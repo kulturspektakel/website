@@ -3,3 +3,6 @@
 /assets/avatars
 /thumbs/*
 /content/*
+!/content/site.txt
+!/content/home
+!/content/error
