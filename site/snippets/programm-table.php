@@ -1,6 +1,6 @@
 <div class="col-sm-4">
 	<h2><?=$tag ?></h2>
-	<ul class="bandlist">
+	<ul class="lineup">
 		<? foreach(listBands($bands,$tag) as $band) { ?>
 			<li data-year="<?= $band->stagetime->year ?>" data-time="<?= preg_replace("/[^0-9]/", "",$band->stagetime->time) ?>">
 				<a href="<?= $band->url() ?>">

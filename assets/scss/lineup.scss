@@ -1,0 +1,116 @@
+.lineup {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+	
+	li {
+		border-top: 5px #ddd solid;
+		background: #eee;
+		margin-bottom: 15px;
+		cursor: pointer;
+		position: relative;
+		
+		a {
+			color: inherit;
+		}
+		
+		a:hover {
+			text-decoration: none;
+		}
+		
+		h3 {
+			margin: 3px 0 1px;
+			padding-right: 30px;
+		}
+	}
+	
+	.band-image  {
+		position: relative;
+		
+		img {
+			width: 100%;
+		}
+	}
+	
+	.band-image:after {
+		text-align: center;
+		display: block;
+		position: absolute;
+		left: 0;
+		right: 0;
+		top: 0;
+		bottom: 0;
+		background-color: rgba(255,255,255,0.5);
+		opacity: 0;
+		font-size: 40px;
+		color: inherit;
+		padding-top: 50%;
+		
+		-webkit-transition: all .3s ease;
+		-moz-transition: all .3s ease;
+		-ms-transition: all .3s ease;
+		transition: all .3s ease;
+	}
+	
+	.band-image:hover:after {
+		opacity: 1;
+		
+		-webkit-transition: all .3s ease;
+		-moz-transition: all .3s ease;
+		-ms-transition: all .3s ease;
+		transition: all .3s ease;
+	}
+	
+	
+	
+	.band-info {
+		padding: 5px 8px;
+	}
+	
+	.band-image, .band-description {
+		display: none;
+	}
+	
+	li.active .band-image, li.active .band-description {
+		display: block;
+	}
+	
+	.band-description {
+		border-top: 1px #ddd solid;
+		margin-top: 10px;
+		margin-left: -8px;
+		margin-right: -8px;
+		padding: 8px;
+	}
+	
+	.band-stage {
+		position: absolute;
+		color: white;
+		font-weight: bold;
+		width: 32px;
+		height: 32px;
+		line-height: 32px;
+		text-align: center;
+		top: -5px;
+		right: 0;
+	}
+	
+	.band-stage.GB {background-color: #E12E2E;}
+	.band-stage.KB {background-color: #446571;}
+	.band-stage.WB {background-color: #3E444D;}
+	.band-stage.A  {background-color: #979FA3;}
+	.band-stage.DJ {background-color: #97BD37;}
+	
+	.band-stage-close {
+		font-size: 16px;
+		display: none;
+	}
+	
+	.active .band-stage-close {
+		display: block;
+	}
+	
+	.active .band-stage-name {
+		display: none;
+	}
+}

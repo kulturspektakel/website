@@ -14,7 +14,7 @@
 		'/bower_components/bootstrap-select/dist/css/bootstrap-select.min.css',
 		'/bower_components/jquery/dist/jquery.min.js',
 		'/bower_components/fontawesome/css/font-awesome.min.css',
-		'/assets/css/screen.css',
+		'/assets/style.php/_main.scss',
 	));
 	?>
 	

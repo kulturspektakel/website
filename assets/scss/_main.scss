@@ -1,3 +1,11 @@
+$brandcolor: #E12E2E;
+$textcolor: #333;
+$GBcolor: #E12E2E;
+$KBcolor: #446571;
+$WBcolor: #3E444D;
+$Acolor: #979FA3;
+$DJcolor: #97BD37;
+
 @font-face {
 	font-family: 'nexalight';
 	src: url('../font/nexa-light-webfont.eot');
@@ -23,7 +31,7 @@
 body {
 	font-family: 'Lato', Arial, sans-serif;
 	font-weight: 300;
-	color: #333;
+	color: $textcolor;
 	font-size: 16px;
 }
 
@@ -46,128 +54,14 @@ a:hover {
 	text-decoration: none;
 }
 
-.bandlist {
-	list-style: none;
-	padding: 0;
-	margin: 0;
-}
-
-.bandlist li a {
-	color: inherit;
-}
-
-.bandlist li a:hover {
-	text-decoration: none;
-}
-
-.bandlist li {
-	border-top: 5px #ddd solid;
-	background: #eee;
-	margin-bottom: 15px;
-	cursor: pointer;
-	position: relative;
-}
-
-
-.bandlist li h3 {
-	margin: 3px 0 1px;
-	padding-right: 30px;
-}
-
-.bandlist .band-image  {
-	position: relative;
-}
-
-.bandlist .band-image img {
-	width: 100%;
-}
-
-.bandlist .band-image:after {
-	text-align: center;
-	display: block;
-	position: absolute;
-	left: 0;
-	right: 0;
-	top: 0;
-	bottom: 0;
-	background-color: rgba(255,255,255,0.5);
-	opacity: 0;
-	font-size: 40px;
-	color: inherit;
-	padding-top: 50%;
-
-	-webkit-transition: all .3s ease;
-	-moz-transition: all .3s ease;
-	-ms-transition: all .3s ease;
-	transition: all .3s ease;
-}
-
-.bandlist .band-image:hover:after {
-	opacity: 1;
-
-	-webkit-transition: all .3s ease;
-	-moz-transition: all .3s ease;
-	-ms-transition: all .3s ease;
-	transition: all .3s ease;
-}
-
-
-
-.bandlist .band-info {
-	padding: 5px 8px;
-}
-
-.bandlist .band-image, .bandlist .band-description {
-	display: none;
-}
-
-.bandlist li.active .band-image, .bandlist li.active .band-description {
-	display: block;
-}
-
-.bandlist .band-description {
-	border-top: 1px #ddd solid;
-	margin-top: 10px;
-	margin-left: -8px;
-	margin-right: -8px;
-	padding: 8px;
-}
-
-.bandlist .band-stage {
-	position: absolute;
-	color: white;
-	font-weight: bold;
-	width: 32px;
-	height: 32px;
-	line-height: 32px;
-	text-align: center;
-	top: -5px;
-	right: 0;
-}
-
-.band-stage.GB {background-color: #E12E2E;}
-.band-stage.KB {background-color: #446571;}
-.band-stage.WB {background-color: #3E444D;}
-.band-stage.A  {background-color: #979FA3;}
-.band-stage.DJ {background-color: #97BD37;}
-
-.band-stage-close {
-	font-size: 16px;
-	display: none;
-}
-
-.bandlist .active .band-stage-close {
-	display: block;
-}
-
-.bandlist .active .band-stage-name {
-	display: none;
-}
-
-
 .light {
 	font-family: 'nexalight';
 }
+
+
+@import 'lineup';
+
+
 
 
 
