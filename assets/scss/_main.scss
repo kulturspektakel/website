@@ -58,86 +58,13 @@ a:hover {
 	font-family: 'nexalight';
 }
 
+.center {
+	text-align: center;
+}
 
 @import 'lineup';
-
-
-
-
-
-
-
-.band-socialmedia {
-	padding-left: 12px;
-	padding-right: 12px;
-	margin-bottom: 40px;
-	font-size: 30px;
-}
-
-.band-socialmedia .col-xs-4 {
-	padding-left: 3px;
-	padding-right: 3px;
-}
-
-
-.band-socialmedia a {
-	background: #eee;
-	display: block;
-	width: 100%;
-	height: 0;
-	padding-bottom: 100%;
-	text-align: center;
-	color: inherit;
-}
-
-.band-socialmedia a:hover {
-	background-color: #e5e5e5;
-}
-
-.band-stagetime {
-	background: #eee;
-	text-align: center;
-	border-top: 5px solid #eee;
-	padding: 20px 0 16px;
-	margin-bottom: 6px;
-	margin-top: 4px;
-	font-family: 'nexabold';
-	text-transform: uppercase;
-	font-size: 28px;
-	line-height: 22px;
-}
-
-.band-stagetime.gb {
-	border-top-color: #E12E2E;
-}
-
-.band-stagetime-stage {
-	font-size: 16px;
-}
-
-.past-events {
-	list-style: none;
-	padding: 0;
-	margin: 0;
-}
-
-.past-events li {
-	margin: 0;
-	padding: 5px 8px;
-	background: #eee;
-	border-left: 2px #eee solid;
-	margin-bottom: 6px;
-}
-
-.past-events .year {
-	font-family: 'nexabold';
-	text-transform: uppercase;
-	font-size: 20px;
-}
-
-
-
-
+@import 'band';
+@import 'fotos';
 
 
 
@@ -157,6 +84,323 @@ figure.video iframe{
 
 
 
+.hero {
+	background: url('../img/hero2.jpg') no-repeat center center; 
+	-webkit-background-size: cover;
+	-moz-background-size: cover;
+	-o-background-size: cover;
+	background-size: cover;
+	
+	height: 520px;
+	padding-top: 150px;
+	margin-bottom: 40px;
+	text-align: center;
+	
+	
+	.branding {
+		margin-bottom: 120px;
+		display: block;
+		
+		img {
+			width: 600px;
+			max-width: 90%;
+		}
+	}
+}
+
+.menu {
+	list-style: none;
+	font-family: 'nexabold';
+	text-transform: uppercase;
+	font-size: 18px;
+	margin: 0;
+	padding: 0;
+	text-align: center;
+	
+	li {
+		display: inline-block;
+	}
+	
+	a {
+		color: white;
+		display: block;
+		padding: 0 30px 12px;
+		position: relative;
+		
+		&:hover {
+			top: 2px;
+		}
+		
+		&.active:hover {
+			top: 0;
+		}
+		
+		&.active {
+			background-image: url('../img/menu-active.png');
+			background-repeat: no-repeat;
+			background-position: center bottom;
+			background-size: 5px 5px;
+		}
+		
+		@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) { 
+			&.active {
+				background-image: url('../img/menu-active@2x.png');
+			}
+		}
+	}
+}
+
+
+.panel {
+	width: 100%;
+	min-height: 250px;
+	color: white;
+	text-transform: uppercase;
+	text-align: center;
+	background-color: #333;
+	margin-bottom: 20px;
+	position: relative;
+	-webkit-background-size: cover;
+	-moz-background-size: cover;
+	-o-background-size: cover;
+	background-size: cover;
+	background-position: center 30%;
+	
+	h2 {
+		font-size: 34px;
+		margin: 0;
+		background-image: url('../img/overlay.png');
+		-webkit-background-size: cover;
+		-moz-background-size: cover;
+		-o-background-size: cover;
+		background-size: cover;
+		background-position: center;
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		padding-top: 100px;
+	}
+}
+
+
+.footer {
+	background-color: #272727;
+	padding: 20px 0;
+	color: white;
+	margin-top: 60px;
+	
+	.footer-infos {
+	
+		h3 {
+			font-size: 16px;
+			margin: 0;
+			margin-bottom: 7px;
+		}
+		
+		p {
+			margin-left: 52px;
+			padding-right: 20px;
+		}
+		
+		img {
+			width: 42px;
+			float: left;
+			margin-right: 10px;
+		}
+	}
+	
+	.footer-icons {
+		padding-top: 25px;
+	}
+	
+	.links, .links a {
+		color: #777;
+	}
+	
+	.links a {
+		color: #777;
+		
+		&:hover {
+			color: #999;
+		}
+	}
+	
+	.social {
+		background-color: white;
+		border-radius: 999em;
+		display: inline-block;
+		color: #272727;
+		width: 40px;
+		height: 40px;
+		line-height: 40px;
+		font-size: 24px;
+		margin: 10px 15px 15px;
+		text-align: center;
+	
+		-webkit-transition: all .2s;
+		transition: width all .2s;
+		
+		&:hover {
+			-ms-transform: scale(1.1);
+			-webkit-transform: scale(1.1);
+			transform: scale(1.1);
+			
+			-webkit-transition: all .2s;
+			transition: width all .2s;
+		}
+	}
+	
+	@media (max-width:768px) {
+		.social {margin: 10px 12px 15px;}
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+.news-container {
+	max-width: 700px;
+	
+	&.news-container-single .news article {
+		display: block;
+	}
+	
+	.news {
+		list-style: none;
+		margin: 0 auto;
+		padding: 0;
+		
+		li {
+			margin-bottom: 5px;
+			
+			&.active hgroup {
+				opacity: 1 !important;
+			}
+			
+			&.active article {
+				display: block;
+			}
+		}
+		
+		hgroup {
+			overflow: hidden;
+			
+			.date {
+				float: left;
+				min-width: 60px;
+				text-align: center;
+				font-size: 11px;
+				border-right: 2px #333 solid;
+				margin-right: 10px;
+				font-family: 'nexalight';
+				text-transform: uppercase;
+				
+				.day {
+					color: $brandcolor;
+					font-family: 'nexabold';
+					font-size: 30px;
+					margin-top: -4px;
+					margin-bottom: -8px;
+				}
+			}
+			
+			h1, h2 {
+				margin-top: 0;
+				padding-top: 5px;
+				margin-left: 70px;
+				padding-right: 10px;
+				
+				a {
+					color: inherit;
+				}
+			}
+			
+			h1 {
+				padding-top: 3px;
+			}
+			
+			&.a1 {opacity: 0.7;}
+			&.a2 {opacity: 0.5;}
+			&.a3 {opacity: 0.3;}
+			&.a4 {opacity: 0.1;}
+			
+			&:hover {
+				opacity: 1;
+			}
+		}
+		
+		article {
+			display: none;
+			margin-left: 70px;
+			padding-top: 10px;
+			padding-right: 15px;
+			padding-bottom: 15px;
+			
+			&:first-child {
+				display: block;
+			}
+			
+			figure img {
+				width: 100%;
+			}
+		}
+		
+		&.container article {
+			display: block;
+		}
+	
+		
+	}
+}
+
+
+#instafeed {
+	overflow: hidden;
+	width: 100%;
+	background-color: $textcolor;
+	margin-top: 60px;
+	margin-bottom: 60px;
+	
+	.slider-row {
+		overflow: hidden;
+		width: 200%;
+		height: 150px;
+		margin-left: -150px;
+	}
+	
+	@media (max-width:768px) {
+		.slider-row {
+			height: 100px;
+			margin-left: -100px;
+		}
+		
+		.slider-row img {
+			max-width: 100px;
+		}
+	}
+	
+	.slider-row img {
+		float: left;
+	}
+}
+
+
+
+
+#maps {
+	height: 300px;
+	background-color: $textcolor;
+}
 
 
 
@@ -171,4 +415,69 @@ figure.video iframe{
 .copy {
 	max-width: 100%;
 	border: 0;
+}
+
+
+
+
+.mehr {
+	
+	h1, h2 {
+		text-align: center;
+	}
+	
+	h2 {
+		font-family: 'nexalight';
+		font-size: 26px;
+		margin-bottom: 50px;
+	}
+	
+}
+.more-event {
+	background-color: #eee;
+	margin: 50px 0;
+	padding-bottom: 10px;
+	position: relative;
+	
+	.col-photo {
+		display: block;
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		left: 50%;
+		height: 100%;
+		background-position: center;
+		-webkit-background-size: cover;
+		-moz-background-size: cover;
+		-o-background-size: cover;
+		background-size: cover;
+
+	}
+	
+	&.odd {
+		.col-info {margin-left: 50%;}
+		.col-photo {left: 0;}
+	}
+	
+	@media (max-width:768px) {
+		&.odd {
+			.col-info {margin-left: 0%;}
+		}
+	}
+	
+	.col-info {
+	
+		h2 {
+			margin-bottom: 0;
+			text-align: left;
+			font-family: 'nexabold';
+		}
+	
+		.date {
+			font-family: 'nexalight';
+			text-transform: uppercase;
+			font-size: 18px;
+			margin-bottom: 6px;
+		}
+	}
 }

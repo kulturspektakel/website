@@ -12,8 +12,8 @@
 		'http://fonts.googleapis.com/css?family=Lato:300,700,300italic',
 		'/bower_components/bootstrap/dist/css/bootstrap.min.css',
 		'/bower_components/bootstrap-select/dist/css/bootstrap-select.min.css',
-		'/bower_components/jquery/dist/jquery.min.js',
 		'/bower_components/fontawesome/css/font-awesome.min.css',
+		'/bower_components/fancybox/source/jquery.fancybox.css',
 		'/assets/style.php/_main.scss',
 	));
 	?>
@@ -21,19 +21,25 @@
 	<?php
 	echo js(array(
 		'/bower_components/jquery/dist/jquery.min.js',
+		'/bower_components/lodash/dist/lodash.min.js',
 		'/bower_components/bootstrap/dist/js/bootstrap.min.js',
 		'/bower_components/bootstrap-select/dist/js/bootstrap-select.min.js',
 		'/bower_components/unveil/jquery.unveil.min.js',
+		'/bower_components/fancybox/source/jquery.fancybox.pack.js',
+		'http://maps.google.com/maps/api/js?sensor=true',
+		'/bower_components/gmaps/gmaps.js',
+		'/assets/js/instafeed.js',
 		'/assets/js/domscript.js',
 	));
 	?>
 
 </head>
-<body>
+<body class="<?= str_replace("/"," ",$_SERVER['REQUEST_URI']) ?>">
 
-	<header class="cf" role="banner">
+	<header class="hero" role="banner">
 		<div class="container">
-			<a class="branding" href="<?php echo url() ?>"><img src="<?php echo url('assets/img/logo.png') ?>" width="115" height="41" alt="<?php echo html($site->title()) ?>" /></a>
+			<a class="branding" href="<?php echo url() ?>" id="logo" oncontextmenu="return false">
+				<img src="<?php echo url('assets/img/logo-textright-white.svg') ?>" alt="<?php echo html($site->title()) ?>" /></a>
 			<?php snippet('menu') ?>
 		</div>
 	</header>

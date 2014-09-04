@@ -1,30 +1,14 @@
 <?php snippet('header') ?>
 
-  <main class="content" role="main">
-    
-    
-    <section class="container">
-      <div class="row">
-        <div class="col-xs-9">
-          <h1><?php echo html($page->title()) ?></h1>
-        </div>
-        <div class="col-xs-3">
-        <select class="form-control selectpicker">
-          <option>2010</option>
-          <option>2011</option>
-          <option>2012</option>
-          <option>2013</option>
-          <option selected="selected">2014</option>
-        </select>
-      </div>
-    </div>
-      <hr />
-      <div class="row">
-        <?php snippet('programm-table', array('tag' => "Freitag", 'bands' => filterByStagetimes($page->children(),"Freitag"))) ?>
-        <?php snippet('programm-table', array('tag' => "Samstag", 'bands' => filterByStagetimes($page->children(),"Samstag"))) ?>
-        <?php snippet('programm-table', array('tag' => "Sonntag", 'bands' => filterByStagetimes($page->children(),"Sonntag"))) ?>
-      </div>
-    </section>
-  </main>
+	<section class="container">
+		<h1><?php echo html($page->title()) ?></h1>
+	
+	</section>
+	<section class="panel" style="background-image: url('https://photos-6.dropbox.com/t/0/AABwdQaz-WaGpvg6hQLYboO1MK36kWeomXFTpR9Ks9mYXA/12/981765/jpeg/1024x768/3/1408258800/0/2/10479150_10152310331499053_8585577888509807930_o.jpg/uwsenDwsk57WilaDy0R7s5oTiTW0dLovlzS88jwIkJk')">
+		<h2>Kinderkult</h2>
+	</section>
+	<section class="container">
+		<?php echo kirbytext($page->text()) ?>
+	</section>
 
 <?php snippet('footer') ?>

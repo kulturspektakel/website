@@ -1,6 +1,6 @@
-Title: Kirby Starterkit
+Title: Kulturspektakel Gauting
 ----
-Author: Bastian Allgeier GmbH
+Author: Kulturspektakel Gauting e.V.
 ----
 Description: This is Kirby's Starterkit.
 ----

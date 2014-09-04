@@ -32,6 +32,17 @@ of the system, please check out http://getkirby.com/docs
 
 */
 
+function stagenames($shorthand) {
+	$name = array(
+		"GB" => "Große&nbsp;Bühne",
+		"KB" => "Kleine&nbsp;Bühne",
+		"WB" => "Waldühne",
+		"A" => "Aula",
+		"DJ" => "DJ-Eck"
+	);
+	return $name[$shorthand];
+}
+
 function stagetimeParser($string) {
 	$ra = array();
 	foreach (explode("\n-",$string) as $s) {
@@ -54,6 +65,12 @@ function stagetimeParser($string) {
 
 function revsort($a, $b) {
 	return -strcmp($a->year, $b->year);
+}
+
+function revsort2($a, $b) {
+	$y = -strcmp($a->stagetime->year, $b->stagetime->year);
+	if ($y==0) return strcmp($a->stagetime->time, $b->stagetime->time);
+	else return $y;
 }
 
 function filterByStagetimes($o,$d,$y=false) {
@@ -92,8 +109,6 @@ function listBands($bands,$tag) {
 			array_push($ra,$rb);
 		}
 	}
-	usort($ra, "revsort");
-	//TODO SORTING
+	usort($ra, "revsort2");
 	return $ra;
 }
-

@@ -1,7 +1,8 @@
 <?php if(!defined('KIRBY')) exit ?>
 
 title: Home
-pages: false
+pages:
+  template: news
 fields:
   title:
     label: Title

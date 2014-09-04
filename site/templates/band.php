@@ -12,10 +12,10 @@
 					<? if (bandPlays($page->stagetimes())) { ?>
 					<div class="row">
 						<div class="col-xs-12">
-							<div class="band-stagetime gb">
+							<div class="band-stagetime <?= bandPlays($page->stagetimes())->stage ?>">
 								<span class="light"><?= substr(bandPlays($page->stagetimes())->day,0,2) ?></span>
 								<?= bandPlays($page->stagetimes())->time ?><br />
-								<span class="light band-stagetime-stage"><?= bandPlays($page->stagetimes())->stage ?></span>
+								<span class="light band-stagetime-stage"><?= stagenames(bandPlays($page->stagetimes())->stage) ?></span>
 							</div>
 						</div>
 					</div>
@@ -30,12 +30,12 @@
 					
 					<h4>Bisherige Auftritte</h4>
 					<ul class="past-events">
-						<li class="gb">
+						<li class="GB">
 							<a href="/lineup#2012">
 								<span class="year">2012</span> SO Kleine Bühne
 							</a>
 						</li>
-						<li class="gb">
+						<li class="GB">
 							<a href="/lineup#2012">
 								<span class="year">2012</span> SO Kleine Bühne
 							</a>

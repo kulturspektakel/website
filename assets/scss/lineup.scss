@@ -1,7 +1,11 @@
-.lineup {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+.bootstrap-select {
+	margin-top: 18px;
+}
+
+.bandlist {
+	list-style: none;
+	padding: 0;
+	margin: 0;
 	
 	li {
 		border-top: 5px #ddd solid;
@@ -22,60 +26,61 @@
 			margin: 3px 0 1px;
 			padding-right: 30px;
 		}
+		
+		&.active {
+			.band-image, .band-description, .band-stage-close {
+				display: block;
+			}
+			.band-stage-name {
+				display: none;
+			}
+		}
 	}
 	
 	.band-image  {
 		position: relative;
+		display: none;
+		
+		&:after {
+			text-align: center;
+			display: block;
+			position: absolute;
+			left: 0;
+			right: 0;
+			top: 0;
+			bottom: 0;
+			background-color: rgba(255,255,255,0.5);
+			opacity: 0;
+			font-size: 40px;
+			color: inherit;
+			padding-top: 50%;
+			
+			-webkit-transition: all .3s ease;
+			-moz-transition: all .3s ease;
+			-ms-transition: all .3s ease;
+			transition: all .3s ease;
+		}
+		
+		&:hover:after {
+			opacity: 1;
+			
+			-webkit-transition: all .3s ease;
+			-moz-transition: all .3s ease;
+			-ms-transition: all .3s ease;
+			transition: all .3s ease;
+		}
 		
 		img {
 			width: 100%;
 		}
 	}
 	
-	.band-image:after {
-		text-align: center;
-		display: block;
-		position: absolute;
-		left: 0;
-		right: 0;
-		top: 0;
-		bottom: 0;
-		background-color: rgba(255,255,255,0.5);
-		opacity: 0;
-		font-size: 40px;
-		color: inherit;
-		padding-top: 50%;
-		
-		-webkit-transition: all .3s ease;
-		-moz-transition: all .3s ease;
-		-ms-transition: all .3s ease;
-		transition: all .3s ease;
-	}
-	
-	.band-image:hover:after {
-		opacity: 1;
-		
-		-webkit-transition: all .3s ease;
-		-moz-transition: all .3s ease;
-		-ms-transition: all .3s ease;
-		transition: all .3s ease;
-	}
-	
-	
-	
 	.band-info {
 		padding: 5px 8px;
 	}
 	
-	.band-image, .band-description {
-		display: none;
-	}
-	
-	li.active .band-image, li.active .band-description {
-		display: block;
-	}
-	
 	.band-description {
+		display: none;
 		border-top: 1px #ddd solid;
 		margin-top: 10px;
 		margin-left: -8px;
@@ -93,24 +98,16 @@
 		text-align: center;
 		top: -5px;
 		right: 0;
-	}
-	
-	.band-stage.GB {background-color: #E12E2E;}
-	.band-stage.KB {background-color: #446571;}
-	.band-stage.WB {background-color: #3E444D;}
-	.band-stage.A  {background-color: #979FA3;}
-	.band-stage.DJ {background-color: #97BD37;}
-	
-	.band-stage-close {
-		font-size: 16px;
-		display: none;
-	}
-	
-	.active .band-stage-close {
-		display: block;
-	}
-	
-	.active .band-stage-name {
-		display: none;
+		
+		&.GB {background-color: $GBcolor;}
+		&.KB {background-color: $KBcolor;}
+		&.WB {background-color: $WBcolor;}
+		&.A  {background-color: $Acolor;}
+		&.DJ {background-color: $DJcolor;}
+		
+		.band-stage-close {
+			font-size: 16px;
+			display: none;
+		}
 	}
 }
