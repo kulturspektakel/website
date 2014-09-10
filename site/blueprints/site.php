@@ -6,12 +6,15 @@ fields:
   title:
     label: Title
     type:  text
-  author:
-    label: Author
-    type:  text
-  description:
-    label: Description
-    type:  textarea
-  copyright:
-    label: Copyright
-    type:  textarea
+  eventdate:
+    label: Datum des Kults
+    type: text
+  infotext:
+    label: Infotext
+    type: textarea
+  footerlinks:
+    label: Footer Links
+    type: textarea
+  sociallinks:
+    label: Social Links
+    type: textarea

@@ -4,6 +4,9 @@ title: Band
 pages: false
 files: true
 fields:
+  title:
+    label: Titel
+    type: text
   genre:
     label: Genre
     type:  text

@@ -13,7 +13,7 @@
 		'/bower_components/bootstrap/dist/css/bootstrap.min.css',
 		'/bower_components/bootstrap-select/dist/css/bootstrap-select.min.css',
 		'/bower_components/fontawesome/css/font-awesome.min.css',
-		'/bower_components/fancybox/source/jquery.fancybox.css',
+		'/bower_components/swipebox/src/css/swipebox.min.css',
 		'/assets/style.php/_main.scss',
 	));
 	?>
@@ -25,7 +25,8 @@
 		'/bower_components/bootstrap/dist/js/bootstrap.min.js',
 		'/bower_components/bootstrap-select/dist/js/bootstrap-select.min.js',
 		'/bower_components/unveil/jquery.unveil.min.js',
-		'/bower_components/fancybox/source/jquery.fancybox.pack.js',
+		'/bower_components/swipebox/src/js/jquery.swipebox.min.js',
+		'/bower_components/sticky/jquery.sticky.js',
 		'http://maps.google.com/maps/api/js?sensor=true',
 		'/bower_components/gmaps/gmaps.js',
 		'/assets/js/instafeed.js',
@@ -34,13 +35,19 @@
 	?>
 
 </head>
-<body class="<?= str_replace("/"," ",$_SERVER['REQUEST_URI']) ?>">
+<body class="<?= str_replace("/"," ",$_SERVER['REQUEST_URI']) ?><? if ($_SERVER['REQUEST_URI']=="/") echo "home"; ?>">
 
 	<header class="hero" role="banner">
+		<a class="nav-logo" href="<?php echo url() ?>"> 
+			<img src="<?php echo url('assets/img/logo.svg') ?>" />
+		</a>
 		<div class="container">
 			<a class="branding" href="<?php echo url() ?>" id="logo" oncontextmenu="return false">
-				<img src="<?php echo url('assets/img/logo-textright-white.svg') ?>" alt="<?php echo html($site->title()) ?>" /></a>
+				<img src="<?php echo url('assets/img/logo-textright-white.svg') ?>" alt="<?php echo html($site->title()) ?>" />
+			</a>
+			<h2><?=$site->eventdate() ?></h2>
 			<?php snippet('menu') ?>
 		</div>
 	</header>
+	<main class="content" role="main">
 	

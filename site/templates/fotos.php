@@ -1,15 +1,15 @@
 <?php snippet('header') ?>
 
-	<main class="content" role="main">
-		<section class="container">
-			<? foreach($page->children() as $album) { ?>
-				<? if ($album->template()=="album") { ?>
-					<?= snippet('album',array('album' => $album)) ?>
-				<? } elseif ($album->template()=="video") { ?>
-					<?= snippet('video',array('video' => $album)) ?>
-				<? } ?>
+	<section class="container">
+		<? $i = 0;?>
+		<? foreach($page->children() as $album) { ?>
+			<? if ($album->template()=="album") { ?>
+				<?= snippet('album',array('album' => $album, 'number' => $i)) ?>
+			<? } elseif ($album->template()=="video") { ?>
+				<?= snippet('video',array('video' => $album, 'number' => $i)) ?>
 			<? } ?>
-		</section>
-	</main>
+			<? $i++; ?>
+		<? } ?>
+	</section>
 
 <?php snippet('footer') ?>

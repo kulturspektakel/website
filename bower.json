@@ -1,0 +1,27 @@
+{
+  "name": "Kult Webseite",
+  "version": "1.0.0",
+  "homepage": "http://kulturspektakel.de",
+  "authors": [
+    "Daniel Büchele <daniel@buechele.cc>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap-select": "~1.6.0",
+    "bootstrap": "~3.2.0",
+    "fontawesome": "~4.1.0",
+    "gmaps": "~0.4.14",
+    "jquery": "~2.1.1",
+    "lodash": "~2.4.1",
+    "unveil": "~1.3.0",
+    "sticky": "*",
+    "swipebox": "~1.2.9"
+  }
+}

@@ -36,9 +36,7 @@ $(function(){
 
 	
 	// fotos
-	$('.album a').fancybox({
-		padding : 0
-	});
+	$('.album a').swipebox();
 	$('.album img').unveil();
 	
 	
@@ -52,6 +50,12 @@ $(function(){
 			e.preventDefault();
 		}
 	});
+	
+	$('.home .hero').sticky({topSpacing:-430});
+	
+	$(document).scroll(function() {
+        $('.home .nav-logo').css('left',Math.min($(document).scrollTop()-520,20));
+    });
 	
 	
 	// Maps

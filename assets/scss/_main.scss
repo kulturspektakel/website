@@ -82,7 +82,18 @@ figure.video iframe{
 	position:absolute;
 }
 
-
+.home .sticky-wrapper {
+	margin-bottom: 40px;
+	
+	.hero {
+		margin-top: 0;
+		position: relative;
+		
+		.nav-logo {
+			left: -100px;
+		}
+	}
+}
 
 .hero {
 	background: url('../img/hero2.jpg') no-repeat center center; 
@@ -92,13 +103,32 @@ figure.video iframe{
 	background-size: cover;
 	
 	height: 520px;
-	padding-top: 150px;
+	padding-top: 120px;
 	margin-bottom: 40px;
 	text-align: center;
+	margin-top: -430px;
+	width: 100%;
+	z-index: 2;
+	position: fixed;
 	
+	h2 {
+		color: white;
+		font-family: 'nexalight';
+		margin-top: 30px;
+		height: 35px;
+	}
+	
+	.nav-logo {
+		visibility: visible;
+		opacity: 1;
+		width: 60px;
+		position: absolute;
+		left: 20px;
+		bottom: 15px;
+	}
 	
 	.branding {
-		margin-bottom: 120px;
+		
 		display: block;
 		
 		img {
@@ -106,50 +136,75 @@ figure.video iframe{
 			max-width: 90%;
 		}
 	}
-}
-
-.menu {
-	list-style: none;
-	font-family: 'nexabold';
-	text-transform: uppercase;
-	font-size: 18px;
-	margin: 0;
-	padding: 0;
-	text-align: center;
 	
-	li {
-		display: inline-block;
-	}
-	
-	a {
-		color: white;
-		display: block;
-		padding: 0 30px 12px;
-		position: relative;
+	nav {
+		position: absolute;
+		bottom: 20px;
+		left: 80px;
+		right: 80px;
 		
-		&:hover {
-			top: 2px;
+		.menu {
+			list-style: none;
+			font-family: 'nexabold';
+			text-transform: uppercase;
+			font-size: 18px;
+			margin: 0;
+			padding: 0;
+			text-align: center;
+		
+			li {
+				display: inline-block;
+		
+				a {
+					color: white;
+					display: block;
+					padding: 0 30px 12px;
+					position: relative;
+					
+					&:hover {
+						top: 2px;
+					}
+					
+					&.active:hover {
+						top: 0;
+					}
+					
+					&.active {
+						background-image: url('../img/menu-active.png');
+						background-repeat: no-repeat;
+						background-position: center bottom;
+						background-size: 5px 5px;
+					}
+					
+					@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) { 
+						&.active {
+							background-image: url('../img/menu-active@2x.png');
+						}
+					}
+				}
+			}
 		}
-		
-		&.active:hover {
-			top: 0;
-		}
-		
-		&.active {
-			background-image: url('../img/menu-active.png');
-			background-repeat: no-repeat;
-			background-position: center bottom;
-			background-size: 5px 5px;
-		}
-		
-		@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) { 
-			&.active {
-				background-image: url('../img/menu-active@2x.png');
+	}	
+	@media (max-width: 991px) {		
+		nav {
+			right: 10px;
+			.menu li a {
+				padding-left: 18px;
+				padding-right: 18px;
 			}
 		}
 	}
 }
 
+.content {
+	padding-top: 110px;
+}
+
+.home {
+	.content {
+		padding-top: 0px;
+	}
+}
 
 .panel {
 	width: 100%;
@@ -213,6 +268,32 @@ figure.video iframe{
 	
 	.footer-icons {
 		padding-top: 25px;
+		overflow: hidden;
+		
+		.icons-right {
+			float: right;
+		}
+	}
+	
+	@media (max-width: 768px) {
+		.footer-infos {
+			text-align: center;
+			
+			p {
+				margin-left: 0;
+				padding-right: 0;
+			}
+		}
+		.footer-icons {
+			padding-top: 10px;
+			overflow: hidden;
+			padding-bottom: 15px;
+			text-align: center;
+			
+			.icons-right {
+				float: none;
+			}
+		}
 	}
 	
 	.links, .links a {
