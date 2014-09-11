@@ -8,6 +8,12 @@ $(function(){
 		}
 	});
 	
+	$('.mobile-nav').click(function () {
+    	$('.hero').toggleClass('active');
+	});
+	
+	FastClick.attach(document.body);
+	
 	
 	// lineup
 	if (window.location.hash.length>1) $('.selectpicker').val(window.location.hash.substring(1));
@@ -38,6 +44,7 @@ $(function(){
 	// fotos
 	$('.album a').swipebox();
 	$('.album img').unveil();
+	$('.album-title').sticky();
 	
 	
 	// home
@@ -59,17 +66,17 @@ $(function(){
 	
 	
 	// Maps
-	new GMaps({
-	  div: '#maps',
-	  lat: 48.078509,
-	  lng: 11.375506,
-	  scrollwheel: false,
-	  streetViewControl: false,
-	  mapTypeControl: false,
-	  panControl: false,
-	  zoom: 14,
-	});
-	
+    new GMaps({
+       div: '#maps',
+       lat: 48.078509,
+       lng: 11.375506,
+       scrollwheel: false,
+       streetViewControl: false,
+       mapTypeControl: false,
+       panControl: false,
+       zoom: 14,
+    });
+
 	
 	
 	

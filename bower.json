@@ -22,6 +22,6 @@
     "lodash": "~2.4.1",
     "unveil": "~1.3.0",
     "sticky": "*",
-    "swipebox": "~1.2.9"
+    "swipebox": "git@github.com:dheera/swipebox.git"
   }
 }

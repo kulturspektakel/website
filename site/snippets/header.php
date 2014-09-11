@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
 
 	<meta charset="utf-8" />
 	
 	<title><?php echo html($site->title()) ?> | <?php echo html($page->title()) ?></title>
 	<meta name="description" content="<?php echo html($site->description()) ?>" />
+	<meta name="viewport" content="width=device-width">
 	
 	<?php
 	echo css(array(
@@ -13,7 +14,7 @@
 		'/bower_components/bootstrap/dist/css/bootstrap.min.css',
 		'/bower_components/bootstrap-select/dist/css/bootstrap-select.min.css',
 		'/bower_components/fontawesome/css/font-awesome.min.css',
-		'/bower_components/swipebox/src/css/swipebox.min.css',
+		'/bower_components/swipebox/src/css/swipebox.css',
 		'/assets/style.php/_main.scss',
 	));
 	?>
@@ -25,8 +26,9 @@
 		'/bower_components/bootstrap/dist/js/bootstrap.min.js',
 		'/bower_components/bootstrap-select/dist/js/bootstrap-select.min.js',
 		'/bower_components/unveil/jquery.unveil.min.js',
-		'/bower_components/swipebox/src/js/jquery.swipebox.min.js',
+		'/bower_components/swipebox/src/js/jquery.swipebox.js',
 		'/bower_components/sticky/jquery.sticky.js',
+		'/bower_components/fastclick/lib/fastclick.js',
 		'http://maps.google.com/maps/api/js?sensor=true',
 		'/bower_components/gmaps/gmaps.js',
 		'/assets/js/instafeed.js',
@@ -40,6 +42,11 @@
 	<header class="hero" role="banner">
 		<a class="nav-logo" href="<?php echo url() ?>"> 
 			<img src="<?php echo url('assets/img/logo.svg') ?>" />
+		</a>
+		<a class="mobile-nav">
+			<span class="line line-1"></span>
+			<span class="line line-2"></span>
+			<span class="line line-3"></span>
 		</a>
 		<div class="container">
 			<a class="branding" href="<?php echo url() ?>" id="logo" oncontextmenu="return false">
