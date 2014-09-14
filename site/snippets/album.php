@@ -1,9 +1,9 @@
 <section class="<? if ($number>0) echo " old "; ?>">
 	<a href="<?= $album->url() ?>" class="album-title">
 		<h2>
-			<?=$ album->title() ?>
+			<?=$album->title() ?>
 		</h2>
-		<?=$album->images()->count() ?> Fotos vom <?=d ate( "d.m.Y", strtotime($album->datum())) ?>
+		<?=$album->images()->count() ?> Fotos vom <?=date( "d.m.Y", strtotime($album->datum())) ?>
 	</a>
 	<ul class="album">
 		<? $i=0 ;?>

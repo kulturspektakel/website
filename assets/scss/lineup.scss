@@ -1,114 +1,186 @@
-.bootstrap-select {
-	margin-top: 18px;
-}
-
-.bandlist {
-	list-style: none;
-	padding: 0;
-	margin: 0;
+.lineup {
+	h2 {
+		text-align: center
+	}
+		
+	.bootstrap-select {
+		margin-top: 18px;
+	}
 	
-	li {
+	@media (max-width: 768px) {
+		.bootstrap-select {
+			margin-top: 0px;
+		}
+	}
+	
+	.nocontent {
+		
+		.nocontent-box {
+			text-align: center;
+			padding: 10px 20px 5px;
+			
+			i {
+				font-size: 20px;
+				margin-bottom: 5px;
+			}
+		}	
+	}
+	
+	.bookinginfo {
 		border-top: 5px #ddd solid;
 		background: #eee;
-		margin-bottom: 15px;
-		cursor: pointer;
-		position: relative;
+		text-align: center;
+		padding: 10px 20px 5px;
+		margin-bottom: 10px
+	}	
+	
+	.stageSelector {
+	
+		margin: 25px 0 20px;
+		padding: 0;
+		text-align: center;
 		
-		a {
-			color: inherit;
-		}
-		
-		a:hover {
-			text-decoration: none;
-		}
-		
-		h3 {
-			margin: 3px 0 1px;
-			padding-right: 30px;
-		}
-		
-		&.active {
-			.band-image, .band-description, .band-stage-close {
-				display: block;
+		label {
+			width: 100%;
+			cursor: pointer;
+			margin-bottom: 0;
+			border-top: 1px #eee solid;
+			border-bottom: 3px #ddd solid;
+			color: #ddd;
+			line-height: 34px;
+			 
+			&:hover, &.active {
+				color: $textcolor;
+				background-color: #f5f5f5;
+				
 			}
-			.band-stage-name {
+			
+			&.GB.active, &.GB:hover {border-bottom-color: $GBcolor;}
+			&.KB.active, &.KB:hover {border-bottom-color: $KBcolor;}
+			&.WB.active, &.WB:hover {border-bottom-color: $WBcolor;}
+			&.A.active,  &.A:hover  {border-bottom-color: $Acolor;}
+			&.DJ.active, &.DJ:hover {border-bottom-color: $DJcolor;}
+		}
+		
+		input {
+			display: none
+		}
+	}
+	
+	.bandlist {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		
+		li {
+			border-top: 5px #ddd solid;
+			background: #eee;
+			margin-bottom: 15px;
+			cursor: pointer;
+			position: relative;
+			
+			a {
+				color: inherit;
+			}
+			
+			a:hover {
+				text-decoration: none;
+			}
+			
+			h3 {
+				margin: 3px 0 1px;
+				padding-right: 30px;
+			}
+			
+			@media (max-width:991px) {
+				h3 {
+					font-size: 20px
+				}
+			}
+			
+			&.active {
+				.band-image, .band-description, .band-stage-close {
+					display: block;
+				}
+				.band-stage-name {
+					display: none;
+				}
+			}
+		}
+		
+		.band-image  {
+			position: relative;
+			display: none;
+			
+			&:after {
+				text-align: center;
+				display: block;
+				position: absolute;
+				left: 0;
+				right: 0;
+				top: 0;
+				bottom: 0;
+				background-color: rgba(255,255,255,0.5);
+				opacity: 0;
+				font-size: 40px;
+				color: inherit;
+				padding-top: 50%;
+				
+				-webkit-transition: all .3s ease;
+				-moz-transition: all .3s ease;
+				-ms-transition: all .3s ease;
+				transition: all .3s ease;
+			}
+			
+			&:hover:after {
+				opacity: 1;
+				
+				-webkit-transition: all .3s ease;
+				-moz-transition: all .3s ease;
+				-ms-transition: all .3s ease;
+				transition: all .3s ease;
+			}
+			
+			img {
+				width: 100%;
+			}
+		}
+		
+		.band-info {
+			padding: 5px 8px;
+			overflow: hidden;
+		}
+		
+		.band-description {
+			display: none;
+			border-top: 1px #ddd solid;
+			margin-top: 10px;
+			margin-left: -8px;
+			margin-right: -8px;
+			padding: 8px;
+		}
+		
+		.band-stage {
+			position: absolute;
+			color: white;
+			font-weight: bold;
+			width: 32px;
+			height: 32px;
+			line-height: 32px;
+			text-align: center;
+			top: -5px;
+			right: 0;
+			
+			&.GB {background-color: $GBcolor;}
+			&.KB {background-color: $KBcolor;}
+			&.WB {background-color: $WBcolor;}
+			&.A  {background-color: $Acolor;}
+			&.DJ {background-color: $DJcolor;}
+			
+			.band-stage-close {
+				font-size: 16px;
 				display: none;
 			}
-		}
-	}
-	
-	.band-image  {
-		position: relative;
-		display: none;
-		
-		&:after {
-			text-align: center;
-			display: block;
-			position: absolute;
-			left: 0;
-			right: 0;
-			top: 0;
-			bottom: 0;
-			background-color: rgba(255,255,255,0.5);
-			opacity: 0;
-			font-size: 40px;
-			color: inherit;
-			padding-top: 50%;
-			
-			-webkit-transition: all .3s ease;
-			-moz-transition: all .3s ease;
-			-ms-transition: all .3s ease;
-			transition: all .3s ease;
-		}
-		
-		&:hover:after {
-			opacity: 1;
-			
-			-webkit-transition: all .3s ease;
-			-moz-transition: all .3s ease;
-			-ms-transition: all .3s ease;
-			transition: all .3s ease;
-		}
-		
-		img {
-			width: 100%;
-		}
-	}
-	
-	.band-info {
-		padding: 5px 8px;
-		overflow: hidden;
-	}
-	
-	.band-description {
-		display: none;
-		border-top: 1px #ddd solid;
-		margin-top: 10px;
-		margin-left: -8px;
-		margin-right: -8px;
-		padding: 8px;
-	}
-	
-	.band-stage {
-		position: absolute;
-		color: white;
-		font-weight: bold;
-		width: 32px;
-		height: 32px;
-		line-height: 32px;
-		text-align: center;
-		top: -5px;
-		right: 0;
-		
-		&.GB {background-color: $GBcolor;}
-		&.KB {background-color: $KBcolor;}
-		&.WB {background-color: $WBcolor;}
-		&.A  {background-color: $Acolor;}
-		&.DJ {background-color: $DJcolor;}
-		
-		.band-stage-close {
-			font-size: 16px;
-			display: none;
 		}
 	}
 }

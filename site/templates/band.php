@@ -3,12 +3,12 @@
 <main class="content" role="main">
 	<section class="container">
 		<h1>
-			<?=$ page->title() ?>
+			<?=$page->title() ?>
 		</h1>
 
 		<div class="row">
 			<div class="col-sm-8">
-				<?=k irbytext($page->description()) ?>
+				<?=kirbytext($page->description()) ?>
 			</div>
 			<div class="col-sm-4">
 				<? if (bandPlays($page->stagetimes())) { ?>
@@ -16,12 +16,12 @@
 					<div class="col-xs-12">
 						<div class="band-stagetime <?= bandPlays($page->stagetimes())->stage ?>">
 							<span class="light">
-								<?=s ubstr(bandPlays($page->stagetimes())->day,0,2) ?>
+								<?=substr(bandPlays($page->stagetimes())->day,0,2) ?>
 							</span>
-							<?=b andPlays($page->stagetimes())->time ?>
+							<?=bandPlays($page->stagetimes())->time ?>
 							<br />
 							<span class="light band-stagetime-stage">
-								<?=s tagenames(bandPlays($page->stagetimes())->stage) ?>
+								<?=stagenames(bandPlays($page->stagetimes())->stage) ?>
 							</span>
 						</div>
 					</div>

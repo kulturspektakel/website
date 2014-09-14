@@ -5,19 +5,19 @@
 		<hgroup class="a<?= $i ?>">
 			<div class="date">
 				<div class="day">
-					<?=d ate( 'd',strtotime($p->datum())) ?>
+					<?=date( 'd',strtotime($p->datum())) ?>
 				</div>
-				<?=d ate( 'M',strtotime($p->datum())) ?>
-				<?=d ate( 'y',strtotime($p->datum())) ?>
+				<?=date( 'M',strtotime($p->datum())) ?>
+				<?=date( 'y',strtotime($p->datum())) ?>
 			</div>
 			<h2>
 				<a href="<?= $p->url() ?>">
-					<?=h tml($p->title()) ?>
+					<?=html($p->title()) ?>
 				</a>
 			</h2>
 		</hgroup>
 		<article>
-			<?=k irbytext($p->text()) ?>
+			<?=kirbytext($p->text()) ?>
 		</article>
 	</li>
 	<? $i++ ?>

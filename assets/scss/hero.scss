@@ -324,15 +324,21 @@
 }
 
 .content {
-	padding-top: 110px;
+	padding-top: 120px;
 	padding-bottom: 200px;
 	
 	.home & {
-		padding-top: 0px;
+		padding-top: 20px;
 	}
 	
 	@media (max-width:768px) {
 		padding-bottom: 300px;
+		padding-top: 60px;
+		
+		.home & {
+			padding-top: 0px;
+		}
+
 	}
 	@media (min-width:769px) and (max-width:991px) {
 		padding-bottom: 250px;

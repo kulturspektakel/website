@@ -37,7 +37,7 @@
 	?>
 </head>
 
-<body class="<?= str_replace(" / "," ",$_SERVER['REQUEST_URI']) ?><? if ($_SERVER['REQUEST_URI']=="/ ") echo "home "; ?>">
+<body class="<?= str_replace("/"," ",$_SERVER['REQUEST_URI']) ?><? if ($_SERVER['REQUEST_URI']=="/") echo "home "; ?>">
 	<div class="wrapper">
 		<header class="hero" role="banner">
 			<a class="nav-logo" href="<?php echo url() ?>">
