@@ -1,0 +1,61 @@
+.mehr {
+	
+	h1, h2 {
+		text-align: center;
+	}
+	
+	h2 {
+		font-family: 'nexalight';
+		font-size: 26px;
+		margin-bottom: 50px;
+	}
+	
+}
+.more-event {
+	background-color: #eee;
+	margin: 50px 0;
+	padding-bottom: 10px;
+	position: relative;
+	
+	.col-photo {
+		display: block;
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		left: 50%;
+		height: 100%;
+		background-position: center;
+		-webkit-background-size: cover;
+		-moz-background-size: cover;
+		-o-background-size: cover;
+		background-size: cover;
+
+	}
+	
+	&.odd {
+		.col-info {margin-left: 50%;}
+		.col-photo {left: 0;}
+	}
+	
+	@media (max-width:768px) {
+		&.odd {
+			.col-info {margin-left: 0%;}
+		}
+	}
+	
+	.col-info {
+	
+		h2 {
+			margin-bottom: 0;
+			text-align: left;
+			font-family: 'nexabold';
+		}
+	
+		.date {
+			font-family: 'nexalight';
+			text-transform: uppercase;
+			font-size: 18px;
+			margin-bottom: 6px;
+		}
+	}
+}

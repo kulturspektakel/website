@@ -4,27 +4,23 @@
 			<div class="row">
 				<div class="col-sm-6 col-sm-push-6 footer-icons">
 					<div class="icons-right">
-						<?= kirbytext($site->sociallinks()) ?>
+						<?=k irbytext($site->sociallinks()) ?>
 					</div>
 				</div>
 				<div class="col-sm-6 col-sm-pull-6 footer-infos">
-					<?php //echo kirbytext($site->copyright()) ?>
 					<img src="/assets/img/logo.svg" class="hidden-xs" />
 					<h3>Kulturspektakel Gauting e.V.</h3>
 					<p>
-						<?= kirbytext($site->infotext()) ?>
+						<?=k irbytext($site->infotext()) ?>
 					</p>
 					<div class="links">
-						<?= kirbytext($site->footerlinks()) ?>
+						<?=k irbytext($site->footerlinks()) ?>
 					</div>
 				</div>
-
 			</div>
-				
-				
-			
 		</div>
 	</footer>
-
+</div>
 </body>
+
 </html>

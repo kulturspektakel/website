@@ -35,26 +35,26 @@
 		'/assets/js/domscript.js',
 	));
 	?>
-
 </head>
-<body class="<?= str_replace("/"," ",$_SERVER['REQUEST_URI']) ?><? if ($_SERVER['REQUEST_URI']=="/") echo "home"; ?>">
 
-	<header class="hero" role="banner">
-		<a class="nav-logo" href="<?php echo url() ?>"> 
-			<img src="<?php echo url('assets/img/logo.svg') ?>" />
-		</a>
-		<a class="mobile-nav">
-			<span class="line line-1"></span>
-			<span class="line line-2"></span>
-			<span class="line line-3"></span>
-		</a>
-		<div class="container">
-			<a class="branding" href="<?php echo url() ?>" id="logo" oncontextmenu="return false">
-				<img src="<?php echo url('assets/img/logo-textright-white.svg') ?>" alt="<?php echo html($site->title()) ?>" />
+<body class="<?= str_replace(" / "," ",$_SERVER['REQUEST_URI']) ?><? if ($_SERVER['REQUEST_URI']=="/ ") echo "home "; ?>">
+	<div class="wrapper">
+		<header class="hero" role="banner">
+			<a class="nav-logo" href="<?php echo url() ?>">
+				<img src="<?php echo url('assets/img/logo.svg') ?>" />
 			</a>
-			<h2><?=$site->eventdate() ?></h2>
-			<?php snippet('menu') ?>
-		</div>
-	</header>
-	<main class="content" role="main">
-	
+			<a class="mobile-nav">
+				<span class="line line-1"></span>
+				<span class="line line-2"></span>
+				<span class="line line-3"></span>
+			</a>
+			<div class="container">
+				<a class="branding" href="<?php echo url() ?>" id="logo" oncontextmenu="return false">
+					<img src="<?php echo url('assets/img/logo-textright-white.svg') ?>" alt="<?php echo html($site->title()) ?>" />
+				</a>
+				<h2>
+					<?=$site->eventdate() ?></h2>
+				<?php snippet( 'menu') ?>
+			</div>
+		</header>
+		<main class="content" role="main">

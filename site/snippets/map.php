@@ -1,3 +1,1 @@
-
-<section id="maps">
-</section>
+<section id="maps"></section>

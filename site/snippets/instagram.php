@@ -1,3 +1,1 @@
-
-<section id="instafeed">
-</section>
+<section id="instafeed"></section>

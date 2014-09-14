@@ -1,9 +1,9 @@
-<?php snippet('header') ?>
+<?php snippet( 'header') ?>
 
-	<main class="content" role="main">
-		<section class="container">
-			<?= snippet('album',array('album' => $page)) ?>
-		</section>
-	</main>
+<main class="content" role="main">
+	<section class="container">
+		<?=s nippet( 'album',array( 'album'=>$page)) ?>
+	</section>
+</main>
 
-<?php snippet('footer') ?>
+<?php snippet( 'footer') ?>
