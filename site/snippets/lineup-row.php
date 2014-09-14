@@ -14,22 +14,22 @@
 				<div class="band-info">
 					<h3>
 						<span class="light">
-							<?=$ band->stagetime->time ?>
+							<?=$band->stagetime->time ?>
 						</span>
-						<?=$ band->title() ?>
+						<?=$band->title() ?>
 					</h3>
 					<div class="band-stage <?= $band->stagetime->stage ?>">
 						<div class="band-stage-name" data-toggle="tooltip" data-placement="right" title="<?= stagenames($band->stagetime->stage) ?>">
-							<?=$ band->stagetime->stage ?>
+							<?=$band->stagetime->stage ?>
 						</div>
 						<div class="band-stage-close">
 							<i class="fa fa-chevron-up"></i>
 						</div>
 					</div>
 					<div class="band-genre">
-						<?=$ band->genre() ?></div>
+						<?=$band->genre() ?></div>
 					<div class="band-description">
-						<?=k irbytext($band->description()) ?>
+						<?=kirbytext($band->description()) ?>
 					</div>
 				</div>
 			</a>
