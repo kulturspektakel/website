@@ -1,18 +1,12 @@
 <?php if(!defined('KIRBY')) exit ?>
 
 title: Lineup
-pages: band
+pages: lineup-year
 files: false
 fields:
   title:
-    label: Title
+    label: Jahr
     type:  text
-  bookinginfo:
-    label: Booking Information
-    type:  textarea
   nocontent:
-    label: Keine Band gefunden
+    label: Fehlermeldung wenn keine Band vorhanden
     type:  textarea
-  years:
-    label: angezeigte Jahre (kommagetrennt)
-    type: tags

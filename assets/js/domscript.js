@@ -34,36 +34,21 @@ function init() {
 	var stageSelector = isMobile ? $( '.stageSelector-mobile' ) : $( '.stageSelector input' );
 	var daySelector   = isMobile ? $( '.daySelector-mobile' )   : false;
 	
-	if ( window.location.hash.length > 1 ) {
-		var option = window.location.hash.substring( 1 );
-		if (yearSelector.find('option[value=' + option + ']').length == 0) {
-			yearSelector.append('<option value="' + option + '">' + option + '</option>');
-		}
-		yearSelector.val( option );
-	}
-	
 	$('.selectpicker').selectpicker();
 	
 	yearSelector.on( 'change' , function() {
-		location.hash = yearSelector.val();
-	} );
-	$( window ).bind( 'hashchange', function() {
-		if ( window.location.hash.length > 1 ) {
-			yearSelector.selectpicker( 'val', location.hash.substring( 1 ) );
-			applyLineupFilter(yearSelector, stageSelector, daySelector);
-		}
-	} );
-	$( window ).trigger( 'hashchange' );
+		document.location.href = yearSelector.val();
+	});
 	
 	stageSelector.change(function () {
 		$( '.stageSelector label' ).removeClass('active');
 		$( this ).parent('label').addClass('active');
-		applyLineupFilter(yearSelector, stageSelector, daySelector);
+		applyLineupFilter(stageSelector, daySelector);
 	});
 	
 	if (daySelector) {
 		daySelector.change(function () {
-			applyLineupFilter(yearSelector, stageSelector, daySelector);
+			applyLineupFilter(stageSelector, daySelector);
 		});
 	}
 	
@@ -130,7 +115,7 @@ function init() {
 	} );
 }
 
-function applyLineupFilter(yearSelector, stageSelector, daySelector) {
+function applyLineupFilter(stageSelector, daySelector) {
 	$( '.bandlist li' ).hide();
 	if (daySelector) {
 		if (daySelector.val() !== "") {
@@ -145,9 +130,10 @@ function applyLineupFilter(yearSelector, stageSelector, daySelector) {
 	if ( typeof stageSelectorValue === "undefined" ) {
 		stageSelectorValue = stageSelector.val();
 	}
-	stageSelector = (stageSelectorValue !== "") ? '[data-stage=' + stageSelectorValue + ']' : '';
 	
-	$( '.bandlist ' + stageSelector + '[data-year=' + yearSelector.val() + ']' ).show().removeClass( 'hidden' );
+	stageSelector = (stageSelectorValue !== "") ? '[data-stage=' + stageSelectorValue + ']' : '';
+	console.log(stageSelector);
+	$( '.bandlist li' + stageSelector ).show();
 	noBandsVisible();
 }
 
