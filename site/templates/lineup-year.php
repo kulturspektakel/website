@@ -92,7 +92,7 @@ if ($page->visibility()=="false" && !$_COOKIE['key']) {
 		<div class="col-sm-12">
 			<div class="nocontent-box">
 				<i class="fa fa-ban"></i>
-				<?php echo kirbytext($page->nocontent()) ?>
+				<?php echo kirbytext($page->parent()->nocontent()) ?>
 			</div>
 		</div>
 	</div>

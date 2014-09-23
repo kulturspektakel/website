@@ -8,22 +8,60 @@
 	.col-xs-4 {
 		padding-left: 3px;
 		padding-right: 3px;
+		margin-bottom: 6px;
+		
+		img {
+			width: 100%;
+		}
 	}
 	
-	a {
-		background: #eee;
+	
+	a.square-box{
 		display: block;
+		position: relative;
 		width: 100%;
-		height: 0;
-		padding-bottom: 100%;
-		text-align: center;
+		overflow: hidden;
+		background-color: #eee;
 		color: inherit;
+		
+		&:before{
+			content: "";
+			display: block;
+			padding-top: 100%;
+		}
+		
+		&:hover {
+			background-color: #e5e5e5;
+		}
+		
+		.square-content{
+			position:  absolute;
+			top: 0;
+			left: 0;
+			bottom: 0;
+			right: 0;
+			
+			div {
+			   display: table;
+			   width: 100%;
+			   height: 100%;
+			}
+			span {
+				display: table-cell;
+				text-align: center;
+				vertical-align: middle;
+				
+				@media (min-width:1200px), (max-width:768px) {
+					font-size: 40px;
+				}
+				
+				i {
+					text-align: center;
+					margin: auto;
+				}
+			}
+		}
 	}
-	
-	&:hover {
-		background-color: #e5e5e5;
-	}
-
 }
 
 
@@ -50,23 +88,7 @@
 	&.DJ {border-top-color: $DJcolor;}
 }
 
-
-.past-events {
-	list-style: none;
-	padding: 0;
-	margin: 0;
-	
-	li {
-		margin: 0;
-		padding: 5px 8px;
-		background: #eee;
-		border-left: 2px #eee solid;
-		margin-bottom: 6px;
-		
-		.year {
-			font-family: 'nexabold';
-			text-transform: uppercase;
-			font-size: 20px;
-		}
-	}
+.band-photo {
+	width: 100%;
+	margin-bottom: 10px;
 }

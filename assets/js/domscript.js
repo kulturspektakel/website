@@ -53,6 +53,9 @@ function init() {
 	}
 	
 	$( '.bandlist a' ).click( function( e ) {
+		if ($(this).hasClass('no-content')) {
+			return false;
+		}
 		if ( !$( this ).parents( 'li' ).hasClass( 'active' ) ) {
 			e.preventDefault();
 			$( this ).parents( 'li' ).addClass( 'active' );

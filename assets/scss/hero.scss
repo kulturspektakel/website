@@ -12,7 +12,7 @@
 }
 
 .hero {
-	background: url('../img/hero2.jpg') no-repeat center center; 
+	background: url('../img/hero.jpg') no-repeat center center; 
 	-webkit-background-size: cover;
 	-moz-background-size: cover;
 	-o-background-size: cover;
@@ -97,17 +97,12 @@
 					}
 					
 					&.active {
-						background-image: url('../img/menu-active.png');
+						background-image: url('../img/menu-active.svg');
 						background-repeat: no-repeat;
 						background-position: center bottom;
 						background-size: 5px 5px;
 					}
 					
-					@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) { 
-						&.active {
-							background-image: url('../img/menu-active@2x.png');
-						}
-					}
 				}
 			}
 		}

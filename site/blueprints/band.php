@@ -11,6 +11,7 @@ fields:
     label: Tag
     type: select
     options:
+      Tag: -
       Freitag: Freitag
       Samstag: Samstag
       Sonntag: Sonntag
@@ -31,10 +32,14 @@ fields:
       A: Aula
       DJ: DJ-Eck
     required: true
+    default: GB
     width: 1/2
   genre:
     label: Genre
     type:  text
+  shortdescription:
+    label: Kurzbeschreibung
+    type:  textarea
   description:
     label: Beschreibung
     type:  textarea

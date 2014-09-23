@@ -8,6 +8,11 @@
 	<meta name="description" content="<?php echo html($site->description()) ?>" />
 	<meta name="viewport" content="width=device-width">
 	
+	<link rel="shortcut icon" href="/assets/img/logo.png"> 
+	<link rel="apple-itouch-icon" href="/assets/img/logo.png"> 
+	<meta property="og:title" content="<?php if ($page->isHomepage()) {echo $site->title();} else {echo $page->title();} ?>" /> 
+	<meta property="og:image" content="/assets/img/logo.png" /> 
+	
 	<?php
 	echo css(array(
 		'http://fonts.googleapis.com/css?family=Lato:300,700,300italic',

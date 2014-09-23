@@ -81,11 +81,18 @@
 			
 			a {
 				color: inherit;
+				cursor: -webkit-zoom-in;
+				cursor: zoom-in;
+				
+				&:hover {
+					text-decoration: none;
+				}
+				
+				&.no-content {
+					cursor: default;
+				}
 			}
 			
-			a:hover {
-				text-decoration: none;
-			}
 			
 			h3 {
 				margin: 3px 0 1px;
@@ -99,11 +106,23 @@
 			}
 			
 			&.active {
+				a {
+					cursor: pointer;
+				}
+			
+				h3 {
+					padding-right: 0px;
+				}
+			
 				.band-image, .band-description, .band-stage-close {
 					display: block;
 				}
 				.band-stage-name {
 					display: none;
+				}
+				.band-stage-close {
+					cursor: -webkit-zoom-out;
+					cursor: zoom-out;
 				}
 			}
 		}
