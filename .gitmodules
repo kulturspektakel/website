@@ -2,3 +2,6 @@
 	path = panel
 	url = https://github.com/getkirby/panel
 
+[submodule "kirby"]
+	path = kirby
+	url = git@github.com:getkirby/kirby.git
