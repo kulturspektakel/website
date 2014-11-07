@@ -35,7 +35,6 @@
 		'/bower_components/sticky/jquery.sticky.js',
 		'/bower_components/fastclick/lib/fastclick.js',
 		'http://maps.google.com/maps/api/js?sensor=true',
-		'/bower_components/gmaps/gmaps.js',
 		'/assets/js/instafeed.js',
 		'/assets/js/domscript.js',
 	));
@@ -55,7 +54,7 @@
 			</a>
 			<div class="container">
 				<a class="branding" href="<?php echo url() ?>" id="logo" oncontextmenu="return false">
-					<img src="<?php echo url('assets/img/logo-textright-white.svg') ?>" alt="<?php echo html($site->title()) ?>" />
+					<img src="<?php echo url('assets/img/logo-text-right-white.svg') ?>" alt="<?php echo html($site->title()) ?>" />
 				</a>
 				<h2>
 					<?=$site->eventdate() ?></h2>

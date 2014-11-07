@@ -4,35 +4,50 @@
 	<h2>Logo</h2>
 	<div class="row logos">
 		<div class="col-sm-4">
-			<img src="/assets/img/logo.svg" />Quadrat in Kulturspektakel Rot, mit weißem K
+			<div class="logo-download">
+				<div href="<?=$page->website() ?>" target="_blank" class="square-box">
+					<div class='square-content'><div><span><img src="/content/<?=$page ?>/logo.svg" /></span></div></div>
+				</div>
+			</div>
+			<strong>Logo "Rotes K"</strong>
 			<p>
-				<a class="btn btn-default" href="" target="_blank">
+				<a class="btn btn-default" download="logo.svg" href="/content/<?=$page ?>/logo.svg" target="_blank">
 					<i class="fa fa-download"></i> Download SVG</a>
-				<a class="btn btn-default" href="" target="_blank">
+				<a class="btn btn-default" download="logo.pdf" href="/content/<?=$page ?>/logo.pdf" target="_blank">
 					<i class="fa fa-download"></i> Download PDF</a>
-				<a class="btn btn-default" href="" target="_blank">
+				<a class="btn btn-default" download="logo.png" href="/content/<?=$page ?>/logo.png" target="_blank">
 					<i class="fa fa-download"></i> Download PNG</a>
 			</p>
 		</div>
 		<div class="col-sm-4">
-			<img src="/assets/img/logo-textunder.svg" />Textmarkte unter Logo
+			<div class="logo-download">
+				<div href="<?=$page->website() ?>" target="_blank" class="square-box">
+					<div class='square-content'><div><span><img src="/content/<?=$page ?>/logo-text-below-black.svg" /></span></div></div>
+				</div>
+			</div>
+			<strong>Textmarkte unter Logo</strong>
 			<p>
-				<a class="btn btn-default" href="" target="_blank">
+				<a class="btn btn-default" download="logo-text-below-black.svg" href="/content/<?=$page ?>/logo-text-below-black.svg" target="_blank">
 					<i class="fa fa-download"></i> Download SVG</a>
-				<a class="btn btn-default" href="" target="_blank">
+				<a class="btn btn-default" download="logo-text-below-black.pdf" href="/content/<?=$page ?>/logo-text-below-black.pdf" target="_blank">
 					<i class="fa fa-download"></i> Download PDF</a>
-				<a class="btn btn-default" href="" target="_blank">
+				<a class="btn btn-default" download="logo-text-below-black.png" href="/content/<?=$page ?>/logo-text-below-black.png" target="_blank">
 					<i class="fa fa-download"></i> Download PNG</a>
 			</p>
 		</div>
 		<div class="col-sm-4">
-			<img src="/assets/img/logo-textright.svg" />Textmarke neben Logo
+			<div class="logo-download">
+				<div href="<?=$page->website() ?>" target="_blank" class="square-box">
+					<div class='square-content'><div><span><img src="/content/<?=$page ?>/logo-text-right-black.svg" style="padding-top: 30%"/></span></div></div>
+				</div>
+			</div>
+			<strong>Textmarke neben Logo</strong>
 			<p>
-				<a class="btn btn-default" href="" target="_blank">
+				<a class="btn btn-default" download="logo-text-right-black.svg" href="/content/<?=$page ?>/logo-text-right-black.svg" target="_blank">
 					<i class="fa fa-download"></i> Download SVG</a>
-				<a class="btn btn-default" href="" target="_blank">
+				<a class="btn btn-default" download="logo-text-right-black.pdf" href="/content/<?=$page ?>/logo-text-right-black.pdf" target="_blank">
 					<i class="fa fa-download"></i> Download PDF</a>
-				<a class="btn btn-default" href="" target="_blank">
+				<a class="btn btn-default" download="logo-text-right-black.png" href="/content/<?=$page ?>/logo-text-right-black.png" target="_blank">
 					<i class="fa fa-download"></i> Download PNG</a>
 			</p>
 		</div>
@@ -134,7 +149,7 @@
 			<span class="font-preview latobold">Lato bold</span>
 			<br />Verwendet für Fließtext. Passend zum Medium, üblicherweise im <em>light</em>-Schnitt.
 		</p>
-		<a class="btn btn-default" href="">Download Fonts</a>
+		<a class="btn btn-default" download="/content/<?=$page ?>/fonts.zip" download="fonts.zip" href="">Download Fonts</a>
 	</div>
 </section>
 

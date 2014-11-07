@@ -84,9 +84,9 @@ if ($page->visibility()=="false" && !$_COOKIE['key']) {
 		</div>
 	</div>
 	<div class="row">
-		<?php snippet( 'lineup-row', array('tag'=>"Freitag", 'bands' => $page->children()->filterBy("day","Freitag")->sortBy("time"))) ?>
-		<?php snippet( 'lineup-row', array('tag'=>"Samstag", 'bands' => $page->children()->filterBy("day","Samstag")->sortBy("time"))) ?>
-		<?php snippet( 'lineup-row', array('tag'=>"Sonntag", 'bands' => $page->children()->filterBy("day","Sonntag")->sortBy("time"))) ?>
+		<?php snippet( 'lineup-row', array('tag'=>"Freitag", 'bands' => $page->children()->filterBy("day","Freitag")->sortBy("time","asc"))) ?>
+		<?php snippet( 'lineup-row', array('tag'=>"Samstag", 'bands' => $page->children()->filterBy("day","Samstag")->sortBy("time","asc"))) ?>
+		<?php snippet( 'lineup-row', array('tag'=>"Sonntag", 'bands' => $page->children()->filterBy("day","Sonntag")->sortBy("time","asc"))) ?>
 	</div>
 	<div class="row nocontent">
 		<div class="col-sm-12">

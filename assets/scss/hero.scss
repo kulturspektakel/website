@@ -101,8 +101,11 @@
 						background-repeat: no-repeat;
 						background-position: center bottom;
 						background-size: 5px 5px;
+						
+						.no-svg & {
+							background-image: url('../img/menu-active.png');
+						}
 					}
-					
 				}
 			}
 		}

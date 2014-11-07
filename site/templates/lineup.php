@@ -1,3 +1,3 @@
 <?php
-	go($page->children()->filterBy('visibility','true')->sortBy('title')->first());
+	go($page->children()->filterBy('visibility','true')->sortBy('title', 'desc')->first());
 ?>

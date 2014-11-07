@@ -64,6 +64,10 @@
 		left: 0;
 		right: 0;
 		bottom: 0;
+		
+		.no-svg & {
+			background-image: url('../img/icon-plus.png');
+		}
 	}
 	
 	.more {

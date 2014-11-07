@@ -1,12 +1,9 @@
 <?php if(!defined('KIRBY')) exit ?>
 
-title: Programm
-pages: Band
-files: true
+title: Angebot
+pages: subpage
+files: false
 fields:
   title:
     label: Title
     type:  text
-  text:
-    label: Text
-    type:  textarea
