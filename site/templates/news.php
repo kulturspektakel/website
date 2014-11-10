@@ -3,7 +3,7 @@
 <section class="container news-container news-container-single" role="main">
 	<div class="news">
 		<hgroup>
-			<? snippet('date', array('date' => $page->date())) ?>
+			<?php snippet('date', array('date' => $page->date())) ?>
 			<h1>
 				<?php echo html($page->title()) ?>
 			</h1>

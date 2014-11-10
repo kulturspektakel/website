@@ -19,7 +19,7 @@
 			</div>
 		</div>
 		<div class="col-sm-8">
-			<? if ($page->hasImages()) {
+			<?php if ($page->hasImages()) {
 				echo '<img class="band-photo" src="'.$page->images()->first()->url().'" />';
 			} ?>
 			<?
@@ -46,41 +46,41 @@
 				</div>
 			</div>
 			<div class="row band-socialmedia">
-				<? if(strlen($page->website())>0) { ?>
+				<?php if(strlen($page->website())>0) { ?>
 				<div class="col-xs-4">
 					<a href="<?=$page->website() ?>" target="_blank" class="square-box">
 						<div class='square-content'><div><span><i class="fa fa-globe"></i></span></div></div>
 					</a>
 				</div>
-				<? } ?>
-				<? if(strlen($page->facebook())>0) { ?>
+				<?php } ?>
+				<?php if(strlen($page->facebook())>0) { ?>
 				<div class="col-xs-4">
 					<a href="<?=$page->facebook() ?>" target="_blank" class="square-box">
 						<div class='square-content'><div><span><i class="fa fa-facebook"></i></span></div></div>
 					</a>
 				</div>
-				<? } ?>
-				<? if(strlen($page->youtube())>0) { ?>
+				<?php } ?>
+				<?php if(strlen($page->youtube())>0) { ?>
 				<div class="col-xs-4">
 					<a href="<?=$page->youtube() ?>" target="_blank" class="square-box">
 						<div class='square-content'><div><span><i class="fa fa-youtube"></i></span></div></div>
 					</a>
 				</div>
-				<? } ?>
-				<? if(strlen($page->soundcloud())>0) { ?>
+				<?php } ?>
+				<?php if(strlen($page->soundcloud())>0) { ?>
 				<div class="col-xs-4">
 					<a href="<?=$page->soundcloud() ?>" target="_blank" class="square-box">
 						<div class='square-content'><div><span><i class="fa fa-soundcloud"></i></span></div></div>
 					</a>
 				</div>
-				<? } ?>
-				<? if(strlen($page->twitter())>0) { ?>
+				<?php } ?>
+				<?php if(strlen($page->twitter())>0) { ?>
 				<div class="col-xs-4">
 					<a href="<?=$page->twitter() ?>" target="_blank" class="square-box">
 						<div class='square-content'><div><span><i class="fa fa-twitter"></i></span></div></div>
 					</a>
 				</div>
-				<? } ?>
+				<?php } ?>
 			</div>
 
 		</div>

@@ -7,7 +7,7 @@
 			<?php foreach($page->children()->sortBy('date', 'desc')->limit(5) as $p) { ?>
 			<li>
 				<hgroup>
-					<? snippet('date',array('date' => $p->date())) ?>
+					<?php snippet('date',array('date' => $p->date())) ?>
 					<h2>
 						<a href="<?= $p->url() ?>">
 							<?=html($p->title()) ?>

@@ -3,9 +3,9 @@
 		<?=$tag ?>
 	</h2>
 	<ul class="bandlist">
-		<? foreach ($bands as $band) { ?>
+		<?php foreach ($bands as $band) { ?>
 		<li data-stage="<?= $band->stage() ?>">
-			<a href="<?= $band->url() ?>" class="<? if (strlen($band->shortdescription())==0 && !$band->hasImages()) {echo "no-content";}?>">
+			<a href="<?= $band->url() ?>" class="<?php if (strlen($band->shortdescription())==0 && !$band->hasImages()) {echo "no-content";}?>">
 				<?php if($band->hasImages()): ?>
 				<div class="band-image">
 					<img data-src="<?= $band->images()->first()->url() ?>" />
@@ -39,6 +39,6 @@
 				</div>
 			</a>
 		</li>
-		<? } ?>
+		<?php } ?>
 	</ul>
 </div>

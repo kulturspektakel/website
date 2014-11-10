@@ -1,6 +1,6 @@
-<div class="row more-event <? if ($i%2==1) {echo " odd ";} ?>">
+<div class="row more-event <?php if ($i%2==1) {echo " odd ";} ?>">
 
-	<a class="col-sm-6 col-photo hidden-xs" style="<? if ($p->hasImages()) echo " background-image:url( '".$p->images()->first()->url()."') "; ?>"></a>
+	<a class="col-sm-6 col-photo hidden-xs" style="<?php if ($p->hasImages()) echo " background-image:url( '".$p->images()->first()->url()."') "; ?>"></a>
 
 	<div class="col-sm-6 col-info">
 		<h2>

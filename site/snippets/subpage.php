@@ -10,10 +10,10 @@
 			if (!$page->col4()->empty()) array_push($cols, $page->col4());
 			
 			foreach ($cols as $col) { ?>
-			<div class="col-sm-<?= 12/count($cols) ?> <? if(count($cols)==4) echo "col-xs-6"; ?>">
-			<? echo kirbytext($col); ?>
+			<div class="col-sm-<?= 12/count($cols) ?> <?php if(count($cols)==4) echo "col-xs-6"; ?>">
+			<?php echo kirbytext($col); ?>
 			</div>
-		<? } ?>
+		<?php } ?>
 	</div>
 	<?php echo kirbytext($page->outro()) ?>
 </section>
