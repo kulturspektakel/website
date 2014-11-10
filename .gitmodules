@@ -4,4 +4,4 @@
 
 [submodule "kirby"]
 	path = kirby
-	url = git@github.com:getkirby/kirby.git
+	url = https://github.com/getkirby/kirby.git
