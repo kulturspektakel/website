@@ -21,6 +21,7 @@ fields:
     label: Uhrzeit
     type: time
     required: true
+    interval: 30
     width: 1/4
   stage:
     label: Bühne
