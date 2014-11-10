@@ -6,6 +6,6 @@ fields:
   title:
     label: Titel
     type: text
-  datum:
+  date:
     label: Datum
     type: date

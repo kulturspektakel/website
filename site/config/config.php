@@ -43,3 +43,38 @@ function stagenames($shorthand) {
 	);
 	return $name[$shorthand];
 }
+
+c::set('routes', array(
+	array(
+		'pattern' => 'archiv',
+		'action'  => function() {
+			$data = array(
+			  'archive' => true
+			);
+			
+			return array('home', $data);
+		}
+	),
+	array(
+		'pattern' => 'search',
+		'action'  => function() {
+			echo page('lineup')->search(get('q'))->children;
+			return response::json(page('lineup')->search(kirby()->request()->query()->q()));
+		}
+	),
+	array(
+		'pattern' => '(:any)',
+		'action'  => function($uid) {
+			$page = page($uid);
+			if(!$page) $page = page('home/' . $uid);
+			if(!$page) $page = site()->errorPage();
+			return site()->visit($page);
+		}
+	),
+	array(
+		'pattern' => 'home/(:any)',
+		'action'  => function($uid) {
+			go($uid);
+		}
+	)
+));

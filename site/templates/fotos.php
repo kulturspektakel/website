@@ -2,7 +2,7 @@
 
 <section class="container">
 	<? $i = 0;?>
-	<? foreach($page->children() as $album) { ?>
+	<? foreach($page->children()->sortBy('date', 'desc') as $album) { ?>
 		<? if ($album->template()=="album") { ?>
 			<?= snippet('album',array('album' => $album, 'number' => $i)) ?>
 		<? } elseif ($album->template()=="video") { ?>

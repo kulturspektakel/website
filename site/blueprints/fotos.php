@@ -6,3 +6,6 @@ pages:
     - album
     - video
 files: false
+fields:
+  title:
+    type: text

@@ -8,19 +8,26 @@ fields:
   title:
     label: Title
     type:  text
-  top:
+  intro:
     label: Text (oben)
     type:  textarea
-  columns:
-    label: Spalten
-    type: structure
-    entry: >
-      {{columntext}}
-    fields:
-      columntext:
-        label: Spalte
-        type: textarea
-  bottom:
-    label: Text (uten)
+  col1:
+    label: Spalte 1
+    type: textarea
+    width: 1/2
+  col2:
+    label: Spalte 2
+    type: textarea
+    width: 1/2
+  col3:
+    label: Spalte 3
+    type: textarea
+    width: 1/2
+  col4:
+    label: Spalte 4
+    type: textarea
+    width: 1/2
+  outro:
+    label: Text (unten)
     type:  textarea
   

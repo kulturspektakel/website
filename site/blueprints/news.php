@@ -7,7 +7,7 @@ fields:
   title:
     label: Title
     type:  text
-  datum:
+  date:
     label: Datum
     type: date
   text:

@@ -4,7 +4,7 @@
 
 	<meta charset="utf-8" />
 	
-	<title><?php echo html($site->title()) ?> | <?php echo html($page->title()) ?></title>
+	<title><?php echo html($site->title()) ?><?php if (!$page->isHomepage()) {echo " | ".html($page->title());} ?></title>
 	<meta name="description" content="<?php echo html($site->description()) ?>" />
 	<meta name="viewport" content="width=device-width">
 	
@@ -29,6 +29,7 @@
 		'/bower_components/jquery/dist/jquery.min.js',
 		'/bower_components/lodash/dist/lodash.min.js',
 		'/bower_components/bootstrap/dist/js/bootstrap.min.js',
+		'/bower_components/typeahead.js/dist/typeahead.jquery.min.js',
 		'/bower_components/bootstrap-select/dist/js/bootstrap-select.min.js',
 		'/bower_components/unveil/jquery.unveil.min.js',
 		'/bower_components/swipebox/src/js/jquery.swipebox.js',

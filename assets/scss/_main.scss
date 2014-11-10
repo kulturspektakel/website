@@ -101,7 +101,32 @@ img {
 	max-width: 100%;
 }
 
-
+.subpage {
+	margin-bottom: 60px;
+	border-bottom: 1px #eee solid;
+	padding-bottom: 80px;
+	
+	&:last-child {
+		border: 0;
+		margin-bottom: 0
+	}
+	
+	h2 {
+		text-align: center
+	}
+	
+	.row {
+		margin-top: 20px;
+		margin-bottom: 20px;
+		text-align: center;
+		
+		& > div:not(.col-sm-3) {
+			padding-left: 30px;
+			padding-right: 30px;
+			
+		}
+	}
+}
 
 @import 'hero';
 @import 'footer';
@@ -110,7 +135,7 @@ img {
 @import 'angebot';
 @import 'band';
 @import 'fotos';
-@import 'mehr';
+@import 'events';
 @import 'panels';
 @import 'brand-assets';
 

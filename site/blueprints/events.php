@@ -1,6 +1,6 @@
 <?php if(!defined('KIRBY')) exit ?>
 
-title: Mehr
+title: Events
 pages: event
 files: false
 fields:

@@ -75,26 +75,23 @@ function init() {
 	noBandsVisible();
 	$( '.bandlist .band-image img' ).unveil();
 	if (!isMobile) $( '.bandlist .band-stage-name' ).tooltip();
-
+	
+	$('#bandsearch').typeahead({
+		minLength: 3,
+		highlight: true,
+	},{
+		source: function (query, cb) {
+			cb([]);
+		}
+	});
 
 
 	// fotos
 	$( '.album a' ).swipebox();
 	$( '.album img' ).unveil();
-	$( '.album-title' ).sticky();
-
 
 
 	// home
-	$( '.news h2 a' ).click( function( e ) {
-		if ( !$( this ).parents( 'li' ).find( 'article' ).is( ':visible' ) ) {
-			$( '.news li article' ).slideUp( 200 );
-			$( '.news li' ).removeClass( 'active' );
-			$( this ).parents( 'li' ).find( 'article' ).slideDown( 200 );
-			$( this ).parents( 'li' ).addClass( 'active' );
-			e.preventDefault();
-		}
-	} );
 	if (isMobile) {
 		$( '.home .hero' ).sticky( {
 			topSpacing: -300
