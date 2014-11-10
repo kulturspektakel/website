@@ -22,7 +22,7 @@
 			<?php if ($page->hasImages()) {
 				echo '<img class="band-photo" src="'.$page->images()->first()->url().'" />';
 			} ?>
-			<?
+			<?php
 				if (strlen($page->description())>0) {
 					echo kirbytext($page->description());
 				} else if ($page->shortdescription()) {
