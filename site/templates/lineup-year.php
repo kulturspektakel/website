@@ -47,15 +47,12 @@ if ($page->visibility()=="false" && !$_COOKIE['key']) {
 			</select>
 		</div>
 		<div class="col-sm-12 visible-xs-block">
-			<div class="pull-left">
-				<select class="form-control selectpicker daySelector-mobile">
-					<option value="" selected="selected">alle Tage</option>
-					<option value="Freitag">Freitag</option>
-					<option value="Samstag">Samstag</option>
-					<option value="Sonntag">Sonntag</option>
-				</select>
-				<i class="fa fa-search"></i>
-			</div>
+			<select class="form-control selectpicker daySelector-mobile">
+				<option value="" selected="selected">alle Tage</option>
+				<option value="Freitag">Freitag</option>
+				<option value="Samstag">Samstag</option>
+				<option value="Sonntag">Sonntag</option>
+			</select>
 		</div>
 		<div class="col-sm-12 hidden-xs">
 			<div class="col-sm-2 stageSelector">
