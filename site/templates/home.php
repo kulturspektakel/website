@@ -1,3 +1,4 @@
+<?php $archive = false; ?>
 <?php snippet( 'header') ?>
 
 <section class="container news-container" role="main">
