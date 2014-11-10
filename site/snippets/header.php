@@ -42,7 +42,7 @@
 	?>
 </head>
 
-<body class="<?= str_replace("/"," ",$_SERVER['REQUEST_URI']) ?><? if ($_SERVER['REQUEST_URI']=="/") echo "home "; ?>">
+<body class="<?php echo str_replace("/"," ",$_SERVER['REQUEST_URI']) ?><?php if ($_SERVER['REQUEST_URI']=="/") echo "home "; ?>">
 	<div class="wrapper">
 		<header class="hero" role="banner">
 			<a class="nav-logo" href="<?php echo url() ?>">
@@ -58,7 +58,7 @@
 					<img src="<?php echo url('assets/img/logo-text-right-white.svg') ?>" alt="<?php echo html($site->title()) ?>" />
 				</a>
 				<h2>
-					<?=$site->eventdate() ?></h2>
+					<?php echo $site->eventdate(); ?></h2>
 				<?php snippet( 'menu') ?>
 			</div>
 		</header>

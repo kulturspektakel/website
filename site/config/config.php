@@ -78,3 +78,5 @@ c::set('routes', array(
 		}
 	)
 ));
+
+c::set('debug', true);

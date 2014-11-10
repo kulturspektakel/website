@@ -6,7 +6,7 @@ if ($page->visibility()=="false" && !$_COOKIE['key']) {
 }
 ?>
 <section class="container">
-	<? if (kirbytext($page->bookinginfo())) { ?>
+	<?php if (kirbytext($page->bookinginfo())) { ?>
 	<div class="row bookinginfo">
 		<div class="col-sm-12">
 			<div class="bookinginfo-box">
@@ -14,7 +14,7 @@ if ($page->visibility()=="false" && !$_COOKIE['key']) {
 			</div>
 		</div>
 	</div>
-	<? } ?>
+	<?php } ?>
 	
 	<div class="row">
 		<div class="col-sm-9">
@@ -23,11 +23,11 @@ if ($page->visibility()=="false" && !$_COOKIE['key']) {
 			</h1>
 		</div>
 		<div class="col-sm-3">
-			<? $years = $page->parent()->children()->filterBy('visibility','true')->sortBy('title')->pluck('title') ?>
+			<?php $years = $page->parent()->children()->filterBy('visibility','true')->sortBy('title')->pluck('title') ?>
 			<select class="form-control selectpicker yearSelector">
-				<? foreach ($years as $year) { ?>
-					<option value="<?=$year ?>" <? if ($page->title() == $year) {echo 'selected="selected"';}?>><?=$year ?></option>
-				<? } ?>
+				<?php foreach ($years as $year) { ?>
+					<option value="<?=$year ?>" <?php if ($page->title() == $year) {echo 'selected="selected"';}?>><?=$year ?></option>
+				<?php } ?>
 			</select>
 			<!--i class="fa fa-search"></i-->
 		</div>
