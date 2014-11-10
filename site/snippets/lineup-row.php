@@ -29,7 +29,7 @@
 					<div class="band-genre">
 						<?=$band->genre() ?></div>
 					<div class="band-description">
-						<?
+						<?php
 						if (strlen($band->shortdescription())>0) {
 							echo kirbytext($band->shortdescription());
 						} else {
