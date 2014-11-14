@@ -77,12 +77,21 @@ function init() {
 	if (!isMobile) $( '.bandlist .band-stage-name' ).tooltip();
 	
 	$('#bandsearch').typeahead({
-		minLength: 3,
 		highlight: true,
 	},{
+		displayKey: function (o) {
+			return o.name + ' (' + o.year + ')';
+		},
 		source: function (query, cb) {
-			cb([]);
+			$.get('/search?q=' + query, function (data) {
+				return cb(data);
+			});
 		}
+	}).bind('typeahead:selected', function(obj, selected, name) {
+		window.location = selected.url;
+	});
+	$('#q-bandsearch').click(function() {
+		$('.search').slideToggle(80);
 	});
 
 

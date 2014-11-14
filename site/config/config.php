@@ -58,8 +58,15 @@ c::set('routes', array(
 	array(
 		'pattern' => 'search',
 		'action'  => function() {
-			echo page('lineup')->search(get('q'))->children;
-			return response::json(page('lineup')->search(kirby()->request()->query()->q()));
+			$result = array();
+			foreach (page('lineup')->search(get('q'),'title') as $page) {
+				$x = array();
+				$x['name'] = (string) $page->title();
+				$x['year'] = (string) $page->parent()->title();
+				$x['url'] = (string) $page->url();
+				array_push($result,$x);
+			}
+			return response::json($result);
 		}
 	),
 	array(
