@@ -28,6 +28,9 @@
 		<ul class="news archive">
 			<?php $i=0; ?>
 			<?php foreach($page->children()->sortBy('date', 'desc') as $p) { ?>
+			<?php if ($lastyear != date('Y',$p->date())) { ?>
+				<h2><?php echo date('Y',$p->date()); ?></h2>
+			<?php } ?>
 			<li style="opacity: <?= 1-($i/$page->children()->count())*.7 ?>">
 				<hgroup>
 					<?php snippet('date',array('date' => $p->date())) ?>
@@ -39,6 +42,7 @@
 				</hgroup>
 			</li>
 			<?php $i++ ?>
+			<?php $lastyear = date('Y',$p->date())  ?>
 			<?php } ?>
 		</ul>
 	<?php } ?>
