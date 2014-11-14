@@ -86,3 +86,5 @@ c::set('routes', array(
 	)
 ));
 
+c::set('cache', true);
+
