@@ -96,5 +96,5 @@ c::set('cache.ignore', array(
   'search'
 ));
 
-c::set('debug', true);
+//c::set('debug', true);
 
