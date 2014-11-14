@@ -31,9 +31,9 @@
 					<div class="band-description">
 						<?php
 						if (strlen($band->shortdescription())>0) {
-							echo kirbytext($band->shortdescription());
+							echo cleanKirbytext($band->shortdescription());
 						} else {
-							echo kirbytext($band->description());
+							echo cleanKirbytext($band->description());
 						} ?>
 					</div>
 				</div>
