@@ -93,5 +93,5 @@ function cleanKirbytext($text, $allowedTags = '') {
 c::set('cache', true);
 
 
-c::set('debug', true);
+//c::set('debug', true);
 
