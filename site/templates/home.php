@@ -29,7 +29,7 @@
 			<?php $i=0; ?>
 			<?php foreach($page->children()->sortBy('date', 'desc') as $p) { ?>
 			<?php if ($lastyear != date('Y',$p->date())) { ?>
-				<h2><?php echo date('Y',$p->date()); ?></h2>
+				<li class="heading"><h2><?php echo date('Y',$p->date()); ?></h2></li>
 			<?php } ?>
 			<li style="opacity: <?= 1-($i/$page->children()->count())*.7 ?>">
 				<hgroup>
