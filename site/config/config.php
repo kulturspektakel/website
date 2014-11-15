@@ -32,6 +32,8 @@ of the system, please check out http://getkirby.com/docs
 
 */
 
+ini_set('memory_limit', '-1');
+
 function stagenames($shorthand) {
 	$shorthand = (string)$shorthand;
 	$name = array(
