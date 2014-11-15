@@ -1,14 +1,13 @@
 {
   "name": "swipebox",
   "main": "src/js/jquery.swipebox.js",
-  "homepage": "https://github.com/dheera/swipebox",
-  "_release": "2264a7eff2",
+  "homepage": "https://github.com/brutaldesign/swipebox",
+  "_release": "0b333c115b",
   "_resolution": {
-    "type": "branch",
-    "branch": "master",
-    "commit": "2264a7eff2fc3374904f8f0876bbab64a647ed64"
+    "type": "commit",
+    "commit": "0b333c115b69864aeb32dc090622370d5306e260"
   },
-  "_source": "git@github.com:dheera/swipebox.git",
-  "_target": "*",
-  "_originalSource": "git@github.com:dheera/swipebox.git"
+  "_source": "git@github.com:brutaldesign/swipebox.git",
+  "_target": "0b333c115b69864aeb32dc090622370d5306e260",
+  "_originalSource": "git@github.com:brutaldesign/swipebox.git"
 }

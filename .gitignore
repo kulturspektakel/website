@@ -3,6 +3,7 @@
 /site/cache
 /assets/avatars
 /thumbs/*
+!/thumbs/.gitkeep
 /content/*
 !/content/site.txt
 !/content/home
