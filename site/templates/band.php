@@ -20,7 +20,7 @@
 		</div>
 		<div class="col-sm-8">
 			<?php if ($page->hasImages()) {
-				echo '<img class="band-photo" src="'.$page->images()->first()->url().'" />';
+				echo '<img class="band-photo" src="'.thumb($page->images()->first(),array('width' => 1200))->url().'" />';
 			} ?>
 			<?php
 				if (strlen($page->description())>0) {

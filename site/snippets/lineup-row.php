@@ -8,7 +8,7 @@
 			<a href="<?= $band->url() ?>" class="<?php if (strlen($band->shortdescription())==0 && !$band->hasImages()) {echo "no-content";}?>">
 				<?php if($band->hasImages()): ?>
 				<div class="band-image">
-					<img data-src="<?= $band->images()->first()->url() ?>" />
+					<img data-src="<?= thumb($band->images()->first(),array('width' => 600))->url() ?>" />
 				</div>
 				<?php endif ?>
 				<div class="band-info">
