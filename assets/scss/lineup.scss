@@ -34,6 +34,14 @@
 		margin-bottom: 10px
 	}	
 	
+	#searchcontrol .yearSelector {
+		@media (min-width: 768px) {
+			float: right;
+			width: 200px;
+			margin-right: 12px;
+		}
+	}
+	
 	.stageSelector {
 	
 		margin: 25px 0 20px;

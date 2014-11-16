@@ -21,6 +21,8 @@ App = {
 			});
 			$('body').addClass('no-svg');
 		}
+		
+		App.map();
 	},
 	
 	lineup: function () {
@@ -106,7 +108,13 @@ App = {
 			window.location = selected.url;
 		});
 		$('#q-bandsearch').click(function() {
-			$('.search').slideToggle(80);
+			$('#searchcontrol').toggleClass('search-active');
+			if ($('#searchcontrol').hasClass('search-active')) {
+				$('.tt-input').focus();
+				$('#q-bandsearch .fa').removeClass('fa-search').addClass('fa-times');
+			} else {
+				$('#q-bandsearch .fa').removeClass('fa-times').addClass('fa-search');
+			}
 		});
 	},
 	
@@ -128,35 +136,34 @@ App = {
 				$( '.home .nav-logo' ).css( 'left', Math.min( $( document ).scrollTop() - 520, 15 ) );
 			} );
 		}
+	},
+	
+	map: function () {
+		if (!$('#maps').length) {
+			
+			return;
+		}
 		
-		/*
 		var styles = [{"featureType":"water","elementType":"geometry","stylers":[{"color":"#a2daf2"}]},{"featureType":"landscape.man_made","elementType":"geometry","stylers":[{"color":"#f7f1df"}]},{"featureType":"landscape.natural","elementType":"geometry","stylers":[{"color":"#d0e3b4"}]},{"featureType":"landscape.natural.terrain","elementType":"geometry","stylers":[{"visibility":"off"}]},{"featureType":"poi.park","elementType":"geometry","stylers":[{"color":"#bde6ab"}]},{"featureType":"poi","elementType":"labels","stylers":[{"visibility":"off"}]},{"featureType":"poi.medical","elementType":"geometry","stylers":[{"color":"#fbd3da"}]},{"featureType":"poi.business","stylers":[{"visibility":"off"}]},{"featureType":"road","elementType":"geometry.stroke","stylers":[{"visibility":"off"}]},{"featureType":"road","elementType":"labels","stylers":[{"visibility":"off"}]},{"featureType":"road.highway","elementType":"geometry.fill","stylers":[{"color":"#ffe15f"}]},{"featureType":"road.highway","elementType":"geometry.stroke","stylers":[{"color":"#efd151"}]},{"featureType":"road.arterial","elementType":"geometry.fill","stylers":[{"color":"#ffffff"}]},{"featureType":"road.local","elementType":"geometry.fill","stylers":[{"color":"black"}]},{"featureType":"transit.station.airport","elementType":"geometry.fill","stylers":[{"color":"#cfb2db"}]}];
 		var mapOptions = {
 			center: new google.maps.LatLng(48.078509, 11.375506),
 			zoom:12,
 			scrollwheel: false,
+			streetViewControl: false,
 			mapTypeControl: false,
 			zoomControl: true,
 			styles: styles,
-			zoomControlOptions: {
-				style: google.maps.ZoomControlStyle.SMALL
-			},
 			mapTypeId: google.maps.MapTypeId.ROADMAP
 		};
 		var map = new google.maps.Map(document.getElementById("maps"), mapOptions);
 		var contentString = $('#maps').html();
 		
-		var infowindow = new google.maps.InfoWindow({
-			content: contentString
-		});
 		var marker = new google.maps.Marker({
 			position: new google.maps.LatLng(48.078509, 11.375506),
 			map: map,
 			title: 'Kulturspektakel Gauting'
 		});
-		infowindow.open(map,marker);
-		*/
-	}	
+	}
 };
 
 

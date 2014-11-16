@@ -17,23 +17,23 @@ if ($page->visibility()=="false" && !$_COOKIE['key']) {
 	<?php } ?>
 	
 	<div class="row">
-		<div class="col-sm-9">
+		<div class="col-sm-7">
 			<h1>
 				Lineup <?= $page->title() ?>
 			</h1>
 		</div>
-		<div class="col-sm-3">
+		<div class="col-sm-5" id="searchcontrol">
 			<?php $years = $page->parent()->children()->filterBy('visibility','true')->sortBy('title')->pluck('title') ?>
+			<a id="q-bandsearch"><i class="fa fa-search"></i></a>
+			<input class="form-control" placeholder="Nach Bands suchen..." id="bandsearch" type="search" />
 			<select class="form-control selectpicker yearSelector">
 				<?php foreach ($years as $year) { ?>
 					<option value="<?=$year ?>" <?php if ($page->title() == $year) {echo 'selected="selected"';}?>><?=$year ?></option>
 				<?php } ?>
 			</select>
-			<a id="q-bandsearch"><i class="fa fa-search"></i></a>
 		</div>
 	</div>
 	<div class="row">
-		
 		<div class="col-sm-12 visible-xs-block">
 			<select class="form-control selectpicker stageSelector-mobile pull-left">
 				<option value="" selected="selected">alle Bühnen</option>
@@ -83,9 +83,6 @@ if ($page->visibility()=="false" && !$_COOKIE['key']) {
 					<input type="radio" value="DJ" name="stageSelector">DJ-Eck
 				</label>
 			</div>
-		</div>
-		<div class="col-sm-12 search">
-			<input name="" class="form-control" placeholder="Nach Bands suchen..." id="bandsearch" type="search" />
 		</div>
 	</div>
 	<div class="row">
