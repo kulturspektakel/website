@@ -5,8 +5,7 @@
 	<div class="row logos">
 		<div class="col-sm-4">
 			<div class="logo-download">
-				<div href="<?=$page->website() ?>" target="_blank" class="square-box">
-					<div class='square-content'><div><span><img src="/content/<?=$page ?>/logo.svg" /></span></div></div>
+				<div href="<?=$page->website() ?>" target="_blank" class="logo-box"  style="background-image: url('/content/<?=$page ?>/logo.svg')">
 				</div>
 			</div>
 			<strong>Logo "Rotes K"</strong>
@@ -21,8 +20,7 @@
 		</div>
 		<div class="col-sm-4">
 			<div class="logo-download">
-				<div href="<?=$page->website() ?>" target="_blank" class="square-box">
-					<div class='square-content'><div><span><img src="/content/<?=$page ?>/logo-text-below-black.svg" /></span></div></div>
+				<div href="<?=$page->website() ?>" target="_blank" class="logo-box" style="background-image: url('/content/<?=$page ?>/logo-text-below-black.svg')">
 				</div>
 			</div>
 			<strong>Textmarkte unter Logo</strong>
@@ -37,8 +35,7 @@
 		</div>
 		<div class="col-sm-4">
 			<div class="logo-download">
-				<div href="<?=$page->website() ?>" target="_blank" class="square-box">
-					<div class='square-content'><div><span><img src="/content/<?=$page ?>/logo-text-right-black.svg" style="padding-top: 30%"/></span></div></div>
+				<div href="<?=$page->website() ?>" target="_blank" class="logo-box" style="background-image: url('/content/<?=$page ?>/logo-text-right-black.svg')">
 				</div>
 			</div>
 			<strong>Textmarke neben Logo</strong>

@@ -65,10 +65,20 @@ c::set('routes', array(
 				$x = array();
 				$x['name'] = (string) $page->title();
 				$x['year'] = (string) $page->parent()->title();
-				$x['url'] = (string) $page->url();
+				$x['url']  = (string) $page->url();
 				array_push($result,$x);
 			}
 			return response::json($result);
+		}
+	),
+	array(
+		'pattern' => 'feed',
+		'action'  => function() {
+			echo page('home')->children()->sortBy('date', 'desc')->limit(10)->feed(array(
+				'title'       => 'Kulturspektakel Gauting',
+				'description' => 'asd',
+				'link'        => 'asd'
+			));
 		}
 	),
 	array(
@@ -98,5 +108,5 @@ c::set('cache.ignore', array(
   'search'
 ));
 
-//c::set('debug', true);
+c::set('debug', true);
 

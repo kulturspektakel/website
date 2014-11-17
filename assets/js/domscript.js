@@ -105,6 +105,7 @@ App = {
 				});
 			}
 		}).bind('typeahead:selected', function(obj, selected, name) {
+			ga('send', 'search', selected.name);
 			window.location = selected.url;
 		});
 		$('#q-bandsearch').click(function() {
@@ -120,6 +121,11 @@ App = {
 	
 	fotos: function () {
 		$( '.album a' ).swipebox();
+		$( '.album a[data-album]' ).click(function (e) {
+			e.preventDefault();
+			e.stopPropagation();
+			window.location.href = $(this).attr('data-album') + '#more';
+		});
 		$( '.album img' ).unveil();
 	},
 	

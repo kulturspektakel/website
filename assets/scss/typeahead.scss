@@ -6,10 +6,18 @@
 	margin-right: 4px;
 	position: relative;
 	z-index: 2;
+	@media (max-width: 768px) {
+		margin-right: 8px;
+		top: 1px;
+	}
 }
 
 #searchcontrol {
 	margin-top: 6px;
+	
+	@media (max-width: 768px) {
+		margin-bottom: -14px;
+	}
 	
 	&:not(.search-active) {
 		.yearSelector {
@@ -37,6 +45,11 @@ span.twitter-typeahead {
 		margin-top: 18px;
 		margin-right: -20px;
 		float: right;
+	}
+	@media (max-width: 768px) {
+		float: left;
+		width: 100%;
+		margin-top: -26px;
 	}
 }
 #searchcontrol .twitter-typeahead input {
