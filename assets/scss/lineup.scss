@@ -99,23 +99,32 @@
 			border-top: 5px #ddd solid;
 			background: #eee;
 			margin-bottom: 15px;
-			cursor: pointer;
+			cursor: default;
 			position: relative;
 			
-			a {
-				color: inherit;
-				cursor: -webkit-zoom-in;
-				cursor: zoom-in;
+			
+			&.has-content:not(.active) {
+				cursor: pointer;
 				
 				&:hover {
-					text-decoration: none;
-				}
-				
-				&.no-content {
-					cursor: default;
+					background-color: #e9e9e9;
 				}
 			}
 			
+			.more-info {
+				display: block;
+				text-align: center;
+				background-color: #ddd;
+				margin-top: 10px;
+				line-height: 35px;
+				color: inherit;
+				font-weight: 400;
+				margin-bottom: -5px;
+				
+				&:hover {
+					background-color: #d5d5d5;
+				}
+			}
 			
 			h3 {
 				margin: 3px 0 1px;
@@ -129,55 +138,17 @@
 			}
 			
 			&.active {
-				a {
-					cursor: pointer;
-				}
-			
 				.band-image, .band-description, .band-stage-close {
 					display: block;
 				}
 				.band-stage-name {
 					display: none;
 				}
-				.band-stage-close {
-					cursor: -webkit-zoom-out;
-					cursor: zoom-out;
-				}
 			}
 		}
 		
 		.band-image  {
-			position: relative;
 			display: none;
-			
-			&:after {
-				text-align: center;
-				display: block;
-				position: absolute;
-				left: 0;
-				right: 0;
-				top: 0;
-				bottom: 0;
-				background-color: rgba(255,255,255,0.5);
-				opacity: 0;
-				font-size: 40px;
-				color: inherit;
-				padding-top: 50%;
-				
-				-webkit-transition: all .3s ease;
-				-moz-transition: all .3s ease;
-				-ms-transition: all .3s ease;
-				transition: all .3s ease;
-			}
-			
-			&:hover:after {
-				opacity: 1;
-				
-				-webkit-transition: all .3s ease;
-				-moz-transition: all .3s ease;
-				-ms-transition: all .3s ease;
-				transition: all .3s ease;
-			}
 			
 			img {
 				width: 100%;
@@ -217,6 +188,7 @@
 			
 			.band-stage-close {
 				font-size: 16px;
+				cursor: pointer;
 				display: none;
 			}
 		}

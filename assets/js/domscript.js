@@ -74,20 +74,16 @@ App = {
 			});
 		}
 		
-		$( '.bandlist a' ).click( function( e ) {
-			if ($(this).hasClass('no-content')) {
-				return false;
-			}
-			if ( !$( this ).parents( 'li' ).hasClass( 'active' ) ) {
-				e.preventDefault();
-				$( this ).parents( 'li' ).addClass( 'active' );
+		$('.bandlist li.has-content').click(function() {
+			if (!$(this).hasClass('active')) {
+				$(this).addClass('active');
 			}
 		} );
-		$( '.bandlist .band-stage-close' ).click( function( e ) {
-			$( this ).parents( '.active' ).removeClass( 'active' );
-			e.preventDefault();
-			e.stopPropagation();
-		} );
+		$('.bandlist .band-stage-close').click(function() {
+			setTimeout(function() {
+				$(this).parents('.active').removeClass('active');
+			}.bind(this), 0)			
+		});
 		
 		noBandsVisible();
 		$( '.bandlist .band-image img' ).unveil();
