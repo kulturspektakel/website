@@ -21,7 +21,7 @@
 			<?php $i++ ?>
 			<?php } ?>
 		</ul>
-		<p class="archive">
+		<p class="archive-btn">
 			<a href="archiv">ältere Artikel anzeigen</a>
 		</p>
 	<?php } else { ?>
