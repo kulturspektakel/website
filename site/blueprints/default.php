@@ -2,7 +2,6 @@
 
 title: Page
 pages: subpage
-files: false
 fields:
   title:
     label: Title
