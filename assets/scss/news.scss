@@ -89,6 +89,17 @@
 	
 	.archive {
 		text-align: center;
+		background-color: #eee;
+		display: inline-block;
+		line-height: 44px;
+		padding: 0 70px;
+		border-radius: 4px;
+		color: #333;
+		font-weight: 400;
+		
+		&:hover {
+			background-color: #e5e5e5;
+		}
 	}
 }
 
