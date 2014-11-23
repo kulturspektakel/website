@@ -1,7 +1,5 @@
 <section class="container subpage <?php echo strtolower($page->title()) ?>">
-	<div class="intro">
-		<?php echo kirbytext($page->intro()) ?>
-	</div>
+	<?php echo kirbytext($page->intro()); ?>
 	<div class="row">
 		<?php 
 			$cols = array();
