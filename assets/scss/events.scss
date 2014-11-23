@@ -6,7 +6,7 @@
 	
 }
 .more-event {
-	margin: 50px 0;
+	margin: 70px 0;
 	padding-bottom: 10px;
 	position: relative;
 	
@@ -19,6 +19,10 @@
 		max-width: 100%;
 		margin-top: 0;
 		margin: auto;
+		
+		@media (min-width: 768px) and (max-width: 991px) {
+			margin-top: 30px;
+		}
 	}	
 		
 	.col-info {
@@ -27,7 +31,10 @@
 			margin-bottom: 0;
 			text-align: left;
 			font-family: 'nexabold';
-			margin-top: 60px;
+			
+			@media (min-width: 1200px) {
+				margin-top: 60px;
+			}
 		}
 	
 		.date {
