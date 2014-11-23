@@ -1,6 +1,9 @@
 .angebot .content {
-	
 	text-align: center;
+	
+	h1 {
+		margin-bottom: 60px;
+	}
 	
 	.buden {
 		margin-bottom: 30px;
@@ -9,6 +12,18 @@
 			margin-top: 30px;
 			margin-bottom: 0;
 		}
-	}	
+	}
+	
+	.intro {
+		margin: auto;
+		margin-bottom: 40px;		
+		@media (min-width: 768px) {
+			max-width: 80%;
+		}
+	}
+	
+	.low-margin-bottom {
+		margin-bottom: -50px;
+	}
 	
 }

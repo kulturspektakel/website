@@ -1,6 +1,7 @@
-<section class="container subpage">
-	<h2><?php echo kirbytext($page->title()) ?></h2>
-	<?php echo kirbytext($page->intro()) ?>
+<section class="container subpage <?php echo strtolower($page->title()) ?>">
+	<div class="intro">
+		<?php echo kirbytext($page->intro()) ?>
+	</div>
 	<div class="row">
 		<?php 
 			$cols = array();

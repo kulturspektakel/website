@@ -45,7 +45,7 @@ body {
 	position:relative;
 }
 
-h1, h2, h3, h4 {
+h1, h2, h3 {
 	font-family: 'nexabold';
 	text-transform: uppercase;
 }
@@ -58,6 +58,13 @@ h2 {
 
 h3 {
 	font-size: 17px;
+}
+
+h4 {
+	font-weight: 400;
+	font-size: 1em;
+	line-height: inherit;
+	margin-bottom: 0px;
 }
 
 * {
@@ -74,6 +81,10 @@ a:hover {
 	text-decoration: none;
 }
 
+strong {
+	font-weight: 400;
+}
+
 .light {
 	font-family: 'nexalight';
 }
@@ -82,6 +93,10 @@ a:hover {
 	text-align: center;
 }
 
+
+hr {
+	margin: 70px 0;
+}
 
 figure.video {
 	overflow:hidden;
@@ -102,9 +117,6 @@ img {
 }
 
 .subpage {
-	margin-bottom: 60px;
-	border-bottom: 1px #eee solid;
-	padding-bottom: 80px;
 	
 	&:last-child {
 		border: 0;
@@ -118,7 +130,6 @@ img {
 	.row {
 		margin-top: 20px;
 		margin-bottom: 20px;
-		text-align: center;
 		
 		& > div:not(.col-sm-3) {
 			padding-left: 30px;
@@ -135,6 +146,8 @@ img {
 .honeycomb {
 	text-align: center;
 	position: relative;
+	margin-top: 60px;
+	margin-bottom: 40px;
 	
 	&:after {
 		display: block;
