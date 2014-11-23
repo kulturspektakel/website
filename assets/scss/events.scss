@@ -6,43 +6,28 @@
 	
 }
 .more-event {
-	background-color: #eee;
 	margin: 50px 0;
 	padding-bottom: 10px;
 	position: relative;
 	
 	.col-photo {
-		display: block;
-		position: absolute;
-		top: 0;
-		bottom: 0;
-		left: 50%;
-		height: 100%;
-		background-position: center;
-		-webkit-background-size: cover;
-		-moz-background-size: cover;
-		-o-background-size: cover;
-		background-size: cover;
-
+		text-align: center;
 	}
 	
-	&.odd {
-		.col-info {margin-left: 50%;}
-		.col-photo {left: 0;}
-	}
-	
-	@media (max-width:768px) {
-		&.odd {
-			.col-info {margin-left: 0%;}
-		}
-	}
-	
+	.honeycomb {
+		width: 400px;
+		max-width: 100%;
+		margin-top: 0;
+		margin: auto;
+	}	
+		
 	.col-info {
 	
 		h2 {
 			margin-bottom: 0;
 			text-align: left;
 			font-family: 'nexabold';
+			margin-top: 60px;
 		}
 	
 		.date {

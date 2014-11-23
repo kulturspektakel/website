@@ -1,8 +1,12 @@
-<div class="row more-event <?php if ($i%2==1) {echo " odd ";} ?>">
+<div class="row more-event">
 
-	<a class="col-sm-6 col-photo hidden-xs" style="<?php if ($p->hasImages()) echo " background-image:url( '".$p->images()->first()->url()."') "; ?>"></a>
-
-	<div class="col-sm-6 col-info">
+	<div class="col-sm-6 col-photo <?php if ($i%2==1) {echo " col-sm-push-6 ";} ?>">
+		<div class="honeycomb">
+		<?php if ($p->hasImages()) echo '<img src="'.thumb($p->images()->first(),array('width' => 800, 'height' => '800', 'crop' => true))->url().'" />'; ?>
+		</div>
+	</div>
+	
+	<div class="col-sm-6 col-info <?php if ($i%2==1) {echo " col-sm-pull-6 ";} ?>">
 		<h2>
 			<?=$p->title() ?>
 		</h2>
