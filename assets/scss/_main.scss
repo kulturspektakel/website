@@ -137,7 +137,7 @@ img {
 		}
 		
 		@media (max-width: 767px) {
-			& > div {margin-bottom: 60px;}
+			& > div ~ div {margin-top: 60px;}
 		}
 	}
 }
