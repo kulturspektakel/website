@@ -11,6 +11,7 @@ fields:
     label: Programm veröffentlichen
     type: toggle
     text: yes/no
+    default: true
   bookinginfo:
     label: Booking Information
     type:  textarea
