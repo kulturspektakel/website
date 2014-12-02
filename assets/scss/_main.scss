@@ -169,9 +169,17 @@ img {
 			background-image: url('../img/honeycomb.png');
 		}
 	}
-	
 }
 
+.banner {
+	height: 300px;
+	background-size: cover;
+	background-position: center;
+	
+	@media (max-width: 767px) {
+		height: 200px;
+	}
+}
 
 @import 'hero';
 @import 'footer';
