@@ -125,10 +125,6 @@ img {
 	
 	h2 {
 		text-align: center
-		
-		@media (max-width: 767px) {
-			margin-top: 60px;
-		}
 	}
 	
 	.row {
@@ -138,7 +134,10 @@ img {
 		& > div:not(.col-sm-3) {
 			padding-left: 30px;
 			padding-right: 30px;
-			
+		}
+		
+		@media (max-width: 767px) {
+			& > div {margin-bottom: 60px;}
 		}
 	}
 }
