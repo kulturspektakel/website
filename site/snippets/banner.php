@@ -1,3 +1,3 @@
 </section>
-<section class="banner" style="background-image: url('<?=$image ?>')"></section>
+<section class="banner photo" style="background-image: url('<?=$image ?>')"></section>
 <section class="container subpage">

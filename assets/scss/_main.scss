@@ -172,12 +172,17 @@ img {
 }
 
 .banner {
-	height: 300px;
-	background-size: cover;
-	background-position: center;
+	margin-top: 70px;
+	margin-bottom: 70px; 
 	
-	@media (max-width: 767px) {
-		height: 200px;
+	&.photo {
+		height: 300px;
+		background-size: cover;
+		background-position: center;
+		
+		@media (max-width: 767px) {
+			height: 200px;
+		}
 	}
 }
 
