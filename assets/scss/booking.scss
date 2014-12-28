@@ -2,4 +2,12 @@
 	h1 {
 		text-align: center;
 	}
+	
+	@media (min-width: 768px) {
+		section > p {
+			width: 80%;
+			text-align: center;
+		}
+	}
+	
 }
