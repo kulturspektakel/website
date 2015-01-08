@@ -43,13 +43,9 @@
 	}	
 		
 	.col-info {
-		@media (min-width: 768px) {
-			
-		}
-		
-		@media (min-width:768px) and (max-width:991px) {min-height: 300px;}
-		@media (min-width:992px) and (max-width:1199px) {min-height: 300px;}
-		@media (min-width:1200px) {min-height: 400px;}
+		@media (min-width:768px) and (max-width:991px) {height: 300px;}
+		@media (min-width:992px) and (max-width:1199px) {height: 300px;}
+		@media (min-width:1200px) {height: 400px;}
 		
 		display: table;
 		
