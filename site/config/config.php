@@ -58,6 +58,12 @@ c::set('routes', array(
 		}
 	),
 	array(
+		'pattern' => 'wiki',
+		'action'  => function() {
+			go('http://wiki.kulturspektakel.de');
+		}
+	),
+	array(
 		'pattern' => 'search',
 		'action'  => function() {
 			$result = array();
