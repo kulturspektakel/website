@@ -64,6 +64,12 @@ c::set('routes', array(
 		}
 	),
 	array(
+		'pattern' => 'mail',
+		'action'  => function() {
+			go('https://mail.bxdc.de/owa');
+		}
+	),
+	array(
 		'pattern' => 'search',
 		'action'  => function() {
 			$result = array();
