@@ -146,7 +146,7 @@
 			<span class="font-preview latobold">Lato bold</span>
 			<br />Verwendet für Fließtext. Passend zum Medium, üblicherweise im <em>light</em>-Schnitt.
 		</p>
-		<a class="btn btn-default" download="/content/<?=$page ?>/fonts.zip" download="fonts.zip" href="">Download Fonts</a>
+		<a class="btn btn-default" href="/content/<?=$page ?>/fonts.zip" download="fonts.zip">Download Fonts</a>
 	</div>
 </section>
 
