@@ -30,6 +30,10 @@
 		margin-top: 0;
 		margin: auto;
 		
+		img {
+			width: 100%;
+		}
+		
 		@media (max-width:767px) {
 			width: 200px;
 			img {
