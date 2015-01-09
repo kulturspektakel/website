@@ -325,6 +325,11 @@
 	padding-top: 120px;
 	padding-bottom: 200px;
 	
+	-webkit-hyphens: auto;
+	-moz-hyphens: auto;
+	-ms-hyphens: auto;
+	hyphens: auto;
+	
 	.home & {
 		padding-top: 20px;
 	}

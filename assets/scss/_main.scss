@@ -43,6 +43,9 @@ body {
 .wrapper {
 	min-height:100%;
 	position:relative;
+	@media (max-width: 767px) {
+		overflow: hidden;
+	}
 }
 
 h1, h2, h3 {

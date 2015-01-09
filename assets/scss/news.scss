@@ -102,6 +102,9 @@
 			display: inline-block;
 			line-height: 44px;
 			padding: 0 70px;
+			@media (max-width: 767px) {
+				padding: 0 30px;
+			}
 			border-radius: 4px;
 			color: #333;
 			font-weight: 400;
