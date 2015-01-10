@@ -12,7 +12,7 @@
 	<link rel="apple-itouch-icon" href="/assets/img/logo.png"> 
 	<meta property="og:title" content="<?php if ($page->isHomepage()) {echo $site->title();} else {echo $page->title();} ?>" /> 
 	<meta property="og:image" content="/assets/img/logo.png" /> 
-	
+	<meta name="google-site-verification" content="OrRSgLJfcndG9W-6TZFHHmmvGhUFw8lfbgS92PGT2Fg" />
 	<?php
 	echo css(array(
 		'http://fonts.googleapis.com/css?family=Lato:300,400,300italic,400italic',
