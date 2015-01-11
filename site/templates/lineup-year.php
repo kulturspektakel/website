@@ -8,11 +8,7 @@ if ($page->visibility()=="false" && !$_COOKIE['key']) {
 <section class="container">
 	<?php if (kirbytext($page->parent()->bookinginfo())) { ?>
 	<div class="row bookinginfo">
-		<div class="col-sm-12">
-			<div class="bookinginfo-box">
-				<?php echo kirbytext($page->parent()->bookinginfo()) ?>
-			</div>
-		</div>
+		<?php echo kirbytext($page->parent()->bookinginfo()) ?>
 	</div>
 	<?php } ?>
 	
