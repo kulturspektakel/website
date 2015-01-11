@@ -6,11 +6,11 @@ if ($page->visibility()=="false" && !$_COOKIE['key']) {
 }
 ?>
 <section class="container">
-	<?php if (kirbytext($page->bookinginfo())) { ?>
+	<?php if (kirbytext($page->parent()->bookinginfo())) { ?>
 	<div class="row bookinginfo">
 		<div class="col-sm-12">
 			<div class="bookinginfo-box">
-				<?php echo kirbytext($page->bookinginfo()) ?>
+				<?php echo kirbytext($page->parent()->bookinginfo()) ?>
 			</div>
 		</div>
 	</div>
@@ -94,7 +94,7 @@ if ($page->visibility()=="false" && !$_COOKIE['key']) {
 		<div class="col-sm-12">
 			<div class="nocontent-box">
 				<i class="fa fa-ban"></i>
-				<?php echo kirbytext($page->parent()->nocontent()) ?>
+				Keine Band gefunden
 			</div>
 		</div>
 	</div>

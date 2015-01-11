@@ -12,7 +12,3 @@ fields:
     type: toggle
     text: yes/no
     default: true
-  bookinginfo:
-    label: Booking Information
-    type:  textarea
-

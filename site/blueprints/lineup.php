@@ -7,6 +7,6 @@ fields:
   title:
     label: Jahr
     type:  text
-  nocontent:
-    label: Fehlermeldung wenn keine Band vorhanden
+  bookinginfo:
+    label: Hinsweis auf Booking (leer lassen um auszublenden)
     type:  textarea
