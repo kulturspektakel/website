@@ -39,7 +39,7 @@ function stagenames($shorthand) {
 	$name = array(
 		"GB" => "Große&nbsp;Bühne",
 		"KB" => "Kleine&nbsp;Bühne",
-		"WB" => "Waldühne",
+		"WB" => "Waldbühne",
 		"A"  => "Aula",
 		"DJ" => "DJ-Eck"
 	);
