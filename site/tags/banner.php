@@ -1,12 +1,14 @@
 <?php	
 	kirbytext::$tags['banner'] = array(
 		'html' => function($tag) {
+			ob_start();
 			if ($tag->page()->image($tag->attr('banner'))) {
-				return snippet('banner', array('image' => $tag->page()->image($tag->attr('banner'))->url()));
+				snippet('banner', array('image' => $tag->page()->image($tag->attr('banner'))->url()));
 			} else {
-				return snippet($tag->attr('banner'));
+				snippet($tag->attr('banner'));
 			}
-			
+			$snippet = ob_get_clean();
+			return $snippet;
 		}
 	);
 ?>
