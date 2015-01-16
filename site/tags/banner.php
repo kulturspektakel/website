@@ -3,12 +3,10 @@
 		'html' => function($tag) {
 			ob_start();
 			if ($tag->page()->image($tag->attr('banner'))) {
-				snippet('banner', array('image' => $tag->page()->image($tag->attr('banner'))->url()));
+				return '</section><section class="banner photo" style="background-image: url('.$tag->page()->image($tag->attr('banner'))->url().')"></section><section class="container subpage">';
 			} else {
-				snippet($tag->attr('banner'));
+				return snippet($tag->attr('banner'));
 			}
-			$snippet = ob_get_clean();
-			return $snippet;
 		}
 	);
 ?>
