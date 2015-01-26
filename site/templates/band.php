@@ -14,7 +14,7 @@
 				<?=$page->time() ?>
 				<br />
 				<span class="light band-stagetime-stage">
-					<?=stagenames($page->stage()) ?> <a href="<? echo $page->parent()->url(); ?>"><? echo $page->parent()->title(); ?></a>
+					<?=stagenames($page->stage()) ?> <a href="<?=$page->parent()->url(); ?>"><?=$page->parent()->title(); ?></a>
 				</span>
 			</div>
 		</div>
