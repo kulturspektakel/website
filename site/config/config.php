@@ -114,11 +114,11 @@ function cleanKirbytext($text, $allowedTags = '') {
 	return strip_tags(kirbytext($text), $allowedTags);
 }
 
-c::set('cache', true);
+//c::set('cache', true);
 c::set('cache.ignore', array(
   'home',
   'search'
 ));
 
-c::set('debug', true);
+//c::set('debug', true);
 
