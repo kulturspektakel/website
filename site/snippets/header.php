@@ -3,16 +3,16 @@
 <head>
 
 	<meta charset="utf-8" />
-	
+
 	<title><?php echo html($site->title()) ?><?php if (!$page->isHomepage()) {echo " | ".html($page->title());} ?></title>
 	<meta name="description" content="<?php echo html($site->description()) ?>" />
 	<meta name="viewport" content="width=device-width">
-	
-	<link rel="shortcut icon" href="/assets/img/logo.png"> 
-	<link rel="apple-touch-icon" href="/assets/img/logo.png"> 
-	<meta property="og:title" content="<?php if ($page->isHomepage()) {echo $site->title();} else {echo $page->title();} ?>" /> 
+
+	<link rel="shortcut icon" href="/assets/img/logo.png">
+	<link rel="apple-touch-icon" href="/assets/img/logo.png">
+	<meta property="og:title" content="<?php if ($page->isHomepage()) {echo $site->title();} else {echo $page->title();} ?>" />
 	<meta property="og:image" content="/assets/img/logo.png" /> 
-	<meta name="google-site-verification" content="OrRSgLJfcndG9W-6TZFHHmmvGhUFw8lfbgS92PGT2Fg" />
+	<meta name="google-site-verification" content="pSQ1fDcPPCIcZ0sc63qakZdFcbMhz_02qld4RVxo4Hk" />
 	<?php
 	echo css(array(
 		'http://fonts.googleapis.com/css?family=Lato:300,400,300italic,400italic',
@@ -23,7 +23,7 @@
 		'/assets/style.php/_main.scss',
 	));
 	?>
-	
+
 	<?php
 	echo js(array(
 		'/bower_components/jquery/dist/jquery.min.js',
