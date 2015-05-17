@@ -19,7 +19,7 @@ if ($page->visibility()=="false" && !$_COOKIE['key']) {
 			</h1>
 		</div>
 		<div class="col-sm-5" id="searchcontrol">
-			<?php $years = $page->parent()->children()->filterBy('visibility','true')->sortBy('title')->pluck('title')->flip() ?>
+			<?php $years = $page->parent()->children()->filterBy('visibility','true')->sortBy('title')->flip()->pluck('title') ?>
 			<a id="q-bandsearch"><i class="fa fa-search"></i></a>
 			<input class="form-control" placeholder="Nach Bands suchen..." id="bandsearch" type="search" />
 			<select class="form-control selectpicker yearSelector">
