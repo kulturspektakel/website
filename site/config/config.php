@@ -53,7 +53,7 @@ c::set('routes', array(
 			$data = array(
 			  'archive' => true
 			);
-			
+
 			return array('home', $data);
 		}
 	),
@@ -120,5 +120,15 @@ c::set('cache.ignore', array(
   'search'
 ));
 
-//c::set('debug', true);
+kirby()->hook('panel.page.create', function($page) {
+	$message = "Neue Seite angelegt: <".$page->url()."|".$page->title().">";
+	file_get_contents("http://dev.kulturspektakel.de/slack.php?data=".urlencode($message));
+});
 
+kirby()->hook('panel.page.update', function($page) {
+	$message = "Seite aktualisiert: <".$page->url()."|".$page->title().">";
+  file_get_contents("http://dev.kulturspektakel.de/slack.php?data=".urlencode($message));
+});
+
+
+//c::set('debug', true);
