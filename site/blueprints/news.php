@@ -2,6 +2,7 @@
 
 title: News
 pages: true
+  sort: flip
 files: true
 fields:
   title:
