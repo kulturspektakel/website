@@ -3,6 +3,7 @@
 title: Home
 pages:
   template: news
+  sort: date desc
 fields:
   title:
     type: text
