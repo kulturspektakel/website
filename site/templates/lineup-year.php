@@ -1,5 +1,5 @@
 <?php 
-if ($page->visibility()=="false" && !$_COOKIE['key']) {
+if (!$_COOKIE['key']) {
 	go();
 } else {
 	snippet('header');
