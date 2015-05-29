@@ -1,9 +1,5 @@
 <?php 
-if (!$_COOKIE['key']) {
-	go();
-} else {
-	snippet('header');
-}
+snippet('header');
 ?>
 <section class="container">
 	<?php if (kirbytext($page->parent()->bookinginfo())) { ?>
