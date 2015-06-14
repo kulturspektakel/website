@@ -19,7 +19,6 @@
 					<?php if ($product->hasImages()) { ?>
 						<img class="productimage" src="<?php echo thumb($product->images()->first(), array('width' => 716, 'height' => 716, 'crop' => true))->url() ?>" />
 					<?php } ?>
-					<?php echo kirbytext($product->description()) ?>
 					<select id="<?php echo $product->slug() ?>" class="form-control" data-price="<?php echo $product->price() ?>">
 						<?php if ($product->selector()=="size") { ?>
 							<option value="0" selected>Größe auswählen</option>
@@ -36,6 +35,7 @@
 							<option>4</option>
 						<?php } ?>
 					</select>
+					<?php echo kirbytext($product->description()) ?>
 				</div>
 				<?php if ($i==2) { ?>
 					</div><div class="row">
