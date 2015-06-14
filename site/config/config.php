@@ -70,6 +70,14 @@ c::set('routes', array(
 		}
 	),
 	array(
+		'pattern' => 'shop/order',
+		'method' => 'POST',
+		'action'  => function() {
+			mail("info@kulturspektakel.de","Kult Shop Bestellung",print_r($_POST,true));
+			echo "ok";
+		}
+	),
+	array(
 		'pattern' => 'search',
 		'action'  => function() {
 			$result = array();

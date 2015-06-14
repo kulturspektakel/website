@@ -165,6 +165,59 @@ App = {
 			map: map,
 			title: 'Kulturspektakel Gauting'
 		});
+	},
+
+	shop: function () {
+		$('.shop select').change(function () {
+			$('.shop #shop-total').text((getTotal()+0.001).toFixed(2).replace('.',','));
+			validate();
+		});
+
+		$('.shop input').keyup(function () {
+			validate();
+		});
+
+		$('.shop form').submit(function () {
+			if (validate()) {
+				$('.shop .btn-success').prop('disabled',true);
+				var data = {};
+				$('.shop select').each(function () {
+					data[$(this).attr('id')] = $(this).val();
+				});
+				$('.shop input').each(function () {
+					data[$(this).attr('id')] = $(this).val();
+				});
+				$.post('/shop/order',data,function () {
+					$('.products').hide();
+					$('.shop-success').show();
+				});
+			}
+			return false;
+		});
+
+		var validate = function () {
+			var valid = true;
+			$('.shop input[required]').each(function () {
+				if ($(this).val().length === 0) valid = false;
+			});
+			if (getTotal() === 0) valid = false;
+
+			$('.shop .btn-success').prop('disabled',!valid);
+			return valid;
+		};
+
+		var getTotal = function () {
+			var total = 0;
+			$('.shop select').each(function () {
+				var amount = parseInt($(this).val());
+				if (isNaN(amount)) amount = 1;
+				var price = parseFloat($(this).attr('data-price'));
+				if (isNaN(price)) price = 0;
+				total += price*amount;
+			});
+			return total;
+		};
+
 	}
 };
 
