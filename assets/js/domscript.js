@@ -168,26 +168,26 @@ App = {
 	},
 
 	merch: function () {
-		$('.shop select').change(function () {
-			$('.shop #shop-total').text((getTotal()+0.001).toFixed(2).replace('.',','));
+		$('.merch select').change(function () {
+			$('.merch #shop-total').text((getTotal()+0.001).toFixed(2).replace('.',','));
 			validate();
 		});
 
-		$('.shop input').keyup(function () {
+		$('.merch input').keyup(function () {
 			validate();
 		});
 
-		$('.shop form').submit(function () {
+		$('.merch form').submit(function () {
 			if (validate()) {
-				$('.shop .btn-success').prop('disabled',true);
+				$('.merch .btn-success').prop('disabled',true);
 				var data = {};
-				$('.shop select').each(function () {
+				$('.merch select').each(function () {
 					data[$(this).attr('id')] = $(this).val();
 				});
-				$('.shop input').each(function () {
+				$('.merch input').each(function () {
 					data[$(this).attr('id')] = $(this).val();
 				});
-				$.post('/shop/order',data,function () {
+				$.post('/merch/order',data,function () {
 					$('.products').hide();
 					$('.shop-success').show();
 				});
@@ -197,18 +197,18 @@ App = {
 
 		var validate = function () {
 			var valid = true;
-			$('.shop input[required]').each(function () {
+			$('.merch input[required]').each(function () {
 				if ($(this).val().length === 0) valid = false;
 			});
 			if (getTotal() === 0) valid = false;
 
-			$('.shop .btn-success').prop('disabled',!valid);
+			$('.merch .btn-success').prop('disabled',!valid);
 			return valid;
 		};
 
 		var getTotal = function () {
 			var total = 0;
-			$('.shop select').each(function () {
+			$('.merch select').each(function () {
 				var amount = parseInt($(this).val());
 				if (isNaN(amount)) amount = 1;
 				var price = parseFloat($(this).attr('data-price'));
