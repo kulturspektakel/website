@@ -71,7 +71,7 @@
 				</div>
 				<div class="form-group">
 					<div class="col-sm-offset-4 col-sm-8">
-						<button type="submit" class="btn btn-success" disabled>Bestellen</button>
+						<button type="submit" class="btn btn-success" disabled>Reservieren</button>
 					</div>
 				</div>
 			</div>
