@@ -171,6 +171,7 @@ App = {
 		$('.merch select').change(function () {
 			$('.merch #shop-total').text((getTotal()+0.001).toFixed(2).replace('.',','));
 			validate();
+			fbq('track', 'AddToCart');
 		});
 
 		$('.merch input').keyup(function () {
@@ -187,6 +188,7 @@ App = {
 				$('.merch input').each(function () {
 					data[$(this).attr('id')] = $(this).val();
 				});
+				fbq('track', 'Purchase', {value: getTotal(), currency: 'EUR'});
 				$.post('/merch/order',data,function () {
 					$('.products').hide();
 					$('.shop-success').show();
@@ -218,6 +220,9 @@ App = {
 			return total;
 		};
 
+		setTimeout(function () {
+			fbq('track', 'shop');
+		}, 1000);
 	}
 };
 
