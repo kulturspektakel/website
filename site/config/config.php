@@ -74,6 +74,8 @@ c::set('routes', array(
 		'method' => 'POST',
 		'action'  => function() {
 			mail("info@kulturspektakel.de","Kult Shop Bestellung",print_r($_POST,true));
+			$message = "Neue Bestellung von *".$_POST["shop-name"]."* eingegangen!";
+			file_get_contents("http://dev.kulturspektakel.de/slack.php?data=".urlencode($message));
 			echo "ok";
 		}
 	),
