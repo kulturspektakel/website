@@ -221,7 +221,7 @@ App = {
 		};
 
 		setTimeout(function () {
-			fbq('track', 'shop');
+			fbq('track', 'ViewContent');
 		}, 1000);
 	}
 };
