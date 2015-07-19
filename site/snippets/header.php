@@ -35,7 +35,7 @@
 		'/bower_components/swipebox/src/js/jquery.swipebox.js',
 		'/bower_components/sticky/jquery.sticky.js',
 		'/bower_components/fastclick/lib/fastclick.js',
-		'http://maps.google.com/maps/api/js?sensor=true',
+		'//maps.google.com/maps/api/js?sensor=true',
 		'/assets/js/instafeed.js',
 		'/assets/js/domscript.js',
 	));
