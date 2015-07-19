@@ -15,7 +15,7 @@
 	<meta name="google-site-verification" content="pSQ1fDcPPCIcZ0sc63qakZdFcbMhz_02qld4RVxo4Hk" />
 	<?php
 	echo css(array(
-		'http://fonts.googleapis.com/css?family=Lato:300,400,300italic,400italic',
+		'//fonts.googleapis.com/css?family=Lato:300,400,300italic,400italic',
 		'/bower_components/bootstrap/dist/css/bootstrap.min.css',
 		'/bower_components/bootstrap-select/dist/css/bootstrap-select.min.css',
 		'/bower_components/fontawesome/css/font-awesome.min.css',
