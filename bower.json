@@ -22,6 +22,6 @@
     "unveil": "~1.3.0",
     "sticky": "*",
     "swipebox": "git@github.com:brutaldesign/swipebox.git#0b333c115b69864aeb32dc090622370d5306e260",
-    "typeahead.js": "~0.10.5"
+    "typeahead.js": "~0.11.1"
   }
 }

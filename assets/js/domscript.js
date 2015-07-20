@@ -92,15 +92,16 @@ App = {
 		$('#bandsearch').typeahead({
 			highlight: true,
 		},{
-			displayKey: function (o) {
+			display: function (o) {
 				return o.name + ' (' + o.year + ')';
 			},
-			source: function (query, cb) {
+			source: function (query, syncResults, asyncResults) {
+				syncResults([]);
 				$.get('/search?q=' + query, function (data) {
-					return cb(data);
+					return asyncResults(data);
 				});
 			}
-		}).bind('typeahead:selected', function(obj, selected, name) {
+		}).bind('typeahead:select', function(obj, selected, name) {
 			ga('send', 'search', selected.name);
 			window.location = selected.url;
 		});
@@ -113,6 +114,22 @@ App = {
 				$('#q-bandsearch .fa').removeClass('fa-times').addClass('fa-search');
 			}
 		});
+
+		// disable iPhone zoom on input focus
+		if (App.isMobile) {
+			var viewport = document.querySelector("meta[name=viewport]");
+			var appendix = ", user-scalable=0";
+			var disableZoom = function () {viewport.setAttribute("content",viewport.getAttribute("content")+appendix);};
+			var enableZoom = function () {viewport.setAttribute("content",viewport.getAttribute("content").replace(appendix,""));};
+			$('#q-bandsearch').bind('touchstart', function() {
+				if (viewport.getAttribute("content").indexOf(appendix) > -1) {
+					enableZoom();
+				} else {
+					disableZoom();
+				}
+			});
+			$('.tt-input').bind('blur', function () {enableZoom();});
+		}
 	},
 
 	fotos: function () {
