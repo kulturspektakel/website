@@ -29,12 +29,8 @@ App = {
 		var yearSelector   = $( '.yearSelector' );
 		var stageSelector  = App.isMobile ? $( '.stageSelector-mobile' ) : $( '.stageSelector input' );
 		var daySelector    = App.isMobile ? $( '.daySelector-mobile' )   : false;
-		var noBandsVisible = function() {
-			$('.day-col').removeClass('hidden');
-			var hasBands = $('.bandlist li:visible').length <= 0;
-			$('.nocontent').toggleClass('hidden',!hasBands);
-			$('.day-col').toggleClass('hidden',hasBands);
-		};
+		var STAGES = ['GB','KB','WB','A','DJ'];
+
 		var applyLineupFilter = function(stageSelector, daySelector) {
 			$( '.bandlist li' ).hide();
 			if (daySelector) {
@@ -53,8 +49,15 @@ App = {
 
 			stageSelector = (stageSelectorValue !== "") ? '[data-stage=' + stageSelectorValue + ']' : '';
 			$( '.bandlist li' + stageSelector ).show();
-			noBandsVisible();
 		}
+
+		// hide unused stages
+		STAGES.forEach(function (stage) {
+			if ($('.bandlist li[data-stage='+stage+']').length === 0) {
+				$('.stageSelector input[value='+stage+']').parents('.stageSelector').hide();
+				$('select.stageSelector-mobile option[value='+stage+']').remove();
+			}
+		});
 
 		$('.selectpicker').selectpicker();
 
@@ -85,7 +88,6 @@ App = {
 			}.bind(this), 0)
 		});
 
-		noBandsVisible();
 		$( '.bandlist .band-image img' ).unveil();
 		if (!App.isMobile) $( '.bandlist .band-stage-name' ).tooltip();
 

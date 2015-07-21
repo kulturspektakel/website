@@ -56,7 +56,7 @@ h1, h2, h3 {
 h2 {
 	font-family: 'nexalight';
 	font-size: 26px;
-	margin-bottom: 50px; 
+	margin-bottom: 50px;
 }
 
 h2 strong {
@@ -124,25 +124,25 @@ img {
 }
 
 .subpage {
-	
+
 	&:last-child {
 		border: 0;
 		margin-bottom: 0
 	}
-	
+
 	h2 {
 		text-align: center
 	}
-	
+
 	.row {
 		margin-top: 20px;
 		margin-bottom: 20px;
-		
+
 		& > div:not(.col-sm-3) {
 			padding-left: 30px;
 			padding-right: 30px;
 		}
-		
+
 		@media (max-width: 767px) {
 			& > div ~ div {margin-top: 60px;}
 		}
@@ -158,7 +158,7 @@ img {
 	position: relative;
 	margin-top: 60px;
 	margin-bottom: 40px;
-	
+
 	&:after {
 		display: block;
 		position: absolute;
@@ -174,7 +174,7 @@ img {
 		content: "";
 		width: 100%;
 		height: 100%;
-		
+
 		.no-svg & {
 			background-image: url('../img/honeycomb.png');
 		}
@@ -183,17 +183,17 @@ img {
 
 .banner {
 	margin-top: 70px;
-	margin-bottom: 70px; 
+	margin-bottom: 70px;
 	@media (max-width: 767px) {
 		margin-top: 30px;
-		margin-bottom: 30px; 
+		margin-bottom: 30px;
 	}
-	
+
 	&.photo {
 		height: 300px;
 		background-size: cover;
 		background-position: center;
-		
+
 		@media (max-width: 767px) {
 			height: 200px;
 		}
@@ -214,3 +214,4 @@ img {
 @import 'brand-assets';
 @import 'typeahead';
 @import 'shop';
+@import 'live';

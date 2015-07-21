@@ -1,0 +1,50 @@
+.live {
+    color: white;
+    font-size: 18px;
+    margin-top: -70px;
+    -webkit-transform: translateX(0%);
+    transform: translateX(0%);
+    -webkit-transition: -webkit-transform 0.2s;
+    transition: transform 0.2s;
+    display: none;
+
+    h1 {
+        margin: 0;
+        margin-bottom: 15px;
+        font-family: 'nexalight';
+        font-size: 30px;
+    }
+
+    h4 {
+        text-transform: uppercase;
+        font-family: 'nexabold';
+    }
+
+    a {
+        color: white;
+
+        &:hover {
+            color: white;
+        }
+    }
+}
+
+@media (max-width: 767px) {
+    .live {
+        display: block;
+    }
+
+    .live + .branding, .live + .branding + h2 {
+        display: none;
+    }
+
+    .home .sticky-wrapper:not(.is-sticky) .hero {height: auto; min-height: 350px;}
+
+    .hero.active .live {
+        position: relative;
+        -webkit-transform: translateX(-100%);
+        transform: translateX(-100%);
+        -webkit-transition: -webkit-transform 0.2s;
+        transition: transform 0.2s;
+    }
+}
