@@ -1,4 +1,4 @@
-.live {
+.now-playing {
     color: white;
     font-size: 18px;
     margin-top: -70px;
@@ -30,17 +30,17 @@
 }
 
 @media (max-width: 767px) {
-    .live {
+    .now-playing {
         display: block;
     }
 
-    .live + .branding, .live + .branding + h2 {
+    .now-playing + .branding, .now-playing + .branding + h2 {
         display: none;
     }
 
     .home .sticky-wrapper:not(.is-sticky) .hero {height: auto; min-height: 350px;}
 
-    .hero.active .live {
+    .hero.active .now-playing {
         position: relative;
         -webkit-transform: translateX(-100%);
         transform: translateX(-100%);

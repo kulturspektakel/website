@@ -4,6 +4,7 @@
 	<?php echo kirbytext($page->text()) ?>
 </section>
 
+<?php if ($page->active() != "false") { ?>
 <section class="container products">
 	<form>
 		<div class="row">
@@ -87,5 +88,7 @@
 		</div>
 	</div>
 </section>
+
+<?php } else {go();} ?>
 
 <?php snippet('footer') ?>
