@@ -17,8 +17,8 @@
 			} elseif ($number>0 && $i>11) {
 				echo ' class="more"';
 			} ?>>
-			<a <?php if ($number>0 && $i == 11) {echo 'data-album="'.$album->url().'"';} ?> href="<?= thumb($image,array('width' => 1200))->url() ?>" rel="<?= $album->url() ?>" title="<?= $album->title() ?>">
-				<img data-src="<?= thumb($image,array('width' => 250,'height' => 250, 'crop' => true))->url() ?>" />
+			<a <?php if ($number>0 && $i == 11) {echo 'data-album="'.$album->url().'"';} ?> href="<?= thumb($image,array('width' => 1200, 'autoOrient' => true))->url() ?>" rel="<?= $album->url() ?>" title="<?= $album->title() ?>">
+				<img data-src="<?= thumb($image,array('width' => 250,'height' => 250, 'crop' => true, 'autoOrient' => true))->url() ?>" />
 			</a>
 		</li>
 		<?php $i++; ?>
