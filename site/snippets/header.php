@@ -38,7 +38,7 @@
 		'//maps.google.com/maps/api/js?sensor=true',
 		'/assets/js/instafeed.js',
 		'/assets/js/domscript.js',
-	));
+	), true);
 	?>
 </head>
 
