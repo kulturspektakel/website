@@ -144,6 +144,10 @@ App = {
 		$( '.album img' ).unveil();
 	},
 
+	plakate: function () {
+		$( '.open-gallery' ).swipebox();
+	},
+
 	home: function () {
 		if (App.isMobile) {
 			$( '.home .hero' ).sticky( {
