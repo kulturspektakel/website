@@ -5,7 +5,7 @@
 	<ul class="plakat-liste">
 		<?php $posters = $page->posters()->yaml(); ?>
 		<?php foreach($posters as $poster) { ?>
-			<li style="background-image: url('/content/plakate/<?php echo $poster['image']; ?>')">
+			<li style="background-image: url('<?php echo thumb($page->image($poster['image']),array('width' => 400))->url() ?>')">
 				<?php if (strlen($poster['image'])==0) { ?><h2 class="fallback-year"><?php echo $poster['year']; ?></h2><?php } else { ?>
 					<a class="open-gallery" href="/content/plakate/<?php echo $poster['image']; ?>"></a>
 				<?php } ?>
