@@ -27,7 +27,7 @@
 	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
 	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
 	})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-	
+
 	ga('create', 'UA-1451591-11', 'auto');
 	ga('send', 'pageview');
 </script>
@@ -39,5 +39,21 @@
 </script>
 <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=568483009893821&ev=PageView&noscript=1"/></noscript>
 <!-- End Facebook Pixel Code -->
+<?php
+	echo js(array(
+		'/bower_components/jquery/dist/jquery.min.js',
+		'/bower_components/lodash/dist/lodash.min.js',
+		'/bower_components/bootstrap/dist/js/bootstrap.min.js',
+		'/bower_components/typeahead.js/dist/typeahead.jquery.min.js',
+		'/bower_components/bootstrap-select/dist/js/bootstrap-select.min.js',
+		'/bower_components/unveil/jquery.unveil.min.js',
+		'/bower_components/swipebox/src/js/jquery.swipebox.js',
+		'/bower_components/sticky/jquery.sticky.js',
+		'/bower_components/fastclick/lib/fastclick.js',
+		'//maps.google.com/maps/api/js',
+		'/assets/js/instafeed.js',
+		'/assets/js/domscript.js',
+	));
+?>
 </body>
 </html>

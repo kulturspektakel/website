@@ -23,23 +23,6 @@
 		'/assets/style.php/_main.scss',
 	));
 	?>
-
-	<?php
-	echo js(array(
-		'/bower_components/jquery/dist/jquery.min.js',
-		'/bower_components/lodash/dist/lodash.min.js',
-		'/bower_components/bootstrap/dist/js/bootstrap.min.js',
-		'/bower_components/typeahead.js/dist/typeahead.jquery.min.js',
-		'/bower_components/bootstrap-select/dist/js/bootstrap-select.min.js',
-		'/bower_components/unveil/jquery.unveil.min.js',
-		'/bower_components/swipebox/src/js/jquery.swipebox.js',
-		'/bower_components/sticky/jquery.sticky.js',
-		'/bower_components/fastclick/lib/fastclick.js',
-		'//maps.google.com/maps/api/js?sensor=true',
-		'/assets/js/instafeed.js',
-		'/assets/js/domscript.js',
-	), true);
-	?>
 </head>
 
 <body class="<?php echo str_replace("/"," ",$_SERVER['REQUEST_URI']) ?><?php if ($_SERVER['REQUEST_URI']=="/") echo "home "; ?>">
