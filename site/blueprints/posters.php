@@ -12,7 +12,7 @@ fields:
     label: text
     type: textarea
   competitionPosters:
-    label: Plakate
+    label: Einsendungen
     type: structure
     entry: >
       {{designer}
