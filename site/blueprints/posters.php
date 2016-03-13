@@ -15,7 +15,7 @@ fields:
     label: Einsendungen
     type: structure
     entry: >
-      {{designer}
+      {{designer}}
     fields:
       designer:
         label: Designer (wird nicht angezeigt)
