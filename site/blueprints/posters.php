@@ -8,6 +8,22 @@ fields:
   title:
     label: Titel
     type: text
+  text:
+    label: text
+    type: textarea
+  competitionPosters:
+    label: Plakate
+    type: structure
+    entry: >
+      {{designer}
+    fields:
+      designer:
+        label: Designer (wird nicht angezeigt)
+        type: text
+     image:
+       label: Bild
+       type: select
+       options: images
   missing:
     label: Fehlendes Plakat
     type: textarea
@@ -29,4 +45,5 @@ fields:
         type: text
      image:
        label: Bild
-       type: text
+       type: select
+       options: images

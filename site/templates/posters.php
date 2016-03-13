@@ -1,7 +1,20 @@
 <?php snippet('header') ?>
 
 <section class="container">
-	<h1><?php echo kirbytext($page->title()) ?></h1>
+	<?php echo kirbytext($page->text()) ?>
+	<?php $posters = $page->competitionPosters()->yaml(); ?>
+	<?php if (count($posters) > 0) { ?>
+	<ul class="plakat-liste">
+		<?php foreach($posters as $poster) { ?>
+			<li style="background-image: url('<?php echo thumb($page->image($poster['image']),array('width' => 400))->url() ?>')">
+				<a class="open-gallery" href="/content/plakate/<?php echo $poster['image']; ?>"></a>
+			</li>
+		<?php } ?>
+	</ul>
+	<hr />
+	<h1>Kult-Plakat-Archiv</h1>
+	<?php } ?>
+
 	<ul class="plakat-liste">
 		<?php $posters = $page->posters()->yaml(); ?>
 		<?php foreach($posters as $poster) { ?>
@@ -21,8 +34,8 @@
 			</li>
 		<?php } ?>
 	</ul>
+	<hr />
+
 </section>
-
-
 
 <?php snippet('footer') ?>
