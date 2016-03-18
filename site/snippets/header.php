@@ -1,17 +1,30 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-
 	<meta charset="utf-8" />
 
 	<title><?php echo html($site->title()) ?><?php if (!$page->isHomepage()) {echo " | ".html($page->title());} ?></title>
-	<meta name="description" content="<?php echo html($site->description()) ?>" />
+	<meta name="description" content="<?php echo html($site->infotext()) ?>" />
 	<meta name="viewport" content="width=device-width">
 
 	<link rel="shortcut icon" href="/assets/img/logo.png">
 	<link rel="apple-touch-icon" href="/assets/img/logo.png">
-	<meta property="og:title" content="<?php if ($page->isHomepage()) {echo $site->title();} else {echo $page->title();} ?>" />
-	<meta property="og:image" content="/assets/img/logo.png" />
+
+	<link rel="canonical" href="<?php echo $page->isHomepage() ? $site->url() : str_replace('/home', '', $page->url()); ?>" />
+
+	<meta property="og:title" content="<?php echo $page->isHomepage() ? $site->title() : $page->title(); ?>" />
+	<meta property="og:image" content="<?php echo $og_image ? $og_image : "http://kulturspektakel.de/assets/img/logo.png"; ?>" />
+	<meta property="og:type" content="article" />
+	<meta property="og:url" content="<?php echo $page->isHomepage() ? $site->url() : str_replace('/home', '', $page->url()); ?>" />
+	<meta property="og:description" content="<?php echo $og_description ? $og_description : $site->infotext(); ?>" />
+	<meta property="og:site_name" content="Kulturspektakel" />
+
+	<meta name="twitter:card" content="summary" />
+	<meta name="twitter:site" content="@kulturspektakel" />
+	<meta name="twitter:title" content="<?php echo $page->isHomepage() ? $site->title() : $page->title(); ?>" />
+	<meta name="twitter:description" content="<?php echo $og_description ? $og_description : $site->infotext(); ?>" />
+	<meta name="twitter:image" content="<?php echo $og_image ? $og_image : "http://kulturspektakel.de/assets/img/logo.png"; ?>" />
+
 	<meta name="google-site-verification" content="pSQ1fDcPPCIcZ0sc63qakZdFcbMhz_02qld4RVxo4Hk" />
 	<?php
 	echo css(array(
