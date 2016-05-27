@@ -81,6 +81,20 @@
 					</a>
 				</div>
 				<?php } ?>
+				<?php if(strlen($page->instagram())>0) { ?>
+				<div class="col-xs-4">
+					<a href="<?=$page->instagram() ?>" target="_blank" class="square-box">
+						<div class='square-content'><div><span><i class="fa fa-instragram"></i></span></div></div>
+					</a>
+				</div>
+				<?php } ?>
+				<?php if(strlen($page->spotify())>0) { ?>
+				<div class="col-xs-4">
+					<a href="<?=$page->spotify() ?>" target="_blank" class="square-box">
+						<div class='square-content'><div><span><i class="fa fa-spotify"></i></span></div></div>
+					</a>
+				</div>
+				<?php } ?>
 			</div>
 
 		</div>
