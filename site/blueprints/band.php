@@ -62,4 +62,7 @@ fields:
   instagram:
     label: Instagram
     type: url
+  spotify:
+    label: Spotify
+    type: url
     
