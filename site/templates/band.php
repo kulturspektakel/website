@@ -1,10 +1,9 @@
 <?php
+$vars = array('og_description' => $page->shortdescription());
 if ($page->hasImages()) {
-	snippet('header', array('og_image'=>thumb($page->images()->first(),array('width' => 1200))->url()));
-} else {
-	snippet('header');
+	array_push($vars['og_image'] = thumb($page->images()->first(),array('width' => 1200))->url());
 }
-
+snippet('header', $vars);
 ?>
 
 <section class="container">
