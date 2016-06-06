@@ -1,4 +1,11 @@
-<?php snippet( 'header') ?>
+<?php
+if ($page->hasImages()) {
+	snippet('header', array('og_image'=>thumb($page->images()->first(),array('width' => 1200))->url()));
+} else {
+	snippet('header');
+}
+
+?>
 
 <section class="container">
 	<h1>
