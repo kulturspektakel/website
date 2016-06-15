@@ -1,12 +1,12 @@
 <?php
-    if (mktime() > 1437746400 && mktime() < 1437958800) {
+    if (mktime() > 1469208600 && mktime() < 1469412000) {
         setlocale(LC_TIME, 'de_DE');
         date_default_timezone_set("Europe/Berlin");
         $weekday = strftime('%A');
         $year = strftime('%Y');
         $stages = array("GB","KB","WB","A");
 
-        echo '<div class="now-playing"><h1>#kult2015</h1>';
+        echo '<div class="now-playing"><h1>#kult2016</h1>';
         foreach ($stages as $stage) {
             $stageline = "";
             foreach ($pages->findBy('uid', 'lineup')->children()->findBy('uid',$year)->children()->filterBy('day',$weekday)->filterBy('stage',$stage)->sortBy('time', 'asc') as $band) {
