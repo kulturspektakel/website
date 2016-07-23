@@ -1,5 +1,5 @@
 <?php
-    if (mktime() > 1469208600 && mktime() < 1469412000) {
+    if (false) {
         setlocale(LC_TIME, 'de_DE');
         date_default_timezone_set("Europe/Berlin");
         $weekday = strftime('%A');
