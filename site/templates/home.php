@@ -1,7 +1,7 @@
 <?php snippet( 'header') ?>
 
 <section class="container news-container" role="main">
-	<?php if (!$archive) { ?>
+	<?php if (!isset($archive)) { ?>
 		<ul class="news">
 			<?php $i=0; ?>
 			<?php foreach($page->children()->sortBy('date', 'desc')->limit(5) as $p) { ?>
@@ -26,7 +26,7 @@
 		</p>
 	<?php } else { ?>
 		<ul class="news archive">
-			<?php $i=0; ?>
+			<?php $i=0; $lastyear = ''; ?>
 			<?php foreach($page->children()->sortBy('date', 'desc') as $p) { ?>
 			<?php if ($lastyear != date('Y',$p->date())) { ?>
 				<li class="heading"><h2><?php echo date('Y',$p->date()); ?></h2></li>
