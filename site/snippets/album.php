@@ -1,3 +1,6 @@
+<?php if (!isset($number)) {
+	$number = 0;
+} ?>
 <section class="<?php if ($number>0) echo " old "; ?>">
 	<a href="<?= $album->url() ?>" class="album-title">
 		<h2>
