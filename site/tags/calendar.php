@@ -16,6 +16,11 @@
 			foreach ($events as $event) {
 				$dtstart = new \DateTime('@' . (int) $ical->iCalDateToUnixTimestamp($event->dtstart));
 				$dtend = new \DateTime('@' . (int) ($ical->iCalDateToUnixTimestamp($event->dtend)-1));
+
+				$target_timezone = new DateTimeZone('Europe/Berlin');
+				$dtstart->setTimeZone($target_timezone);
+				$dtend->setTimeZone($target_timezone);
+				
 				if ($dtstart->format('d.m.Y') != $dtend->format('d.m.Y')) {
 					$time = ($ical->iCalDateToUnixTimestamp($event->dtstart)%86400 === 0) ? $dtstart->format('d.m.') : $dtstart->format('d.m.');
 					$time .= ' bis '.(($ical->iCalDateToUnixTimestamp($event->dtend)%86400 === 0) ? $dtend->format('d.m.Y') : $dtend->format('d.m.Y H:i').' Uhr');

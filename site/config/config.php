@@ -1,5 +1,5 @@
 <?php
-
+ header("Access-Control-Allow-Origin: *");
 /*
 
 ---------------------------------------
@@ -96,7 +96,7 @@ c::set('routes', array(
 	array(
 		'pattern' => 'feed',
 		'action'  => function() {
-			echo page('home')->children()->sortBy('date', 'desc')->limit(10)->feed(array(
+			echo page('lineup')->children()->feed(array(
 				'title'       => 'Kulturspektakel Gauting',
 				'description' => 'asd',
 				'link'        => 'asd'

@@ -84,4 +84,14 @@ snippet('header');
 	</div>
 </section>
 
+
+
+
 <?php snippet( 'footer') ?>
+<script>
+	$(function() {
+    		if (document.location.hash) {
+			$(document.location.hash).click();
+		}
+	});
+</script>

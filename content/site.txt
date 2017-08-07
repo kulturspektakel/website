@@ -1,45 +1,17 @@
-Title: 
-
-Kulturspektakel Gauting
+Title: Kulturspektakel Gauting
 
 ----
 
-Author: 
-
-
+Eventdate: 21. - 23. Juli 2017
 
 ----
 
-Description: 
-
-
+Infotext: Das Kult ist ein dreitägiges ehrenamtlich von Jugendlichen organisiertes Musikfestival in Gauting.
 
 ----
 
-Copyright: 
-
-
+Footerlinks: (link:/booking  text: Booking), (link:/impressum  text: Impressum), (link:/foerderverein  text: Förderverein)
 
 ----
 
-Eventdate: 
-
-25.-27. Juli 2014
-
-----
-
-Infotext: 
-
-Das "Kult" ist ein dreitägiges ehrenamtlich von Jugendlichen organisiertes Musikfestival in Gauting.
-
-----
-
-Footerlinks: 
-
-(link:  text: Impressum), (link:  text: Förderverein), (link:  text: Mitgliedsantrag)
-
-----
-
-Sociallinks: 
-
-<a href="https://facebook.com/kulturspektakel" target="_blank" class="social"><i class="fa fa-facebook"></i></a><a href="https://www.youtube.com/channel/UCLOU06fHSN3Hwe0rmbrFtpA" target="_blank" class="social"><i class="fa fa-youtube"></i></a><a href="https://instagram.com/kulturspektakel" target="_blank" class="social"><i class="fa fa-instagram"></i></a><a href="https://twitter.com/kulturspektakel" target="_blank" class="social"><i class="fa fa-twitter"></i></a>
+Sociallinks: <a href="https://facebook.com/kulturspektakel" target="_blank" class="social"><i class="fa fa-facebook"></i></a><a href="https://www.youtube.com/channel/UCLOU06fHSN3Hwe0rmbrFtpA" target="_blank" class="social"><i class="fa fa-youtube"></i></a><a href="https://instagram.com/kulturspektakel" target="_blank" class="social"><i class="fa fa-instagram"></i></a><a href="https://twitter.com/kulturspektakel" target="_blank" class="social"><i class="fa fa-twitter"></i></a>
