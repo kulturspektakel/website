@@ -130,6 +130,11 @@ c::set('cache.ignore', array(
   'search'
 ));
 
+c::set('slack_client_id', '3495902661.316840614818');
+c::set('slack_client_secret', '3f178229aab8c9bcc1c0508da9e12f07');
+c::set('slack_team_id', 'T03EKSJKF');
+
+
 kirby()->hook('panel.page.create', function($page) {
 	$message = "Neue Seite von *".kirby()->site()->user()->firstName()." ".kirby()->site()->user()->lastName()."* angelegt: <".$page->url()."|".$page->title().">";
 	file_get_contents("http://dev.kulturspektakel.de/slack.php?data=".urlencode($message));
