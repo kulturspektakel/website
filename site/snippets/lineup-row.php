@@ -7,7 +7,7 @@
 		<li data-stage="<?= $band->stage() ?>" class="<?php if (!$band->shortdescription()->empty() || !$band->description()->empty() || $band->hasImages()) {echo "has-content";}?>"  id="<?= $band->slug() ?>">
 			<?php if($band->hasImages()): ?>
 			<div class="band-image">
-				<img data-src="<?= thumb($band->images()->first(),array('width' => 600))->url() ?>" />
+				<img data-src="<?= thumb($band->images()->first(),array('width' => 300))->url() ?>" />
 			</div>
 			<?php endif ?>
 			<div class="band-info">
