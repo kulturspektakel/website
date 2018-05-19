@@ -31,7 +31,7 @@ fields:
       KB: Kleine Bühne
       WB: Waldbühne
       A: Aula
-      DJ: DJ-Eck
+      DJ: DJ-Area
     required: true
     default: GB
     width: 1/2
@@ -65,4 +65,3 @@ fields:
   spotify:
     label: Spotify
     type: url
-    
