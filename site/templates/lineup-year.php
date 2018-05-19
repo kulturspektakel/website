@@ -33,7 +33,7 @@ snippet('header');
 				<option value="KB">Kleine Bühne</option>
 				<option value="WB">Waldbühne</option>
 				<option value="A" >Aula</option>
-				<option value="DJ">DJ-Eck</option>
+				<option value="DJ">DJ-Area</option>
 			</select>
 		</div>
 		<div class="col-sm-12 visible-xs-block">
@@ -72,7 +72,7 @@ snippet('header');
 			</div>
 			<div class="stageSelector">
 				<label class="DJ">
-					<input type="radio" value="DJ" name="stageSelector">DJ-Eck
+					<input type="radio" value="DJ" name="stageSelector">
 				</label>
 			</div>
 		</div>

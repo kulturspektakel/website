@@ -120,7 +120,7 @@
 		</div>
 		<div class="col-sm-2">
 			<div class="colorfield" style="background-color: #97BD37"></div>
-			<strong>DJ-Eck</strong>
+			<strong>DJ-Area</strong>
 			<br />#97BD37
 			<br />C47 M6 Y100 K0
 		</div>

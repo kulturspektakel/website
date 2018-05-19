@@ -41,7 +41,7 @@ function stagenames($shorthand) {
 		"KB" => "Kleine&nbsp;Bühne",
 		"WB" => "Waldbühne",
 		"A"  => "Aula",
-		"DJ" => "DJ-Eck"
+		"DJ" => "DJ-Area"
 	);
 	return $name[$shorthand];
 }
