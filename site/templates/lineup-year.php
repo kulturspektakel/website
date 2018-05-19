@@ -72,7 +72,7 @@ snippet('header');
 			</div>
 			<div class="stageSelector">
 				<label class="DJ">
-					<input type="radio" value="DJ" name="stageSelector">
+					<input type="radio" value="DJ" name="stageSelector">DJ-Area
 				</label>
 			</div>
 		</div>
