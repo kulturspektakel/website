@@ -1,10 +1,10 @@
 language: node_js
 node_js:
-  - 10
+- 10
 addons:
   ssh_known_hosts: kulturspektakel.de
 before_install:
-  - openssl aes-256-cbc -K $encrypted_08aa9827e538_key -iv $encrypted_08aa9827e538_iv
+  - openssl aes-256-cbc -K $encrypted_869f24d24cf0_key -iv $encrypted_869f24d24cf0_iv
     -in deploy_rsa.enc -out ./deploy_rsa -d
   - eval "$(ssh-agent -s)"
   - chmod 600 ./deploy_rsa
