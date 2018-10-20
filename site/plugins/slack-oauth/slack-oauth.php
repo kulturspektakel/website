@@ -1,5 +1,4 @@
 <?php
-
 if (function_exists('panel')) {
   panel()->routes(array(
     array(
@@ -15,25 +14,25 @@ if (function_exists('panel')) {
 
           if (array_key_exists('error', $response) || empty($response['user']['email']) || $response['team']['id'] != $teamID) {
             echo $response['error'];
-            } else if ($kirbyUser = site()->user($response['user']['name'])) {
-              if ($kirbyUser->loginPasswordless()) {
-                go('/panel');
-                }
-                } else {
-                  $kirbyUser = site()->users()->create([
-                    'username'  => $response['user']['name'],
-                    'email'     => $response['user']['email'],
-                    'password'  => str::random(24),
-                    'role'      => 'admin',
-                    ]);
-                    $kirbyUser->loginPasswordless();
-                    go('/panel');
-                    }
-                    } else {
-                      echo '<a style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%)" href="https://slack.com/oauth/authorize?scope=identity.basic,identity.email,identity.team,identity.avatar&client_id=3495902661.316840614818&redirect_uri='.$redirectURL.'"><img alt="Sign in with Slack" height="40" width="172" src="https://platform.slack-edge.com/img/sign_in_with_slack.png" srcset="https://platform.slack-edge.com/img/sign_in_with_slack.png 1x, https://platform.slack-edge.com/img/sign_in_with_slack@2x.png 2x" /></a>';
-                        }
-                        }
-                      )
-                    ));
+          } else if ($kirbyUser = site()->user($response['user']['name'])) {
+            if ($kirbyUser->loginPasswordless()) {
+              go('/panel');
+            }
+          } else {
+            $kirbyUser = site()->users()->create([
+              'username'  => $response['user']['name'],
+              'email'     => $response['user']['email'],
+              'password'  => str::random(24),
+              'role'      => 'admin',
+            ]);
+            $kirbyUser->loginPasswordless();
+            go('/panel');
+          }
+        } else {
+          echo '<a style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%)" href="https://slack.com/oauth/authorize?scope=identity.basic,identity.email,identity.team,identity.avatar&client_id=3495902661.316840614818&redirect_uri='.$redirectURL.'"><img alt="Sign in with Slack" height="40" width="172" src="https://platform.slack-edge.com/img/sign_in_with_slack.png" srcset="https://platform.slack-edge.com/img/sign_in_with_slack.png 1x, https://platform.slack-edge.com/img/sign_in_with_slack@2x.png 2x" /></a>';
+        }
+      }
+    )
+  ));
 }
 ?>
