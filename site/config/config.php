@@ -136,12 +136,12 @@ c::set('slack_team_id', 'T03EKSJKF');
 
 
 kirby()->hook('panel.page.create', function($page) {
-	$message = "Neue Seite von *".kirby()->site()->user()->firstName()." ".kirby()->site()->user()->lastName()."* angelegt: <".$page->url()."|".$page->title().">";
+	$message = "Neue Seite von *".kirby()->site()->user()->username()."* angelegt: <".$page->url()."|".$page->title().">";
 	file_get_contents("http://dev.kulturspektakel.de/slack.php?data=".urlencode($message));
 });
 
 kirby()->hook('panel.page.update', function($page) {
-	$message = "Seite von *".kirby()->site()->user()->firstName()." ".kirby()->site()->user()->lastName()."* aktualisiert: <".$page->url()."|".$page->title().">";
+	$message = "Seite von *".kirby()->site()->user()->username()."* aktualisiert: <".$page->url()."|".$page->title().">";
   file_get_contents("http://dev.kulturspektakel.de/slack.php?data=".urlencode($message));
 });
 

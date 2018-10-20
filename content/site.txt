@@ -2,7 +2,7 @@ Title: Kulturspektakel Gauting
 
 ----
 
-Eventdate: 20. - 22. Juli 2018
+Eventdate: 19. - 21. Juli 2019
 
 ----
 
@@ -10,7 +10,7 @@ Infotext: Das Kult ist ein dreitägiges ehrenamtlich von Jugendlichen organisier
 
 ----
 
-Footerlinks: (link:/booking  text: Booking), (link:/impressum  text: Impressum), (link:/foerderverein  text: Förderverein)
+Footerlinks: (link:/booking  text: Booking), (link:/impressum  text: Impressum), (link:/foerderverein  text: Förderverein), (link:/datenschutz  text: Datenschutz)
 
 ----
 
