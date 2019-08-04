@@ -37,7 +37,4 @@ Icon
 /site/config/.license
 
 # Contents
-/content/*
-!/content/site.txt
-!/content/home
-!/content/error
+/content
