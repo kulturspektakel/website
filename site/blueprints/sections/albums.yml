@@ -4,7 +4,6 @@
 # More about pages sections: https://getkirby.com/docs/reference/panel/sections/pages
 type: pages
 headline: Photography
-parent: kirby.page("photography")
 size: tiny
 info: "{{ page.images.count }} image(s)"
 layout: cards

@@ -1,0 +1,22 @@
+{
+  "name": "kulturspektakel",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://danielbuechele@github.com/danielbuechele/kulturspektakel",
+  "author": "Daniel Büchele <daniel@buechele.cc>",
+  "license": "MIT",
+  "devDependencies": {
+    "@prettier/plugin-php": "^0.11.2",
+    "gulp": "^4.0.2",
+    "gulp-sass": "^4.0.2",
+    "node-sass": "^4.12.0"
+  },
+  "dependencies": {
+    "bootstrap-sass": "^3.4.1",
+    "font-awesome": "^4.7.0",
+    "gulp-concat": "^2.6.1",
+    "gulp-uglify": "^3.0.2",
+    "jquery": "^3.4.1",
+    "swipebox": "^1.4.6"
+  }
+}

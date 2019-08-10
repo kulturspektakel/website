@@ -1,0 +1,114 @@
+#q-bandsearch {
+  color: $textcolor;
+  float: right;
+  margin-top: 23px;
+  cursor: pointer;
+  margin-right: 4px;
+  position: relative;
+  z-index: 2;
+  @media (max-width: 768px) {
+    margin-right: 8px;
+    top: 1px;
+  }
+}
+
+#searchcontrol {
+  margin-top: 6px;
+
+  @media (max-width: 768px) {
+    margin-bottom: -14px;
+  }
+
+  &:not(.search-active) {
+    .yearSelector {
+      display: inline-block;
+    }
+
+    #bandsearch,
+    .twitter-typeahead {
+      display: none !important;
+    }
+  }
+
+  &.search-active {
+    .yearSelector {
+      display: none;
+    }
+
+    #bandsearch {
+      display: inline-block;
+    }
+  }
+}
+span.twitter-typeahead {
+  @media (min-width: 768px) {
+    width: 240px;
+    margin-top: 18px;
+    margin-right: -20px;
+    float: right;
+  }
+  @media (max-width: 768px) {
+    float: left;
+    width: 100%;
+    margin-top: -26px;
+  }
+}
+#searchcontrol .twitter-typeahead input {
+  box-shadow: none;
+}
+span.twitter-typeahead .tt-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 2;
+  display: none;
+  float: left;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  margin-top: 3px;
+  list-style: none;
+  text-align: left;
+  background-color: #ffffff;
+  border: 1px solid #cccccc;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+  overflow: hidden;
+  -webkit-box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+  background-clip: padding-box;
+}
+span.twitter-typeahead .tt-suggestion {
+  display: block;
+  padding: 0px 12px;
+  padding-bottom: 1px;
+  margin: 0;
+  clear: both;
+  font-weight: normal;
+  line-height: 35px;
+  font-size: 14px;
+  color: #333333;
+  white-space: nowrap;
+  cursor: pointer;
+}
+span.twitter-typeahead .tt-suggestion:hover,
+span.twitter-typeahead .tt-suggestion:focus {
+  text-decoration: none;
+  outline: 0;
+  background-color: #eee;
+}
+span.twitter-typeahead .tt-suggestion.tt-cursor {
+  background-color: #eee;
+}
+.input-group span.twitter-typeahead {
+  display: block !important;
+}
+.input-group span.twitter-typeahead .tt-menu {
+  top: 32px !important;
+}
+.input-group.input-group-lg span.twitter-typeahead .tt-menu {
+  top: 44px !important;
+}
+.input-group.input-group-sm span.twitter-typeahead .tt-menu {
+  top: 28px !important;
+}

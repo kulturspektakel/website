@@ -1,0 +1,54 @@
+.logo {
+  .colorfield-big {
+    height: 140px;
+  }
+
+  .colorfield {
+    height: 70px;
+  }
+
+  .copy {
+    max-width: 100%;
+    border: 0;
+  }
+
+  .logos {
+    text-align: center;
+
+    .btn {
+      display: block;
+      margin-top: 10px;
+    }
+
+    .logo-box {
+      height: 300px;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      margin-bottom: 20px;
+    }
+  }
+
+  .font-preview {
+    font-size: 20px;
+
+    &.nexabold {
+      font-family: "nexabold";
+    }
+    &.nexalight {
+      font-family: "nexalight";
+    }
+    &.latolight {
+      font-family: "Lato";
+      font-weight: 300;
+    }
+    &.latoregular {
+      font-family: "Lato";
+      font-weight: 400;
+    }
+    &.latobold {
+      font-family: "Lato";
+      font-weight: 700;
+    }
+  }
+}

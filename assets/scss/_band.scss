@@ -1,0 +1,100 @@
+.band-socialmedia {
+  padding-left: 12px;
+  padding-right: 12px;
+  margin-bottom: 40px;
+  font-size: 30px;
+
+  .col-xs-4 {
+    padding-left: 3px;
+    padding-right: 3px;
+    margin-bottom: 6px;
+
+    img {
+      width: 100%;
+    }
+  }
+
+  a.square-box {
+    display: block;
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    background-color: #eee;
+    color: inherit;
+
+    &:before {
+      content: "";
+      display: block;
+      padding-top: 100%;
+    }
+
+    &:hover {
+      background-color: #e5e5e5;
+    }
+
+    .square-content {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+
+      div {
+        display: table;
+        width: 100%;
+        height: 100%;
+      }
+      span {
+        display: table-cell;
+        text-align: center;
+        vertical-align: middle;
+
+        @media (min-width: 1200px), (max-width: 768px) {
+          font-size: 40px;
+        }
+
+        i {
+          text-align: center;
+          margin: auto;
+        }
+      }
+    }
+  }
+}
+
+.band-stagetime {
+  background: #eee;
+  text-align: center;
+  border-top: 5px solid #eee;
+  padding: 20px 0 16px;
+  margin-bottom: 6px;
+  font-family: "nexabold";
+  text-transform: uppercase;
+  font-size: 28px;
+  line-height: 22px;
+
+  .band-stagetime-stage {
+    font-size: 16px;
+  }
+
+  &.GB {
+    border-top-color: $GBcolor;
+  }
+  &.KB {
+    border-top-color: $KBcolor;
+  }
+  &.WB {
+    border-top-color: $WBcolor;
+  }
+  &.A {
+    border-top-color: $Acolor;
+  }
+  &.DJ {
+    border-top-color: $DJcolor;
+  }
+}
+
+.band-photo {
+  width: 100%;
+  margin-bottom: 10px;
+}

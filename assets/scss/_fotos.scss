@@ -1,0 +1,103 @@
+.album {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+
+  li {
+    float: left;
+    width: 25%;
+    display: block;
+
+    a {
+      display: block;
+      overflow: hidden;
+      margin: 3px;
+      position: relative;
+
+      img {
+        width: 100%;
+
+        -webkit-transition: 0.2s;
+        -moz-transition: 0.2s;
+        -ms-transition: 0.4s;
+        -o-transition: 0.2s;
+        transition: 0.2s;
+      }
+
+      &:hover img {
+        -webkit-transform: scale(1.1);
+        -moz-transform: scale(1.1);
+        -ms-transform: scale(1.1);
+        -o-transform: scale(1.1);
+        transform: scale(1.1);
+
+        -webkit-transition: 0.4s;
+        -moz-transition: 0.4s;
+        -ms-transition: 0.4s;
+        -o-transition: 0.4s;
+        transition: 0.4s;
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    li {
+      width: 33%;
+    }
+  }
+}
+
+.old {
+  li:nth-child(12) a:after {
+    display: block;
+    content: "";
+    background-color: rgba(0, 0, 0, 0.6);
+    background-size: 50%;
+    background-image: url("../img/icon-plus.svg");
+    background-repeat: no-repeat;
+    background-position: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    .no-svg & {
+      background-image: url("../img/icon-plus.png");
+    }
+  }
+
+  .more {
+    display: none;
+  }
+}
+
+#swipebox-caption {
+  font-family: "nexabold";
+  text-transform: uppercase;
+  font-size: 18px;
+  line-height: 48px;
+}
+
+.album-title {
+  display: block;
+  text-align: center;
+  padding: 40px;
+  padding-top: 50px;
+  margin-bottom: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  z-index: 2;
+  width: 100%;
+  color: inherit;
+
+  &:hover {
+    color: $textcolor;
+  }
+
+  h2 {
+    font-family: "nexabold";
+    font-size: 32px;
+    margin: 0;
+  }
+}

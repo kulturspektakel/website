@@ -1,0 +1,28 @@
+title: Post
+num: '{{ page.date.toDate("Ymd") }}'
+
+status:
+  draft: Entwurf
+  listed: Veröffentlicht
+
+columns:
+  main:
+    width: 2/3
+    fields:
+      text:
+        type: textarea
+        size: large
+
+  sidebar:
+    width: 1/3
+    sections:
+      files:
+        type: files
+      meta:
+        type: fields
+        fields:
+          date:
+            type: date
+            time: false
+            default: now
+            label: Datum

@@ -1,0 +1,67 @@
+.panel {
+  width: 100%;
+  min-height: 250px;
+  color: white;
+  text-transform: uppercase;
+  text-align: center;
+  background-color: #333;
+  margin-bottom: 20px;
+  position: relative;
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
+  background-position: center 30%;
+
+  h2 {
+    font-size: 34px;
+    margin: 0;
+    background-image: url("../img/overlay.png");
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+    background-position: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding-top: 100px;
+  }
+}
+
+#instafeed {
+  overflow: hidden;
+  width: 100%;
+  background-color: $textcolor;
+  margin-top: 60px;
+  margin-bottom: 60px;
+
+  .slider-row {
+    overflow: hidden;
+    width: 200%;
+    height: 150px;
+    margin-left: -150px;
+  }
+
+  @media (max-width: 768px) {
+    .slider-row {
+      height: 100px;
+      margin-left: -100px;
+    }
+
+    .slider-row img {
+      max-width: 100px;
+    }
+  }
+
+  .slider-row img {
+    float: left;
+  }
+}
+
+#maps {
+  height: 300px;
+  background-color: $textcolor;
+}

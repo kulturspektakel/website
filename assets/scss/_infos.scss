@@ -1,0 +1,11 @@
+.infos .content {
+  text-align: center;
+
+  section > p {
+    margin: auto;
+    margin-bottom: 40px;
+    @media (min-width: 768px) {
+      max-width: 80%;
+    }
+  }
+}

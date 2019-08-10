@@ -82,7 +82,7 @@ class PanelPlugins
                 }
             }
         }
-
+        
         return implode(PHP_EOL, $dist);
     }
 

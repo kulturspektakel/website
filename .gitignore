@@ -36,5 +36,9 @@ Icon
 # ---------------
 /site/config/.license
 
+# Build files
+node_modules
+/assets/build
+
 # Contents
 /content

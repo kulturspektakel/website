@@ -1,0 +1,33 @@
+.angebot .content {
+  text-align: center;
+
+  h1 {
+    margin-bottom: 60px;
+  }
+
+  .buden {
+    margin-bottom: 30px;
+
+    h3 {
+      margin-top: 30px;
+      margin-bottom: 0;
+    }
+  }
+
+  section > p {
+    margin: auto;
+    margin-bottom: 40px;
+    @media (min-width: 768px) {
+      max-width: 80%;
+    }
+  }
+
+  .sports-image {
+    margin-bottom: -50px;
+    @media (min-width: 768px) {
+      max-width: 80%;
+      margin-left: auto;
+      margin-right: auto;
+    }
+  }
+}

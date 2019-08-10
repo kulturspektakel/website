@@ -1,0 +1,105 @@
+.footer {
+  background-color: #272727;
+  padding: 20px 0;
+  color: white;
+  margin-top: 60px;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+
+  .footer-infos {
+    h3 {
+      font-size: 16px;
+      margin: 0;
+      margin-bottom: 7px;
+    }
+
+    p {
+      margin-left: 52px;
+      padding-right: 20px;
+    }
+
+    img {
+      width: 42px;
+      float: left;
+      margin-right: 10px;
+    }
+  }
+
+  .footer-icons {
+    overflow: hidden;
+
+    .icons-right {
+      float: right;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .footer-infos {
+      text-align: center;
+
+      p {
+        margin-left: 0;
+        padding-right: 0;
+      }
+    }
+    .footer-icons {
+      padding-top: 10px;
+      overflow: hidden;
+      padding-bottom: 15px;
+      text-align: center;
+
+      .icons-right {
+        float: none;
+      }
+    }
+  }
+
+  .byon {
+    text-align: center;
+  }
+
+  .links,
+  .links a {
+    color: #777;
+  }
+
+  .links a {
+    color: #777;
+
+    &:hover {
+      color: #999;
+    }
+  }
+
+  .social {
+    background-color: white;
+    border-radius: 999em;
+    display: inline-block;
+    color: #272727;
+    width: 40px;
+    height: 40px;
+    line-height: 40px;
+    font-size: 24px;
+    margin: 10px 15px 15px;
+    text-align: center;
+
+    -webkit-transition: all 0.2s;
+    transition: width all 0.2s;
+
+    &:hover {
+      -ms-transform: scale(1.1);
+      -webkit-transform: scale(1.1);
+      transform: scale(1.1);
+
+      -webkit-transition: all 0.2s;
+      transition: width all 0.2s;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .social {
+      margin: 10px 12px 15px;
+    }
+  }
+}
