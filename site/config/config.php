@@ -10,7 +10,10 @@
 return [
   'debug' => true,
   'smartypants' => true,
-  
+  'slack.clientId' => '3495902661.316840614818',
+  'slack.clientSecret' => '3f178229aab8c9bcc1c0508da9e12f07',
+  'slack.webhook' => 'https://hooks.slack.com/services/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',
+
   'routes' => [
     [
       'pattern' => 'archiv',
