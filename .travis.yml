@@ -1,6 +1,6 @@
 language: php
 php:
-  - 7
+  - 7.1
 addons:
   ssh_known_hosts: kulturspektakel.de
 before_install:
