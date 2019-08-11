@@ -1,0 +1,58 @@
+title: Band
+
+status:
+  draft: Entwurf
+  unlisted: Öffentlich
+
+columns:
+  contents:
+    width: 2/3
+    sections:
+      Bandfoto:
+        type: files
+      text:
+        type: fields
+        fields:
+          Shortdescription:
+            label: Programmhefttext
+            type: textarea
+            size: small
+          Description:
+            label: Pressetext
+            type: textarea
+            size: large
+
+  infos:
+    width: 1/3
+    sections:
+      Bands:
+        type: fields
+        fields:
+          stage:
+            type: select
+            options:
+              GB: Große Bühne
+              KB: Kleine Bühne
+              WB: Waldbühne
+              A: Aula
+              DJ: DJ-Area
+          day:
+            type: select
+            options:
+              Freitag: Freitag
+              Samstag: Samstag
+              Sonntag: Sonntag
+          time:
+            type: time
+          genre:
+            type: text
+          website:
+            type: url
+          soundcloud:
+            type: url
+          twitter:
+            type: url
+          instagram:
+            type: url
+          spotify:
+            type: url

@@ -1,5 +1,5 @@
 <?php
-Kirby::plugin('kirby/columns', [
+Kirby::plugin('kulturspektakel/tags', [
   'hooks' => [
     'kirbytags:before' => function ($text, array $data = []) {
       $text = preg_replace_callback(
@@ -23,9 +23,15 @@ Kirby::plugin('kirby/columns', [
         },
         $text
       );
-
       return $text;
     }
-  ]
+  ],
+  'tags' => [
+      'honeycomb' => [
+        'html' => function($tag) {
+          return '<a href="http://wikipedia.org">Wikipedia</a>';
+        }
+      ]
+    ]
 ]);
 ?>

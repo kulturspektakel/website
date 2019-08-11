@@ -8,15 +8,20 @@
   "devDependencies": {
     "@prettier/plugin-php": "^0.11.2",
     "gulp": "^4.0.2",
+    "gulp-clean-css": "^4.2.0",
+    "gulp-concat": "^2.6.1",
     "gulp-sass": "^4.0.2",
+    "gulp-uglify": "^3.0.2",
     "node-sass": "^4.12.0"
   },
   "dependencies": {
     "bootstrap-sass": "^3.4.1",
+    "bootstrap-select": "^1.13.10",
     "font-awesome": "^4.7.0",
-    "gulp-concat": "^2.6.1",
-    "gulp-uglify": "^3.0.2",
     "jquery": "^3.4.1",
-    "swipebox": "^1.4.6"
+    "jquery-sticky": "^1.0.4",
+    "swipebox": "^1.4.6",
+    "typeahead.js": "^0.11.1",
+    "unveil2": "^2.0.8"
   }
 }

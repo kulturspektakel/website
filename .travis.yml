@@ -1,6 +1,6 @@
 language: node_js
 node_js:
-- 10
+  - 10
 addons:
   ssh_known_hosts: kulturspektakel.de
 before_install:
@@ -10,7 +10,9 @@ before_install:
   - chmod 600 ./deploy_rsa
   - ssh-add ./deploy_rsa
 script:
-  - echo "done"
+  - yarn
+  - composer install
+  - gulp
 deploy:
   provider: script
   skip_cleanup: true

@@ -1,0 +1,52 @@
+title: Unterseite
+
+status:
+  draft: Entwurf
+  listed: Öffentlich
+
+columns:
+  files:
+    width: 1/1
+    fields:
+      Bilder und Dateien:
+        type: files
+  intro:
+    width: 1/1
+    fields:
+      Intro:
+        type: textarea
+        size: medium
+  col1:
+    width: 1/4
+    fields:
+      col1:
+        type: textarea
+        size: medium
+        label: Splate 1
+  col2:
+    width: 1/4
+    fields:
+      col2:
+        type: textarea
+        size: medium
+        label: Splate 2
+  col3:
+    width: 1/4
+    fields:
+      col3:
+        type: textarea
+        size: medium
+        label: Splate 3
+  col4:
+    width: 1/4
+    fields:
+      col4:
+        type: textarea
+        size: medium
+        label: Splate 4
+  outro:
+    width: 1/1
+    fields:
+      outro:
+        type: textarea
+        size: medium

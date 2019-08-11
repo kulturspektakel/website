@@ -11,24 +11,6 @@ App = {
     $(".mobile-nav").click(function() {
       $(".hero").toggleClass("active");
     });
-
-    //SVG to PNG fallback
-    if (
-      !document.implementation.hasFeature(
-        "http://www.w3.org/TR/SVG11/feature#BasicStructure",
-        "1.1"
-      )
-    ) {
-      $('img[src*="svg"]').each(function() {
-        $(this).attr(
-          "src",
-          $(this)
-            .attr("src")
-            .replace(".svg", ".png")
-        );
-      });
-      $("body").addClass("no-svg");
-    }
   },
 
   lineup: function() {
@@ -72,7 +54,7 @@ App = {
       }
     });
 
-    // $(".selectpicker").selectpicker();
+    $(".selectpicker").selectpicker();
 
     yearSelector.on("change", function() {
       document.location.href = yearSelector.val();
@@ -109,7 +91,7 @@ App = {
     });
 
     $(".bandlist .band-image img").unveil();
-    if (!App.isMobile) $(".bandlist .band-stage-name").tooltip();
+    // if (!App.isMobile) $(".bandlist .band-stage-name").tooltip();
 
     $("#bandsearch")
       .typeahead(
@@ -191,13 +173,13 @@ App = {
 
   home: function() {
     if (App.isMobile) {
-      $(".home .hero").sticky({
-        topSpacing: -300
-      });
+      // $(".home .hero").sticky({
+      //   topSpacing: -300
+      // });
     } else {
-      $(".home .hero").sticky({
-        topSpacing: -430
-      });
+      // $(".home .hero").sticky({
+      //   topSpacing: -430
+      // });
       $(document).scroll(function() {
         $(".home .nav-logo").css(
           "left",

@@ -3,4 +3,6 @@
     <?= $video->title() ?>
   </h2>
 </a>
-<?= youtube($video->link()) ?>
+<figure class="video">
+  <?= video($video->link(), [], ['frameborder' => 0]) ?>
+</figure>

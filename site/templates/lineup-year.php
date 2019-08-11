@@ -13,9 +13,10 @@
       </h1>
     </div>
     <div class="col-sm-5" id="searchcontrol">
-      <input type="search" placeholder="Suche..." />
+      <?php $years = $page->parent()->children()->filterBy('visibility','true')->sortBy('title')->flip()->pluck('title') ?>
+      <a id="q-bandsearch"><i class="fa fa-search"></i></a>
+      <input class="form-control" placeholder="Nach Bands suchen..." id="bandsearch" type="search" />
       <select class="form-control selectpicker yearSelector">
-        <?php $years = $page->parent()->children()->filterBy('visibility','true')->sortBy('title')->flip()->pluck('title') ?>
         <?php foreach ($years as $year) { ?>
           <option value="<?=$year ?>" <?php if ($page->title() == $year) {echo 'selected="selected"';}?>><?=$year ?></option>
         <?php } ?>

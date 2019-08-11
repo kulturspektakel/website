@@ -1,4 +1,6 @@
-title: Seite
+title: Lineup
+
+icon: 🎸
 
 columns:
   pages:
@@ -7,9 +9,12 @@ columns:
       Test:
         type: fields
         fields:
-          text:
+          bookinginfo:
             type: textarea
             size: small
-      Unterseiten:
+      Jahre:
         type: pages
-        create: subpage
+        sortBy: title desc
+        template:
+          - lineup-year
+        create: lineup-year

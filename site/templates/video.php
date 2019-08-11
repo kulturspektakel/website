@@ -2,8 +2,8 @@
 
 <main class="content" role="main">
   <section class="container">
-    <?=snippet( 'album',array( 'album'=>$page)) ?>
+    <?=snippet('album', ['album' => $page]) ?>
   </section>
 </main>
 
-<?php snippet( 'footer') ?>
+<?php snippet('footer') ?>

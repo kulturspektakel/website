@@ -1,0 +1,29 @@
+title: Fotoalbum
+
+icon: 📷
+
+status:
+  draft: Entwurf
+  unlisted: Öffentlich
+
+columns:
+  - width: 1/1
+    sections:
+      Info:
+        type: fields
+        fields:
+          Date:
+            type: date
+            time: false
+            default: now
+            label: Datum
+      Fotos:
+        type: files
+        layout: cards
+        info: "{{ file.dimensions }}"
+        image:
+          ratio: 1/1
+          cover: true
+        min: 1
+        size: small
+        sortable: false

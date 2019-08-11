@@ -1,0 +1,17 @@
+title: Media
+
+status:
+  draft: Entwurf
+  unlisted: Öffentlich
+
+columns:
+  - width: 1/1
+    sections:
+      Alben:
+        type: pages
+        create:
+          - album
+          - video
+        sortable: false
+        sortBy: date desc
+        info: "{{ page.files.count }} Fotos"

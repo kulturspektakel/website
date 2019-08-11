@@ -3,7 +3,7 @@ num: '{{ page.date.toDate("Ymd") }}'
 
 status:
   draft: Entwurf
-  listed: Veröffentlicht
+  unlisted: Öffentlich
 
 columns:
   main:
