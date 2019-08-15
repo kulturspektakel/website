@@ -27,11 +27,20 @@ Kirby::plugin('kulturspektakel/tags', [
     }
   ],
   'tags' => [
-      'honeycomb' => [
-        'html' => function($tag) {
-          return '<a href="http://wikipedia.org">Wikipedia</a>';
+    'honeycomb' => [
+      'html' => function($tag) {
+        return '<a href="http://wikipedia.org">Wikipedia</a>';
+      }
+    ],
+    'banner' => [
+      'html' => function($tag) {
+        if ($tag->parent()->image($tag->attr('banner'))) {
+          return '</section><section class="banner photo" style="background-image: url('.$tag->parent()->image($tag->attr('banner'))->url().')"></section><section class="container subpage">';
+        } else {
+          return snippet($tag->attr('banner'));
         }
-      ]
+      }
     ]
+  ]
 ]);
 ?>

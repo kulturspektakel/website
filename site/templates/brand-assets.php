@@ -1,7 +1,7 @@
 <?php snippet( 'header') ?>
 
 <section class="container">
-  <h2>Logo</h2>
+  <h1>Logo</h1>
   <div class="row logos">
     <div class="col-sm-4">
       <div class="logo-download">
@@ -54,7 +54,7 @@
     Die Bildmarke wird immer quadratisch dargestellt, das "K" wird in weiß gesetzt nicht transparent gelassen. Die Farbe der Textmarke kann auf dunklen Hintergründen in weiß gesetzt werden.
   </p>
   <hr />
-  <h2>Farben</h2>
+  <h1>Farben</h1>
   <div class="row">
     <div class="col-sm-4">
       <div class="colorfield-big" style="background-color: #E12E2E"></div>
@@ -130,7 +130,7 @@
     </div>
   </div>
   <hr />
-  <h2>Fonts</h2>
+  <h1>Fonts</h1>
   <div class="">
     <p>
       <span class="font-preview nexabold">NEXA BOLD</span>

@@ -51,10 +51,10 @@
 .old {
   li:nth-child(12) a:after {
     display: block;
-    content: "";
+    content: '';
     background-color: rgba(0, 0, 0, 0.6);
     background-size: 50%;
-    background-image: url("../img/icon-plus.svg");
+    background-image: url('../img/icon-plus.svg');
     background-repeat: no-repeat;
     background-position: center;
     position: absolute;
@@ -64,7 +64,7 @@
     bottom: 0;
 
     .no-svg & {
-      background-image: url("../img/icon-plus.png");
+      background-image: url('../img/icon-plus.png');
     }
   }
 
@@ -74,7 +74,7 @@
 }
 
 #swipebox-caption {
-  font-family: "nexabold";
+  font-family: 'nexabold';
   text-transform: uppercase;
   font-size: 18px;
   line-height: 48px;
@@ -96,7 +96,7 @@
   }
 
   h2 {
-    font-family: "nexabold";
+    font-family: 'nexabold';
     font-size: 32px;
     margin: 0;
   }

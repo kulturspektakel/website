@@ -1,4 +1,9 @@
 .logo {
+  h1 {
+    margin-bottom: 40px;
+    text-align: center;
+  }
+
   .colorfield-big {
     height: 140px;
   }
@@ -33,21 +38,21 @@
     font-size: 20px;
 
     &.nexabold {
-      font-family: "nexabold";
+      font-family: 'nexabold';
     }
     &.nexalight {
-      font-family: "nexalight";
+      font-family: 'nexalight';
     }
     &.latolight {
-      font-family: "Lato";
+      font-family: 'Lato';
       font-weight: 300;
     }
     &.latoregular {
-      font-family: "Lato";
+      font-family: 'Lato';
       font-weight: 400;
     }
     &.latobold {
-      font-family: "Lato";
+      font-family: 'Lato';
       font-weight: 700;
     }
   }

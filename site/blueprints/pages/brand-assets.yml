@@ -1,0 +1,12 @@
+title: Home
+
+icon: 🏠
+
+options:
+  status: false
+
+sections:
+  info:
+    headline: Info
+    type: info
+    text: Seite muss über das Template direkt geändert werden.

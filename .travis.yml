@@ -12,7 +12,7 @@ before_install:
 script:
   - yarn
   - composer install
-  - gulp
+  - yarn gulp
 deploy:
   provider: script
   skip_cleanup: true

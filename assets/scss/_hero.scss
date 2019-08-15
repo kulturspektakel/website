@@ -12,7 +12,7 @@
 }
 
 .hero {
-  background: url("../img/hero.jpg") no-repeat center center;
+  background: url('../img/hero.jpg') no-repeat center center;
   -webkit-background-size: cover;
   -moz-background-size: cover;
   -o-background-size: cover;
@@ -29,7 +29,7 @@
 
   h2 {
     color: white;
-    font-family: "nexalight";
+    font-family: 'nexalight';
     margin-top: 30px;
     height: 35px;
   }
@@ -71,7 +71,7 @@
 
     .menu {
       list-style: none;
-      font-family: "nexabold";
+      font-family: 'nexabold';
       text-transform: uppercase;
       font-size: 18px;
       margin: 0;
@@ -96,13 +96,13 @@
           }
 
           &.active {
-            background-image: url("../img/menu-active.svg");
+            background-image: url('../img/menu-active.svg');
             background-repeat: no-repeat;
             background-position: center bottom;
             background-size: 5px 5px;
 
             .no-svg & {
-              background-image: url("../img/menu-active.png");
+              background-image: url('../img/menu-active.png');
             }
           }
         }
