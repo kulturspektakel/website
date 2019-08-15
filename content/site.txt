@@ -2,7 +2,7 @@ Title: Kulturspektakel Gauting
 
 ----
 
-Eventdate: 19. - 21. Juli 2019
+Eventdate: 2019-07-19
 
 ----
 
@@ -14,7 +14,7 @@ Footerlinks: (link:/booking  text: Booking), (link:/impressum  text: Impressum),
 
 ----
 
-Sociallinks: 
+Sociallinks:
 
 <a href="https://facebook.com/kulturspektakel" target="_blank" class="social"><i class="fa fa-facebook"></i></a><a href="https://www.youtube.com/channel/UCLOU06fHSN3Hwe0rmbrFtpA" target="_blank" class="social"><i class="fa fa-youtube"></i></a><a href="https://instagram.com/kulturspektakel" target="_blank" class="social"><i class="fa fa-instagram"></i></a><a href="https://twitter.com/kulturspektakel" target="_blank" class="social"><i class="fa fa-twitter"></i></a>
 <div class="byon">

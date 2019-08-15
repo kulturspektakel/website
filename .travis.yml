@@ -13,9 +13,10 @@ script:
   - yarn
   - composer install
   - yarn gulp
+  - rm -rf content node_modules media
 deploy:
   provider: script
   skip_cleanup: true
-  script: ssh kultwiki@kulturspektakel.de 'cd html && git pull origin master'
+  script: rsync -r --delete-after --quiet $TRAVIS_BUILD_DIR kultwiki@kulturspektakel.de:html
   on:
     branch: master

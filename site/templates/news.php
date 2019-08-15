@@ -1,8 +1,8 @@
 <?php
-  snippet( 'header', array(
-    'og_image' => thumb($page->images()->first(), array('width' => 1200, 'autoOrient' => true))->url(),
-    'og_description' => excerpt($page->text(), 30, 'words').'...'
-  ));
+  snippet('header', [
+    'og_image' => $page->images()->first()->thumb(['width' => 1200, 'autoOrient' => true])->url(),
+    'og_description' => $page->text()->excerpt(30, 'words').'...'
+  ]);
 ?>
 
 <section class="container news-container news-container-single" role="main">

@@ -35,10 +35,6 @@
 
     <?php echo css(array(
       '//fonts.googleapis.com/css?family=Lato:300,400,300italic,400italic',
-      // '/bower_components/bootstrap/dist/css/bootstrap.min.css',
-      // '/bower_components/bootstrap-select/dist/css/bootstrap-select.min.css',
-      // '/bower_components/fontawesome/css/font-awesome.min.css',
-      // '/bower_components/swipebox/src/css/swipebox.css',
       '/assets/build/index.css'
     )); ?>
   </head>
@@ -64,7 +60,7 @@
         <a class="branding" href="<?= url(); ?>" id="logo" oncontextmenu="return false">
           <img src="<?= url('assets/img/logo-text-right-white.svg'); ?>" alt="<?= html($site->title()); ?>" />
         </a>
-        <h2><?= $site->eventdate(); ?></h2>
+        <h2><?= $site->eventdate()->toDate('%d'); ?>. - <?= strftime("%d. %B %Y", $site->eventdate()->toDate() + 2 * 24 * 60 * 60); ?></h2>
         <?php snippet('menu'); ?>
       </div>
     </header>

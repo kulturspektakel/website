@@ -10,7 +10,7 @@ function slackMessage($message) {
     ]
   ];
   $context  = stream_context_create($options);
-  // $result = file_get_contents($url, false, $context);
+  $result = file_get_contents($url, false, $context);
 }
 
 Kirby::plugin('kulturspektakel/slack', [
@@ -56,11 +56,15 @@ Kirby::plugin('kulturspektakel/slack', [
   'hooks' => [
     'page.create:after' => function ($newPage, $oldPage) {
       $message = "Neue Seite von *<@".$this->user()->id().">* angelegt: <".$newPage->url()."|".$newPage->title().">";
-    	slackMessage($message);
+      try {
+        slackMessage($message);
+      } catch(Exception $e) {}
     },
     'page.update:after' => function ($page) {
       $message = "Seite von *<@".$this->user()->id().">* aktualisiert: <".$page->url()."|".$page->title().">";
-      slackMessage($message);
+      try {
+        slackMessage($message);
+      } catch(Exception $e) {}
     }
   ]
 ]);

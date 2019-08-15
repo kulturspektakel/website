@@ -19,27 +19,52 @@ status:
 columns:
   - width: 1/1
     sections:
-      ## The `images` files section shows all images of the current page that use the `image` template
-
+      Files:
+        type: files
       Plakate:
-        type: files
-        layout: cards
-        info: "{{ file.dimensions }}"
-        image:
-          ratio: 3/4
-          cover: true
-        min: 1
-        size: small
-        sortBy: filename desc
-        sortable: false
-      Wettbewerb:
-        type: files
-        layout: cards
-        info: "{{ file.dimensions }}"
-        image:
-          ratio: 3/4
-          cover: true
-        min: 1
-        size: small
-        sortBy: filename desc
-        sortable: false
+        type: fields
+        fields:
+          title:
+            label: Titel
+            type: text
+          text:
+            label: text
+            type: textarea
+          competitionPosters:
+            label: Einsendungen
+            type: structure
+            entry: >
+              {{designer}}
+            fields:
+              designer:
+                label: Designer (wird nicht angezeigt)
+                type: text
+                required: true
+              image:
+                label: Bild
+                type: select
+                options: images
+                required: true
+          missing:
+            label: Fehlendes Plakat
+            type: textarea
+          posters:
+            label: Plakate
+            type: structure
+            entry: >
+              {{year}} {{designer}}<br />
+              {{motiv}}
+            fields:
+              designer:
+                label: Designer
+                type: text
+              year:
+                label: Jahr
+                type: number
+              motiv:
+                label: Motiv
+                type: text
+              image:
+                label: Bild
+                type: select
+                options: images

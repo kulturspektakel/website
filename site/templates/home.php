@@ -16,7 +16,7 @@
         <hgroup>
           <?php snippet('date', array('date' => $p->date())); ?>
           <h2>
-            <a href="<?= $p->url() ?>">
+            <a href="<?= basename($p->url()) ?>">
               <?= $p->title()->html() ?>
             </a>
           </h2>
@@ -29,7 +29,7 @@
       ?>
     </ul>
     <p class="archive-btn">
-      <a href="archiv">ältere Artikel anzeigen</a>
+      <a href="/archiv">ältere Artikel anzeigen</a>
     </p>
   <?php } else { ?>
     <ul class="news archive">
@@ -37,15 +37,15 @@
         $i = 0;
         $lastyear = '';
         foreach ($page->children()->filter(function ($page) {return $page->date();})->sortBy('date', 'desc') as $p) {
-          if ($lastyear != $p->date()->toDate('Y')) {
+          if ($lastyear != $p->date()->toDate('%Y')) {
       ?>
-          <li class="heading"><h2><?= $p->date()->toDate('Y') ?></h2></li>
+          <li class="heading"><h2><?= $p->date()->toDate('%Y') ?></h2></li>
         <?php } ?>
         <li style="opacity: <?= 1 - ($i / $page->children()->count()) * 0.7 ?>">
           <hgroup>
             <?php snippet('date', ['date' => $p->date()]); ?>
             <h2>
-              <a href="<?= $p->url() ?>">
+              <a href="<?= basename($p->url()) ?>">
                 <?= $p->title()->html() ?>
               </a>
             </h2>
@@ -53,7 +53,7 @@
         </li>
         <?php
           $i++;
-          $lastyear = $p->date()->toDate('Y');
+          $lastyear = $p->date()->toDate('%Y');
         } ?>
     </ul>
   <?php } ?>

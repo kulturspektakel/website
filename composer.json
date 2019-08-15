@@ -21,5 +21,8 @@
   },
   "config": {
     "optimize-autoloader": true
+  },
+  "scripts": {
+    "post-install-cmd": "cd site/plugins/tags && composer install"
   }
 }
