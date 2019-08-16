@@ -43,5 +43,5 @@ node_modules
 # Contents
 /content
 /kirby
-/vendor
+vendor
 /yarn-error.log

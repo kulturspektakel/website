@@ -1,0 +1,27 @@
+title: Event
+
+status:
+  draft: Entwurf
+  unlisted: Öffentlich
+
+columns:
+  pages:
+    width: 1/4
+    sections:
+      Logo:
+        type: files
+        layout: cards
+        image:
+          ratio: 1/1
+          cover: true
+  pages2:
+    width: 3/4
+    sections:
+      Info:
+        type: fields
+        fields:
+          datum:
+            type: text
+          text:
+            type: textarea
+            size: small

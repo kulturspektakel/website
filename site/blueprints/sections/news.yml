@@ -1,7 +1,7 @@
 type: pages
 headline: News
 parent: kirby.page("home")
-info: "{{ page.date.toDate('d.m.Y') }}"
+info: "{{ page.date.toDate('%d.%m.%Y') }}"
 template: news
 empty: Keine Posts
 sortBy: date desc

@@ -1,4 +1,7 @@
 <?php
+
+require __DIR__ . '/vendor/autoload.php';
+
 Kirby::plugin('kulturspektakel/tags', [
   'hooks' => [
     'kirbytags:before' => function ($text, array $data = []) {
@@ -29,7 +32,10 @@ Kirby::plugin('kulturspektakel/tags', [
   'tags' => [
     'honeycomb' => [
       'html' => function($tag) {
-        return '<a href="http://wikipedia.org">Wikipedia</a>';
+        return '<div class="honeycomb">
+            <img src="'.$tag->parent()->image($tag->attr('honeycomb'))->thumb(['width' => 200,'height' => 200, 'crop' => true])->url().'" />
+          </div>
+        ';
       }
     ],
     'banner' => [
@@ -39,6 +45,39 @@ Kirby::plugin('kulturspektakel/tags', [
         } else {
           return snippet($tag->attr('banner'));
         }
+      }
+    ],
+    'calendar' => [
+      'html' => function($tag) {
+        $ical = new ICal\ICal($tag->attr('calendar'), array(
+          'defaultSpan'           => 2,
+          'defaultWeekStart'      => 'MO',
+          'skipRecurrence'        => false,
+          'useTimeZoneWithRRules' => false,
+        ));
+        $events = $ical->eventsFromInterval('50 weeks');
+        $res = "<ul class='ics-calendar'>";
+        foreach ($events as $event) {
+          $dtstart = new \DateTime('@' . (int) $ical->iCalDateToUnixTimestamp($event->dtstart));
+          $dtend = new \DateTime('@' . (int) ($ical->iCalDateToUnixTimestamp($event->dtend)-1));
+          $target_timezone = new DateTimeZone('Europe/Berlin');
+          $dtstart->setTimeZone($target_timezone);
+          $dtend->setTimeZone($target_timezone);
+
+          if ($dtstart->format('d.m.Y') != $dtend->format('d.m.Y')) {
+            $time = ($ical->iCalDateToUnixTimestamp($event->dtstart)%86400 === 0) ? $dtstart->format('d.m.') : $dtstart->format('d.m.');
+            $time .= ' bis '.(($ical->iCalDateToUnixTimestamp($event->dtend)%86400 === 0) ? $dtend->format('d.m.Y') : $dtend->format('d.m.Y H:i').' Uhr');
+          } else {
+            $time = ($ical->iCalDateToUnixTimestamp($event->dtstart)%86400 === 0) ? $dtstart->format('d.m.Y') : $dtstart->format('d.m.Y, H:i').' Uhr';
+          }
+          $res .= '<li>'.
+          '<time>'.$time.'</time>'.
+          '<h3>'.$event->summary.'</h3>'.
+          $event->location.'</li>';
+        }
+        return $res.'</ul><div class="ics-subscribe">
+          <a href="'.$tag->attr('calendar').'">Kalender abonnieren</a>
+        </div>';
       }
     ]
   ]

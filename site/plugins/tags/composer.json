@@ -1,0 +1,16 @@
+{
+  "name": "kulturspektakel/tags",
+  "description": "Kulturspektakel Tags Plugin",
+  "version": "1.0.0",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Daniel Büchele",
+      "email": "daniel@buechele.cc",
+      "homepage": "https://buechele.cc"
+    }
+  ],
+  "require": {
+    "johngrogg/ics-parser": "^2.1"
+  }
+}

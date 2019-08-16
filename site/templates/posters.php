@@ -1,13 +1,13 @@
 <?php snippet('header') ?>
 
 <section class="container">
-  <?php echo kirbytext($page->text()) ?>
+  <?= kirbytext($page->text()) ?>
   <?php $posters = $page->competitionPosters()->yaml(); ?>
   <?php if (count($posters) > 0) { ?>
   <ul class="plakat-liste">
     <?php foreach($posters as $poster) { ?>
-      <li style="background-image: url('<?=$page->image($poster['image'])->thumb(['width' => 400])->url() ?>')">
-        <a class="open-gallery" href="/content/plakate/<?php echo $poster['image']; ?>"></a>
+      <li style="background-image: url('<?=$page->image(basename($poster['image']))->thumb(['width' => 400])->url() ?>')">
+        <a class="open-gallery" href="/content/<?= $poster['image']; ?>"></a>
       </li>
     <?php } ?>
   </ul>
@@ -18,9 +18,9 @@
   <ul class="plakat-liste">
     <?php $posters = $page->posters()->yaml(); ?>
     <?php foreach($posters as $poster) { ?>
-      <li style="background-image: url('<?=$page->image($poster['image'])->thumb(['width' => 400])->url() ?>')">
+      <li style="background-image: url('<?=strlen($poster['image']) > 0 ? $page->image(basename($poster['image']))->thumb(['width' => 400])->url(): '' ?>')">
         <?php if (strlen($poster['image'])==0) { ?><h2 class="fallback-year"><?php echo $poster['year']; ?></h2><?php } else { ?>
-          <a class="open-gallery" href="/content/plakate/<?php echo $poster['image']; ?>"></a>
+          <a class="open-gallery" href="/content/<?= $poster['image']; ?>"></a>
         <?php } ?>
         <div class="poster" >
           <?php if (strlen($poster['designer'])==0 && strlen($poster['motiv'])==0) { ?>

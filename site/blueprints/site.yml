@@ -33,8 +33,9 @@ tabs:
             label: Published on
             fields:
               eventdate:
-                label: Kult-Datum
-                type: text
+                label: Kult-Datum (Freitag)
+                type: date
+                time: false
               infotext:
                 label: Beschreibungstext
                 type: textarea

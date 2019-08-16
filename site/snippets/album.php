@@ -4,7 +4,7 @@
     <h2>
       <?= $album->title() ?>
     </h2>
-    <?= $album->images()->count() ?> Fotos vom <?= $album->date()->toDate("d.m.Y") ?>
+    <?= $album->images()->count() ?> Fotos vom <?= $album->date()->toDate("%d.%m.%Y") ?>
   </a>
   <ul class="album">
     <?php $i=0 ;?>

@@ -10,12 +10,13 @@ before_install:
   - chmod 600 ./deploy_rsa
   - ssh-add ./deploy_rsa
 script:
-  - yarn
   - composer install
+  - yarn
   - yarn gulp
+  - rm -rf content node_modules media site/cache
 deploy:
   provider: script
   skip_cleanup: true
-  script: ssh kultwiki@kulturspektakel.de 'cd html && git pull origin master'
+  script: rsync -r --delete-after --quiet $TRAVIS_BUILD_DIR kultwiki@kulturspektakel.de:html && ssh kultwiki@kulturspektakel.de 'rm -rf html/site/cache'
   on:
     branch: master
