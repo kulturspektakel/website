@@ -33,14 +33,16 @@
     <meta name="twitter:image" content="<?= isset($og_image) ? $og_image : 'http://kulturspektakel.de/assets/img/logo.png'; ?>" />
     <meta name="google-site-verification" content="pSQ1fDcPPCIcZ0sc63qakZdFcbMhz_02qld4RVxo4Hk" />
 
-    <?php echo css(array(
-      '//fonts.googleapis.com/css?family=Lato:300,400,300italic,400italic',
-      // '/bower_components/bootstrap/dist/css/bootstrap.min.css',
-      // '/bower_components/bootstrap-select/dist/css/bootstrap-select.min.css',
-      // '/bower_components/fontawesome/css/font-awesome.min.css',
-      // '/bower_components/swipebox/src/css/swipebox.css',
-      '/assets/build/index.css'
-    )); ?>
+    <?php
+      $css = $site->url().'/assets/build/index.css';
+      if(!in_array($_SERVER['REMOTE_ADDR'], ['127.0.0.1', '::1'])){
+        $css = preg_replace('#^http:#', 'https:', $css);
+      }
+      echo css([
+        '//fonts.googleapis.com/css?family=Lato:300,400,300italic,400italic',
+        $css
+      ]);
+    ?>
   </head>
 
   <body class="<?php
