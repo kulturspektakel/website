@@ -20,3 +20,21 @@ Sociallinks:
 <div class="byon">
 gefördert von <a target="_blank" href="http://www.by-on.net"><img src="https://kulturspektakel.de/assets/img/byon.svg" width="65" /></a>
 </div>
+
+----
+
+Preislisten:
+
+- 
+  name: Frittiererei
+  products:
+    - 
+      productname: Fritten
+      price: "3"
+    - 
+      productname: Hühnchen
+      price: "4"
+
+----
+
+Preisliste: 

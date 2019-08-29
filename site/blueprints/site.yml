@@ -51,3 +51,37 @@ tabs:
               sociallinks:
                 label: Social Media Links
                 type: textarea
+  preislisten:
+    columns:
+      - width: 1/1
+        sections:
+          buden:
+            type: fields
+            fields:
+              preislisten:
+                type: structure
+                fields:
+                  name:
+                    label: Budenname
+                    type: text
+                    required: true
+                  devices:
+                    label: Geräte
+                    type: tags
+                  products:
+                    label: Produkte
+                    type: structure
+                    fields:
+                      productname:
+                        label: Produktname
+                        type: text
+                        width: 3/4
+                        required: true
+                      price:
+                        label: Preis
+                        type: number
+                        step: 0.5
+                        width: 1/4
+                        required: true
+                        align: right
+                        after: "Euro"
