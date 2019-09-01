@@ -35,13 +35,14 @@ Icon
 # License
 # ---------------
 /site/config/.license
+/site/config/config.kulturspektakel.de.php
 
 # Build files
 node_modules
 /assets/build
+vendor
+/yarn-error.log
 
 # Contents
 /content
 /kirby
-vendor
-/yarn-error.log

@@ -17,6 +17,6 @@ script:
 deploy:
   provider: script
   skip_cleanup: true
-  script: rsync -r --delete-after --quiet $TRAVIS_BUILD_DIR kultwiki@kulturspektakel.de:html && ssh kultwiki@kulturspektakel.de 'rm -rf html/site/cache'
+  script: rsync -av $TRAVIS_BUILD_DIR kultwiki@kulturspektakel.de:html && ssh kultwiki@kulturspektakel.de 'rm -rf html/site/cache'
   on:
     branch: master
