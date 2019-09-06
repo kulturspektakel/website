@@ -7,7 +7,7 @@ Kirby::plugin('kulturspektakel/contactless', [
         $results = site()->devices()->toStructure()->map(function ($device) {
           $products = site()->buden()->toStructure()->findBy(
             'name',
-            $device->bude()->toString(),
+            $device->bude()->toString()
           )->products();
           return [
             'device' => $device->id(),
