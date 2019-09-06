@@ -5,8 +5,8 @@ return [
   'smartypants' => true,
   'date.handler' => 'strftime',
   'locale' => 'de_DE.utf-8',
-  'slack.clientId' => '',
-  'slack.clientSecret' => '',
+  'slack.clientId' => '3495902661.316840614818',
+  'slack.clientSecret' => '3f178229aab8c9bcc1c0508da9e12f07',
   'slack.webhook' => '',
   'routes' => [
     [

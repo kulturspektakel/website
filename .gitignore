@@ -43,6 +43,7 @@ node_modules
 vendor
 /yarn-error.log
 deploy_rsa
+.cache
 
 # Contents
 /content

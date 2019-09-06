@@ -16,7 +16,6 @@ export default {
   created() {
     fetch('/slack-clientid').then(res => res.json()).then(res => {
       this.url = `https://slack.com/oauth/authorize?scope=identity.basic,identity.email&client_id=${res.clientId}&redirect_uri=${location.origin}/slack-login`;
-      console.log(this.url);
     })
   }
 };
