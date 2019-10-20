@@ -9,6 +9,7 @@ RewriteEngine on
 
 # HTTPS redirect
 RewriteCond %{HTTP_HOST} !localhost
+RewriteCond %{HTTP_HOST} !kult.cash
 RewriteCond %{HTTP_HOST} ^www\. [NC,OR]
 RewriteCond %{HTTPS} off
 RewriteCond %{HTTP_HOST} ^(?:www\.)?(.+)$ [NC]
