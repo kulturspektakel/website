@@ -45,3 +45,4 @@ node_modules
 /kirby
 vendor
 /yarn-error.log
+/site/config/config.localhost.php
