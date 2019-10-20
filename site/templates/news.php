@@ -1,8 +1,13 @@
 <?php
-  snippet('header', [
-    'og_image' => $page->images()->first()->thumb(['width' => 1200, 'autoOrient' => true])->url(),
+  $header = [
     'og_description' => $page->text()->excerpt(30, 'words').'...'
-  ]);
+  ];
+  $firstImage = $page->images()->first();
+  if (isset($firstImage)) {
+    $header['og_image'] = $firstImage->thumb(['width' => 1200, 'autoOrient' => true])->url();
+  }
+
+  snippet('header', $header);
 ?>
 
 <section class="container news-container news-container-single" role="main">

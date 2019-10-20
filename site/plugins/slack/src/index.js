@@ -1,5 +1,5 @@
-import LoginScreen from "./components/LoginScreen.vue";
+import LoginScreen from './components/LoginScreen.vue';
 
 panel.plugin('kulturspektakel/slack', {
-  login: LoginScreen
+  login: LoginScreen,
 });
