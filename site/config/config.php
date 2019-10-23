@@ -1,4 +1,5 @@
 <?php
+setlocale(LC_ALL, 'de_DE');
 
 return [
   'debug' => true,

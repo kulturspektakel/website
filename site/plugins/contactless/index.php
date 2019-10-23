@@ -41,11 +41,26 @@ function getColumns($tableName) {
   }
 }
 
+function enforceContactlessDomain(&$context) {
+  if (Url::host() !== 'kult.cash' && Url::host() !== 'localhost') {
+    $context->next();
+    throw null;
+  }
+}
+
 Kirby::plugin('kulturspektakel/contactless', [
   'routes' => [
     [
-      'pattern' => '/contactless/api/config',
+      'pattern' => '/',
       'action'  => function () {
+        enforceContactlessDomain($this);
+        return new Response("<h1>kult.ca\$h</h1>");
+      }
+    ],
+    [
+      'pattern' => '/apii/config',
+      'action'  => function () {
+        enforceContactlessDomain($this);
         date_default_timezone_set('Europe/Berlin');
         $response = date("dmHi")."\n";
         $response .= getProducts($_SERVER['HTTP_USER_AGENT']);
@@ -53,9 +68,10 @@ Kirby::plugin('kulturspektakel/contactless', [
       }
     ],
     [
-      'pattern' => '/contactless/api/(charge)',
+      'pattern' => '/apii/(charge)',
       'method'  => 'POST',
       'action'  => function($tableName) {
+        enforceContactlessDomain($this);
         //"_ABCDEF,AA:A3:55,1571277103,9A826EAE,571,0,570,0,"
         $body = file_get_contents('php://input');
         if (!$body) {
