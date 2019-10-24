@@ -37,6 +37,7 @@ Icon
 /site/config/.license
 /site/config/config.kulturspektakel.de.php
 /site/config/config.localhost.php
+/site/config/config.kult.cash.php
 
 # Build files
 node_modules
