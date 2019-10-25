@@ -2,13 +2,18 @@
 setlocale(LC_ALL, 'de_DE');
 
 return [
-  'debug' => true,
-  'smartypants' => true,
-  'date.handler' => 'strftime',
-  'locale' => 'de_DE.utf-8',
+  // config.kulturspektakel.de.php
   'slack.clientId' => '',
   'slack.clientSecret' => '',
   'slack.webhook' => '',
+
+  // config.kult.cash.php
+  'contactless.salt' => '',
+  'contactless.webhook' => '',
+
+  'smartypants' => true,
+  'date.handler' => 'strftime',
+  'locale' => 'de_DE.utf-8',
   'routes' => [
     [
       'pattern' => 'archiv',

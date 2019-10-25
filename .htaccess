@@ -1,5 +1,7 @@
 # Kirby .htaccess
 
+Header unset X-Powered-By
+
 # rewrite rules
 <IfModule mod_rewrite.c>
 
