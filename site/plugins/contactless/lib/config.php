@@ -11,7 +11,7 @@ function getBude($device) {
 
   return site()->buden()->toStructure()->findBy(
     'name',
-    $map->bude()->toString(),
+    $map->bude()->toString()
   );
 }
 
