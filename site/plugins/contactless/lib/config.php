@@ -1,34 +1,64 @@
 <?php
 
-function getBude($device) {
-  if (!$device) {
-    return;
+function getPage() {
+  $slug = kirby()->option('kulturspektakel.contactless.slug');
+  $page = page($slug);
+  if ($page) {
+    return $page;
   }
-  $map = site()->devices()->toStructure()->find($device);
-  if (!$map || !$map->bude()) {
-    return;
-  }
+  kirby()->impersonate('kirby');
+  return Page::create([
+    "slug"     => $slug,
+    "template" => "contactless",
+    "draft"    => false
+  ]);
+}
 
-  return site()->buden()->toStructure()->findBy(
+function getDevice($page, $deviceID) {
+  if (!$deviceID) {
+    return;
+  }
+  $devices = $page->devices()->toStructure() ?? new Structure([]);
+  $device = $devices->find($deviceID);
+  $device = new Kirby\Cms\StructureObject([
+    "id"      => $deviceID,
+    "content" => array_merge(
+      $device ? $device->toArray() : [],
+      ["lastconnected" => date("Y-m-d H:i:s")]
+    )
+  ]);
+  kirby()->impersonate('kirby');
+  $page->update(['Devices' => Yaml::encode($devices->add($device)->toArray())]);
+  return $device;
+}
+
+function getBude($page, $device) {
+  if (!$device || !$device->bude()) {
+    return;
+  }
+  return $page->buden()->toStructure()->findBy(
     'name',
-    $map->bude()->toString()
+    $device->bude()->toString()
   );
 }
 
-function getProducts($device) {
-  $bude = getBude($device);
+function getProducts($page, $deviceID) {
+  $bude = getBude($page, $deviceID);
   if (!$bude) {
     return;
   }
+
+  $response = "";
   $products = $bude->products()->value();
-  if (count($products) == 0) {
-    return;
+  if (count($products) > 0) {
+    $response = join("\n", array_map(function($p) {
+      $name = iconv('UTF-8', 'ASCII//TRANSLIT', $p['name']);
+      return "" . ($p['price'] * 100) . "," . $name;
+    }, $products));
   }
 
-  return join("\n", array_map(function($p) {
-    $name = iconv('UTF-8', 'ASCII//TRANSLIT', $p['name']);
-    return "" . ($p['price'] * 100) . "," . $name;
-  }, $products));
+  $budenname = iconv('UTF-8', 'ASCII//TRANSLIT', $bude->name());
+  return join("\n", [crc32($response), $budenname, $response]);
 }
 
 return [
@@ -36,7 +66,11 @@ return [
   'action'  => function () {
     enforceContactlessDomain($this);
     date_default_timezone_set('Europe/Berlin');
-    $response = date("dmHi") . "\n" . getProducts($_SERVER['HTTP_USER_AGENT']);
+
+    $deviceID = $_SERVER['HTTP_USER_AGENT'];
+    $page = getPage();
+    $device = getDevice($page, $deviceID);
+    $response = date("dmHi") . "\n" . getProducts($page, $device);
     return new Response($response, "text/plain");
   }
 ];
