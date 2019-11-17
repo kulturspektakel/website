@@ -65,12 +65,9 @@ return [
   'pattern' => '/$$$/config',
   'action'  => function () {
     enforceContactlessDomain($this);
-    date_default_timezone_set('Europe/Berlin');
-
     $deviceID = $_SERVER['HTTP_USER_AGENT'];
     $page = getPage();
     $device = getDevice($page, $deviceID);
-    $response = date("dmHi") . "\n" . getProducts($page, $device);
-    return new Response($response, "text/plain");
+    return new Response(getProducts($page, $device), "text/plain");
   }
 ];
