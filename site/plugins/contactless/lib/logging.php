@@ -10,10 +10,10 @@ function getColumns() {
     "tokens_before" => [ "name" => "tokens_before", "type" => "int",  "null" => false ],
     "value_after"   => [ "name" => "value_after",   "type" => "int",  "null" => false ],
     "tokens_after"  => [ "name" => "tokens_after",  "type" => "int",  "null" => false ],
+    "bude"          => [ "name" => "bude",          "type" => "text",                 ],
     "info"          => [ "name" => "info",          "type" => "text",                 ],
     // server only
     "server_time"   => [ "name" => "server_time",   "type" => "int",  "null" => false ],
-    "bude"          => [ "name" => "bude",          "type" => "text",                 ],
   ];
 }
 
@@ -35,7 +35,7 @@ return [
   'method'  => 'POST',
   'action'  => function() {
     enforceContactlessDomain($this);
-    // ABCDEFG,AA:A3:55,0,1571277103,9A826EAE,571,0,570,0,250:Fritten::
+    // ABCDEFG,AA:A3:55,0,1571277103,9A826EAE,571,0,570,0,Frittiererei,250:Fritten::
     $body = file_get_contents('php://input');
     if (!$body) {
       return new Error("no body");
@@ -58,10 +58,6 @@ return [
 
     // server fields
     $row['server_time'] = time();
-    $bude = getBude($row['device']);
-    if ($bude) {
-      $row['bude'] = $bude->name()->value();
-    }
 
     if ($table->insert($row)) {
       return new Response("ok");
