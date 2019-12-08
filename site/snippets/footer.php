@@ -48,9 +48,9 @@ src="https://www.facebook.com/tr?id=568483009893821&amp;ev=PageView&amp;noscript
 /></noscript>
 <!-- End Facebook Pixel Code -->
 <script>
-  window.ALGOLIA_APP_ID = <?=kirby()->option('algolia')['app'] ?>;
-  window.ALGOLIA_APP_API_KEY = <?=kirby()->option('algolia')['api_key'] ?>;
-  window.ALGOLIA_INDEX = <?=kirby()->option('algolia')['index'] ?>;
+  window.ALGOLIA_APP_ID = "<?=kirby()->option('algolia')['app'] ?>";
+  window.ALGOLIA_API_KEY = "<?=kirby()->option('algolia')['api_key'] ?>";
+  window.ALGOLIA_INDEX = "<?=kirby()->option('algolia')['index'] ?>";
 </script>
 <?php
   echo js(array(

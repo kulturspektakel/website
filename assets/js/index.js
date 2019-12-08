@@ -106,13 +106,13 @@ App = {
             syncResults([]);
             fetch(
               'https://' +
-                window.ALGOLIA_APP_API_KEY +
+                window.ALGOLIA_INDEX +
                 '-dsn.algolia.net/1/indexes/kulturspektakel.de?query=' +
                 query,
               {
                 headers: {
-                  'X-Algolia-API-Key': window.ALGOLIA_APP_ID,
-                  'X-Algolia-Application-Id': window.ALGOLIA_APP_API_KEY
+                  'X-Algolia-API-Key': window.ALGOLIA_API_KEY,
+                  'X-Algolia-Application-Id': window.ALGOLIA_APP_ID
                 }
               }
             )
