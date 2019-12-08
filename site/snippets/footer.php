@@ -47,19 +47,13 @@ fbq('track', 'PageView');
 src="https://www.facebook.com/tr?id=568483009893821&amp;ev=PageView&amp;noscript=1"
 /></noscript>
 <!-- End Facebook Pixel Code -->
+<script>
+  window.ALGOLIA_APP_ID = <?=kirby()->option('algolia')['app'] ?>;
+  window.ALGOLIA_APP_API_KEY = <?=kirby()->option('algolia')['api_key'] ?>;
+  window.ALGOLIA_INDEX = <?=kirby()->option('algolia')['index'] ?>;
+</script>
 <?php
   echo js(array(
-    // '/bower_components/jquery/dist/jquery.min.js',
-    // '/bower_components/lodash/dist/lodash.min.js',
-    // '/bower_components/bootstrap/dist/js/bootstrap.min.js',
-    // '/bower_components/typeahead.js/dist/typeahead.jquery.min.js',
-    // '/bower_components/bootstrap-select/dist/js/bootstrap-select.min.js',
-    // '/bower_components/unveil/jquery.unveil.min.js',
-    // '/bower_components/swipebox/src/js/jquery.swipebox.js',
-    // '/bower_components/sticky/jquery.sticky.js',
-    // '/bower_components/fastclick/lib/fastclick.js',
-    // '//maps.googleapis.com/maps/api/js?key=AIzaSyDvjy2Xk7QWhe4OK6d6cOf1zCbf31v3S_0',
-    // '/assets/js/instafeed.js',
     '/assets/build/index.js',
   ));
 ?>

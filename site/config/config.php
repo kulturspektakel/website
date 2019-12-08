@@ -13,6 +13,7 @@ return [
 
   'algolia' => [
     'app' => '8SGC8OUGMR',
+    'api_key'  => '0ff850912266754e00b2561f2a810a4c',
     'index'  => 'kulturspektakel.de',
     'fields' => [
       'url',
