@@ -11,6 +11,22 @@ return [
   'contactless.salt' => '',
   'contactless.webhook' => '',
 
+  'algolia' => [
+    'app' => '8SGC8OUGMR',
+    'index'  => 'kulturspektakel.de',
+    'fields' => [
+      'url',
+      'title',
+      'genre',
+      'year' => function($page) {
+        return $page->parent()->title()->toString();
+      },
+    ],
+    'templates' => [
+      'band',
+    ]
+  ],
+
   'smartypants' => true,
   'date.handler' => 'strftime',
   'locale' => 'de_DE.utf-8',

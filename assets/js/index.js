@@ -100,13 +100,33 @@ App = {
         },
         {
           display: function(o) {
-            return o.name + ' (' + o.year + ')';
+            return o.title + ' (' + o.year + ')';
           },
           source: function(query, syncResults, asyncResults) {
             syncResults([]);
-            $.get('/search?q=' + query, function(data) {
-              return asyncResults(data);
-            });
+            fetch(
+              'https://8SGC8OUGMR-dsn.algolia.net/1/indexes/kulturspektakel.de?query=' +
+                query,
+              {
+                headers: {
+                  'X-Algolia-API-Key': '0ff850912266754e00b2561f2a810a4c',
+                  'X-Algolia-Application-Id': '8SGC8OUGMR'
+                }
+              }
+            )
+              .then(function(res) {
+                return res.json();
+              })
+              .then(function(data) {
+                return asyncResults(data.hits);
+              });
+          },
+          templates: {
+            empty: function(context) {
+              $('.tt-dataset').html(
+                '<div class="tt-suggestion">Keine Band gefunden</div>'
+              );
+            }
           }
         }
       )

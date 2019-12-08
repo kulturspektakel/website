@@ -10,7 +10,7 @@ columns:
     sections:
       Bands:
         type: pages
-        info: "{{ page.day }} {{ page.time }}, {{ page.stage }}"
+        info: '{{ page.day }} {{ page.time }}, {{ page.stage }}'
         template:
           - band
-        create: lineup-year
+        create: band

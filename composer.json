@@ -23,6 +23,6 @@
     "optimize-autoloader": true
   },
   "scripts": {
-    "post-install-cmd": "cd site/plugins/tags && composer install"
+    "post-install-cmd": "cd site/plugins/tags && composer install && cd ../algolia && composer install"
   }
 }
