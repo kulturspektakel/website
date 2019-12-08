@@ -106,8 +106,10 @@ App = {
             syncResults([]);
             fetch(
               'https://' +
+                window.ALGOLIA_APP_ID +
+                '-dsn.algolia.net/1/indexes/' +
                 window.ALGOLIA_INDEX +
-                '-dsn.algolia.net/1/indexes/kulturspektakel.de?query=' +
+                '?query=' +
                 query,
               {
                 headers: {
