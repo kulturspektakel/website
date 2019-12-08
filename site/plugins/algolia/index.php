@@ -15,6 +15,3 @@ Kirby::plugin('kulturspektakel/algolia', [
     }
   ],
 ]);
-
-echo '<pre>';
-print_r(kirby()->options());
