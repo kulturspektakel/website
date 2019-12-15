@@ -70,6 +70,11 @@ columns:
             label: Geräte
             type: structure
             sortable: false
+            columns:
+              id:
+                width: 1/3
+              bude:
+                width: 2/3
             fields:
               id:
                 label: Geräte ID
@@ -91,5 +96,9 @@ columns:
                   value: '{{ structureItem.name }}'
               lastConnected:
                 label: Zuletzt verbunden
+                type: text
+                disabled: true
+              version:
+                label: Version
                 type: text
                 disabled: true

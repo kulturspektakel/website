@@ -55,12 +55,18 @@ Kirby::plugin('kulturspektakel/slack', [
   ],
   'hooks' => [
     'page.create:after' => function ($newPage, $oldPage) {
+      if ($this->user()->isKirby()) {
+        return;
+      }
       $message = "Neue Seite von *<@".$this->user()->id().">* angelegt: <".$newPage->url()."|".$newPage->title().">";
       try {
         slackMessage($message);
       } catch(Exception $e) {}
     },
     'page.update:after' => function ($page) {
+      if ($this->user()->isKirby()) {
+        return;
+      }
       $message = "Seite von *<@".$this->user()->id().">* aktualisiert: <".$page->url()."|".$page->title().">";
       try {
         slackMessage($message);

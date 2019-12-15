@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('Europe/Berlin');
 
 function enforceContactlessDomain(&$context) {
   if (Url::host() !== 'kult.cash' && Url::host() !== 'localhost') {
@@ -9,7 +10,8 @@ function enforceContactlessDomain(&$context) {
 
 Kirby::plugin('kulturspektakel/contactless', [
   'options' => [
-    'slug' => 'contactless'
+    'slug' => 'contactless',
+    'github' => 'kulturspektakel/contactless',
   ],
   'routes' => [
     require_once __DIR__ . '/lib/landing.php',

@@ -14,7 +14,7 @@ function getPage() {
   ]);
 }
 
-function getDevice($page, $deviceID) {
+function getDevice($page, $deviceID, $version) {
   if (!$deviceID) {
     return;
   }
@@ -24,7 +24,10 @@ function getDevice($page, $deviceID) {
     "id"      => $deviceID,
     "content" => array_merge(
       $device ? $device->toArray() : [],
-      ["lastconnected" => date("Y-m-d H:i:s")]
+      [
+        "lastconnected" => date("Y-m-d H:i:s"),
+        "version" => $version
+      ]
     )
   ]);
   kirby()->impersonate('kirby');
@@ -61,13 +64,48 @@ function getProducts($page, $deviceID) {
   return join("\n", [crc32($response), $budenname, $response]);
 }
 
+function checkForUpdate($currentVersion) {
+  $github = kirby()->option('kulturspektakel.contactless.github');
+  try {
+    $release = json_decode(file_get_contents(
+      "https://api.github.com/repos/".$github."/releases/latest",
+      false,
+      stream_context_create([
+            'http' => [
+              'method' => 'GET',
+              'header' => ['User-Agent: PHP']
+            ]
+      ])
+    ), true);
+    $latestVersion = preg_replace("/[^0-9]/", "", $release['name']);
+    echo $latestVersion;
+    echo $currentVersion;
+    if (intval($latestVersion) > intval($currentVersion)) {
+      return $release['assets'][0]['browser_download_url'];
+    }
+  } catch (Exception $e) {}
+  return null;
+}
+
 return [
   'pattern' => '/$$$/config',
   'action'  => function () {
     enforceContactlessDomain($this);
-    $deviceID = $_SERVER['HTTP_USER_AGENT'];
+
+    $userAgent = [];
+    $responseHeaders = [];
+    preg_match('/([A-F0-9]{2}:[A-F0-9]{2}:[A-F0-9]{2})\/(\d+)/', $_SERVER['HTTP_USER_AGENT'], $userAgent);
+    if (count($userAgent) < 3) {
+      return null;
+    }
+    $deviceID = $userAgent[1];
+    $deviceVersion = $userAgent[2];
     $page = getPage();
-    $device = getDevice($page, $deviceID);
-    return new Response(getProducts($page, $device), "text/plain");
+    $device = getDevice($page, $deviceID, $deviceVersion);
+    $update = checkForUpdate($deviceVersion);
+    if ($update) {
+      $responseHeaders['X-Kult-Update'] = $update;
+    }
+    return new Response(getProducts($page, $device), "text/plain", 200, $responseHeaders);
   }
 ];
