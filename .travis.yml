@@ -2,7 +2,7 @@ language: php
 php:
   - 7.1
 addons:
-  ssh_known_hosts: kulturspektakel.de
+  ssh_known_hosts: kultursp.uber.space
 before_install:
   - openssl aes-256-cbc -K $encrypted_869f24d24cf0_key -iv $encrypted_869f24d24cf0_iv
     -in deploy_rsa.enc -out ./deploy_rsa -d
@@ -18,6 +18,6 @@ script:
 deploy:
   provider: script
   skip_cleanup: true
-  script: rsync -av $TRAVIS_BUILD_DIR/ kultwiki@kulturspektakel.de:html && ssh kultwiki@kulturspektakel.de 'rm -rf html/site/cache'
+  script: rsync -av $TRAVIS_BUILD_DIR/ kultursp@kultursp.uber.space:html && ssh kultursp@kultursp.uber.space 'rm -rf html/site/cache'
   on:
     branch: master
