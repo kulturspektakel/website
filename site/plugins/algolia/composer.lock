@@ -1,27 +1,27 @@
 {
     "_readme": [
         "This file locks the dependencies of your project to a known state",
-        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "hash": "d7ec7db31282670f0361cd8c334a4f60",
     "content-hash": "cdee6ddd5693e3e3219b3a843c5ac41b",
     "packages": [
         {
             "name": "algolia/algoliasearch-client-php",
-            "version": "1.25.1",
+            "version": "1.27.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/algolia/algoliasearch-client-php.git",
-                "reference": "805021ea52630756d2da01d482309a2fdc47d3c0"
+                "reference": "d4e83cd7756bafff1e1cb2adcbf3c08b974dc263"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/algolia/algoliasearch-client-php/zipball/805021ea52630756d2da01d482309a2fdc47d3c0",
-                "reference": "805021ea52630756d2da01d482309a2fdc47d3c0",
+                "url": "https://api.github.com/repos/algolia/algoliasearch-client-php/zipball/d4e83cd7756bafff1e1cb2adcbf3c08b974dc263",
+                "reference": "d4e83cd7756bafff1e1cb2adcbf3c08b974dc263",
                 "shasum": ""
             },
             "require": {
+                "ext-curl": "*",
                 "ext-mbstring": "*",
                 "php": ">=5.3"
             },
@@ -55,7 +55,7 @@
             ],
             "description": "Algolia Search API Client for PHP",
             "homepage": "https://github.com/algolia/algoliasearch-client-php",
-            "time": "2018-03-02 13:24:10"
+            "time": "2018-06-19T05:59:53+00:00"
         }
     ],
     "packages-dev": [],
@@ -65,5 +65,6 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": [],
-    "platform-dev": []
+    "platform-dev": [],
+    "plugin-api-version": "1.1.0"
 }

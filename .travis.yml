@@ -1,6 +1,6 @@
 language: php
 php:
-  - 7.1
+  - 7
 addons:
   ssh_known_hosts: kultursp.uber.space
 before_install:
