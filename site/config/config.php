@@ -7,10 +7,6 @@ return [
   'slack.clientSecret' => '',
   'slack.webhook' => '',
 
-  // config.kult.cash.php
-  'contactless.salt' => '',
-  'contactless.webhook' => '',
-
   'algolia' => [
     'app' => '8SGC8OUGMR',
     'api_key'  => '0ff850912266754e00b2561f2a810a4c',
