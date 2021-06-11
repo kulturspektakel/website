@@ -23,7 +23,9 @@ return [
       'band',
     ]
   ],
-
+  'api' => [
+    'basicAuth' => true
+  ],
   'smartypants' => true,
   'date.handler' => 'strftime',
   'locale' => 'de_DE.utf-8',
