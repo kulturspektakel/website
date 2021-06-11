@@ -18,7 +18,7 @@
     "bootstrap-sass": "^3.4.1",
     "bootstrap-select": "^1.13.10",
     "font-awesome": "^4.7.0",
-    "jquery": "2",
+    "jquery": "3",
     "jquery-sticky": "^1.0.4",
     "swipebox": "^1.4.6",
     "typeahead.js": "^0.11.1",
