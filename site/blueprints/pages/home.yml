@@ -10,3 +10,27 @@ sections:
     headline: Info
     type: info
     text: Auf der Startseite werden die neusten Posts dargestellt
+  fields:
+    headline: CTA
+    fields:
+      cta_visible:
+        label: Banner anzeigen
+        type: toggle
+        text:
+          - 'nein'
+          - 'ja'
+      cta_headline:
+        label: Banner Überschrift
+        type: text
+        label: Banner Überschrift
+      cta_text:
+        type: textarea
+        label: Banner Text
+      cta_button:
+        label: Banner Button
+        type: text
+        width: 1/2
+      cta_url:
+        label: Banner Button URL
+        type: url
+        width: 1/2
