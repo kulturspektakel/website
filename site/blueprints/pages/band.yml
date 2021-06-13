@@ -59,3 +59,7 @@ columns:
             type: url
           spotify:
             type: url
+          youtube:
+            type: url
+          bandcamp:
+            type: url
