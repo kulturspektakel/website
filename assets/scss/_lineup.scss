@@ -192,6 +192,32 @@
       margin-left: -8px;
       margin-right: -8px;
       padding: 8px;
+
+      .band-social {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+
+        li {
+          flex-basis: 0;
+          margin: 0;
+          padding: 0;
+          flex-grow: 1;
+          text-align: center;
+          font-size: 1.5em;
+          border-top: 0;
+
+          a {
+            color: $textcolor;
+            opacity: 0.75;
+
+            &:hover {
+              opacity: 1;
+            }
+          }
+        }
+      }
     }
 
     .band-stage {
