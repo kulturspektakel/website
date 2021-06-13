@@ -13,7 +13,7 @@
       <div class="band-info">
         <h3>
           <span class="light">
-            <?=$band->time() ?>
+            <?=substr($band->time(), 0, 5) ?>
           </span>
           <?=$band->title() ?>
         </h3>

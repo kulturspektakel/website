@@ -44,6 +44,7 @@ columns:
               Sonntag: Sonntag
           time:
             type: time
+            display: HH:mm
           genre:
             type: text
           website:

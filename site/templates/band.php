@@ -17,7 +17,7 @@ snippet('header', $vars);
         <span class="light">
           <?=substr($page->day(),0,2) ?>
         </span>
-        <?=$page->time() ?>
+        <?=substr($page->time(), 0, 5) ?>
         <br />
         <span class="light band-stagetime-stage">
           <?=stagenames($page->stage()) ?> <a href="<?php echo $page->parent()->url(); ?>"><?php echo $page->parent()->title(); ?></a>
@@ -43,7 +43,7 @@ snippet('header', $vars);
             <span class="light">
               <?=substr($page->day(),0,2) ?>
             </span>
-            <?=$page->time() ?>
+            <?=substr($page->time(), 0, 5) ?>
             <br />
             <span class="light band-stagetime-stage">
               <?=stagenames($page->stage()) ?> <a href="<?php echo $page->parent()->url(); ?>"><?php echo $page->parent()->title(); ?></a>
