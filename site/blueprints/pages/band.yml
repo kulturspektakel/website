@@ -49,6 +49,8 @@ columns:
             type: text
           website:
             type: url
+          facebook:
+            type: url
           soundcloud:
             type: url
           twitter:

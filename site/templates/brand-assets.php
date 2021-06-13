@@ -95,22 +95,22 @@
   </p>
   <div class="row">
     <div class="col-sm-2">
-      <div class="colorfield" style="background-color: #E12E2E"></div>
+      <div class="colorfield" style="background-color: #D34F55"></div>
       <strong>Große Bühne</strong>
-      <br />#E12E2E
-      <br />C5 M96 Y99 K1
+      <br />#D34F55
+      <br />C0 M52 Y49 K17
     </div>
     <div class="col-sm-2">
-      <div class="colorfield" style="background-color: #446571"></div>
+      <div class="colorfield" style="background-color: #F0BD51"></div>
       <strong>Kleine Bühne</strong>
-      <br />#446571
-      <br />C77 M50 Y43 K17
+      <br />#F0BD51
+      <br />C0 M20 Y62 K6
     </div>
     <div class="col-sm-2">
-      <div class="colorfield" style="background-color: #3E444D"></div>
+      <div class="colorfield" style="background-color: #5DA65C"></div>
       <strong>Waldbühne</strong>
-      <br />#3E444D
-      <br />C74 M64 Y51 K39
+      <br />#5DA65C
+      <br />C29 M0 Y29 K35
     </div>
     <div class="col-sm-2">
       <div class="colorfield" style="background-color: #979FA3"></div>
@@ -119,10 +119,10 @@
       <br />C44 M31 Y31 K1
     </div>
     <div class="col-sm-2">
-      <div class="colorfield" style="background-color: #97BD37"></div>
+      <div class="colorfield" style="background-color: #5487EB"></div>
       <strong>DJ-Area</strong>
-      <br />#97BD37
-      <br />C47 M6 Y100 K0
+      <br />#5487EB
+      <br />C59 M39 Y0 K8
     </div>
     <div class="col-sm-2">
       <div class="colorfield" style="background-color: "></div>
