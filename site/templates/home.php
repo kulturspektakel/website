@@ -1,5 +1,5 @@
 <?php snippet('header'); ?>
-<?php if ($page->cta_visible()) { ?>
+<?php if ($page->cta_visible() == 'true') { ?>
   <section class="container cta-container">
     <div class="cta">
       <div>
