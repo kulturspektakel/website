@@ -1,4 +1,4 @@
-<section class="container subpage <?php echo strtolower($page->title()) ?>">
+<section id="<?php echo strtolower($page->title()) ?>" class="container subpage <?php echo strtolower($page->title()) ?>">
   <?= $page->intro()->kirbytext() ?>
   <div class="row">
     <?php
