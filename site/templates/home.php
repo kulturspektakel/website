@@ -5,7 +5,6 @@
       <div>
         <h3><?= $page->cta_headline() ?></h3>
         <?= $page->cta_text() ?>
-        <?php snippet('trafficlight'); ?>
       </div>
       <a class="cta-button" href="<?= $page->cta_url() ?>"><?= $page->cta_button() ?></a>
     </div>

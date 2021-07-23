@@ -52,8 +52,6 @@ return [
     'pages' => [
       'active' => true,
       'ignore' => function ($page) {
-        // do not cache, to show live API response
-        if ($page->id() == 'home' && gmdate("c") > '2021-07-23' && gmdate("c") < '2021-07-26') return true;
         return option('debug');
       }
     ]
