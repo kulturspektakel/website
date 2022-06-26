@@ -9,9 +9,8 @@
     "gulp": "^4.0.2",
     "gulp-clean-css": "^4.2.0",
     "gulp-concat": "^2.6.1",
-    "gulp-sass": "^4.0.2",
+    "gulp-sass": "^5.1.0",
     "gulp-uglify": "^3.0.2",
-    "node-sass": "^4.12.0",
     "prettier": "^1.18.2"
   },
   "dependencies": {
@@ -20,6 +19,7 @@
     "font-awesome": "^4.7.0",
     "jquery": "2",
     "jquery-sticky": "^1.0.4",
+    "sass": "^1.53.0",
     "swipebox": "^1.4.6",
     "typeahead.js": "^0.11.1",
     "unveil2": "^2.0.8"
