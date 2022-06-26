@@ -78,6 +78,8 @@ App = {
       if (!$(this).hasClass('active')) {
         $(this).addClass('active');
       }
+      var img = $(this).find('.band-image img');
+      img.attr('src', img.attr('data-src'));
     });
     $('.bandlist .band-stage-close').click(function() {
       setTimeout(
@@ -90,7 +92,6 @@ App = {
       );
     });
 
-    $('.bandlist .band-image img').unveil();
     // if (!App.isMobile) $(".bandlist .band-stage-name").tooltip();
 
     $('#bandsearch')
