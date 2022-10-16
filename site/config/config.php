@@ -31,6 +31,18 @@ return [
   'locale' => 'de_DE.utf-8',
   'routes' => [
     [
+      'pattern' => 'duschgel',
+      'action'  => function () {
+        return go('https://dschungel.kulturspektakel.de', 301);
+      }
+    ],
+    [
+      'pattern' => 'dschungel',
+      'action'  => function () {
+        return go('https://dschungel.kulturspektakel.de', 301);
+      }
+    ],
+    [
       'pattern' => 'archiv',
       'action'  => function () {
         return page('home')->render([
