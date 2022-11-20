@@ -20,7 +20,7 @@
     <?php foreach($posters as $poster) { ?>
       <li style="background-image: url('<?=strlen($poster['image']) > 0 ? $page->image(basename($poster['image']))->thumb(['width' => 400])->url(): '' ?>')">
         <?php if (strlen($poster['image'])==0) { ?><h2 class="fallback-year"><?php echo $poster['year']; ?></h2><?php } else { ?>
-          <a class="open-gallery" href="/<?= $page->url().'/'.$poster['image'] ?>"></a>
+          <a class="open-gallery" href="<?=$page->image(basename($poster['image']))->url() ?>"></a>
         <?php } ?>
         <div class="poster" >
           <?php if (strlen($poster['designer'])==0 && strlen($poster['motiv'])==0) { ?>
