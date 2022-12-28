@@ -102,7 +102,7 @@
     </div>
     <div class="col-sm-2">
       <div class="colorfield" style="background-color: #F0BD51"></div>
-      <strong>Kleine Bühne</strong>
+      <strong>Kultbühne</strong>
       <br />#F0BD51
       <br />C0 M20 Y62 K6
     </div>
