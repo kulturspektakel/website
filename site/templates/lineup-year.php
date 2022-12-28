@@ -28,7 +28,7 @@
       <select class="form-control selectpicker stageSelector-mobile">
         <option value="" selected="selected">alle Bühnen</option>
         <option value="GB">Große Bühne</option>
-        <option value="KB">Kleine Bühne</option>
+        <option value="KB">Kultbühne</option>
         <option value="WB">Waldbühne</option>
         <option value="A" >Aula</option>
         <option value="DJ">DJ-Area</option>
