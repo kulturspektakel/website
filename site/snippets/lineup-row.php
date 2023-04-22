@@ -15,7 +15,13 @@
           <span class="light">
             <?=substr($band->time(), 0, 5) ?>
           </span>
-          <?=$band->title() ?>
+          <?php
+            if ($band->title() == "TBA") {
+              echo '<span style="filter: blur(5px)">Is geheim</span>';
+            } else {
+              echo $band->title();
+            }
+          ?>
         </h3>
         <div class="band-stage <?= $band->stage() ?>">
           <div class="band-stage-name" data-toggle="tooltip" data-placement="right" title="<?= stagenames($band->stage()) ?>">
