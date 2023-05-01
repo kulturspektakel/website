@@ -55,7 +55,7 @@
       </div>
       <div class="stageSelector">
         <label class="KB">
-          <input type="radio" value="KB" name="stageSelector">Kleine&nbsp;Bühne
+          <input type="radio" value="KB" name="stageSelector">Kultbühne
         </label>
       </div>
       <div class="stageSelector">
