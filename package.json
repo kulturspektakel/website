@@ -1,0 +1,51 @@
+{
+  "scripts": {
+    "build": "remix build",
+    "dev": "remix dev",
+    "start": "remix-serve build",
+    "typecheck": "tsc",
+    "graphql": "graphql-codegen --config ./.graphqlrc.yml --watch"
+  },
+  "dependencies": {
+    "@apollo/client": "^3.8.0-rc.2",
+    "@chakra-ui/icons": "^2.1.0",
+    "@chakra-ui/react": "^2.3.6",
+    "@emotion/react": "^11.10.4",
+    "@emotion/server": "^11.10.0",
+    "@emotion/styled": "^11.10.4",
+    "@remix-run/node": "~1.14.2",
+    "@remix-run/react": "~1.14.2",
+    "@remix-run/serve": "~1.14.2",
+    "apollo-link-scalars": "^4.0.2",
+    "chakra-ui-steps": "^2.1.0",
+    "formik": "^2.4.3",
+    "framer-motion": "^6.5.1",
+    "graphql": "^16.7.1",
+    "graphql-scalars": "^1.22.2",
+    "hex-rgb": "^5.0.0",
+    "isbot": "^3.6.5",
+    "markdown-to-jsx": "^7.2.1",
+    "react": "^18.2.0",
+    "react-beforeunload": "^2.6.0",
+    "react-confetti": "^6.1.0",
+    "react-dom": "^18.2.0",
+    "react-use": "^17.4.0",
+    "remix-typedjson": "^0.1.7"
+  },
+  "devDependencies": {
+    "@graphql-codegen/cli": "^5.0.0",
+    "@graphql-codegen/introspection": "^4.0.0",
+    "@graphql-codegen/typescript-operations": "^4.0.1",
+    "@graphql-codegen/typescript-react-apollo": "^3.3.7",
+    "@remix-run/dev": "~1.14.2",
+    "@remix-run/eslint-config": "~1.14.2",
+    "@types/react": "^18.0.25",
+    "@types/react-dom": "^18.0.8",
+    "eslint": "^8.27.0",
+    "prettier": "^3.0.0",
+    "typescript": "^4.8.4"
+  },
+  "engines": {
+    "node": ">=14"
+  }
+}

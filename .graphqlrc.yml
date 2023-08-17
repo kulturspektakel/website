@@ -1,0 +1,22 @@
+schema: https://api.kulturspektakel.de/graphql
+documents:
+  - ./app/**/*.tsx
+generates:
+  ./app/types/graphql.ts:
+    plugins:
+      - typescript
+      - typescript-operations
+      - typescript-react-apollo
+  ./app/types/graphql.schema.json:
+    plugins:
+      - introspection
+    config:
+      minify: true
+config:
+  withMutationFn: true
+  scalars:
+    Date: Date
+    DateTime: Date
+hooks:
+  afterOneFileWrite:
+    - prettier --write

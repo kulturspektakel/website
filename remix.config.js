@@ -1,0 +1,21 @@
+/** @type {import('@remix-run/dev').AppConfig} */
+module.exports = {
+  ignoredRouteFiles: ['**/.*'],
+  serverDependenciesToBundle: [
+    '@apollo/client',
+    'ts-invariant',
+    '@wry/equality',
+    'zen-observable-ts',
+    '@wry/trie',
+    '@wry/context',
+    'hex-rgb',
+    'chakra-ui-steps',
+  ],
+  future: {
+    v2_routeConvention: true,
+  },
+  // appDirectory: "app",
+  // assetsBuildDirectory: "public/build",
+  // serverBuildPath: "build/index.js",
+  // publicPath: "/build/",
+};
