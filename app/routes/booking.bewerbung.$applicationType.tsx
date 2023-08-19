@@ -1,8 +1,12 @@
 import {gql} from '@apollo/client';
 import {VStack, HStack, Button, Spacer} from '@chakra-ui/react';
+import {LoaderArgs} from '@remix-run/node';
 import {Outlet} from '@remix-run/react';
 import {Steps, Step} from 'chakra-ui-steps';
 import {Formik} from 'formik';
+import {typedjson} from 'remix-typedjson';
+import {getSession} from '~/components/booking/session.server';
+import useIsDJ from '~/components/booking/useIsDJ';
 import type {CreateBandApplicationInput} from '~/types/graphql';
 import {
   HeardAboutBookingFrom,
@@ -26,13 +30,20 @@ export function getUtmSource() {
   }
 }
 
+export async function loader({request}: LoaderArgs) {
+  const session = await getSession(request.headers.get('cookie'));
+  console.log(session);
+
+  return typedjson({});
+}
+
 const utmSourceMapping: Record<string, HeardAboutBookingFrom> = Object.freeze({
   fb: HeardAboutBookingFrom.Facebook,
   ig: HeardAboutBookingFrom.Instagram,
 });
 
 export default function () {
-  let step = 1;
+  let currentStep = 1;
   let isSubmitting = false;
   const isDJ = useIsDJ();
   const [create, {error, loading}] = useCreateBandApplicationMutation();
@@ -41,7 +52,7 @@ export default function () {
     <div>
       <VStack spacing="5">
         <Steps
-          activeStep={step - 1}
+          activeStep={currentStep - 1}
           responsive={false}
           colorScheme="blue"
           display={['none', 'flex']}
@@ -78,7 +89,7 @@ export default function () {
                 // );
               }
             } else {
-              setCurrentStep(currentStep + 1);
+              // setCurrentStep(currentStep + 1);
             }
           }}
           validateOnChange={false}

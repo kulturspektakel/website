@@ -1,5 +1,6 @@
+import {ApolloProvider} from '@apollo/client';
 import {ChakraProvider, Box, Heading} from '@chakra-ui/react';
-import type {MetaFunction} from '@remix-run/node';
+import type {V2_MetaFunction} from '@remix-run/node';
 import {
   Links,
   LiveReload,
@@ -7,13 +8,28 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
-  useCatch,
+  isRouteErrorResponse,
+  useRouteError,
 } from '@remix-run/react';
+import apolloClient from './utils/apolloClient';
+import {CacheProvider} from '@emotion/react';
+import createEmotionCache from '@emotion/cache';
 
-export const meta: MetaFunction = () => ({
-  charset: 'utf-8',
-  viewport: 'width=device-width,initial-scale=1',
-});
+export const meta: V2_MetaFunction = () => {
+  return [
+    {name: 'charset', content: 'utf-8'},
+    {name: 'viewport', content: 'width=device-width,initial-scale=1'},
+    {title: 'Very cool app | Remix'},
+    {
+      property: 'og:title',
+      content: 'Very cool app',
+    },
+    {
+      name: 'description',
+      content: 'This app is the best',
+    },
+  ];
+};
 
 function Document({
   children,
@@ -22,15 +38,19 @@ function Document({
   children: React.ReactNode;
   title?: string;
 }) {
+  const emotionCache = createEmotionCache({key: 'css'});
+
   return (
     <html lang="de">
       <head>
         <Meta />
-        <title>{title}</title>
         <Links />
       </head>
       <body>
-        {children}
+        <CacheProvider value={emotionCache}>
+          <ApolloProvider client={apolloClient}>{children}</ApolloProvider>
+        </CacheProvider>
+
         <ScrollRestoration />
         <Scripts />
         <LiveReload />
@@ -53,15 +73,16 @@ export default function App() {
 
 // How ChakraProvider should be used on CatchBoundary
 export function CatchBoundary() {
-  const caught = useCatch();
+  // when true, this is what used to go to `CatchBoundary`
 
   return (
-    <Document title={`${caught.status} ${caught.statusText}`}>
+    <Document>
       <ChakraProvider>
         <Box>
           <Heading as="h1" bg="purple.600">
-            [CatchBoundary]: {caught.status} {caught.statusText}
+            Uh oh ...
           </Heading>
+          <p>Something went wrong.</p>
         </Box>
       </ChakraProvider>
     </Document>
@@ -69,15 +90,22 @@ export function CatchBoundary() {
 }
 
 // How ChakraProvider should be used on ErrorBoundary
-export function ErrorBoundary({error}: {error: Error}) {
+export function ErrorBoundary() {
+  const error = useRouteError();
+
   return (
-    <Document title="Error!">
+    <Document>
       <ChakraProvider>
-        <Box>
-          <Heading as="h1" bg="blue.500">
-            [ErrorBoundary]: There was an error: {error.message}
-          </Heading>
-        </Box>
+        <Heading as="h1" bg="purple.600">
+          Oops
+        </Heading>
+        {isRouteErrorResponse(error) && (
+          <>
+            <p>Status: {error.status}</p>
+            <p>{error.data.message}</p>
+          </>
+        )}
+        {error instanceof Error && <p>{error.message}</p>}
       </ChakraProvider>
     </Document>
   );

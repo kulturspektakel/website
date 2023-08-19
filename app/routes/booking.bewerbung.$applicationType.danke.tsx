@@ -28,7 +28,7 @@ export async function loader(args: LoaderArgs) {
   });
 
   if (data.node?.__typename === 'Event') {
-    return typedjson(data);
+    return typedjson(data.node);
   }
 
   throw new Error(`Event ${EVENT_ID} not found`);
