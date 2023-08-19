@@ -1,6 +1,6 @@
 import {ApolloProvider} from '@apollo/client';
-import {ChakraProvider, Box, Heading} from '@chakra-ui/react';
-import type {V2_MetaFunction} from '@remix-run/node';
+import {ChakraProvider, Box, Heading, extendTheme} from '@chakra-ui/react';
+import type {LinksFunction, V2_MetaFunction} from '@remix-run/node';
 import {
   Links,
   LiveReload,
@@ -14,6 +14,8 @@ import {
 import apolloClient from './utils/apolloClient';
 import {CacheProvider} from '@emotion/react';
 import createEmotionCache from '@emotion/cache';
+import {StepsTheme as Steps} from 'chakra-ui-steps';
+import SpaceGrotesk400 from '@fontsource/space-grotesk/latin-400.css';
 
 export const meta: V2_MetaFunction = () => {
   return [
@@ -30,6 +32,49 @@ export const meta: V2_MetaFunction = () => {
     },
   ];
 };
+
+export const links: LinksFunction = () => [
+  {
+    rel: 'stylesheet',
+    href: SpaceGrotesk400,
+  },
+  {
+    rel: 'stylesheet',
+    href: '/shrimp-webfont.css',
+  },
+];
+
+const theme = extendTheme({
+  colors: {
+    brand: {
+      100: '#f7fafc',
+      // ...
+      900: '#1a202c',
+    },
+  },
+  textStyles: {
+    h2: {
+      fontFamily: 'Shrimp',
+      fontWeight: 'normal',
+      textTansform: 'uppercase',
+    },
+  },
+  fonts: {
+    heading: "'Space Grotesk', sans-serif;",
+    body: "'Space Grotesk', sans-serif;",
+  },
+  styles: {
+    global: {
+      html: {
+        '-webkit-font-smoothing': 'auto',
+        fontSynthesis: 'none',
+      },
+    },
+  },
+  components: {
+    Steps,
+  },
+});
 
 function Document({
   children,
@@ -48,7 +93,9 @@ function Document({
       </head>
       <body>
         <CacheProvider value={emotionCache}>
-          <ApolloProvider client={apolloClient}>{children}</ApolloProvider>
+          <ChakraProvider theme={theme}>
+            <ApolloProvider client={apolloClient}>{children}</ApolloProvider>
+          </ChakraProvider>
         </CacheProvider>
 
         <ScrollRestoration />
@@ -64,9 +111,7 @@ export default function App() {
 
   return (
     <Document>
-      <ChakraProvider>
-        <Outlet />
-      </ChakraProvider>
+      <Outlet />
     </Document>
   );
 }
@@ -77,14 +122,12 @@ export function CatchBoundary() {
 
   return (
     <Document>
-      <ChakraProvider>
-        <Box>
-          <Heading as="h1" bg="purple.600">
-            Uh oh ...
-          </Heading>
-          <p>Something went wrong.</p>
-        </Box>
-      </ChakraProvider>
+      <Box>
+        <Heading as="h1" bg="purple.600">
+          Uh oh ...
+        </Heading>
+        <p>Something went wrong.</p>
+      </Box>
     </Document>
   );
 }
@@ -95,18 +138,16 @@ export function ErrorBoundary() {
 
   return (
     <Document>
-      <ChakraProvider>
-        <Heading as="h1" bg="purple.600">
-          Oops
-        </Heading>
-        {isRouteErrorResponse(error) && (
-          <>
-            <p>Status: {error.status}</p>
-            <p>{error.data.message}</p>
-          </>
-        )}
-        {error instanceof Error && <p>{error.message}</p>}
-      </ChakraProvider>
+      <Heading as="h1" bg="purple.600">
+        Oops
+      </Heading>
+      {isRouteErrorResponse(error) && (
+        <>
+          <p>Status: {error.status}</p>
+          <p>{error.data.message}</p>
+        </>
+      )}
+      {error instanceof Error && <p>{error.message}</p>}
     </Document>
   );
 }

@@ -6,13 +6,16 @@ import {
   FormHelperText,
   Textarea,
   Text,
+  Link as ChakraLink,
 } from '@chakra-ui/react';
 import {Link} from '@remix-run/react';
-import {Field} from 'formik';
 import DistanceWarning from '~/components/booking/DistanceWarning';
 import DuplicateApplicationWarning from '~/components/booking/DuplicateApplicationWarning';
+import Field from '~/components/booking/Field';
 import useIsDJ from '~/components/booking/useIsDJ';
 import {GenreCategory} from '~/types/graphql';
+import type {FormikContextT} from './booking.bewerbung.$applicationType.test';
+import {useField, useFormContext} from 'remix-validated-form';
 
 const GENRE_CATEGORIES: Map<GenreCategory, string> = new Map([
   [GenreCategory.Pop, 'Pop'],
@@ -31,8 +34,10 @@ const GENRE_CATEGORIES: Map<GenreCategory, string> = new Map([
 
 export default function () {
   const isDJ = useIsDJ();
-  const values = {};
+  // const {values, errors} = useFormContext<FormikContextT>();
   const errors = {};
+  const values = {};
+  const city = useField('city');
 
   return (
     <>
@@ -79,7 +84,7 @@ export default function () {
         <Field />
       </FormControl>
 
-      <DistanceWarning origin={values.city} />
+      <DistanceWarning origin={city} />
 
       {!isDJ && (
         <>
@@ -110,14 +115,16 @@ export default function () {
           </HStack>
           <Text fontSize="sm" color="gray.500">
             Die Festival-Branche hat eine geringe Geschlechter&shy;diversität (
-            <Link
+            <ChakraLink
+              as={Link}
               textDecoration="underline"
               rel="noreferrer"
-              href="https://bit.ly/2HxZMgl"
+              to="https://bit.ly/2HxZMgl"
               target="_blank"
+              isExternal
             >
               mehr Informationen
-            </Link>
+            </ChakraLink>
             ). Wir wählen die Bands nicht nach Geschlechter&shy;verteilung aus,
             trotzdem wollen wir einen besseren Überblick über die Situation
             bekommen. Personen und Gruppen die auf Festival&shy;bühnen

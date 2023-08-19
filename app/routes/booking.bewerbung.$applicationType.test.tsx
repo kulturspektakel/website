@@ -1,11 +1,7 @@
 import React, {useState} from 'react';
 import Page from '~/components/booking/Page';
 import useIsDJ from '~/components/booking/useIsDJ';
-import Step1 from '~/components/booking/Step1';
-import Step2 from '~/components/booking/Step2';
-import Step3 from '~/components/booking/Step3';
 import Step from '~/components/booking/Step';
-import {Formik} from 'formik';
 // import {useRouter} from 'next/router';
 import type {CreateBandApplicationInput} from '~/types/graphql';
 import {
@@ -44,8 +40,6 @@ const utmSourceMapping: Record<string, HeardAboutBookingFrom> = Object.freeze({
 
 export type FormikContextT = Partial<CreateBandApplicationInput>;
 
-const STEPS = [Step1, Step2, Step3];
-
 // eslint-disable-next-line @typescript-eslint/ban-types
 type Props = {};
 
@@ -56,7 +50,7 @@ export default function Application(props: Props) {
 
   return (
     <Page>
-      <Formik<FormikContextT>
+      {/* <Formik<FormikContextT>
         initialValues={{
           heardAboutBookingFrom: utmSourceMapping[getUtmSource() ?? ''],
           genreCategory: isDJ ? GenreCategory.Dj : undefined,
@@ -101,7 +95,7 @@ export default function Application(props: Props) {
         >
           {React.createElement(STEPS[currentStep - 1])}
         </Step>
-      </Formik>
+      </Formik> */}
       {!loading && error && (
         <Alert status="error" borderRadius="md">
           <AlertIcon />

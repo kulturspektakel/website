@@ -5,9 +5,9 @@ import {
   Textarea,
   Select,
 } from '@chakra-ui/react';
-import Field from './Field';
-import {HeardAboutBookingFrom, PreviouslyPlayed} from '../../types/graphql';
-import useIsDJ from './useIsDJ';
+import Field from '../components/booking/Field';
+import {HeardAboutBookingFrom, PreviouslyPlayed} from '../types/graphql';
+import useIsDJ from '../components/booking/useIsDJ';
 import {getUtmSource} from '~/routes/booking.bewerbung.$applicationType.test';
 
 const HEARD_ABOUT: Map<HeardAboutBookingFrom, string> = new Map([

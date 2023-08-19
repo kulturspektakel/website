@@ -6,19 +6,17 @@ import {
   InputGroup,
   InputLeftElement,
 } from '@chakra-ui/react';
-import React from 'react';
-import Field from './Field';
-import useIsDJ from './useIsDJ';
-import {useFormikContext} from 'formik';
-import {FormikContextT} from '../../pages/booking/[applicationType]';
+import Field from '../components/booking/Field';
+import useIsDJ from '../components/booking/useIsDJ';
+import {useField} from 'remix-validated-form';
 
 export default function Step2() {
   const isDJ = useIsDJ();
-  const {errors} = useFormikContext<FormikContextT>();
+  const demoField = useField('demo');
 
   return (
     <>
-      <FormControl id="demo" isRequired={!isDJ} isInvalid={!!errors.demo}>
+      <FormControl id="demo" isRequired={!isDJ} isInvalid={!!demoField.error}>
         <FormLabel>Demomaterial: YouTube, Spotify, etc.</FormLabel>
         <FormHelperText mt="-2" mb="2">
           {isDJ
@@ -40,7 +38,9 @@ export default function Step2() {
             }
           }}
         />
-        {errors.demo && <FormErrorMessage>Ungültiger Link</FormErrorMessage>}
+        {demoField.error && (
+          <FormErrorMessage>{demoField.error}</FormErrorMessage>
+        )}
       </FormControl>
 
       <FormControl id="instagram">

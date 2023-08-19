@@ -1,6 +1,5 @@
 import {gql} from '@apollo/client';
 import {Alert, AlertIcon, AlertDescription} from '@chakra-ui/react';
-import React from 'react';
 import {useDistanceQuery} from '../../types/graphql';
 
 gql`

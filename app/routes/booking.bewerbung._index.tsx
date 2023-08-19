@@ -5,7 +5,6 @@ import {
   Text,
   Button,
   Heading,
-  Link,
   AlertIcon,
   Alert,
   AlertDescription,
@@ -19,9 +18,9 @@ import DateString from '~/components/DateString';
 import apolloClient from '~/utils/apolloClient';
 import type {LoaderArgs} from '@remix-run/node';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
-import {Outlet} from '@remix-run/react';
+import {Link, Outlet} from '@remix-run/react';
 
-export const EVENT_ID = 'Event:kult2023';
+export const EVENT_ID = 'Event:kult2024';
 
 function BBox({
   href,
@@ -67,7 +66,7 @@ function BBox({
         </Text>
       </VStack>
       <Spacer />
-      <Link href={href}>
+      <Link to={href}>
         <Button m="3" mr="0" isDisabled={disabled} colorScheme="blue">
           {buttonLabel}
         </Button>
@@ -161,7 +160,7 @@ export default function Home() {
           title="Bands"
           content="Ihr möchtet euch als Band für eine unserer Bühnen bewerben."
           buttonLabel="Als Band bewerben"
-          href="/booking/band"
+          href="/booking/bewerbung/band/schritt1"
           disabled={bandApplicationEnded}
         />
       )}
@@ -172,7 +171,7 @@ export default function Home() {
           title="DJs"
           content="Du möchtest dich als DJ für unsere DJ-Area bewerben."
           buttonLabel="Als DJ bewerben"
-          href="/booking/dj"
+          href="/booking/bewerbung/dj/schritt1"
           disabled={djApplicationEnded}
         />
       )}
