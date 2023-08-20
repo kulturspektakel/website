@@ -60,7 +60,7 @@ const theme = extendTheme({
   styles: {
     global: {
       html: {
-        '-webkit-font-smoothing': 'auto',
+        WebkitFontSmoothing: 'auto',
         fontSynthesis: 'none',
       },
       'h1,h2': {

@@ -8,8 +8,22 @@ import {
 import {useField} from 'remix-validated-form';
 import Field from './Field';
 import useIsDJ from './useIsDJ';
+import {z} from 'zod';
 
-export default function Step2() {
+Step2.schema = z.object({
+  demo: z
+    .string()
+    .nonempty()
+    .regex(
+      /^(https?:\/\/)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)?$/,
+      'Ungültiger Link',
+    ),
+  instagram: z.string(),
+  facebook: z.string(),
+  website: z.string(),
+});
+
+function Step2() {
   const isDJ = useIsDJ();
   const demoField = useField('demo');
 
@@ -51,3 +65,5 @@ export default function Step2() {
     </>
   );
 }
+
+export default Step2;

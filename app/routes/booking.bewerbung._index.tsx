@@ -12,6 +12,7 @@ import {
   Spacer,
   Flex,
   Tag,
+  Link as ChakraLink,
 } from '@chakra-ui/react';
 import {EventDocument, type EventQuery} from '~/types/graphql';
 import DateString from '~/components/DateString';
@@ -19,6 +20,7 @@ import apolloClient from '~/utils/apolloClient';
 import type {LoaderArgs} from '@remix-run/node';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import {Link, Outlet} from '@remix-run/react';
+import {$path} from 'remix-routes';
 
 export const EVENT_ID = 'Event:kult2024';
 
@@ -74,8 +76,6 @@ function BBox({
     </Flex>
   );
 }
-
-type Props = Extract<EventQuery['node'], {__typename?: 'Event'}>;
 
 gql`
   query Event($id: ID!) {
@@ -142,9 +142,13 @@ export default function Home() {
           statt. Die Bewerbung für einen Auftritt beim Kulturspektakel ist
           ausschließlich über dieses Bewerbungsformular möglich. Alle anderen
           Anfragen bitte per E-Mail an{' '}
-          <Link href="mailto:info@kulturspektakel.de" color="red.500">
+          <ChakraLink
+            as={Link}
+            to="mailto:info@kulturspektakel.de"
+            color="red.500"
+          >
             info@kulturspektakel.de
-          </Link>
+          </ChakraLink>
           .
         </Text>
         <Text>
@@ -154,13 +158,23 @@ export default function Home() {
         </Text>
       </VStack>
 
+      {errorMessage && (
+        <Alert status="warning" borderRadius="md" mb="5">
+          <AlertIcon />
+          <AlertDescription color="yellow.900">{errorMessage}</AlertDescription>
+        </Alert>
+      )}
+
       {data.bandApplicationEnd && (
         <BBox
           applicationStart={data.bandApplicationEnd}
           title="Bands"
           content="Ihr möchtet euch als Band für eine unserer Bühnen bewerben."
           buttonLabel="Als Band bewerben"
-          href="/booking/bewerbung/band/schritt1"
+          href={$path('/booking/bewerbung/:applicationType/:step', {
+            applicationType: 'band',
+            step: 1,
+          })}
           disabled={bandApplicationEnded}
         />
       )}
@@ -171,16 +185,12 @@ export default function Home() {
           title="DJs"
           content="Du möchtest dich als DJ für unsere DJ-Area bewerben."
           buttonLabel="Als DJ bewerben"
-          href="/booking/bewerbung/dj/schritt1"
+          href={$path('/booking/bewerbung/:applicationType/:step', {
+            applicationType: 'dj',
+            step: 1,
+          })}
           disabled={djApplicationEnded}
         />
-      )}
-
-      {errorMessage && (
-        <Alert status="warning" borderRadius="md" mt="5">
-          <AlertIcon />
-          <AlertDescription color="yellow.900">{errorMessage}</AlertDescription>
-        </Alert>
       )}
     </Box>
   );

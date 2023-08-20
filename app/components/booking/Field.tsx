@@ -7,12 +7,16 @@ import {
 import React from 'react';
 import {useField} from 'remix-validated-form';
 
-export default function FieldWrapper({as = Input, ...props}: InputProps) {
+export default function FieldWrapper({
+  as = Input,
+  onBlur,
+  ...props
+}: InputProps) {
   const {id, isRequired} = useFormControlContext();
   const field = useField(id);
 
   const inputProps: InputProps = {
-    ...field.getInputProps({onBlur: props.onBlur}),
+    ...field.getInputProps({onBlur}),
     isRequired,
     isInvalid: field.error != null,
     bg: 'white',

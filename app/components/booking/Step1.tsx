@@ -15,6 +15,7 @@ import Field from './Field';
 import useIsDJ from './useIsDJ';
 import {GenreCategory} from '~/types/graphql';
 import {useControlField} from 'remix-validated-form';
+import {z} from 'zod';
 
 const GENRE_CATEGORIES: Map<GenreCategory, string> = new Map([
   [GenreCategory.Pop, 'Pop'],
@@ -31,7 +32,35 @@ const GENRE_CATEGORIES: Map<GenreCategory, string> = new Map([
   [GenreCategory.Other, 'andere Musikrichtung'],
 ]);
 
-export default function Step1() {
+const shared = z.object({
+  bandname: z.string().nonempty(),
+  description: z.string().nonempty(),
+  genre: z.string(),
+  genreCategory: z.nativeEnum(GenreCategory),
+  city: z.string().nonempty(),
+});
+
+const bandSchema = shared
+  .extend({
+    numberOfArtists: z.string().nonempty().regex(/^\d+$/),
+    numberOfNonMaleArtists: z.string().nonempty().regex(/^\d+$/),
+  })
+  .superRefine((val, ctx) => {
+    if (val.numberOfArtists < val.numberOfNonMaleArtists) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['numberOfNonMaleArtists'],
+      });
+    }
+  });
+
+const djSchema = shared.extend({
+  genreCategory: z.literal(GenreCategory.Dj),
+});
+
+Step1.schema = z.union([bandSchema, djSchema]);
+
+function Step1() {
   const isDJ = useIsDJ();
   const [city, setCity] = useControlField<string>('city');
   const [bandname, setBandname] = useControlField<string>('bandname');
@@ -121,3 +150,5 @@ export default function Step1() {
     </>
   );
 }
+
+export default Step1;
