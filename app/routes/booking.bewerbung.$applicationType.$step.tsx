@@ -47,6 +47,8 @@ export async function loader({request, params}: LoaderArgs) {
     );
   }
 
+  const a = session.get('data');
+
   return typedjson(
     session.get('data') ?? {
       genreCategory:
@@ -78,7 +80,8 @@ export const action = async ({request, params}: ActionArgs) => {
 //   ig: HeardAboutBookingFrom.Instagram,
 // });
 
-export type CookieData = z.infer<typeof step3Schema>;
+const a = z.intersection(Step1.schema, Step2.schema, Step3.schema);
+export type CookieData = z.infer<typeof a>;
 
 const SearchParamsSchema = z.object({
   applicationType: z.enum(['band', 'dj']),

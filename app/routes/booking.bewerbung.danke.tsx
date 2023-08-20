@@ -57,8 +57,14 @@ export const action = async ({request}: ActionArgs) => {
   if (errors) {
     throw new Error(errors.at(0)?.message);
   }
-  destroySession(session);
-  return typedjson({isDJ: true});
+  return typedjson(
+    {isDJ: true},
+    {
+      headers: {
+        'Set-Cookie': await destroySession(session),
+      },
+    },
+  );
 };
 
 export default function Thanks() {
