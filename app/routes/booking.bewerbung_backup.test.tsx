@@ -1,7 +1,5 @@
 import React, {useState} from 'react';
-import Page from '~/components/booking/Page';
 import useIsDJ from '~/components/booking/useIsDJ';
-import Step from '~/components/booking/Step';
 // import {useRouter} from 'next/router';
 import type {CreateBandApplicationInput} from '~/types/graphql';
 import {
@@ -49,7 +47,7 @@ export default function Application(props: Props) {
   const [currentStep, setCurrentStep] = useState(1);
 
   return (
-    <Page>
+    <>
       {/* <Formik<FormikContextT>
         initialValues={{
           heardAboutBookingFrom: utmSourceMapping[getUtmSource() ?? ''],
@@ -116,6 +114,6 @@ export default function Application(props: Props) {
           </Box>
         </Alert>
       )}
-    </Page>
+    </>
   );
 }

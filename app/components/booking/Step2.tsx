@@ -1,14 +1,13 @@
 import {
   FormControl,
-  FormErrorMessage,
   FormHelperText,
   FormLabel,
   InputGroup,
   InputLeftElement,
 } from '@chakra-ui/react';
-import Field from '../components/booking/Field';
-import useIsDJ from '../components/booking/useIsDJ';
 import {useField} from 'remix-validated-form';
+import Field from './Field';
+import useIsDJ from './useIsDJ';
 
 export default function Step2() {
   const isDJ = useIsDJ();
@@ -27,20 +26,7 @@ export default function Step2() {
         <Field
           type="text"
           placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-          validate={(url) => {
-            if (
-              url &&
-              !/^(https?:\/\/)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)?$/.test(
-                url,
-              )
-            ) {
-              return 'ungültige URL';
-            }
-          }}
         />
-        {demoField.error && (
-          <FormErrorMessage>{demoField.error}</FormErrorMessage>
-        )}
       </FormControl>
 
       <FormControl id="instagram">

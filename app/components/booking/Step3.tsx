@@ -5,10 +5,10 @@ import {
   Textarea,
   Select,
 } from '@chakra-ui/react';
-import Field from '../components/booking/Field';
-import {HeardAboutBookingFrom, PreviouslyPlayed} from '../types/graphql';
-import useIsDJ from '../components/booking/useIsDJ';
-import {getUtmSource} from '~/routes/booking.bewerbung.$applicationType.test';
+import Field from './Field';
+import useIsDJ from './useIsDJ';
+import {getUtmSource} from '~/routes/booking.bewerbung_backup.test';
+import {HeardAboutBookingFrom, PreviouslyPlayed} from '~/types/graphql';
 
 const HEARD_ABOUT: Map<HeardAboutBookingFrom, string> = new Map([
   [HeardAboutBookingFrom.BYon, 'BY-on'],

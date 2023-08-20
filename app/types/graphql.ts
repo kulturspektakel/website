@@ -816,6 +816,55 @@ export type DuplicateApplicationWarningQuery = {
   } | null;
 };
 
+export type NewsQueryVariables = Exact<{[key: string]: never}>;
+
+export type NewsQuery = {
+  __typename?: 'Query';
+  news: {
+    __typename?: 'QueryNewsConnection';
+    edges: Array<{
+      __typename?: 'QueryNewsConnectionEdge';
+      node: {
+        __typename?: 'News';
+        slug: string;
+        title: string;
+        createdAt: Date;
+        content: string;
+      };
+    }>;
+  };
+};
+
+export type EventQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+export type EventQuery = {
+  __typename?: 'Query';
+  node?:
+    | {__typename?: 'Area'}
+    | {__typename?: 'BandApplication'}
+    | {__typename?: 'BandApplicationComment'}
+    | {__typename?: 'BandPlaying'}
+    | {__typename?: 'Card'}
+    | {__typename?: 'Device'}
+    | {
+        __typename?: 'Event';
+        name: string;
+        start: Date;
+        end: Date;
+        bandApplicationStart?: Date | null;
+        bandApplicationEnd?: Date | null;
+        djApplicationEnd?: Date | null;
+      }
+    | {__typename?: 'News'}
+    | {__typename?: 'NuclinoPage'}
+    | {__typename?: 'Product'}
+    | {__typename?: 'ProductList'}
+    | {__typename?: 'Viewer'}
+    | null;
+};
+
 export type ThanksQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
@@ -849,55 +898,6 @@ export type CreateBandApplicationMutationVariables = Exact<{
 export type CreateBandApplicationMutation = {
   __typename?: 'Mutation';
   createBandApplication: {__typename?: 'BandApplication'; id: string};
-};
-
-export type EventQueryVariables = Exact<{
-  id: Scalars['ID']['input'];
-}>;
-
-export type EventQuery = {
-  __typename?: 'Query';
-  node?:
-    | {__typename?: 'Area'}
-    | {__typename?: 'BandApplication'}
-    | {__typename?: 'BandApplicationComment'}
-    | {__typename?: 'BandPlaying'}
-    | {__typename?: 'Card'}
-    | {__typename?: 'Device'}
-    | {
-        __typename?: 'Event';
-        name: string;
-        start: Date;
-        end: Date;
-        bandApplicationStart?: Date | null;
-        bandApplicationEnd?: Date | null;
-        djApplicationEnd?: Date | null;
-      }
-    | {__typename?: 'News'}
-    | {__typename?: 'NuclinoPage'}
-    | {__typename?: 'Product'}
-    | {__typename?: 'ProductList'}
-    | {__typename?: 'Viewer'}
-    | null;
-};
-
-export type NewsQueryVariables = Exact<{[key: string]: never}>;
-
-export type NewsQuery = {
-  __typename?: 'Query';
-  news: {
-    __typename?: 'QueryNewsConnection';
-    edges: Array<{
-      __typename?: 'QueryNewsConnectionEdge';
-      node: {
-        __typename?: 'News';
-        slug: string;
-        title: string;
-        createdAt: Date;
-        content: string;
-      };
-    }>;
-  };
 };
 
 export const ArticleHeadFragmentDoc = gql`
@@ -1028,6 +1028,107 @@ export type DuplicateApplicationWarningQueryResult = Apollo.QueryResult<
   DuplicateApplicationWarningQuery,
   DuplicateApplicationWarningQueryVariables
 >;
+export const NewsDocument = gql`
+  query News {
+    news(first: 10) {
+      edges {
+        node {
+          ...Article
+        }
+      }
+    }
+  }
+  ${ArticleFragmentDoc}
+`;
+
+/**
+ * __useNewsQuery__
+ *
+ * To run a query within a React component, call `useNewsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useNewsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useNewsQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useNewsQuery(
+  baseOptions?: Apollo.QueryHookOptions<NewsQuery, NewsQueryVariables>,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useQuery<NewsQuery, NewsQueryVariables>(NewsDocument, options);
+}
+export function useNewsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<NewsQuery, NewsQueryVariables>,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useLazyQuery<NewsQuery, NewsQueryVariables>(
+    NewsDocument,
+    options,
+  );
+}
+export type NewsQueryHookResult = ReturnType<typeof useNewsQuery>;
+export type NewsLazyQueryHookResult = ReturnType<typeof useNewsLazyQuery>;
+export type NewsQueryResult = Apollo.QueryResult<NewsQuery, NewsQueryVariables>;
+export const EventDocument = gql`
+  query Event($id: ID!) {
+    node(id: $id) {
+      ... on Event {
+        name
+        start
+        end
+        bandApplicationStart
+        bandApplicationEnd
+        djApplicationEnd
+      }
+    }
+  }
+`;
+
+/**
+ * __useEventQuery__
+ *
+ * To run a query within a React component, call `useEventQuery` and pass it any options that fit your needs.
+ * When your component renders, `useEventQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useEventQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useEventQuery(
+  baseOptions: Apollo.QueryHookOptions<EventQuery, EventQueryVariables>,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useQuery<EventQuery, EventQueryVariables>(
+    EventDocument,
+    options,
+  );
+}
+export function useEventLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<EventQuery, EventQueryVariables>,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useLazyQuery<EventQuery, EventQueryVariables>(
+    EventDocument,
+    options,
+  );
+}
+export type EventQueryHookResult = ReturnType<typeof useEventQuery>;
+export type EventLazyQueryHookResult = ReturnType<typeof useEventLazyQuery>;
+export type EventQueryResult = Apollo.QueryResult<
+  EventQuery,
+  EventQueryVariables
+>;
 export const ThanksDocument = gql`
   query Thanks($id: ID!) {
     node(id: $id) {
@@ -1129,104 +1230,3 @@ export type CreateBandApplicationMutationOptions = Apollo.BaseMutationOptions<
   CreateBandApplicationMutation,
   CreateBandApplicationMutationVariables
 >;
-export const EventDocument = gql`
-  query Event($id: ID!) {
-    node(id: $id) {
-      ... on Event {
-        name
-        start
-        end
-        bandApplicationStart
-        bandApplicationEnd
-        djApplicationEnd
-      }
-    }
-  }
-`;
-
-/**
- * __useEventQuery__
- *
- * To run a query within a React component, call `useEventQuery` and pass it any options that fit your needs.
- * When your component renders, `useEventQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useEventQuery({
- *   variables: {
- *      id: // value for 'id'
- *   },
- * });
- */
-export function useEventQuery(
-  baseOptions: Apollo.QueryHookOptions<EventQuery, EventQueryVariables>,
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useQuery<EventQuery, EventQueryVariables>(
-    EventDocument,
-    options,
-  );
-}
-export function useEventLazyQuery(
-  baseOptions?: Apollo.LazyQueryHookOptions<EventQuery, EventQueryVariables>,
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useLazyQuery<EventQuery, EventQueryVariables>(
-    EventDocument,
-    options,
-  );
-}
-export type EventQueryHookResult = ReturnType<typeof useEventQuery>;
-export type EventLazyQueryHookResult = ReturnType<typeof useEventLazyQuery>;
-export type EventQueryResult = Apollo.QueryResult<
-  EventQuery,
-  EventQueryVariables
->;
-export const NewsDocument = gql`
-  query News {
-    news(first: 10) {
-      edges {
-        node {
-          ...Article
-        }
-      }
-    }
-  }
-  ${ArticleFragmentDoc}
-`;
-
-/**
- * __useNewsQuery__
- *
- * To run a query within a React component, call `useNewsQuery` and pass it any options that fit your needs.
- * When your component renders, `useNewsQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useNewsQuery({
- *   variables: {
- *   },
- * });
- */
-export function useNewsQuery(
-  baseOptions?: Apollo.QueryHookOptions<NewsQuery, NewsQueryVariables>,
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useQuery<NewsQuery, NewsQueryVariables>(NewsDocument, options);
-}
-export function useNewsLazyQuery(
-  baseOptions?: Apollo.LazyQueryHookOptions<NewsQuery, NewsQueryVariables>,
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useLazyQuery<NewsQuery, NewsQueryVariables>(
-    NewsDocument,
-    options,
-  );
-}
-export type NewsQueryHookResult = ReturnType<typeof useNewsQuery>;
-export type NewsLazyQueryHookResult = ReturnType<typeof useNewsLazyQuery>;
-export type NewsQueryResult = Apollo.QueryResult<NewsQuery, NewsQueryVariables>;

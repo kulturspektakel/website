@@ -16,6 +16,7 @@ import {CacheProvider} from '@emotion/react';
 import createEmotionCache from '@emotion/cache';
 import {StepsTheme as Steps} from 'chakra-ui-steps';
 import SpaceGrotesk400 from '@fontsource/space-grotesk/latin-400.css';
+import Header from './components/Header';
 
 export const meta: V2_MetaFunction = () => {
   return [
@@ -52,13 +53,6 @@ const theme = extendTheme({
       900: '#1a202c',
     },
   },
-  textStyles: {
-    h2: {
-      fontFamily: 'Shrimp',
-      fontWeight: 'normal',
-      textTansform: 'uppercase',
-    },
-  },
   fonts: {
     heading: "'Space Grotesk', sans-serif;",
     body: "'Space Grotesk', sans-serif;",
@@ -68,6 +62,10 @@ const theme = extendTheme({
       html: {
         '-webkit-font-smoothing': 'auto',
         fontSynthesis: 'none',
+      },
+      'h1,h2': {
+        fontFamily: 'Shrimp !important',
+        textTransform: 'uppercase',
       },
     },
   },
@@ -94,7 +92,10 @@ function Document({
       <body>
         <CacheProvider value={emotionCache}>
           <ChakraProvider theme={theme}>
-            <ApolloProvider client={apolloClient}>{children}</ApolloProvider>
+            <ApolloProvider client={apolloClient}>
+              <Header />
+              {children}
+            </ApolloProvider>
           </ChakraProvider>
         </CacheProvider>
 

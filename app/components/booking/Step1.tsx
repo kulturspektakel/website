@@ -1,20 +1,20 @@
 import {
   FormControl,
-  FormHelperText,
   FormLabel,
-  Text,
-  Textarea,
   HStack,
-  Link,
   Select,
+  FormHelperText,
+  Textarea,
+  Text,
+  Link as ChakraLink,
 } from '@chakra-ui/react';
-import {GenreCategory} from '~/types/graphql';
-import {useFormikContext} from 'formik';
+import {Link} from '@remix-run/react';
 import DistanceWarning from './DistanceWarning';
+import DuplicateApplicationWarning from './DuplicateApplicationWarning';
 import Field from './Field';
 import useIsDJ from './useIsDJ';
-import DuplicateApplicationWarning from './DuplicateApplicationWarning';
-import type {FormikContextT} from '~/routes/booking.bewerbung.$applicationType.test';
+import {GenreCategory} from '~/types/graphql';
+import {useControlField} from 'remix-validated-form';
 
 const GENRE_CATEGORIES: Map<GenreCategory, string> = new Map([
   [GenreCategory.Pop, 'Pop'],
@@ -33,13 +33,14 @@ const GENRE_CATEGORIES: Map<GenreCategory, string> = new Map([
 
 export default function Step1() {
   const isDJ = useIsDJ();
-  const {values, errors} = useFormikContext<FormikContextT>();
+  const [city, setCity] = useControlField<string>('city');
+  const [bandname, setBandname] = useControlField<string>('bandname');
 
   return (
     <>
       <FormControl id="bandname" isRequired>
         <FormLabel>{isDJ ? 'Künstler:innen-Name' : 'Bandname'}</FormLabel>
-        <Field />
+        <Field onBlur={(e) => setBandname(e.target.value)} />
       </FormControl>
 
       <HStack w="100%">
@@ -77,10 +78,10 @@ export default function Step1() {
 
       <FormControl id="city" isRequired>
         <FormLabel>Wohnort</FormLabel>
-        <Field />
+        <Field onBlur={(e) => setCity(e.target.value)} />
       </FormControl>
 
-      <DistanceWarning origin={values.city} />
+      <DistanceWarning origin={city} />
 
       {!isDJ && (
         <>
@@ -89,36 +90,25 @@ export default function Step1() {
               <FormLabel>Anzahl Bandmitglieder</FormLabel>
               <Field type="number" min={1} />
             </FormControl>
-            <FormControl
-              id="numberOfNonMaleArtists"
-              isRequired
-              isInvalid={!!errors.numberOfNonMaleArtists}
-            >
+            <FormControl id="numberOfNonMaleArtists" isRequired>
               <FormLabel>
                 davon <strong>nicht</strong> männlich
               </FormLabel>
-              <Field
-                type="number"
-                min={0}
-                max={values.numberOfArtists ?? 100}
-                validate={(v) => {
-                  if (values.numberOfArtists && v > values.numberOfArtists) {
-                    return 'wrong number';
-                  }
-                }}
-              />
+              <Field type="number" min={0} />
             </FormControl>
           </HStack>
           <Text fontSize="sm" color="gray.500">
             Die Festival-Branche hat eine geringe Geschlechter&shy;diversität (
-            <Link
+            <ChakraLink
+              as={Link}
               textDecoration="underline"
               rel="noreferrer"
-              href="https://bit.ly/2HxZMgl"
+              to="https://bit.ly/2HxZMgl"
               target="_blank"
+              isExternal
             >
               mehr Informationen
-            </Link>
+            </ChakraLink>
             ). Wir wählen die Bands nicht nach Geschlechter&shy;verteilung aus,
             trotzdem wollen wir einen besseren Überblick über die Situation
             bekommen. Personen und Gruppen die auf Festival&shy;bühnen
@@ -127,7 +117,7 @@ export default function Step1() {
           </Text>
         </>
       )}
-      <DuplicateApplicationWarning bandname={values.bandname} />
+      <DuplicateApplicationWarning bandname={bandname} />
     </>
   );
 }
