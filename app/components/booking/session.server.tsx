@@ -1,10 +1,9 @@
-import type {SessionData} from '@remix-run/node';
 import {createCookieSessionStorage} from '@remix-run/node';
-import type {CookieData} from '~/routes/booking.bewerbung.$applicationType.$step';
+import type {CookieData} from '~/routes/booking.$applicationType.$step';
 
 const {getSession, commitSession, destroySession} = createCookieSessionStorage<
-  SessionData,
-  {data: CookieData}
+  {data: CookieData},
+  never
 >({
   // a Cookie from `createCookie` or the CookieOptions to create one
   cookie: {

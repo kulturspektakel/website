@@ -9,7 +9,7 @@ import {
   useTypedActionData,
   useTypedLoaderData,
 } from 'remix-typedjson';
-import {EVENT_ID} from './booking.bewerbung._index';
+import {EVENT_ID} from './booking._index';
 import {destroySession, getSession} from '~/components/booking/session.server';
 import {Suspense} from 'react';
 import DateString from '~/components/DateString';

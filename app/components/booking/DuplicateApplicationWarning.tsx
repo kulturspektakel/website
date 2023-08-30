@@ -1,7 +1,7 @@
 import {gql} from '@apollo/client';
 import {Alert, AlertIcon, AlertDescription} from '@chakra-ui/react';
 import {useDuplicateApplicationWarningQuery} from '../../types/graphql';
-import {EVENT_ID} from '~/routes/booking.bewerbung._index';
+import {EVENT_ID} from '~/routes/booking._index';
 
 gql`
   query DuplicateApplicationWarning($bandname: String!, $eventId: ID!) {

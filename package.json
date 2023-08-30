@@ -35,7 +35,8 @@
     "remix-routes": "^1.4.4",
     "remix-typedjson": "^0.2.0",
     "remix-validated-form": "^5.1.0",
-    "zod": "^3.22.2"
+    "zod": "^3.22.2",
+    "zod-form-data": "^2.0.1"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "^5.0.0",

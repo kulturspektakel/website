@@ -15,6 +15,8 @@ export default function FieldWrapper({
   const {id, isRequired} = useFormControlContext();
   const field = useField(id);
 
+  console.log(id, field.getInputProps({onBlur}).defaultValue);
+
   const inputProps: InputProps = {
     ...field.getInputProps({onBlur}),
     isRequired,

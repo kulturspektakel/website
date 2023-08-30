@@ -171,7 +171,7 @@ export default function Home() {
           title="Bands"
           content="Ihr möchtet euch als Band für eine unserer Bühnen bewerben."
           buttonLabel="Als Band bewerben"
-          href={$path('/booking/bewerbung/:applicationType/:step', {
+          href={$path('/booking/:applicationType/:step', {
             applicationType: 'band',
             step: 1,
           })}
@@ -185,7 +185,7 @@ export default function Home() {
           title="DJs"
           content="Du möchtest dich als DJ für unsere DJ-Area bewerben."
           buttonLabel="Als DJ bewerben"
-          href={$path('/booking/bewerbung/:applicationType/:step', {
+          href={$path('/booking/:applicationType/:step', {
             applicationType: 'dj',
             step: 1,
           })}

@@ -5,15 +5,26 @@ import {withZod} from '@remix-validated-form/with-zod';
 import {Steps, Step} from 'chakra-ui-steps';
 import {redirect, typedjson, useTypedLoaderData} from 'remix-typedjson';
 import {ValidatedForm, useIsSubmitting, useIsValid} from 'remix-validated-form';
-import {$path, type Routes} from 'remix-routes';
-import {z} from 'zod';
-import Step1 from '~/components/booking/Step1';
+import {$path} from 'remix-routes';
+import {type ZodType, z} from 'zod';
 import {getParams} from 'remix-params-helper';
+import Step1 from '~/components/booking/Step1';
 import Step3 from '~/components/booking/Step3';
 import Step2 from '~/components/booking/Step2';
-import {createElement} from 'react';
+import {createElement, useMemo} from 'react';
 import {getSession, commitSession} from '~/components/booking/session.server';
 import {GenreCategory} from '~/types/graphql';
+import {zfd} from 'zod-form-data';
+
+const STEPS = [Step1, Step2, Step3] as const;
+const GlobalSchema = z.intersection(Step1.schema, Step2.schema, Step3.schema);
+export type CookieData = Partial<z.infer<typeof GlobalSchema>>;
+
+const SearchParamsSchema = z.object({
+  applicationType: z.enum(['band', 'dj']),
+  step: zfd.numeric(z.number().int().min(1).max(STEPS.length)),
+});
+export type SearchParams = z.infer<typeof SearchParamsSchema>;
 
 export async function loader({request, params}: LoaderArgs) {
   const result = getParams(params, SearchParamsSchema);
@@ -24,43 +35,42 @@ export async function loader({request, params}: LoaderArgs) {
     });
   }
   const session = await getSession(request.headers.get('cookie'));
+  const sessionData = session.get('data') ?? {
+    genreCategory:
+      result.data.applicationType === 'dj' ? GenreCategory.Dj : undefined,
+  };
 
-  let lastValidStep = result.data.step;
-  while (lastValidStep > 1) {
-    console.log('validating', lastValidStep - 1);
+  for (
+    let lastValidStep = 1;
+    lastValidStep < result.data.step;
+    lastValidStep++
+  ) {
     const validationResult = await withZod(
       STEPS[lastValidStep - 1].schema,
-    ).validate(session.get('data'));
+    ).validate(sessionData);
     if (validationResult.error) {
-      lastValidStep--;
-    } else {
-      break;
+      // redirect to last valid step
+      return redirect(
+        $path('/booking/:applicationType/:step', {
+          applicationType: result.data.applicationType,
+          step: lastValidStep,
+        }),
+      );
     }
   }
-  // redirect to last valid step
-  if (lastValidStep !== result.data.step) {
-    return redirect(
-      $path('/booking/bewerbung/:applicationType/:step', {
-        applicationType: result.data.applicationType,
-        step: lastValidStep,
-      }),
-    );
-  }
 
-  const a = session.get('data');
-
-  return typedjson(
-    session.get('data') ?? {
-      genreCategory:
-        result.data.applicationType === 'dj' ? GenreCategory.Dj : undefined,
-    },
-  );
+  return typedjson(sessionData);
 }
 
-export const action = async ({request, params}: ActionArgs) => {
+export const action = async ({request, params, context}: ActionArgs) => {
+  const {data: p} = getParams(params, SearchParamsSchema);
   const session = await getSession(request.headers.get('cookie'));
-  const formData = Object.fromEntries(await request.formData());
-  session.set('data', formData);
+  const {data} = await withZod(STEPS[(p?.step ?? 2) - 2].schema).validate(
+    await request.formData(),
+  );
+
+  const oldData = session.get('data') ?? {};
+  session.set('data', {...oldData, ...data});
 
   return typedjson(null, {
     headers: {
@@ -80,35 +90,18 @@ export const action = async ({request, params}: ActionArgs) => {
 //   ig: HeardAboutBookingFrom.Instagram,
 // });
 
-const a = z.intersection(Step1.schema, Step2.schema, Step3.schema);
-export type CookieData = z.infer<typeof a>;
-
-const SearchParamsSchema = z.object({
-  applicationType: z.enum(['band', 'dj']),
-  step: z.number().int().min(1).max(3),
-});
-
-export type SearchParams = {
-  applicationType: 'band' | 'dj';
-  step: 1 | 2 | 3;
-};
-//z.infer<typeof SearchParamsSchema>;
-
-const STEPS = [Step1, Step2, Step3];
-
 export default function () {
   const formID = 'booking';
-  const {applicationType, step} =
-    useParams<Routes['/booking/bewerbung/:applicationType/:step']['params']>();
-  const activeStep = parseInt(String(step), 10);
+  const {applicationType, step} = SearchParamsSchema.parse(useParams());
   const isSubmitting = useIsSubmitting(formID);
   const isValid = useIsValid(formID);
   const data = useTypedLoaderData<typeof loader>();
+  const validator = useMemo(() => withZod(STEPS[step - 1].schema), [step]);
 
   return (
     <VStack spacing="5">
       <Steps
-        activeStep={activeStep - 1}
+        activeStep={step - 1}
         responsive={false}
         colorScheme="blue"
         display={['none', 'flex']}
@@ -119,26 +112,27 @@ export default function () {
       </Steps>
 
       <ValidatedForm
-        defaultValues={data}
-        validator={withZod(STEPS[activeStep - 1].schema)}
+        defaultValues={data ?? {}}
+        validator={validator}
+        action={$path('/booking/:applicationType/:step', {
+          applicationType,
+          step: step + 1,
+        })}
         method="post"
         id={formID}
       >
-        {createElement(STEPS[activeStep - 1])}
-
-        {isValid ? 'valid' : 'invalid'}
-
+        {createElement(STEPS[step - 1])}
         <HStack w="100%">
           <Button
             isDisabled={isSubmitting}
             as={Link}
             to={
-              activeStep > 1
-                ? $path('/booking/bewerbung/:applicationType/:step', {
+              step > 1
+                ? $path('/booking/:applicationType/:step', {
                     applicationType,
-                    step: activeStep - 1,
+                    step: step - 1,
                   })
-                : $path('/booking/bewerbung')
+                : $path('/booking')
             }
           >
             Zurück
@@ -150,7 +144,7 @@ export default function () {
             isDisabled={isSubmitting || !isValid}
             isLoading={isSubmitting}
           >
-            {activeStep === 3 ? 'Absenden' : 'Weiter'}
+            {step === STEPS.length ? 'Absenden' : 'Weiter'}
           </Button>
         </HStack>
       </ValidatedForm>

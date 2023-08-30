@@ -16,6 +16,7 @@ import useIsDJ from './useIsDJ';
 import {GenreCategory} from '~/types/graphql';
 import {useControlField} from 'remix-validated-form';
 import {z} from 'zod';
+import {zfd} from 'zod-form-data';
 
 const GENRE_CATEGORIES: Map<GenreCategory, string> = new Map([
   [GenreCategory.Pop, 'Pop'],
@@ -36,14 +37,14 @@ const shared = z.object({
   bandname: z.string().nonempty(),
   description: z.string().nonempty(),
   genre: z.string(),
-  genreCategory: z.nativeEnum(GenreCategory),
+  genreCategory: zfd.text(z.nativeEnum(GenreCategory)),
   city: z.string().nonempty(),
 });
 
 const bandSchema = shared
   .extend({
-    numberOfArtists: z.string().nonempty().regex(/^\d+$/),
-    numberOfNonMaleArtists: z.string().nonempty().regex(/^\d+$/),
+    numberOfArtists: zfd.numeric(z.number().int().min(1)),
+    numberOfNonMaleArtists: zfd.numeric(z.number().int()),
   })
   .superRefine((val, ctx) => {
     if (val.numberOfArtists < val.numberOfNonMaleArtists) {
