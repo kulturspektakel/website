@@ -14,9 +14,8 @@ import DuplicateApplicationWarning from './DuplicateApplicationWarning';
 import Field from './Field';
 import useIsDJ from './useIsDJ';
 import {GenreCategory} from '~/types/graphql';
-import {useControlField} from 'remix-validated-form';
-import {z} from 'zod';
-import {zfd} from 'zod-form-data';
+import type {FormikContextT} from '~/routes/booking.$applicationType';
+import {useFormikContext} from 'formik';
 
 const GENRE_CATEGORIES: Map<GenreCategory, string> = new Map([
   [GenreCategory.Pop, 'Pop'],
@@ -33,48 +32,23 @@ const GENRE_CATEGORIES: Map<GenreCategory, string> = new Map([
   [GenreCategory.Other, 'andere Musikrichtung'],
 ]);
 
-const shared = z.object({
-  bandname: z.string().nonempty(),
-  description: z.string().nonempty(),
-  genre: z.string(),
-  genreCategory: zfd.text(z.nativeEnum(GenreCategory)),
-  city: z.string().nonempty(),
-});
-
-const bandSchema = shared
-  .extend({
-    numberOfArtists: zfd.numeric(z.number().int().min(1)),
-    numberOfNonMaleArtists: zfd.numeric(z.number().int()),
-  })
-  .superRefine((val, ctx) => {
-    if (val.numberOfArtists < val.numberOfNonMaleArtists) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['numberOfNonMaleArtists'],
-      });
-    }
-  });
-
-const djSchema = shared.extend({
-  genreCategory: z.literal(GenreCategory.Dj),
-});
-
-Step1.schema = z.union([bandSchema, djSchema]);
-
-function Step1() {
+export default function Step1() {
   const isDJ = useIsDJ();
-  const [city, setCity] = useControlField<string>('city');
-  const [bandname, setBandname] = useControlField<string>('bandname');
+  const {values, errors} = useFormikContext<FormikContextT>();
 
   return (
     <>
       <FormControl id="bandname" isRequired>
         <FormLabel>{isDJ ? 'Künstler:innen-Name' : 'Bandname'}</FormLabel>
-        <Field onBlur={(e) => setBandname(e.target.value)} />
+        <Field />
       </FormControl>
 
       <HStack w="100%">
-        <FormControl id={isDJ ? 'genre' : 'genreCategory'} isRequired={!isDJ}>
+        <FormControl
+          id={isDJ ? 'genre' : 'genreCategory'}
+          isRequired={!isDJ}
+          isInvalid={!!errors.numberOfNonMaleArtists}
+        >
           <FormLabel>Musikrichtung</FormLabel>
           {isDJ ? (
             <Field />
@@ -108,10 +82,10 @@ function Step1() {
 
       <FormControl id="city" isRequired>
         <FormLabel>Wohnort</FormLabel>
-        <Field onBlur={(e) => setCity(e.target.value)} />
+        <Field />
       </FormControl>
 
-      <DistanceWarning origin={city} />
+      <DistanceWarning origin={values.city} />
 
       {!isDJ && (
         <>
@@ -124,7 +98,16 @@ function Step1() {
               <FormLabel>
                 davon <strong>nicht</strong> männlich
               </FormLabel>
-              <Field type="number" min={0} />
+              <Field
+                type="number"
+                min={0}
+                max={values.numberOfArtists ?? 100}
+                validate={(v) => {
+                  if (values.numberOfArtists && v > values.numberOfArtists) {
+                    return 'wrong number';
+                  }
+                }}
+              />
             </FormControl>
           </HStack>
           <Text fontSize="sm" color="gray.500">
@@ -147,9 +130,7 @@ function Step1() {
           </Text>
         </>
       )}
-      <DuplicateApplicationWarning bandname={bandname} />
+      <DuplicateApplicationWarning bandname={values.bandname} />
     </>
   );
 }
-
-export default Step1;

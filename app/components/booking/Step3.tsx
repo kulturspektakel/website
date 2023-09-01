@@ -7,9 +7,8 @@ import {
 } from '@chakra-ui/react';
 import Field from './Field';
 import useIsDJ from './useIsDJ';
-import {getUtmSource} from '~/routes/booking.bewerbung_backup.test';
+import {getUtmSource} from '~/routes/booking.$applicationType';
 import {HeardAboutBookingFrom, PreviouslyPlayed} from '~/types/graphql';
-import {z} from 'zod';
 
 const HEARD_ABOUT: Map<HeardAboutBookingFrom, string> = new Map([
   [HeardAboutBookingFrom.BYon, 'BY-on'],
@@ -26,16 +25,7 @@ const PLAYED_PREVIOUSLY: Map<PreviouslyPlayed, string> = new Map([
   [PreviouslyPlayed.No, 'Nein'],
 ]);
 
-Step3.schema = z.object({
-  contactName: z.string().nonempty(),
-  email: z.string().nonempty().email(),
-  contactPhone: z.string().nonempty(),
-  knowsKultFrom: z.string(),
-  hasPreviouslyPlayed: z.nativeEnum(PreviouslyPlayed),
-  heardAboutBookingFrom: z.nativeEnum(HeardAboutBookingFrom),
-});
-
-function Step3() {
+export default function Step3() {
   const isDJ = useIsDJ();
 
   return (
@@ -109,5 +99,3 @@ function Step3() {
     </>
   );
 }
-
-export default Step3;

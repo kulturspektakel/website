@@ -1,7 +1,7 @@
 import {gql} from '@apollo/client';
 import {VStack, Heading, Text, Img} from '@chakra-ui/react';
 import Confetti from '~/components/booking/Confetti';
-import type {CreateBandApplicationMutation, ThanksQuery} from '~/types/graphql';
+import type {ThanksQuery} from '~/types/graphql';
 import apolloClient from '~/utils/apolloClient';
 import type {ActionArgs, LoaderArgs} from '@remix-run/node';
 import {
@@ -10,7 +10,6 @@ import {
   useTypedLoaderData,
 } from 'remix-typedjson';
 import {EVENT_ID} from './booking._index';
-import {destroySession, getSession} from '~/components/booking/session.server';
 import {Suspense} from 'react';
 import DateString from '~/components/DateString';
 
@@ -38,34 +37,7 @@ export async function loader(args: LoaderArgs) {
   throw new Error(`Event ${EVENT_ID} not found`);
 }
 
-export const action = async ({request}: ActionArgs) => {
-  const session = await getSession(request.headers.get('cookie'));
-  const formData = Object.fromEntries(await request.formData()); // TODO: type
-
-  const {errors} = await apolloClient.mutate<CreateBandApplicationMutation>({
-    mutation: gql`
-      mutation CreateBandApplication($data: CreateBandApplicationInput!) {
-        createBandApplication(data: $data) {
-          id
-        }
-      }
-    `,
-    variables: {
-      data: formData,
-    },
-  });
-  if (errors) {
-    throw new Error(errors.at(0)?.message);
-  }
-  return typedjson(
-    {isDJ: true},
-    {
-      headers: {
-        'Set-Cookie': await destroySession(session),
-      },
-    },
-  );
-};
+export const action = async ({request}: ActionArgs) => {};
 
 export default function Thanks() {
   const data = useTypedLoaderData<typeof loader>();

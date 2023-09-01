@@ -5,31 +5,18 @@ import {
   InputGroup,
   InputLeftElement,
 } from '@chakra-ui/react';
-import {useField} from 'remix-validated-form';
 import Field from './Field';
 import useIsDJ from './useIsDJ';
-import {z} from 'zod';
+import {useFormikContext} from 'formik';
+import type {FormikContextT} from '~/routes/booking.$applicationType';
 
-Step2.schema = z.object({
-  demo: z
-    .string()
-    .nonempty()
-    .regex(
-      /^(https?:\/\/)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)?$/,
-      'Ungültiger Link',
-    ),
-  instagram: z.string(),
-  facebook: z.string(),
-  website: z.string(),
-});
-
-function Step2() {
+export default function Step2() {
   const isDJ = useIsDJ();
-  const demoField = useField('demo');
+  const {errors} = useFormikContext<FormikContextT>();
 
   return (
     <>
-      <FormControl id="demo" isRequired={!isDJ} isInvalid={!!demoField.error}>
+      <FormControl id="demo" isRequired={!isDJ} isInvalid={!!errors.demo}>
         <FormLabel>Demomaterial: YouTube, Spotify, etc.</FormLabel>
         <FormHelperText mt="-2" mb="2">
           {isDJ
@@ -40,6 +27,16 @@ function Step2() {
         <Field
           type="text"
           placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+          validate={(url) => {
+            if (
+              url &&
+              !/^(https?:\/\/)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)?$/.test(
+                url,
+              )
+            ) {
+              return 'ungültige URL';
+            }
+          }}
         />
       </FormControl>
 
@@ -65,5 +62,3 @@ function Step2() {
     </>
   );
 }
-
-export default Step2;

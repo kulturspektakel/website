@@ -1,34 +1,36 @@
-import {
-  Input,
-  useFormControlContext,
-  type InputProps,
-  FormErrorMessage,
-} from '@chakra-ui/react';
+import type {InputProps} from '@chakra-ui/react';
+import {Input, useFormControlContext} from '@chakra-ui/react';
+import type {FieldValidator} from 'formik';
+import {useField} from 'formik';
 import React from 'react';
-import {useField} from 'remix-validated-form';
 
 export default function FieldWrapper({
   as = Input,
-  onBlur,
+  validate,
   ...props
-}: InputProps) {
+}: InputProps & {
+  validate?: FieldValidator;
+}) {
   const {id, isRequired} = useFormControlContext();
-  const field = useField(id);
 
-  console.log(id, field.getInputProps({onBlur}).defaultValue);
+  const [field, meta] = useField({
+    name: id,
+    validate: (v) => {
+      if (isRequired && (v === '' || v == null)) {
+        return 'empty';
+      }
+      if (validate) {
+        return validate(v);
+      }
+    },
+  });
 
   const inputProps: InputProps = {
-    ...field.getInputProps({onBlur}),
-    isRequired,
-    isInvalid: field.error != null,
+    ...field,
+    isInvalid: meta.touched && meta.error ? true : false,
     bg: 'white',
     ...props,
   };
 
-  return (
-    <>
-      {React.createElement(as ?? Input, inputProps)}
-      {field.error && <FormErrorMessage>{field.error}</FormErrorMessage>}
-    </>
-  );
+  return React.createElement(as ?? Input, inputProps);
 }
