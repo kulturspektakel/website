@@ -88,6 +88,7 @@ const theme = extendTheme({
 
 export async function loader(args: LoaderArgs) {
   console.log('asd');
+  return null;
 }
 
 function Document({

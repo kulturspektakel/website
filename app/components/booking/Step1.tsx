@@ -14,7 +14,7 @@ import DuplicateApplicationWarning from './DuplicateApplicationWarning';
 import Field from './Field';
 import useIsDJ from './useIsDJ';
 import {GenreCategory} from '~/types/graphql';
-import type {FormikContextT} from '~/routes/booking.$applicationType';
+import type {FormikContextT} from '~/routes/booking.$applicationType._index';
 import {useFormikContext} from 'formik';
 
 const GENRE_CATEGORIES: Map<GenreCategory, string> = new Map([

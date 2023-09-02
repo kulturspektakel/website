@@ -9,6 +9,7 @@ import {
   AlertTitle,
   Box,
   Code,
+  Heading,
 } from '@chakra-ui/react';
 import {useNavigate, useParams} from '@remix-run/react';
 import {Steps, Step} from 'chakra-ui-steps';
@@ -66,10 +67,15 @@ export default function () {
 
   return (
     <VStack spacing="5">
+      <Heading size="lg" mt="2">
+        {applicationType === 'dj' ? 'DJ Bewerbung' : 'Bandbewerbung'}
+      </Heading>
+
       <Steps
         activeStep={currentStep}
         responsive={false}
         colorScheme="blue"
+        trackColor="offwhite.300"
         display={['none', 'flex']}
       >
         <Step label="Infos" />

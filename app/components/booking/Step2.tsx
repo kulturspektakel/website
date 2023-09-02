@@ -8,7 +8,7 @@ import {
 import Field from './Field';
 import useIsDJ from './useIsDJ';
 import {useFormikContext} from 'formik';
-import type {FormikContextT} from '~/routes/booking.$applicationType';
+import type {FormikContextT} from '~/routes/booking.$applicationType._index';
 
 export default function Step2() {
   const isDJ = useIsDJ();

@@ -7,7 +7,7 @@ import {
 } from '@chakra-ui/react';
 import Field from './Field';
 import useIsDJ from './useIsDJ';
-import {getUtmSource} from '~/routes/booking.$applicationType';
+import {getUtmSource} from '~/routes/booking.$applicationType._index';
 import {HeardAboutBookingFrom, PreviouslyPlayed} from '~/types/graphql';
 
 const HEARD_ABOUT: Map<HeardAboutBookingFrom, string> = new Map([
