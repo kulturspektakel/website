@@ -10,28 +10,23 @@ import {
   Box,
   Code,
 } from '@chakra-ui/react';
-import type {ActionArgs} from '@remix-run/node';
-import {useParams, useSubmit} from '@remix-run/react';
+import {useNavigate, useParams} from '@remix-run/react';
 import {Steps, Step} from 'chakra-ui-steps';
 import {$path} from 'remix-routes';
 import {Formik, Form} from 'formik';
 import Step1 from '~/components/booking/Step1';
 import Step3 from '~/components/booking/Step3';
 import Step2 from '~/components/booking/Step2';
-import {createElement, useCallback, useState} from 'react';
-import type {
-  CreateBandApplicationInput,
-  CreateBandApplicationMutation,
-} from '~/types/graphql';
+import {createElement, useState} from 'react';
+import type {CreateBandApplicationInput} from '~/types/graphql';
 import {
-  CreateBandApplicationDocument,
   GenreCategory,
   HeardAboutBookingFrom,
+  useCreateBandApplicationMutation,
 } from '~/types/graphql';
 import {gql} from '@apollo/client';
-import {redirect, typedjson, useTypedActionData} from 'remix-typedjson';
-import apolloClient from '~/utils/apolloClient';
 import ReloadWarning from '~/components/booking/ReloadWarning';
+import {EVENT_ID} from './booking._index';
 
 const STEPS = [Step1, Step2, Step3] as const;
 export type FormikContextT = Partial<CreateBandApplicationInput>;
@@ -41,37 +36,15 @@ export type SearchParams = {
 };
 
 gql`
-  mutation CreateBandApplication($data: CreateBandApplicationInput!) {
-    createBandApplication(data: $data) {
+  mutation CreateBandApplication(
+    $eventId: ID!
+    $data: CreateBandApplicationInput!
+  ) {
+    createBandApplication(eventId: $eventId, data: $data) {
       id
     }
   }
 `;
-
-export async function action({request}: ActionArgs) {
-  const data: CreateBandApplicationInput = await request.json();
-  console.log('action', data);
-  // let k: keyof CreateBandApplicationInput;
-  //         for (k in values) {
-  //           if (typeof values[k] === 'string') {
-  //             // @ts-ignore
-  //             values[k] = (values[k] as string).trim();
-  //           }
-  //         }
-  const {errors} = await apolloClient.mutate<CreateBandApplicationMutation>({
-    mutation: CreateBandApplicationDocument,
-    variables: {
-      data,
-    },
-    errorPolicy: 'all',
-  });
-
-  if (errors != null && errors.length > 0) {
-    return typedjson({error: errors[0], data});
-  }
-
-  return redirect($path('/booking/danke'));
-}
 
 export function getUtmSource() {
   if (typeof window !== 'undefined') {
@@ -86,17 +59,10 @@ const utmSourceMapping: Record<string, HeardAboutBookingFrom> = Object.freeze({
 
 export default function () {
   const [currentStep, setCurrentStep] = useState(0);
-  const actionData = useTypedActionData<typeof action>();
   const {applicationType} = useParams<SearchParams>();
-  const submit = useSubmit();
+  const [create, {error}] = useCreateBandApplicationMutation();
   const isLastStep = currentStep === STEPS.length - 1;
-
-  const onUnload = useCallback((e: BeforeUnloadEvent) => {
-    e.preventDefault();
-    return (e.returnValue = '');
-  }, []);
-
-  console.log(actionData);
+  const navigate = useNavigate();
 
   return (
     <VStack spacing="5">
@@ -112,27 +78,45 @@ export default function () {
       </Steps>
 
       <Formik<FormikContextT>
-        initialValues={
-          actionData?.data ?? {
-            heardAboutBookingFrom: utmSourceMapping[getUtmSource() ?? ''],
-            genreCategory:
-              applicationType === 'dj' ? GenreCategory.Dj : undefined,
-          }
-        }
-        onSubmit={(values, bag) => {
-          if (isLastStep) {
-            submit(values, {method: 'post', encType: 'application/json'});
-          } else {
+        initialValues={{
+          heardAboutBookingFrom: utmSourceMapping[getUtmSource() ?? ''],
+          genreCategory:
+            applicationType === 'dj' ? GenreCategory.Dj : undefined,
+        }}
+        onSubmit={async (values) => {
+          if (!isLastStep) {
             setCurrentStep(currentStep + 1);
-            bag.setSubmitting(false);
+            return;
+          }
+
+          let k: keyof CreateBandApplicationInput;
+          for (k in values) {
+            if (typeof values[k] === 'string') {
+              // @ts-ignore
+              values[k] = (values[k] as string).trim();
+            }
+          }
+          const {data: res} = await create({
+            variables: {
+              data: values as CreateBandApplicationInput,
+              eventId: EVENT_ID,
+            },
+            errorPolicy: 'all',
+          });
+          if (res?.createBandApplication?.id) {
+            navigate(
+              $path('/booking/:applicationType/danke', {
+                applicationType,
+              }),
+            );
           }
         }}
         validateOnChange={false}
       >
         {(props) => (
           <Form>
-            {createElement(STEPS[currentStep])}
-            <HStack w="100%">
+            <VStack spacing="4">{createElement(STEPS[currentStep])}</VStack>
+            <HStack w="100%" mt="4">
               {currentStep > 0 && (
                 <Button
                   isDisabled={props.isSubmitting}
@@ -150,14 +134,11 @@ export default function () {
                 {isLastStep ? 'Absenden' : 'Weiter'}
               </Button>
             </HStack>
-            {/* <ReloadWarning
-              dirty={props.dirty && !props.isSubmitting}
-              onUnload={onUnload}
-            /> */}
+            <ReloadWarning dirty={props.dirty && !props.isSubmitting} />
           </Form>
         )}
       </Formik>
-      {actionData?.error && isLastStep && (
+      {error && isLastStep && (
         <Alert status="error" borderRadius="md">
           <AlertIcon />
           <Box flex="1">
@@ -175,7 +156,7 @@ export default function () {
                 .
               </p>
               <Code borderRadius="md">
-                {actionData.error.name}: {actionData.error.message}
+                {error.name}: {error.message}
               </Code>
             </AlertDescription>
           </Box>

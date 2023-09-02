@@ -15,7 +15,6 @@ gql`
 export default function DuplicateWarning(props: {bandname?: string}) {
   const {data} = useDuplicateApplicationWarningQuery({
     variables: {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       bandname: props.bandname!,
       eventId: EVENT_ID,
     },

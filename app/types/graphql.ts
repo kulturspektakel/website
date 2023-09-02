@@ -413,6 +413,7 @@ export type Mutation = {
 
 export type MutationCreateBandApplicationArgs = {
   data: CreateBandApplicationInput;
+  eventId: Scalars['ID']['input'];
 };
 
 export type MutationCreateBandApplicationCommentArgs = {
@@ -793,6 +794,28 @@ export type ArticleHeadFragment = {
   createdAt: Date;
 };
 
+export type HeaderQueryVariables = Exact<{
+  eventId: Scalars['ID']['input'];
+}>;
+
+export type HeaderQuery = {
+  __typename?: 'Query';
+  node?:
+    | {__typename?: 'Area'}
+    | {__typename?: 'BandApplication'}
+    | {__typename?: 'BandApplicationComment'}
+    | {__typename?: 'BandPlaying'}
+    | {__typename?: 'Card'}
+    | {__typename?: 'Device'}
+    | {__typename?: 'Event'; start: Date; end: Date}
+    | {__typename?: 'News'}
+    | {__typename?: 'NuclinoPage'}
+    | {__typename?: 'Product'}
+    | {__typename?: 'ProductList'}
+    | {__typename?: 'Viewer'}
+    | null;
+};
+
 export type DistanceQueryVariables = Exact<{
   origin: Scalars['String']['input'];
 }>;
@@ -835,6 +858,42 @@ export type NewsQuery = {
   };
 };
 
+export type ThanksQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+export type ThanksQuery = {
+  __typename?: 'Query';
+  node?:
+    | {__typename?: 'Area'}
+    | {__typename?: 'BandApplication'}
+    | {__typename?: 'BandApplicationComment'}
+    | {__typename?: 'BandPlaying'}
+    | {__typename?: 'Card'}
+    | {__typename?: 'Device'}
+    | {
+        __typename?: 'Event';
+        bandApplicationEnd?: Date | null;
+        djApplicationEnd?: Date | null;
+      }
+    | {__typename?: 'News'}
+    | {__typename?: 'NuclinoPage'}
+    | {__typename?: 'Product'}
+    | {__typename?: 'ProductList'}
+    | {__typename?: 'Viewer'}
+    | null;
+};
+
+export type CreateBandApplicationMutationVariables = Exact<{
+  eventId: Scalars['ID']['input'];
+  data: CreateBandApplicationInput;
+}>;
+
+export type CreateBandApplicationMutation = {
+  __typename?: 'Mutation';
+  createBandApplication: {__typename?: 'BandApplication'; id: string};
+};
+
 export type EventQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
@@ -865,41 +924,6 @@ export type EventQuery = {
     | null;
 };
 
-export type ThanksQueryVariables = Exact<{
-  id: Scalars['ID']['input'];
-}>;
-
-export type ThanksQuery = {
-  __typename?: 'Query';
-  node?:
-    | {__typename?: 'Area'}
-    | {__typename?: 'BandApplication'}
-    | {__typename?: 'BandApplicationComment'}
-    | {__typename?: 'BandPlaying'}
-    | {__typename?: 'Card'}
-    | {__typename?: 'Device'}
-    | {
-        __typename?: 'Event';
-        bandApplicationEnd?: Date | null;
-        djApplicationEnd?: Date | null;
-      }
-    | {__typename?: 'News'}
-    | {__typename?: 'NuclinoPage'}
-    | {__typename?: 'Product'}
-    | {__typename?: 'ProductList'}
-    | {__typename?: 'Viewer'}
-    | null;
-};
-
-export type CreateBandApplicationMutationVariables = Exact<{
-  data: CreateBandApplicationInput;
-}>;
-
-export type CreateBandApplicationMutation = {
-  __typename?: 'Mutation';
-  createBandApplication: {__typename?: 'BandApplication'; id: string};
-};
-
 export const ArticleHeadFragmentDoc = gql`
   fragment ArticleHead on News {
     slug
@@ -917,6 +941,57 @@ export const ArticleFragmentDoc = gql`
   }
   ${ArticleHeadFragmentDoc}
 `;
+export const HeaderDocument = gql`
+  query Header($eventId: ID!) {
+    node(id: $eventId) {
+      ... on Event {
+        start
+        end
+      }
+    }
+  }
+`;
+
+/**
+ * __useHeaderQuery__
+ *
+ * To run a query within a React component, call `useHeaderQuery` and pass it any options that fit your needs.
+ * When your component renders, `useHeaderQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useHeaderQuery({
+ *   variables: {
+ *      eventId: // value for 'eventId'
+ *   },
+ * });
+ */
+export function useHeaderQuery(
+  baseOptions: Apollo.QueryHookOptions<HeaderQuery, HeaderQueryVariables>,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useQuery<HeaderQuery, HeaderQueryVariables>(
+    HeaderDocument,
+    options,
+  );
+}
+export function useHeaderLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<HeaderQuery, HeaderQueryVariables>,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useLazyQuery<HeaderQuery, HeaderQueryVariables>(
+    HeaderDocument,
+    options,
+  );
+}
+export type HeaderQueryHookResult = ReturnType<typeof useHeaderQuery>;
+export type HeaderLazyQueryHookResult = ReturnType<typeof useHeaderLazyQuery>;
+export type HeaderQueryResult = Apollo.QueryResult<
+  HeaderQuery,
+  HeaderQueryVariables
+>;
 export const DistanceDocument = gql`
   query Distance($origin: String!) {
     distanceToKult(origin: $origin)
@@ -1074,6 +1149,111 @@ export function useNewsLazyQuery(
 export type NewsQueryHookResult = ReturnType<typeof useNewsQuery>;
 export type NewsLazyQueryHookResult = ReturnType<typeof useNewsLazyQuery>;
 export type NewsQueryResult = Apollo.QueryResult<NewsQuery, NewsQueryVariables>;
+export const ThanksDocument = gql`
+  query Thanks($id: ID!) {
+    node(id: $id) {
+      ... on Event {
+        bandApplicationEnd
+        djApplicationEnd
+      }
+    }
+  }
+`;
+
+/**
+ * __useThanksQuery__
+ *
+ * To run a query within a React component, call `useThanksQuery` and pass it any options that fit your needs.
+ * When your component renders, `useThanksQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useThanksQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useThanksQuery(
+  baseOptions: Apollo.QueryHookOptions<ThanksQuery, ThanksQueryVariables>,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useQuery<ThanksQuery, ThanksQueryVariables>(
+    ThanksDocument,
+    options,
+  );
+}
+export function useThanksLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<ThanksQuery, ThanksQueryVariables>,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useLazyQuery<ThanksQuery, ThanksQueryVariables>(
+    ThanksDocument,
+    options,
+  );
+}
+export type ThanksQueryHookResult = ReturnType<typeof useThanksQuery>;
+export type ThanksLazyQueryHookResult = ReturnType<typeof useThanksLazyQuery>;
+export type ThanksQueryResult = Apollo.QueryResult<
+  ThanksQuery,
+  ThanksQueryVariables
+>;
+export const CreateBandApplicationDocument = gql`
+  mutation CreateBandApplication(
+    $eventId: ID!
+    $data: CreateBandApplicationInput!
+  ) {
+    createBandApplication(eventId: $eventId, data: $data) {
+      id
+    }
+  }
+`;
+export type CreateBandApplicationMutationFn = Apollo.MutationFunction<
+  CreateBandApplicationMutation,
+  CreateBandApplicationMutationVariables
+>;
+
+/**
+ * __useCreateBandApplicationMutation__
+ *
+ * To run a mutation, you first call `useCreateBandApplicationMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateBandApplicationMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createBandApplicationMutation, { data, loading, error }] = useCreateBandApplicationMutation({
+ *   variables: {
+ *      eventId: // value for 'eventId'
+ *      data: // value for 'data'
+ *   },
+ * });
+ */
+export function useCreateBandApplicationMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    CreateBandApplicationMutation,
+    CreateBandApplicationMutationVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useMutation<
+    CreateBandApplicationMutation,
+    CreateBandApplicationMutationVariables
+  >(CreateBandApplicationDocument, options);
+}
+export type CreateBandApplicationMutationHookResult = ReturnType<
+  typeof useCreateBandApplicationMutation
+>;
+export type CreateBandApplicationMutationResult =
+  Apollo.MutationResult<CreateBandApplicationMutation>;
+export type CreateBandApplicationMutationOptions = Apollo.BaseMutationOptions<
+  CreateBandApplicationMutation,
+  CreateBandApplicationMutationVariables
+>;
 export const EventDocument = gql`
   query Event($id: ID!) {
     node(id: $id) {
@@ -1128,105 +1308,4 @@ export type EventLazyQueryHookResult = ReturnType<typeof useEventLazyQuery>;
 export type EventQueryResult = Apollo.QueryResult<
   EventQuery,
   EventQueryVariables
->;
-export const ThanksDocument = gql`
-  query Thanks($id: ID!) {
-    node(id: $id) {
-      ... on Event {
-        bandApplicationEnd
-        djApplicationEnd
-      }
-    }
-  }
-`;
-
-/**
- * __useThanksQuery__
- *
- * To run a query within a React component, call `useThanksQuery` and pass it any options that fit your needs.
- * When your component renders, `useThanksQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useThanksQuery({
- *   variables: {
- *      id: // value for 'id'
- *   },
- * });
- */
-export function useThanksQuery(
-  baseOptions: Apollo.QueryHookOptions<ThanksQuery, ThanksQueryVariables>,
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useQuery<ThanksQuery, ThanksQueryVariables>(
-    ThanksDocument,
-    options,
-  );
-}
-export function useThanksLazyQuery(
-  baseOptions?: Apollo.LazyQueryHookOptions<ThanksQuery, ThanksQueryVariables>,
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useLazyQuery<ThanksQuery, ThanksQueryVariables>(
-    ThanksDocument,
-    options,
-  );
-}
-export type ThanksQueryHookResult = ReturnType<typeof useThanksQuery>;
-export type ThanksLazyQueryHookResult = ReturnType<typeof useThanksLazyQuery>;
-export type ThanksQueryResult = Apollo.QueryResult<
-  ThanksQuery,
-  ThanksQueryVariables
->;
-export const CreateBandApplicationDocument = gql`
-  mutation CreateBandApplication($data: CreateBandApplicationInput!) {
-    createBandApplication(data: $data) {
-      id
-    }
-  }
-`;
-export type CreateBandApplicationMutationFn = Apollo.MutationFunction<
-  CreateBandApplicationMutation,
-  CreateBandApplicationMutationVariables
->;
-
-/**
- * __useCreateBandApplicationMutation__
- *
- * To run a mutation, you first call `useCreateBandApplicationMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useCreateBandApplicationMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [createBandApplicationMutation, { data, loading, error }] = useCreateBandApplicationMutation({
- *   variables: {
- *      data: // value for 'data'
- *   },
- * });
- */
-export function useCreateBandApplicationMutation(
-  baseOptions?: Apollo.MutationHookOptions<
-    CreateBandApplicationMutation,
-    CreateBandApplicationMutationVariables
-  >,
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useMutation<
-    CreateBandApplicationMutation,
-    CreateBandApplicationMutationVariables
-  >(CreateBandApplicationDocument, options);
-}
-export type CreateBandApplicationMutationHookResult = ReturnType<
-  typeof useCreateBandApplicationMutation
->;
-export type CreateBandApplicationMutationResult =
-  Apollo.MutationResult<CreateBandApplicationMutation>;
-export type CreateBandApplicationMutationOptions = Apollo.BaseMutationOptions<
-  CreateBandApplicationMutation,
-  CreateBandApplicationMutationVariables
 >;

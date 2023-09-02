@@ -42,6 +42,7 @@ export default function Step1() {
         <FormLabel>{isDJ ? 'Künstler:innen-Name' : 'Bandname'}</FormLabel>
         <Field />
       </FormControl>
+      <DuplicateApplicationWarning bandname={values.bandname} />
 
       <HStack w="100%">
         <FormControl
@@ -89,7 +90,7 @@ export default function Step1() {
 
       {!isDJ && (
         <>
-          <HStack w="100%" mt="5">
+          <HStack w="100%">
             <FormControl id="numberOfArtists" isRequired>
               <FormLabel>Anzahl Bandmitglieder</FormLabel>
               <Field type="number" min={1} />
@@ -130,7 +131,6 @@ export default function Step1() {
           </Text>
         </>
       )}
-      <DuplicateApplicationWarning bandname={values.bandname} />
     </>
   );
 }

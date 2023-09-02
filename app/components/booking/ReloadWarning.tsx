@@ -1,18 +1,6 @@
-import {useEffect} from 'react';
+import {useBeforeUnload} from 'react-use';
 
-export default function ReloadWarning({
-  dirty,
-  onUnload,
-}: {
-  dirty: boolean;
-  onUnload: any;
-}) {
-  useEffect(() => {
-    if (dirty) {
-      window.addEventListener('beforeunload', onUnload);
-      return () => window.removeEventListener('beforeunload', onUnload);
-    }
-  }, [onUnload, dirty]);
-
+export default function ReloadWarning({dirty}: {dirty: boolean}) {
+  useBeforeUnload(dirty, 'Bist du sicher, dass du die Seite verlassen willst?');
   return null;
 }

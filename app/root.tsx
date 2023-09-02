@@ -15,8 +15,8 @@ import apolloClient from './utils/apolloClient';
 import {CacheProvider} from '@emotion/react';
 import createEmotionCache from '@emotion/cache';
 import {StepsTheme as Steps} from 'chakra-ui-steps';
-import SpaceGrotesk400 from '@fontsource/space-grotesk/latin-400.css';
 import Header from './components/Header';
+import {useTypedLoaderData} from 'remix-typedjson';
 
 export const meta: V2_MetaFunction = () => {
   return [
@@ -37,11 +37,7 @@ export const meta: V2_MetaFunction = () => {
 export const links: LinksFunction = () => [
   {
     rel: 'stylesheet',
-    href: SpaceGrotesk400,
-  },
-  {
-    rel: 'stylesheet',
-    href: '/shrimp-webfont.css',
+    href: '/fonts.css',
   },
 ];
 
@@ -52,6 +48,19 @@ const theme = extendTheme({
       // ...
       900: '#1a202c',
     },
+    offwhite: {
+      100: '#f6f5f0',
+      200: '#dbd8d3',
+      300: '#d0cabc',
+      400: '#b6b39f',
+      500: '#9c9686',
+      600: '#5a574e',
+    },
+  },
+  fontWeights: {
+    normal: 400,
+    medium: 600,
+    bold: 600,
   },
   fonts: {
     heading: "'Space Grotesk', sans-serif;",
@@ -63,6 +72,9 @@ const theme = extendTheme({
         WebkitFontSmoothing: 'auto',
         fontSynthesis: 'none',
       },
+      body: {
+        bg: 'offwhite.100',
+      },
       'h1,h2': {
         fontFamily: 'Shrimp !important',
         textTransform: 'uppercase',
@@ -73,6 +85,10 @@ const theme = extendTheme({
     Steps,
   },
 });
+
+export async function loader(args: LoaderArgs) {
+  console.log('asd');
+}
 
 function Document({
   children,

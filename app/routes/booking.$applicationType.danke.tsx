@@ -4,14 +4,15 @@ import Confetti from '~/components/booking/Confetti';
 import type {ThanksQuery} from '~/types/graphql';
 import apolloClient from '~/utils/apolloClient';
 import type {ActionArgs, LoaderArgs} from '@remix-run/node';
-import {
-  typedjson,
-  useTypedActionData,
-  useTypedLoaderData,
-} from 'remix-typedjson';
+import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import {EVENT_ID} from './booking._index';
 import {Suspense} from 'react';
 import DateString from '~/components/DateString';
+import {useParams} from '@remix-run/react';
+
+export type SearchParams = {
+  applicationType: 'band' | 'dj';
+};
 
 export async function loader(args: LoaderArgs) {
   const {data} = await apolloClient.query<ThanksQuery>({
@@ -41,8 +42,9 @@ export const action = async ({request}: ActionArgs) => {};
 
 export default function Thanks() {
   const data = useTypedLoaderData<typeof loader>();
-  const isDJ = useTypedActionData<typeof action>()?.isDJ;
-  const applicationEnd = isDJ ? data.djApplicationEnd : data.bandApplicationEnd;
+  const {applicationType} = useParams<SearchParams>();
+  const applicationEnd =
+    applicationType === 'dj' ? data.djApplicationEnd : data.bandApplicationEnd;
 
   return (
     <>
@@ -50,9 +52,14 @@ export default function Thanks() {
         <Confetti />
       </Suspense>
       <VStack spacing="5" textAlign="center">
-        <Img src={isDJ ? '/genre/disco.svg' : '/genre/metal.svg'} width="16" />
+        <Img
+          src={
+            applicationType === 'dj' ? '/genre/disco.svg' : '/genre/metal.svg'
+          }
+          width="16"
+        />
         <Heading size="lg">
-          Danke für {isDJ ? 'deine' : 'eure'} Bewerbung!
+          Danke für {applicationType === 'dj' ? 'deine' : 'eure'} Bewerbung!
         </Heading>
         <Text>
           Wir haben dir soeben eine E-Mail zur Bestätigung geschickt. Wir
