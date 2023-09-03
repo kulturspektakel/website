@@ -74,7 +74,6 @@ export default function () {
       <Steps
         activeStep={currentStep}
         responsive={false}
-        colorScheme="blue"
         trackColor="offwhite.300"
         display={['none', 'flex']}
       >
@@ -133,7 +132,7 @@ export default function () {
               )}
               <Spacer />
               <Button
-                colorScheme="blue"
+                variant="primary"
                 type="submit"
                 isLoading={props.isSubmitting}
               >

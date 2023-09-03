@@ -15,8 +15,7 @@ import apolloClient from './utils/apolloClient';
 import {CacheProvider} from '@emotion/react';
 import createEmotionCache from '@emotion/cache';
 import {StepsTheme as Steps} from 'chakra-ui-steps';
-import Header from './components/Header';
-import {useTypedLoaderData} from 'remix-typedjson';
+import Header from './components/Header/Header';
 
 export const meta: V2_MetaFunction = () => {
   return [
@@ -39,14 +38,21 @@ export const links: LinksFunction = () => [
     rel: 'stylesheet',
     href: '/fonts.css',
   },
+  {
+    rel: 'icon',
+    type: 'image/png',
+    href: '/favicon.png',
+  },
 ];
 
+console.log(Steps.baseStyle({}));
 const theme = extendTheme({
   colors: {
     brand: {
-      100: '#f7fafc',
-      // ...
-      900: '#1a202c',
+      900: '#100A28',
+    },
+    red: {
+      500: '#E12E2E',
     },
     offwhite: {
       100: '#f6f5f0',
@@ -82,14 +88,42 @@ const theme = extendTheme({
     },
   },
   components: {
-    Steps,
+    Steps: {
+      ...Steps,
+      baseStyle: (props: any) => ({
+        ...Steps.baseStyle(props),
+        stepIconContainer: {
+          ...Steps.baseStyle(props).stepIconContainer,
+          _activeStep: {
+            ...Steps.baseStyle(props).stepIconContainer?._activeStep,
+            bg: 'brand.900', // Default color for light mode
+            borderColor: 'brand.900',
+            color: 'white',
+          },
+        },
+      }),
+    },
+    Heading: {
+      baseStyle: {
+        color: 'brand.900',
+      },
+    },
+    Button: {
+      baseStyle: {
+        background: 'offwhite.200',
+      },
+      variants: {
+        primary: {
+          background: 'brand.900',
+          color: 'white',
+        },
+      },
+      defaultProps: {
+        variant: 'base',
+      },
+    },
   },
 });
-
-export async function loader(args: LoaderArgs) {
-  console.log('asd');
-  return null;
-}
 
 function Document({
   children,

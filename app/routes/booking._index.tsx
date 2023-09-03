@@ -1,17 +1,12 @@
 import {gql} from '@apollo/client';
-import {WarningTwoIcon} from '@chakra-ui/icons';
 import {
   VStack,
   Text,
-  Button,
   Heading,
   AlertIcon,
   Alert,
   AlertDescription,
   Box,
-  Spacer,
-  Flex,
-  Tag,
   Link as ChakraLink,
 } from '@chakra-ui/react';
 import {EventDocument, type EventQuery} from '~/types/graphql';
@@ -21,61 +16,9 @@ import type {LoaderArgs} from '@remix-run/node';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import {Link, Outlet} from '@remix-run/react';
 import {$path} from 'remix-routes';
+import ApplicationPhase from '~/components/booking/ApplicationPhase';
 
 export const EVENT_ID = 'Event:kult2024';
-
-function BBox({
-  href,
-  disabled,
-  buttonLabel,
-  applicationStart,
-  title,
-  content,
-}: {
-  href: string;
-  title: string;
-  content: string;
-  disabled: boolean;
-  buttonLabel: string;
-  applicationStart: Date;
-}) {
-  return (
-    <Flex
-      mt="5"
-      alignItems="center"
-      direction={{base: 'column', sm: 'row'}}
-      bg="white"
-      borderRadius="lg"
-      p="4"
-      shadow="xs"
-    >
-      <VStack align="start">
-        <Heading size="sm" textAlign="left">
-          {title}
-        </Heading>
-        <Text>
-          {content}
-          <br />
-          <strong>Bewerbungsschluss:</strong>{' '}
-          {disabled ? (
-            <Tag colorScheme="red">
-              <WarningTwoIcon />
-              &nbsp;Abgelaufen
-            </Tag>
-          ) : (
-            <DateString date={applicationStart} />
-          )}
-        </Text>
-      </VStack>
-      <Spacer />
-      <Link to={href}>
-        <Button m="3" mr="0" isDisabled={disabled} colorScheme="blue">
-          {buttonLabel}
-        </Button>
-      </Link>
-    </Flex>
-  );
-}
 
 gql`
   query Event($id: ID!) {
@@ -131,9 +74,7 @@ export default function Home() {
     <Box>
       <Outlet />
       <VStack spacing="5">
-        <Heading size="md" mt="4">
-          Band- und DJ-Bewerbungen
-        </Heading>
+        <Heading size="lg">Band- und DJ-Bewerbungen</Heading>
         <Text>
           Das Kulturspektakel Gauting findet vom{' '}
           <strong>
@@ -166,7 +107,7 @@ export default function Home() {
       )}
 
       {data.bandApplicationEnd && (
-        <BBox
+        <ApplicationPhase
           applicationStart={data.bandApplicationEnd}
           title="Bands"
           content="Ihr möchtet euch als Band für eine unserer Bühnen bewerben."
@@ -179,7 +120,7 @@ export default function Home() {
       )}
 
       {data.djApplicationEnd && (
-        <BBox
+        <ApplicationPhase
           applicationStart={data.djApplicationEnd}
           title="DJs"
           content="Du möchtest dich als DJ für unsere DJ-Area bewerben."
