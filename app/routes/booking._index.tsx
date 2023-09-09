@@ -60,12 +60,15 @@ export default function Home() {
   const djApplicationEnded =
     (data.djApplicationEnd && data.djApplicationEnd < now) ?? false;
 
+  let bandApplicationNotStarted = false;
   if (!data.bandApplicationStart) {
     errorMessage = 'Aktuell läuft die Bewerbungsphase nicht.';
+    bandApplicationNotStarted = true;
   } else if (data.bandApplicationStart > now) {
     errorMessage = `Die Bewerbungsphase beginnt am ${data.bandApplicationStart.toLocaleDateString(
       'de',
     )}`;
+    bandApplicationNotStarted = true;
   } else if (bandApplicationEnded && djApplicationEnded) {
     errorMessage = `Die Bewerbungsphase für das ${data.name} ist beendet.`;
   }
@@ -100,36 +103,40 @@ export default function Home() {
       </VStack>
 
       {errorMessage && (
-        <Alert status="warning" borderRadius="md" mb="5">
+        <Alert status="warning" borderRadius="md" mb="5" mt="5">
           <AlertIcon />
           <AlertDescription color="yellow.900">{errorMessage}</AlertDescription>
         </Alert>
       )}
 
-      {data.bandApplicationEnd && (
-        <ApplicationPhase
-          applicationStart={data.bandApplicationEnd}
-          title="Bands"
-          content="Ihr möchtet euch als Band für eine unserer Bühnen bewerben."
-          buttonLabel="Als Band bewerben"
-          href={$path('/booking/:applicationType', {
-            applicationType: 'band',
-          })}
-          disabled={bandApplicationEnded}
-        />
-      )}
+      {!bandApplicationNotStarted && (
+        <>
+          {data.bandApplicationEnd && (
+            <ApplicationPhase
+              applicationEnd={data.bandApplicationEnd}
+              title="Bands"
+              content="Ihr möchtet euch als Band für eine unserer Bühnen bewerben."
+              buttonLabel="Als Band bewerben"
+              href={$path('/booking/:applicationType', {
+                applicationType: 'band',
+              })}
+              disabled={bandApplicationEnded}
+            />
+          )}
 
-      {data.djApplicationEnd && (
-        <ApplicationPhase
-          applicationStart={data.djApplicationEnd}
-          title="DJs"
-          content="Du möchtest dich als DJ für unsere DJ-Area bewerben."
-          buttonLabel="Als DJ bewerben"
-          href={$path('/booking/:applicationType', {
-            applicationType: 'dj',
-          })}
-          disabled={djApplicationEnded}
-        />
+          {data.djApplicationEnd && (
+            <ApplicationPhase
+              applicationEnd={data.djApplicationEnd}
+              title="DJs"
+              content="Du möchtest dich als DJ für unsere DJ-Area bewerben."
+              buttonLabel="Als DJ bewerben"
+              href={$path('/booking/:applicationType', {
+                applicationType: 'dj',
+              })}
+              disabled={djApplicationEnded}
+            />
+          )}
+        </>
       )}
     </Box>
   );

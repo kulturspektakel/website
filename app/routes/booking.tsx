@@ -1,4 +1,4 @@
-import {Box, Divider, HStack, Heading, Spacer} from '@chakra-ui/react';
+import {Box} from '@chakra-ui/react';
 
 import {Outlet} from '@remix-run/react';
 

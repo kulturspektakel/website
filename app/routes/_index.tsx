@@ -1,4 +1,4 @@
-import {Box, Button, Center, Link} from '@chakra-ui/react';
+import {Box, Button, Center, Divider, Link} from '@chakra-ui/react';
 import {gql} from '@apollo/client';
 import {NewsDocument, type NewsQuery} from '~/types/graphql';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
@@ -30,10 +30,10 @@ export default function Index() {
   const data = useTypedLoaderData<typeof loader>();
 
   return (
-    <>
-      {data.news.edges.map((edge, i) => (
+    <Box ml="auto" mr="auto" maxW="3xl" p="6">
+      {data.news.edges.slice(0, 8).map((edge, i) => (
         <React.Fragment key={i}>
-          {i > 0 && <Box as="hr" width="60%" m="auto" />}
+          {i > 0 && <Divider width="60%" m="auto" />}
           <Article key={edge.node.slug} {...edge.node} />
         </React.Fragment>
       ))}
@@ -42,6 +42,6 @@ export default function Index() {
           Ältere Beträge
         </Button>
       </Center>
-    </>
+    </Box>
   );
 }

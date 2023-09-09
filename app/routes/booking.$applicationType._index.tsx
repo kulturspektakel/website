@@ -72,10 +72,26 @@ export default function () {
       </Heading>
 
       <Steps
-        activeStep={currentStep}
+        activeStep={1}
         responsive={false}
         trackColor="offwhite.300"
         display={['none', 'flex']}
+        sx={{
+          '& .cui-steps__step-icon-container': {
+            bg: 'offwhite.300',
+            borderColor: 'offwhite.300',
+            _active: {
+              borderColor: 'brand.900',
+              bg: 'brand.900',
+            },
+            '&[aria-current=step]': {
+              borderColor: 'brand.900',
+            },
+          },
+          '& .cui-steps__horizontal-step[data-active]:not(:last-child):after': {
+            bg: 'brand.900',
+          },
+        }}
       >
         <Step label="Infos" />
         <Step label="Musik" />

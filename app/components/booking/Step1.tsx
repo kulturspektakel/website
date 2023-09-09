@@ -111,7 +111,7 @@ export default function Step1() {
               />
             </FormControl>
           </HStack>
-          <Text fontSize="sm" color="gray.500">
+          <Text fontSize="sm" color="offwhite.600">
             Die Festival-Branche hat eine geringe Geschlechter&shy;diversität (
             <ChakraLink
               as={Link}

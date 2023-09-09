@@ -21,15 +21,15 @@ export const meta: V2_MetaFunction = () => {
   return [
     {name: 'charset', content: 'utf-8'},
     {name: 'viewport', content: 'width=device-width,initial-scale=1'},
-    {title: 'Very cool app | Remix'},
-    {
-      property: 'og:title',
-      content: 'Very cool app',
-    },
-    {
-      name: 'description',
-      content: 'This app is the best',
-    },
+    {title: 'Kulturspektakel Gauting'},
+    // {
+    //   property: 'og:title',
+    //   content: 'Very cool app',
+    // },
+    // {
+    //   name: 'description',
+    //   content: 'This app is the best',
+    // },
   ];
 };
 
@@ -45,10 +45,10 @@ export const links: LinksFunction = () => [
   },
 ];
 
-console.log(Steps.baseStyle({}));
 const theme = extendTheme({
   colors: {
     brand: {
+      500: '#E12E2E',
       900: '#100A28',
     },
     red: {
@@ -88,20 +88,13 @@ const theme = extendTheme({
     },
   },
   components: {
-    Steps: {
-      ...Steps,
-      baseStyle: (props: any) => ({
-        ...Steps.baseStyle(props),
-        stepIconContainer: {
-          ...Steps.baseStyle(props).stepIconContainer,
-          _activeStep: {
-            ...Steps.baseStyle(props).stepIconContainer?._activeStep,
-            bg: 'brand.900', // Default color for light mode
-            borderColor: 'brand.900',
-            color: 'white',
-          },
+    Steps,
+    Form: {
+      baseStyle: {
+        helperText: {
+          color: 'offwhite.600',
         },
-      }),
+      },
     },
     Heading: {
       baseStyle: {
@@ -110,12 +103,17 @@ const theme = extendTheme({
     },
     Button: {
       baseStyle: {
-        background: 'offwhite.200',
+        bg: 'offwhite.200',
       },
       variants: {
         primary: {
-          background: 'brand.900',
+          bg: 'brand.900',
           color: 'white',
+          _hover: {
+            _disabled: {
+              bg: 'brand.900',
+            },
+          },
         },
       },
       defaultProps: {

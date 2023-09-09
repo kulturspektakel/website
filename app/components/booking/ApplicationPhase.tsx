@@ -15,7 +15,7 @@ export default function ApplicationPhase({
   href,
   disabled,
   buttonLabel,
-  applicationStart,
+  applicationEnd,
   title,
   content,
 }: {
@@ -24,8 +24,10 @@ export default function ApplicationPhase({
   content: string;
   disabled: boolean;
   buttonLabel: string;
-  applicationStart: Date;
+  applicationEnd: Date;
 }) {
+  const applicationEnded = applicationEnd < new Date();
+
   return (
     <Flex
       mt="5"
@@ -44,20 +46,20 @@ export default function ApplicationPhase({
           {content}
           <br />
           <strong>Bewerbungsschluss:</strong>{' '}
-          {disabled ? (
+          {applicationEnded ? (
             <Tag colorScheme="red">
               <WarningTwoIcon />
               &nbsp;Abgelaufen
             </Tag>
           ) : (
-            <DateString date={applicationStart} />
+            <DateString date={applicationEnd} />
           )}
         </Text>
       </VStack>
       <Spacer />
       <Button
         flexShrink={0}
-        as={Link}
+        as={disabled ? undefined : Link}
         to={href}
         mt="3"
         isDisabled={disabled}
