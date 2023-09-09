@@ -19,7 +19,7 @@ import Header from './components/Header/Header';
 
 export const meta: V2_MetaFunction = () => {
   return [
-    {name: 'charset', content: 'utf-8'},
+    {charset: 'utf-8'},
     {name: 'viewport', content: 'width=device-width,initial-scale=1'},
     {title: 'Kulturspektakel Gauting'},
     // {
