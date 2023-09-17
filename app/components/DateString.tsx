@@ -1,43 +1,10 @@
-export const timeZone = 'Europe/Berlin';
-export const locale = 'de-DE';
-
-export function isSameDay(from: Date, to: Date) {
-  const format: Intl.DateTimeFormatOptions = {
-    timeZone,
-    year: 'numeric',
-    month: 'numeric',
-    day: 'numeric',
-  };
-
-  return (
-    from.toLocaleDateString(locale, format) ===
-    to.toLocaleDateString(locale, format)
-  );
-}
-
-function isSameMonth(from: Date, to: Date) {
-  const format: Intl.DateTimeFormatOptions = {
-    timeZone,
-    year: 'numeric',
-    month: 'numeric',
-  };
-
-  return (
-    from.toLocaleDateString(locale, format) ===
-    to.toLocaleDateString(locale, format)
-  );
-}
-
-function isSameYear(from: Date, to: Date) {
-  const format: Intl.DateTimeFormatOptions = {
-    timeZone,
-    year: 'numeric',
-  };
-  return (
-    from.toLocaleDateString(locale, format) ===
-    to.toLocaleDateString(locale, format)
-  );
-}
+import {
+  timeZone,
+  locale,
+  isSameDay,
+  isSameMonth,
+  isSameYear,
+} from '~/utils/dateUtils';
 
 export default function DateString({
   date,
@@ -48,17 +15,21 @@ export default function DateString({
     month: 'numeric',
     year: 'numeric',
   },
+  timeOnly = false,
   until = 'bis',
 }: {
   date: Date;
   to?: Date;
   options?: Intl.DateTimeFormatOptions;
   until?: string;
+  timeOnly?: boolean;
 }) {
   // always force to Berlin timezone
   options = {...options, timeZone};
 
-  const dateString = date.toLocaleDateString(locale, options);
+  const dateString = timeOnly
+    ? date.toLocaleTimeString(locale, options)
+    : date.toLocaleDateString(locale, options);
   const dateElement = <time dateTime={date.toISOString()}>{dateString}</time>;
   if (to == null || isSameDay(date, to)) {
     // same day

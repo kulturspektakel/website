@@ -794,28 +794,6 @@ export type ArticleHeadFragment = {
   createdAt: Date;
 };
 
-export type HeaderQueryVariables = Exact<{
-  eventId: Scalars['ID']['input'];
-}>;
-
-export type HeaderQuery = {
-  __typename?: 'Query';
-  node?:
-    | {__typename?: 'Area'}
-    | {__typename?: 'BandApplication'}
-    | {__typename?: 'BandApplicationComment'}
-    | {__typename?: 'BandPlaying'}
-    | {__typename?: 'Card'}
-    | {__typename?: 'Device'}
-    | {__typename?: 'Event'; start: Date; end: Date}
-    | {__typename?: 'News'}
-    | {__typename?: 'NuclinoPage'}
-    | {__typename?: 'Product'}
-    | {__typename?: 'ProductList'}
-    | {__typename?: 'Viewer'}
-    | null;
-};
-
 export type DistanceQueryVariables = Exact<{
   origin: Scalars['String']['input'];
 }>;
@@ -839,6 +817,32 @@ export type DuplicateApplicationWarningQuery = {
   } | null;
 };
 
+export type BandFragment = {
+  __typename?: 'BandPlaying';
+  id: string;
+  name: string;
+  startTime: Date;
+  slug: string;
+  genre?: string | null;
+  area: {__typename?: 'Area'; displayName: string; themeColor: string};
+  photo?: {__typename?: 'PixelImage'; scaledUri: string} | null;
+};
+
+export type BandSearchQueryVariables = Exact<{
+  query: Scalars['String']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+export type BandSearchQuery = {
+  __typename?: 'Query';
+  findBandPlaying: Array<{
+    __typename?: 'BandPlaying';
+    id: string;
+    name: string;
+    startTime: Date;
+  }>;
+};
+
 export type NewsQueryVariables = Exact<{[key: string]: never}>;
 
 export type NewsQuery = {
@@ -856,6 +860,16 @@ export type NewsQuery = {
       };
     }>;
   };
+};
+
+export type CreateBandApplicationMutationVariables = Exact<{
+  eventId: Scalars['ID']['input'];
+  data: CreateBandApplicationInput;
+}>;
+
+export type CreateBandApplicationMutation = {
+  __typename?: 'Mutation';
+  createBandApplication: {__typename?: 'BandApplication'; id: string};
 };
 
 export type ThanksQueryVariables = Exact<{
@@ -882,16 +896,6 @@ export type ThanksQuery = {
     | {__typename?: 'ProductList'}
     | {__typename?: 'Viewer'}
     | null;
-};
-
-export type CreateBandApplicationMutationVariables = Exact<{
-  eventId: Scalars['ID']['input'];
-  data: CreateBandApplicationInput;
-}>;
-
-export type CreateBandApplicationMutation = {
-  __typename?: 'Mutation';
-  createBandApplication: {__typename?: 'BandApplication'; id: string};
 };
 
 export type EventQueryVariables = Exact<{
@@ -924,6 +928,105 @@ export type EventQuery = {
     | null;
 };
 
+export type LineupBandQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+export type LineupBandQuery = {
+  __typename?: 'Query';
+  node?:
+    | {__typename?: 'Area'}
+    | {__typename?: 'BandApplication'}
+    | {__typename?: 'BandApplicationComment'}
+    | {__typename?: 'BandPlaying'; name: string}
+    | {__typename?: 'Card'}
+    | {__typename?: 'Device'}
+    | {__typename?: 'Event'}
+    | {__typename?: 'News'}
+    | {__typename?: 'NuclinoPage'}
+    | {__typename?: 'Product'}
+    | {__typename?: 'ProductList'}
+    | {__typename?: 'Viewer'}
+    | null;
+};
+
+export type LineupQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+export type LineupQuery = {
+  __typename?: 'Query';
+  node?:
+    | {__typename?: 'Area'}
+    | {__typename?: 'BandApplication'}
+    | {__typename?: 'BandApplicationComment'}
+    | {__typename?: 'BandPlaying'}
+    | {__typename?: 'Card'}
+    | {__typename?: 'Device'}
+    | {
+        __typename?: 'Event';
+        name: string;
+        start: Date;
+        end: Date;
+        bandsPlaying: {
+          __typename?: 'EventBandsPlayingConnection';
+          edges: Array<{
+            __typename?: 'EventBandsPlayingConnectionEdge';
+            node: {
+              __typename?: 'BandPlaying';
+              id: string;
+              name: string;
+              startTime: Date;
+              slug: string;
+              genre?: string | null;
+              area: {
+                __typename?: 'Area';
+                id: string;
+                displayName: string;
+                themeColor: string;
+              };
+              photo?: {__typename?: 'PixelImage'; scaledUri: string} | null;
+            };
+          }>;
+        };
+      }
+    | {__typename?: 'News'}
+    | {__typename?: 'NuclinoPage'}
+    | {__typename?: 'Product'}
+    | {__typename?: 'ProductList'}
+    | {__typename?: 'Viewer'}
+    | null;
+  areas: Array<{__typename?: 'Area'; id: string; displayName: string}>;
+};
+
+export type NewsPageQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+export type NewsPageQuery = {
+  __typename?: 'Query';
+  node?:
+    | {__typename?: 'Area'}
+    | {__typename?: 'BandApplication'}
+    | {__typename?: 'BandApplicationComment'}
+    | {__typename?: 'BandPlaying'}
+    | {__typename?: 'Card'}
+    | {__typename?: 'Device'}
+    | {__typename?: 'Event'}
+    | {
+        __typename?: 'News';
+        slug: string;
+        title: string;
+        createdAt: Date;
+        content: string;
+      }
+    | {__typename?: 'NuclinoPage'}
+    | {__typename?: 'Product'}
+    | {__typename?: 'ProductList'}
+    | {__typename?: 'Viewer'}
+    | null;
+};
+
 export const ArticleHeadFragmentDoc = gql`
   fragment ArticleHead on News {
     slug
@@ -941,57 +1044,22 @@ export const ArticleFragmentDoc = gql`
   }
   ${ArticleHeadFragmentDoc}
 `;
-export const HeaderDocument = gql`
-  query Header($eventId: ID!) {
-    node(id: $eventId) {
-      ... on Event {
-        start
-        end
-      }
+export const BandFragmentDoc = gql`
+  fragment Band on BandPlaying {
+    id
+    name
+    startTime
+    slug
+    area {
+      displayName
+      themeColor
+    }
+    genre
+    photo {
+      scaledUri(height: 200, width: 200)
     }
   }
 `;
-
-/**
- * __useHeaderQuery__
- *
- * To run a query within a React component, call `useHeaderQuery` and pass it any options that fit your needs.
- * When your component renders, `useHeaderQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useHeaderQuery({
- *   variables: {
- *      eventId: // value for 'eventId'
- *   },
- * });
- */
-export function useHeaderQuery(
-  baseOptions: Apollo.QueryHookOptions<HeaderQuery, HeaderQueryVariables>,
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useQuery<HeaderQuery, HeaderQueryVariables>(
-    HeaderDocument,
-    options,
-  );
-}
-export function useHeaderLazyQuery(
-  baseOptions?: Apollo.LazyQueryHookOptions<HeaderQuery, HeaderQueryVariables>,
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useLazyQuery<HeaderQuery, HeaderQueryVariables>(
-    HeaderDocument,
-    options,
-  );
-}
-export type HeaderQueryHookResult = ReturnType<typeof useHeaderQuery>;
-export type HeaderLazyQueryHookResult = ReturnType<typeof useHeaderLazyQuery>;
-export type HeaderQueryResult = Apollo.QueryResult<
-  HeaderQuery,
-  HeaderQueryVariables
->;
 export const DistanceDocument = gql`
   query Distance($origin: String!) {
     distanceToKult(origin: $origin)
@@ -1103,6 +1171,65 @@ export type DuplicateApplicationWarningQueryResult = Apollo.QueryResult<
   DuplicateApplicationWarningQuery,
   DuplicateApplicationWarningQueryVariables
 >;
+export const BandSearchDocument = gql`
+  query BandSearch($query: String!, $limit: Int = 5) {
+    findBandPlaying(query: $query, limit: $limit) {
+      id
+      name
+      startTime
+    }
+  }
+`;
+
+/**
+ * __useBandSearchQuery__
+ *
+ * To run a query within a React component, call `useBandSearchQuery` and pass it any options that fit your needs.
+ * When your component renders, `useBandSearchQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useBandSearchQuery({
+ *   variables: {
+ *      query: // value for 'query'
+ *      limit: // value for 'limit'
+ *   },
+ * });
+ */
+export function useBandSearchQuery(
+  baseOptions: Apollo.QueryHookOptions<
+    BandSearchQuery,
+    BandSearchQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useQuery<BandSearchQuery, BandSearchQueryVariables>(
+    BandSearchDocument,
+    options,
+  );
+}
+export function useBandSearchLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    BandSearchQuery,
+    BandSearchQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useLazyQuery<BandSearchQuery, BandSearchQueryVariables>(
+    BandSearchDocument,
+    options,
+  );
+}
+export type BandSearchQueryHookResult = ReturnType<typeof useBandSearchQuery>;
+export type BandSearchLazyQueryHookResult = ReturnType<
+  typeof useBandSearchLazyQuery
+>;
+export type BandSearchQueryResult = Apollo.QueryResult<
+  BandSearchQuery,
+  BandSearchQueryVariables
+>;
 export const NewsDocument = gql`
   query News {
     news(first: 10) {
@@ -1149,57 +1276,6 @@ export function useNewsLazyQuery(
 export type NewsQueryHookResult = ReturnType<typeof useNewsQuery>;
 export type NewsLazyQueryHookResult = ReturnType<typeof useNewsLazyQuery>;
 export type NewsQueryResult = Apollo.QueryResult<NewsQuery, NewsQueryVariables>;
-export const ThanksDocument = gql`
-  query Thanks($id: ID!) {
-    node(id: $id) {
-      ... on Event {
-        bandApplicationEnd
-        djApplicationEnd
-      }
-    }
-  }
-`;
-
-/**
- * __useThanksQuery__
- *
- * To run a query within a React component, call `useThanksQuery` and pass it any options that fit your needs.
- * When your component renders, `useThanksQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useThanksQuery({
- *   variables: {
- *      id: // value for 'id'
- *   },
- * });
- */
-export function useThanksQuery(
-  baseOptions: Apollo.QueryHookOptions<ThanksQuery, ThanksQueryVariables>,
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useQuery<ThanksQuery, ThanksQueryVariables>(
-    ThanksDocument,
-    options,
-  );
-}
-export function useThanksLazyQuery(
-  baseOptions?: Apollo.LazyQueryHookOptions<ThanksQuery, ThanksQueryVariables>,
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useLazyQuery<ThanksQuery, ThanksQueryVariables>(
-    ThanksDocument,
-    options,
-  );
-}
-export type ThanksQueryHookResult = ReturnType<typeof useThanksQuery>;
-export type ThanksLazyQueryHookResult = ReturnType<typeof useThanksLazyQuery>;
-export type ThanksQueryResult = Apollo.QueryResult<
-  ThanksQuery,
-  ThanksQueryVariables
->;
 export const CreateBandApplicationDocument = gql`
   mutation CreateBandApplication(
     $eventId: ID!
@@ -1253,6 +1329,57 @@ export type CreateBandApplicationMutationResult =
 export type CreateBandApplicationMutationOptions = Apollo.BaseMutationOptions<
   CreateBandApplicationMutation,
   CreateBandApplicationMutationVariables
+>;
+export const ThanksDocument = gql`
+  query Thanks($id: ID!) {
+    node(id: $id) {
+      ... on Event {
+        bandApplicationEnd
+        djApplicationEnd
+      }
+    }
+  }
+`;
+
+/**
+ * __useThanksQuery__
+ *
+ * To run a query within a React component, call `useThanksQuery` and pass it any options that fit your needs.
+ * When your component renders, `useThanksQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useThanksQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useThanksQuery(
+  baseOptions: Apollo.QueryHookOptions<ThanksQuery, ThanksQueryVariables>,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useQuery<ThanksQuery, ThanksQueryVariables>(
+    ThanksDocument,
+    options,
+  );
+}
+export function useThanksLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<ThanksQuery, ThanksQueryVariables>,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useLazyQuery<ThanksQuery, ThanksQueryVariables>(
+    ThanksDocument,
+    options,
+  );
+}
+export type ThanksQueryHookResult = ReturnType<typeof useThanksQuery>;
+export type ThanksLazyQueryHookResult = ReturnType<typeof useThanksLazyQuery>;
+export type ThanksQueryResult = Apollo.QueryResult<
+  ThanksQuery,
+  ThanksQueryVariables
 >;
 export const EventDocument = gql`
   query Event($id: ID!) {
@@ -1308,4 +1435,185 @@ export type EventLazyQueryHookResult = ReturnType<typeof useEventLazyQuery>;
 export type EventQueryResult = Apollo.QueryResult<
   EventQuery,
   EventQueryVariables
+>;
+export const LineupBandDocument = gql`
+  query LineupBand($id: ID!) {
+    node(id: $id) {
+      ... on BandPlaying {
+        name
+      }
+    }
+  }
+`;
+
+/**
+ * __useLineupBandQuery__
+ *
+ * To run a query within a React component, call `useLineupBandQuery` and pass it any options that fit your needs.
+ * When your component renders, `useLineupBandQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useLineupBandQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useLineupBandQuery(
+  baseOptions: Apollo.QueryHookOptions<
+    LineupBandQuery,
+    LineupBandQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useQuery<LineupBandQuery, LineupBandQueryVariables>(
+    LineupBandDocument,
+    options,
+  );
+}
+export function useLineupBandLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    LineupBandQuery,
+    LineupBandQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useLazyQuery<LineupBandQuery, LineupBandQueryVariables>(
+    LineupBandDocument,
+    options,
+  );
+}
+export type LineupBandQueryHookResult = ReturnType<typeof useLineupBandQuery>;
+export type LineupBandLazyQueryHookResult = ReturnType<
+  typeof useLineupBandLazyQuery
+>;
+export type LineupBandQueryResult = Apollo.QueryResult<
+  LineupBandQuery,
+  LineupBandQueryVariables
+>;
+export const LineupDocument = gql`
+  query Lineup($id: ID!) {
+    node(id: $id) {
+      ... on Event {
+        name
+        start
+        end
+        bandsPlaying(first: 100) {
+          edges {
+            node {
+              ...Band
+              area {
+                id
+              }
+            }
+          }
+        }
+      }
+    }
+    areas {
+      id
+      displayName
+    }
+  }
+  ${BandFragmentDoc}
+`;
+
+/**
+ * __useLineupQuery__
+ *
+ * To run a query within a React component, call `useLineupQuery` and pass it any options that fit your needs.
+ * When your component renders, `useLineupQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useLineupQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useLineupQuery(
+  baseOptions: Apollo.QueryHookOptions<LineupQuery, LineupQueryVariables>,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useQuery<LineupQuery, LineupQueryVariables>(
+    LineupDocument,
+    options,
+  );
+}
+export function useLineupLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<LineupQuery, LineupQueryVariables>,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useLazyQuery<LineupQuery, LineupQueryVariables>(
+    LineupDocument,
+    options,
+  );
+}
+export type LineupQueryHookResult = ReturnType<typeof useLineupQuery>;
+export type LineupLazyQueryHookResult = ReturnType<typeof useLineupLazyQuery>;
+export type LineupQueryResult = Apollo.QueryResult<
+  LineupQuery,
+  LineupQueryVariables
+>;
+export const NewsPageDocument = gql`
+  query NewsPage($id: ID!) {
+    node(id: $id) {
+      ... on News {
+        ...Article
+      }
+    }
+  }
+  ${ArticleFragmentDoc}
+`;
+
+/**
+ * __useNewsPageQuery__
+ *
+ * To run a query within a React component, call `useNewsPageQuery` and pass it any options that fit your needs.
+ * When your component renders, `useNewsPageQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useNewsPageQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useNewsPageQuery(
+  baseOptions: Apollo.QueryHookOptions<NewsPageQuery, NewsPageQueryVariables>,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useQuery<NewsPageQuery, NewsPageQueryVariables>(
+    NewsPageDocument,
+    options,
+  );
+}
+export function useNewsPageLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    NewsPageQuery,
+    NewsPageQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useLazyQuery<NewsPageQuery, NewsPageQueryVariables>(
+    NewsPageDocument,
+    options,
+  );
+}
+export type NewsPageQueryHookResult = ReturnType<typeof useNewsPageQuery>;
+export type NewsPageLazyQueryHookResult = ReturnType<
+  typeof useNewsPageLazyQuery
+>;
+export type NewsPageQueryResult = Apollo.QueryResult<
+  NewsPageQuery,
+  NewsPageQueryVariables
 >;

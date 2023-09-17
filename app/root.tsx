@@ -84,6 +84,7 @@ const theme = extendTheme({
       'h1,h2': {
         fontFamily: 'Shrimp !important',
         textTransform: 'uppercase',
+        lineHeight: '0.95 !important',
       },
     },
   },

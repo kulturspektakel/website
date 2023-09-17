@@ -1,10 +1,11 @@
 {
   "scripts": {
     "build": "remix build",
-    "dev": "remix dev",
+    "dev": "concurrently \"remix dev\" \"yarn graphql\" \"yarn routes\"",
     "start": "remix-serve build",
     "typecheck": "tsc",
-    "graphql": "graphql-codegen --config ./.graphqlrc.yml --watch"
+    "graphql": "graphql-codegen --config ./.graphqlrc.yml --watch",
+    "routes": "remix-routes --watch"
   },
   "dependencies": {
     "@apollo/client": "^3.8.1",
@@ -30,17 +31,20 @@
     "react-dom": "^18.2.0",
     "react-use": "^17.4.0",
     "remix-routes": "^1.4.4",
-    "remix-typedjson": "^0.2.0"
+    "remix-typedjson": "^0.2.0",
+    "tomo-typeahead": "^0.0.5"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "^5.0.0",
     "@graphql-codegen/introspection": "^4.0.0",
     "@graphql-codegen/typescript-operations": "^4.0.1",
     "@graphql-codegen/typescript-react-apollo": "^3.3.7",
+    "@parcel/watcher": "^2.3.0",
     "@remix-run/dev": "~1.19.3",
     "@remix-run/eslint-config": "~1.19.3",
     "@types/react": "^18.2.20",
     "@types/react-dom": "^18.0.8",
+    "concurrently": "^8.2.1",
     "eslint": "^8.47.0",
     "prettier": "^3.0.2",
     "typescript": "^4.8.4",
