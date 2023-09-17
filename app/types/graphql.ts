@@ -1027,6 +1027,29 @@ export type NewsPageQuery = {
     | null;
 };
 
+export type SpeisekarteQueryVariables = Exact<{[key: string]: never}>;
+
+export type SpeisekarteQuery = {
+  __typename?: 'Query';
+  productLists: Array<{
+    __typename?: 'ProductList';
+    description?: string | null;
+    name: string;
+    emoji?: string | null;
+    product: Array<{
+      __typename?: 'Product';
+      name: string;
+      price: number;
+      requiresDeposit: boolean;
+      additives: Array<{
+        __typename?: 'ProductAdditives';
+        displayName: string;
+        additiveId: string;
+      }>;
+    }>;
+  }>;
+};
+
 export const ArticleHeadFragmentDoc = gql`
   fragment ArticleHead on News {
     slug
@@ -1616,4 +1639,70 @@ export type NewsPageLazyQueryHookResult = ReturnType<
 export type NewsPageQueryResult = Apollo.QueryResult<
   NewsPageQuery,
   NewsPageQueryVariables
+>;
+export const SpeisekarteDocument = gql`
+  query Speisekarte {
+    productLists(activeOnly: true) {
+      description
+      name
+      emoji
+      product {
+        additives {
+          displayName
+          additiveId: id
+        }
+        name
+        price
+        requiresDeposit
+      }
+    }
+  }
+`;
+
+/**
+ * __useSpeisekarteQuery__
+ *
+ * To run a query within a React component, call `useSpeisekarteQuery` and pass it any options that fit your needs.
+ * When your component renders, `useSpeisekarteQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useSpeisekarteQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useSpeisekarteQuery(
+  baseOptions?: Apollo.QueryHookOptions<
+    SpeisekarteQuery,
+    SpeisekarteQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useQuery<SpeisekarteQuery, SpeisekarteQueryVariables>(
+    SpeisekarteDocument,
+    options,
+  );
+}
+export function useSpeisekarteLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    SpeisekarteQuery,
+    SpeisekarteQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useLazyQuery<SpeisekarteQuery, SpeisekarteQueryVariables>(
+    SpeisekarteDocument,
+    options,
+  );
+}
+export type SpeisekarteQueryHookResult = ReturnType<typeof useSpeisekarteQuery>;
+export type SpeisekarteLazyQueryHookResult = ReturnType<
+  typeof useSpeisekarteLazyQuery
+>;
+export type SpeisekarteQueryResult = Apollo.QueryResult<
+  SpeisekarteQuery,
+  SpeisekarteQueryVariables
 >;
