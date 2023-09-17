@@ -6,14 +6,16 @@ export default function Card({
   href,
   aspectRatio = 1,
   children,
+  preventScrollReset,
   ...props
 }: {
   href: string;
   aspectRatio?: number;
   children?: React.ReactNode;
+  preventScrollReset?: boolean;
 } & BoxProps) {
   return (
-    <Link to={href}>
+    <Link to={href} preventScrollReset={preventScrollReset}>
       <AspectRatio ratio={aspectRatio}>
         <Box
           transition={'transform 0.1s ease-in-out'}

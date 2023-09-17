@@ -840,6 +840,7 @@ export type BandSearchQuery = {
     id: string;
     name: string;
     startTime: Date;
+    slug: string;
   }>;
 };
 
@@ -938,7 +939,13 @@ export type LineupBandQuery = {
     | {__typename?: 'Area'}
     | {__typename?: 'BandApplication'}
     | {__typename?: 'BandApplicationComment'}
-    | {__typename?: 'BandPlaying'; name: string}
+    | {
+        __typename?: 'BandPlaying';
+        name: string;
+        shortDescription?: string | null;
+        description?: string | null;
+        photo?: {__typename?: 'PixelImage'; scaledUri: string} | null;
+      }
     | {__typename?: 'Card'}
     | {__typename?: 'Device'}
     | {__typename?: 'Event'}
@@ -1177,6 +1184,7 @@ export const BandSearchDocument = gql`
       id
       name
       startTime
+      slug
     }
   }
 `;
@@ -1441,6 +1449,11 @@ export const LineupBandDocument = gql`
     node(id: $id) {
       ... on BandPlaying {
         name
+        shortDescription
+        description
+        photo {
+          scaledUri(width: 800)
+        }
       }
     }
   }

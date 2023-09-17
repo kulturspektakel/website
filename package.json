@@ -19,6 +19,7 @@
     "@remix-run/serve": "~1.19.3",
     "apollo-link-scalars": "^4.0.2",
     "chakra-ui-steps": "^2.1.0",
+    "downshift": "^8.1.0",
     "formik": "^2.4.3",
     "framer-motion": "^6.5.1",
     "graphql": "^16.8.0",

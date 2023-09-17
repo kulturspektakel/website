@@ -1,6 +1,7 @@
 import {gql} from '@apollo/client';
 import {Button, ButtonGroup} from '@chakra-ui/react';
 import type {LoaderArgs} from '@remix-run/node';
+import {Outlet, ScrollRestoration} from '@remix-run/react';
 import {$params} from 'remix-routes';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import Day from '~/components/lineup/Day';
@@ -97,6 +98,7 @@ export default function LineupYear() {
           />
         );
       })}
+      <Outlet />
     </>
   );
 }

@@ -30,6 +30,7 @@ export default function Band({band}: {band: BandFragment}) {
         year: band.startTime.getFullYear(),
         slug: band.slug,
       })}
+      preventScrollReset
       bgImg={band.photo?.scaledUri}
     >
       <Mark bgColor={band.area.themeColor}>

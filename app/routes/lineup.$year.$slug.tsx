@@ -1,10 +1,17 @@
 import {gql} from '@apollo/client';
-import {Button, ButtonGroup} from '@chakra-ui/react';
+import {
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalHeader,
+  ModalOverlay,
+} from '@chakra-ui/react';
 import type {LoaderArgs} from '@remix-run/node';
+import {useNavigate, useParams} from '@remix-run/react';
+import {$params, $path} from 'remix-routes';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
-import Day from '~/components/lineup/Day';
-import type {LineupQuery} from '~/types/graphql';
-import {LineupDocument} from '~/types/graphql';
+import type {LineupBandQuery} from '~/types/graphql';
+import {LineupBandDocument} from '~/types/graphql';
 import apolloClient from '~/utils/apolloClient';
 
 gql`
@@ -12,6 +19,11 @@ gql`
     node(id: $id) {
       ... on BandPlaying {
         name
+        shortDescription
+        description
+        photo {
+          scaledUri(width: 800)
+        }
       }
     }
   }
@@ -23,10 +35,12 @@ export type SearchParams = {
 };
 
 export async function loader(args: LoaderArgs) {
-  const {data} = await apolloClient.query<LineupQuery>({
-    query: LineupDocument,
+  const {year, slug} = $params('/lineup/:year/:slug', args.params);
+
+  const {data} = await apolloClient.query<LineupBandQuery>({
+    query: LineupBandDocument,
     variables: {
-      id: `Event:kult2022`,
+      id: `BandPlaying:lineup/${year}/${slug}`,
     },
   });
 
@@ -34,5 +48,23 @@ export async function loader(args: LoaderArgs) {
 }
 
 export default function LineupBand() {
-  return <>okoko</>;
+  const data = useTypedLoaderData<typeof loader>();
+  const {year} = useParams();
+  const navigate = useNavigate();
+  const band = data?.node?.__typename === 'BandPlaying' ? data.node : null;
+
+  return (
+    <Modal
+      isOpen={true}
+      onClose={() =>
+        navigate($path('/lineup/:year', {year}), {preventScrollReset: true})
+      }
+    >
+      <ModalOverlay />
+      <ModalContent p="6">
+        <ModalHeader>{band?.name}</ModalHeader>
+        <ModalBody>{band?.shortDescription}</ModalBody>
+      </ModalContent>
+    </Modal>
+  );
 }
