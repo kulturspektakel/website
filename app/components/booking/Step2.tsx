@@ -10,6 +10,7 @@ import {
   HStack,
   VStack,
   Heading,
+  Button,
 } from '@chakra-ui/react';
 import Field from './Field';
 import useIsDJ from './useIsDJ';
@@ -21,7 +22,7 @@ import {SpotifyArtistSearchDocument} from '~/types/graphql';
 import apolloClient from '~/utils/apolloClient';
 import {gql} from '@apollo/client';
 import {useCombobox} from 'downshift';
-import {useEffect, useRef} from 'react';
+import {useEffect, useMemo, useRef, useState} from 'react';
 import DropdownMenu from '../DropdownMenu';
 
 gql`
@@ -52,30 +53,46 @@ export default function Step2() {
       });
       return d.spotifyArtist;
     },
-    minimumQueryLength: 0,
+    nullstateFetcher: values.bandname
+      ? async () => {
+          const {data} = await apolloClient.query({
+            query: SpotifyArtistSearchDocument,
+            variables: {
+              query: values.bandname,
+            },
+          });
+          return data.spotifyArtist;
+        }
+      : undefined,
+    minimumQueryLength: 1,
     keyExtractor: (item) => item.id,
     matchStringExtractor: (item) => item.name,
   });
 
-  useEffect(() => {
-    setQuery(values.bandname ?? '');
-  }, [values.bandname]);
-
-  // const ref = useRef<HTMLInputElement>(null);
+  const [spotifyArtist, setSpotifyArtist] =
+    useState<SpotifyArtistSearchQuery['']>(null);
 
   const {isOpen, highlightedIndex, getInputProps, getItemProps, getMenuProps} =
     useCombobox({
       items: data,
       itemToString: (artist) => artist?.name ?? '',
       // stateReducer: (_state, {type, changes}) => {},
-      onInputValueChange: (e) => setQuery(e.inputValue ?? ''),
-      onSelectedItemChange: ({selectedItem}) => {},
+      onInputValueChange: (e) => {
+        console.log('onInputValueChange', e.inputValue);
+
+        setQuery(e.inputValue ?? '');
+        setSpotifyArtist(null);
+      },
+      onSelectedItemChange: ({selectedItem}) => {
+        console.log('onSelectedItemChange');
+        setSpotifyArtist(selectedItem);
+      },
     });
 
   return (
     <>
       <FormControl id="demo" isRequired={!isDJ} isInvalid={!!errors.demo}>
-        <FormLabel>Demomaterial: YouTube, Spotify, etc.</FormLabel>
+        <FormLabel>Demomaterial</FormLabel>
         <FormHelperText mt="-2" mb="2">
           {isDJ
             ? 'Bitte gib uns einen direkten Link zu ein paar Mixes/Beispielen von dir.'
@@ -97,9 +114,29 @@ export default function Step2() {
         />
       </FormControl>
 
-      <FormControl id="spotifyArtist">
+      <FormControl
+        id="spotifyArtist"
+        isInvalid={values.spotifyArtist && spotifyArtist}
+      >
         <FormLabel>Spotify</FormLabel>
-        <Field placeholder="" {...getInputProps()} />
+        <InputGroup>
+          <InputLeftElement
+            pointerEvents="none"
+            children={
+              <AspectRatio
+                ratio={1}
+                borderRadius="sm"
+                w="32px"
+                bgColor="offwhite.300"
+                overflow="hidden"
+              >
+                <Image src={spotifyArtist?.image ?? ''} />
+              </AspectRatio>
+            }
+          />
+          <Field placeholder="" {...getInputProps()} />
+        </InputGroup>
+
         <DropdownMenu
           getMenuProps={getMenuProps}
           getItemProps={getItemProps}

@@ -33,7 +33,7 @@
     "react-use": "^17.4.0",
     "remix-routes": "^1.4.4",
     "remix-typedjson": "^0.2.0",
-    "tomo-typeahead": "^0.0.5"
+    "tomo-typeahead": "^0.0.6"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "^5.0.0",
