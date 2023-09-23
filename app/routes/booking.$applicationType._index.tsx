@@ -19,7 +19,7 @@ import Step1 from '~/components/booking/Step1';
 import Step3 from '~/components/booking/Step3';
 import Step2 from '~/components/booking/Step2';
 import {createElement, useState} from 'react';
-import type {CreateBandApplicationInput} from '~/types/graphql';
+import type {CreateBandApplicationInput, SpotifyArtist} from '~/types/graphql';
 import {
   GenreCategory,
   HeardAboutBookingFrom,
@@ -30,7 +30,9 @@ import ReloadWarning from '~/components/booking/ReloadWarning';
 import {EVENT_ID} from './booking._index';
 
 const STEPS = [Step1, Step2, Step3] as const;
-export type FormikContextT = Partial<CreateBandApplicationInput>;
+export type FormikContextT = Partial<CreateBandApplicationInput> & {
+  spotifyArtist?: SpotifyArtist;
+};
 
 export type SearchParams = {
   applicationType: 'band' | 'dj';
@@ -117,9 +119,13 @@ export default function () {
               values[k] = (values[k] as string).trim();
             }
           }
+
           const {data: res} = await create({
             variables: {
-              data: values as CreateBandApplicationInput,
+              data: {
+                ...values,
+                spotifyArtist: values.spotifyArtist?.id,
+              } as CreateBandApplicationInput,
               eventId: EVENT_ID,
             },
             errorPolicy: 'all',
@@ -135,7 +141,7 @@ export default function () {
         validateOnChange={false}
       >
         {(props) => (
-          <Form>
+          <Form style={{width: '100%'}}>
             <VStack spacing="4">{createElement(STEPS[currentStep])}</VStack>
             <HStack w="100%" mt="4">
               {currentStep > 0 && (

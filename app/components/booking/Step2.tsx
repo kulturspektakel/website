@@ -6,11 +6,12 @@ import {
   InputLeftElement,
   Text,
   Image,
-  AspectRatio,
   HStack,
   VStack,
-  Heading,
-  Button,
+  InputRightElement,
+  CloseButton,
+  FormErrorMessage,
+  Center,
 } from '@chakra-ui/react';
 import Field from './Field';
 import useIsDJ from './useIsDJ';
@@ -22,8 +23,9 @@ import {SpotifyArtistSearchDocument} from '~/types/graphql';
 import apolloClient from '~/utils/apolloClient';
 import {gql} from '@apollo/client';
 import {useCombobox} from 'downshift';
-import {useEffect, useMemo, useRef, useState} from 'react';
+import {useRef, useState} from 'react';
 import DropdownMenu from '../DropdownMenu';
+import {FaSpotify} from 'react-icons/fa6';
 
 gql`
   query SpotifyArtistSearch($query: String!, $limit: Int = 5) {
@@ -38,8 +40,7 @@ gql`
 
 export default function Step2() {
   const isDJ = useIsDJ();
-  const {values, errors} = useFormikContext<FormikContextT>();
-  values.bandname = 'Stray Colors';
+  const {values, errors, setFieldValue} = useFormikContext<FormikContextT>();
 
   const {loading, data, setQuery} = useTypeahead<
     SpotifyArtistSearchQuery['spotifyArtist'][number]
@@ -69,25 +70,43 @@ export default function Step2() {
     matchStringExtractor: (item) => item.name,
   });
 
-  const [spotifyArtist, setSpotifyArtist] =
-    useState<SpotifyArtistSearchQuery['']>(null);
+  const [spotifyInvalid, setSpotifyInvalid] = useState(false);
 
-  const {isOpen, highlightedIndex, getInputProps, getItemProps, getMenuProps} =
-    useCombobox({
-      items: data,
-      itemToString: (artist) => artist?.name ?? '',
-      // stateReducer: (_state, {type, changes}) => {},
-      onInputValueChange: (e) => {
-        console.log('onInputValueChange', e.inputValue);
+  const ref = useRef<HTMLInputElement>(null);
 
-        setQuery(e.inputValue ?? '');
-        setSpotifyArtist(null);
-      },
-      onSelectedItemChange: ({selectedItem}) => {
-        console.log('onSelectedItemChange');
-        setSpotifyArtist(selectedItem);
-      },
-    });
+  const {
+    isOpen,
+    highlightedIndex,
+    getInputProps,
+    getItemProps,
+    getMenuProps,
+    setInputValue,
+    openMenu,
+  } = useCombobox({
+    items: data,
+    itemToString: (artist) => artist?.name ?? '',
+    stateReducer: (_state, {type, changes}) => {
+      switch (type) {
+        case useCombobox.stateChangeTypes.InputClick:
+          changes.isOpen = true;
+          break;
+        case useCombobox.stateChangeTypes.FunctionSetInputValue:
+        case useCombobox.stateChangeTypes.InputChange:
+          setFieldValue('spotifyArtist', null);
+          setSpotifyInvalid(changes.inputValue !== '');
+          break;
+      }
+      return changes;
+    },
+    onInputValueChange: (e) => {
+      setQuery(e.inputValue ?? '');
+    },
+    onSelectedItemChange: ({selectedItem}) => {
+      setFieldValue('spotifyArtist', selectedItem);
+      setSpotifyInvalid(false);
+      ref.current?.blur();
+    },
+  });
 
   return (
     <>
@@ -114,27 +133,23 @@ export default function Step2() {
         />
       </FormControl>
 
-      <FormControl
-        id="spotifyArtist"
-        isInvalid={values.spotifyArtist && spotifyArtist}
-      >
+      <FormControl id="spotifyArtist" isInvalid={spotifyInvalid}>
         <FormLabel>Spotify</FormLabel>
         <InputGroup>
           <InputLeftElement
             pointerEvents="none"
             children={
-              <AspectRatio
-                ratio={1}
-                borderRadius="sm"
-                w="32px"
-                bgColor="offwhite.300"
-                overflow="hidden"
-              >
-                <Image src={spotifyArtist?.image ?? ''} />
-              </AspectRatio>
+              <SpotifyCover image={values.spotifyArtist?.image} width="32px" />
             }
           />
-          <Field placeholder="" {...getInputProps()} />
+          <Field
+            pl="40px"
+            placeholder="Spotify-Profil suchen..."
+            {...getInputProps({ref, onFocus: openMenu})}
+          />
+          <InputRightElement>
+            <CloseButton onClick={() => setInputValue('')} />
+          </InputRightElement>
         </InputGroup>
 
         <DropdownMenu
@@ -146,15 +161,7 @@ export default function Step2() {
           highlightedIndex={highlightedIndex}
           itemRenderer={(artist) => (
             <HStack>
-              <AspectRatio
-                ratio={1}
-                borderRadius="lg"
-                w="46px"
-                bgColor="offwhite.300"
-                overflow="hidden"
-              >
-                <Image src={artist.image ?? ''} />
-              </AspectRatio>
+              <SpotifyCover image={artist.image} width="46px" />
               <VStack alignItems="flex-start" spacing="0">
                 <Text fontWeight="bold">{artist.name}</Text>
                 <Text mt="-1">{artist.genre}</Text>
@@ -163,6 +170,7 @@ export default function Step2() {
           )}
           keyExtractor={(band) => band.id}
         />
+        <FormErrorMessage>Spotify-Profil aus Liste auswählen</FormErrorMessage>
       </FormControl>
 
       <FormControl id="instagram">
@@ -185,5 +193,22 @@ export default function Step2() {
         <Field type="text" placeholder="https://kulturspektakel.de" />
       </FormControl>
     </>
+  );
+}
+
+function SpotifyCover({image, width}: {image?: string | null; width: string}) {
+  return (
+    <Image
+      src={image ?? undefined}
+      fallback={
+        <Center aspectRatio={1} w={width} borderRadius="md" bg="offwhite.200">
+          <FaSpotify color="white" />
+        </Center>
+      }
+      w={width}
+      aspectRatio={1}
+      objectFit="cover"
+      borderRadius="md"
+    />
   );
 }

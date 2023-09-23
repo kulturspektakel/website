@@ -44,7 +44,7 @@ const REPERTOIRE: Map<BandRepertoireType, string> = new Map([
 
 export default function Step1() {
   const isDJ = useIsDJ();
-  const {values, errors} = useFormikContext<FormikContextT>();
+  const {values} = useFormikContext<FormikContextT>();
 
   return (
     <>
@@ -55,11 +55,7 @@ export default function Step1() {
       <DuplicateApplicationWarning bandname={values.bandname} />
 
       <HStack w="100%">
-        <FormControl
-          id={isDJ ? 'genre' : 'genreCategory'}
-          isRequired={!isDJ}
-          isInvalid={!!errors.numberOfNonMaleArtists}
-        >
+        <FormControl id={isDJ ? 'genre' : 'genreCategory'} isRequired={!isDJ}>
           <FormLabel>Musikrichtung</FormLabel>
           {isDJ ? (
             <Field />

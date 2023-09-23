@@ -14,7 +14,7 @@ export default forwardRef(function FieldWrapper(
   },
   ref,
 ) {
-  const {id, isRequired} = useFormControlContext();
+  const {id, isRequired, isInvalid} = useFormControlContext();
 
   const [field, meta] = useField({
     name: id,
@@ -30,7 +30,7 @@ export default forwardRef(function FieldWrapper(
 
   const inputProps: InputProps = {
     ...field,
-    isInvalid: meta.touched && meta.error ? true : false,
+    isInvalid: (meta.touched && meta.error) || isInvalid ? true : false,
     bg: 'white',
     ref,
     ...props,
