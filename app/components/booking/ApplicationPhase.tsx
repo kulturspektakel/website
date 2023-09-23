@@ -48,19 +48,21 @@ export default function ApplicationPhase({
           {content}
           <br />
           {applicationNotStarted ? (
-            <>
-              <strong>Bewerbungsschluss:</strong>{' '}
-              {applicationEnd && !applicationEnded ? (
-                <DateString date={applicationEnd} />
-              ) : (
-                <Tag colorScheme="red">
-                  <WarningTwoIcon />
-                  &nbsp;Abgelaufen
-                </Tag>
-              )}
-            </>
-          ) : (
             <strong>Bewerbungsphase hat noch nicht begonnen</strong>
+          ) : (
+            applicationEnd && (
+              <>
+                <strong>Bewerbungsschluss:</strong>{' '}
+                {!applicationEnded ? (
+                  <DateString date={applicationEnd} />
+                ) : (
+                  <Tag colorScheme="red">
+                    <WarningTwoIcon />
+                    &nbsp;Abgelaufen
+                  </Tag>
+                )}
+              </>
+            )
           )}
         </Text>
       </VStack>
