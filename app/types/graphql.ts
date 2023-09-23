@@ -1092,7 +1092,7 @@ export type SpeisekarteQuery = {
       additives: Array<{
         __typename?: 'ProductAdditives';
         displayName: string;
-        additiveId: string;
+        id: string;
       }>;
     }>;
   }>;
@@ -1766,7 +1766,7 @@ export const SpeisekarteDocument = gql`
       product {
         additives {
           displayName
-          additiveId: id
+          id
         }
         name
         price

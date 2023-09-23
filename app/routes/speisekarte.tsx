@@ -23,7 +23,7 @@ gql`
       product {
         additives {
           displayName
-          additiveId: id
+          id
         }
         name
         price
@@ -43,7 +43,7 @@ export async function loader(args: LoaderArgs) {
 
 export default function Speisekarte() {
   const {productLists} = useTypedLoaderData<typeof loader>();
-  const none = useMemo(() => [], []);
+  const none: number[] = useMemo(() => [], []);
   const all = useMemo(
     () => productLists.map((_, i) => i),
     [productLists.length],
