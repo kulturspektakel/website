@@ -54,9 +54,7 @@ export default function Step3() {
         <FormHelperText mt="-2" mb="2">
           {isDJ
             ? 'Was verbindet dich mit unserer Veranstaltung? Woher kennst du das Kulturspektakel? Was wolltest du uns schon immer mal erzählen?'
-            : `Was verbindet euch mit unserer Veranstaltung? Wart ihr schonmal
-              da? Woher kennt ihr das Kulturspektakel? Was wolltet ihr uns schon
-              immer mal erzählen?`}
+            : `Wart ihr schonmal da? Woher kennt ihr das Kulturspektakel? Was verbindet euch mit unserer Veranstaltung? Was wolltet ihr uns schon immer mal erzählen? `}
         </FormHelperText>
         <Field as={Textarea} />
       </FormControl>
