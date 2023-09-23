@@ -1,14 +1,5 @@
 import {gql} from '@apollo/client';
-import {
-  VStack,
-  Text,
-  Heading,
-  AlertIcon,
-  Alert,
-  AlertDescription,
-  Box,
-  Link as ChakraLink,
-} from '@chakra-ui/react';
+import {VStack, Text, Heading, Box, Link as ChakraLink} from '@chakra-ui/react';
 import {EventDocument, type EventQuery} from '~/types/graphql';
 import DateString from '~/components/DateString';
 import apolloClient from '~/utils/apolloClient';
@@ -29,6 +20,7 @@ gql`
         end
         bandApplicationStart
         bandApplicationEnd
+        djApplicationStart
         djApplicationEnd
       }
     }
@@ -52,26 +44,6 @@ export async function loader(args: LoaderArgs) {
 
 export default function Home() {
   const data = useTypedLoaderData<typeof loader>();
-
-  let errorMessage: string | null = null;
-  const now = new Date();
-  const bandApplicationEnded =
-    (data.bandApplicationEnd && data.bandApplicationEnd < now) ?? false;
-  const djApplicationEnded =
-    (data.djApplicationEnd && data.djApplicationEnd < now) ?? false;
-
-  let bandApplicationNotStarted = false;
-  if (!data.bandApplicationStart) {
-    errorMessage = 'Aktuell läuft die Bewerbungsphase nicht.';
-    bandApplicationNotStarted = true;
-  } else if (data.bandApplicationStart > now) {
-    errorMessage = `Die Bewerbungsphase beginnt am ${data.bandApplicationStart.toLocaleDateString(
-      'de',
-    )}`;
-    bandApplicationNotStarted = true;
-  } else if (bandApplicationEnded && djApplicationEnded) {
-    errorMessage = `Die Bewerbungsphase für das ${data.name} ist beendet.`;
-  }
 
   return (
     <Box>
@@ -101,42 +73,29 @@ export default function Home() {
           der Bewerbungsfrist.
         </Text>
       </VStack>
-
-      {errorMessage && (
-        <Alert status="warning" borderRadius="md" mb="5" mt="5">
-          <AlertIcon />
-          <AlertDescription color="yellow.900">{errorMessage}</AlertDescription>
-        </Alert>
+      {data.bandApplicationStart && (
+        <ApplicationPhase
+          applicationStart={data.bandApplicationStart}
+          applicationEnd={data.bandApplicationEnd}
+          title="Bands"
+          content="Ihr möchtet euch als Band für eine unserer Bühnen bewerben."
+          buttonLabel="Als Band bewerben"
+          href={$path('/booking/:applicationType', {
+            applicationType: 'band',
+          })}
+        />
       )}
-
-      {!bandApplicationNotStarted && (
-        <>
-          {data.bandApplicationEnd && (
-            <ApplicationPhase
-              applicationEnd={data.bandApplicationEnd}
-              title="Bands"
-              content="Ihr möchtet euch als Band für eine unserer Bühnen bewerben."
-              buttonLabel="Als Band bewerben"
-              href={$path('/booking/:applicationType', {
-                applicationType: 'band',
-              })}
-              disabled={bandApplicationEnded}
-            />
-          )}
-
-          {data.djApplicationEnd && (
-            <ApplicationPhase
-              applicationEnd={data.djApplicationEnd}
-              title="DJs"
-              content="Du möchtest dich als DJ für unsere DJ-Area bewerben."
-              buttonLabel="Als DJ bewerben"
-              href={$path('/booking/:applicationType', {
-                applicationType: 'dj',
-              })}
-              disabled={djApplicationEnded}
-            />
-          )}
-        </>
+      {data.djApplicationStart && (
+        <ApplicationPhase
+          applicationStart={data.djApplicationStart}
+          applicationEnd={data.djApplicationEnd}
+          title="DJs"
+          content="Du möchtest dich als DJ für unsere DJ-Area bewerben."
+          buttonLabel="Als DJ bewerben"
+          href={$path('/booking/:applicationType', {
+            applicationType: 'dj',
+          })}
+        />
       )}
     </Box>
   );

@@ -151,6 +151,13 @@ export type BandPlaying = Node & {
   startTime: Scalars['DateTime']['output'];
 };
 
+export enum BandRepertoireType {
+  ExclusivelyCoverSongs = 'ExclusivelyCoverSongs',
+  ExclusivelyOwnSongs = 'ExclusivelyOwnSongs',
+  MostlyCoverSongs = 'MostlyCoverSongs',
+  MostlyOwnSongs = 'MostlyOwnSongs',
+}
+
 export type Billable = {
   salesNumbers: Array<SalesNumber>;
 };
@@ -248,6 +255,8 @@ export type CreateBandApplicationInput = {
   knowsKultFrom?: InputMaybe<Scalars['String']['input']>;
   numberOfArtists?: InputMaybe<Scalars['Int']['input']>;
   numberOfNonMaleArtists?: InputMaybe<Scalars['Int']['input']>;
+  repertoire?: InputMaybe<BandRepertoireType>;
+  spotifyArtist?: InputMaybe<Scalars['String']['input']>;
   website?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -300,6 +309,7 @@ export type Event = Node & {
   bandsPlaying: EventBandsPlayingConnection;
   description?: Maybe<Scalars['String']['output']>;
   djApplicationEnd?: Maybe<Scalars['DateTime']['output']>;
+  djApplicationStart?: Maybe<Scalars['DateTime']['output']>;
   end: Scalars['DateTime']['output'];
   id: Scalars['ID']['output'];
   media: EventMediaConnection;
@@ -642,6 +652,7 @@ export type Query = {
   nuclinoPages: Array<NuclinoSearchResult>;
   productAdditives: Array<ProductAdditives>;
   productLists: Array<ProductList>;
+  spotifyArtist: Array<SpotifyArtist>;
   transactions: Transactions;
   viewer?: Maybe<Viewer>;
 };
@@ -705,6 +716,11 @@ export type QueryProductListsArgs = {
   activeOnly?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
+export type QuerySpotifyArtistArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  query: Scalars['String']['input'];
+};
+
 export type QueryNewsConnection = {
   __typename?: 'QueryNewsConnection';
   edges: Array<QueryNewsConnectionEdge>;
@@ -728,6 +744,14 @@ export type SalesNumber = {
 
 export type SalesNumberTimeSeriesArgs = {
   grouping?: InputMaybe<TimeGrouping>;
+};
+
+export type SpotifyArtist = {
+  __typename?: 'SpotifyArtist';
+  genre?: Maybe<Scalars['String']['output']>;
+  id: Scalars['String']['output'];
+  image?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
 };
 
 export enum TimeGrouping {
@@ -815,6 +839,22 @@ export type DuplicateApplicationWarningQuery = {
     applicationTime: Date;
     obfuscatedEmail: string;
   } | null;
+};
+
+export type SpotifyArtistSearchQueryVariables = Exact<{
+  query: Scalars['String']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+export type SpotifyArtistSearchQuery = {
+  __typename?: 'Query';
+  spotifyArtist: Array<{
+    __typename?: 'SpotifyArtist';
+    id: string;
+    name: string;
+    genre?: string | null;
+    image?: string | null;
+  }>;
 };
 
 export type BandFragment = {
@@ -919,6 +959,7 @@ export type EventQuery = {
         end: Date;
         bandApplicationStart?: Date | null;
         bandApplicationEnd?: Date | null;
+        djApplicationStart?: Date | null;
         djApplicationEnd?: Date | null;
       }
     | {__typename?: 'News'}
@@ -1201,6 +1242,68 @@ export type DuplicateApplicationWarningQueryResult = Apollo.QueryResult<
   DuplicateApplicationWarningQuery,
   DuplicateApplicationWarningQueryVariables
 >;
+export const SpotifyArtistSearchDocument = gql`
+  query SpotifyArtistSearch($query: String!, $limit: Int = 5) {
+    spotifyArtist(query: $query, limit: $limit) {
+      id
+      name
+      genre
+      image
+    }
+  }
+`;
+
+/**
+ * __useSpotifyArtistSearchQuery__
+ *
+ * To run a query within a React component, call `useSpotifyArtistSearchQuery` and pass it any options that fit your needs.
+ * When your component renders, `useSpotifyArtistSearchQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useSpotifyArtistSearchQuery({
+ *   variables: {
+ *      query: // value for 'query'
+ *      limit: // value for 'limit'
+ *   },
+ * });
+ */
+export function useSpotifyArtistSearchQuery(
+  baseOptions: Apollo.QueryHookOptions<
+    SpotifyArtistSearchQuery,
+    SpotifyArtistSearchQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useQuery<
+    SpotifyArtistSearchQuery,
+    SpotifyArtistSearchQueryVariables
+  >(SpotifyArtistSearchDocument, options);
+}
+export function useSpotifyArtistSearchLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    SpotifyArtistSearchQuery,
+    SpotifyArtistSearchQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useLazyQuery<
+    SpotifyArtistSearchQuery,
+    SpotifyArtistSearchQueryVariables
+  >(SpotifyArtistSearchDocument, options);
+}
+export type SpotifyArtistSearchQueryHookResult = ReturnType<
+  typeof useSpotifyArtistSearchQuery
+>;
+export type SpotifyArtistSearchLazyQueryHookResult = ReturnType<
+  typeof useSpotifyArtistSearchLazyQuery
+>;
+export type SpotifyArtistSearchQueryResult = Apollo.QueryResult<
+  SpotifyArtistSearchQuery,
+  SpotifyArtistSearchQueryVariables
+>;
 export const BandSearchDocument = gql`
   query BandSearch($query: String!, $limit: Int = 5) {
     findBandPlaying(query: $query, limit: $limit) {
@@ -1421,6 +1524,7 @@ export const EventDocument = gql`
         end
         bandApplicationStart
         bandApplicationEnd
+        djApplicationStart
         djApplicationEnd
       }
     }

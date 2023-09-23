@@ -13,8 +13,8 @@ import DateString from '../DateString';
 
 export default function ApplicationPhase({
   href,
-  disabled,
   buttonLabel,
+  applicationStart,
   applicationEnd,
   title,
   content,
@@ -22,11 +22,13 @@ export default function ApplicationPhase({
   href: string;
   title: string;
   content: string;
-  disabled: boolean;
   buttonLabel: string;
-  applicationEnd: Date;
+  applicationStart: Date;
+  applicationEnd?: Date | null;
 }) {
-  const applicationEnded = applicationEnd < new Date();
+  const applicationEnded = applicationEnd ? applicationEnd < new Date() : false;
+  const applicationNotStarted = applicationStart > new Date();
+  const disabled = applicationEnded || applicationNotStarted;
 
   return (
     <Flex
@@ -45,14 +47,20 @@ export default function ApplicationPhase({
         <Text>
           {content}
           <br />
-          <strong>Bewerbungsschluss:</strong>{' '}
-          {applicationEnded ? (
-            <Tag colorScheme="red">
-              <WarningTwoIcon />
-              &nbsp;Abgelaufen
-            </Tag>
+          {applicationNotStarted ? (
+            <>
+              <strong>Bewerbungsschluss:</strong>{' '}
+              {applicationEnd && !applicationEnded ? (
+                <DateString date={applicationEnd} />
+              ) : (
+                <Tag colorScheme="red">
+                  <WarningTwoIcon />
+                  &nbsp;Abgelaufen
+                </Tag>
+              )}
+            </>
           ) : (
-            <DateString date={applicationEnd} />
+            <strong>Bewerbungsphase hat noch nicht begonnen</strong>
           )}
         </Text>
       </VStack>

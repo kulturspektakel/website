@@ -25,9 +25,9 @@ export default function DistanceWarning(props: {origin?: string}) {
       <AlertIcon mt="0.5" />
       <AlertDescription color="yellow.900">
         Unser Festival findet in Gauting statt und die meisten Bands kommen aus
-        der Region. Wir freuen uns natürlich über eure Bewerbung, egal von wo
-        ihr anreist. Trotzdem bitten wir euch zu überlegen, ob eine Anreise zu
-        unserem Festival für euch realistisch und finanzierbar ist.
+        der Region. Da wir in der Regel keine Aufwandsentschädigungen für weite
+        Anreisen zahlen können, bitten wir euch zu überlegen ob die Anreise für
+        euch realistisch und finanzierbar ist.
       </AlertDescription>
     </Alert>
   );
