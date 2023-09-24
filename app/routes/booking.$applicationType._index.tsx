@@ -130,7 +130,7 @@ export default function () {
             },
             errorPolicy: 'all',
           });
-          if (res?.createBandApplication?.id) {
+          if (res?.createBandApplication?.id && applicationType) {
             navigate(
               $path('/booking/:applicationType/danke', {
                 applicationType,

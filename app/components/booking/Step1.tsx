@@ -94,8 +94,7 @@ export default function Step1() {
               <AlertIcon mt="0.5" />
               <AlertDescription color="yellow.900"></AlertDescription>
               Wir möchten Bands mit eigenen Songs eine Bühne bieten. Reine
-              Tribute-/Coverbands, ohne eigene Interpretationen buchen wir
-              nicht.
+              Tribute-/Coverbands ohne eigene Interpretationen buchen wir nicht.
             </Alert>
           )}
         </>
