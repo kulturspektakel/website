@@ -61,7 +61,7 @@ const utmSourceMapping: Record<string, HeardAboutBookingFrom> = Object.freeze({
 });
 
 export default function () {
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(1);
   const {applicationType} = useParams<SearchParams>();
   const [create, {error}] = useCreateBandApplicationMutation();
   const isLastStep = currentStep === STEPS.length - 1;

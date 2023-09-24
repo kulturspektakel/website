@@ -59,7 +59,7 @@ export default function Step2() {
           const {data} = await apolloClient.query({
             query: SpotifyArtistSearchDocument,
             variables: {
-              query: values.bandname,
+              query: values.spotifyArtist?.name ?? values.bandname,
             },
           });
           return data.spotifyArtist;
@@ -83,6 +83,7 @@ export default function Step2() {
     setInputValue,
     openMenu,
   } = useCombobox({
+    defaultInputValue: values.spotifyArtist?.name,
     items: data,
     itemToString: (artist) => artist?.name ?? '',
     stateReducer: (_state, {type, changes}) => {
@@ -145,7 +146,10 @@ export default function Step2() {
           <Field
             pl="40px"
             placeholder="Spotify-Profil suchen..."
-            {...getInputProps({ref, onFocus: openMenu})}
+            {...getInputProps({
+              ref,
+              onFocus: openMenu,
+            })}
           />
           <InputRightElement>
             <CloseButton onClick={() => setInputValue('')} />
@@ -164,7 +168,9 @@ export default function Step2() {
               <SpotifyCover image={artist.image} width="46px" />
               <VStack alignItems="flex-start" spacing="0">
                 <Text fontWeight="bold">{artist.name}</Text>
-                <Text mt="-1">{artist.genre}</Text>
+                <Text mt="-1" textTransform="capitalize">
+                  {artist.genre}
+                </Text>
               </VStack>
             </HStack>
           )}
