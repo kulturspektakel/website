@@ -1,8 +1,7 @@
-import {Heading, Text} from '@chakra-ui/react';
+import {Heading, Text, Box} from '@chakra-ui/react';
 import DateString from '../DateString';
 import {gql} from '@apollo/client';
 import type {BandFragment} from '~/types/graphql';
-import Mark from '../Mark';
 import Card from '../Card';
 import {$path} from 'remix-routes';
 
@@ -13,6 +12,7 @@ gql`
     startTime
     slug
     area {
+      id
       displayName
       themeColor
     }
@@ -31,24 +31,49 @@ export default function Band({band}: {band: BandFragment}) {
         slug: band.slug,
       })}
       preventScrollReset
+      bgColor="offwhite.300"
+      // bgColor={band.area.themeColor}
+      bgBlendMode="luminosity"
       bgImg={band.photo?.scaledUri}
     >
-      <Mark bgColor={band.area.themeColor}>
-        <DateString
-          timeOnly
-          date={band.startTime}
-          options={{
-            hour: '2-digit',
-            minute: '2-digit',
-          }}
-        />
-        &nbsp;
-        {band.area.displayName}
-      </Mark>
-      <Heading mt="1.5" size="lg" noOfLines={4}>
-        {band.name}
-      </Heading>
-      {band.genre && <Text>{band.genre}</Text>}
+      <Box
+        position="absolute"
+        bottom="2"
+        left="2"
+        mr="2"
+        bgColor={band.area.themeColor}
+        pt="2"
+        pb="1"
+        px="2"
+        color={band.area.id === 'Area:a' ? undefined : 'white'}
+        textAlign="left"
+        borderRadius="md"
+      >
+        <Heading
+          sx={{hyphens: 'auto'}}
+          fontSize="26px"
+          noOfLines={4}
+          color="inherit"
+        >
+          {band.name}
+        </Heading>
+        {band.genre && (
+          <Text noOfLines={1} fontWeight="bold" fontSize="sm">
+            <DateString
+              timeOnly
+              date={band.startTime}
+              options={{
+                hour: '2-digit',
+                minute: '2-digit',
+              }}
+            />
+            &nbsp;
+            {band.area.displayName}
+            &nbsp;&middot;&nbsp;
+            {band.genre}
+          </Text>
+        )}
+      </Box>
     </Card>
   );
 }

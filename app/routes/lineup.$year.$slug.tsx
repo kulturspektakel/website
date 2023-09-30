@@ -1,18 +1,23 @@
-import {gql} from '@apollo/client';
+import {gql, useSuspenseQuery} from '@apollo/client';
 import {
-  Modal,
+  HStack,
+  Image,
   ModalBody,
-  ModalContent,
+  ModalCloseButton,
   ModalHeader,
-  ModalOverlay,
 } from '@chakra-ui/react';
-import type {LoaderArgs} from '@remix-run/node';
-import {useNavigate, useParams} from '@remix-run/react';
-import {$params, $path} from 'remix-routes';
-import {typedjson, useTypedLoaderData} from 'remix-typedjson';
+import {Link, useParams} from '@remix-run/react';
+import DateString from '~/components/DateString';
+import Mark from '~/components/Mark';
 import type {LineupBandQuery} from '~/types/graphql';
 import {LineupBandDocument} from '~/types/graphql';
-import apolloClient from '~/utils/apolloClient';
+import {
+  FaSpotify,
+  FaYoutube,
+  FaInstagram,
+  FaFacebook,
+  FaGlobe,
+} from 'react-icons/fa6';
 
 gql`
   query LineupBand($id: ID!) {
@@ -24,6 +29,17 @@ gql`
         photo {
           scaledUri(width: 800)
         }
+        startTime
+        area {
+          displayName
+          themeColor
+        }
+        genre
+        spotify
+        youtube
+        website
+        instagram
+        facebook
       }
     }
   }
@@ -34,37 +50,67 @@ export type SearchParams = {
   slug: string;
 };
 
-export async function loader(args: LoaderArgs) {
-  const {year, slug} = $params('/lineup/:year/:slug', args.params);
-
-  const {data} = await apolloClient.query<LineupBandQuery>({
-    query: LineupBandDocument,
+export default function LineupBand() {
+  const {year, slug} = useParams();
+  const {data} = useSuspenseQuery<LineupBandQuery>(LineupBandDocument, {
     variables: {
       id: `BandPlaying:lineup/${year}/${slug}`,
     },
   });
-
-  return typedjson(data);
-}
-
-export default function LineupBand() {
-  const data = useTypedLoaderData<typeof loader>();
-  const {year} = useParams();
-  const navigate = useNavigate();
   const band = data?.node?.__typename === 'BandPlaying' ? data.node : null;
+  if (!band) return null;
 
   return (
-    <Modal
-      isOpen={true}
-      onClose={() =>
-        navigate($path('/lineup/:year', {year}), {preventScrollReset: true})
-      }
-    >
-      <ModalOverlay />
-      <ModalContent p="6">
-        <ModalHeader>{band?.name}</ModalHeader>
-        <ModalBody>{band?.shortDescription}</ModalBody>
-      </ModalContent>
-    </Modal>
+    <>
+      <ModalHeader as="h2" fontSize="lg">
+        {band.name}
+      </ModalHeader>
+      <ModalCloseButton />
+      <ModalBody>
+        {band.photo && <Image src={band.photo?.scaledUri} alt={band.name} />}
+        <DateString
+          options={{
+            hour: '2-digit',
+            minute: '2-digit',
+            weekday: 'long',
+            month: '2-digit',
+            day: '2-digit',
+            year: 'numeric',
+          }}
+          date={band.startTime}
+        />
+        <Mark bgColor={band.area.themeColor}>{band.area.displayName}</Mark>
+
+        <HStack fontSize="xl" justify="space-around">
+          {band.spotify && (
+            <Link to={band.spotify}>
+              <FaSpotify />
+            </Link>
+          )}
+          {band.youtube && (
+            <Link to={band.youtube}>
+              <FaYoutube />
+            </Link>
+          )}
+          {band.instagram && (
+            <Link to={band.instagram}>
+              <FaInstagram />
+            </Link>
+          )}
+          {band.facebook && (
+            <Link to={band.facebook}>
+              <FaFacebook />
+            </Link>
+          )}
+          {band.website && (
+            <Link to={band.website}>
+              <FaGlobe />
+            </Link>
+          )}
+        </HStack>
+        {band.genre}
+        {band.shortDescription ?? band.description}
+      </ModalBody>
+    </>
   );
 }

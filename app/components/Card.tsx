@@ -18,6 +18,7 @@ export default function Card({
     <Link to={href} preventScrollReset={preventScrollReset}>
       <AspectRatio ratio={aspectRatio}>
         <Box
+          aspectRatio={aspectRatio}
           transition={'transform 0.1s ease-in-out'}
           boxShadow="sm"
           sx={{
@@ -27,8 +28,7 @@ export default function Card({
           borderRadius="xl"
           flexDirection="column"
           textAlign="center"
-          bgSize="cover"
-          bgPos="center"
+          backgroundSize="cover"
           p="4"
           {...props}
         >

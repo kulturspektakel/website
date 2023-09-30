@@ -605,6 +605,26 @@
             "deprecationReason": null
           },
           {
+            "name": "repertoire",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "ENUM",
+              "name": "BandRepertoireType",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "spotifyArtist",
+            "description": null,
+            "args": [],
+            "type": {"kind": "SCALAR", "name": "String", "ofType": null},
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "website",
             "description": null,
             "args": [],
@@ -934,6 +954,14 @@
             "deprecationReason": null
           },
           {
+            "name": "facebook",
+            "description": null,
+            "args": [],
+            "type": {"kind": "SCALAR", "name": "String", "ofType": null},
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "genre",
             "description": null,
             "args": [],
@@ -950,6 +978,14 @@
               "name": null,
               "ofType": {"kind": "SCALAR", "name": "ID", "ofType": null}
             },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "instagram",
+            "description": null,
+            "args": [],
+            "type": {"kind": "SCALAR", "name": "String", "ofType": null},
             "isDeprecated": false,
             "deprecationReason": null
           },
@@ -994,6 +1030,22 @@
             "deprecationReason": null
           },
           {
+            "name": "soundcloud",
+            "description": null,
+            "args": [],
+            "type": {"kind": "SCALAR", "name": "String", "ofType": null},
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "spotify",
+            "description": null,
+            "args": [],
+            "type": {"kind": "SCALAR", "name": "String", "ofType": null},
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "startTime",
             "description": null,
             "args": [],
@@ -1002,6 +1054,22 @@
               "name": null,
               "ofType": {"kind": "SCALAR", "name": "DateTime", "ofType": null}
             },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "website",
+            "description": null,
+            "args": [],
+            "type": {"kind": "SCALAR", "name": "String", "ofType": null},
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "youtube",
+            "description": null,
+            "args": [],
+            "type": {"kind": "SCALAR", "name": "String", "ofType": null},
             "isDeprecated": false,
             "deprecationReason": null
           }

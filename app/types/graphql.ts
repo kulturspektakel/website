@@ -88,6 +88,8 @@ export type BandApplication = Node & {
   pastApplications: Array<BandApplication>;
   pastPerformances: Array<BandPlaying>;
   rating?: Maybe<Scalars['Float']['output']>;
+  repertoire?: Maybe<BandRepertoireType>;
+  spotifyArtist?: Maybe<Scalars['String']['output']>;
   website?: Maybe<Scalars['String']['output']>;
 };
 
@@ -142,13 +144,19 @@ export type BandPlaying = Node & {
   endTime: Scalars['DateTime']['output'];
   event: Event;
   eventId: Scalars['ID']['output'];
+  facebook?: Maybe<Scalars['String']['output']>;
   genre?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
+  instagram?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
   photo?: Maybe<PixelImage>;
   shortDescription?: Maybe<Scalars['String']['output']>;
   slug: Scalars['String']['output'];
+  soundcloud?: Maybe<Scalars['String']['output']>;
+  spotify?: Maybe<Scalars['String']['output']>;
   startTime: Scalars['DateTime']['output'];
+  website?: Maybe<Scalars['String']['output']>;
+  youtube?: Maybe<Scalars['String']['output']>;
 };
 
 export enum BandRepertoireType {
@@ -864,7 +872,12 @@ export type BandFragment = {
   startTime: Date;
   slug: string;
   genre?: string | null;
-  area: {__typename?: 'Area'; displayName: string; themeColor: string};
+  area: {
+    __typename?: 'Area';
+    id: string;
+    displayName: string;
+    themeColor: string;
+  };
   photo?: {__typename?: 'PixelImage'; scaledUri: string} | null;
 };
 
@@ -985,7 +998,15 @@ export type LineupBandQuery = {
         name: string;
         shortDescription?: string | null;
         description?: string | null;
+        startTime: Date;
+        genre?: string | null;
+        spotify?: string | null;
+        youtube?: string | null;
+        website?: string | null;
+        instagram?: string | null;
+        facebook?: string | null;
         photo?: {__typename?: 'PixelImage'; scaledUri: string} | null;
+        area: {__typename?: 'Area'; displayName: string; themeColor: string};
       }
     | {__typename?: 'Card'}
     | {__typename?: 'Device'}
@@ -1122,6 +1143,7 @@ export const BandFragmentDoc = gql`
     startTime
     slug
     area {
+      id
       displayName
       themeColor
     }
@@ -1581,6 +1603,17 @@ export const LineupBandDocument = gql`
         photo {
           scaledUri(width: 800)
         }
+        startTime
+        area {
+          displayName
+          themeColor
+        }
+        genre
+        spotify
+        youtube
+        website
+        instagram
+        facebook
       }
     }
   }
