@@ -1,10 +1,10 @@
-import { Box, Flex, HStack, Link, VStack, Image, Text } from '@chakra-ui/react';
+import { Box, Flex, HStack, Link, VStack, Image, Text, useBreakpointValue } from '@chakra-ui/react';
 import { Link as RemixLink } from '@remix-run/react';
 import { FaSpotify, FaYoutube, FaInstagram, FaFacebook } from 'react-icons/fa6';
 import vpby from './vpby.svg';
 
 export default function Footer() {
-  // const x= 0;
+  const iconSize = useBreakpointValue({base: 32, md: 24})
   return (
     <Flex
       as="footer"
@@ -13,14 +13,15 @@ export default function Footer() {
       paddingX={[8, 10, 16]}
       color="white"
       justify={'space-between'}
-      gap={[12, 12, 20]}
+      direction={{base: 'column', md: 'row'}}
+      gap={[8, 12, 20]}
     >
       <HStack alignItems={"flex-start"}>
-        <Image src={"/logo.svg"} alt="Kulturspektakel Gauting Logo" w={10} />
-        <VStack align={"left"}>
+        <Image src={"/logo.svg"} alt="Kulturspektakel Gauting Logo" w={10} display={{base: 'none', md: 'initial'}} />
+        <VStack align={{base: "center", md: "flex-start"}}>
           <Text as="h2" >Kulturspektakel Gauting e.V.</Text>
-          <Text>Das Kult ist ein dreitägiges ehrenamtlich von Jugendlichen organisiertes Musikfestival in Gauting.</Text>
-          <HStack color="offwhite.500" >
+          <Text textAlign={{base: "center", md: "left"}}>Das Kult ist ein dreitägiges ehrenamtlich von Jugendlichen organisiertes Musikfestival in Gauting.</Text>
+          <HStack color="offwhite.500" flexWrap={"wrap"} justifyContent={"center"}>
             <Link as={RemixLink} to="/booking">
               Booking
             </Link>
@@ -37,34 +38,34 @@ export default function Footer() {
         </VStack>
       </HStack>
       <VStack>
-        <HStack gap={4}>
+        <HStack gap={{base: 6, md: 4}}>
           <Link
             as={RemixLink}
             to="https://facebook.com/kulturspektakel"
             title="Facebook"
           >
-            <FaFacebook size={24} />
+            <FaFacebook size={iconSize} />
           </Link>
           <Link
             as={RemixLink}
             to="https://www.youtube.com/channel/UCLOU06fHSN3Hwe0rmbrFtpA"
             title="Youtube"
           >
-            <FaYoutube size={24} />
+            <FaYoutube size={iconSize} />
           </Link>
           <Link
             as={RemixLink}
             to="https://instagram.com/kulturspektakel"
             title="Instagram"
           >
-            <FaInstagram size={24} />
+            <FaInstagram size={iconSize} />
           </Link>
           <Link
             as={RemixLink}
             to="https://open.spotify.com/user/p7s6vlorvw05bxm881h5em4dj?si=4049483d01ec4fc3"
             title="Spotify"
           >
-            <FaSpotify size={24} />
+            <FaSpotify size={iconSize} />
           </Link>
         </HStack>
         <Box mt={4}>
