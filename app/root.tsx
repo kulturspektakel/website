@@ -1,5 +1,5 @@
 import {ApolloProvider} from '@apollo/client';
-import {ChakraProvider, Box, Heading, extendTheme} from '@chakra-ui/react';
+import {ChakraProvider, Box, Heading, extendTheme, Flex} from '@chakra-ui/react';
 import type {LinksFunction, V2_MetaFunction} from '@remix-run/node';
 import {
   Links,
@@ -16,6 +16,7 @@ import {CacheProvider} from '@emotion/react';
 import createEmotionCache from '@emotion/cache';
 import {StepsTheme as Steps} from 'chakra-ui-steps';
 import Header from './components/Header/Header';
+import Footer from './components/Footer/Footer';
 
 export const meta: V2_MetaFunction = () => {
   return [
@@ -143,8 +144,11 @@ function Document({
         <CacheProvider value={emotionCache}>
           <ChakraProvider theme={theme}>
             <ApolloProvider client={apolloClient}>
-              <Header />
-              {children}
+              <Flex direction={'column'} minHeight={'100vh'}>
+                <Header />
+                {children}
+                <Footer />
+              </Flex>
             </ApolloProvider>
           </ChakraProvider>
         </CacheProvider>
@@ -162,7 +166,9 @@ export default function App() {
 
   return (
     <Document>
-      <Outlet />
+      <Box flex="1 1 0">
+        <Outlet />
+      </Box>
     </Document>
   );
 }
