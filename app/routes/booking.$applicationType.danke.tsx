@@ -1,14 +1,15 @@
 import {gql} from '@apollo/client';
 import {VStack, Heading, Text, Img} from '@chakra-ui/react';
-import Confetti from '~/components/booking/Confetti';
 import type {ThanksQuery} from '~/types/graphql';
 import apolloClient from '~/utils/apolloClient';
 import type {ActionArgs, LoaderArgs} from '@remix-run/node';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import {EVENT_ID} from './booking._index';
-import {Suspense} from 'react';
+import {useEffect} from 'react';
+import Confetti from '~/components/booking/Confetti.client';
 import DateString from '~/components/DateString';
 import {useParams} from '@remix-run/react';
+import {ClientOnly, useHydrated} from 'remix-utils';
 
 export type SearchParams = {
   applicationType: 'band' | 'dj';
@@ -41,16 +42,21 @@ export async function loader(args: LoaderArgs) {
 export const action = async ({request}: ActionArgs) => {};
 
 export default function Thanks() {
+  const hydrated = useHydrated();
   const data = useTypedLoaderData<typeof loader>();
   const {applicationType} = useParams<SearchParams>();
   const applicationEnd =
     applicationType === 'dj' ? data.djApplicationEnd : data.bandApplicationEnd;
 
+  useEffect(() => {
+    if (hydrated) {
+      (window as any).fbq?.('track', 'CompleteRegistration');
+    }
+  }, [hydrated]);
+
   return (
     <>
-      <Suspense fallback={null}>
-        <Confetti />
-      </Suspense>
+      <ClientOnly>{() => <Confetti />}</ClientOnly>
       <VStack spacing="5" textAlign="center">
         <Img
           src={

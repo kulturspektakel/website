@@ -1,27 +1,51 @@
-import { Box, Flex, HStack, Link, VStack, Image, Text, useBreakpointValue } from '@chakra-ui/react';
-import { Link as RemixLink } from '@remix-run/react';
-import { FaSpotify, FaYoutube, FaInstagram, FaFacebook } from 'react-icons/fa6';
+import {
+  Box,
+  Flex,
+  HStack,
+  Link,
+  VStack,
+  Image,
+  Text,
+  useBreakpointValue,
+} from '@chakra-ui/react';
+import {Link as RemixLink} from '@remix-run/react';
+import {FaSpotify, FaYoutube, FaInstagram, FaFacebook} from 'react-icons/fa6';
 import vpby from './vpby.svg';
 
 export default function Footer() {
-  const iconSize = useBreakpointValue({base: 32, md: 24})
+  const iconSize = useBreakpointValue({base: 32, md: 24});
   return (
     <Flex
       as="footer"
       bgColor="brand.900"
-      paddingY={8}
+      paddingY="8"
       paddingX={[8, 10, 16]}
       color="white"
       justify={'space-between'}
       direction={{base: 'column', md: 'row'}}
       gap={[8, 12, 20]}
+      fontSize="sm"
     >
-      <HStack alignItems={"flex-start"}>
-        <Image src={"/logo.svg"} alt="Kulturspektakel Gauting Logo" w={10} display={{base: 'none', md: 'initial'}} />
-        <VStack align={{base: "center", md: "flex-start"}}>
-          <Text as="h2" >Kulturspektakel Gauting e.V.</Text>
-          <Text textAlign={{base: "center", md: "left"}}>Das Kult ist ein dreitägiges ehrenamtlich von Jugendlichen organisiertes Musikfestival in Gauting.</Text>
-          <HStack color="offwhite.500" flexWrap={"wrap"} justifyContent={"center"}>
+      <HStack alignItems="flex-start" maxW="500px">
+        <Image
+          src={'/logo.svg'}
+          alt="Kulturspektakel Gauting Logo"
+          w={10}
+          display={{base: 'none', md: 'initial'}}
+        />
+        <VStack spacing="2" align={{base: 'center', md: 'flex-start'}}>
+          <Text as="h2" fontSize="md">
+            Kulturspektakel Gauting e.V.
+          </Text>
+          <Text textAlign={{base: 'center', md: 'left'}} lineHeight="1.2">
+            Das Kult ist ein dreitägiges ehrenamtlich von Jugendlichen
+            organisiertes Musikfestival in Gauting.
+          </Text>
+          <HStack
+            color="offwhite.300"
+            flexWrap={'wrap'}
+            justifyContent={'center'}
+          >
             <Link as={RemixLink} to="/booking">
               Booking
             </Link>
@@ -68,9 +92,9 @@ export default function Footer() {
             <FaSpotify size={iconSize} />
           </Link>
         </HStack>
-        <Box mt={4}>
+        <Box mt="2">
           Gefördert von
-          <Image src={vpby} alt="Verband für Popkultur Logo" mt={-2} />
+          <Image src={vpby} alt="Verband für Popkultur Logo" />
         </Box>
       </VStack>
     </Flex>

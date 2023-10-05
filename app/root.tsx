@@ -1,5 +1,5 @@
 import {ApolloProvider} from '@apollo/client';
-import {ChakraProvider, Box, Heading, extendTheme, Flex} from '@chakra-ui/react';
+import {ChakraProvider, Box, Heading, Flex} from '@chakra-ui/react';
 import type {LinksFunction, V2_MetaFunction} from '@remix-run/node';
 import {
   Links,
@@ -14,9 +14,11 @@ import {
 import apolloClient from './utils/apolloClient';
 import {CacheProvider} from '@emotion/react';
 import createEmotionCache from '@emotion/cache';
-import {StepsTheme as Steps} from 'chakra-ui-steps';
 import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
+import theme from './theme';
+import MetaPixel from './components/MetaPixel.client';
+import {ClientOnly} from 'remix-utils';
 
 export const meta: V2_MetaFunction = () => {
   return [
@@ -46,85 +48,6 @@ export const links: LinksFunction = () => [
   },
 ];
 
-const theme = extendTheme({
-  colors: {
-    brand: {
-      500: '#E12E2E',
-      900: '#100A28',
-    },
-    red: {
-      500: '#E12E2E',
-    },
-    offwhite: {
-      100: '#f6f5f0',
-      200: '#dbd8d3',
-      300: '#d0cabc',
-      400: '#b6b39f',
-      500: '#9c9686',
-      600: '#5a574e',
-    },
-  },
-  fontWeights: {
-    normal: 400,
-    medium: 600,
-    bold: 600,
-  },
-  fonts: {
-    heading: "'Space Grotesk', sans-serif;",
-    body: "'Space Grotesk', sans-serif;",
-  },
-  styles: {
-    global: {
-      html: {
-        WebkitFontSmoothing: 'auto',
-        fontSynthesis: 'none',
-      },
-      body: {
-        bg: 'offwhite.100',
-      },
-      'h1,h2': {
-        fontFamily: 'Shrimp !important',
-        textTransform: 'uppercase',
-        lineHeight: '0.95 !important',
-      },
-    },
-  },
-  components: {
-    Steps,
-    Form: {
-      baseStyle: {
-        helperText: {
-          color: 'offwhite.600',
-        },
-      },
-    },
-    Heading: {
-      baseStyle: {
-        color: 'brand.900',
-      },
-    },
-    Button: {
-      baseStyle: {
-        bg: 'offwhite.200',
-      },
-      variants: {
-        primary: {
-          bg: 'brand.900',
-          color: 'white',
-          _hover: {
-            _disabled: {
-              bg: 'brand.900',
-            },
-          },
-        },
-      },
-      defaultProps: {
-        variant: 'base',
-      },
-    },
-  },
-});
-
 function Document({
   children,
   title = 'Kulturspektakel Gauting',
@@ -146,7 +69,7 @@ function Document({
             <ApolloProvider client={apolloClient}>
               <Flex direction={'column'} minHeight={'100vh'}>
                 <Header />
-                {children}
+                <Box flex="1 1 0">{children}</Box>
                 <Footer />
               </Flex>
             </ApolloProvider>
@@ -156,6 +79,7 @@ function Document({
         <ScrollRestoration />
         <Scripts />
         <LiveReload />
+        <ClientOnly>{() => <MetaPixel />}</ClientOnly>
       </body>
     </html>
   );
@@ -166,38 +90,30 @@ export default function App() {
 
   return (
     <Document>
-      <Box flex="1 1 0">
-        <Outlet />
-      </Box>
+      <Outlet />
     </Document>
   );
 }
 
-// How ChakraProvider should be used on CatchBoundary
 export function CatchBoundary() {
   // when true, this is what used to go to `CatchBoundary`
 
   return (
     <Document>
       <Box>
-        <Heading as="h1" bg="purple.600">
-          Uh oh ...
-        </Heading>
+        <Heading as="h1">Uh oh ...</Heading>
         <p>Something went wrong.</p>
       </Box>
     </Document>
   );
 }
 
-// How ChakraProvider should be used on ErrorBoundary
 export function ErrorBoundary() {
   const error = useRouteError();
 
   return (
     <Document>
-      <Heading as="h1" bg="purple.600">
-        Oops
-      </Heading>
+      <Heading as="h1">Oops</Heading>
       {isRouteErrorResponse(error) && (
         <>
           <p>Status: {error.status}</p>

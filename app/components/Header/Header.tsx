@@ -1,7 +1,7 @@
 import {Box, Image} from '@chakra-ui/react';
 import {Link, useLocation} from '@remix-run/react';
 
-export default function Header(props: {start: Date; end: Date}) {
+export default function Header() {
   const isHome = useLocation().pathname === '/';
   return (
     <Box
@@ -11,7 +11,7 @@ export default function Header(props: {start: Date; end: Date}) {
       p={[2, 2, 4]}
     >
       <Link to="https://kulturspektakel.de">
-        <Image src={"/logo.svg"} alt="Kulturspektakel Gauting Logo" h="100%" />
+        <Image src={'/logo.svg'} alt="Kulturspektakel Gauting Logo" h="100%" />
       </Link>
     </Box>
   );
