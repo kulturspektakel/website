@@ -10,6 +10,7 @@ import Confetti from '~/components/booking/Confetti.client';
 import DateString from '~/components/DateString';
 import {useParams} from '@remix-run/react';
 import {ClientOnly, useHydrated} from 'remix-utils';
+import ReactPixel from 'react-facebook-pixel';
 
 export type SearchParams = {
   applicationType: 'band' | 'dj';
@@ -42,17 +43,10 @@ export async function loader(args: LoaderArgs) {
 export const action = async ({request}: ActionArgs) => {};
 
 export default function Thanks() {
-  const hydrated = useHydrated();
   const data = useTypedLoaderData<typeof loader>();
   const {applicationType} = useParams<SearchParams>();
   const applicationEnd =
     applicationType === 'dj' ? data.djApplicationEnd : data.bandApplicationEnd;
-
-  useEffect(() => {
-    if (hydrated) {
-      (window as any).fbq?.('track', 'CompleteRegistration');
-    }
-  }, [hydrated]);
 
   return (
     <>
