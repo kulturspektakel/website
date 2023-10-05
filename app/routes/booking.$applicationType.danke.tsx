@@ -5,12 +5,10 @@ import apolloClient from '~/utils/apolloClient';
 import type {ActionArgs, LoaderArgs} from '@remix-run/node';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import {EVENT_ID} from './booking._index';
-import {useEffect} from 'react';
 import Confetti from '~/components/booking/Confetti.client';
 import DateString from '~/components/DateString';
 import {useParams} from '@remix-run/react';
-import {ClientOnly, useHydrated} from 'remix-utils';
-import ReactPixel from 'react-facebook-pixel';
+import {ClientOnly} from 'remix-utils';
 
 export type SearchParams = {
   applicationType: 'band' | 'dj';
