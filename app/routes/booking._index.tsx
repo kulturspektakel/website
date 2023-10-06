@@ -29,7 +29,6 @@ gql`
 
 export function useUtmSource() {
   const utm_source = useSearchParams().at(0);
-  console.log('asdasd', utm_source);
   if (
     utm_source &&
     utm_source instanceof URLSearchParams &&
