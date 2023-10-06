@@ -5,7 +5,7 @@ import DateString from '~/components/DateString';
 import apolloClient from '~/utils/apolloClient';
 import type {LoaderArgs} from '@remix-run/node';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
-import {Link, Outlet} from '@remix-run/react';
+import {Link, Outlet, useSearchParams} from '@remix-run/react';
 import {$path} from 'remix-routes';
 import ApplicationPhase from '~/components/booking/ApplicationPhase';
 
@@ -27,6 +27,18 @@ gql`
   }
 `;
 
+export function useUtmSource() {
+  const utm_source = useSearchParams().at(0);
+  console.log('asdasd', utm_source);
+  if (
+    utm_source &&
+    utm_source instanceof URLSearchParams &&
+    utm_source.has('utm_source')
+  ) {
+    return utm_source.get('utm_source') ?? undefined;
+  }
+}
+
 export async function loader(args: LoaderArgs) {
   const {data} = await apolloClient.query<EventQuery>({
     query: EventDocument,
@@ -44,6 +56,7 @@ export async function loader(args: LoaderArgs) {
 
 export default function Home() {
   const data = useTypedLoaderData<typeof loader>();
+  const utm_source = useUtmSource();
 
   return (
     <Box>
@@ -80,9 +93,13 @@ export default function Home() {
           title="Bands"
           content="Ihr möchtet euch als Band für eine unserer Bühnen bewerben."
           buttonLabel="Als Band bewerben"
-          href={$path('/booking/:applicationType', {
-            applicationType: 'band',
-          })}
+          href={$path(
+            '/booking/:applicationType',
+            {
+              applicationType: 'band',
+            },
+            {utm_source},
+          )}
         />
       )}
       {data.djApplicationStart && (
@@ -92,9 +109,13 @@ export default function Home() {
           title="DJs"
           content="Du möchtest dich als DJ für unsere DJ-Area bewerben."
           buttonLabel="Als DJ bewerben"
-          href={$path('/booking/:applicationType', {
-            applicationType: 'dj',
-          })}
+          href={$path(
+            '/booking/:applicationType',
+            {
+              applicationType: 'dj',
+            },
+            {utm_source},
+          )}
         />
       )}
     </Box>

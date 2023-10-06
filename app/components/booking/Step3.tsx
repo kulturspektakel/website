@@ -7,8 +7,8 @@ import {
 } from '@chakra-ui/react';
 import Field from './Field';
 import useIsDJ from './useIsDJ';
-import {getUtmSource} from '~/routes/booking.$applicationType._index';
 import {HeardAboutBookingFrom, PreviouslyPlayed} from '~/types/graphql';
+import {useUtmSource} from '~/routes/booking._index';
 
 const HEARD_ABOUT: Map<HeardAboutBookingFrom, string> = new Map([
   [HeardAboutBookingFrom.BYon, 'BY-on'],
@@ -27,6 +27,7 @@ const PLAYED_PREVIOUSLY: Map<PreviouslyPlayed, string> = new Map([
 
 export default function Step3() {
   const isDJ = useIsDJ();
+  const utmSource = useUtmSource();
 
   return (
     <>
@@ -78,7 +79,7 @@ export default function Step3() {
         </Field>
       </FormControl>
 
-      {!getUtmSource() && (
+      {!utmSource && (
         <FormControl id="heardAboutBookingFrom">
           <FormLabel>
             {isDJ

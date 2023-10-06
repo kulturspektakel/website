@@ -13,6 +13,7 @@ import {
 } from '@chakra-ui/react';
 import {useNavigate, useParams} from '@remix-run/react';
 import {Steps, Step} from 'chakra-ui-steps';
+import type {Routes} from 'remix-routes';
 import {$path} from 'remix-routes';
 import {Formik, Form} from 'formik';
 import Step1 from '~/components/booking/Step1';
@@ -27,7 +28,7 @@ import {
 } from '~/types/graphql';
 import {gql} from '@apollo/client';
 import ReloadWarning from '~/components/booking/ReloadWarning';
-import {EVENT_ID} from './booking._index';
+import {EVENT_ID, useUtmSource} from './booking._index';
 
 const STEPS = [Step1, Step2, Step3] as const;
 export type FormikContextT = Partial<CreateBandApplicationInput> & {
@@ -35,7 +36,7 @@ export type FormikContextT = Partial<CreateBandApplicationInput> & {
 };
 
 export type SearchParams = {
-  applicationType: 'band' | 'dj';
+  utm_source?: string;
 };
 
 gql`
@@ -49,12 +50,6 @@ gql`
   }
 `;
 
-export function getUtmSource() {
-  if (typeof window !== 'undefined') {
-    return window.sessionStorage.getItem('utm_source');
-  }
-}
-
 const utmSourceMapping: Record<string, HeardAboutBookingFrom> = Object.freeze({
   fb: HeardAboutBookingFrom.Facebook,
   ig: HeardAboutBookingFrom.Instagram,
@@ -62,10 +57,12 @@ const utmSourceMapping: Record<string, HeardAboutBookingFrom> = Object.freeze({
 
 export default function () {
   const [currentStep, setCurrentStep] = useState(0);
-  const {applicationType} = useParams<SearchParams>();
+  const {applicationType} =
+    useParams<Routes['/booking/:applicationType']['params']>();
   const [create, {error}] = useCreateBandApplicationMutation();
   const isLastStep = currentStep === STEPS.length - 1;
   const navigate = useNavigate();
+  const utm_source = useUtmSource();
 
   return (
     <VStack spacing="5">
@@ -102,7 +99,7 @@ export default function () {
 
       <Formik<FormikContextT>
         initialValues={{
-          heardAboutBookingFrom: utmSourceMapping[getUtmSource() ?? ''],
+          heardAboutBookingFrom: utmSourceMapping[utm_source ?? ''],
           genreCategory:
             applicationType === 'dj' ? GenreCategory.Dj : undefined,
         }}
