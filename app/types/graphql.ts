@@ -564,6 +564,16 @@ export enum OrderPayment {
   Voucher = 'VOUCHER',
 }
 
+export type Page = Node & {
+  __typename?: 'Page';
+  bottom?: Maybe<Scalars['String']['output']>;
+  content?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  left?: Maybe<Scalars['String']['output']>;
+  right?: Maybe<Scalars['String']['output']>;
+  title: Scalars['String']['output'];
+};
+
 export type PageInfo = {
   __typename?: 'PageInfo';
   endCursor?: Maybe<Scalars['String']['output']>;
@@ -897,6 +907,37 @@ export type BandSearchQuery = {
   }>;
 };
 
+export type PageQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+export type PageQuery = {
+  __typename?: 'Query';
+  node?:
+    | {__typename?: 'Area'}
+    | {__typename?: 'BandApplication'}
+    | {__typename?: 'BandApplicationComment'}
+    | {__typename?: 'BandPlaying'}
+    | {__typename?: 'Card'}
+    | {__typename?: 'Device'}
+    | {__typename?: 'Event'}
+    | {__typename?: 'News'}
+    | {__typename?: 'NuclinoPage'}
+    | {
+        __typename?: 'Page';
+        id: string;
+        title: string;
+        content?: string | null;
+        left?: string | null;
+        right?: string | null;
+        bottom?: string | null;
+      }
+    | {__typename?: 'Product'}
+    | {__typename?: 'ProductList'}
+    | {__typename?: 'Viewer'}
+    | null;
+};
+
 export type NewsQueryVariables = Exact<{[key: string]: never}>;
 
 export type NewsQuery = {
@@ -946,6 +987,7 @@ export type ThanksQuery = {
       }
     | {__typename?: 'News'}
     | {__typename?: 'NuclinoPage'}
+    | {__typename?: 'Page'}
     | {__typename?: 'Product'}
     | {__typename?: 'ProductList'}
     | {__typename?: 'Viewer'}
@@ -977,6 +1019,7 @@ export type EventQuery = {
       }
     | {__typename?: 'News'}
     | {__typename?: 'NuclinoPage'}
+    | {__typename?: 'Page'}
     | {__typename?: 'Product'}
     | {__typename?: 'ProductList'}
     | {__typename?: 'Viewer'}
@@ -1013,6 +1056,7 @@ export type LineupBandQuery = {
     | {__typename?: 'Event'}
     | {__typename?: 'News'}
     | {__typename?: 'NuclinoPage'}
+    | {__typename?: 'Page'}
     | {__typename?: 'Product'}
     | {__typename?: 'ProductList'}
     | {__typename?: 'Viewer'}
@@ -1061,6 +1105,7 @@ export type LineupQuery = {
       }
     | {__typename?: 'News'}
     | {__typename?: 'NuclinoPage'}
+    | {__typename?: 'Page'}
     | {__typename?: 'Product'}
     | {__typename?: 'ProductList'}
     | {__typename?: 'Viewer'}
@@ -1090,6 +1135,7 @@ export type NewsPageQuery = {
         content: string;
       }
     | {__typename?: 'NuclinoPage'}
+    | {__typename?: 'Page'}
     | {__typename?: 'Product'}
     | {__typename?: 'ProductList'}
     | {__typename?: 'Viewer'}
@@ -1386,6 +1432,55 @@ export type BandSearchQueryResult = Apollo.QueryResult<
   BandSearchQuery,
   BandSearchQueryVariables
 >;
+export const PageDocument = gql`
+  query Page($id: ID!) {
+    node(id: $id) {
+      ... on Page {
+        id
+        title
+        content
+        left
+        right
+        bottom
+      }
+    }
+  }
+`;
+
+/**
+ * __usePageQuery__
+ *
+ * To run a query within a React component, call `usePageQuery` and pass it any options that fit your needs.
+ * When your component renders, `usePageQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = usePageQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function usePageQuery(
+  baseOptions: Apollo.QueryHookOptions<PageQuery, PageQueryVariables>,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useQuery<PageQuery, PageQueryVariables>(PageDocument, options);
+}
+export function usePageLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<PageQuery, PageQueryVariables>,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useLazyQuery<PageQuery, PageQueryVariables>(
+    PageDocument,
+    options,
+  );
+}
+export type PageQueryHookResult = ReturnType<typeof usePageQuery>;
+export type PageLazyQueryHookResult = ReturnType<typeof usePageLazyQuery>;
+export type PageQueryResult = Apollo.QueryResult<PageQuery, PageQueryVariables>;
 export const NewsDocument = gql`
   query News {
     news(first: 10) {
