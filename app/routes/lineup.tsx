@@ -8,8 +8,8 @@ export default function () {
   const params = useParams();
   return (
     <Box ml="auto" mr="auto" maxW="3xl" p="6">
-      <HStack justifyContent="space-between">
-        <Heading>
+      <HStack justifyContent="space-between" mb="5">
+        <Heading as="h1">
           Lineup
           {params?.year && <>&nbsp;{params.year}</>}
         </Heading>

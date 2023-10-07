@@ -25,10 +25,12 @@ export const mergeMeta = (
           ('title' in meta && 'title' in override),
       );
       if (index !== -1) {
-        if ('title' in override) {
-          override.title += ` – ${(mergedMeta[index] as any).title}`;
+        if (mergedMeta[index].title) {
+          mergedMeta[index].title = `${override.title} – ${
+            (mergedMeta[index] as any).title
+          }`;
         }
-        mergedMeta.splice(index, 1, override);
+        console.log(JSON.stringify(mergedMeta));
       }
     }
 

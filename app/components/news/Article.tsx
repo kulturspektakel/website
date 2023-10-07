@@ -1,14 +1,8 @@
 import {gql} from '@apollo/client';
-import type {ArticleFragment} from '../types/graphql';
+import type {ArticleFragment} from '../../types/graphql';
 import Markdown from 'markdown-to-jsx';
-import {
-  Text,
-  Heading,
-  Box,
-  HeadingProps,
-  Link as ChakraLink,
-  LinkProps,
-} from '@chakra-ui/react';
+import type {HeadingProps, LinkProps} from '@chakra-ui/react';
+import {Text, Heading, Box, Link as ChakraLink} from '@chakra-ui/react';
 import ArticleHead from './ArticleHead';
 import {Link} from '@remix-run/react';
 

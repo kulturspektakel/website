@@ -1,4 +1,6 @@
+import {gql} from '@apollo/client';
 import {InfoIcon} from '@chakra-ui/icons';
+import type {PlacementWithLogical} from '@chakra-ui/react';
 import {
   AccordionButton,
   AccordionIcon,
@@ -15,11 +17,32 @@ import {
   useBreakpointValue,
 } from '@chakra-ui/react';
 import type {FC} from 'react';
-import type {ProductAdditives, ProductList} from '~/types/graphql';
+import type {
+  ProductAdditives,
+  ProductList,
+  ProductListComponentFragment,
+} from '~/types/graphql';
+
+gql`
+  fragment ProductListComponent on ProductList {
+    description
+    name
+    emoji
+    product {
+      additives {
+        displayName
+        id
+      }
+      name
+      price
+      requiresDeposit
+    }
+  }
+`;
 
 const TooltipContent: FC<{additives: ProductAdditives[]}> = ({additives}) => {
   return (
-    <UnorderedList listStyleType={'none'} marginInlineStart={0} padding={1}>
+    <UnorderedList listStyleType={'none'} marginInlineStart={0}>
       {additives.map((additive: ProductAdditives) => (
         <Text key={additive.id} fontWeight={'normal'}>
           {additive.displayName}
@@ -29,12 +52,20 @@ const TooltipContent: FC<{additives: ProductAdditives[]}> = ({additives}) => {
   );
 };
 
-export default function ProductList({productList}: {productList: ProductList}) {
+export default function ProductList({
+  productList,
+}: {
+  productList: ProductListComponentFragment;
+}) {
   const showDepositText = productList.product.some(
     (item) => item.requiresDeposit,
   );
   const productListLength = productList.product.length;
-  const tooltipPlacement = useBreakpointValue({base: 'top', lg: 'right', default: 'right'});
+  const tooltipPlacement = useBreakpointValue<PlacementWithLogical>({
+    base: 'top',
+    lg: 'right',
+    default: 'right',
+  });
 
   return (
     <AccordionItem>
@@ -57,9 +88,9 @@ export default function ProductList({productList}: {productList: ProductList}) {
                     <Tooltip
                       label={<TooltipContent additives={item.additives} />}
                       hasArrow
-                      placement={tooltipPlacement}
+                      placement={tooltipPlacement!}
                     >
-                      <InfoIcon color={'offwhite.300'} marginLeft={1} />  
+                      <InfoIcon color={'offwhite.300'} marginLeft={1} />
                     </Tooltip>
                   )}
                 </Text>

@@ -1,8 +1,8 @@
-import { gql } from '@apollo/client';
-import { Heading } from '@chakra-ui/react';
-import DateString from './DateString';
-import Mark from './Mark';
-import type { ArticleHeadFragment } from '../types/graphql';
+import {gql} from '@apollo/client';
+import {Heading} from '@chakra-ui/react';
+import DateString from '../DateString';
+import Mark from '../Mark';
+import type {ArticleHeadFragment} from '../../types/graphql';
 
 gql`
   fragment ArticleHead on News {

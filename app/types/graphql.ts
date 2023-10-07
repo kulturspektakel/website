@@ -564,6 +564,16 @@ export enum OrderPayment {
   Voucher = 'VOUCHER',
 }
 
+export type Page = Node & {
+  __typename?: 'Page';
+  bottom?: Maybe<Scalars['String']['output']>;
+  content?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  left?: Maybe<Scalars['String']['output']>;
+  right?: Maybe<Scalars['String']['output']>;
+  title: Scalars['String']['output'];
+};
+
 export type PageInfo = {
   __typename?: 'PageInfo';
   endCursor?: Maybe<Scalars['String']['output']>;
@@ -811,21 +821,6 @@ export type Viewer = Node & {
   profilePicture?: Maybe<Scalars['String']['output']>;
 };
 
-export type ArticleFragment = {
-  __typename?: 'News';
-  slug: string;
-  title: string;
-  createdAt: Date;
-  content: string;
-};
-
-export type ArticleHeadFragment = {
-  __typename?: 'News';
-  slug: string;
-  title: string;
-  createdAt: Date;
-};
-
 export type DistanceQueryVariables = Exact<{
   origin: Scalars['String']['input'];
 }>;
@@ -897,6 +892,39 @@ export type BandSearchQuery = {
   }>;
 };
 
+export type ArticleFragment = {
+  __typename?: 'News';
+  slug: string;
+  title: string;
+  createdAt: Date;
+  content: string;
+};
+
+export type ArticleHeadFragment = {
+  __typename?: 'News';
+  slug: string;
+  title: string;
+  createdAt: Date;
+};
+
+export type ProductListComponentFragment = {
+  __typename?: 'ProductList';
+  description?: string | null;
+  name: string;
+  emoji?: string | null;
+  product: Array<{
+    __typename?: 'Product';
+    name: string;
+    price: number;
+    requiresDeposit: boolean;
+    additives: Array<{
+      __typename?: 'ProductAdditives';
+      displayName: string;
+      id: string;
+    }>;
+  }>;
+};
+
 export type NewsQueryVariables = Exact<{[key: string]: never}>;
 
 export type NewsQuery = {
@@ -946,6 +974,7 @@ export type ThanksQuery = {
       }
     | {__typename?: 'News'}
     | {__typename?: 'NuclinoPage'}
+    | {__typename?: 'Page'}
     | {__typename?: 'Product'}
     | {__typename?: 'ProductList'}
     | {__typename?: 'Viewer'}
@@ -977,6 +1006,7 @@ export type EventQuery = {
       }
     | {__typename?: 'News'}
     | {__typename?: 'NuclinoPage'}
+    | {__typename?: 'Page'}
     | {__typename?: 'Product'}
     | {__typename?: 'ProductList'}
     | {__typename?: 'Viewer'}
@@ -1013,6 +1043,7 @@ export type LineupBandQuery = {
     | {__typename?: 'Event'}
     | {__typename?: 'News'}
     | {__typename?: 'NuclinoPage'}
+    | {__typename?: 'Page'}
     | {__typename?: 'Product'}
     | {__typename?: 'ProductList'}
     | {__typename?: 'Viewer'}
@@ -1061,6 +1092,7 @@ export type LineupQuery = {
       }
     | {__typename?: 'News'}
     | {__typename?: 'NuclinoPage'}
+    | {__typename?: 'Page'}
     | {__typename?: 'Product'}
     | {__typename?: 'ProductList'}
     | {__typename?: 'Viewer'}
@@ -1090,6 +1122,7 @@ export type NewsPageQuery = {
         content: string;
       }
     | {__typename?: 'NuclinoPage'}
+    | {__typename?: 'Page'}
     | {__typename?: 'Product'}
     | {__typename?: 'ProductList'}
     | {__typename?: 'Viewer'}
@@ -1119,6 +1152,23 @@ export type SpeisekarteQuery = {
   }>;
 };
 
+export const BandFragmentDoc = gql`
+  fragment Band on BandPlaying {
+    id
+    name
+    startTime
+    slug
+    area {
+      id
+      displayName
+      themeColor
+    }
+    genre
+    photo {
+      scaledUri(height: 200, width: 200)
+    }
+  }
+`;
 export const ArticleHeadFragmentDoc = gql`
   fragment ArticleHead on News {
     slug
@@ -1136,20 +1186,19 @@ export const ArticleFragmentDoc = gql`
   }
   ${ArticleHeadFragmentDoc}
 `;
-export const BandFragmentDoc = gql`
-  fragment Band on BandPlaying {
-    id
+export const ProductListComponentFragmentDoc = gql`
+  fragment ProductListComponent on ProductList {
+    description
     name
-    startTime
-    slug
-    area {
-      id
-      displayName
-      themeColor
-    }
-    genre
-    photo {
-      scaledUri(height: 200, width: 200)
+    emoji
+    product {
+      additives {
+        displayName
+        id
+      }
+      name
+      price
+      requiresDeposit
     }
   }
 `;
@@ -1601,7 +1650,7 @@ export const LineupBandDocument = gql`
         shortDescription
         description
         photo {
-          scaledUri(width: 800)
+          scaledUri(width: 600)
         }
         startTime
         area {
@@ -1793,20 +1842,10 @@ export type NewsPageQueryResult = Apollo.QueryResult<
 export const SpeisekarteDocument = gql`
   query Speisekarte {
     productLists(activeOnly: true) {
-      description
-      name
-      emoji
-      product {
-        additives {
-          displayName
-          id
-        }
-        name
-        price
-        requiresDeposit
-      }
+      ...ProductListComponent
     }
   }
+  ${ProductListComponentFragmentDoc}
 `;
 
 /**

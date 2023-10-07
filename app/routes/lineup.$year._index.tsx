@@ -135,6 +135,7 @@ export default function LineupYear() {
         onClose={() =>
           navigate($path('/lineup/:year', {year}), {preventScrollReset: true})
         }
+        w="100px"
       >
         <ModalOverlay />
         <ModalContent p="6">

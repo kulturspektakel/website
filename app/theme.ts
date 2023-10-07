@@ -1,4 +1,4 @@
-import {extendTheme} from '@chakra-ui/react';
+import {cssVar, extendTheme} from '@chakra-ui/react';
 import {StepsTheme as Steps} from 'chakra-ui-steps';
 
 export default extendTheme({
@@ -75,6 +75,18 @@ export default extendTheme({
       },
       defaultProps: {
         variant: 'base',
+      },
+    },
+    Tooltip: {
+      baseStyle: {
+        bg: 'brand.900',
+        color: 'white',
+        borderRadius: '0.5rem',
+        paddingTop: 1,
+        paddingBottom: 1,
+        paddingLeft: 3,
+        paddingRight: 3,
+        [cssVar('popper-arrow-bg').variable]: 'colors.brand.900',
       },
     },
   },

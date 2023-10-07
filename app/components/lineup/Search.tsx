@@ -78,7 +78,7 @@ export default function Search() {
         <Input
           bgColor="white"
           borderRadius="full"
-          placeholder="Suchen..."
+          placeholder="Bands suchen..."
           type="search"
           {...getInputProps({ref})}
         />

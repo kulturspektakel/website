@@ -3,7 +3,7 @@ import {gql} from '@apollo/client';
 import {NewsDocument, type NewsQuery} from '~/types/graphql';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import React from 'react';
-import Article from '~/components/Article';
+import Article from '~/components/news/Article';
 import apolloClient from '~/utils/apolloClient';
 import {type LoaderArgs} from '@remix-run/node';
 

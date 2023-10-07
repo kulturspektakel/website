@@ -1,7 +1,7 @@
 import {gql} from '@apollo/client';
 import type {LoaderArgs, V2_MetaFunction} from '@remix-run/node';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
-import Article from '~/components/Article';
+import Article from '~/components/news/Article';
 import {NewsPageDocument} from '~/types/graphql';
 import type {NewsPageQuery} from '~/types/graphql';
 import apolloClient from '~/utils/apolloClient';
