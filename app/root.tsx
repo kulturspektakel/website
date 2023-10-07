@@ -69,7 +69,7 @@ function Document({
             <ApolloProvider client={apolloClient}>
               <Flex direction={'column'} minHeight={'100vh'}>
                 <Header />
-                <Box flex="1 1 0">{children}</Box>
+                <Box flex="1 1 0" ml="auto" mr="auto" maxW="3xl" p="6" width="100%">{children}</Box>
                 <Footer />
               </Flex>
             </ApolloProvider>

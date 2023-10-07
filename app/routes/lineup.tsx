@@ -7,7 +7,7 @@ import Search from '~/components/lineup/Search';
 export default function () {
   const params = useParams();
   return (
-    <Box ml="auto" mr="auto" maxW="3xl" p="6">
+    <>
       <HStack justifyContent="space-between">
         <Heading>
           Lineup
@@ -16,6 +16,6 @@ export default function () {
         <Search />
       </HStack>
       <Outlet />
-    </Box>
+    </>
   );
 }

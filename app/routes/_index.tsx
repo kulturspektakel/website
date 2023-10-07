@@ -30,7 +30,7 @@ export default function Index() {
   const data = useTypedLoaderData<typeof loader>();
 
   return (
-    <Box ml="auto" mr="auto" maxW="3xl" p="6">
+    <>
       {data.news.edges.slice(0, 8).map((edge, i) => (
         <React.Fragment key={i}>
           {i > 0 && <Divider width="60%" m="auto" />}
@@ -42,6 +42,6 @@ export default function Index() {
           Ältere Beträge
         </Button>
       </Center>
-    </Box>
+    </>
   );
 }

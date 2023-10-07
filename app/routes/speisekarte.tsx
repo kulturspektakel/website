@@ -1,7 +1,6 @@
 import {gql} from '@apollo/client';
 import {
   Accordion,
-  Box,
   Heading,
   Spinner,
   useBreakpointValue,
@@ -60,7 +59,7 @@ export default function Speisekarte() {
   }
 
   return (
-    <Box ml="auto" mr="auto" maxW="3xl" p="6">
+    <>
       <Heading>Speisen & Getränke</Heading>
       <Accordion
         index={openIndices}
@@ -72,6 +71,6 @@ export default function Speisekarte() {
           <ProductList productList={productList} key={productList.name} />
         ))}
       </Accordion>
-    </Box>
+    </>
   );
 }
