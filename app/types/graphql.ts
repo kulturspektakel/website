@@ -821,6 +821,21 @@ export type Viewer = Node & {
   profilePicture?: Maybe<Scalars['String']['output']>;
 };
 
+export type ArticleFragment = {
+  __typename?: 'News';
+  slug: string;
+  title: string;
+  createdAt: Date;
+  content: string;
+};
+
+export type ArticleHeadFragment = {
+  __typename?: 'News';
+  slug: string;
+  title: string;
+  createdAt: Date;
+};
+
 export type DistanceQueryVariables = Exact<{
   origin: Scalars['String']['input'];
 }>;
@@ -892,37 +907,35 @@ export type BandSearchQuery = {
   }>;
 };
 
-export type ArticleFragment = {
-  __typename?: 'News';
-  slug: string;
-  title: string;
-  createdAt: Date;
-  content: string;
-};
+export type PageQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
 
-export type ArticleHeadFragment = {
-  __typename?: 'News';
-  slug: string;
-  title: string;
-  createdAt: Date;
-};
-
-export type ProductListComponentFragment = {
-  __typename?: 'ProductList';
-  description?: string | null;
-  name: string;
-  emoji?: string | null;
-  product: Array<{
-    __typename?: 'Product';
-    name: string;
-    price: number;
-    requiresDeposit: boolean;
-    additives: Array<{
-      __typename?: 'ProductAdditives';
-      displayName: string;
-      id: string;
-    }>;
-  }>;
+export type PageQuery = {
+  __typename?: 'Query';
+  node?:
+    | {__typename?: 'Area'}
+    | {__typename?: 'BandApplication'}
+    | {__typename?: 'BandApplicationComment'}
+    | {__typename?: 'BandPlaying'}
+    | {__typename?: 'Card'}
+    | {__typename?: 'Device'}
+    | {__typename?: 'Event'}
+    | {__typename?: 'News'}
+    | {__typename?: 'NuclinoPage'}
+    | {
+        __typename?: 'Page';
+        id: string;
+        title: string;
+        content?: string | null;
+        left?: string | null;
+        right?: string | null;
+        bottom?: string | null;
+      }
+    | {__typename?: 'Product'}
+    | {__typename?: 'ProductList'}
+    | {__typename?: 'Viewer'}
+    | null;
 };
 
 export type NewsQueryVariables = Exact<{[key: string]: never}>;
@@ -1152,23 +1165,6 @@ export type SpeisekarteQuery = {
   }>;
 };
 
-export const BandFragmentDoc = gql`
-  fragment Band on BandPlaying {
-    id
-    name
-    startTime
-    slug
-    area {
-      id
-      displayName
-      themeColor
-    }
-    genre
-    photo {
-      scaledUri(height: 200, width: 200)
-    }
-  }
-`;
 export const ArticleHeadFragmentDoc = gql`
   fragment ArticleHead on News {
     slug
@@ -1186,19 +1182,20 @@ export const ArticleFragmentDoc = gql`
   }
   ${ArticleHeadFragmentDoc}
 `;
-export const ProductListComponentFragmentDoc = gql`
-  fragment ProductListComponent on ProductList {
-    description
+export const BandFragmentDoc = gql`
+  fragment Band on BandPlaying {
+    id
     name
-    emoji
-    product {
-      additives {
-        displayName
-        id
-      }
-      name
-      price
-      requiresDeposit
+    startTime
+    slug
+    area {
+      id
+      displayName
+      themeColor
+    }
+    genre
+    photo {
+      scaledUri(height: 200, width: 200)
     }
   }
 `;
@@ -1435,6 +1432,55 @@ export type BandSearchQueryResult = Apollo.QueryResult<
   BandSearchQuery,
   BandSearchQueryVariables
 >;
+export const PageDocument = gql`
+  query Page($id: ID!) {
+    node(id: $id) {
+      ... on Page {
+        id
+        title
+        content
+        left
+        right
+        bottom
+      }
+    }
+  }
+`;
+
+/**
+ * __usePageQuery__
+ *
+ * To run a query within a React component, call `usePageQuery` and pass it any options that fit your needs.
+ * When your component renders, `usePageQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = usePageQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function usePageQuery(
+  baseOptions: Apollo.QueryHookOptions<PageQuery, PageQueryVariables>,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useQuery<PageQuery, PageQueryVariables>(PageDocument, options);
+}
+export function usePageLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<PageQuery, PageQueryVariables>,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useLazyQuery<PageQuery, PageQueryVariables>(
+    PageDocument,
+    options,
+  );
+}
+export type PageQueryHookResult = ReturnType<typeof usePageQuery>;
+export type PageLazyQueryHookResult = ReturnType<typeof usePageLazyQuery>;
+export type PageQueryResult = Apollo.QueryResult<PageQuery, PageQueryVariables>;
 export const NewsDocument = gql`
   query News {
     news(first: 10) {
@@ -1650,7 +1696,7 @@ export const LineupBandDocument = gql`
         shortDescription
         description
         photo {
-          scaledUri(width: 600)
+          scaledUri(width: 800)
         }
         startTime
         area {
@@ -1842,10 +1888,20 @@ export type NewsPageQueryResult = Apollo.QueryResult<
 export const SpeisekarteDocument = gql`
   query Speisekarte {
     productLists(activeOnly: true) {
-      ...ProductListComponent
+      description
+      name
+      emoji
+      product {
+        additives {
+          displayName
+          id
+        }
+        name
+        price
+        requiresDeposit
+      }
     }
   }
-  ${ProductListComponentFragmentDoc}
 `;
 
 /**
