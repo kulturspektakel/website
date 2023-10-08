@@ -1,8 +1,8 @@
-import {gql} from '@apollo/client';
-import {Heading} from '@chakra-ui/react';
+import { gql } from '@apollo/client';
+import { Heading } from '@chakra-ui/react';
 import DateString from '../DateString';
 import Mark from '../Mark';
-import type {ArticleHeadFragment} from '../../types/graphql';
+import type { ArticleHeadFragment } from '../../types/graphql';
 
 gql`
   fragment ArticleHead on News {
@@ -14,20 +14,18 @@ gql`
 
 export default function ArticleHead(props: ArticleHeadFragment) {
   return (
-    <>
-      <Heading size="lg">{props.title}</Heading>
-      <a href={`/news/${props.slug}`}>
-        <Mark>
-          <DateString
-            options={{
-              day: 'numeric',
-              month: 'long',
-              year: 'numeric',
-            }}
-            date={props.createdAt}
-          />
-        </Mark>
-      </a>
-    </>
+    <a href={`/news/${props.slug}`}>
+      <Heading size="lg" mb="2">{props.title}</Heading>
+      <Mark>
+        <DateString
+          options={{
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+          }}
+          date={props.createdAt}
+        />
+      </Mark>
+    </a>
   );
 }

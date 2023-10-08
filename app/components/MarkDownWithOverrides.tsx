@@ -1,6 +1,14 @@
 import Markdown from 'markdown-to-jsx';
 import type {HeadingProps, LinkProps} from '@chakra-ui/react';
-import {Text, Heading, Image, Link as ChakraLink} from '@chakra-ui/react';
+import {
+  Text,
+  Heading,
+  Image,
+  Link as ChakraLink,
+  UnorderedList,
+  OrderedList,
+  ListItem,
+} from '@chakra-ui/react';
 import {Link} from '@remix-run/react';
 
 export default function MarkDownWithOverrides(props: any) {
@@ -44,9 +52,13 @@ export default function MarkDownWithOverrides(props: any) {
               mb="2"
               transition="transform 0.1s ease-in-out"
               _hover={{transform: 'rotate(1deg)'}}
+              loading='lazy'
               {...props}
             />
           ),
+          ul: UnorderedList,
+          ol: OrderedList,
+          li: ListItem,
         },
       }}
     >
