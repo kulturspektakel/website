@@ -35,18 +35,28 @@ export default function MarkDownWithOverrides(props: any) {
               color="brand.500"
             />
           ),
-          img: (props) => (
-            <Image
-              borderRadius="xl"
-              transform="rotate(-1deg)"
-              boxShadow="lg"
-              mt="2"
-              mb="2"
-              transition="transform 0.1s ease-in-out"
-              _hover={{transform: 'rotate(1deg)'}}
-              {...props}
-            />
-          ),
+          img: ({src, ...props}) => {
+            const scaledSrc = new URL(src);
+            scaledSrc.searchParams.set('width', '900');
+
+            return (
+              <Image
+                maxH="500px"
+                borderRadius="xl"
+                transform="rotate(-1deg)"
+                boxShadow="lg"
+                mt="3"
+                mb="3"
+                ml="auto"
+                mr="auto"
+                loading="lazy"
+                transition="transform 0.1s ease-in-out"
+                _hover={{transform: 'rotate(1deg)'}}
+                src={scaledSrc}
+                {...props}
+              />
+            );
+          },
         },
       }}
     >

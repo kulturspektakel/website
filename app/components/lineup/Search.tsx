@@ -1,4 +1,10 @@
-import {Box, Input, InputGroup, InputLeftElement} from '@chakra-ui/react';
+import {
+  Box,
+  BoxProps,
+  Input,
+  InputGroup,
+  InputLeftElement,
+} from '@chakra-ui/react';
 import {gql} from '@apollo/client';
 import type {BandSearchQuery} from '~/types/graphql';
 import {BandSearchDocument} from '~/types/graphql';
@@ -22,7 +28,7 @@ gql`
   }
 `;
 
-export default function Search() {
+export default function Search(props: BoxProps) {
   const {loading, data, setQuery} = useTypeahead<
     BandSearchQuery['findBandPlaying'][number]
   >({
@@ -70,7 +76,7 @@ export default function Search() {
     });
 
   return (
-    <Box position="relative">
+    <Box position="relative" {...props}>
       <InputGroup>
         <InputLeftElement pointerEvents="none">
           <Search2Icon color="offwhite.300" />

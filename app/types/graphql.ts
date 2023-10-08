@@ -892,6 +892,11 @@ export type BandSearchQuery = {
   }>;
 };
 
+export type StageSelectorFragment = {
+  __typename?: 'Query';
+  areas: Array<{__typename?: 'Area'; id: string; displayName: string}>;
+};
+
 export type ArticleFragment = {
   __typename?: 'News';
   slug: string;
@@ -1202,6 +1207,14 @@ export const BandFragmentDoc = gql`
     genre
     photo {
       scaledUri(height: 200, width: 200)
+    }
+  }
+`;
+export const StageSelectorFragmentDoc = gql`
+  fragment StageSelector on Query {
+    areas {
+      id
+      displayName
     }
   }
 `;
@@ -1822,12 +1835,10 @@ export const LineupDocument = gql`
         }
       }
     }
-    areas {
-      id
-      displayName
-    }
+    ...StageSelector
   }
   ${BandFragmentDoc}
+  ${StageSelectorFragmentDoc}
 `;
 
 /**

@@ -10,13 +10,12 @@ export default function () {
         direction={['column', 'row']}
         justifyContent="space-between"
         align={['start', 'center']}
-        mb="5"
       >
         <Heading as="h1">
           Lineup
           {params?.year && <>&nbsp;{params.year}</>}
         </Heading>
-        <Search />
+        <Search w={['100%', 'auto']} />
       </Stack>
       <Outlet />
     </>

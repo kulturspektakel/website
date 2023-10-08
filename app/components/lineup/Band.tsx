@@ -62,6 +62,7 @@ export default function Band({band}: {band: BandFragment}) {
             lineHeight="1"
             fontWeight="bold"
             fontSize="sm"
+            mt="0.5"
           >
             <DateString
               timeOnly

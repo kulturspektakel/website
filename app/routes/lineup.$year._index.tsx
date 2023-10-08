@@ -1,23 +1,12 @@
 import {gql} from '@apollo/client';
-import {
-  Button,
-  ButtonGroup,
-  Modal,
-  ModalContent,
-  ModalOverlay,
-  Spinner,
-} from '@chakra-ui/react';
+import {Modal, ModalContent, ModalOverlay, Spinner} from '@chakra-ui/react';
 import type {LoaderArgs} from '@remix-run/node';
-import {
-  Outlet,
-  ScrollRestoration,
-  useNavigate,
-  useParams,
-} from '@remix-run/react';
+import {Outlet, useNavigate, useParams} from '@remix-run/react';
 import {Suspense, useState} from 'react';
 import {$params, $path} from 'remix-routes';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import Day from '~/components/lineup/Day';
+import StageSelector from '~/components/lineup/StageSelector';
 import type {LineupQuery} from '~/types/graphql';
 import {LineupDocument} from '~/types/graphql';
 import apolloClient from '~/utils/apolloClient';
@@ -42,10 +31,7 @@ gql`
         }
       }
     }
-    areas {
-      id
-      displayName
-    }
+    ...StageSelector
   }
 `;
 
@@ -85,32 +71,13 @@ export default function LineupYear() {
 
   return (
     <>
-      <ButtonGroup isAttached mt="3" display="flex">
-        <Button
-          onClick={() => setStageFilter(null)}
-          variant={stageFilter === null ? 'primary' : undefined}
-          aria-pressed={stageFilter == null}
-          flexGrow="1"
-        >
-          Alle
-        </Button>
-        {areas
-          .filter(
-            (a) =>
-              event?.bandsPlaying.edges.some((e) => e.node.area.id === a.id),
-          )
-          .map((area) => (
-            <Button
-              flexGrow="1"
-              key={area.id}
-              aria-pressed={area.id === stageFilter}
-              onClick={() => setStageFilter(area.id)}
-              variant={area.id === stageFilter ? 'primary' : undefined}
-            >
-              {area.displayName}
-            </Button>
-          ))}
-      </ButtonGroup>
+      <StageSelector
+        onChange={setStageFilter}
+        value={stageFilter}
+        areas={areas.filter(
+          (a) => event?.bandsPlaying.edges.some((e) => e.node.area.id === a.id),
+        )}
+      />
       {days.map((day) => (
         <Day
           key={day.toISOString()}
@@ -135,7 +102,6 @@ export default function LineupYear() {
         onClose={() =>
           navigate($path('/lineup/:year', {year}), {preventScrollReset: true})
         }
-        w="100px"
       >
         <ModalOverlay />
         <ModalContent p="6">
