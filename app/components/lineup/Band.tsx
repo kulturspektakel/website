@@ -32,9 +32,8 @@ export default function Band({band}: {band: BandFragment}) {
       })}
       preventScrollReset
       bgColor="offwhite.300"
-      // bgColor={band.area.themeColor}
-      bgBlendMode="luminosity"
-      bgImg={band.photo?.scaledUri}
+      imageBlendMode="luminosity"
+      image={band.photo?.scaledUri}
     >
       <Box
         position="absolute"
@@ -51,14 +50,19 @@ export default function Band({band}: {band: BandFragment}) {
       >
         <Heading
           sx={{hyphens: 'auto'}}
-          fontSize="26px"
+          fontSize={['xl', '2xl']}
           noOfLines={4}
           color="inherit"
         >
           {band.name}
         </Heading>
         {band.genre && (
-          <Text noOfLines={1} fontWeight="bold" fontSize="sm">
+          <Text
+            noOfLines={[2, 2, 1]}
+            lineHeight="1"
+            fontWeight="bold"
+            fontSize="sm"
+          >
             <DateString
               timeOnly
               date={band.startTime}
@@ -68,9 +72,7 @@ export default function Band({band}: {band: BandFragment}) {
               }}
             />
             &nbsp;
-            {band.area.displayName}
-            &nbsp;&middot;&nbsp;
-            {band.genre}
+            {band.area.displayName}&nbsp;&middot; {band.genre}
           </Text>
         )}
       </Box>

@@ -18,7 +18,7 @@ export default function Day({
           options={{weekday: 'long', day: '2-digit', month: 'long'}}
         />
       </Heading>
-      <SimpleGrid minChildWidth="200px" spacing="3">
+      <SimpleGrid columns={[2, 3]} spacing="3">
         {bandsPlaying.map((band) => (
           <Band key={band.id} band={band} />
         ))}

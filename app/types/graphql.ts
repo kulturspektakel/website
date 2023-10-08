@@ -821,21 +821,6 @@ export type Viewer = Node & {
   profilePicture?: Maybe<Scalars['String']['output']>;
 };
 
-export type ArticleFragment = {
-  __typename?: 'News';
-  slug: string;
-  title: string;
-  createdAt: Date;
-  content: string;
-};
-
-export type ArticleHeadFragment = {
-  __typename?: 'News';
-  slug: string;
-  title: string;
-  createdAt: Date;
-};
-
 export type DistanceQueryVariables = Exact<{
   origin: Scalars['String']['input'];
 }>;
@@ -904,6 +889,39 @@ export type BandSearchQuery = {
     name: string;
     startTime: Date;
     slug: string;
+  }>;
+};
+
+export type ArticleFragment = {
+  __typename?: 'News';
+  slug: string;
+  title: string;
+  createdAt: Date;
+  content: string;
+};
+
+export type ArticleHeadFragment = {
+  __typename?: 'News';
+  slug: string;
+  title: string;
+  createdAt: Date;
+};
+
+export type ProductListComponentFragment = {
+  __typename?: 'ProductList';
+  description?: string | null;
+  name: string;
+  emoji?: string | null;
+  product: Array<{
+    __typename?: 'Product';
+    name: string;
+    price: number;
+    requiresDeposit: boolean;
+    additives: Array<{
+      __typename?: 'ProductAdditives';
+      displayName: string;
+      id: string;
+    }>;
   }>;
 };
 
@@ -1048,7 +1066,12 @@ export type LineupBandQuery = {
         website?: string | null;
         instagram?: string | null;
         facebook?: string | null;
-        photo?: {__typename?: 'PixelImage'; scaledUri: string} | null;
+        photo?: {
+          __typename?: 'PixelImage';
+          scaledUri: string;
+          width: number;
+          height: number;
+        } | null;
         area: {__typename?: 'Area'; displayName: string; themeColor: string};
       }
     | {__typename?: 'Card'}
@@ -1165,6 +1188,23 @@ export type SpeisekarteQuery = {
   }>;
 };
 
+export const BandFragmentDoc = gql`
+  fragment Band on BandPlaying {
+    id
+    name
+    startTime
+    slug
+    area {
+      id
+      displayName
+      themeColor
+    }
+    genre
+    photo {
+      scaledUri(height: 200, width: 200)
+    }
+  }
+`;
 export const ArticleHeadFragmentDoc = gql`
   fragment ArticleHead on News {
     slug
@@ -1182,20 +1222,19 @@ export const ArticleFragmentDoc = gql`
   }
   ${ArticleHeadFragmentDoc}
 `;
-export const BandFragmentDoc = gql`
-  fragment Band on BandPlaying {
-    id
+export const ProductListComponentFragmentDoc = gql`
+  fragment ProductListComponent on ProductList {
+    description
     name
-    startTime
-    slug
-    area {
-      id
-      displayName
-      themeColor
-    }
-    genre
-    photo {
-      scaledUri(height: 200, width: 200)
+    emoji
+    product {
+      additives {
+        displayName
+        id
+      }
+      name
+      price
+      requiresDeposit
     }
   }
 `;
@@ -1696,7 +1735,9 @@ export const LineupBandDocument = gql`
         shortDescription
         description
         photo {
-          scaledUri(width: 800)
+          scaledUri(width: 600)
+          width
+          height
         }
         startTime
         area {
@@ -1888,20 +1929,10 @@ export type NewsPageQueryResult = Apollo.QueryResult<
 export const SpeisekarteDocument = gql`
   query Speisekarte {
     productLists(activeOnly: true) {
-      description
-      name
-      emoji
-      product {
-        additives {
-          displayName
-          id
-        }
-        name
-        price
-        requiresDeposit
-      }
+      ...ProductListComponent
     }
   }
+  ${ProductListComponentFragmentDoc}
 `;
 
 /**

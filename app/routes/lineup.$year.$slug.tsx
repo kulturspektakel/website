@@ -7,6 +7,7 @@ import {
   Text,
   SimpleGrid,
   Tooltip,
+  Box,
 } from '@chakra-ui/react';
 import type {V2_MetaFunction} from '@remix-run/react';
 import {Link} from '@remix-run/react';
@@ -36,6 +37,8 @@ gql`
         description
         photo {
           scaledUri(width: 600)
+          width
+          height
         }
         startTime
         area {
@@ -75,20 +78,23 @@ export const meta: V2_MetaFunction<typeof loader> = mergeMeta((args) => [
 export default function LineupBand() {
   const band = useTypedLoaderData<typeof loader>();
 
+  const bandPhoto = band.photo ? (
+    <Image
+      src={band.photo?.scaledUri}
+      alt={band.name}
+      borderRadius="xl"
+      transform="rotate(-1deg)"
+      boxShadow="lg"
+      transition="transform 0.1s ease-in-out"
+      _hover={{transform: 'rotate(1deg)'}}
+      maxHeight="100%"
+      m="auto"
+    />
+  ) : undefined;
+
   return (
-    <SimpleGrid columns={band.photo ? 2 : 1} spacing="5">
-      {band.photo && (
-        <Image
-          src={band.photo?.scaledUri}
-          alt={band.name}
-          borderRadius="xl"
-          transform="rotate(-1deg)"
-          transition="transform 0.1s ease-in-out"
-          _hover={{transform: 'rotate(1deg)'}}
-          boxShadow="lg"
-          mb="4"
-        />
-      )}
+    <SimpleGrid columns={[1, 1, band.photo ? 2 : 1]} spacing="5">
+      {bandPhoto && <Box display={['none', 'none', 'block']}>{bandPhoto}</Box>}
       <VStack spacing="4" align="start">
         <VStack spacing="1" align="start" mt="3">
           <Text>
@@ -109,6 +115,17 @@ export default function LineupBand() {
             &nbsp;Uhr&nbsp;&middot;&nbsp;{band.genre}
           </Text>
         </VStack>
+        {band.photo && (
+          <Box
+            maxHeight={band.photo.height > band.photo.width ? 300 : undefined}
+            display={['block', 'block', 'none']}
+            textAlign="center"
+            mb="4"
+            w="100%"
+          >
+            {bandPhoto}
+          </Box>
+        )}
         {(band.spotify ||
           band.youtube ||
           band.instagram ||
