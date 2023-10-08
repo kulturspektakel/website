@@ -15,7 +15,7 @@ export default function Page(props: PageType) {
         </Box>
       )}
       {left && right && (
-        <SimpleGrid columns={2} spacing="5">
+        <SimpleGrid columns={2} spacing="5" mt="3">
           <Box>
             <MarkDownWithOverrides>{left}</MarkDownWithOverrides>
           </Box>
