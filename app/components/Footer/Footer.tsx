@@ -67,6 +67,7 @@ export default function Footer() {
             as={RemixLink}
             to="https://facebook.com/kulturspektakel"
             title="Facebook"
+            target="_blank"
           >
             <FaFacebook size={iconSize} />
           </Link>
@@ -74,6 +75,7 @@ export default function Footer() {
             as={RemixLink}
             to="https://www.youtube.com/channel/UCLOU06fHSN3Hwe0rmbrFtpA"
             title="Youtube"
+            target="_blank"
           >
             <FaYoutube size={iconSize} />
           </Link>
@@ -81,6 +83,7 @@ export default function Footer() {
             as={RemixLink}
             to="https://instagram.com/kulturspektakel"
             title="Instagram"
+            target="_blank"
           >
             <FaInstagram size={iconSize} />
           </Link>
@@ -88,14 +91,17 @@ export default function Footer() {
             as={RemixLink}
             to="https://open.spotify.com/user/p7s6vlorvw05bxm881h5em4dj?si=4049483d01ec4fc3"
             title="Spotify"
+            target="_blank"
           >
             <FaSpotify size={iconSize} />
           </Link>
         </HStack>
-        <Box mt="2">
-          Gefördert von
-          <Image src={vpby} alt="Verband für Popkultur Logo" />
-        </Box>
+        <Link as={RemixLink} to="https://popkultur.bayern" target="_blank">
+          <Box mt="2">
+            Gefördert von
+            <Image src={vpby} alt="Verband für Popkultur" />
+          </Box>
+        </Link>
       </VStack>
     </Flex>
   );
