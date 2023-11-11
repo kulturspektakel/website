@@ -1,5 +1,5 @@
 import React from 'react';
-import type { TextProps} from '@chakra-ui/react';
+import type {TextProps} from '@chakra-ui/react';
 import {Text} from '@chakra-ui/react';
 import hexRgb from 'hex-rgb';
 
@@ -25,6 +25,7 @@ export default function Mark({
       p="0.1em 0.4em"
       borderRadius="0.8em 0.3em"
       bgColor="transparent"
+      whiteSpace="nowrap"
       boxDecorationBreak="clone"
       bgImage={`linear-gradient(
         to right,

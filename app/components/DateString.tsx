@@ -39,7 +39,7 @@ export default function DateString({
   const toString = to.toLocaleDateString(locale, options);
   const toElement = <time dateTime={date.toISOString()}>{toString}</time>;
   let connectingElement = <> {until} </>;
-  if (isSameDay(new Date(date.getDate() + 1), to)) {
+  if (isSameDay(new Date(date.getTime() + 24 * 60 * 60 * 1000), to)) {
     connectingElement = <> und </>;
   }
 

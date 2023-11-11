@@ -3,7 +3,6 @@ import {
   VStack,
   HStack,
   Heading,
-  Image,
   Text,
   SimpleGrid,
   Tooltip,
@@ -27,6 +26,7 @@ import type {LoaderArgs} from '@remix-run/node';
 import {$params} from 'remix-routes';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import apolloClient from '~/utils/apolloClient';
+import Image from '~/components/Image';
 
 gql`
   query LineupBand($id: ID!) {
@@ -82,18 +82,13 @@ export default function LineupBand() {
     <Image
       src={band.photo?.scaledUri}
       alt={band.name}
-      borderRadius="xl"
-      transform="rotate(-1deg)"
-      boxShadow="lg"
-      transition="transform 0.1s ease-in-out"
-      _hover={{transform: 'rotate(1deg)'}}
       maxHeight="100%"
       m="auto"
     />
   ) : undefined;
 
   return (
-    <SimpleGrid columns={[1, 1, band.photo ? 2 : 1]} spacing="5">
+    <SimpleGrid columns={[1, 1, band.photo ? 2 : 1]} spacing="5" mt="8">
       {bandPhoto && <Box display={['none', 'none', 'block']}>{bandPhoto}</Box>}
       <VStack spacing="4" align="start">
         <VStack spacing="1" align="start" mt="3">

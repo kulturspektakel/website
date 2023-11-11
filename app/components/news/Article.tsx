@@ -2,7 +2,7 @@ import {gql} from '@apollo/client';
 import {Box} from '@chakra-ui/react';
 import type {ArticleFragment} from '../../types/graphql';
 import ArticleHead from './ArticleHead';
-import MarkDownWithOverrides from '../MarkDownWithOverrides';
+import MarkDownWithOverrides from '../MarkdownText';
 
 gql`
   fragment Article on News {

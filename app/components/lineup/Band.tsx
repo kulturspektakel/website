@@ -53,6 +53,7 @@ export default function Band({band}: {band: BandFragment}) {
           fontSize={['xl', '2xl']}
           noOfLines={4}
           color="inherit"
+          as="h3"
         >
           {band.name}
         </Heading>

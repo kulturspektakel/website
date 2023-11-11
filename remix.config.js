@@ -10,6 +10,8 @@ module.exports = {
     '@wry/context',
     'hex-rgb',
     'chakra-ui-steps',
+    'react-photoswipe-gallery',
+    'photoswipe',
   ],
   future: {
     v2_routeConvention: true,

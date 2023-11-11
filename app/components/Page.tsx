@@ -1,6 +1,6 @@
 import {Box, Heading, SimpleGrid} from '@chakra-ui/react';
 import type {PageQuery} from '~/types/graphql';
-import MarkDownWithOverrides from './MarkDownWithOverrides';
+import MarkDownWithOverrides from './MarkdownText';
 
 type PageType = Extract<PageQuery['node'], {__typename?: 'Page'}>;
 
@@ -15,7 +15,7 @@ export default function Page(props: PageType) {
         </Box>
       )}
       {left && right && (
-        <SimpleGrid columns={2} spacing="5" mt="3">
+        <SimpleGrid columns={[1, 2]} spacing="5" mt="3">
           <Box>
             <MarkDownWithOverrides>{left}</MarkDownWithOverrides>
           </Box>

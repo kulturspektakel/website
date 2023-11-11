@@ -1,10 +1,5 @@
-import {
-  Box,
-  BoxProps,
-  Input,
-  InputGroup,
-  InputLeftElement,
-} from '@chakra-ui/react';
+import type {BoxProps} from '@chakra-ui/react';
+import {Box, Input, InputGroup, InputLeftElement, Text} from '@chakra-ui/react';
 import {gql} from '@apollo/client';
 import type {BandSearchQuery} from '~/types/graphql';
 import {BandSearchDocument} from '~/types/graphql';
@@ -97,9 +92,9 @@ export default function Search(props: BoxProps) {
         data={data}
         highlightedIndex={highlightedIndex}
         itemRenderer={(band) => (
-          <>
+          <Text noOfLines={1}>
             {band.name} ({band.startTime.getFullYear()})
-          </>
+          </Text>
         )}
         keyExtractor={(band) => band.id}
       />

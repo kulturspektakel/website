@@ -90,6 +90,7 @@ export type BandApplication = Node & {
   rating?: Maybe<Scalars['Float']['output']>;
   repertoire?: Maybe<BandRepertoireType>;
   spotifyArtist?: Maybe<Scalars['String']['output']>;
+  spotifyMonthlyListeners?: Maybe<Scalars['Int']['output']>;
   website?: Maybe<Scalars['String']['output']>;
 };
 
@@ -1049,6 +1050,48 @@ export type EventQuery = {
     | null;
 };
 
+export type EventsQueryVariables = Exact<{[key: string]: never}>;
+
+export type EventsQuery = {
+  __typename?: 'Query';
+  events: Array<{
+    __typename?: 'Event';
+    id: string;
+    name: string;
+    description?: string | null;
+    start: Date;
+    end: Date;
+    poster?: {
+      __typename?: 'PixelImage';
+      width: number;
+      height: number;
+      copyright?: string | null;
+      thumbnail: string;
+      large: string;
+    } | null;
+    bandsPlaying: {
+      __typename?: 'EventBandsPlayingConnection';
+      totalCount: number;
+      edges: Array<{
+        __typename?: 'EventBandsPlayingConnectionEdge';
+        node: {__typename?: 'BandPlaying'; name: string};
+      }>;
+    };
+    media: {
+      __typename?: 'EventMediaConnection';
+      edges: Array<{
+        __typename?: 'EventMediaConnectionEdge';
+        node: {
+          __typename?: 'PixelImage';
+          id: string;
+          thumbnail: string;
+          large: string;
+        };
+      }>;
+    };
+  }>;
+};
+
 export type LineupBandQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
@@ -1139,6 +1182,22 @@ export type LineupQuery = {
     | {__typename?: 'Viewer'}
     | null;
   areas: Array<{__typename?: 'Area'; id: string; displayName: string}>;
+};
+
+export type LineupsQueryVariables = Exact<{[key: string]: never}>;
+
+export type LineupsQuery = {
+  __typename?: 'Query';
+  events: Array<{
+    __typename?: 'Event';
+    name: string;
+    id: string;
+    start: Date;
+    bandsPlaying: {
+      __typename?: 'EventBandsPlayingConnection';
+      totalCount: number;
+    };
+  }>;
 };
 
 export type NewsPageQueryVariables = Exact<{
@@ -1740,6 +1799,83 @@ export type EventQueryResult = Apollo.QueryResult<
   EventQuery,
   EventQueryVariables
 >;
+export const EventsDocument = gql`
+  query Events {
+    events(limit: 10) {
+      id
+      name
+      description
+      start
+      end
+      poster {
+        thumbnail: scaledUri(width: 200)
+        large: scaledUri(width: 1200)
+        width
+        height
+        copyright
+      }
+      bandsPlaying {
+        totalCount
+        edges {
+          node {
+            name
+          }
+        }
+      }
+      media(first: 20) {
+        edges {
+          node {
+            id
+            ... on PixelImage {
+              thumbnail: scaledUri(width: 140)
+              large: scaledUri(width: 1200)
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+/**
+ * __useEventsQuery__
+ *
+ * To run a query within a React component, call `useEventsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useEventsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useEventsQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useEventsQuery(
+  baseOptions?: Apollo.QueryHookOptions<EventsQuery, EventsQueryVariables>,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useQuery<EventsQuery, EventsQueryVariables>(
+    EventsDocument,
+    options,
+  );
+}
+export function useEventsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<EventsQuery, EventsQueryVariables>,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useLazyQuery<EventsQuery, EventsQueryVariables>(
+    EventsDocument,
+    options,
+  );
+}
+export type EventsQueryHookResult = ReturnType<typeof useEventsQuery>;
+export type EventsLazyQueryHookResult = ReturnType<typeof useEventsLazyQuery>;
+export type EventsQueryResult = Apollo.QueryResult<
+  EventsQuery,
+  EventsQueryVariables
+>;
 export const LineupBandDocument = gql`
   query LineupBand($id: ID!) {
     node(id: $id) {
@@ -1880,6 +2016,61 @@ export type LineupLazyQueryHookResult = ReturnType<typeof useLineupLazyQuery>;
 export type LineupQueryResult = Apollo.QueryResult<
   LineupQuery,
   LineupQueryVariables
+>;
+export const LineupsDocument = gql`
+  query Lineups {
+    events(type: Kulturspektakel) {
+      name
+      id
+      start
+      bandsPlaying {
+        totalCount
+      }
+    }
+  }
+`;
+
+/**
+ * __useLineupsQuery__
+ *
+ * To run a query within a React component, call `useLineupsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useLineupsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useLineupsQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useLineupsQuery(
+  baseOptions?: Apollo.QueryHookOptions<LineupsQuery, LineupsQueryVariables>,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useQuery<LineupsQuery, LineupsQueryVariables>(
+    LineupsDocument,
+    options,
+  );
+}
+export function useLineupsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    LineupsQuery,
+    LineupsQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useLazyQuery<LineupsQuery, LineupsQueryVariables>(
+    LineupsDocument,
+    options,
+  );
+}
+export type LineupsQueryHookResult = ReturnType<typeof useLineupsQuery>;
+export type LineupsLazyQueryHookResult = ReturnType<typeof useLineupsLazyQuery>;
+export type LineupsQueryResult = Apollo.QueryResult<
+  LineupsQuery,
+  LineupsQueryVariables
 >;
 export const NewsPageDocument = gql`
   query NewsPage($id: ID!) {

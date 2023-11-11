@@ -37,7 +37,7 @@ export default extendTheme({
       body: {
         bg: 'offwhite.100',
       },
-      'h1,h2': {
+      'h1,h2,h3': {
         fontFamily: 'Shrimp !important',
         textTransform: 'uppercase',
         lineHeight: '0.95 !important',
@@ -61,6 +61,11 @@ export default extendTheme({
     Button: {
       baseStyle: {
         bg: 'offwhite.200',
+        _focusVisible: {
+          outlineOffset: '3',
+          outlineColor: 'blue.500',
+          boxShadow: 'none',
+        },
       },
       variants: {
         primary: {
@@ -77,6 +82,21 @@ export default extendTheme({
         variant: 'base',
       },
     },
+    Input: {
+      defaultProps: {
+        focusBorderColor: 'blue.500',
+      },
+      // baseStyle: {
+      //   field: {
+      //     // _focus: {
+      //     //   bg: 'red.500',
+      //     //   outlineOffset: '3',
+      //     //   outlineColor: 'blue.500',
+      //     //   boxShadow: 'none',
+      //     },
+      //   },
+      // },
+    },
     Tooltip: {
       baseStyle: {
         bg: 'brand.900',
@@ -87,6 +107,11 @@ export default extendTheme({
         paddingLeft: 3,
         paddingRight: 3,
         [cssVar('popper-arrow-bg').variable]: 'colors.brand.900',
+      },
+    },
+    Divider: {
+      baseStyle: {
+        borderColor: 'offwhite.300',
       },
     },
   },

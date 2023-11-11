@@ -11,7 +11,7 @@ import {
   Code,
   Heading,
 } from '@chakra-ui/react';
-import {useNavigate, useParams} from '@remix-run/react';
+import {useNavigate, useNavigation, useParams} from '@remix-run/react';
 import {Steps, Step} from 'chakra-ui-steps';
 import type {Routes} from 'remix-routes';
 import {$path} from 'remix-routes';
@@ -63,6 +63,7 @@ export default function () {
   const isLastStep = currentStep === STEPS.length - 1;
   const navigate = useNavigate();
   const utm_source = useUtmSource();
+  const {state} = useNavigation();
 
   return (
     <VStack spacing="5">
@@ -143,7 +144,7 @@ export default function () {
             <HStack w="100%" mt="4">
               {currentStep > 0 && (
                 <Button
-                  isDisabled={props.isSubmitting}
+                  isDisabled={props.isSubmitting || state != 'idle'}
                   onClick={() => setCurrentStep(currentStep - 1)}
                 >
                   Zurück
@@ -153,7 +154,7 @@ export default function () {
               <Button
                 variant="primary"
                 type="submit"
-                isLoading={props.isSubmitting}
+                isLoading={props.isSubmitting || state != 'idle'}
               >
                 {isLastStep ? 'Absenden' : 'Weiter'}
               </Button>

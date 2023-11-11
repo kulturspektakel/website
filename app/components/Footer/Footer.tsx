@@ -8,9 +8,10 @@ import {
   Text,
   useBreakpointValue,
 } from '@chakra-ui/react';
-import {Link as RemixLink} from '@remix-run/react';
+import {Link as RemixLink, NavLink} from '@remix-run/react';
 import {FaSpotify, FaYoutube, FaInstagram, FaFacebook} from 'react-icons/fa6';
 import vpby from './vpby.svg';
+import {$path} from 'remix-routes';
 
 export default function Footer() {
   const iconSize = useBreakpointValue({base: 32, md: 24});
@@ -46,16 +47,16 @@ export default function Footer() {
             flexWrap={'wrap'}
             justifyContent={'center'}
           >
-            <Link as={RemixLink} to="/booking">
+            <Link as={NavLink} to={$path('/booking')}>
               Booking
             </Link>
-            <Link as={RemixLink} to="/impressum">
+            <Link as={NavLink} to={$path('/:slug', {slug: 'impressum'})}>
               Impressum
             </Link>
-            <Link as={RemixLink} to="/foerderverein">
+            <Link as={NavLink} to={$path('/:slug', {slug: 'foerderverein'})}>
               Förderverein
             </Link>
-            <Link as={RemixLink} to="/datenschutz">
+            <Link as={NavLink} to={$path('/:slug', {slug: 'datenschutz'})}>
               Datenschutz
             </Link>
           </HStack>
@@ -96,12 +97,12 @@ export default function Footer() {
             <FaSpotify size={iconSize} />
           </Link>
         </HStack>
-        <Link as={RemixLink} to="https://popkultur.bayern" target="_blank">
-          <Box mt="2">
-            Gefördert von
+        <Box mt="2">
+          Gefördert von
+          <Link as={RemixLink} to="https://popkultur.bayern" target="_blank">
             <Image src={vpby} alt="Verband für Popkultur" />
-          </Box>
-        </Link>
+          </Link>
+        </Box>
       </VStack>
     </Flex>
   );

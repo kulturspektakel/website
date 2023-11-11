@@ -19,6 +19,8 @@ import Footer from './components/Footer/Footer';
 import theme from './theme';
 import MetaPixel from './components/MetaPixel.client';
 import {ClientOnly} from 'remix-utils';
+import photoswipeCSS from 'photoswipe/dist/photoswipe.css';
+import fontsCSS from '../public/fonts.css';
 
 export const meta: V2_MetaFunction = () => {
   return [
@@ -39,13 +41,14 @@ export const meta: V2_MetaFunction = () => {
 export const links: LinksFunction = () => [
   {
     rel: 'stylesheet',
-    href: '/fonts.css',
+    href: fontsCSS,
   },
   {
     rel: 'icon',
     type: 'image/png',
     href: '/favicon.png',
   },
+  {rel: 'stylesheet', href: photoswipeCSS},
 ];
 
 function Document({
@@ -69,7 +72,16 @@ function Document({
             <ApolloProvider client={apolloClient}>
               <Flex direction={'column'} minHeight={'100vh'}>
                 <Header />
-                <Box flex="1 1 0" ml="auto" mr="auto" maxW="3xl" p="6" width="100%">{children}</Box>
+                <Box
+                  flex="1 1 0"
+                  ml="auto"
+                  mr="auto"
+                  maxW="3xl"
+                  p="6"
+                  width="100%"
+                >
+                  {children}
+                </Box>
                 <Footer />
               </Flex>
             </ApolloProvider>
