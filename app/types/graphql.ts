@@ -360,6 +360,7 @@ export type EventMediaConnection = {
   __typename?: 'EventMediaConnection';
   edges: Array<EventMediaConnectionEdge>;
   pageInfo: PageInfo;
+  totalCount: Scalars['Int']['output'];
 };
 
 export type EventMediaConnectionEdge = {
@@ -699,6 +700,7 @@ export type QueryDistanceToKultArgs = {
 };
 
 export type QueryEventsArgs = {
+  hasBandsPlaying?: InputMaybe<Scalars['Boolean']['input']>;
   limit?: InputMaybe<Scalars['Int']['input']>;
   type?: InputMaybe<EventType>;
 };
@@ -858,6 +860,47 @@ export type SpotifyArtistSearchQuery = {
     name: string;
     genre?: string | null;
     image?: string | null;
+  }>;
+};
+
+export type EventDetailsFragment = {
+  __typename?: 'Event';
+  id: string;
+  name: string;
+  description?: string | null;
+  start: Date;
+  end: Date;
+  poster?: {
+    __typename?: 'PixelImage';
+    width: number;
+    height: number;
+    copyright?: string | null;
+    thumbnail: string;
+    large: string;
+  } | null;
+  bandsPlaying: {
+    __typename?: 'EventBandsPlayingConnection';
+    totalCount: number;
+    edges: Array<{
+      __typename?: 'EventBandsPlayingConnectionEdge';
+      node: {__typename?: 'BandPlaying'; name: string};
+    }>;
+  };
+};
+
+export type EventPhotosFragment = {
+  __typename?: 'EventMediaConnection';
+  totalCount: number;
+  edges: Array<{
+    __typename?: 'EventMediaConnectionEdge';
+    node: {
+      __typename?: 'PixelImage';
+      width: number;
+      height: number;
+      id: string;
+      thumbnail: string;
+      large: string;
+    };
   }>;
 };
 
@@ -1050,17 +1093,93 @@ export type EventQuery = {
     | null;
 };
 
-export type EventsQueryVariables = Exact<{[key: string]: never}>;
+export type SingleEventQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
 
-export type EventsQuery = {
+export type SingleEventQuery = {
+  __typename?: 'Query';
+  event?:
+    | {__typename?: 'Area'}
+    | {__typename?: 'BandApplication'}
+    | {__typename?: 'BandApplicationComment'}
+    | {__typename?: 'BandPlaying'}
+    | {__typename?: 'Card'}
+    | {__typename?: 'Device'}
+    | {
+        __typename?: 'Event';
+        name: string;
+        id: string;
+        description?: string | null;
+        start: Date;
+        end: Date;
+        media: {
+          __typename?: 'EventMediaConnection';
+          totalCount: number;
+          edges: Array<{
+            __typename?: 'EventMediaConnectionEdge';
+            node: {
+              __typename?: 'PixelImage';
+              width: number;
+              height: number;
+              id: string;
+              thumbnail: string;
+              large: string;
+            };
+          }>;
+        };
+        poster?: {
+          __typename?: 'PixelImage';
+          width: number;
+          height: number;
+          copyright?: string | null;
+          thumbnail: string;
+          large: string;
+        } | null;
+        bandsPlaying: {
+          __typename?: 'EventBandsPlayingConnection';
+          totalCount: number;
+          edges: Array<{
+            __typename?: 'EventBandsPlayingConnectionEdge';
+            node: {__typename?: 'BandPlaying'; name: string};
+          }>;
+        };
+      }
+    | {__typename?: 'News'}
+    | {__typename?: 'NuclinoPage'}
+    | {__typename?: 'Page'}
+    | {__typename?: 'Product'}
+    | {__typename?: 'ProductList'}
+    | {__typename?: 'Viewer'}
+    | null;
+};
+
+export type EventsOverviewQueryVariables = Exact<{[key: string]: never}>;
+
+export type EventsOverviewQuery = {
   __typename?: 'Query';
   events: Array<{
     __typename?: 'Event';
     id: string;
     name: string;
-    description?: string | null;
     start: Date;
     end: Date;
+    description?: string | null;
+    media: {
+      __typename?: 'EventMediaConnection';
+      totalCount: number;
+      edges: Array<{
+        __typename?: 'EventMediaConnectionEdge';
+        node: {
+          __typename?: 'PixelImage';
+          width: number;
+          height: number;
+          id: string;
+          thumbnail: string;
+          large: string;
+        };
+      }>;
+    };
     poster?: {
       __typename?: 'PixelImage';
       width: number;
@@ -1075,18 +1194,6 @@ export type EventsQuery = {
       edges: Array<{
         __typename?: 'EventBandsPlayingConnectionEdge';
         node: {__typename?: 'BandPlaying'; name: string};
-      }>;
-    };
-    media: {
-      __typename?: 'EventMediaConnection';
-      edges: Array<{
-        __typename?: 'EventMediaConnectionEdge';
-        node: {
-          __typename?: 'PixelImage';
-          id: string;
-          thumbnail: string;
-          large: string;
-        };
       }>;
     };
   }>;
@@ -1188,16 +1295,7 @@ export type LineupsQueryVariables = Exact<{[key: string]: never}>;
 
 export type LineupsQuery = {
   __typename?: 'Query';
-  events: Array<{
-    __typename?: 'Event';
-    name: string;
-    id: string;
-    start: Date;
-    bandsPlaying: {
-      __typename?: 'EventBandsPlayingConnection';
-      totalCount: number;
-    };
-  }>;
+  events: Array<{__typename?: 'Event'; name: string; id: string; start: Date}>;
 };
 
 export type NewsPageQueryVariables = Exact<{
@@ -1252,6 +1350,46 @@ export type SpeisekarteQuery = {
   }>;
 };
 
+export const EventDetailsFragmentDoc = gql`
+  fragment EventDetails on Event {
+    id
+    name
+    description
+    start
+    end
+    poster {
+      thumbnail: scaledUri(width: 200)
+      large: scaledUri(width: 1200)
+      width
+      height
+      copyright
+    }
+    bandsPlaying {
+      totalCount
+      edges {
+        node {
+          name
+        }
+      }
+    }
+  }
+`;
+export const EventPhotosFragmentDoc = gql`
+  fragment EventPhotos on EventMediaConnection {
+    totalCount
+    edges {
+      node {
+        id
+        ... on PixelImage {
+          width
+          height
+          thumbnail: scaledUri(width: 140)
+          large: scaledUri(width: 1200)
+        }
+      }
+    }
+  }
+`;
 export const BandFragmentDoc = gql`
   fragment Band on BandPlaying {
     id
@@ -1799,82 +1937,135 @@ export type EventQueryResult = Apollo.QueryResult<
   EventQuery,
   EventQueryVariables
 >;
-export const EventsDocument = gql`
-  query Events {
-    events(limit: 10) {
-      id
-      name
-      description
-      start
-      end
-      poster {
-        thumbnail: scaledUri(width: 200)
-        large: scaledUri(width: 1200)
-        width
-        height
-        copyright
-      }
-      bandsPlaying {
-        totalCount
-        edges {
-          node {
-            name
-          }
-        }
-      }
-      media(first: 20) {
-        edges {
-          node {
-            id
-            ... on PixelImage {
-              thumbnail: scaledUri(width: 140)
-              large: scaledUri(width: 1200)
-            }
-          }
+export const SingleEventDocument = gql`
+  query SingleEvent($id: ID!) {
+    event: node(id: $id) {
+      ... on Event {
+        name
+        ...EventDetails
+        media(first: 100) {
+          ...EventPhotos
         }
       }
     }
   }
+  ${EventDetailsFragmentDoc}
+  ${EventPhotosFragmentDoc}
 `;
 
 /**
- * __useEventsQuery__
+ * __useSingleEventQuery__
  *
- * To run a query within a React component, call `useEventsQuery` and pass it any options that fit your needs.
- * When your component renders, `useEventsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useSingleEventQuery` and pass it any options that fit your needs.
+ * When your component renders, `useSingleEventQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useEventsQuery({
+ * const { data, loading, error } = useSingleEventQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useSingleEventQuery(
+  baseOptions: Apollo.QueryHookOptions<
+    SingleEventQuery,
+    SingleEventQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useQuery<SingleEventQuery, SingleEventQueryVariables>(
+    SingleEventDocument,
+    options,
+  );
+}
+export function useSingleEventLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    SingleEventQuery,
+    SingleEventQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useLazyQuery<SingleEventQuery, SingleEventQueryVariables>(
+    SingleEventDocument,
+    options,
+  );
+}
+export type SingleEventQueryHookResult = ReturnType<typeof useSingleEventQuery>;
+export type SingleEventLazyQueryHookResult = ReturnType<
+  typeof useSingleEventLazyQuery
+>;
+export type SingleEventQueryResult = Apollo.QueryResult<
+  SingleEventQuery,
+  SingleEventQueryVariables
+>;
+export const EventsOverviewDocument = gql`
+  query EventsOverview {
+    events(limit: 10) {
+      id
+      name
+      start
+      end
+      ...EventDetails
+      media(first: 18) {
+        ...EventPhotos
+      }
+    }
+  }
+  ${EventDetailsFragmentDoc}
+  ${EventPhotosFragmentDoc}
+`;
+
+/**
+ * __useEventsOverviewQuery__
+ *
+ * To run a query within a React component, call `useEventsOverviewQuery` and pass it any options that fit your needs.
+ * When your component renders, `useEventsOverviewQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useEventsOverviewQuery({
  *   variables: {
  *   },
  * });
  */
-export function useEventsQuery(
-  baseOptions?: Apollo.QueryHookOptions<EventsQuery, EventsQueryVariables>,
+export function useEventsOverviewQuery(
+  baseOptions?: Apollo.QueryHookOptions<
+    EventsOverviewQuery,
+    EventsOverviewQueryVariables
+  >,
 ) {
   const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useQuery<EventsQuery, EventsQueryVariables>(
-    EventsDocument,
+  return Apollo.useQuery<EventsOverviewQuery, EventsOverviewQueryVariables>(
+    EventsOverviewDocument,
     options,
   );
 }
-export function useEventsLazyQuery(
-  baseOptions?: Apollo.LazyQueryHookOptions<EventsQuery, EventsQueryVariables>,
+export function useEventsOverviewLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    EventsOverviewQuery,
+    EventsOverviewQueryVariables
+  >,
 ) {
   const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useLazyQuery<EventsQuery, EventsQueryVariables>(
-    EventsDocument,
+  return Apollo.useLazyQuery<EventsOverviewQuery, EventsOverviewQueryVariables>(
+    EventsOverviewDocument,
     options,
   );
 }
-export type EventsQueryHookResult = ReturnType<typeof useEventsQuery>;
-export type EventsLazyQueryHookResult = ReturnType<typeof useEventsLazyQuery>;
-export type EventsQueryResult = Apollo.QueryResult<
-  EventsQuery,
-  EventsQueryVariables
+export type EventsOverviewQueryHookResult = ReturnType<
+  typeof useEventsOverviewQuery
+>;
+export type EventsOverviewLazyQueryHookResult = ReturnType<
+  typeof useEventsOverviewLazyQuery
+>;
+export type EventsOverviewQueryResult = Apollo.QueryResult<
+  EventsOverviewQuery,
+  EventsOverviewQueryVariables
 >;
 export const LineupBandDocument = gql`
   query LineupBand($id: ID!) {
@@ -2019,13 +2210,10 @@ export type LineupQueryResult = Apollo.QueryResult<
 >;
 export const LineupsDocument = gql`
   query Lineups {
-    events(type: Kulturspektakel) {
+    events(type: Kulturspektakel, hasBandsPlaying: true) {
       name
       id
       start
-      bandsPlaying {
-        totalCount
-      }
     }
   }
 `;

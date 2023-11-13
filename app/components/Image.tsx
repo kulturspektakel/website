@@ -27,7 +27,7 @@ const Image = React.forwardRef(({onClick, ...props}: ImageProps, ref) => {
       borderRadius="xl"
       transform="rotate(-1deg)"
       boxShadow="sm"
-      transition="transform 0.1s ease-in-out"
+      transition="transform 0.1s ease-in-out, box-shadow 0.1s ease-in-out"
       _hover={_focus}
       _focus={_focus}
       _active={_focus}

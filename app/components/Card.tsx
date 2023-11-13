@@ -25,7 +25,7 @@ export default function Card({
         ratio={aspectRatio}
         borderRadius="xl"
         overflow="hidden"
-        transition="transform 0.1s ease-in-out"
+        transition="transform 0.1s ease-in-out, box-shadow 0.1s ease-in-out"
         _hover={{
           transform: 'scale(1.03) rotate(1deg)',
           boxShadow: 'md',

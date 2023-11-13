@@ -24,7 +24,12 @@ const apolloClient = new ApolloClient({
   cache: new InMemoryCache(),
   link: ApolloLink.from([
     scalarLink,
-    new HttpLink({uri: 'https://api.kulturspektakel.de/graphql'}),
+    new HttpLink({
+      uri: 'https://api.kulturspektakel.de/graphql',
+      headers: {
+        'x-environment': process.env.NODE_ENV,
+      },
+    }),
   ]),
 });
 

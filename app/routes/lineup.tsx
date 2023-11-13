@@ -20,13 +20,10 @@ import {LineupsDocument} from '~/types/graphql';
 
 gql`
   query Lineups {
-    events(type: Kulturspektakel) {
+    events(type: Kulturspektakel, hasBandsPlaying: true) {
       name
       id
       start
-      bandsPlaying {
-        totalCount
-      }
     }
   }
 `;
@@ -90,17 +87,15 @@ function MenuItems() {
   const {data} = useSuspenseQuery<LineupsQuery>(LineupsDocument, {});
   return (
     <>
-      {data?.events
-        .filter((e) => e.bandsPlaying.totalCount > 0)
-        .map((e) => (
-          <MenuItem
-            as={NavLink}
-            to={$path('/lineup/:year', {year: e.start.getFullYear()})}
-            key={e.id}
-          >
-            {e.name}
-          </MenuItem>
-        ))}
+      {data?.events.map((e) => (
+        <MenuItem
+          as={NavLink}
+          to={$path('/lineup/:year', {year: e.start.getFullYear()})}
+          key={e.id}
+        >
+          {e.name}
+        </MenuItem>
+      ))}
     </>
   );
 }
