@@ -4,6 +4,7 @@ import i from './Header.webp';
 
 export default function Header() {
   const isHome = useLocation().pathname === '/';
+  const isBooking = useLocation().pathname.startsWith('/booking');
 
   return (
     <Flex
@@ -31,6 +32,7 @@ export default function Header() {
         fontSize={['sm', 'md', 'lg']}
         textTransform="uppercase"
         color={isHome ? 'white' : 'brand.900'}
+        display={isBooking ? 'none' : 'flex'}
       >
         <ChakraLink as={NavLink} to="/angebot">
           Angebot
