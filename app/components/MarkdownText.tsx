@@ -37,9 +37,9 @@ export default function MarkDownWithOverrides(props: any) {
           a: (props: LinkProps) => (
             <ChakraLink
               {...props}
+              color="brand.500"
               as={Link}
               to={props.href}
-              color="brand.500"
             />
           ),
           img: ({src, ...props}) => {
@@ -53,7 +53,6 @@ export default function MarkDownWithOverrides(props: any) {
                 mb="3"
                 ml="auto"
                 mr="auto"
-                loading="lazy"
                 src={scaledSrc}
                 {...props}
               />

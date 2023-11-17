@@ -28,22 +28,35 @@ export default function Header() {
         as="nav"
         pr="3"
         spacing="8"
+        h="14"
         fontFamily="Shrimp"
         fontSize={['sm', 'md', 'lg']}
         textTransform="uppercase"
         color={isHome ? 'white' : 'brand.900'}
         display={isBooking ? 'none' : 'flex'}
       >
-        <ChakraLink as={NavLink} to="/angebot">
+        <ChakraLink
+          as={NavLink}
+          to="/angebot"
+          _activeLink={{color: 'brand.500'}}
+        >
           Angebot
         </ChakraLink>
-        <ChakraLink as={NavLink} to="/lineup">
+        <ChakraLink
+          as={NavLink}
+          to="/lineup"
+          _activeLink={{color: 'brand.500'}}
+        >
           Lineup
         </ChakraLink>
-        <ChakraLink as={NavLink} to="/events">
+        <ChakraLink
+          as={NavLink}
+          to="/events"
+          _activeLink={{color: 'brand.500'}}
+        >
           Veranstaltungen
         </ChakraLink>
-        <ChakraLink as={NavLink} to="/infos">
+        <ChakraLink as={NavLink} to="/infos" _activeLink={{color: 'brand.500'}}>
           Infos
         </ChakraLink>
       </HStack>

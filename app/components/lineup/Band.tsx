@@ -1,8 +1,8 @@
-import {Heading, Text, Box} from '@chakra-ui/react';
-import DateString from '../DateString';
+import {Heading, Text, Box, Image} from '@chakra-ui/react';
+import DateString from '~/components//DateString';
 import {gql} from '@apollo/client';
 import type {BandFragment} from '~/types/graphql';
-import Card from '../Card';
+import Card from '~/components/Card';
 import {$path} from 'remix-routes';
 
 gql`
@@ -26,15 +26,21 @@ gql`
 export default function Band({band}: {band: BandFragment}) {
   return (
     <Card
+      aspectRatio={1}
       href={$path('/lineup/:year/:slug', {
         year: band.startTime.getFullYear(),
         slug: band.slug,
       })}
-      preventScrollReset
-      bgColor="offwhite.300"
-      imageBlendMode="luminosity"
-      image={band.photo?.scaledUri}
     >
+      <Image
+        position="absolute"
+        width="100%"
+        height="100%"
+        src={band.photo?.scaledUri}
+        loading="lazy"
+        objectFit="cover"
+        blendMode="luminosity"
+      />
       <Box
         position="absolute"
         bottom="2"

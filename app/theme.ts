@@ -114,5 +114,17 @@ export default extendTheme({
         borderColor: 'offwhite.300',
       },
     },
+    Link: {
+      baseStyle: {
+        _hover: {
+          color: 'brand.500',
+          textDecoration: 'none',
+        },
+        _focus: {
+          color: 'brand.500',
+          textDecoration: 'none',
+        },
+      },
+    },
   },
 });

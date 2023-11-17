@@ -1,5 +1,4 @@
 import {Box, Heading, Stack, Link as ChakraLink} from '@chakra-ui/react';
-import {Item} from 'react-photoswipe-gallery';
 import {$path} from 'remix-routes';
 import {gql} from '@apollo/client';
 import Image from '~/components/Image';
@@ -29,7 +28,7 @@ gql`
         }
       }
     }
-    media(first: 100) {
+    media(first: $num_photos) {
       ...EventPhotos
     }
   }
@@ -44,27 +43,20 @@ export default function Event({event}: {event: EventDetailsFragment}) {
       align={['center', 'flex-start']}
     >
       {event.poster && (
-        <Item
+        <Image
+          w="200px"
+          flexShrink="0"
+          src={event.poster.thumbnail}
           original={event.poster.large}
-          thumbnail={event.poster.thumbnail}
-          width={event.poster.width}
-          height={event.poster.height}
-          caption={event.poster.copyright ?? undefined}
-          key={event.id}
-        >
-          {({ref, open}) => (
-            <Image
-              onClick={open}
-              w="200px"
-              ref={ref as React.MutableRefObject<HTMLImageElement>}
-              src={event.poster!.thumbnail}
-              role="link"
-              tabIndex={0}
-              alt={`Poster von ${event.name}`}
-              onKeyDown={(e) => e?.key === 'Enter' && open(e)}
-            />
-          )}
-        </Item>
+          originalHeight={event.poster.height}
+          originalWidth={event.poster.width}
+          alt={`${event.name} Poster`}
+          caption={
+            event.poster.copyright
+              ? `Gestaltung: ${event.poster.copyright}`
+              : undefined
+          }
+        />
       )}
       <Box>
         {event.description && <Box>{event.description}</Box>}

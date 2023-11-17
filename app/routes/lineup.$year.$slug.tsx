@@ -27,6 +27,7 @@ import {$params} from 'remix-routes';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import apolloClient from '~/utils/apolloClient';
 import Image from '~/components/Image';
+import {Gallery} from 'react-photoswipe-gallery';
 
 gql`
   query LineupBand($id: ID!) {
@@ -37,11 +38,14 @@ gql`
         description
         photo {
           scaledUri(width: 600)
+          large: scaledUri(width: 1200)
           width
           height
+          copyright
         }
         startTime
         area {
+          id
           displayName
           themeColor
         }
@@ -79,12 +83,20 @@ export default function LineupBand() {
   const band = useTypedLoaderData<typeof loader>();
 
   const bandPhoto = band.photo ? (
-    <Image
-      src={band.photo?.scaledUri}
-      alt={band.name}
-      maxHeight="100%"
-      m="auto"
-    />
+    <Gallery withCaption>
+      <Image
+        src={band.photo.scaledUri}
+        alt={band.name}
+        maxHeight="100%"
+        m="auto"
+        caption={
+          band.photo.copyright ? `Foto: ${band.photo.copyright}` : undefined
+        }
+        originalHeight={band.photo.height}
+        originalWidth={band.photo.width}
+        original={band.photo.large}
+      />
+    </Gallery>
   ) : undefined;
 
   return (
@@ -93,7 +105,12 @@ export default function LineupBand() {
       <VStack spacing="4" align="start">
         <VStack spacing="1" align="start" mt="3">
           <Text>
-            <Mark bgColor={band.area.themeColor}>{band.area.displayName}</Mark>
+            <Mark
+              bgColor={band.area.themeColor}
+              color={band.area.id === 'Area:dj' ? 'white' : undefined}
+            >
+              {band.area.displayName}
+            </Mark>
           </Text>
           <Heading as="h2" size="lg">
             {band.name}

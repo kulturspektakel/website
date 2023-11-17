@@ -824,6 +824,15 @@ export type Viewer = Node & {
   profilePicture?: Maybe<Scalars['String']['output']>;
 };
 
+export type PageContentFragment = {
+  __typename?: 'Page';
+  title: string;
+  content?: string | null;
+  left?: string | null;
+  right?: string | null;
+  bottom?: string | null;
+};
+
 export type DistanceQueryVariables = Exact<{
   origin: Scalars['String']['input'];
 }>;
@@ -886,6 +895,21 @@ export type EventDetailsFragment = {
       node: {__typename?: 'BandPlaying'; name: string};
     }>;
   };
+  media: {
+    __typename?: 'EventMediaConnection';
+    totalCount: number;
+    edges: Array<{
+      __typename?: 'EventMediaConnectionEdge';
+      node: {
+        __typename?: 'PixelImage';
+        width: number;
+        height: number;
+        id: string;
+        thumbnail: string;
+        large: string;
+      };
+    }>;
+  };
 };
 
 export type EventPhotosFragment = {
@@ -934,11 +958,6 @@ export type BandSearchQuery = {
     startTime: Date;
     slug: string;
   }>;
-};
-
-export type StageSelectorFragment = {
-  __typename?: 'Query';
-  areas: Array<{__typename?: 'Area'; id: string; displayName: string}>;
 };
 
 export type ArticleFragment = {
@@ -1024,6 +1043,88 @@ export type NewsQuery = {
   };
 };
 
+export type AngebotQueryVariables = Exact<{[key: string]: never}>;
+
+export type AngebotQuery = {
+  __typename?: 'Query';
+  productLists: Array<{
+    __typename?: 'ProductList';
+    id: string;
+    name: string;
+    description?: string | null;
+    emoji?: string | null;
+  }>;
+  workshops?:
+    | {__typename?: 'Area'}
+    | {__typename?: 'BandApplication'}
+    | {__typename?: 'BandApplicationComment'}
+    | {__typename?: 'BandPlaying'}
+    | {__typename?: 'Card'}
+    | {__typename?: 'Device'}
+    | {__typename?: 'Event'}
+    | {__typename?: 'News'}
+    | {__typename?: 'NuclinoPage'}
+    | {
+        __typename?: 'Page';
+        id: string;
+        title: string;
+        content?: string | null;
+        left?: string | null;
+        right?: string | null;
+        bottom?: string | null;
+      }
+    | {__typename?: 'Product'}
+    | {__typename?: 'ProductList'}
+    | {__typename?: 'Viewer'}
+    | null;
+  sport?:
+    | {__typename?: 'Area'}
+    | {__typename?: 'BandApplication'}
+    | {__typename?: 'BandApplicationComment'}
+    | {__typename?: 'BandPlaying'}
+    | {__typename?: 'Card'}
+    | {__typename?: 'Device'}
+    | {__typename?: 'Event'}
+    | {__typename?: 'News'}
+    | {__typename?: 'NuclinoPage'}
+    | {
+        __typename?: 'Page';
+        id: string;
+        title: string;
+        content?: string | null;
+        left?: string | null;
+        right?: string | null;
+        bottom?: string | null;
+      }
+    | {__typename?: 'Product'}
+    | {__typename?: 'ProductList'}
+    | {__typename?: 'Viewer'}
+    | null;
+  kinderkult?:
+    | {__typename?: 'Area'}
+    | {__typename?: 'BandApplication'}
+    | {__typename?: 'BandApplicationComment'}
+    | {__typename?: 'BandPlaying'}
+    | {__typename?: 'Card'}
+    | {__typename?: 'Device'}
+    | {__typename?: 'Event'}
+    | {__typename?: 'News'}
+    | {__typename?: 'NuclinoPage'}
+    | {
+        __typename?: 'Page';
+        id: string;
+        title: string;
+        content?: string | null;
+        left?: string | null;
+        right?: string | null;
+        bottom?: string | null;
+      }
+    | {__typename?: 'Product'}
+    | {__typename?: 'ProductList'}
+    | {__typename?: 'Viewer'}
+    | null;
+};
+
 export type CreateBandApplicationMutationVariables = Exact<{
   eventId: Scalars['ID']['input'];
   data: CreateBandApplicationInput;
@@ -1095,6 +1196,7 @@ export type EventQuery = {
 
 export type SingleEventQueryVariables = Exact<{
   id: Scalars['ID']['input'];
+  num_photos?: InputMaybe<Scalars['Int']['input']>;
 }>;
 
 export type SingleEventQuery = {
@@ -1113,21 +1215,6 @@ export type SingleEventQuery = {
         description?: string | null;
         start: Date;
         end: Date;
-        media: {
-          __typename?: 'EventMediaConnection';
-          totalCount: number;
-          edges: Array<{
-            __typename?: 'EventMediaConnectionEdge';
-            node: {
-              __typename?: 'PixelImage';
-              width: number;
-              height: number;
-              id: string;
-              thumbnail: string;
-              large: string;
-            };
-          }>;
-        };
         poster?: {
           __typename?: 'PixelImage';
           width: number;
@@ -1144,6 +1231,21 @@ export type SingleEventQuery = {
             node: {__typename?: 'BandPlaying'; name: string};
           }>;
         };
+        media: {
+          __typename?: 'EventMediaConnection';
+          totalCount: number;
+          edges: Array<{
+            __typename?: 'EventMediaConnectionEdge';
+            node: {
+              __typename?: 'PixelImage';
+              width: number;
+              height: number;
+              id: string;
+              thumbnail: string;
+              large: string;
+            };
+          }>;
+        };
       }
     | {__typename?: 'News'}
     | {__typename?: 'NuclinoPage'}
@@ -1154,7 +1256,11 @@ export type SingleEventQuery = {
     | null;
 };
 
-export type EventsOverviewQueryVariables = Exact<{[key: string]: never}>;
+export type EventsOverviewQueryVariables = Exact<{
+  limit: Scalars['Int']['input'];
+  type?: InputMaybe<EventType>;
+  num_photos?: InputMaybe<Scalars['Int']['input']>;
+}>;
 
 export type EventsOverviewQuery = {
   __typename?: 'Query';
@@ -1165,21 +1271,6 @@ export type EventsOverviewQuery = {
     start: Date;
     end: Date;
     description?: string | null;
-    media: {
-      __typename?: 'EventMediaConnection';
-      totalCount: number;
-      edges: Array<{
-        __typename?: 'EventMediaConnectionEdge';
-        node: {
-          __typename?: 'PixelImage';
-          width: number;
-          height: number;
-          id: string;
-          thumbnail: string;
-          large: string;
-        };
-      }>;
-    };
     poster?: {
       __typename?: 'PixelImage';
       width: number;
@@ -1194,6 +1285,21 @@ export type EventsOverviewQuery = {
       edges: Array<{
         __typename?: 'EventBandsPlayingConnectionEdge';
         node: {__typename?: 'BandPlaying'; name: string};
+      }>;
+    };
+    media: {
+      __typename?: 'EventMediaConnection';
+      totalCount: number;
+      edges: Array<{
+        __typename?: 'EventMediaConnectionEdge';
+        node: {
+          __typename?: 'PixelImage';
+          width: number;
+          height: number;
+          id: string;
+          thumbnail: string;
+          large: string;
+        };
       }>;
     };
   }>;
@@ -1226,8 +1332,15 @@ export type LineupBandQuery = {
           scaledUri: string;
           width: number;
           height: number;
+          copyright?: string | null;
+          large: string;
         } | null;
-        area: {__typename?: 'Area'; displayName: string; themeColor: string};
+        area: {
+          __typename?: 'Area';
+          id: string;
+          displayName: string;
+          themeColor: string;
+        };
       }
     | {__typename?: 'Card'}
     | {__typename?: 'Device'}
@@ -1350,6 +1463,31 @@ export type SpeisekarteQuery = {
   }>;
 };
 
+export const PageContentFragmentDoc = gql`
+  fragment PageContent on Page {
+    title
+    content
+    left
+    right
+    bottom
+  }
+`;
+export const EventPhotosFragmentDoc = gql`
+  fragment EventPhotos on EventMediaConnection {
+    totalCount
+    edges {
+      node {
+        id
+        ... on PixelImage {
+          width
+          height
+          thumbnail: scaledUri(width: 140)
+          large: scaledUri(width: 1200)
+        }
+      }
+    }
+  }
+`;
 export const EventDetailsFragmentDoc = gql`
   fragment EventDetails on Event {
     id
@@ -1372,23 +1510,11 @@ export const EventDetailsFragmentDoc = gql`
         }
       }
     }
-  }
-`;
-export const EventPhotosFragmentDoc = gql`
-  fragment EventPhotos on EventMediaConnection {
-    totalCount
-    edges {
-      node {
-        id
-        ... on PixelImage {
-          width
-          height
-          thumbnail: scaledUri(width: 140)
-          large: scaledUri(width: 1200)
-        }
-      }
+    media(first: $num_photos) {
+      ...EventPhotos
     }
   }
+  ${EventPhotosFragmentDoc}
 `;
 export const BandFragmentDoc = gql`
   fragment Band on BandPlaying {
@@ -1404,14 +1530,6 @@ export const BandFragmentDoc = gql`
     genre
     photo {
       scaledUri(height: 200, width: 200)
-    }
-  }
-`;
-export const StageSelectorFragmentDoc = gql`
-  fragment StageSelector on Query {
-    areas {
-      id
-      displayName
     }
   }
 `;
@@ -1686,14 +1804,11 @@ export const PageDocument = gql`
     node(id: $id) {
       ... on Page {
         id
-        title
-        content
-        left
-        right
-        bottom
+        ...PageContent
       }
     }
   }
+  ${PageContentFragmentDoc}
 `;
 
 /**
@@ -1776,6 +1891,78 @@ export function useNewsLazyQuery(
 export type NewsQueryHookResult = ReturnType<typeof useNewsQuery>;
 export type NewsLazyQueryHookResult = ReturnType<typeof useNewsLazyQuery>;
 export type NewsQueryResult = Apollo.QueryResult<NewsQuery, NewsQueryVariables>;
+export const AngebotDocument = gql`
+  query Angebot {
+    productLists(activeOnly: true) {
+      id
+      name
+      description
+      emoji
+    }
+    workshops: node(id: "Page:workshops") {
+      ... on Page {
+        id
+        ...PageContent
+      }
+    }
+    sport: node(id: "Page:sport") {
+      ... on Page {
+        id
+        ...PageContent
+      }
+    }
+    kinderkult: node(id: "Page:kinderkult") {
+      ... on Page {
+        id
+        ...PageContent
+      }
+    }
+  }
+  ${PageContentFragmentDoc}
+`;
+
+/**
+ * __useAngebotQuery__
+ *
+ * To run a query within a React component, call `useAngebotQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAngebotQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAngebotQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useAngebotQuery(
+  baseOptions?: Apollo.QueryHookOptions<AngebotQuery, AngebotQueryVariables>,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useQuery<AngebotQuery, AngebotQueryVariables>(
+    AngebotDocument,
+    options,
+  );
+}
+export function useAngebotLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    AngebotQuery,
+    AngebotQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useLazyQuery<AngebotQuery, AngebotQueryVariables>(
+    AngebotDocument,
+    options,
+  );
+}
+export type AngebotQueryHookResult = ReturnType<typeof useAngebotQuery>;
+export type AngebotLazyQueryHookResult = ReturnType<typeof useAngebotLazyQuery>;
+export type AngebotQueryResult = Apollo.QueryResult<
+  AngebotQuery,
+  AngebotQueryVariables
+>;
 export const CreateBandApplicationDocument = gql`
   mutation CreateBandApplication(
     $eventId: ID!
@@ -1938,19 +2125,15 @@ export type EventQueryResult = Apollo.QueryResult<
   EventQueryVariables
 >;
 export const SingleEventDocument = gql`
-  query SingleEvent($id: ID!) {
+  query SingleEvent($id: ID!, $num_photos: Int = 100) {
     event: node(id: $id) {
       ... on Event {
         name
         ...EventDetails
-        media(first: 100) {
-          ...EventPhotos
-        }
       }
     }
   }
   ${EventDetailsFragmentDoc}
-  ${EventPhotosFragmentDoc}
 `;
 
 /**
@@ -1966,6 +2149,7 @@ export const SingleEventDocument = gql`
  * const { data, loading, error } = useSingleEventQuery({
  *   variables: {
  *      id: // value for 'id'
+ *      num_photos: // value for 'num_photos'
  *   },
  * });
  */
@@ -2002,20 +2186,16 @@ export type SingleEventQueryResult = Apollo.QueryResult<
   SingleEventQueryVariables
 >;
 export const EventsOverviewDocument = gql`
-  query EventsOverview {
-    events(limit: 10) {
+  query EventsOverview($limit: Int!, $type: EventType, $num_photos: Int = 18) {
+    events(limit: $limit, type: $type) {
       id
       name
       start
       end
       ...EventDetails
-      media(first: 18) {
-        ...EventPhotos
-      }
     }
   }
   ${EventDetailsFragmentDoc}
-  ${EventPhotosFragmentDoc}
 `;
 
 /**
@@ -2030,11 +2210,14 @@ export const EventsOverviewDocument = gql`
  * @example
  * const { data, loading, error } = useEventsOverviewQuery({
  *   variables: {
+ *      limit: // value for 'limit'
+ *      type: // value for 'type'
+ *      num_photos: // value for 'num_photos'
  *   },
  * });
  */
 export function useEventsOverviewQuery(
-  baseOptions?: Apollo.QueryHookOptions<
+  baseOptions: Apollo.QueryHookOptions<
     EventsOverviewQuery,
     EventsOverviewQueryVariables
   >,
@@ -2076,11 +2259,14 @@ export const LineupBandDocument = gql`
         description
         photo {
           scaledUri(width: 600)
+          large: scaledUri(width: 1200)
           width
           height
+          copyright
         }
         startTime
         area {
+          id
           displayName
           themeColor
         }
@@ -2162,10 +2348,12 @@ export const LineupDocument = gql`
         }
       }
     }
-    ...StageSelector
+    areas {
+      id
+      displayName
+    }
   }
   ${BandFragmentDoc}
-  ${StageSelectorFragmentDoc}
 `;
 
 /**

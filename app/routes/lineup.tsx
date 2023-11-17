@@ -1,7 +1,6 @@
 import {gql, useSuspenseQuery} from '@apollo/client';
 import {TriangleDownIcon} from '@chakra-ui/icons';
 import {
-  Box,
   Stack,
   Heading,
   MenuButton,

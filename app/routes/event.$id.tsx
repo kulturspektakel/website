@@ -11,21 +11,18 @@ import {SingleEventDocument} from '~/types/graphql';
 import apolloClient from '~/utils/apolloClient';
 
 gql`
-  query SingleEvent($id: ID!) {
+  query SingleEvent($id: ID!, $num_photos: Int = 100) {
     event: node(id: $id) {
       ... on Event {
         name
         ...EventDetails
-        media(first: 100) {
-          ...EventPhotos
-        }
       }
     }
   }
 `;
 
 export async function loader(args: LoaderArgs) {
-  const {id} = $params('/events/:id', args.params);
+  const {id} = $params('/event/:id', args.params);
   const {data} = await apolloClient.query<SingleEventQuery>({
     query: SingleEventDocument,
     variables: {id: `Event:${id}`},
@@ -42,10 +39,10 @@ export default function EventComponent() {
   return (
     <>
       <Box textAlign="center" mb="10">
-        <Heading as="h1" textAlign="center">
+        <Heading as="h1" textAlign="center" mb="1">
           {event.name}
         </Heading>
-        <Mark fontSize="2xl">
+        <Mark fontSize="xl">
           <DateString date={event.start} to={event.end} />
         </Mark>
       </Box>

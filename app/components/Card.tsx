@@ -1,61 +1,63 @@
 import type {BoxProps} from '@chakra-ui/react';
-import {AspectRatio, Box, Image} from '@chakra-ui/react';
+import {Box} from '@chakra-ui/react';
+import React, {useMemo} from 'react';
 import {Link} from '@remix-run/react';
-import type {Property} from 'csstype';
 
-export default function Card({
-  href,
-  aspectRatio = 1,
-  children,
-  preventScrollReset,
-  image,
-  imageBlendMode,
-  ...props
-}: {
-  image?: string;
-  imageBlendMode?: Property.MixBlendMode;
-  href: string;
-  aspectRatio?: number;
-  children?: React.ReactNode;
-  preventScrollReset?: boolean;
-} & BoxProps) {
-  return (
-    <Link to={href} preventScrollReset={preventScrollReset}>
-      <AspectRatio
-        ratio={aspectRatio}
+const Card = React.forwardRef(
+  (
+    {
+      onClick,
+      href,
+      ...props
+    }: BoxProps & {
+      href?: string;
+    },
+    ref,
+  ) => {
+    const _focus = useMemo(
+      () => ({transform: 'rotate(1deg) scale(1.03)', boxShadow: 'md'}),
+      [],
+    );
+
+    const onClickProps = useMemo(() => {
+      if (onClick == null) return undefined;
+      const p: BoxProps = {
+        onKeyDown: (e) => {
+          if (e.code === 'Enter' || e.code === 'Space') {
+            e.preventDefault();
+            onClick(e as any); // casting KeyboardEvent to MouseEvent
+          }
+        },
+        tabIndex: 0,
+        role: 'link',
+        cursor: 'pointer',
+        onClick,
+      };
+      return p;
+    }, [onClick]);
+
+    return (
+      <Box
+        ref={ref}
+        as={href == null ? 'div' : Link}
+        bgColor="offwhite.300"
         borderRadius="xl"
-        overflow="hidden"
-        transition="transform 0.1s ease-in-out, box-shadow 0.1s ease-in-out"
-        _hover={{
-          transform: 'scale(1.03) rotate(1deg)',
-          boxShadow: 'md',
-        }}
+        transform="rotate(-1deg)"
         boxShadow="sm"
+        transition="transform 0.1s ease-in-out, box-shadow 0.1s ease-in-out"
+        _hover={_focus}
+        _focus={_focus}
+        _active={_focus}
+        outlineOffset={3}
+        overflow="hidden"
+        to={href}
+        {...onClickProps}
         {...props}
-      >
-        <>
-          {image && (
-            <Image
-              blendMode={imageBlendMode}
-              position="absolute"
-              top="0"
-              left="0"
-              right="0"
-              bottom="0"
-              objectFit="cover"
-              src={image}
-              loading="lazy"
-            />
-          )}
-          <Box
-            aspectRatio={aspectRatio}
-            flexDirection="column"
-            textAlign="center"
-          >
-            {children}
-          </Box>
-        </>
-      </AspectRatio>
-    </Link>
-  );
-}
+      />
+    );
+  },
+);
+
+Card.displayName = 'Card';
+
+export default Card;

@@ -1,44 +1,46 @@
+import Card from '~/components/Card';
 import type {ImageProps} from '@chakra-ui/react';
 import {Image as ChakraImage} from '@chakra-ui/react';
-import React, {useMemo} from 'react';
+import type {ItemProps} from 'react-photoswipe-gallery';
+import {Item} from 'react-photoswipe-gallery';
 
-const Image = React.forwardRef(({onClick, ...props}: ImageProps, ref) => {
-  const _focus = useMemo(
-    () => ({transform: 'rotate(1deg) scale(1.03)', boxShadow: 'md'}),
-    [],
-  );
-
-  const onClickProps = useMemo(() => {
-    if (onClick == null) return undefined;
-    return {
-      onKeyDown: (e: React.KeyboardEventHandler<HTMLImageElement>) => {
-        e?.key === 'Enter' && onClick(e);
-      },
-      tabIndex: 0,
-      role: 'link',
-      cursor: 'pointer',
-      onClick,
-    };
-  }, [onClick]);
-
-  return (
-    <ChakraImage
-      ref={ref}
-      borderRadius="xl"
-      transform="rotate(-1deg)"
-      boxShadow="sm"
-      transition="transform 0.1s ease-in-out, box-shadow 0.1s ease-in-out"
-      _hover={_focus}
-      _focus={_focus}
-      _active={_focus}
-      loading="lazy"
-      outlineOffset={3}
-      {...onClickProps}
-      {...props}
-    />
-  );
-});
-
-Image.displayName = 'Image';
-
-export default Image;
+export default function Image({
+  original,
+  originalWidth,
+  originalHeight,
+  cropped,
+  ...props
+}: ImageProps & {
+  originalWidth?: number;
+  originalHeight?: number;
+} & Omit<ItemProps, 'width' | 'height' | 'children'>) {
+  if (original != null) {
+    return (
+      <Item
+        original={original}
+        thumbnail={props.src}
+        width={originalWidth}
+        height={originalHeight}
+        caption={props.caption ?? props.alt}
+        cropped={cropped}
+      >
+        {({ref, open}) => (
+          <Card
+            {...props}
+            onClick={open}
+            aspectRatio={
+              props.aspectRatio == null && originalWidth && originalHeight
+                ? originalWidth / originalHeight
+                : undefined
+            }
+            as={ChakraImage}
+            title={props.caption}
+            loading="lazy"
+            ref={ref}
+          />
+        )}
+      </Item>
+    );
+  }
+  return <Card {...props} as={ChakraImage} loading="lazy" />;
+}

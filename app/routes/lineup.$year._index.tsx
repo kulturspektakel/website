@@ -2,11 +2,11 @@ import {gql} from '@apollo/client';
 import {Modal, ModalContent, ModalOverlay, Spinner} from '@chakra-ui/react';
 import type {LoaderArgs} from '@remix-run/node';
 import {Outlet, useNavigate, useParams} from '@remix-run/react';
-import {Suspense, useState} from 'react';
+import {Suspense, useMemo, useState} from 'react';
 import {$params, $path} from 'remix-routes';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
+import Selector from '~/components/Selector';
 import Day from '~/components/lineup/Day';
-import StageSelector from '~/components/lineup/StageSelector';
 import type {LineupQuery} from '~/types/graphql';
 import {LineupDocument} from '~/types/graphql';
 import apolloClient from '~/utils/apolloClient';
@@ -31,7 +31,10 @@ gql`
         }
       }
     }
-    ...StageSelector
+    areas {
+      id
+      displayName
+    }
   }
 `;
 
@@ -69,14 +72,20 @@ export default function LineupYear() {
     return acc;
   }, []);
 
+  const activeAreas = useMemo(
+    () =>
+      areas.filter(
+        (a) => event?.bandsPlaying.edges.some((e) => e.node.area.id === a.id),
+      ),
+    [areas, event?.bandsPlaying.edges],
+  );
+
   return (
     <>
-      <StageSelector
+      <Selector
         onChange={setStageFilter}
         value={stageFilter}
-        areas={areas.filter(
-          (a) => event?.bandsPlaying.edges.some((e) => e.node.area.id === a.id),
-        )}
+        options={activeAreas.map((a) => ({name: a.displayName, id: a.id}))}
       />
       {days.map((day) => (
         <Day
