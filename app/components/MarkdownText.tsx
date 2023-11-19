@@ -35,12 +35,7 @@ export default function MarkDownWithOverrides(props: any) {
           ),
           p: Text,
           a: (props: LinkProps) => (
-            <ChakraLink
-              {...props}
-              color="brand.500"
-              as={Link}
-              to={props.href}
-            />
+            <ChakraLink {...props} as={Link} to={props.href} variant="inline" />
           ),
           img: ({src, ...props}) => {
             const scaledSrc = new URL(src);

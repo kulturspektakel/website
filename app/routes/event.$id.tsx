@@ -3,6 +3,7 @@ import {Box, Heading} from '@chakra-ui/react';
 import type {LoaderArgs} from '@remix-run/node';
 import {$params} from 'remix-routes';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
+import Card from '~/components/Card';
 import DateString from '~/components/DateString';
 import Mark from '~/components/Mark';
 import Event from '~/components/events/Event';
@@ -47,6 +48,12 @@ export default function EventComponent() {
         </Mark>
       </Box>
       <Event event={event} />
+      <Heading textAlign="center" size="lg">
+        Anfahrt
+      </Heading>
+      <Card bg="white" aspectRatio={16 / 9} mt="5" p="3">
+        test
+      </Card>
     </>
   );
 }

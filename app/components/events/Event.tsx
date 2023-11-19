@@ -1,4 +1,4 @@
-import {Box, Heading, Stack, Link as ChakraLink} from '@chakra-ui/react';
+import {Box, Heading, Stack, Link as ChakraLink, Text} from '@chakra-ui/react';
 import {$path} from 'remix-routes';
 import {gql} from '@apollo/client';
 import Image from '~/components/Image';
@@ -13,6 +13,10 @@ gql`
     description
     start
     end
+    bandApplicationStart
+    bandApplicationEnd
+    djApplicationStart
+    djApplicationEnd
     poster {
       thumbnail: scaledUri(width: 200)
       large: scaledUri(width: 1200)
@@ -20,7 +24,7 @@ gql`
       height
       copyright
     }
-    bandsPlaying {
+    bandsPlaying(first: 12) {
       totalCount
       edges {
         node {
@@ -34,7 +38,21 @@ gql`
   }
 `;
 
+function applicationsOpen(event: EventDetailsFragment) {
+  return (
+    (event.bandApplicationStart &&
+      event.bandApplicationEnd &&
+      event.bandApplicationStart.getTime() < Date.now() &&
+      event.bandApplicationEnd.getTime() > Date.now()) ||
+    (event.djApplicationStart &&
+      event.djApplicationEnd &&
+      event.djApplicationStart.getTime() < Date.now() &&
+      event.djApplicationEnd.getTime() > Date.now())
+  );
+}
+
 export default function Event({event}: {event: EventDetailsFragment}) {
+  const applications = applicationsOpen(event);
   return (
     <Stack
       direction={['column', 'row']}
@@ -66,17 +84,39 @@ export default function Event({event}: {event: EventDetailsFragment}) {
               Lineup
             </Heading>
             <Box>
-              {event.bandsPlaying.edges.map((b) => b.node.name).join(', ')}
+              mit {event.bandsPlaying.edges.map((b) => b.node.name).join(', ')}{' '}
               <ChakraLink
-                color="brand.500"
                 as={Link}
                 to={$path('/lineup/:year', {
                   year: event.start.getFullYear(),
                 })}
+                variant="inline"
               >
-                Lineup
+                {event.bandsPlaying.totalCount > 12 ? (
+                  <>
+                    und {event.bandsPlaying.totalCount - 12} weiteren
+                    Bands&hellip;
+                  </>
+                ) : (
+                  <>Lineup</>
+                )}
               </ChakraLink>
             </Box>
+          </>
+        )}
+        {applications && (
+          <>
+            <Heading as="h3" size="md" mb="2">
+              Booking
+            </Heading>
+            <Text>
+              Die Bewerbungsphase läuft aktuell und ihr könnt euch jetzt für
+              einen Auftritt bei uns{' '}
+              <ChakraLink as={Link} to={$path('/booking')} variant="inline">
+                bewerben
+              </ChakraLink>
+              .
+            </Text>
           </>
         )}
         {event.media.edges.length > 0 && (
@@ -84,7 +124,7 @@ export default function Event({event}: {event: EventDetailsFragment}) {
             <Heading as="h3" size="md" mt="4" mb="2">
               Fotos
             </Heading>
-            <Photos media={event.media} />
+            <Photos eventId={event.id} media={event.media} />
           </>
         )}
       </Box>

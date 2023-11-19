@@ -125,6 +125,17 @@ export default extendTheme({
           textDecoration: 'none',
         },
       },
+      variants: {
+        inline: {
+          color: 'brand.500',
+          _hover: {
+            textDecoration: 'underline',
+          },
+          _focus: {
+            textDecoration: 'underline',
+          },
+        },
+      },
     },
   },
 });

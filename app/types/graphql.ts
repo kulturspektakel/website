@@ -664,7 +664,9 @@ export type Query = {
   config: Config;
   devices: Array<Device>;
   distanceToKult?: Maybe<Scalars['Float']['output']>;
+  /** @deprecated Use `eventsConnection` instead. */
   events: Array<Event>;
+  eventsConnection: QueryEventsConnection;
   findBandPlaying: Array<BandPlaying>;
   news: QueryNewsConnection;
   node?: Maybe<Node>;
@@ -705,6 +707,15 @@ export type QueryEventsArgs = {
   type?: InputMaybe<EventType>;
 };
 
+export type QueryEventsConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  hasBandsPlaying?: InputMaybe<Scalars['Boolean']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  type?: InputMaybe<EventType>;
+};
+
 export type QueryFindBandPlayingArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   query: Scalars['String']['input'];
@@ -740,6 +751,18 @@ export type QueryProductListsArgs = {
 export type QuerySpotifyArtistArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   query: Scalars['String']['input'];
+};
+
+export type QueryEventsConnection = {
+  __typename?: 'QueryEventsConnection';
+  edges: Array<QueryEventsConnectionEdge>;
+  pageInfo: PageInfo;
+};
+
+export type QueryEventsConnectionEdge = {
+  __typename?: 'QueryEventsConnectionEdge';
+  cursor: Scalars['String']['output'];
+  node: Event;
 };
 
 export type QueryNewsConnection = {
@@ -879,6 +902,10 @@ export type EventDetailsFragment = {
   description?: string | null;
   start: Date;
   end: Date;
+  bandApplicationStart?: Date | null;
+  bandApplicationEnd?: Date | null;
+  djApplicationStart?: Date | null;
+  djApplicationEnd?: Date | null;
   poster?: {
     __typename?: 'PixelImage';
     width: number;
@@ -898,8 +925,10 @@ export type EventDetailsFragment = {
   media: {
     __typename?: 'EventMediaConnection';
     totalCount: number;
+    pageInfo: {__typename?: 'PageInfo'; hasNextPage: boolean};
     edges: Array<{
       __typename?: 'EventMediaConnectionEdge';
+      cursor: string;
       node: {
         __typename?: 'PixelImage';
         width: number;
@@ -915,8 +944,10 @@ export type EventDetailsFragment = {
 export type EventPhotosFragment = {
   __typename?: 'EventMediaConnection';
   totalCount: number;
+  pageInfo: {__typename?: 'PageInfo'; hasNextPage: boolean};
   edges: Array<{
     __typename?: 'EventMediaConnectionEdge';
+    cursor: string;
     node: {
       __typename?: 'PixelImage';
       width: number;
@@ -926,6 +957,49 @@ export type EventPhotosFragment = {
       large: string;
     };
   }>;
+};
+
+export type MorePhotosQueryVariables = Exact<{
+  event: Scalars['ID']['input'];
+  cursor?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+export type MorePhotosQuery = {
+  __typename?: 'Query';
+  node?:
+    | {__typename?: 'Area'}
+    | {__typename?: 'BandApplication'}
+    | {__typename?: 'BandApplicationComment'}
+    | {__typename?: 'BandPlaying'}
+    | {__typename?: 'Card'}
+    | {__typename?: 'Device'}
+    | {
+        __typename?: 'Event';
+        media: {
+          __typename?: 'EventMediaConnection';
+          totalCount: number;
+          pageInfo: {__typename?: 'PageInfo'; hasNextPage: boolean};
+          edges: Array<{
+            __typename?: 'EventMediaConnectionEdge';
+            cursor: string;
+            node: {
+              __typename?: 'PixelImage';
+              width: number;
+              height: number;
+              id: string;
+              thumbnail: string;
+              large: string;
+            };
+          }>;
+        };
+      }
+    | {__typename?: 'News'}
+    | {__typename?: 'NuclinoPage'}
+    | {__typename?: 'Page'}
+    | {__typename?: 'Product'}
+    | {__typename?: 'ProductList'}
+    | {__typename?: 'Viewer'}
+    | null;
 };
 
 export type BandFragment = {
@@ -1215,6 +1289,10 @@ export type SingleEventQuery = {
         description?: string | null;
         start: Date;
         end: Date;
+        bandApplicationStart?: Date | null;
+        bandApplicationEnd?: Date | null;
+        djApplicationStart?: Date | null;
+        djApplicationEnd?: Date | null;
         poster?: {
           __typename?: 'PixelImage';
           width: number;
@@ -1234,8 +1312,10 @@ export type SingleEventQuery = {
         media: {
           __typename?: 'EventMediaConnection';
           totalCount: number;
+          pageInfo: {__typename?: 'PageInfo'; hasNextPage: boolean};
           edges: Array<{
             __typename?: 'EventMediaConnectionEdge';
+            cursor: string;
             node: {
               __typename?: 'PixelImage';
               width: number;
@@ -1257,52 +1337,66 @@ export type SingleEventQuery = {
 };
 
 export type EventsOverviewQueryVariables = Exact<{
-  limit: Scalars['Int']['input'];
+  cursor?: InputMaybe<Scalars['String']['input']>;
   type?: InputMaybe<EventType>;
   num_photos?: InputMaybe<Scalars['Int']['input']>;
 }>;
 
 export type EventsOverviewQuery = {
   __typename?: 'Query';
-  events: Array<{
-    __typename?: 'Event';
-    id: string;
-    name: string;
-    start: Date;
-    end: Date;
-    description?: string | null;
-    poster?: {
-      __typename?: 'PixelImage';
-      width: number;
-      height: number;
-      copyright?: string | null;
-      thumbnail: string;
-      large: string;
-    } | null;
-    bandsPlaying: {
-      __typename?: 'EventBandsPlayingConnection';
-      totalCount: number;
-      edges: Array<{
-        __typename?: 'EventBandsPlayingConnectionEdge';
-        node: {__typename?: 'BandPlaying'; name: string};
-      }>;
-    };
-    media: {
-      __typename?: 'EventMediaConnection';
-      totalCount: number;
-      edges: Array<{
-        __typename?: 'EventMediaConnectionEdge';
-        node: {
+  eventsConnection: {
+    __typename?: 'QueryEventsConnection';
+    pageInfo: {__typename?: 'PageInfo'; hasNextPage: boolean};
+    edges: Array<{
+      __typename?: 'QueryEventsConnectionEdge';
+      cursor: string;
+      node: {
+        __typename?: 'Event';
+        id: string;
+        name: string;
+        start: Date;
+        end: Date;
+        description?: string | null;
+        bandApplicationStart?: Date | null;
+        bandApplicationEnd?: Date | null;
+        djApplicationStart?: Date | null;
+        djApplicationEnd?: Date | null;
+        poster?: {
           __typename?: 'PixelImage';
           width: number;
           height: number;
-          id: string;
+          copyright?: string | null;
           thumbnail: string;
           large: string;
+        } | null;
+        bandsPlaying: {
+          __typename?: 'EventBandsPlayingConnection';
+          totalCount: number;
+          edges: Array<{
+            __typename?: 'EventBandsPlayingConnectionEdge';
+            node: {__typename?: 'BandPlaying'; name: string};
+          }>;
         };
-      }>;
-    };
-  }>;
+        media: {
+          __typename?: 'EventMediaConnection';
+          totalCount: number;
+          pageInfo: {__typename?: 'PageInfo'; hasNextPage: boolean};
+          edges: Array<{
+            __typename?: 'EventMediaConnectionEdge';
+            cursor: string;
+            node: {
+              __typename?: 'PixelImage';
+              width: number;
+              height: number;
+              id: string;
+              thumbnail: string;
+              large: string;
+            };
+          }>;
+        };
+      };
+    }>;
+  };
 };
 
 export type LineupBandQueryVariables = Exact<{
@@ -1475,7 +1569,11 @@ export const PageContentFragmentDoc = gql`
 export const EventPhotosFragmentDoc = gql`
   fragment EventPhotos on EventMediaConnection {
     totalCount
+    pageInfo {
+      hasNextPage
+    }
     edges {
+      cursor
       node {
         id
         ... on PixelImage {
@@ -1495,6 +1593,10 @@ export const EventDetailsFragmentDoc = gql`
     description
     start
     end
+    bandApplicationStart
+    bandApplicationEnd
+    djApplicationStart
+    djApplicationEnd
     poster {
       thumbnail: scaledUri(width: 200)
       large: scaledUri(width: 1200)
@@ -1502,7 +1604,7 @@ export const EventDetailsFragmentDoc = gql`
       height
       copyright
     }
-    bandsPlaying {
+    bandsPlaying(first: 12) {
       totalCount
       edges {
         node {
@@ -1738,6 +1840,68 @@ export type SpotifyArtistSearchLazyQueryHookResult = ReturnType<
 export type SpotifyArtistSearchQueryResult = Apollo.QueryResult<
   SpotifyArtistSearchQuery,
   SpotifyArtistSearchQueryVariables
+>;
+export const MorePhotosDocument = gql`
+  query MorePhotos($event: ID!, $cursor: String) {
+    node(id: $event) {
+      ... on Event {
+        media(after: $cursor, first: 100) {
+          ...EventPhotos
+        }
+      }
+    }
+  }
+  ${EventPhotosFragmentDoc}
+`;
+
+/**
+ * __useMorePhotosQuery__
+ *
+ * To run a query within a React component, call `useMorePhotosQuery` and pass it any options that fit your needs.
+ * When your component renders, `useMorePhotosQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useMorePhotosQuery({
+ *   variables: {
+ *      event: // value for 'event'
+ *      cursor: // value for 'cursor'
+ *   },
+ * });
+ */
+export function useMorePhotosQuery(
+  baseOptions: Apollo.QueryHookOptions<
+    MorePhotosQuery,
+    MorePhotosQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useQuery<MorePhotosQuery, MorePhotosQueryVariables>(
+    MorePhotosDocument,
+    options,
+  );
+}
+export function useMorePhotosLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    MorePhotosQuery,
+    MorePhotosQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useLazyQuery<MorePhotosQuery, MorePhotosQueryVariables>(
+    MorePhotosDocument,
+    options,
+  );
+}
+export type MorePhotosQueryHookResult = ReturnType<typeof useMorePhotosQuery>;
+export type MorePhotosLazyQueryHookResult = ReturnType<
+  typeof useMorePhotosLazyQuery
+>;
+export type MorePhotosQueryResult = Apollo.QueryResult<
+  MorePhotosQuery,
+  MorePhotosQueryVariables
 >;
 export const BandSearchDocument = gql`
   query BandSearch($query: String!, $limit: Int = 5) {
@@ -2186,13 +2350,25 @@ export type SingleEventQueryResult = Apollo.QueryResult<
   SingleEventQueryVariables
 >;
 export const EventsOverviewDocument = gql`
-  query EventsOverview($limit: Int!, $type: EventType, $num_photos: Int = 18) {
-    events(limit: $limit, type: $type) {
-      id
-      name
-      start
-      end
-      ...EventDetails
+  query EventsOverview(
+    $cursor: String
+    $type: EventType
+    $num_photos: Int = 15
+  ) {
+    eventsConnection(type: $type, first: 10, after: $cursor) {
+      pageInfo {
+        hasNextPage
+      }
+      edges {
+        cursor
+        node {
+          id
+          name
+          start
+          end
+          ...EventDetails
+        }
+      }
     }
   }
   ${EventDetailsFragmentDoc}
@@ -2210,14 +2386,14 @@ export const EventsOverviewDocument = gql`
  * @example
  * const { data, loading, error } = useEventsOverviewQuery({
  *   variables: {
- *      limit: // value for 'limit'
+ *      cursor: // value for 'cursor'
  *      type: // value for 'type'
  *      num_photos: // value for 'num_photos'
  *   },
  * });
  */
 export function useEventsOverviewQuery(
-  baseOptions: Apollo.QueryHookOptions<
+  baseOptions?: Apollo.QueryHookOptions<
     EventsOverviewQuery,
     EventsOverviewQueryVariables
   >,

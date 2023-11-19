@@ -1,13 +1,26 @@
 import {gql} from '@apollo/client';
-import {Wrap} from '@chakra-ui/react';
+import {Wrap, Text, Link as ChakraLink} from '@chakra-ui/react';
+import {Link} from '@remix-run/react';
+import type PhotoSwipe from 'photoswipe';
+import {useCallback} from 'react';
 import {Gallery} from 'react-photoswipe-gallery';
+import {$path} from 'remix-routes';
 import Image from '~/components/Image';
-import type {EventPhotosFragment} from '~/types/graphql';
+import {
+  type EventPhotosFragment,
+  type MorePhotosQuery,
+  MorePhotosDocument,
+} from '~/types/graphql';
+import apolloClient from '~/utils/apolloClient';
 
 gql`
   fragment EventPhotos on EventMediaConnection {
     totalCount
+    pageInfo {
+      hasNextPage
+    }
     edges {
+      cursor
       node {
         id
         ... on PixelImage {
@@ -19,12 +32,69 @@ gql`
       }
     }
   }
+
+  query MorePhotos($event: ID!, $cursor: String) {
+    node(id: $event) {
+      ... on Event {
+        media(after: $cursor, first: 100) {
+          ...EventPhotos
+        }
+      }
+    }
+  }
 `;
 
-export default function EventComponent({media}: {media: EventPhotosFragment}) {
+const SIZE = 70;
+
+export default function EventComponent({
+  media,
+  eventId,
+}: {
+  media: EventPhotosFragment;
+  eventId: string;
+}) {
+  const onBeforeOpen = useCallback(
+    async (pswp: PhotoSwipe) => {
+      pswp.addFilter('numItems', () => media.totalCount);
+
+      const {data} = await apolloClient.query<MorePhotosQuery>({
+        query: MorePhotosDocument,
+        fetchPolicy: 'cache-first',
+        variables: {
+          event: eventId,
+          cursor: media.edges[media.edges.length - 1]?.cursor,
+        },
+      });
+
+      const event = data.node?.__typename === 'Event' ? data.node : null;
+      if (!event) {
+        return;
+      }
+
+      pswp.addFilter('itemData', (itemData, index) => {
+        if (!itemData.src) {
+          const {
+            width: w,
+            height: h,
+            thumbnail: msrc,
+            large: src,
+          } = event.media.edges[index - media.edges.length].node;
+          return {
+            w,
+            h,
+            msrc,
+            src,
+          };
+        }
+        return itemData;
+      });
+    },
+    [eventId, media.edges, media.totalCount],
+  );
+
   return (
     <Wrap role="grid">
-      <Gallery>
+      <Gallery options={{loop: false}} onBeforeOpen={onBeforeOpen}>
         {media.edges
           .map((m) => m.node)
           .map((m) => (
@@ -35,10 +105,32 @@ export default function EventComponent({media}: {media: EventPhotosFragment}) {
               originalHeight={m.height}
               src={m.thumbnail}
               objectFit="cover"
-              height="70"
+              height={SIZE}
               borderRadius="md"
             />
           ))}
+        {media.pageInfo.hasNextPage && (
+          <ChakraLink
+            to={
+              $path('/event/:id', {id: eventId.split(':')[1]}) + '#more-photos'
+            }
+            as={Link}
+            height={SIZE}
+            width={SIZE}
+            borderRadius="md"
+            justifyContent="center"
+            alignItems="center"
+            display="flex"
+            flexDirection="column"
+            color="brand.900"
+            fontWeight="bold"
+          >
+            <Text fontSize="xl" userSelect="none" mb="-3">
+              +{media.totalCount - media.edges.length}
+            </Text>
+            <Text>Fotos</Text>
+          </ChakraLink>
+        )}
       </Gallery>
     </Wrap>
   );

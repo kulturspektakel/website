@@ -1,3 +1,4 @@
+import type {LinkProps} from '@chakra-ui/react';
 import {
   Box,
   Flex,
@@ -8,13 +9,14 @@ import {
   Text,
   useBreakpointValue,
 } from '@chakra-ui/react';
+import type {NavLinkProps} from '@remix-run/react';
 import {Link as RemixLink, NavLink} from '@remix-run/react';
 import {FaSpotify, FaYoutube, FaInstagram, FaFacebook} from 'react-icons/fa6';
 import vpby from './vpby.svg';
 import {$path} from 'remix-routes';
+import type {RemixLinkProps} from '@remix-run/react/dist/components';
 
 export default function Footer() {
-  const iconSize = useBreakpointValue({base: 32, md: 24});
   return (
     <Flex
       as="footer"
@@ -43,61 +45,47 @@ export default function Footer() {
             organisiertes Musikfestival in Gauting.
           </Text>
           <HStack
-            color="offwhite.300"
+            color="whiteAlpha.600"
             flexWrap={'wrap'}
             justifyContent={'center'}
           >
-            <Link as={NavLink} to={$path('/booking')}>
-              Booking
-            </Link>
-            <Link as={NavLink} to={$path('/:slug', {slug: 'impressum'})}>
+            <FooterLink to={$path('/booking')}>Booking</FooterLink>
+            <FooterLink to={$path('/:slug', {slug: 'impressum'})}>
               Impressum
-            </Link>
-            <Link as={NavLink} to={$path('/:slug', {slug: 'foerderverein'})}>
+            </FooterLink>
+            <FooterLink to={$path('/:slug', {slug: 'foerderverein'})}>
               Förderverein
-            </Link>
-            <Link as={NavLink} to={$path('/:slug', {slug: 'datenschutz'})}>
+            </FooterLink>
+            <FooterLink to={$path('/:slug', {slug: 'datenschutz'})}>
               Datenschutz
-            </Link>
+            </FooterLink>
           </HStack>
         </VStack>
       </HStack>
       <VStack>
         <HStack gap={{base: 6, md: 4}}>
-          <Link
-            as={RemixLink}
+          <FooterIcon
             to="https://facebook.com/kulturspektakel"
             title="Facebook"
-            target="_blank"
-          >
-            <FaFacebook size={iconSize} />
-          </Link>
-          <Link
-            as={RemixLink}
+            icon={FaFacebook}
+          />
+          <FooterIcon
             to="https://www.youtube.com/channel/UCLOU06fHSN3Hwe0rmbrFtpA"
             title="Youtube"
-            target="_blank"
-          >
-            <FaYoutube size={iconSize} />
-          </Link>
-          <Link
-            as={RemixLink}
+            icon={FaYoutube}
+          />
+          <FooterIcon
             to="https://instagram.com/kulturspektakel"
             title="Instagram"
-            target="_blank"
-          >
-            <FaInstagram size={iconSize} />
-          </Link>
-          <Link
-            as={RemixLink}
+            icon={FaInstagram}
+          />
+          <FooterIcon
             to="https://open.spotify.com/user/p7s6vlorvw05bxm881h5em4dj?si=4049483d01ec4fc3"
             title="Spotify"
-            target="_blank"
-          >
-            <FaSpotify size={iconSize} />
-          </Link>
+            icon={FaSpotify}
+          />
         </HStack>
-        <Box mt="2">
+        <Box mt="2" color="whiteAlpha.600">
           Gefördert von
           <Link as={RemixLink} to="https://popkultur.bayern" target="_blank">
             <Image src={vpby} alt="Verband für Popkultur" />
@@ -105,5 +93,38 @@ export default function Footer() {
         </Box>
       </VStack>
     </Flex>
+  );
+}
+
+function FooterIcon({icon: Icon}: LinkProps & RemixLinkProps & {icon: any}) {
+  const iconSize = useBreakpointValue({base: 32, md: 24});
+
+  return (
+    <Link
+      as={RemixLink}
+      to="https://open.spotify.com/user/p7s6vlorvw05bxm881h5em4dj?si=4049483d01ec4fc3"
+      title="Spotify"
+      target="_blank"
+      _hover={{color: 'whiteAlpha.600'}}
+      _active={{color: 'whiteAlpha.600'}}
+      _focus={{color: 'whiteAlpha.600'}}
+    >
+      <Icon size={iconSize} />
+    </Link>
+  );
+}
+
+function FooterLink({children, ...props}: LinkProps & NavLinkProps) {
+  return (
+    <Link
+      as={NavLink}
+      {...props}
+      color="whiteAlpha.600"
+      _hover={{color: 'white'}}
+      _active={{color: 'white'}}
+      _focus={{color: 'white'}}
+    >
+      {children}
+    </Link>
   );
 }
