@@ -1,25 +1,79 @@
 import {
   Box,
-  Button,
   Heading,
-  Link,
   SimpleGrid,
   Text,
   VStack,
+  Image,
+  Flex,
 } from '@chakra-ui/react';
 import type {V2_MetaFunction} from '@remix-run/node';
+import LinkButton from '~/components/LinkButton';
 import {mergeMeta} from '~/utils/mergeMeta';
 
 export const meta: V2_MetaFunction = mergeMeta(() => [{title: `Logo`}]);
 
+function LogoCol({filename}: {filename: string}) {
+  return (
+    <VStack spacing="3">
+      <Flex
+        p="2"
+        borderRadius="md"
+        fontFamily="Shrimp"
+        bg="white"
+        fontSize="lg"
+        textTransform="uppercase"
+        boxShadow="base"
+        h="200px"
+        alignItems="center"
+        textAlign="center"
+      >
+        <Image
+          src={`/logos/${filename}.svg`}
+          h="100%"
+          alt="Kulturspektakel Gauting Logo"
+        />
+      </Flex>
+      Bildmarke
+      <Flex gap="2">
+        <LinkButton
+          href={`/logos/${filename}.png`}
+          download={`${filename}.png`}
+        >
+          PNG
+        </LinkButton>
+        <LinkButton
+          href={`/logos/${filename}.pdf`}
+          download={`${filename}.pdf`}
+        >
+          PDF
+        </LinkButton>
+        <LinkButton
+          href={`/logos/${filename}.svg`}
+          download={`${filename}.svg`}
+        >
+          SVG
+        </LinkButton>
+      </Flex>
+    </VStack>
+  );
+}
+
 export default function Logo() {
   return (
-    <VStack spacing="16">
-      <Heading>Logo</Heading>
-      <Heading>Typographie</Heading>
+    <VStack>
+      <Heading mb="8">Logo</Heading>
+      <SimpleGrid columns={[1, 3]} gap="5">
+        <LogoCol filename="logo" />
+        <LogoCol filename="logo-text-below-black" />
+        <LogoCol filename="logo-text-right-black" />
+      </SimpleGrid>
+      <Heading mt="16" mb="8">
+        Typographie
+      </Heading>
       <SimpleGrid columns={2} gap="5">
         <VStack spacing="3" align="start">
-          <Heading as="h3" size="lg">
+          <Heading as="h3" size="md">
             Shrimp
           </Heading>
           <Box
@@ -54,15 +108,15 @@ export default function Logo() {
             Ausschließlich in Großbuchstaben. Hervorhebungen durch invertierten
             Text mit Umrandung.
           </Text>
-          <Link
+          <LinkButton
             target="_blank"
             href="https://unblast.com/shrimp-sans-serif-typeface/"
           >
-            <Button>Download</Button>
-          </Link>
+            Download
+          </LinkButton>
         </VStack>
         <VStack spacing="3" align="start">
-          <Heading as="h3" size="lg">
+          <Heading as="h3" size="md">
             Space Grotesk
           </Heading>
           <Box
@@ -87,16 +141,18 @@ export default function Logo() {
             Verwendet für Fließtexte und kleinere Überschriften. Verschiedene
             Schnitte für Hervorhebungen verfügbar.
           </Text>
-          <Link
+          <LinkButton
             target="_blank"
             href="https://floriankarsten.github.io/space-grotesk/"
           >
-            <Button>Download</Button>
-          </Link>
+            Download
+          </LinkButton>
         </VStack>
       </SimpleGrid>
 
-      <Heading>Farben</Heading>
+      <Heading mt="16" mb="8">
+        Farben
+      </Heading>
       <SimpleGrid columns={[2, 4]} gap="5">
         <Box>
           <Box
@@ -175,32 +231,30 @@ export default function Logo() {
           Pantone 186
         </Box>
       </SimpleGrid>
-      <Heading>Sprache</Heading>
-      <SimpleGrid columns={[1, 2, 4]} gap="5">
-        <Box>
+      <Heading mt="16" mb="8">
+        Sprache
+      </Heading>
+      <SimpleGrid columns={[1, 2]} gap="5">
+        <VStack spacing="3" align="start">
           <Heading as="h3" size="md">
             Geschlechtergerechte Sprache
           </Heading>
           <Text>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam
+            Grundsätzlich versuchen wir geschlechtergerechte Sprache zu
+            verwenden und verwenden den Doppelpunkt um zu gendern (z.B.
+            Musiker:innen).
           </Text>
-        </Box>
-        <Box>
+        </VStack>
+        <VStack spacing="3" align="start">
           <Heading as="h3" size="md">
             Eigennamen
           </Heading>
-          <Text>Große Bühne immer mit großem G</Text>
           <Text>
             Wenn "Kult" als Kurzform von Kulturspektakel verwendet wird, nicht
             in Großbuchstaben ("KULT").
           </Text>
-        </Box>
-        <Box>
-          <Heading as="h3" size="md">
-            Geschlechtergerechte Sprache
-          </Heading>
-          <Text>Große Bühne</Text>
-        </Box>
+          <Text>Eignenamen wie "Große Bühne" immer mit großem G.</Text>
+        </VStack>
       </SimpleGrid>
     </VStack>
   );

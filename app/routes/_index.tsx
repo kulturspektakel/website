@@ -1,4 +1,4 @@
-import {Box, Button, Center, Divider, Link} from '@chakra-ui/react';
+import {Center, Divider} from '@chakra-ui/react';
 import {gql} from '@apollo/client';
 import {NewsDocument, type NewsQuery} from '~/types/graphql';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
@@ -6,6 +6,7 @@ import React from 'react';
 import Article from '~/components/news/Article';
 import apolloClient from '~/utils/apolloClient';
 import {type LoaderArgs} from '@remix-run/node';
+import LinkButton from '~/components/LinkButton';
 
 gql`
   query News {
@@ -38,9 +39,7 @@ export default function Index() {
         </React.Fragment>
       ))}
       <Center>
-        <Button href="/news/archiv" as={Link}>
-          Ältere Beträge
-        </Button>
+        <LinkButton href="/news/archiv">Ältere Beträge</LinkButton>
       </Center>
     </>
   );

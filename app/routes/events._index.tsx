@@ -101,7 +101,7 @@ export default function Events() {
                 <Heading size="lg" mb="1">
                   <ChakraLink
                     as={Link}
-                    to={$path('/event/:id', {id: e.id.split(':')[1]})}
+                    to={$path('/events/:id', {id: e.id.split(':')[1]})}
                   >
                     {e.name}
                   </ChakraLink>

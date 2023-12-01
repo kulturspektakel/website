@@ -662,6 +662,7 @@ export type Query = {
   cardStatus: CardStatus;
   checkDuplicateApplication?: Maybe<ObfuscatedBandApplication>;
   config: Config;
+  crewCalendar: Array<VEvent>;
   devices: Array<Device>;
   distanceToKult?: Maybe<Scalars['Float']['output']>;
   /** @deprecated Use `eventsConnection` instead. */
@@ -691,6 +692,10 @@ export type QueryCardStatusArgs = {
 export type QueryCheckDuplicateApplicationArgs = {
   bandname: Scalars['String']['input'];
   eventId: Scalars['ID']['input'];
+};
+
+export type QueryCrewCalendarArgs = {
+  includePastEvents?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type QueryDevicesArgs = {
@@ -837,6 +842,17 @@ export type TransactionsTransactionsArgs = {
   before?: InputMaybe<Scalars['DateTime']['input']>;
   limit?: InputMaybe<Scalars['Int']['input']>;
   type?: InputMaybe<CardTransactionType>;
+};
+
+export type VEvent = {
+  __typename?: 'VEvent';
+  comment?: Maybe<Scalars['String']['output']>;
+  end: Scalars['DateTime']['output'];
+  location?: Maybe<Scalars['String']['output']>;
+  start: Scalars['DateTime']['output'];
+  summary: Scalars['String']['output'];
+  uid: Scalars['String']['output'];
+  url?: Maybe<Scalars['String']['output']>;
 };
 
 export type Viewer = Node & {
@@ -1052,8 +1068,6 @@ export type ArticleHeadFragment = {
 export type ProductListComponentFragment = {
   __typename?: 'ProductList';
   description?: string | null;
-  name: string;
-  emoji?: string | null;
   product: Array<{
     __typename?: 'Product';
     name: string;
@@ -1128,6 +1142,29 @@ export type AngebotQuery = {
     description?: string | null;
     emoji?: string | null;
   }>;
+  food?:
+    | {__typename?: 'Area'}
+    | {__typename?: 'BandApplication'}
+    | {__typename?: 'BandApplicationComment'}
+    | {__typename?: 'BandPlaying'}
+    | {__typename?: 'Card'}
+    | {__typename?: 'Device'}
+    | {__typename?: 'Event'}
+    | {__typename?: 'News'}
+    | {__typename?: 'NuclinoPage'}
+    | {
+        __typename?: 'Page';
+        id: string;
+        title: string;
+        content?: string | null;
+        left?: string | null;
+        right?: string | null;
+        bottom?: string | null;
+      }
+    | {__typename?: 'Product'}
+    | {__typename?: 'ProductList'}
+    | {__typename?: 'Viewer'}
+    | null;
   workshops?:
     | {__typename?: 'Area'}
     | {__typename?: 'BandApplication'}
@@ -1399,6 +1436,65 @@ export type EventsOverviewQuery = {
   };
 };
 
+export type InfosQueryVariables = Exact<{[key: string]: never}>;
+
+export type InfosQuery = {
+  __typename?: 'Query';
+  crewCalendar: Array<{
+    __typename?: 'VEvent';
+    summary: string;
+    start: Date;
+    uid: string;
+    location?: string | null;
+  }>;
+  infos?:
+    | {__typename?: 'Area'}
+    | {__typename?: 'BandApplication'}
+    | {__typename?: 'BandApplicationComment'}
+    | {__typename?: 'BandPlaying'}
+    | {__typename?: 'Card'}
+    | {__typename?: 'Device'}
+    | {__typename?: 'Event'}
+    | {__typename?: 'News'}
+    | {__typename?: 'NuclinoPage'}
+    | {
+        __typename?: 'Page';
+        id: string;
+        title: string;
+        content?: string | null;
+        left?: string | null;
+        right?: string | null;
+        bottom?: string | null;
+      }
+    | {__typename?: 'Product'}
+    | {__typename?: 'ProductList'}
+    | {__typename?: 'Viewer'}
+    | null;
+  verein?:
+    | {__typename?: 'Area'}
+    | {__typename?: 'BandApplication'}
+    | {__typename?: 'BandApplicationComment'}
+    | {__typename?: 'BandPlaying'}
+    | {__typename?: 'Card'}
+    | {__typename?: 'Device'}
+    | {__typename?: 'Event'}
+    | {__typename?: 'News'}
+    | {__typename?: 'NuclinoPage'}
+    | {
+        __typename?: 'Page';
+        id: string;
+        title: string;
+        content?: string | null;
+        left?: string | null;
+        right?: string | null;
+        bottom?: string | null;
+      }
+    | {__typename?: 'Product'}
+    | {__typename?: 'ProductList'}
+    | {__typename?: 'Viewer'}
+    | null;
+};
+
 export type LineupBandQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
@@ -1534,15 +1630,38 @@ export type NewsPageQuery = {
     | null;
 };
 
+export type NewsArchiveQueryVariables = Exact<{
+  cursor?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+export type NewsArchiveQuery = {
+  __typename?: 'Query';
+  news: {
+    __typename?: 'QueryNewsConnection';
+    pageInfo: {__typename?: 'PageInfo'; hasNextPage: boolean};
+    edges: Array<{
+      __typename?: 'QueryNewsConnectionEdge';
+      cursor: string;
+      node: {
+        __typename?: 'News';
+        title: string;
+        slug: string;
+        createdAt: Date;
+        content: string;
+      };
+    }>;
+  };
+};
+
 export type SpeisekarteQueryVariables = Exact<{[key: string]: never}>;
 
 export type SpeisekarteQuery = {
   __typename?: 'Query';
   productLists: Array<{
     __typename?: 'ProductList';
-    description?: string | null;
     name: string;
     emoji?: string | null;
+    description?: string | null;
     product: Array<{
       __typename?: 'Product';
       name: string;
@@ -1655,8 +1774,6 @@ export const ArticleFragmentDoc = gql`
 export const ProductListComponentFragmentDoc = gql`
   fragment ProductListComponent on ProductList {
     description
-    name
-    emoji
     product {
       additives {
         displayName
@@ -2063,6 +2180,12 @@ export const AngebotDocument = gql`
       description
       emoji
     }
+    food: node(id: "Page:speisen-getraenke") {
+      ... on Page {
+        id
+        ...PageContent
+      }
+    }
     workshops: node(id: "Page:workshops") {
       ... on Page {
         id
@@ -2426,6 +2549,69 @@ export type EventsOverviewQueryResult = Apollo.QueryResult<
   EventsOverviewQuery,
   EventsOverviewQueryVariables
 >;
+export const InfosDocument = gql`
+  query Infos {
+    crewCalendar {
+      summary
+      start
+      uid
+      location
+    }
+    infos: node(id: "Page:infos") {
+      ... on Page {
+        id
+        ...PageContent
+      }
+    }
+    verein: node(id: "Page:verein") {
+      ... on Page {
+        id
+        ...PageContent
+      }
+    }
+  }
+  ${PageContentFragmentDoc}
+`;
+
+/**
+ * __useInfosQuery__
+ *
+ * To run a query within a React component, call `useInfosQuery` and pass it any options that fit your needs.
+ * When your component renders, `useInfosQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useInfosQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useInfosQuery(
+  baseOptions?: Apollo.QueryHookOptions<InfosQuery, InfosQueryVariables>,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useQuery<InfosQuery, InfosQueryVariables>(
+    InfosDocument,
+    options,
+  );
+}
+export function useInfosLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<InfosQuery, InfosQueryVariables>,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useLazyQuery<InfosQuery, InfosQueryVariables>(
+    InfosDocument,
+    options,
+  );
+}
+export type InfosQueryHookResult = ReturnType<typeof useInfosQuery>;
+export type InfosLazyQueryHookResult = ReturnType<typeof useInfosLazyQuery>;
+export type InfosQueryResult = Apollo.QueryResult<
+  InfosQuery,
+  InfosQueryVariables
+>;
 export const LineupBandDocument = gql`
   query LineupBand($id: ID!) {
     node(id: $id) {
@@ -2680,9 +2866,78 @@ export type NewsPageQueryResult = Apollo.QueryResult<
   NewsPageQuery,
   NewsPageQueryVariables
 >;
+export const NewsArchiveDocument = gql`
+  query NewsArchive($cursor: String) {
+    news(after: $cursor, first: 20) {
+      pageInfo {
+        hasNextPage
+      }
+      edges {
+        cursor
+        node {
+          title
+          slug
+          createdAt
+          content
+        }
+      }
+    }
+  }
+`;
+
+/**
+ * __useNewsArchiveQuery__
+ *
+ * To run a query within a React component, call `useNewsArchiveQuery` and pass it any options that fit your needs.
+ * When your component renders, `useNewsArchiveQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useNewsArchiveQuery({
+ *   variables: {
+ *      cursor: // value for 'cursor'
+ *   },
+ * });
+ */
+export function useNewsArchiveQuery(
+  baseOptions?: Apollo.QueryHookOptions<
+    NewsArchiveQuery,
+    NewsArchiveQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useQuery<NewsArchiveQuery, NewsArchiveQueryVariables>(
+    NewsArchiveDocument,
+    options,
+  );
+}
+export function useNewsArchiveLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    NewsArchiveQuery,
+    NewsArchiveQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useLazyQuery<NewsArchiveQuery, NewsArchiveQueryVariables>(
+    NewsArchiveDocument,
+    options,
+  );
+}
+export type NewsArchiveQueryHookResult = ReturnType<typeof useNewsArchiveQuery>;
+export type NewsArchiveLazyQueryHookResult = ReturnType<
+  typeof useNewsArchiveLazyQuery
+>;
+export type NewsArchiveQueryResult = Apollo.QueryResult<
+  NewsArchiveQuery,
+  NewsArchiveQueryVariables
+>;
 export const SpeisekarteDocument = gql`
   query Speisekarte {
     productLists(activeOnly: true) {
+      name
+      emoji
       ...ProductListComponent
     }
   }

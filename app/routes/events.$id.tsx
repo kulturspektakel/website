@@ -5,6 +5,7 @@ import {$params} from 'remix-routes';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import Card from '~/components/Card';
 import DateString from '~/components/DateString';
+import GoogleMaps from '~/components/GoogleMaps';
 import Mark from '~/components/Mark';
 import Event from '~/components/events/Event';
 import type {SingleEventQuery} from '~/types/graphql';
@@ -48,11 +49,11 @@ export default function EventComponent() {
         </Mark>
       </Box>
       <Event event={event} />
-      <Heading textAlign="center" size="lg">
+      <Heading textAlign="center" size="lg" mt="10">
         Anfahrt
       </Heading>
       <Card bg="white" aspectRatio={16 / 9} mt="5" p="3">
-        test
+        <GoogleMaps />
       </Card>
     </>
   );

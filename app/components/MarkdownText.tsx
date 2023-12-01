@@ -9,6 +9,7 @@ import {
 } from '@chakra-ui/react';
 import {Link} from '@remix-run/react';
 import Image from './Image';
+import {Gallery} from 'react-photoswipe-gallery';
 
 export default function MarkDownWithOverrides(props: any) {
   return (
@@ -33,7 +34,11 @@ export default function MarkDownWithOverrides(props: any) {
           h6: (props: HeadingProps) => (
             <Heading {...props} size="sm" as="h6" mb={1} mt={3} />
           ),
-          p: Text,
+          p: ({children, ...props}) => (
+            <Text mt="2" {...props}>
+              {children}
+            </Text>
+          ),
           a: (props: LinkProps) => (
             <ChakraLink {...props} as={Link} to={props.href} variant="inline" />
           ),
@@ -42,15 +47,19 @@ export default function MarkDownWithOverrides(props: any) {
             scaledSrc.searchParams.set('width', '900');
 
             return (
-              <Image
-                maxH="500px"
-                mt="3"
-                mb="3"
-                ml="auto"
-                mr="auto"
-                src={scaledSrc}
-                {...props}
-              />
+              <Gallery>
+                <Image
+                  maxH="500px"
+                  mt="3"
+                  mb="3"
+                  ml="auto"
+                  mr="auto"
+                  bgColor="white"
+                  src={scaledSrc.toString()}
+                  original={src}
+                  {...props}
+                />
+              </Gallery>
             );
           },
           ul: UnorderedList,

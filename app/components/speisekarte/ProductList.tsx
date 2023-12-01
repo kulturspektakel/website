@@ -2,14 +2,8 @@ import {gql} from '@apollo/client';
 import {InfoIcon} from '@chakra-ui/icons';
 import type {PlacementWithLogical} from '@chakra-ui/react';
 import {
-  AccordionButton,
-  AccordionIcon,
-  AccordionItem,
-  AccordionPanel,
-  Box,
   Divider,
   HStack,
-  Heading,
   ListItem,
   Text,
   Tooltip,
@@ -26,8 +20,6 @@ import type {
 gql`
   fragment ProductListComponent on ProductList {
     description
-    name
-    emoji
     product {
       additives {
         displayName
@@ -68,63 +60,51 @@ export default function ProductList({
   });
 
   return (
-    <AccordionItem>
-      <Heading>
-        <AccordionButton textTransform={'inherit'}>
-          <Box as="span" flex="1" textAlign="left">
-            {productList.emoji} {productList.name}
-          </Box>
-          <AccordionIcon />
-        </AccordionButton>
-      </Heading>
-      <AccordionPanel pb={4}>
-        <UnorderedList listStyleType={'none'} marginInlineStart={0}>
-          {productList.product.map((item, index) => (
-            <ListItem key={item.name}>
-              <HStack justifyContent={'space-between'} paddingY={1}>
-                <Text>
-                  {item.name}
-                  {item.additives.length > 0 && (
-                    <Tooltip
-                      label={<TooltipContent additives={item.additives} />}
-                      hasArrow
-                      placement={tooltipPlacement!}
-                    >
-                      <InfoIcon color={'offwhite.300'} marginLeft={1} />
-                    </Tooltip>
-                  )}
-                </Text>
-                <span>
-                  {item.requiresDeposit && (
-                    <Text color={'offwhite.500'} as={'span'}>
-                      *{' '}
-                    </Text>
-                  )}
-                  {new Intl.NumberFormat('de-DE', {
-                    style: 'currency',
-                    currency: 'EUR',
-                  }).format(item.price / 100)}
-                </span>
-              </HStack>
-              {(showDepositText || index < productListLength - 1) && (
-                <Divider />
-              )}
-            </ListItem>
-          ))}
-        </UnorderedList>
-        {showDepositText && (
-          <>
-            <Text textAlign={'right'} paddingTop={1} color={'offwhite.500'}>
-              * zuzüglich{' '}
-              {new Intl.NumberFormat('de-DE', {
-                style: 'currency',
-                currency: 'EUR',
-              }).format(2)}{' '}
-              Pfand
-            </Text>
-          </>
-        )}
-      </AccordionPanel>
-    </AccordionItem>
+    <>
+      <UnorderedList listStyleType="none" marginInlineStart={0}>
+        {productList.product.map((item, index) => (
+          <ListItem key={item.name}>
+            <HStack justifyContent="space-between" py={1}>
+              <Text>
+                {item.name}
+                {item.additives.length > 0 && (
+                  <Tooltip
+                    label={<TooltipContent additives={item.additives} />}
+                    hasArrow
+                    placement={tooltipPlacement!}
+                  >
+                    <InfoIcon color={'offwhite.300'} ml="1" mt="-1" />
+                  </Tooltip>
+                )}
+              </Text>
+              <span>
+                {item.requiresDeposit && (
+                  <Text color="offwhite.500" as="span">
+                    *{' '}
+                  </Text>
+                )}
+                {new Intl.NumberFormat('de-DE', {
+                  style: 'currency',
+                  currency: 'EUR',
+                }).format(item.price / 100)}
+              </span>
+            </HStack>
+            {(showDepositText || index < productListLength - 1) && <Divider />}
+          </ListItem>
+        ))}
+      </UnorderedList>
+      {showDepositText && (
+        <>
+          <Text textAlign="right" pt="1" color="offwhite.500">
+            * zuzüglich{' '}
+            {new Intl.NumberFormat('de-DE', {
+              style: 'currency',
+              currency: 'EUR',
+            }).format(2)}{' '}
+            Pfand
+          </Text>
+        </>
+      )}
+    </>
   );
 }

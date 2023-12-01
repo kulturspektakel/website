@@ -39,7 +39,7 @@ export default function Band({band}: {band: BandFragment}) {
         src={band.photo?.scaledUri}
         loading="lazy"
         objectFit="cover"
-        blendMode="luminosity"
+        // blendMode="luminosity"
       />
       <Box
         position="absolute"

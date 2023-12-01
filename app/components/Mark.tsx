@@ -20,9 +20,9 @@ export default function Mark({
       as="mark"
       fontWeight="semibold"
       color="inherit"
-      {...props}
       m="0 -0.4em"
       p="0.1em 0.4em"
+      {...props}
       borderRadius="0.8em 0.3em"
       bgColor="transparent"
       whiteSpace="nowrap"

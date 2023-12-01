@@ -1,12 +1,6 @@
 import {gql} from '@apollo/client';
-import {
-  Accordion,
-  Heading,
-  Spinner,
-  useBreakpointValue,
-} from '@chakra-ui/react';
+import {Heading, ListItem, UnorderedList} from '@chakra-ui/react';
 import type {LoaderArgs} from '@remix-run/node';
-import {useEffect, useMemo, useState} from 'react';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import ProductList from '~/components/speisekarte/ProductList';
 import type {SpeisekarteQuery} from '~/types/graphql';
@@ -16,6 +10,8 @@ import apolloClient from '~/utils/apolloClient';
 gql`
   query Speisekarte {
     productLists(activeOnly: true) {
+      name
+      emoji
       ...ProductListComponent
     }
   }
@@ -31,39 +27,30 @@ export async function loader(args: LoaderArgs) {
 
 export default function Speisekarte() {
   const {productLists} = useTypedLoaderData<typeof loader>();
-  const none = useMemo<number[]>(() => [], []);
-  const all = useMemo(
-    () => productLists.map((_, i) => i),
-    // hook is only depending on length of productLists
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [productLists.length],
-  );
-  const indices = useBreakpointValue({base: none, lg: all});
-  const [openIndices, setOpenIndices] = useState<number[] | number | undefined>(
-    indices,
-  );
-
-  useEffect(() => {
-    setOpenIndices(indices);
-  }, [indices]);
-
-  if (!productLists || productLists.length < 1) {
-    return <Spinner />;
-  }
 
   return (
     <>
-      <Heading>Speisen & Getränke</Heading>
-      <Accordion
-        index={openIndices}
-        allowMultiple
-        mt="5"
-        onChange={setOpenIndices}
+      <Heading mb="10" textAlign="center">
+        Speisen & Getränke
+      </Heading>
+      <UnorderedList
+        columnGap="10"
+        sx={{columnCount: [1, 2]}}
+        listStyleType="none"
       >
         {productLists.map((productList) => (
-          <ProductList productList={productList} key={productList.name} />
+          <ListItem
+            key={productList.name}
+            sx={{breakInside: 'avoid-column'}}
+            pb="10"
+          >
+            <Heading size="md" textAlign="center" mb="2">
+              {productList.emoji} {productList.name}
+            </Heading>
+            <ProductList productList={productList} />
+          </ListItem>
         ))}
-      </Accordion>
+      </UnorderedList>
     </>
   );
 }

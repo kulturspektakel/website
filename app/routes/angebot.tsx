@@ -6,6 +6,8 @@ import type {AngebotQuery} from '~/types/graphql';
 import {AngebotDocument} from '~/types/graphql';
 import apolloClient from '~/utils/apolloClient';
 import Page from '~/components/Page';
+import {$path} from 'remix-routes';
+import LinkButton from '~/components/LinkButton';
 
 gql`
   query Angebot {
@@ -14,6 +16,12 @@ gql`
       name
       description
       emoji
+    }
+    food: node(id: "Page:speisen-getraenke") {
+      ... on Page {
+        id
+        ...PageContent
+      }
     }
     workshops: node(id: "Page:workshops") {
       ... on Page {
@@ -47,7 +55,9 @@ export default function Angebot() {
   const {data} = useTypedLoaderData<typeof loader>();
   return (
     <VStack spacing="10">
-      <Heading textAlign="center">Speisen & Getränke</Heading>
+      {data.food && data.food.__typename === 'Page' && (
+        <Page {...data.food} centered />
+      )}
       <UnorderedList columnGap="5" sx={{columnCount: [1, 2, 3]}}>
         {data.productLists.map((list) => (
           <ListItem
@@ -63,6 +73,9 @@ export default function Angebot() {
           </ListItem>
         ))}
       </UnorderedList>
+      <LinkButton href={$path('/speisekarte')}>
+        vollständige Speisekarte
+      </LinkButton>
       {data.workshops && data.workshops.__typename === 'Page' && (
         <Page {...data.workshops} centered />
       )}

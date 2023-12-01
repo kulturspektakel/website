@@ -21,7 +21,11 @@ export default function Header() {
       bgBlendMode="luminosity"
     >
       <NavLink to="https://kulturspektakel.de">
-        <Image src={'/logo.svg'} alt="Kulturspektakel Gauting Logo" w="14" />
+        <Image
+          src={'/logos/logo.svg'}
+          alt="Kulturspektakel Gauting Logo"
+          w="14"
+        />
       </NavLink>
 
       <HStack
