@@ -31,7 +31,7 @@ export default function Footer() {
     >
       <HStack alignItems="flex-start" maxW="500px">
         <Image
-          src={'/logo.svg'}
+          src={'/logos/logo.svg'}
           alt="Kulturspektakel Gauting Logo"
           w={10}
           display={{base: 'none', md: 'initial'}}

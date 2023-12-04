@@ -88,6 +88,7 @@ export default function Events() {
       <Selector
         options={EVENT_TYPE}
         value={variables?.type ?? null}
+        allLabelSmall="Alle Veranstaltungen"
         onChange={(type) =>
           setVariables(type == null ? null : {type, cursor: null})
         }

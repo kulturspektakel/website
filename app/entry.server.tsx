@@ -50,7 +50,6 @@ export default function handleRequest(
         },
         onError: (error: unknown) => {
           didError = true;
-
           console.error(error);
         },
       },

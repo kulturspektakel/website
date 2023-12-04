@@ -21,11 +21,13 @@ const scalarLink = withScalars({
 });
 
 const apolloClient = new ApolloClient({
-  cache: new InMemoryCache(),
+  cache: new InMemoryCache().restore(
+    typeof window !== 'undefined' ? window.__APOLLO_STATE__ : undefined,
+  ),
   link: ApolloLink.from([
     scalarLink,
     new HttpLink({
-      uri: 'https://api.kulturspektakel.de/graphql',
+      uri: 'https://api2.kulturspektakel.de/graphql',
       headers: {
         'x-environment': process.env.NODE_ENV,
       },

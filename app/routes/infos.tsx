@@ -22,6 +22,7 @@ gql`
     crewCalendar {
       summary
       start
+      end
       uid
       location
     }
@@ -71,6 +72,7 @@ export default function Angebot() {
                     year: 'numeric',
                   }}
                   date={event.start}
+                  to={event.end}
                 />
               </Mark>
               <Text>

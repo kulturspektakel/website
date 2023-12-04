@@ -4,10 +4,12 @@ import {useCallback, useRef} from 'react';
 export default function Selector({
   value,
   onChange,
+  allLabelSmall,
   options,
 }: {
   value: string | null;
   onChange: (value: string | null, index: number) => void;
+  allLabelSmall?: string;
   options: Array<{
     id: string;
     name: string;
@@ -77,7 +79,7 @@ export default function Selector({
         fontWeight="bold"
         value={value ?? 'all'}
       >
-        <option value={'all'}>Alle</option>
+        <option value={'all'}>{allLabelSmall ?? 'Alle'}</option>
         {options.map((o) => (
           <option key={o.id} value={o.id}>
             {o.name}

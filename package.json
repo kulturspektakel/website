@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.8.5",
+    "@badrap/bar-of-progress": "^0.2.2",
     "@chakra-ui/icons": "^2.1.1",
     "@chakra-ui/react": "^2.8.1",
     "@emotion/react": "^11.10.4",

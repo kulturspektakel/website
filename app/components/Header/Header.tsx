@@ -1,10 +1,40 @@
-import {Flex, HStack, Image, Link as ChakraLink} from '@chakra-ui/react';
-import {useLocation, NavLink} from '@remix-run/react';
+import {
+  Flex,
+  HStack,
+  Image,
+  Link as ChakraLink,
+  useToken,
+} from '@chakra-ui/react';
+import {useLocation, NavLink, useNavigation} from '@remix-run/react';
 import i from './Header.webp';
+import {useEffect, useMemo} from 'react';
+import ProgressBar from '@badrap/bar-of-progress';
+
+function useLoadingBar() {
+  const [blue500] = useToken('colors', ['blue.500']);
+  const progress = useMemo(
+    () =>
+      new ProgressBar({
+        size: 2,
+        color: blue500,
+        delay: 80,
+      }),
+    [blue500],
+  );
+  const {state} = useNavigation();
+  useEffect(() => {
+    if (state === 'loading' || state === 'submitting') {
+      progress.start();
+    } else {
+      progress.finish();
+    }
+  }, [progress, state]);
+}
 
 export default function Header() {
   const isHome = useLocation().pathname === '/';
   const isBooking = useLocation().pathname.startsWith('/booking');
+  useLoadingBar();
 
   return (
     <Flex

@@ -19,10 +19,14 @@ import {LineupsDocument} from '~/types/graphql';
 
 gql`
   query Lineups {
-    events(type: Kulturspektakel, hasBandsPlaying: true) {
-      name
-      id
-      start
+    eventsConnection(type: Kulturspektakel, hasBandsPlaying: true, first: 100) {
+      edges {
+        node {
+          name
+          id
+          start
+        }
+      }
     }
   }
 `;
@@ -59,16 +63,19 @@ export default function () {
           </Heading>
           {params.slug == null && (
             <Menu placement="bottom-end" isLazy>
-              <MenuButton
-                size="xs"
-                mt="0.5"
-                ml="1.5"
-                isRound
-                as={IconButton}
-                icon={<TriangleDownIcon />}
-              >
-                Actions
-              </MenuButton>
+              <Tooltip label="Jahr auswählen">
+                <MenuButton
+                  aria-label="Jahr auswählen"
+                  size="xs"
+                  mt="0.5"
+                  ml="1.5"
+                  isRound
+                  as={IconButton}
+                  icon={<TriangleDownIcon />}
+                >
+                  Jahr auswählen
+                </MenuButton>
+              </Tooltip>
               <MenuList>
                 <MenuItems />
               </MenuList>
@@ -86,13 +93,13 @@ function MenuItems() {
   const {data} = useSuspenseQuery<LineupsQuery>(LineupsDocument, {});
   return (
     <>
-      {data?.events.map((e) => (
+      {data?.eventsConnection.edges.map(({node}) => (
         <MenuItem
           as={NavLink}
-          to={$path('/lineup/:year', {year: e.start.getFullYear()})}
-          key={e.id}
+          to={$path('/lineup/:year', {year: node.start.getFullYear()})}
+          key={node.id}
         >
-          {e.name}
+          {node.name}
         </MenuItem>
       ))}
     </>

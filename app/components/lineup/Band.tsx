@@ -39,7 +39,6 @@ export default function Band({band}: {band: BandFragment}) {
         src={band.photo?.scaledUri}
         loading="lazy"
         objectFit="cover"
-        // blendMode="luminosity"
       />
       <Box
         position="absolute"
@@ -56,7 +55,7 @@ export default function Band({band}: {band: BandFragment}) {
       >
         <Heading
           sx={{hyphens: 'auto'}}
-          fontSize={['xl', '2xl']}
+          fontSize={['md', 'lg', '2xl']}
           noOfLines={4}
           color="inherit"
           as="h3"
@@ -65,10 +64,10 @@ export default function Band({band}: {band: BandFragment}) {
         </Heading>
         {band.genre && (
           <Text
-            noOfLines={[2, 2, 1]}
-            lineHeight="1"
+            noOfLines={2}
+            lineHeight="1.1"
             fontWeight="bold"
-            fontSize="sm"
+            fontSize={['xs', 'sm']}
             mt="0.5"
           >
             <DateString

@@ -83,6 +83,7 @@ export default function LineupYear() {
   return (
     <>
       <Selector
+        allLabelSmall="Alle Bühnen"
         onChange={setStageFilter}
         value={stageFilter}
         options={activeAreas.map((a) => ({name: a.displayName, id: a.id}))}

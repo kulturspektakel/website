@@ -1444,6 +1444,7 @@ export type InfosQuery = {
     __typename?: 'VEvent';
     summary: string;
     start: Date;
+    end: Date;
     uid: string;
     location?: string | null;
   }>;
@@ -1598,7 +1599,13 @@ export type LineupsQueryVariables = Exact<{[key: string]: never}>;
 
 export type LineupsQuery = {
   __typename?: 'Query';
-  events: Array<{__typename?: 'Event'; name: string; id: string; start: Date}>;
+  eventsConnection: {
+    __typename?: 'QueryEventsConnection';
+    edges: Array<{
+      __typename?: 'QueryEventsConnectionEdge';
+      node: {__typename?: 'Event'; name: string; id: string; start: Date};
+    }>;
+  };
 };
 
 export type NewsPageQueryVariables = Exact<{
@@ -2554,6 +2561,7 @@ export const InfosDocument = gql`
     crewCalendar {
       summary
       start
+      end
       uid
       location
     }
@@ -2760,10 +2768,14 @@ export type LineupQueryResult = Apollo.QueryResult<
 >;
 export const LineupsDocument = gql`
   query Lineups {
-    events(type: Kulturspektakel, hasBandsPlaying: true) {
-      name
-      id
-      start
+    eventsConnection(type: Kulturspektakel, hasBandsPlaying: true, first: 100) {
+      edges {
+        node {
+          name
+          id
+          start
+        }
+      }
     }
   }
 `;
