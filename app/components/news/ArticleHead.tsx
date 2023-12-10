@@ -1,8 +1,10 @@
-import { gql } from '@apollo/client';
-import { Heading } from '@chakra-ui/react';
+import {gql} from '@apollo/client';
+import {Heading, Link as ChakraLink} from '@chakra-ui/react';
+import {Link} from '@remix-run/react';
 import DateString from '../DateString';
 import Mark from '../Mark';
-import type { ArticleHeadFragment } from '../../types/graphql';
+import type {ArticleHeadFragment} from '../../types/graphql';
+import {$path} from 'remix-routes';
 
 gql`
   fragment ArticleHead on News {
@@ -14,8 +16,12 @@ gql`
 
 export default function ArticleHead(props: ArticleHeadFragment) {
   return (
-    <a href={`/news/${props.slug}`}>
-      <Heading size="lg" mb="2">{props.title}</Heading>
+    <>
+      <Heading size="lg" mb="1">
+        <ChakraLink as={Link} to={$path('/news/:slug', {slug: props.slug})}>
+          {props.title}
+        </ChakraLink>
+      </Heading>
       <Mark>
         <DateString
           options={{
@@ -26,6 +32,6 @@ export default function ArticleHead(props: ArticleHeadFragment) {
           date={props.createdAt}
         />
       </Mark>
-    </a>
+    </>
   );
 }

@@ -409,6 +409,13 @@ export type HistoricalProductSalesNumbersArgs = {
   before: Scalars['DateTime']['input'];
 };
 
+export type ImageSize = {
+  __typename?: 'ImageSize';
+  height: Scalars['Int']['output'];
+  uri: Scalars['String']['output'];
+  width: Scalars['Int']['output'];
+};
+
 export type MissingTransaction = Transaction & {
   __typename?: 'MissingTransaction';
   balanceAfter: Scalars['Int']['output'];
@@ -484,6 +491,7 @@ export type News = Node & {
   content: Scalars['String']['output'];
   createdAt: Scalars['Date']['output'];
   id: Scalars['ID']['output'];
+  imageSizes: Array<ImageSize>;
   slug: Scalars['String']['output'];
   title: Scalars['String']['output'];
 };
@@ -571,6 +579,7 @@ export type Page = Node & {
   bottom?: Maybe<Scalars['String']['output']>;
   content?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
+  imageSizes: Array<ImageSize>;
   left?: Maybe<Scalars['String']['output']>;
   right?: Maybe<Scalars['String']['output']>;
   title: Scalars['String']['output'];
