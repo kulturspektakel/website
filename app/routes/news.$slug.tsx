@@ -36,5 +36,5 @@ export const meta: V2_MetaFunction = mergeMeta((args) => {
 
 export default function News() {
   const data = useTypedLoaderData<typeof loader>();
-  return <Article {...data} />;
+  return <Article data={data} />;
 }

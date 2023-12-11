@@ -1,4 +1,4 @@
-schema: https://api2.kulturspektakel.de/graphql
+schema: https://api.kulturspektakel.de/graphql
 documents:
   - ./app/**/*.tsx
 generates:

@@ -4,12 +4,10 @@ import {
   ListItem,
   OrderedList,
   Divider,
-  Box,
   Center,
-  Link as ChakraLink,
   Button,
 } from '@chakra-ui/react';
-import type {LoaderArgs} from '@remix-run/node';
+import type {LoaderArgs, V2_MetaFunction} from '@remix-run/node';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import Event from '~/components/events/Event';
 import type {
@@ -24,11 +22,10 @@ import {
 import apolloClient from '~/utils/apolloClient';
 import {Gallery} from 'react-photoswipe-gallery';
 import DateString from '~/components/DateString';
-import Mark from '~/components/Mark';
 import Selector from '~/components/Selector';
 import {useState} from 'react';
-import {Link} from '@remix-run/react';
 import {$path} from 'remix-routes';
+import Headline from '~/components/Headline';
 
 gql`
   query EventsOverview(
@@ -59,6 +56,15 @@ const EVENT_TYPE = [
   {id: EventType.Locker, name: 'Locker'},
   {id: EventType.Other, name: 'Weitere'},
 ];
+
+export const meta: V2_MetaFunction<typeof loader> = (props) => {
+  console.log(props.data);
+  return [
+    {
+      title: 'Veranstaltungen',
+    },
+  ];
+};
 
 export async function loader(args: LoaderArgs) {
   const {data} = await apolloClient.query<EventsOverviewQuery>({
@@ -98,19 +104,13 @@ export default function Events() {
           {data.eventsConnection.edges.map(({node: e}, i) => (
             <ListItem key={e.id}>
               {i > 0 && <Divider m="16" />}
-              <Box textAlign="center">
-                <Heading size="lg" mb="1">
-                  <ChakraLink
-                    as={Link}
-                    to={$path('/events/:id', {id: e.id.split(':')[1]})}
-                  >
-                    {e.name}
-                  </ChakraLink>
-                </Heading>
-                <Mark fontSize="lg">
-                  <DateString date={e.start} to={e.end} />
-                </Mark>
-              </Box>
+              <Headline
+                textAlign="center"
+                mark={<DateString date={e.start} to={e.end} />}
+                href={$path('/events/:id', {id: e.id.split(':')[1]})}
+              >
+                {e.name}
+              </Headline>
               <Event event={e} />
             </ListItem>
           ))}

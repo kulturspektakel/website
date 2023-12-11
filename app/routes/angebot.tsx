@@ -1,6 +1,6 @@
 import {gql} from '@apollo/client';
 import {Text, Heading, ListItem, UnorderedList, VStack} from '@chakra-ui/react';
-import type {LoaderArgs} from '@remix-run/node';
+import type {LoaderArgs, V2_MetaFunction} from '@remix-run/node';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import type {AngebotQuery} from '~/types/graphql';
 import {AngebotDocument} from '~/types/graphql';
@@ -44,15 +44,23 @@ gql`
   }
 `;
 
+export const meta: V2_MetaFunction<typeof loader> = (props) => {
+  return [
+    {
+      title: 'Angebot & Programm',
+    },
+  ];
+};
+
 export async function loader(args: LoaderArgs) {
   const {data} = await apolloClient.query<AngebotQuery>({
     query: AngebotDocument,
   });
-  return typedjson({data});
+  return typedjson(data);
 }
 
 export default function Angebot() {
-  const {data} = useTypedLoaderData<typeof loader>();
+  const data = useTypedLoaderData<typeof loader>();
   return (
     <VStack spacing="10">
       {data.food && data.food.__typename === 'Page' && (

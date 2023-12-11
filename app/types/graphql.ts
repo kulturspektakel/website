@@ -409,11 +409,11 @@ export type HistoricalProductSalesNumbersArgs = {
   before: Scalars['DateTime']['input'];
 };
 
-export type ImageSize = {
-  __typename?: 'ImageSize';
-  height: Scalars['Int']['output'];
-  uri: Scalars['String']['output'];
-  width: Scalars['Int']['output'];
+export type MarkdownString = {
+  __typename?: 'MarkdownString';
+  images: Array<PixelImage>;
+  markdown: Scalars['String']['output'];
+  plainText: Scalars['String']['output'];
 };
 
 export type MissingTransaction = Transaction & {
@@ -488,10 +488,9 @@ export type MutationUpsertProductListArgs = {
 
 export type News = Node & {
   __typename?: 'News';
-  content: Scalars['String']['output'];
+  content: MarkdownString;
   createdAt: Scalars['Date']['output'];
   id: Scalars['ID']['output'];
-  imageSizes: Array<ImageSize>;
   slug: Scalars['String']['output'];
   title: Scalars['String']['output'];
 };
@@ -576,12 +575,11 @@ export enum OrderPayment {
 
 export type Page = Node & {
   __typename?: 'Page';
-  bottom?: Maybe<Scalars['String']['output']>;
-  content?: Maybe<Scalars['String']['output']>;
+  bottom?: Maybe<MarkdownString>;
+  content?: Maybe<MarkdownString>;
   id: Scalars['ID']['output'];
-  imageSizes: Array<ImageSize>;
-  left?: Maybe<Scalars['String']['output']>;
-  right?: Maybe<Scalars['String']['output']>;
+  left?: Maybe<MarkdownString>;
+  right?: Maybe<MarkdownString>;
   title: Scalars['String']['output'];
 };
 
@@ -855,6 +853,7 @@ export type TransactionsTransactionsArgs = {
 
 export type VEvent = {
   __typename?: 'VEvent';
+  allDay: Scalars['Boolean']['output'];
   comment?: Maybe<Scalars['String']['output']>;
   end: Scalars['DateTime']['output'];
   location?: Maybe<Scalars['String']['output']>;
@@ -872,13 +871,91 @@ export type Viewer = Node & {
   profilePicture?: Maybe<Scalars['String']['output']>;
 };
 
+export type HeaderFragment = {
+  __typename?: 'Query';
+  eventsConnection: {
+    __typename?: 'QueryEventsConnection';
+    edges: Array<{
+      __typename?: 'QueryEventsConnectionEdge';
+      node: {__typename?: 'Event'; start: Date; end: Date};
+    }>;
+  };
+};
+
+export type MarkdownTextFragment = {
+  __typename?: 'MarkdownString';
+  markdown: string;
+  images: Array<{
+    __typename?: 'PixelImage';
+    uri: string;
+    width: number;
+    height: number;
+    copyright?: string | null;
+    tiny: string;
+    small: string;
+    large: string;
+  }>;
+};
+
 export type PageContentFragment = {
   __typename?: 'Page';
   title: string;
-  content?: string | null;
-  left?: string | null;
-  right?: string | null;
-  bottom?: string | null;
+  content?: {
+    __typename?: 'MarkdownString';
+    markdown: string;
+    images: Array<{
+      __typename?: 'PixelImage';
+      uri: string;
+      width: number;
+      height: number;
+      copyright?: string | null;
+      tiny: string;
+      small: string;
+      large: string;
+    }>;
+  } | null;
+  left?: {
+    __typename?: 'MarkdownString';
+    markdown: string;
+    images: Array<{
+      __typename?: 'PixelImage';
+      uri: string;
+      width: number;
+      height: number;
+      copyright?: string | null;
+      tiny: string;
+      small: string;
+      large: string;
+    }>;
+  } | null;
+  right?: {
+    __typename?: 'MarkdownString';
+    markdown: string;
+    images: Array<{
+      __typename?: 'PixelImage';
+      uri: string;
+      width: number;
+      height: number;
+      copyright?: string | null;
+      tiny: string;
+      small: string;
+      large: string;
+    }>;
+  } | null;
+  bottom?: {
+    __typename?: 'MarkdownString';
+    markdown: string;
+    images: Array<{
+      __typename?: 'PixelImage';
+      uri: string;
+      width: number;
+      height: number;
+      copyright?: string | null;
+      tiny: string;
+      small: string;
+      large: string;
+    }>;
+  } | null;
 };
 
 export type DistanceQueryVariables = Exact<{
@@ -1064,14 +1141,20 @@ export type ArticleFragment = {
   slug: string;
   title: string;
   createdAt: Date;
-  content: string;
-};
-
-export type ArticleHeadFragment = {
-  __typename?: 'News';
-  slug: string;
-  title: string;
-  createdAt: Date;
+  content: {
+    __typename?: 'MarkdownString';
+    markdown: string;
+    images: Array<{
+      __typename?: 'PixelImage';
+      uri: string;
+      width: number;
+      height: number;
+      copyright?: string | null;
+      tiny: string;
+      small: string;
+      large: string;
+    }>;
+  };
 };
 
 export type ProductListComponentFragment = {
@@ -1088,6 +1171,19 @@ export type ProductListComponentFragment = {
       id: string;
     }>;
   }>;
+};
+
+export type RootQueryVariables = Exact<{[key: string]: never}>;
+
+export type RootQuery = {
+  __typename?: 'Query';
+  eventsConnection: {
+    __typename?: 'QueryEventsConnection';
+    edges: Array<{
+      __typename?: 'QueryEventsConnectionEdge';
+      node: {__typename?: 'Event'; start: Date; end: Date};
+    }>;
+  };
 };
 
 export type PageQueryVariables = Exact<{
@@ -1110,10 +1206,62 @@ export type PageQuery = {
         __typename?: 'Page';
         id: string;
         title: string;
-        content?: string | null;
-        left?: string | null;
-        right?: string | null;
-        bottom?: string | null;
+        content?: {
+          __typename?: 'MarkdownString';
+          markdown: string;
+          images: Array<{
+            __typename?: 'PixelImage';
+            uri: string;
+            width: number;
+            height: number;
+            copyright?: string | null;
+            tiny: string;
+            small: string;
+            large: string;
+          }>;
+        } | null;
+        left?: {
+          __typename?: 'MarkdownString';
+          markdown: string;
+          images: Array<{
+            __typename?: 'PixelImage';
+            uri: string;
+            width: number;
+            height: number;
+            copyright?: string | null;
+            tiny: string;
+            small: string;
+            large: string;
+          }>;
+        } | null;
+        right?: {
+          __typename?: 'MarkdownString';
+          markdown: string;
+          images: Array<{
+            __typename?: 'PixelImage';
+            uri: string;
+            width: number;
+            height: number;
+            copyright?: string | null;
+            tiny: string;
+            small: string;
+            large: string;
+          }>;
+        } | null;
+        bottom?: {
+          __typename?: 'MarkdownString';
+          markdown: string;
+          images: Array<{
+            __typename?: 'PixelImage';
+            uri: string;
+            width: number;
+            height: number;
+            copyright?: string | null;
+            tiny: string;
+            small: string;
+            large: string;
+          }>;
+        } | null;
       }
     | {__typename?: 'Product'}
     | {__typename?: 'ProductList'}
@@ -1134,7 +1282,20 @@ export type NewsQuery = {
         slug: string;
         title: string;
         createdAt: Date;
-        content: string;
+        content: {
+          __typename?: 'MarkdownString';
+          markdown: string;
+          images: Array<{
+            __typename?: 'PixelImage';
+            uri: string;
+            width: number;
+            height: number;
+            copyright?: string | null;
+            tiny: string;
+            small: string;
+            large: string;
+          }>;
+        };
       };
     }>;
   };
@@ -1165,10 +1326,62 @@ export type AngebotQuery = {
         __typename?: 'Page';
         id: string;
         title: string;
-        content?: string | null;
-        left?: string | null;
-        right?: string | null;
-        bottom?: string | null;
+        content?: {
+          __typename?: 'MarkdownString';
+          markdown: string;
+          images: Array<{
+            __typename?: 'PixelImage';
+            uri: string;
+            width: number;
+            height: number;
+            copyright?: string | null;
+            tiny: string;
+            small: string;
+            large: string;
+          }>;
+        } | null;
+        left?: {
+          __typename?: 'MarkdownString';
+          markdown: string;
+          images: Array<{
+            __typename?: 'PixelImage';
+            uri: string;
+            width: number;
+            height: number;
+            copyright?: string | null;
+            tiny: string;
+            small: string;
+            large: string;
+          }>;
+        } | null;
+        right?: {
+          __typename?: 'MarkdownString';
+          markdown: string;
+          images: Array<{
+            __typename?: 'PixelImage';
+            uri: string;
+            width: number;
+            height: number;
+            copyright?: string | null;
+            tiny: string;
+            small: string;
+            large: string;
+          }>;
+        } | null;
+        bottom?: {
+          __typename?: 'MarkdownString';
+          markdown: string;
+          images: Array<{
+            __typename?: 'PixelImage';
+            uri: string;
+            width: number;
+            height: number;
+            copyright?: string | null;
+            tiny: string;
+            small: string;
+            large: string;
+          }>;
+        } | null;
       }
     | {__typename?: 'Product'}
     | {__typename?: 'ProductList'}
@@ -1188,10 +1401,62 @@ export type AngebotQuery = {
         __typename?: 'Page';
         id: string;
         title: string;
-        content?: string | null;
-        left?: string | null;
-        right?: string | null;
-        bottom?: string | null;
+        content?: {
+          __typename?: 'MarkdownString';
+          markdown: string;
+          images: Array<{
+            __typename?: 'PixelImage';
+            uri: string;
+            width: number;
+            height: number;
+            copyright?: string | null;
+            tiny: string;
+            small: string;
+            large: string;
+          }>;
+        } | null;
+        left?: {
+          __typename?: 'MarkdownString';
+          markdown: string;
+          images: Array<{
+            __typename?: 'PixelImage';
+            uri: string;
+            width: number;
+            height: number;
+            copyright?: string | null;
+            tiny: string;
+            small: string;
+            large: string;
+          }>;
+        } | null;
+        right?: {
+          __typename?: 'MarkdownString';
+          markdown: string;
+          images: Array<{
+            __typename?: 'PixelImage';
+            uri: string;
+            width: number;
+            height: number;
+            copyright?: string | null;
+            tiny: string;
+            small: string;
+            large: string;
+          }>;
+        } | null;
+        bottom?: {
+          __typename?: 'MarkdownString';
+          markdown: string;
+          images: Array<{
+            __typename?: 'PixelImage';
+            uri: string;
+            width: number;
+            height: number;
+            copyright?: string | null;
+            tiny: string;
+            small: string;
+            large: string;
+          }>;
+        } | null;
       }
     | {__typename?: 'Product'}
     | {__typename?: 'ProductList'}
@@ -1211,10 +1476,62 @@ export type AngebotQuery = {
         __typename?: 'Page';
         id: string;
         title: string;
-        content?: string | null;
-        left?: string | null;
-        right?: string | null;
-        bottom?: string | null;
+        content?: {
+          __typename?: 'MarkdownString';
+          markdown: string;
+          images: Array<{
+            __typename?: 'PixelImage';
+            uri: string;
+            width: number;
+            height: number;
+            copyright?: string | null;
+            tiny: string;
+            small: string;
+            large: string;
+          }>;
+        } | null;
+        left?: {
+          __typename?: 'MarkdownString';
+          markdown: string;
+          images: Array<{
+            __typename?: 'PixelImage';
+            uri: string;
+            width: number;
+            height: number;
+            copyright?: string | null;
+            tiny: string;
+            small: string;
+            large: string;
+          }>;
+        } | null;
+        right?: {
+          __typename?: 'MarkdownString';
+          markdown: string;
+          images: Array<{
+            __typename?: 'PixelImage';
+            uri: string;
+            width: number;
+            height: number;
+            copyright?: string | null;
+            tiny: string;
+            small: string;
+            large: string;
+          }>;
+        } | null;
+        bottom?: {
+          __typename?: 'MarkdownString';
+          markdown: string;
+          images: Array<{
+            __typename?: 'PixelImage';
+            uri: string;
+            width: number;
+            height: number;
+            copyright?: string | null;
+            tiny: string;
+            small: string;
+            large: string;
+          }>;
+        } | null;
       }
     | {__typename?: 'Product'}
     | {__typename?: 'ProductList'}
@@ -1234,10 +1551,62 @@ export type AngebotQuery = {
         __typename?: 'Page';
         id: string;
         title: string;
-        content?: string | null;
-        left?: string | null;
-        right?: string | null;
-        bottom?: string | null;
+        content?: {
+          __typename?: 'MarkdownString';
+          markdown: string;
+          images: Array<{
+            __typename?: 'PixelImage';
+            uri: string;
+            width: number;
+            height: number;
+            copyright?: string | null;
+            tiny: string;
+            small: string;
+            large: string;
+          }>;
+        } | null;
+        left?: {
+          __typename?: 'MarkdownString';
+          markdown: string;
+          images: Array<{
+            __typename?: 'PixelImage';
+            uri: string;
+            width: number;
+            height: number;
+            copyright?: string | null;
+            tiny: string;
+            small: string;
+            large: string;
+          }>;
+        } | null;
+        right?: {
+          __typename?: 'MarkdownString';
+          markdown: string;
+          images: Array<{
+            __typename?: 'PixelImage';
+            uri: string;
+            width: number;
+            height: number;
+            copyright?: string | null;
+            tiny: string;
+            small: string;
+            large: string;
+          }>;
+        } | null;
+        bottom?: {
+          __typename?: 'MarkdownString';
+          markdown: string;
+          images: Array<{
+            __typename?: 'PixelImage';
+            uri: string;
+            width: number;
+            height: number;
+            copyright?: string | null;
+            tiny: string;
+            small: string;
+            large: string;
+          }>;
+        } | null;
       }
     | {__typename?: 'Product'}
     | {__typename?: 'ProductList'}
@@ -1456,6 +1825,7 @@ export type InfosQuery = {
     end: Date;
     uid: string;
     location?: string | null;
+    allDay: boolean;
   }>;
   infos?:
     | {__typename?: 'Area'}
@@ -1471,10 +1841,62 @@ export type InfosQuery = {
         __typename?: 'Page';
         id: string;
         title: string;
-        content?: string | null;
-        left?: string | null;
-        right?: string | null;
-        bottom?: string | null;
+        content?: {
+          __typename?: 'MarkdownString';
+          markdown: string;
+          images: Array<{
+            __typename?: 'PixelImage';
+            uri: string;
+            width: number;
+            height: number;
+            copyright?: string | null;
+            tiny: string;
+            small: string;
+            large: string;
+          }>;
+        } | null;
+        left?: {
+          __typename?: 'MarkdownString';
+          markdown: string;
+          images: Array<{
+            __typename?: 'PixelImage';
+            uri: string;
+            width: number;
+            height: number;
+            copyright?: string | null;
+            tiny: string;
+            small: string;
+            large: string;
+          }>;
+        } | null;
+        right?: {
+          __typename?: 'MarkdownString';
+          markdown: string;
+          images: Array<{
+            __typename?: 'PixelImage';
+            uri: string;
+            width: number;
+            height: number;
+            copyright?: string | null;
+            tiny: string;
+            small: string;
+            large: string;
+          }>;
+        } | null;
+        bottom?: {
+          __typename?: 'MarkdownString';
+          markdown: string;
+          images: Array<{
+            __typename?: 'PixelImage';
+            uri: string;
+            width: number;
+            height: number;
+            copyright?: string | null;
+            tiny: string;
+            small: string;
+            large: string;
+          }>;
+        } | null;
       }
     | {__typename?: 'Product'}
     | {__typename?: 'ProductList'}
@@ -1494,10 +1916,62 @@ export type InfosQuery = {
         __typename?: 'Page';
         id: string;
         title: string;
-        content?: string | null;
-        left?: string | null;
-        right?: string | null;
-        bottom?: string | null;
+        content?: {
+          __typename?: 'MarkdownString';
+          markdown: string;
+          images: Array<{
+            __typename?: 'PixelImage';
+            uri: string;
+            width: number;
+            height: number;
+            copyright?: string | null;
+            tiny: string;
+            small: string;
+            large: string;
+          }>;
+        } | null;
+        left?: {
+          __typename?: 'MarkdownString';
+          markdown: string;
+          images: Array<{
+            __typename?: 'PixelImage';
+            uri: string;
+            width: number;
+            height: number;
+            copyright?: string | null;
+            tiny: string;
+            small: string;
+            large: string;
+          }>;
+        } | null;
+        right?: {
+          __typename?: 'MarkdownString';
+          markdown: string;
+          images: Array<{
+            __typename?: 'PixelImage';
+            uri: string;
+            width: number;
+            height: number;
+            copyright?: string | null;
+            tiny: string;
+            small: string;
+            large: string;
+          }>;
+        } | null;
+        bottom?: {
+          __typename?: 'MarkdownString';
+          markdown: string;
+          images: Array<{
+            __typename?: 'PixelImage';
+            uri: string;
+            width: number;
+            height: number;
+            copyright?: string | null;
+            tiny: string;
+            small: string;
+            large: string;
+          }>;
+        } | null;
       }
     | {__typename?: 'Product'}
     | {__typename?: 'ProductList'}
@@ -1636,7 +2110,20 @@ export type NewsPageQuery = {
         slug: string;
         title: string;
         createdAt: Date;
-        content: string;
+        content: {
+          __typename?: 'MarkdownString';
+          markdown: string;
+          images: Array<{
+            __typename?: 'PixelImage';
+            uri: string;
+            width: number;
+            height: number;
+            copyright?: string | null;
+            tiny: string;
+            small: string;
+            large: string;
+          }>;
+        };
       }
     | {__typename?: 'NuclinoPage'}
     | {__typename?: 'Page'}
@@ -1660,10 +2147,23 @@ export type NewsArchiveQuery = {
       cursor: string;
       node: {
         __typename?: 'News';
-        title: string;
         slug: string;
+        title: string;
         createdAt: Date;
-        content: string;
+        content: {
+          __typename?: 'MarkdownString';
+          markdown: string;
+          images: Array<{
+            __typename?: 'PixelImage';
+            uri: string;
+            width: number;
+            height: number;
+            copyright?: string | null;
+            tiny: string;
+            small: string;
+            large: string;
+          }>;
+        };
       };
     }>;
   };
@@ -1692,14 +2192,49 @@ export type SpeisekarteQuery = {
   }>;
 };
 
+export const HeaderFragmentDoc = gql`
+  fragment Header on Query {
+    eventsConnection(first: 1, type: Kulturspektakel) {
+      edges {
+        node {
+          start
+          end
+        }
+      }
+    }
+  }
+`;
+export const MarkdownTextFragmentDoc = gql`
+  fragment MarkdownText on MarkdownString {
+    markdown
+    images {
+      uri
+      tiny: scaledUri(width: 250)
+      small: scaledUri(width: 900)
+      large: scaledUri(width: 1600)
+      width
+      height
+      copyright
+    }
+  }
+`;
 export const PageContentFragmentDoc = gql`
   fragment PageContent on Page {
     title
-    content
-    left
-    right
-    bottom
+    content {
+      ...MarkdownText
+    }
+    left {
+      ...MarkdownText
+    }
+    right {
+      ...MarkdownText
+    }
+    bottom {
+      ...MarkdownText
+    }
   }
+  ${MarkdownTextFragmentDoc}
 `;
 export const EventPhotosFragmentDoc = gql`
   fragment EventPhotos on EventMediaConnection {
@@ -1770,22 +2305,16 @@ export const BandFragmentDoc = gql`
     }
   }
 `;
-export const ArticleHeadFragmentDoc = gql`
-  fragment ArticleHead on News {
-    slug
-    title
-    createdAt
-  }
-`;
 export const ArticleFragmentDoc = gql`
   fragment Article on News {
     slug
     title
     createdAt
-    content
-    ...ArticleHead
+    content {
+      ...MarkdownText
+    }
   }
-  ${ArticleHeadFragmentDoc}
+  ${MarkdownTextFragmentDoc}
 `;
 export const ProductListComponentFragmentDoc = gql`
   fragment ProductListComponent on ProductList {
@@ -2096,6 +2625,46 @@ export type BandSearchQueryResult = Apollo.QueryResult<
   BandSearchQuery,
   BandSearchQueryVariables
 >;
+export const RootDocument = gql`
+  query Root {
+    ...Header
+  }
+  ${HeaderFragmentDoc}
+`;
+
+/**
+ * __useRootQuery__
+ *
+ * To run a query within a React component, call `useRootQuery` and pass it any options that fit your needs.
+ * When your component renders, `useRootQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useRootQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useRootQuery(
+  baseOptions?: Apollo.QueryHookOptions<RootQuery, RootQueryVariables>,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useQuery<RootQuery, RootQueryVariables>(RootDocument, options);
+}
+export function useRootLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<RootQuery, RootQueryVariables>,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useLazyQuery<RootQuery, RootQueryVariables>(
+    RootDocument,
+    options,
+  );
+}
+export type RootQueryHookResult = ReturnType<typeof useRootQuery>;
+export type RootLazyQueryHookResult = ReturnType<typeof useRootLazyQuery>;
+export type RootQueryResult = Apollo.QueryResult<RootQuery, RootQueryVariables>;
 export const PageDocument = gql`
   query Page($id: ID!) {
     node(id: $id) {
@@ -2573,6 +3142,7 @@ export const InfosDocument = gql`
       end
       uid
       location
+      allDay
     }
     infos: node(id: "Page:infos") {
       ... on Page {
@@ -2896,14 +3466,12 @@ export const NewsArchiveDocument = gql`
       edges {
         cursor
         node {
-          title
-          slug
-          createdAt
-          content
+          ...Article
         }
       }
     }
   }
+  ${ArticleFragmentDoc}
 `;
 
 /**

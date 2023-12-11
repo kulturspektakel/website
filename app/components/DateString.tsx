@@ -51,8 +51,9 @@ export default function DateString({
           {date.toLocaleDateString(locale, {
             timeZone,
             day: options.day,
+            weekday: options.weekday,
           })}
-          .
+          {options.weekday ? '' : '.'}
         </time>
         {connectingElement}
         {toElement}
@@ -66,6 +67,7 @@ export default function DateString({
           {date.toLocaleDateString(locale, {
             timeZone,
             day: options.day,
+            weekday: options.weekday,
             month: options.month,
           })}
         </time>

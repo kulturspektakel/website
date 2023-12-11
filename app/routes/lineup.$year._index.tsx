@@ -1,6 +1,6 @@
 import {gql} from '@apollo/client';
 import {Modal, ModalContent, ModalOverlay, Spinner} from '@chakra-ui/react';
-import type {LoaderArgs} from '@remix-run/node';
+import type {LoaderArgs, V2_MetaFunction} from '@remix-run/node';
 import {Outlet, useNavigate, useParams} from '@remix-run/react';
 import {Suspense, useMemo, useState} from 'react';
 import {$params, $path} from 'remix-routes';
@@ -40,6 +40,14 @@ gql`
 
 export type SearchParams = {
   year: number;
+};
+
+export const meta: V2_MetaFunction<typeof loader> = (props) => {
+  return [
+    {
+      title: `Lineup ${props.params.year}`,
+    },
+  ];
 };
 
 export async function loader(args: LoaderArgs) {

@@ -1,5 +1,5 @@
 import Markdown from 'markdown-to-jsx';
-import type {HeadingProps, LinkProps} from '@chakra-ui/react';
+import type {HeadingProps, ImageProps, LinkProps} from '@chakra-ui/react';
 import {
   Text,
   Heading,
@@ -10,8 +10,29 @@ import {
 import {Link} from '@remix-run/react';
 import Image from './Image';
 import {Gallery} from 'react-photoswipe-gallery';
+import {gql} from '@apollo/client';
+import type {MarkdownTextFragment} from '~/types/graphql';
 
-export default function MarkDownWithOverrides(props: any) {
+gql`
+  fragment MarkdownText on MarkdownString {
+    markdown
+    images {
+      uri
+      tiny: scaledUri(width: 250)
+      small: scaledUri(width: 900)
+      large: scaledUri(width: 1600)
+      width
+      height
+      copyright
+    }
+  }
+`;
+
+type Props = {
+  markdown: MarkdownTextFragment;
+};
+
+export default function MarkDownWithOverrides(props: Props) {
   return (
     <Markdown
       options={{
@@ -42,9 +63,10 @@ export default function MarkDownWithOverrides(props: any) {
           a: (props: LinkProps) => (
             <ChakraLink {...props} as={Link} to={props.href} variant="inline" />
           ),
-          img: ({src, ...props}) => {
-            const scaledSrc = new URL(src);
-            scaledSrc.searchParams.set('width', '900');
+          img: (imgProps: ImageProps) => {
+            const img = props.markdown.images.find(
+              (image) => image.uri === imgProps.src,
+            );
 
             return (
               <Gallery>
@@ -55,8 +77,13 @@ export default function MarkDownWithOverrides(props: any) {
                   ml="auto"
                   mr="auto"
                   bgColor="white"
-                  src={scaledSrc.toString()}
-                  original={src}
+                  originalHeight={img?.height}
+                  originalWidth={img?.width}
+                  src={img?.small}
+                  original={img?.large}
+                  caption={
+                    img?.copyright ? `Foto: ${img?.copyright}` : undefined
+                  }
                   {...props}
                 />
               </Gallery>
@@ -67,7 +94,7 @@ export default function MarkDownWithOverrides(props: any) {
         },
       }}
     >
-      {props.children}
+      {props.markdown.markdown}
     </Markdown>
   );
 }

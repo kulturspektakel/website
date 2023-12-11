@@ -31,7 +31,7 @@ export async function loader(args: LoaderArgs) {
   throw new Error('not found');
 }
 
-export const meta: V2_MetaFunction = mergeMeta((args) => {
+export const meta: V2_MetaFunction<typeof loader> = mergeMeta((args) => {
   return [{title: args.data.title}];
 });
 

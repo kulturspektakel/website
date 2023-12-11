@@ -27,7 +27,7 @@ const apolloClient = new ApolloClient({
   link: ApolloLink.from([
     scalarLink,
     new HttpLink({
-      uri: 'https://api2.kulturspektakel.de/graphql',
+      uri: 'https://api.kulturspektakel.de/graphql',
       headers: {
         'x-environment': process.env.NODE_ENV,
       },

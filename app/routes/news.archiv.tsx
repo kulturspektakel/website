@@ -26,10 +26,7 @@ gql`
       edges {
         cursor
         node {
-          title
-          slug
-          createdAt
-          content
+          ...Article
         }
       }
     }
@@ -77,7 +74,7 @@ export default function NewsArchive() {
             <Heading textAlign="center" mb="10">
               {year}
             </Heading>
-            <SimpleGrid columns={[1, 2, 3]} spacing={4} key={year} mb="10">
+            <SimpleGrid columns={[2, 2, 3]} spacing={4} key={year} mb="10">
               {edges.map(({node}, i) => (
                 <Card
                   key={node.slug}
@@ -94,8 +91,8 @@ export default function NewsArchive() {
                     bottom="0"
                     p="4"
                     bgImage={
-                      getImageFromMarkdown(node.content)
-                        ? 'linear-gradient( rgba(0,0,0,0.7), rgba(0,0,0,0.3))'
+                      node.content.images[0]?.uri
+                        ? 'linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.3))'
                         : undefined
                     }
                     zIndex={2}
@@ -104,10 +101,8 @@ export default function NewsArchive() {
                       <DateString date={node.createdAt} />
                     </Mark>
                     <Heading
-                      size="lg"
-                      color={
-                        getImageFromMarkdown(node.content) ? 'white' : undefined
-                      }
+                      size={['md', 'lg', 'lg']}
+                      color={node.content.images[0]?.uri ? 'white' : undefined}
                       mt="1"
                       noOfLines={5}
                     >
@@ -118,7 +113,7 @@ export default function NewsArchive() {
                     position="absolute"
                     width="100%"
                     height="100%"
-                    src={getImageFromMarkdown(node.content)}
+                    src={node.content.images[0]?.tiny}
                     loading="lazy"
                     objectFit="cover"
                   />
@@ -155,12 +150,4 @@ export default function NewsArchive() {
       )}
     </>
   );
-}
-
-function getImageFromMarkdown(markdown: string) {
-  const match = markdown.match(/!\[.*\]\((.*)\)/);
-  if (match) {
-    return match[1] + '?width=300';
-  }
-  return undefined;
 }

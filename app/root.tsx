@@ -1,6 +1,6 @@
-import {ApolloProvider} from '@apollo/client';
+import {ApolloProvider, gql} from '@apollo/client';
 import {ChakraProvider, Box, Heading, Flex} from '@chakra-ui/react';
-import type {LinksFunction, V2_MetaFunction} from '@remix-run/node';
+import type {LinksFunction, LoaderArgs, V2_MetaFunction} from '@remix-run/node';
 import {
   Links,
   LiveReload,
@@ -21,12 +21,17 @@ import MetaPixel from './components/MetaPixel.client';
 import {ClientOnly} from 'remix-utils';
 import photoswipeCSS from 'photoswipe/dist/photoswipe.css';
 import fontsCSS from '../public/fonts.css';
+import {typedjson, useTypedLoaderData} from 'remix-typedjson';
+import {RootDocument} from './types/graphql';
+import type {RootQuery} from './types/graphql';
 
-export const meta: V2_MetaFunction = () => {
+export const meta: V2_MetaFunction<typeof loader> = (props) => {
   return [
     {charset: 'utf-8'},
     {name: 'viewport', content: 'width=device-width,initial-scale=1'},
-    {title: 'Kulturspektakel Gauting'},
+    {
+      title: `${props.data.eventsConnection.edges[0].node.start} | Kulturspektakel Gauting`,
+    },
     // {
     //   property: 'og:title',
     //   content: 'Very cool app',
@@ -51,14 +56,22 @@ export const links: LinksFunction = () => [
   {rel: 'stylesheet', href: photoswipeCSS},
 ];
 
-function Document({
-  children,
-  title = 'Kulturspektakel Gauting',
-}: {
-  children: React.ReactNode;
-  title?: string;
-}) {
+gql`
+  query Root {
+    ...Header
+  }
+`;
+
+export async function loader(args: LoaderArgs) {
+  const {data} = await apolloClient.query<RootQuery>({
+    query: RootDocument,
+  });
+  return typedjson(data);
+}
+
+function Document({children}: {children: React.ReactNode}) {
   const emotionCache = createEmotionCache({key: 'css'});
+  const data = useTypedLoaderData<typeof loader>();
 
   return (
     <html lang="de">
@@ -71,13 +84,14 @@ function Document({
           <ChakraProvider theme={theme}>
             <ApolloProvider client={apolloClient}>
               <Flex direction={'column'} minHeight={'100vh'}>
-                <Header />
+                <Header data={data} />
                 <Box
                   flex="1 1 0"
                   ml="auto"
                   mr="auto"
                   maxW="3xl"
                   p="6"
+                  pb="16"
                   width="100%"
                 >
                   {children}

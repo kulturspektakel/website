@@ -1,3 +1,4 @@
+import type {LinkProps, SystemStyleObject} from '@chakra-ui/react';
 import {
   Flex,
   Image,
@@ -6,10 +7,11 @@ import {
   Box,
   Center,
   IconButton,
-  Hide,
-  Collapse,
   HStack,
   VStack,
+  Modal,
+  ModalContent,
+  ModalOverlay,
 } from '@chakra-ui/react';
 import {useLocation, NavLink, useNavigation} from '@remix-run/react';
 import {useEffect, useMemo, useState} from 'react';
@@ -19,6 +21,22 @@ import videoSrc from './Header.mov';
 import DateString from '../DateString';
 import {CloseIcon, HamburgerIcon} from '@chakra-ui/icons';
 import {$path} from 'remix-routes';
+import type {RemixNavLinkProps} from '@remix-run/react/dist/components';
+import {gql} from '@apollo/client';
+import type {HeaderFragment} from '~/types/graphql';
+
+gql`
+  fragment Header on Query {
+    eventsConnection(first: 1, type: Kulturspektakel) {
+      edges {
+        node {
+          start
+          end
+        }
+      }
+    }
+  }
+`;
 
 function useLoadingBar() {
   const [blue500] = useToken('colors', ['blue.500']);
@@ -42,44 +60,49 @@ function useLoadingBar() {
 }
 
 function NavItems() {
+  const _focus: SystemStyleObject = {
+    outline: 'none',
+    color: 'brand.500',
+  };
+  const _activeLink: SystemStyleObject = {
+    borderBottom: '3px solid',
+    marginBottom: '-3px',
+  };
+
+  const props: Omit<RemixNavLinkProps & LinkProps, 'to'> = {
+    _focus,
+    _focusVisible: _focus,
+    _hover: _focus,
+    _activeLink,
+    lineHeight: 1,
+    as: NavLink,
+  };
+
   return (
     <>
-      <ChakraLink
-        as={NavLink}
-        to={$path('/angebot')}
-        _activeLink={{color: 'brand.500'}}
-      >
+      <ChakraLink to={$path('/angebot')} {...props}>
         Angebot
       </ChakraLink>
-      <ChakraLink
-        as={NavLink}
-        to={$path('/lineup')}
-        _activeLink={{color: 'brand.500'}}
-      >
+      <ChakraLink to={$path('/lineup')} {...props}>
         Lineup
       </ChakraLink>
-      <ChakraLink
-        as={NavLink}
-        to={$path('/events')}
-        _activeLink={{color: 'brand.500'}}
-      >
+      <ChakraLink to={$path('/events')} {...props}>
         Veranstaltungen
       </ChakraLink>
-      <ChakraLink
-        as={NavLink}
-        to={$path('/infos')}
-        _activeLink={{color: 'brand.500'}}
-      >
+      <ChakraLink to={$path('/infos')} {...props}>
         Infos
       </ChakraLink>
     </>
   );
 }
 
-export default function Header() {
+export default function Header(props: {data: HeaderFragment}) {
   const isHome = useLocation().pathname === '/';
   const isBooking = useLocation().pathname.startsWith('/booking');
   const [showNav, setShowNav] = useState(true);
+  const {state} = useNavigation();
+  // Close nav on route change
+  useEffect(() => setShowNav(false), [state]);
   useLoadingBar();
 
   return (
@@ -89,6 +112,7 @@ export default function Header() {
       w="100%"
       h={isHome ? 700 : ['60px', '60px', '90px']}
       bgColor={isHome ? 'brand.900' : undefined}
+      mb={isHome ? '8' : undefined}
     >
       {isHome && (
         <Center
@@ -135,8 +159,8 @@ export default function Header() {
           >
             <DateString
               options={{month: 'long', year: 'numeric', day: '2-digit'}}
-              date={new Date('2024-07-19')}
-              to={new Date('2024-07-21')}
+              date={props.data.eventsConnection.edges[0].node.start}
+              to={props.data.eventsConnection.edges[0].node.end}
               until="-"
             />
           </Box>
@@ -159,56 +183,84 @@ export default function Header() {
         justify="space-between"
         alignItems="center"
         position="absolute"
-        zIndex={3}
         w="100%"
       >
-        <NavLink to="https://kulturspektakel.de">
-          <Image
-            src={'/logos/logo.svg'}
-            alt="Kulturspektakel Gauting Logo"
-            w="14"
-          />
-        </NavLink>
-        <Hide above="sm">
-          <IconButton
-            aria-label="Navigation öffnen"
-            isRound={true}
-            icon={showNav ? <CloseIcon /> : <HamburgerIcon fontSize="xl" />}
-            onClick={() => setShowNav((s) => !s)}
-          />
-        </Hide>
-        <Hide below="md">
-          <HStack
-            as="nav"
-            pr="3"
-            spacing="8"
-            h="14"
-            fontFamily="Shrimp"
-            fontSize={['sm', 'lg', 'xl']}
-            textTransform="uppercase"
-            color={isHome ? 'white' : 'brand.900'}
-            display={isBooking ? 'none' : 'flex'}
-          >
-            <NavItems />
-          </HStack>
-        </Hide>
+        <Logo />
+        <IconButton
+          aria-label="Navigation öffnen"
+          isRound={true}
+          icon={<HamburgerIcon fontSize="xl" />}
+          onClick={() => setShowNav(true)}
+          display={['block', 'none']}
+        />
+        <HStack
+          as="nav"
+          pr="3"
+          spacing="8"
+          h="14"
+          fontFamily="Shrimp"
+          fontSize={['sm', 'lg', 'xl']}
+          textTransform="uppercase"
+          color={isHome ? 'white' : 'brand.900'}
+          display={isBooking ? 'none' : ['none', 'flex']}
+        >
+          <NavItems />
+        </HStack>
       </Flex>
-      <Box w="100%" h="100%" position="relative" zIndex={2}>
-        <Collapse in={showNav} animateOpacity>
+      <Modal
+        isOpen={showNav}
+        onClose={() => setShowNav(false)}
+        motionPreset="scale"
+        size="full"
+      >
+        <ModalOverlay bg="brand.900" backdropFilter="blur(10px)" />
+        <ModalContent
+          bgColor="transparent"
+          boxShadow="none"
+          // reversed, so that nav items are focused first
+          flexDirection="column-reverse"
+        >
           <VStack
             color="white"
-            fontSize="lg"
+            fontSize="xl"
             fontFamily="Shrimp"
             textTransform="uppercase"
             justify="center"
-            bgColor="brand.900"
-            pt="14"
-            pb="14"
+            height="100%"
+            spacing="8"
+            flexGrow={1}
+            pb="16"
           >
             <NavItems />
           </VStack>
-        </Collapse>
-      </Box>
+          <Flex
+            p={[2, 2, 4]}
+            justify="space-between"
+            alignItems="center"
+            w="100%"
+          >
+            <Logo />
+            <IconButton
+              aria-label="Navigation schließen"
+              isRound={true}
+              icon={<CloseIcon fontSize="xl" />}
+              onClick={() => setShowNav(false)}
+            />
+          </Flex>
+        </ModalContent>
+      </Modal>
     </Flex>
+  );
+}
+
+function Logo() {
+  return (
+    <NavLink to="https://kulturspektakel.de">
+      <Image
+        src={'/logos/logo.svg'}
+        alt="Kulturspektakel Gauting Logo"
+        w="14"
+      />
+    </NavLink>
   );
 }

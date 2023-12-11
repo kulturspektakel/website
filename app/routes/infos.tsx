@@ -8,7 +8,7 @@ import {
   Link,
   Box,
 } from '@chakra-ui/react';
-import type {LoaderArgs} from '@remix-run/node';
+import type {LoaderArgs, V2_MetaFunction} from '@remix-run/node';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import type {InfosQuery} from '~/types/graphql';
 import {InfosDocument} from '~/types/graphql';
@@ -25,6 +25,7 @@ gql`
       end
       uid
       location
+      allDay
     }
     infos: node(id: "Page:infos") {
       ... on Page {
@@ -41,15 +42,24 @@ gql`
   }
 `;
 
+export const meta: V2_MetaFunction<typeof loader> = (props) => {
+  console.log(props.data);
+  return [
+    {
+      title: props.data.infos.title,
+    },
+  ];
+};
+
 export async function loader(args: LoaderArgs) {
   const {data} = await apolloClient.query<InfosQuery>({
     query: InfosDocument,
   });
-  return typedjson({data});
+  return typedjson(data);
 }
 
 export default function Angebot() {
-  const {data} = useTypedLoaderData<typeof loader>();
+  const data = useTypedLoaderData<typeof loader>();
   return (
     <VStack spacing="10">
       {data.infos && data.infos.__typename === 'Page' && (
@@ -72,16 +82,24 @@ export default function Angebot() {
                     year: 'numeric',
                   }}
                   date={event.start}
-                  to={event.end}
+                  to={
+                    event.allDay
+                      ? new Date(event.end.getTime() - 2 * 60 * 60 * 1000 - 1) // it's not nice but CE(S)T is a maximum of 2 hours ahead of UTC
+                      : event.end
+                  }
                 />
               </Mark>
               <Text>
-                <DateString
-                  date={event.start}
-                  timeOnly
-                  options={{hour: '2-digit', minute: '2-digit'}}
-                />
-                &nbsp;Uhr&nbsp;
+                {!event.allDay && (
+                  <>
+                    <DateString
+                      date={event.start}
+                      timeOnly
+                      options={{hour: '2-digit', minute: '2-digit'}}
+                    />
+                    &nbsp;Uhr&nbsp;
+                  </>
+                )}
                 <Text fontWeight="bold" as="span">
                   {event.summary}
                 </Text>

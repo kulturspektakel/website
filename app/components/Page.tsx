@@ -6,10 +6,18 @@ import {gql} from '@apollo/client';
 gql`
   fragment PageContent on Page {
     title
-    content
-    left
-    right
-    bottom
+    content {
+      ...MarkdownText
+    }
+    left {
+      ...MarkdownText
+    }
+    right {
+      ...MarkdownText
+    }
+    bottom {
+      ...MarkdownText
+    }
   }
 `;
 
@@ -24,22 +32,22 @@ export default function Page(
       </Heading>
       {content && (
         <Box mt="3" textAlign={props.centered ? 'center' : undefined}>
-          <MarkdownText>{content}</MarkdownText>
+          <MarkdownText markdown={content} />
         </Box>
       )}
       {left && right && (
         <SimpleGrid columns={[1, 2]} spacing="5" mt="3">
           <Box>
-            <MarkdownText>{left}</MarkdownText>
+            <MarkdownText markdown={left} />
           </Box>
           <Box>
-            <MarkdownText>{right}</MarkdownText>
+            <MarkdownText markdown={right} />
           </Box>
         </SimpleGrid>
       )}
       {bottom && (
         <Box mt="3" textAlign={props.centered ? 'center' : undefined}>
-          <MarkdownText>{bottom}</MarkdownText>
+          <MarkdownText markdown={bottom} />
         </Box>
       )}
     </Box>
