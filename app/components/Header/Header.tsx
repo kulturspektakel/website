@@ -1,18 +1,24 @@
 import {
   Flex,
-  HStack,
   Image,
   Link as ChakraLink,
   useToken,
   Box,
   Center,
+  IconButton,
+  Hide,
+  Collapse,
+  HStack,
+  VStack,
 } from '@chakra-ui/react';
 import {useLocation, NavLink, useNavigation} from '@remix-run/react';
-import {useEffect, useMemo} from 'react';
+import {useEffect, useMemo, useState} from 'react';
 import ProgressBar from '@badrap/bar-of-progress';
 import logo from './logo.svg';
 import videoSrc from './Header.mov';
 import DateString from '../DateString';
+import {CloseIcon, HamburgerIcon} from '@chakra-ui/icons';
+import {$path} from 'remix-routes';
 
 function useLoadingBar() {
   const [blue500] = useToken('colors', ['blue.500']);
@@ -35,9 +41,45 @@ function useLoadingBar() {
   }, [progress, state]);
 }
 
+function NavItems() {
+  return (
+    <>
+      <ChakraLink
+        as={NavLink}
+        to={$path('/angebot')}
+        _activeLink={{color: 'brand.500'}}
+      >
+        Angebot
+      </ChakraLink>
+      <ChakraLink
+        as={NavLink}
+        to={$path('/lineup')}
+        _activeLink={{color: 'brand.500'}}
+      >
+        Lineup
+      </ChakraLink>
+      <ChakraLink
+        as={NavLink}
+        to={$path('/events')}
+        _activeLink={{color: 'brand.500'}}
+      >
+        Veranstaltungen
+      </ChakraLink>
+      <ChakraLink
+        as={NavLink}
+        to={$path('/infos')}
+        _activeLink={{color: 'brand.500'}}
+      >
+        Infos
+      </ChakraLink>
+    </>
+  );
+}
+
 export default function Header() {
   const isHome = useLocation().pathname === '/';
   const isBooking = useLocation().pathname.startsWith('/booking');
+  const [showNav, setShowNav] = useState(true);
   useLoadingBar();
 
   return (
@@ -115,9 +157,9 @@ export default function Header() {
         right={0}
         top={0}
         justify="space-between"
-        alignItems="flex-start"
+        alignItems="center"
         position="absolute"
-        zIndex={2}
+        zIndex={3}
         w="100%"
       >
         <NavLink to="https://kulturspektakel.de">
@@ -127,48 +169,46 @@ export default function Header() {
             w="14"
           />
         </NavLink>
-
-        <HStack
-          as="nav"
-          pr="3"
-          spacing="8"
-          h="14"
-          fontFamily="Shrimp"
-          fontSize={['sm', 'lg', 'xl']}
-          textTransform="uppercase"
-          color={isHome ? 'white' : 'brand.900'}
-          display={isBooking ? 'none' : 'flex'}
-        >
-          <ChakraLink
-            as={NavLink}
-            to="/angebot"
-            _activeLink={{color: 'brand.500'}}
+        <Hide above="sm">
+          <IconButton
+            aria-label="Navigation öffnen"
+            isRound={true}
+            icon={showNav ? <CloseIcon /> : <HamburgerIcon fontSize="xl" />}
+            onClick={() => setShowNav((s) => !s)}
+          />
+        </Hide>
+        <Hide below="md">
+          <HStack
+            as="nav"
+            pr="3"
+            spacing="8"
+            h="14"
+            fontFamily="Shrimp"
+            fontSize={['sm', 'lg', 'xl']}
+            textTransform="uppercase"
+            color={isHome ? 'white' : 'brand.900'}
+            display={isBooking ? 'none' : 'flex'}
           >
-            Angebot
-          </ChakraLink>
-          <ChakraLink
-            as={NavLink}
-            to="/lineup"
-            _activeLink={{color: 'brand.500'}}
-          >
-            Lineup
-          </ChakraLink>
-          <ChakraLink
-            as={NavLink}
-            to="/events"
-            _activeLink={{color: 'brand.500'}}
-          >
-            Veranstaltungen
-          </ChakraLink>
-          <ChakraLink
-            as={NavLink}
-            to="/infos"
-            _activeLink={{color: 'brand.500'}}
-          >
-            Infos
-          </ChakraLink>
-        </HStack>
+            <NavItems />
+          </HStack>
+        </Hide>
       </Flex>
+      <Box w="100%" h="100%" position="relative" zIndex={2}>
+        <Collapse in={showNav} animateOpacity>
+          <VStack
+            color="white"
+            fontSize="lg"
+            fontFamily="Shrimp"
+            textTransform="uppercase"
+            justify="center"
+            bgColor="brand.900"
+            pt="14"
+            pb="14"
+          >
+            <NavItems />
+          </VStack>
+        </Collapse>
+      </Box>
     </Flex>
   );
 }
