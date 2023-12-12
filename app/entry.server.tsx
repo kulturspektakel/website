@@ -3,7 +3,7 @@ import createEmotionCache from '@emotion/cache';
 import {CacheProvider as EmotionCacheProvider} from '@emotion/react';
 import createEmotionServer from '@emotion/server/create-instance';
 import type {AppLoadContext, EntryContext} from '@remix-run/node';
-import {Response} from '@remix-run/node';
+import {createReadableStreamFromReadable} from '@remix-run/node';
 import {RemixServer} from '@remix-run/react';
 import isbot from 'isbot';
 import {renderToPipeableStream} from 'react-dom/server';
@@ -37,7 +37,7 @@ export default function handleRequest(
           responseHeaders.set('Content-Type', 'text/html');
 
           resolve(
-            new Response(bodyWithStyles, {
+            new Response(createReadableStreamFromReadable(bodyWithStyles), {
               headers: responseHeaders,
               status: didError ? 500 : responseStatusCode,
             }),

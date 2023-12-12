@@ -8,7 +8,7 @@ import {
   Tooltip,
   Box,
 } from '@chakra-ui/react';
-import type {V2_MetaFunction} from '@remix-run/react';
+import type {MetaFunction} from '@remix-run/react';
 import {Link} from '@remix-run/react';
 import DateString from '~/components/DateString';
 import Mark from '~/components/Mark';
@@ -22,7 +22,7 @@ import {
   FaGlobe,
 } from 'react-icons/fa6';
 import mergeMeta from '~/utils/mergeMeta';
-import type {LoaderArgs} from '@remix-run/node';
+import type {LoaderFunctionArgs} from '@remix-run/node';
 import {$params} from 'remix-routes';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import apolloClient from '~/utils/apolloClient';
@@ -60,7 +60,7 @@ gql`
   }
 `;
 
-export async function loader(args: LoaderArgs) {
+export async function loader(args: LoaderFunctionArgs) {
   const {year, slug} = $params('/lineup/:year/:slug', args.params);
   const {data} = await apolloClient.query<LineupBandQuery>({
     query: LineupBandDocument,
@@ -75,7 +75,7 @@ export async function loader(args: LoaderArgs) {
   throw new Error('Not Found');
 }
 
-export const meta: V2_MetaFunction<typeof loader> = mergeMeta((args) => [
+export const meta: MetaFunction<typeof loader> = mergeMeta((args) => [
   {title: `${args.data.name} | Lineup ${args.params.year}`},
   {
     name: 'description',

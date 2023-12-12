@@ -1,6 +1,6 @@
 import {gql} from '@apollo/client';
 import {Text, Heading, ListItem, UnorderedList, VStack} from '@chakra-ui/react';
-import type {LoaderArgs, V2_MetaFunction} from '@remix-run/node';
+import type {LoaderFunctionArgs, MetaFunction} from '@remix-run/node';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import type {AngebotQuery} from '~/types/graphql';
 import {AngebotDocument} from '~/types/graphql';
@@ -45,7 +45,7 @@ gql`
   }
 `;
 
-export const meta: V2_MetaFunction<typeof loader> = mergedMeta((props) => [
+export const meta: MetaFunction<typeof loader> = mergedMeta((props) => [
   {
     title: 'Angebot & Programm',
   },
@@ -56,7 +56,7 @@ export const meta: V2_MetaFunction<typeof loader> = mergedMeta((props) => [
   },
 ]);
 
-export async function loader(args: LoaderArgs) {
+export async function loader(args: LoaderFunctionArgs) {
   const {data} = await apolloClient.query<AngebotQuery>({
     query: AngebotDocument,
   });

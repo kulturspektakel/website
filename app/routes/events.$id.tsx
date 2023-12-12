@@ -1,7 +1,7 @@
 import {gql} from '@apollo/client';
 import {Heading} from '@chakra-ui/react';
-import type {LoaderArgs} from '@remix-run/node';
-import type {V2_MetaFunction} from '@remix-run/react';
+import type {LoaderFunctionArgs} from '@remix-run/node';
+import type {MetaFunction} from '@remix-run/react';
 import {$params} from 'remix-routes';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import Card from '~/components/Card';
@@ -25,7 +25,7 @@ gql`
   }
 `;
 
-export async function loader(args: LoaderArgs) {
+export async function loader(args: LoaderFunctionArgs) {
   const {id} = $params('/events/:id', args.params);
   const {data} = await apolloClient.query<SingleEventQuery>({
     query: SingleEventDocument,
@@ -37,7 +37,7 @@ export async function loader(args: LoaderArgs) {
   throw new Error('Not found');
 }
 
-export const meta: V2_MetaFunction<typeof loader> = mergedMeta((props) => {
+export const meta: MetaFunction<typeof loader> = mergedMeta((props) => {
   const {
     date,
     to = '',

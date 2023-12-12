@@ -2382,9 +2382,24 @@ export function useDistanceLazyQuery(
     options,
   );
 }
+export function useDistanceSuspenseQuery(
+  baseOptions?: Apollo.SuspenseQueryHookOptions<
+    DistanceQuery,
+    DistanceQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useSuspenseQuery<DistanceQuery, DistanceQueryVariables>(
+    DistanceDocument,
+    options,
+  );
+}
 export type DistanceQueryHookResult = ReturnType<typeof useDistanceQuery>;
 export type DistanceLazyQueryHookResult = ReturnType<
   typeof useDistanceLazyQuery
+>;
+export type DistanceSuspenseQueryHookResult = ReturnType<
+  typeof useDistanceSuspenseQuery
 >;
 export type DistanceQueryResult = Apollo.QueryResult<
   DistanceQuery,
@@ -2440,11 +2455,26 @@ export function useDuplicateApplicationWarningLazyQuery(
     DuplicateApplicationWarningQueryVariables
   >(DuplicateApplicationWarningDocument, options);
 }
+export function useDuplicateApplicationWarningSuspenseQuery(
+  baseOptions?: Apollo.SuspenseQueryHookOptions<
+    DuplicateApplicationWarningQuery,
+    DuplicateApplicationWarningQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useSuspenseQuery<
+    DuplicateApplicationWarningQuery,
+    DuplicateApplicationWarningQueryVariables
+  >(DuplicateApplicationWarningDocument, options);
+}
 export type DuplicateApplicationWarningQueryHookResult = ReturnType<
   typeof useDuplicateApplicationWarningQuery
 >;
 export type DuplicateApplicationWarningLazyQueryHookResult = ReturnType<
   typeof useDuplicateApplicationWarningLazyQuery
+>;
+export type DuplicateApplicationWarningSuspenseQueryHookResult = ReturnType<
+  typeof useDuplicateApplicationWarningSuspenseQuery
 >;
 export type DuplicateApplicationWarningQueryResult = Apollo.QueryResult<
   DuplicateApplicationWarningQuery,
@@ -2502,11 +2532,26 @@ export function useSpotifyArtistSearchLazyQuery(
     SpotifyArtistSearchQueryVariables
   >(SpotifyArtistSearchDocument, options);
 }
+export function useSpotifyArtistSearchSuspenseQuery(
+  baseOptions?: Apollo.SuspenseQueryHookOptions<
+    SpotifyArtistSearchQuery,
+    SpotifyArtistSearchQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useSuspenseQuery<
+    SpotifyArtistSearchQuery,
+    SpotifyArtistSearchQueryVariables
+  >(SpotifyArtistSearchDocument, options);
+}
 export type SpotifyArtistSearchQueryHookResult = ReturnType<
   typeof useSpotifyArtistSearchQuery
 >;
 export type SpotifyArtistSearchLazyQueryHookResult = ReturnType<
   typeof useSpotifyArtistSearchLazyQuery
+>;
+export type SpotifyArtistSearchSuspenseQueryHookResult = ReturnType<
+  typeof useSpotifyArtistSearchSuspenseQuery
 >;
 export type SpotifyArtistSearchQueryResult = Apollo.QueryResult<
   SpotifyArtistSearchQuery,
@@ -2566,9 +2611,24 @@ export function useMorePhotosLazyQuery(
     options,
   );
 }
+export function useMorePhotosSuspenseQuery(
+  baseOptions?: Apollo.SuspenseQueryHookOptions<
+    MorePhotosQuery,
+    MorePhotosQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useSuspenseQuery<MorePhotosQuery, MorePhotosQueryVariables>(
+    MorePhotosDocument,
+    options,
+  );
+}
 export type MorePhotosQueryHookResult = ReturnType<typeof useMorePhotosQuery>;
 export type MorePhotosLazyQueryHookResult = ReturnType<
   typeof useMorePhotosLazyQuery
+>;
+export type MorePhotosSuspenseQueryHookResult = ReturnType<
+  typeof useMorePhotosSuspenseQuery
 >;
 export type MorePhotosQueryResult = Apollo.QueryResult<
   MorePhotosQuery,
@@ -2626,9 +2686,24 @@ export function useBandSearchLazyQuery(
     options,
   );
 }
+export function useBandSearchSuspenseQuery(
+  baseOptions?: Apollo.SuspenseQueryHookOptions<
+    BandSearchQuery,
+    BandSearchQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useSuspenseQuery<BandSearchQuery, BandSearchQueryVariables>(
+    BandSearchDocument,
+    options,
+  );
+}
 export type BandSearchQueryHookResult = ReturnType<typeof useBandSearchQuery>;
 export type BandSearchLazyQueryHookResult = ReturnType<
   typeof useBandSearchLazyQuery
+>;
+export type BandSearchSuspenseQueryHookResult = ReturnType<
+  typeof useBandSearchSuspenseQuery
 >;
 export type BandSearchQueryResult = Apollo.QueryResult<
   BandSearchQuery,
@@ -2671,8 +2746,20 @@ export function useRootLazyQuery(
     options,
   );
 }
+export function useRootSuspenseQuery(
+  baseOptions?: Apollo.SuspenseQueryHookOptions<RootQuery, RootQueryVariables>,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useSuspenseQuery<RootQuery, RootQueryVariables>(
+    RootDocument,
+    options,
+  );
+}
 export type RootQueryHookResult = ReturnType<typeof useRootQuery>;
 export type RootLazyQueryHookResult = ReturnType<typeof useRootLazyQuery>;
+export type RootSuspenseQueryHookResult = ReturnType<
+  typeof useRootSuspenseQuery
+>;
 export type RootQueryResult = Apollo.QueryResult<RootQuery, RootQueryVariables>;
 export const PageDocument = gql`
   query Page($id: ID!) {
@@ -2717,8 +2804,20 @@ export function usePageLazyQuery(
     options,
   );
 }
+export function usePageSuspenseQuery(
+  baseOptions?: Apollo.SuspenseQueryHookOptions<PageQuery, PageQueryVariables>,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useSuspenseQuery<PageQuery, PageQueryVariables>(
+    PageDocument,
+    options,
+  );
+}
 export type PageQueryHookResult = ReturnType<typeof usePageQuery>;
 export type PageLazyQueryHookResult = ReturnType<typeof usePageLazyQuery>;
+export type PageSuspenseQueryHookResult = ReturnType<
+  typeof usePageSuspenseQuery
+>;
 export type PageQueryResult = Apollo.QueryResult<PageQuery, PageQueryVariables>;
 export const NewsDocument = gql`
   query News {
@@ -2763,8 +2862,20 @@ export function useNewsLazyQuery(
     options,
   );
 }
+export function useNewsSuspenseQuery(
+  baseOptions?: Apollo.SuspenseQueryHookOptions<NewsQuery, NewsQueryVariables>,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useSuspenseQuery<NewsQuery, NewsQueryVariables>(
+    NewsDocument,
+    options,
+  );
+}
 export type NewsQueryHookResult = ReturnType<typeof useNewsQuery>;
 export type NewsLazyQueryHookResult = ReturnType<typeof useNewsLazyQuery>;
+export type NewsSuspenseQueryHookResult = ReturnType<
+  typeof useNewsSuspenseQuery
+>;
 export type NewsQueryResult = Apollo.QueryResult<NewsQuery, NewsQueryVariables>;
 export const AngebotDocument = gql`
   query Angebot {
@@ -2838,8 +2949,23 @@ export function useAngebotLazyQuery(
     options,
   );
 }
+export function useAngebotSuspenseQuery(
+  baseOptions?: Apollo.SuspenseQueryHookOptions<
+    AngebotQuery,
+    AngebotQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useSuspenseQuery<AngebotQuery, AngebotQueryVariables>(
+    AngebotDocument,
+    options,
+  );
+}
 export type AngebotQueryHookResult = ReturnType<typeof useAngebotQuery>;
 export type AngebotLazyQueryHookResult = ReturnType<typeof useAngebotLazyQuery>;
+export type AngebotSuspenseQueryHookResult = ReturnType<
+  typeof useAngebotSuspenseQuery
+>;
 export type AngebotQueryResult = Apollo.QueryResult<
   AngebotQuery,
   AngebotQueryVariables
@@ -2943,8 +3069,23 @@ export function useThanksLazyQuery(
     options,
   );
 }
+export function useThanksSuspenseQuery(
+  baseOptions?: Apollo.SuspenseQueryHookOptions<
+    ThanksQuery,
+    ThanksQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useSuspenseQuery<ThanksQuery, ThanksQueryVariables>(
+    ThanksDocument,
+    options,
+  );
+}
 export type ThanksQueryHookResult = ReturnType<typeof useThanksQuery>;
 export type ThanksLazyQueryHookResult = ReturnType<typeof useThanksLazyQuery>;
+export type ThanksSuspenseQueryHookResult = ReturnType<
+  typeof useThanksSuspenseQuery
+>;
 export type ThanksQueryResult = Apollo.QueryResult<
   ThanksQuery,
   ThanksQueryVariables
@@ -2999,8 +3140,23 @@ export function useEventLazyQuery(
     options,
   );
 }
+export function useEventSuspenseQuery(
+  baseOptions?: Apollo.SuspenseQueryHookOptions<
+    EventQuery,
+    EventQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useSuspenseQuery<EventQuery, EventQueryVariables>(
+    EventDocument,
+    options,
+  );
+}
 export type EventQueryHookResult = ReturnType<typeof useEventQuery>;
 export type EventLazyQueryHookResult = ReturnType<typeof useEventLazyQuery>;
+export type EventSuspenseQueryHookResult = ReturnType<
+  typeof useEventSuspenseQuery
+>;
 export type EventQueryResult = Apollo.QueryResult<
   EventQuery,
   EventQueryVariables
@@ -3058,9 +3214,24 @@ export function useSingleEventLazyQuery(
     options,
   );
 }
+export function useSingleEventSuspenseQuery(
+  baseOptions?: Apollo.SuspenseQueryHookOptions<
+    SingleEventQuery,
+    SingleEventQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useSuspenseQuery<SingleEventQuery, SingleEventQueryVariables>(
+    SingleEventDocument,
+    options,
+  );
+}
 export type SingleEventQueryHookResult = ReturnType<typeof useSingleEventQuery>;
 export type SingleEventLazyQueryHookResult = ReturnType<
   typeof useSingleEventLazyQuery
+>;
+export type SingleEventSuspenseQueryHookResult = ReturnType<
+  typeof useSingleEventSuspenseQuery
 >;
 export type SingleEventQueryResult = Apollo.QueryResult<
   SingleEventQuery,
@@ -3133,11 +3304,26 @@ export function useEventsOverviewLazyQuery(
     options,
   );
 }
+export function useEventsOverviewSuspenseQuery(
+  baseOptions?: Apollo.SuspenseQueryHookOptions<
+    EventsOverviewQuery,
+    EventsOverviewQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useSuspenseQuery<
+    EventsOverviewQuery,
+    EventsOverviewQueryVariables
+  >(EventsOverviewDocument, options);
+}
 export type EventsOverviewQueryHookResult = ReturnType<
   typeof useEventsOverviewQuery
 >;
 export type EventsOverviewLazyQueryHookResult = ReturnType<
   typeof useEventsOverviewLazyQuery
+>;
+export type EventsOverviewSuspenseQueryHookResult = ReturnType<
+  typeof useEventsOverviewSuspenseQuery
 >;
 export type EventsOverviewQueryResult = Apollo.QueryResult<
   EventsOverviewQuery,
@@ -3202,8 +3388,23 @@ export function useInfosLazyQuery(
     options,
   );
 }
+export function useInfosSuspenseQuery(
+  baseOptions?: Apollo.SuspenseQueryHookOptions<
+    InfosQuery,
+    InfosQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useSuspenseQuery<InfosQuery, InfosQueryVariables>(
+    InfosDocument,
+    options,
+  );
+}
 export type InfosQueryHookResult = ReturnType<typeof useInfosQuery>;
 export type InfosLazyQueryHookResult = ReturnType<typeof useInfosLazyQuery>;
+export type InfosSuspenseQueryHookResult = ReturnType<
+  typeof useInfosSuspenseQuery
+>;
 export type InfosQueryResult = Apollo.QueryResult<
   InfosQuery,
   InfosQueryVariables
@@ -3279,9 +3480,24 @@ export function useLineupBandLazyQuery(
     options,
   );
 }
+export function useLineupBandSuspenseQuery(
+  baseOptions?: Apollo.SuspenseQueryHookOptions<
+    LineupBandQuery,
+    LineupBandQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useSuspenseQuery<LineupBandQuery, LineupBandQueryVariables>(
+    LineupBandDocument,
+    options,
+  );
+}
 export type LineupBandQueryHookResult = ReturnType<typeof useLineupBandQuery>;
 export type LineupBandLazyQueryHookResult = ReturnType<
   typeof useLineupBandLazyQuery
+>;
+export type LineupBandSuspenseQueryHookResult = ReturnType<
+  typeof useLineupBandSuspenseQuery
 >;
 export type LineupBandQueryResult = Apollo.QueryResult<
   LineupBandQuery,
@@ -3348,8 +3564,23 @@ export function useLineupLazyQuery(
     options,
   );
 }
+export function useLineupSuspenseQuery(
+  baseOptions?: Apollo.SuspenseQueryHookOptions<
+    LineupQuery,
+    LineupQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useSuspenseQuery<LineupQuery, LineupQueryVariables>(
+    LineupDocument,
+    options,
+  );
+}
 export type LineupQueryHookResult = ReturnType<typeof useLineupQuery>;
 export type LineupLazyQueryHookResult = ReturnType<typeof useLineupLazyQuery>;
+export type LineupSuspenseQueryHookResult = ReturnType<
+  typeof useLineupSuspenseQuery
+>;
 export type LineupQueryResult = Apollo.QueryResult<
   LineupQuery,
   LineupQueryVariables
@@ -3404,8 +3635,23 @@ export function useLineupsLazyQuery(
     options,
   );
 }
+export function useLineupsSuspenseQuery(
+  baseOptions?: Apollo.SuspenseQueryHookOptions<
+    LineupsQuery,
+    LineupsQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useSuspenseQuery<LineupsQuery, LineupsQueryVariables>(
+    LineupsDocument,
+    options,
+  );
+}
 export type LineupsQueryHookResult = ReturnType<typeof useLineupsQuery>;
 export type LineupsLazyQueryHookResult = ReturnType<typeof useLineupsLazyQuery>;
+export type LineupsSuspenseQueryHookResult = ReturnType<
+  typeof useLineupsSuspenseQuery
+>;
 export type LineupsQueryResult = Apollo.QueryResult<
   LineupsQuery,
   LineupsQueryVariables
@@ -3458,9 +3704,24 @@ export function useNewsPageLazyQuery(
     options,
   );
 }
+export function useNewsPageSuspenseQuery(
+  baseOptions?: Apollo.SuspenseQueryHookOptions<
+    NewsPageQuery,
+    NewsPageQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useSuspenseQuery<NewsPageQuery, NewsPageQueryVariables>(
+    NewsPageDocument,
+    options,
+  );
+}
 export type NewsPageQueryHookResult = ReturnType<typeof useNewsPageQuery>;
 export type NewsPageLazyQueryHookResult = ReturnType<
   typeof useNewsPageLazyQuery
+>;
+export type NewsPageSuspenseQueryHookResult = ReturnType<
+  typeof useNewsPageSuspenseQuery
 >;
 export type NewsPageQueryResult = Apollo.QueryResult<
   NewsPageQuery,
@@ -3523,9 +3784,24 @@ export function useNewsArchiveLazyQuery(
     options,
   );
 }
+export function useNewsArchiveSuspenseQuery(
+  baseOptions?: Apollo.SuspenseQueryHookOptions<
+    NewsArchiveQuery,
+    NewsArchiveQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useSuspenseQuery<NewsArchiveQuery, NewsArchiveQueryVariables>(
+    NewsArchiveDocument,
+    options,
+  );
+}
 export type NewsArchiveQueryHookResult = ReturnType<typeof useNewsArchiveQuery>;
 export type NewsArchiveLazyQueryHookResult = ReturnType<
   typeof useNewsArchiveLazyQuery
+>;
+export type NewsArchiveSuspenseQueryHookResult = ReturnType<
+  typeof useNewsArchiveSuspenseQuery
 >;
 export type NewsArchiveQueryResult = Apollo.QueryResult<
   NewsArchiveQuery,
@@ -3581,9 +3857,24 @@ export function useSpeisekarteLazyQuery(
     options,
   );
 }
+export function useSpeisekarteSuspenseQuery(
+  baseOptions?: Apollo.SuspenseQueryHookOptions<
+    SpeisekarteQuery,
+    SpeisekarteQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useSuspenseQuery<SpeisekarteQuery, SpeisekarteQueryVariables>(
+    SpeisekarteDocument,
+    options,
+  );
+}
 export type SpeisekarteQueryHookResult = ReturnType<typeof useSpeisekarteQuery>;
 export type SpeisekarteLazyQueryHookResult = ReturnType<
   typeof useSpeisekarteLazyQuery
+>;
+export type SpeisekarteSuspenseQueryHookResult = ReturnType<
+  typeof useSpeisekarteSuspenseQuery
 >;
 export type SpeisekarteQueryResult = Apollo.QueryResult<
   SpeisekarteQuery,

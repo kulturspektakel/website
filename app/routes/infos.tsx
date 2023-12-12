@@ -8,7 +8,7 @@ import {
   Link,
   Box,
 } from '@chakra-ui/react';
-import type {LoaderArgs, V2_MetaFunction} from '@remix-run/node';
+import type {LoaderFunctionArgs, MetaFunction} from '@remix-run/node';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import type {InfosQuery} from '~/types/graphql';
 import {InfosDocument} from '~/types/graphql';
@@ -43,7 +43,7 @@ gql`
   }
 `;
 
-export const meta: V2_MetaFunction<typeof loader> = mergedMeta((props) => [
+export const meta: MetaFunction<typeof loader> = mergedMeta((props) => [
   {
     title: props.data.infos.title,
   },
@@ -53,7 +53,7 @@ export const meta: V2_MetaFunction<typeof loader> = mergedMeta((props) => [
   },
 ]);
 
-export async function loader(args: LoaderArgs) {
+export async function loader(args: LoaderFunctionArgs) {
   const {data} = await apolloClient.query<InfosQuery>({
     query: InfosDocument,
   });

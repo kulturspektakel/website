@@ -2,6 +2,7 @@
 module.exports = {
   ignoredRouteFiles: ['**/.*'],
   serverDependenciesToBundle: [
+    /^remix-utils.*/,
     '@apollo/client',
     'ts-invariant',
     '@wry/equality',
@@ -13,13 +14,5 @@ module.exports = {
     'react-photoswipe-gallery',
     'photoswipe',
   ],
-  future: {
-    v2_routeConvention: true,
-    v2_errorBoundary: true,
-    v2_meta: true,
-  },
-  // appDirectory: "app",
-  // assetsBuildDirectory: "public/build",
-  // serverBuildPath: "build/index.js",
-  // publicPath: "/build/",
+  serverModuleFormat: 'cjs',
 };

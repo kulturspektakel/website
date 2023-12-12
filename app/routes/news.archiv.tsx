@@ -7,7 +7,7 @@ import {
   Center,
   Button,
 } from '@chakra-ui/react';
-import type {LoaderArgs, V2_MetaFunction} from '@remix-run/node';
+import type {LoaderFunctionArgs, MetaFunction} from '@remix-run/node';
 import React, {useState} from 'react';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import Card from '~/components/Card';
@@ -34,7 +34,7 @@ gql`
   }
 `;
 
-export async function loader(args: LoaderArgs) {
+export async function loader(args: LoaderFunctionArgs) {
   const {data} = await apolloClient.query<NewsArchiveQuery>({
     query: NewsArchiveDocument,
     variables: {
@@ -44,7 +44,7 @@ export async function loader(args: LoaderArgs) {
   return typedjson(data);
 }
 
-export const meta: V2_MetaFunction<typeof loader> = mergedMeta((args) => [
+export const meta: MetaFunction<typeof loader> = mergedMeta((args) => [
   {
     title: 'Newsarchiv',
   },

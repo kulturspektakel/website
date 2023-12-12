@@ -7,11 +7,11 @@ import {
   Image,
   Flex,
 } from '@chakra-ui/react';
-import type {V2_MetaFunction} from '@remix-run/node';
+import type {MetaFunction} from '@remix-run/node';
 import LinkButton from '~/components/LinkButton';
 import mergeMeta from '~/utils/mergeMeta';
 
-export const meta: V2_MetaFunction<any> = mergeMeta(() => [
+export const meta: MetaFunction<any> = mergeMeta(() => [
   {title: `Logo`},
   {
     name: 'description',

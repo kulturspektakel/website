@@ -1,6 +1,10 @@
 import {ApolloProvider, gql} from '@apollo/client';
 import {ChakraProvider, Box, Heading, Flex} from '@chakra-ui/react';
-import type {LinksFunction, LoaderArgs, V2_MetaFunction} from '@remix-run/node';
+import type {
+  LinksFunction,
+  MetaFunction,
+  LoaderFunctionArgs,
+} from '@remix-run/node';
 import {
   Links,
   LiveReload,
@@ -18,7 +22,7 @@ import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
 import theme from './theme';
 import MetaPixel from './components/MetaPixel.client';
-import {ClientOnly} from 'remix-utils';
+import {ClientOnly} from 'remix-utils/client-only';
 import photoswipeCSS from 'photoswipe/dist/photoswipe.css';
 import fontsCSS from '../public/fonts.css';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
@@ -27,7 +31,7 @@ import type {RootQuery} from './types/graphql';
 import {dateStringComponents} from './components/DateString';
 import logo from '../public/logos/logo.png';
 
-export const meta: V2_MetaFunction<typeof loader> = (props) => {
+export const meta: MetaFunction<typeof loader> = (props) => {
   const {
     date,
     connector = '',
@@ -92,7 +96,7 @@ gql`
   }
 `;
 
-export async function loader(args: LoaderArgs) {
+export async function loader(args: LoaderFunctionArgs) {
   const {data} = await apolloClient.query<RootQuery>({
     query: RootDocument,
   });

@@ -1,5 +1,5 @@
 import {gql} from '@apollo/client';
-import type {LoaderArgs, V2_MetaFunction} from '@remix-run/node';
+import type {LoaderFunctionArgs, MetaFunction} from '@remix-run/node';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import Article from '~/components/news/Article';
 import {NewsPageDocument} from '~/types/graphql';
@@ -18,7 +18,7 @@ gql`
   }
 `;
 
-export async function loader(args: LoaderArgs) {
+export async function loader(args: LoaderFunctionArgs) {
   const {data} = await apolloClient.query<NewsPageQuery>({
     query: NewsPageDocument,
     variables: {
@@ -31,7 +31,7 @@ export async function loader(args: LoaderArgs) {
   throw new Error('not found');
 }
 
-export const meta: V2_MetaFunction<typeof loader> = mergedMeta((args) => {
+export const meta: MetaFunction<typeof loader> = mergedMeta((args) => {
   const result: V2_ServerRuntimeMetaDescriptor[] = [{title: args.data.title}];
   const image = args.data.content.images.at(0).small;
   if (image) {

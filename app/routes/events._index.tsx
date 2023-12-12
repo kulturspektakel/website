@@ -7,7 +7,7 @@ import {
   Center,
   Button,
 } from '@chakra-ui/react';
-import type {LoaderArgs, V2_MetaFunction} from '@remix-run/node';
+import type {LoaderFunctionArgs, MetaFunction} from '@remix-run/node';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import Event from '~/components/events/Event';
 import type {
@@ -58,7 +58,7 @@ const EVENT_TYPE = [
   {id: EventType.Other, name: 'Weitere'},
 ];
 
-export const meta: V2_MetaFunction<typeof loader> = mergedMeta((props) => {
+export const meta: MetaFunction<typeof loader> = mergedMeta((props) => {
   return [
     {
       title: 'Veranstaltungen',
@@ -70,7 +70,7 @@ export const meta: V2_MetaFunction<typeof loader> = mergedMeta((props) => {
   ];
 });
 
-export async function loader(args: LoaderArgs) {
+export async function loader(args: LoaderFunctionArgs) {
   const {data} = await apolloClient.query<EventsOverviewQuery>({
     query: EventsOverviewDocument,
   });

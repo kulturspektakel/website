@@ -1,13 +1,13 @@
 // https://gist.github.com/ryanflorence/ec1849c6d690cfbffcb408ecd633e069
-import type {LoaderFunction, V2_MetaFunction} from '@remix-run/node';
+import type {LoaderFunction, MetaFunction} from '@remix-run/node';
 import type {V2_ServerRuntimeMetaDescriptor} from '@remix-run/server-runtime';
 
 export default function mergedMeta<
   Loader extends LoaderFunction,
   ParentsLoaders extends Record<string, LoaderFunction>,
 >(
-  leafMetaFn: V2_MetaFunction<Loader, ParentsLoaders>,
-): V2_MetaFunction<Loader, ParentsLoaders> {
+  leafMetaFn: MetaFunction<Loader, ParentsLoaders>,
+): MetaFunction<Loader, ParentsLoaders> {
   return (arg) => {
     let leafMeta = leafMetaFn(arg);
 

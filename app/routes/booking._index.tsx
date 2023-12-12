@@ -3,9 +3,9 @@ import {VStack, Text, Heading, Box, Link as ChakraLink} from '@chakra-ui/react';
 import {EventDocument, type EventQuery} from '~/types/graphql';
 import DateString, {dateStringComponents} from '~/components/DateString';
 import apolloClient from '~/utils/apolloClient';
-import type {LoaderArgs} from '@remix-run/node';
+import type {LoaderFunctionArgs} from '@remix-run/node';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
-import type {V2_MetaFunction} from '@remix-run/react';
+import type {MetaFunction} from '@remix-run/react';
 import {Link, Outlet, useSearchParams} from '@remix-run/react';
 import {$path} from 'remix-routes';
 import ApplicationPhase from '~/components/booking/ApplicationPhase';
@@ -41,7 +41,7 @@ export function useUtmSource() {
   }
 }
 
-export async function loader(args: LoaderArgs) {
+export async function loader(args: LoaderFunctionArgs) {
   const {data} = await apolloClient.query<EventQuery>({
     query: EventDocument,
     variables: {
@@ -56,7 +56,7 @@ export async function loader(args: LoaderArgs) {
   throw new Error(`Event ${EVENT_ID} not found`);
 }
 
-export const meta: V2_MetaFunction<typeof loader> = mergedMeta((args) => [
+export const meta: MetaFunction<typeof loader> = mergedMeta((args) => [
   {
     title: 'Band- und DJ-Bewerbungen',
   },

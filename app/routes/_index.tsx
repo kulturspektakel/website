@@ -5,7 +5,7 @@ import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import React from 'react';
 import Article from '~/components/news/Article';
 import apolloClient from '~/utils/apolloClient';
-import type {V2_MetaFunction, LoaderArgs} from '@remix-run/node';
+import type {MetaFunction, LoaderFunctionArgs} from '@remix-run/node';
 import LinkButton from '~/components/LinkButton';
 import mergeMeta from '~/utils/mergeMeta';
 import theme from '~/theme';
@@ -22,14 +22,14 @@ gql`
   }
 `;
 
-export async function loader(args: LoaderArgs) {
+export async function loader(args: LoaderFunctionArgs) {
   const {data} = await apolloClient.query<NewsQuery>({
     query: NewsDocument,
   });
   return typedjson(data);
 }
 
-export const meta: V2_MetaFunction<typeof loader> = mergeMeta((args) => [
+export const meta: MetaFunction<typeof loader> = mergeMeta((args) => [
   {
     name: 'theme-color',
     content: theme.colors.brand[900],
