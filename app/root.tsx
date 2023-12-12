@@ -33,8 +33,8 @@ export const meta: V2_MetaFunction<typeof loader> = (props) => {
     connector = '',
     to = '',
   } = dateStringComponents({
-    date: props.data.eventsConnection.edges[0].node.start,
-    to: props.data.eventsConnection.edges[0].node.end,
+    date: new Date(props.data.eventsConnection.edges[0].node.start),
+    to: new Date(props.data.eventsConnection.edges[0].node.end),
     until: '-',
   });
 

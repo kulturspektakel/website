@@ -1,14 +1,17 @@
 import {gql} from '@apollo/client';
 import {VStack, Text, Heading, Box, Link as ChakraLink} from '@chakra-ui/react';
 import {EventDocument, type EventQuery} from '~/types/graphql';
-import DateString from '~/components/DateString';
+import DateString, {dateStringComponents} from '~/components/DateString';
 import apolloClient from '~/utils/apolloClient';
 import type {LoaderArgs} from '@remix-run/node';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
+import type {V2_MetaFunction} from '@remix-run/react';
 import {Link, Outlet, useSearchParams} from '@remix-run/react';
 import {$path} from 'remix-routes';
 import ApplicationPhase from '~/components/booking/ApplicationPhase';
+import mergedMeta from '~/utils/mergeMeta';
 
+// TODO read from root
 export const EVENT_ID = 'Event:kult2024';
 
 gql`
@@ -52,6 +55,18 @@ export async function loader(args: LoaderArgs) {
 
   throw new Error(`Event ${EVENT_ID} not found`);
 }
+
+export const meta: V2_MetaFunction<typeof loader> = mergedMeta((args) => [
+  {
+    title: 'Band- und DJ-Bewerbungen',
+  },
+  {
+    name: 'description',
+    content: `Die Bewerbungspahse für das ${args.data.name} läuft bis zum ${
+      dateStringComponents({date: new Date(args.data.bandApplicationEnd)}).date
+    }`,
+  },
+]);
 
 export default function Home() {
   const data = useTypedLoaderData<typeof loader>();
