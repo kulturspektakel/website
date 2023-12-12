@@ -9,9 +9,15 @@ import {
 } from '@chakra-ui/react';
 import type {V2_MetaFunction} from '@remix-run/node';
 import LinkButton from '~/components/LinkButton';
-import {mergeMeta} from '~/utils/mergeMeta';
+import mergeMeta from '~/utils/mergeMeta';
 
-export const meta: V2_MetaFunction = mergeMeta(() => [{title: `Logo`}]);
+export const meta: V2_MetaFunction<any> = mergeMeta(() => [
+  {title: `Logo`},
+  {
+    name: 'description',
+    content: 'Logos, Typographie, Farben und Sprache des Kulturspektakels',
+  },
+]);
 
 function LogoCol({filename}: {filename: string}) {
   return (

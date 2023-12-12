@@ -1,11 +1,13 @@
 import {gql} from '@apollo/client';
 import {Heading, ListItem, UnorderedList} from '@chakra-ui/react';
 import type {LoaderArgs} from '@remix-run/node';
+import type {V2_MetaFunction} from '@remix-run/react';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import ProductList from '~/components/speisekarte/ProductList';
 import type {SpeisekarteQuery} from '~/types/graphql';
 import {SpeisekarteDocument} from '~/types/graphql';
 import apolloClient from '~/utils/apolloClient';
+import mergedMeta from '~/utils/mergeMeta';
 
 gql`
   query Speisekarte {
@@ -24,6 +26,12 @@ export async function loader(args: LoaderArgs) {
 
   return typedjson(data);
 }
+
+export const meta: V2_MetaFunction<typeof loader> = mergedMeta((args) => [
+  {
+    title: 'Speisen & Getränke',
+  },
+]);
 
 export default function Speisekarte() {
   const {productLists} = useTypedLoaderData<typeof loader>();

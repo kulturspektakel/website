@@ -26,6 +26,7 @@ import Selector from '~/components/Selector';
 import {useState} from 'react';
 import {$path} from 'remix-routes';
 import Headline from '~/components/Headline';
+import mergedMeta from '~/utils/mergeMeta';
 
 gql`
   query EventsOverview(
@@ -57,25 +58,28 @@ const EVENT_TYPE = [
   {id: EventType.Other, name: 'Weitere'},
 ];
 
-export const meta: V2_MetaFunction<typeof loader> = (props) => {
-  console.log(props.data);
+export const meta: V2_MetaFunction<typeof loader> = mergedMeta((props) => {
   return [
     {
       title: 'Veranstaltungen',
     },
+    {
+      name: 'description',
+      content: 'Alle Veranstaltungen des Kulturspektakel Gauting e.V.',
+    },
   ];
-};
+});
 
 export async function loader(args: LoaderArgs) {
   const {data} = await apolloClient.query<EventsOverviewQuery>({
     query: EventsOverviewDocument,
   });
-  return typedjson({data});
+  return typedjson(data);
 }
 
 export default function Events() {
   const [variables, setVariables] = useState<EventsOverviewQueryVariables>();
-  const {data: initialData} = useTypedLoaderData<typeof loader>();
+  const initialData = useTypedLoaderData<typeof loader>();
   // not using Apollo's loading state because it will initially be true
   const [loading, setLoading] = useState(false);
 

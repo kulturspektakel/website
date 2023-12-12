@@ -46,12 +46,11 @@ export default function () {
               <IconButton
                 aria-label={`Zum Lineup ${params.year} zurückkehren`}
                 as={NavLink}
-                to={$path('/lineup/:year', {year: params.year})}
+                to={$path('/lineup/:year', {year: String(params.year)})}
                 icon={<TriangleDownIcon />}
                 transform="rotate(90deg) translateY(120%)"
                 size="xs"
                 isRound={true}
-                mt="0.5"
                 position="absolute"
                 left="0"
               />

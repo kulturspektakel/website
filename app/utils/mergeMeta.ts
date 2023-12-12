@@ -1,44 +1,65 @@
 // https://gist.github.com/ryanflorence/ec1849c6d690cfbffcb408ecd633e069
-import type {V2_HtmlMetaDescriptor, V2_MetaFunction} from '@remix-run/node';
+import type {LoaderFunction, V2_MetaFunction} from '@remix-run/node';
+import type {V2_ServerRuntimeMetaDescriptor} from '@remix-run/server-runtime';
 
-export const mergeMeta = (
-  overrideFn: V2_MetaFunction,
-  appendFn?: V2_MetaFunction,
-): V2_MetaFunction => {
+export default function mergedMeta<
+  Loader extends LoaderFunction,
+  ParentsLoaders extends Record<string, LoaderFunction>,
+>(
+  leafMetaFn: V2_MetaFunction<Loader, ParentsLoaders>,
+): V2_MetaFunction<Loader, ParentsLoaders> {
   return (arg) => {
-    // get meta from parent routes
-    let mergedMeta = arg.matches.reduce((acc, match) => {
-      return acc.concat(match.meta || []);
-    }, [] as V2_HtmlMetaDescriptor[]);
+    let leafMeta = leafMetaFn(arg);
 
-    // replace any parent meta with the same name or property with the override
-    let overrides = overrideFn(arg);
-    for (let override of overrides) {
-      let index = mergedMeta.findIndex(
-        (meta) =>
-          ('name' in meta &&
-            'name' in override &&
-            meta.name === override.name) ||
-          ('property' in meta &&
-            'property' in override &&
-            meta.property === override.property) ||
-          ('title' in meta && 'title' in override),
-      );
-      if (index !== -1) {
-        if (mergedMeta[index].title) {
-          mergedMeta[index].title = `${override.title} – ${
-            (mergedMeta[index] as any).title
-          }`;
+    const data = arg.matches.reduceRight((acc, match) => {
+      for (let parentMeta of match.meta) {
+        let index = acc.findIndex(
+          (meta) =>
+            ('name' in meta &&
+              'name' in parentMeta &&
+              meta.name === parentMeta.name) ||
+            ('property' in meta &&
+              'property' in parentMeta &&
+              meta.property === parentMeta.property) ||
+            ('title' in meta && 'title' in parentMeta),
+        );
+        if (index == -1) {
+          // Parent meta not found in acc, so add it
+          acc.push(parentMeta);
         }
-        console.log(JSON.stringify(mergedMeta));
       }
-    }
+      return acc;
+    }, leafMeta);
 
-    // append any additional meta
-    if (appendFn) {
-      mergedMeta = mergedMeta.concat(appendFn(arg));
-    }
+    setOG(data, 'og:title', (meta) => 'title' in meta, 'title');
+    setOG(
+      data,
+      'og:description',
+      (meta) => meta.name === 'description',
+      'content',
+    );
 
-    return mergedMeta;
+    return data;
   };
-};
+}
+
+function setOG(
+  data: V2_ServerRuntimeMetaDescriptor[],
+  ogProperty: string,
+  indexFinder: (meta: V2_ServerRuntimeMetaDescriptor) => boolean,
+  key: string,
+) {
+  const index = data.findIndex(indexFinder);
+  if (index > -1) {
+    const title = data[index][key];
+    const ogIndex = data.findIndex((meta) => meta.property === ogProperty);
+    if (ogIndex > -1) {
+      data[ogIndex].content = title;
+    } else {
+      data.push({
+        property: ogProperty,
+        content: title,
+      });
+    }
+  }
+}

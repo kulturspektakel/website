@@ -24,22 +24,52 @@ import fontsCSS from '../public/fonts.css';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import {RootDocument} from './types/graphql';
 import type {RootQuery} from './types/graphql';
+import {dateStringComponents} from './components/DateString';
+import logo from '../public/logos/logo.png';
 
 export const meta: V2_MetaFunction<typeof loader> = (props) => {
+  const {
+    date,
+    connector = '',
+    to = '',
+  } = dateStringComponents({
+    date: props.data.eventsConnection.edges[0].node.start,
+    to: props.data.eventsConnection.edges[0].node.end,
+    until: '-',
+  });
+
+  const title = `Kulturspektakel Gauting ${date}${connector}${to}`;
+  const description = `Das Kulturspektakel Gauting ist ein Kulturfestival in Gauting. Es findet vom ${date} bis ${to} statt.`;
   return [
     {charset: 'utf-8'},
     {name: 'viewport', content: 'width=device-width,initial-scale=1'},
     {
-      title: `${props.data.eventsConnection.edges[0].node.start} | Kulturspektakel Gauting`,
+      title,
     },
-    // {
-    //   property: 'og:title',
-    //   content: 'Very cool app',
-    // },
-    // {
-    //   name: 'description',
-    //   content: 'This app is the best',
-    // },
+    {
+      name: 'description',
+      content: description,
+    },
+    {
+      property: 'og:title',
+      content: title,
+    },
+    {
+      property: 'og:locale',
+      content: 'de_DE',
+    },
+    {
+      property: 'og:description',
+      content: description,
+    },
+    {
+      property: 'og:image',
+      content: `https://kulturspektakel.de${logo}`,
+    },
+    {
+      name: 'theme-color',
+      content: theme.colors.offwhite[100],
+    },
   ];
 };
 
