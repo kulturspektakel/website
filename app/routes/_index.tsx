@@ -5,8 +5,10 @@ import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import React from 'react';
 import Article from '~/components/news/Article';
 import apolloClient from '~/utils/apolloClient';
-import {type LoaderArgs} from '@remix-run/node';
+import type {V2_MetaFunction, LoaderArgs} from '@remix-run/node';
 import LinkButton from '~/components/LinkButton';
+import mergeMeta from '~/utils/mergeMeta';
+import theme from '~/theme';
 
 gql`
   query News {
@@ -26,6 +28,13 @@ export async function loader(args: LoaderArgs) {
   });
   return typedjson(data);
 }
+
+export const meta: V2_MetaFunction<typeof loader> = mergeMeta((args) => [
+  {
+    name: 'theme-color',
+    content: theme.colors.brand[900],
+  },
+]);
 
 export default function Index() {
   const data = useTypedLoaderData<typeof loader>();

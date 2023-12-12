@@ -11,6 +11,7 @@ import type {LineupQuery} from '~/types/graphql';
 import {LineupDocument} from '~/types/graphql';
 import apolloClient from '~/utils/apolloClient';
 import {isSameDay, timeZone} from '~/utils/dateUtils';
+import mergedMeta from '~/utils/mergeMeta';
 
 gql`
   query Lineup($id: ID!) {
@@ -42,13 +43,17 @@ export type SearchParams = {
   year: number;
 };
 
-export const meta: V2_MetaFunction<typeof loader> = (props) => {
+export const meta: V2_MetaFunction<typeof loader> = mergedMeta((props) => {
   return [
     {
       title: `Lineup ${props.params.year}`,
     },
+    {
+      name: 'description',
+      content: `${props.data.node.bandsPlaying.edges.length} Bands und Künstler:innen treten auf dem Kulturspektakel ${props.params.year} auf`,
+    },
   ];
-};
+});
 
 export async function loader(args: LoaderArgs) {
   const {year} = $params('/lineup/:year', args.params);
@@ -118,7 +123,9 @@ export default function LineupYear() {
       <Modal
         isOpen={!!slug}
         onClose={() =>
-          navigate($path('/lineup/:year', {year}), {preventScrollReset: true})
+          navigate($path('/lineup/:year', {year: String(year)}), {
+            preventScrollReset: true,
+          })
         }
       >
         <ModalOverlay />

@@ -21,7 +21,7 @@ import {
   FaFacebook,
   FaGlobe,
 } from 'react-icons/fa6';
-import {mergeMeta} from '~/utils/mergeMeta';
+import mergeMeta from '~/utils/mergeMeta';
 import type {LoaderArgs} from '@remix-run/node';
 import {$params} from 'remix-routes';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
@@ -76,7 +76,11 @@ export async function loader(args: LoaderArgs) {
 }
 
 export const meta: V2_MetaFunction<typeof loader> = mergeMeta((args) => [
-  {title: `${args.data.name} – Lineup ${args.params.year}`},
+  {title: `${args.data.name} | Lineup ${args.params.year}`},
+  {
+    name: 'description',
+    content: args.data.shortDescription,
+  },
 ]);
 
 export default function LineupBand() {

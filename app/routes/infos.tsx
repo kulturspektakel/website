@@ -16,6 +16,7 @@ import apolloClient from '~/utils/apolloClient';
 import Page from '~/components/Page';
 import DateString from '~/components/DateString';
 import Mark from '~/components/Mark';
+import mergedMeta from '~/utils/mergeMeta';
 
 gql`
   query Infos {
@@ -42,14 +43,15 @@ gql`
   }
 `;
 
-export const meta: V2_MetaFunction<typeof loader> = (props) => {
-  console.log(props.data);
-  return [
-    {
-      title: props.data.infos.title,
-    },
-  ];
-};
+export const meta: V2_MetaFunction<typeof loader> = mergedMeta((props) => [
+  {
+    title: props.data.infos.title,
+  },
+  {
+    name: 'description',
+    content: 'Informationen zum Kulturspektakel und dem Verein dahinter',
+  },
+]);
 
 export async function loader(args: LoaderArgs) {
   const {data} = await apolloClient.query<InfosQuery>({

@@ -8,6 +8,7 @@ import apolloClient from '~/utils/apolloClient';
 import Page from '~/components/Page';
 import {$path} from 'remix-routes';
 import LinkButton from '~/components/LinkButton';
+import mergedMeta from '~/utils/mergeMeta';
 
 gql`
   query Angebot {
@@ -44,13 +45,16 @@ gql`
   }
 `;
 
-export const meta: V2_MetaFunction<typeof loader> = (props) => {
-  return [
-    {
-      title: 'Angebot & Programm',
-    },
-  ];
-};
+export const meta: V2_MetaFunction<typeof loader> = mergedMeta((props) => [
+  {
+    title: 'Angebot & Programm',
+  },
+  {
+    name: 'description',
+    content:
+      'Essens- und Getränkeangebot, Workshops, Sportturniere und Kinderprogramm',
+  },
+]);
 
 export async function loader(args: LoaderArgs) {
   const {data} = await apolloClient.query<AngebotQuery>({

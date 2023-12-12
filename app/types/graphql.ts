@@ -902,6 +902,7 @@ export type PageContentFragment = {
   title: string;
   content?: {
     __typename?: 'MarkdownString';
+    plainText: string;
     markdown: string;
     images: Array<{
       __typename?: 'PixelImage';
@@ -1208,6 +1209,7 @@ export type PageQuery = {
         title: string;
         content?: {
           __typename?: 'MarkdownString';
+          plainText: string;
           markdown: string;
           images: Array<{
             __typename?: 'PixelImage';
@@ -1328,6 +1330,7 @@ export type AngebotQuery = {
         title: string;
         content?: {
           __typename?: 'MarkdownString';
+          plainText: string;
           markdown: string;
           images: Array<{
             __typename?: 'PixelImage';
@@ -1403,6 +1406,7 @@ export type AngebotQuery = {
         title: string;
         content?: {
           __typename?: 'MarkdownString';
+          plainText: string;
           markdown: string;
           images: Array<{
             __typename?: 'PixelImage';
@@ -1478,6 +1482,7 @@ export type AngebotQuery = {
         title: string;
         content?: {
           __typename?: 'MarkdownString';
+          plainText: string;
           markdown: string;
           images: Array<{
             __typename?: 'PixelImage';
@@ -1553,6 +1558,7 @@ export type AngebotQuery = {
         title: string;
         content?: {
           __typename?: 'MarkdownString';
+          plainText: string;
           markdown: string;
           images: Array<{
             __typename?: 'PixelImage';
@@ -1843,6 +1849,7 @@ export type InfosQuery = {
         title: string;
         content?: {
           __typename?: 'MarkdownString';
+          plainText: string;
           markdown: string;
           images: Array<{
             __typename?: 'PixelImage';
@@ -1918,6 +1925,7 @@ export type InfosQuery = {
         title: string;
         content?: {
           __typename?: 'MarkdownString';
+          plainText: string;
           markdown: string;
           images: Array<{
             __typename?: 'PixelImage';
@@ -2223,6 +2231,7 @@ export const PageContentFragmentDoc = gql`
     title
     content {
       ...MarkdownText
+      plainText
     }
     left {
       ...MarkdownText

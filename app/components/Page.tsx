@@ -8,6 +8,7 @@ gql`
     title
     content {
       ...MarkdownText
+      plainText
     }
     left {
       ...MarkdownText
