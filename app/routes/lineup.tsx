@@ -1,5 +1,5 @@
 import {gql, useSuspenseQuery} from '@apollo/client';
-import {TriangleDownIcon} from '@chakra-ui/icons';
+import {InfoIcon, TriangleDownIcon} from '@chakra-ui/icons';
 import type {BoxProps} from '@chakra-ui/react';
 import {
   Stack,
@@ -11,10 +11,7 @@ import {
   IconButton,
   Flex,
   Tooltip,
-  Alert,
-  AlertDescription,
-  AlertIcon,
-  AlertTitle,
+  Text,
   Box,
   CloseButton,
   Link as ChakraLink,
@@ -145,20 +142,32 @@ function BookingAlert(props: BoxProps) {
   }
 
   return (
-    <Alert borderRadius="lg" bg="offwhite.200" alignItems="start" {...props}>
-      <AlertIcon color="brand.900" />
+    <Flex
+      borderRadius="lg"
+      bg="offwhite.200"
+      alignItems="start"
+      p="3"
+      gap="2"
+      {...props}
+    >
+      <InfoIcon color="brand.900" />
       <Box>
-        <AlertTitle fontFamily="Shrimp" textTransform="uppercase">
+        <Heading
+          size="sm"
+          as="h4"
+          fontFamily="Shrimp"
+          textTransform="uppercase"
+        >
           Jetzt bewerben!
-        </AlertTitle>
-        <AlertDescription>
+        </Heading>
+        <Text>
           Die Bewerbungsphase für das nächste Kulturspektakel läuft aktuell und
           ihr könnt euch jetzt für einen Auftritt bei uns{' '}
           <ChakraLink as={Link} to={$path('/booking')} variant="inline">
             bewerben
           </ChakraLink>
           .
-        </AlertDescription>
+        </Text>
       </Box>
       <CloseButton
         alignSelf="flex-start"
@@ -167,6 +176,6 @@ function BookingAlert(props: BoxProps) {
         top={-1}
         onClick={onClose}
       />
-    </Alert>
+    </Flex>
   );
 }
