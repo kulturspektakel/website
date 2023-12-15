@@ -124,7 +124,9 @@ function MenuItems() {
       {data?.eventsConnection.edges.map(({node}) => (
         <MenuItem
           as={NavLink}
-          to={$path('/lineup/:year', {year: node.start.getFullYear()})}
+          to={$path('/lineup/:year', {
+            year: new Date(node.start).getFullYear(),
+          })}
           key={node.id}
         >
           {node.name}
