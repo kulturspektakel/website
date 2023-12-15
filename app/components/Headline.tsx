@@ -18,8 +18,8 @@ export default function Headline({
   href = href === pathname ? undefined : href;
 
   return (
-    <Box {...props}>
-      <Heading size="lg" mb="1" as={href ? 'h2' : 'h1'}>
+    <Box textAlign={href ? undefined : 'center'} {...props}>
+      <Heading size={[href ? 'lg' : 'xl']} mb="1" as={href ? 'h2' : 'h1'}>
         {href ? (
           <ChakraLink as={Link} to={href}>
             {children}

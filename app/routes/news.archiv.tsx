@@ -63,7 +63,7 @@ export default function NewsArchive() {
 
   // group data by year
   const years = data.news.edges.reduce((acc, edge) => {
-    const year = edge.node.createdAt.getFullYear();
+    const year = new Date(edge.node.createdAt).getFullYear();
     if (acc.has(year)) {
       acc.get(year)?.push(edge);
     } else {

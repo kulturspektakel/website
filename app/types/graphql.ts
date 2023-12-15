@@ -23,8 +23,8 @@ export type Scalars = {
   Boolean: {input: boolean; output: boolean};
   Int: {input: number; output: number};
   Float: {input: number; output: number};
-  Date: {input: Date; output: Date};
-  DateTime: {input: Date; output: Date};
+  Date: {input: string; output: string};
+  DateTime: {input: string; output: string};
 };
 
 export type Area = Node & {
@@ -321,6 +321,9 @@ export type Event = Node & {
   djApplicationStart?: Maybe<Scalars['DateTime']['output']>;
   end: Scalars['DateTime']['output'];
   id: Scalars['ID']['output'];
+  latitude?: Maybe<Scalars['Float']['output']>;
+  location?: Maybe<Scalars['String']['output']>;
+  longitude?: Maybe<Scalars['Float']['output']>;
   media: EventMediaConnection;
   name: Scalars['String']['output'];
   poster?: Maybe<PixelImage>;
@@ -871,16 +874,7 @@ export type Viewer = Node & {
   profilePicture?: Maybe<Scalars['String']['output']>;
 };
 
-export type HeaderFragment = {
-  __typename?: 'Query';
-  eventsConnection: {
-    __typename?: 'QueryEventsConnection';
-    edges: Array<{
-      __typename?: 'QueryEventsConnectionEdge';
-      node: {__typename?: 'Event'; start: Date; end: Date};
-    }>;
-  };
-};
+export type HeaderFragment = {__typename?: 'Event'; start: string; end: string};
 
 export type MarkdownTextFragment = {
   __typename?: 'MarkdownString';
@@ -977,7 +971,7 @@ export type DuplicateApplicationWarningQuery = {
   __typename?: 'Query';
   checkDuplicateApplication?: {
     __typename?: 'ObfuscatedBandApplication';
-    applicationTime: Date;
+    applicationTime: string;
     obfuscatedEmail: string;
   } | null;
 };
@@ -1003,12 +997,8 @@ export type EventDetailsFragment = {
   id: string;
   name: string;
   description?: string | null;
-  start: Date;
-  end: Date;
-  bandApplicationStart?: Date | null;
-  bandApplicationEnd?: Date | null;
-  djApplicationStart?: Date | null;
-  djApplicationEnd?: Date | null;
+  start: string;
+  end: string;
   poster?: {
     __typename?: 'PixelImage';
     width: number;
@@ -1109,7 +1099,7 @@ export type BandFragment = {
   __typename?: 'BandPlaying';
   id: string;
   name: string;
-  startTime: Date;
+  startTime: string;
   slug: string;
   genre?: string | null;
   area: {
@@ -1132,7 +1122,7 @@ export type BandSearchQuery = {
     __typename?: 'BandPlaying';
     id: string;
     name: string;
-    startTime: Date;
+    startTime: string;
     slug: string;
   }>;
 };
@@ -1141,7 +1131,7 @@ export type ArticleFragment = {
   __typename?: 'News';
   slug: string;
   title: string;
-  createdAt: Date;
+  createdAt: string;
   content: {
     __typename?: 'MarkdownString';
     markdown: string;
@@ -1182,7 +1172,17 @@ export type RootQuery = {
     __typename?: 'QueryEventsConnection';
     edges: Array<{
       __typename?: 'QueryEventsConnectionEdge';
-      node: {__typename?: 'Event'; start: Date; end: Date};
+      node: {
+        __typename?: 'Event';
+        start: string;
+        end: string;
+        id: string;
+        name: string;
+        bandApplicationStart?: string | null;
+        bandApplicationEnd?: string | null;
+        djApplicationStart?: string | null;
+        djApplicationEnd?: string | null;
+      };
     }>;
   };
 };
@@ -1283,7 +1283,7 @@ export type NewsQuery = {
         __typename?: 'News';
         slug: string;
         title: string;
-        createdAt: Date;
+        createdAt: string;
         content: {
           __typename?: 'MarkdownString';
           markdown: string;
@@ -1630,63 +1630,16 @@ export type CreateBandApplicationMutation = {
   createBandApplication: {__typename?: 'BandApplication'; id: string};
 };
 
-export type ThanksQueryVariables = Exact<{
-  id: Scalars['ID']['input'];
-}>;
-
-export type ThanksQuery = {
-  __typename?: 'Query';
-  node?:
-    | {__typename?: 'Area'}
-    | {__typename?: 'BandApplication'}
-    | {__typename?: 'BandApplicationComment'}
-    | {__typename?: 'BandPlaying'}
-    | {__typename?: 'Card'}
-    | {__typename?: 'Device'}
-    | {
-        __typename?: 'Event';
-        bandApplicationEnd?: Date | null;
-        djApplicationEnd?: Date | null;
-      }
-    | {__typename?: 'News'}
-    | {__typename?: 'NuclinoPage'}
-    | {__typename?: 'Page'}
-    | {__typename?: 'Product'}
-    | {__typename?: 'ProductList'}
-    | {__typename?: 'Viewer'}
-    | null;
-};
-
-export type EventQueryVariables = Exact<{
-  id: Scalars['ID']['input'];
-}>;
-
-export type EventQuery = {
-  __typename?: 'Query';
-  node?:
-    | {__typename?: 'Area'}
-    | {__typename?: 'BandApplication'}
-    | {__typename?: 'BandApplicationComment'}
-    | {__typename?: 'BandPlaying'}
-    | {__typename?: 'Card'}
-    | {__typename?: 'Device'}
-    | {
-        __typename?: 'Event';
-        name: string;
-        start: Date;
-        end: Date;
-        bandApplicationStart?: Date | null;
-        bandApplicationEnd?: Date | null;
-        djApplicationStart?: Date | null;
-        djApplicationEnd?: Date | null;
-      }
-    | {__typename?: 'News'}
-    | {__typename?: 'NuclinoPage'}
-    | {__typename?: 'Page'}
-    | {__typename?: 'Product'}
-    | {__typename?: 'ProductList'}
-    | {__typename?: 'Viewer'}
-    | null;
+export type BookingDetailsFragment = {
+  __typename?: 'Event';
+  id: string;
+  name: string;
+  start: string;
+  end: string;
+  bandApplicationStart?: string | null;
+  bandApplicationEnd?: string | null;
+  djApplicationStart?: string | null;
+  djApplicationEnd?: string | null;
 };
 
 export type SingleEventQueryVariables = Exact<{
@@ -1706,14 +1659,13 @@ export type SingleEventQuery = {
     | {
         __typename?: 'Event';
         name: string;
+        location?: string | null;
+        latitude?: number | null;
+        longitude?: number | null;
         id: string;
         description?: string | null;
-        start: Date;
-        end: Date;
-        bandApplicationStart?: Date | null;
-        bandApplicationEnd?: Date | null;
-        djApplicationStart?: Date | null;
-        djApplicationEnd?: Date | null;
+        start: string;
+        end: string;
         poster?: {
           __typename?: 'PixelImage';
           width: number;
@@ -1775,13 +1727,9 @@ export type EventsOverviewQuery = {
         __typename?: 'Event';
         id: string;
         name: string;
-        start: Date;
-        end: Date;
+        start: string;
+        end: string;
         description?: string | null;
-        bandApplicationStart?: Date | null;
-        bandApplicationEnd?: Date | null;
-        djApplicationStart?: Date | null;
-        djApplicationEnd?: Date | null;
         poster?: {
           __typename?: 'PixelImage';
           width: number;
@@ -1827,8 +1775,8 @@ export type InfosQuery = {
   crewCalendar: Array<{
     __typename?: 'VEvent';
     summary: string;
-    start: Date;
-    end: Date;
+    start: string;
+    end: string;
     uid: string;
     location?: string | null;
     allDay: boolean;
@@ -2002,7 +1950,7 @@ export type LineupBandQuery = {
         name: string;
         shortDescription?: string | null;
         description?: string | null;
-        startTime: Date;
+        startTime: string;
         genre?: string | null;
         spotify?: string | null;
         youtube?: string | null;
@@ -2052,8 +2000,12 @@ export type LineupQuery = {
     | {
         __typename?: 'Event';
         name: string;
-        start: Date;
-        end: Date;
+        start: string;
+        end: string;
+        bandApplicationStart?: string | null;
+        bandApplicationEnd?: string | null;
+        djApplicationStart?: string | null;
+        djApplicationEnd?: string | null;
         bandsPlaying: {
           __typename?: 'EventBandsPlayingConnection';
           edges: Array<{
@@ -2062,7 +2014,7 @@ export type LineupQuery = {
               __typename?: 'BandPlaying';
               id: string;
               name: string;
-              startTime: Date;
+              startTime: string;
               slug: string;
               genre?: string | null;
               area: {
@@ -2094,7 +2046,7 @@ export type LineupsQuery = {
     __typename?: 'QueryEventsConnection';
     edges: Array<{
       __typename?: 'QueryEventsConnectionEdge';
-      node: {__typename?: 'Event'; name: string; id: string; start: Date};
+      node: {__typename?: 'Event'; name: string; id: string; start: string};
     }>;
   };
 };
@@ -2117,7 +2069,7 @@ export type NewsPageQuery = {
         __typename?: 'News';
         slug: string;
         title: string;
-        createdAt: Date;
+        createdAt: string;
         content: {
           __typename?: 'MarkdownString';
           markdown: string;
@@ -2157,7 +2109,7 @@ export type NewsArchiveQuery = {
         __typename?: 'News';
         slug: string;
         title: string;
-        createdAt: Date;
+        createdAt: string;
         content: {
           __typename?: 'MarkdownString';
           markdown: string;
@@ -2201,15 +2153,9 @@ export type SpeisekarteQuery = {
 };
 
 export const HeaderFragmentDoc = gql`
-  fragment Header on Query {
-    eventsConnection(first: 1, type: Kulturspektakel) {
-      edges {
-        node {
-          start
-          end
-        }
-      }
-    }
+  fragment Header on Event {
+    start
+    end
   }
 `;
 export const MarkdownTextFragmentDoc = gql`
@@ -2272,10 +2218,6 @@ export const EventDetailsFragmentDoc = gql`
     description
     start
     end
-    bandApplicationStart
-    bandApplicationEnd
-    djApplicationStart
-    djApplicationEnd
     poster {
       thumbnail: scaledUri(width: 200)
       large: scaledUri(width: 1200)
@@ -2337,6 +2279,18 @@ export const ProductListComponentFragmentDoc = gql`
       price
       requiresDeposit
     }
+  }
+`;
+export const BookingDetailsFragmentDoc = gql`
+  fragment BookingDetails on Event {
+    id
+    name
+    start
+    end
+    bandApplicationStart
+    bandApplicationEnd
+    djApplicationStart
+    djApplicationEnd
   }
 `;
 export const DistanceDocument = gql`
@@ -2711,9 +2665,17 @@ export type BandSearchQueryResult = Apollo.QueryResult<
 >;
 export const RootDocument = gql`
   query Root {
-    ...Header
+    eventsConnection(first: 1, type: Kulturspektakel) {
+      edges {
+        node {
+          ...Header
+          ...BookingDetails
+        }
+      }
+    }
   }
   ${HeaderFragmentDoc}
+  ${BookingDetailsFragmentDoc}
 `;
 
 /**
@@ -3024,149 +2986,15 @@ export type CreateBandApplicationMutationOptions = Apollo.BaseMutationOptions<
   CreateBandApplicationMutation,
   CreateBandApplicationMutationVariables
 >;
-export const ThanksDocument = gql`
-  query Thanks($id: ID!) {
-    node(id: $id) {
-      ... on Event {
-        bandApplicationEnd
-        djApplicationEnd
-      }
-    }
-  }
-`;
-
-/**
- * __useThanksQuery__
- *
- * To run a query within a React component, call `useThanksQuery` and pass it any options that fit your needs.
- * When your component renders, `useThanksQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useThanksQuery({
- *   variables: {
- *      id: // value for 'id'
- *   },
- * });
- */
-export function useThanksQuery(
-  baseOptions: Apollo.QueryHookOptions<ThanksQuery, ThanksQueryVariables>,
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useQuery<ThanksQuery, ThanksQueryVariables>(
-    ThanksDocument,
-    options,
-  );
-}
-export function useThanksLazyQuery(
-  baseOptions?: Apollo.LazyQueryHookOptions<ThanksQuery, ThanksQueryVariables>,
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useLazyQuery<ThanksQuery, ThanksQueryVariables>(
-    ThanksDocument,
-    options,
-  );
-}
-export function useThanksSuspenseQuery(
-  baseOptions?: Apollo.SuspenseQueryHookOptions<
-    ThanksQuery,
-    ThanksQueryVariables
-  >,
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useSuspenseQuery<ThanksQuery, ThanksQueryVariables>(
-    ThanksDocument,
-    options,
-  );
-}
-export type ThanksQueryHookResult = ReturnType<typeof useThanksQuery>;
-export type ThanksLazyQueryHookResult = ReturnType<typeof useThanksLazyQuery>;
-export type ThanksSuspenseQueryHookResult = ReturnType<
-  typeof useThanksSuspenseQuery
->;
-export type ThanksQueryResult = Apollo.QueryResult<
-  ThanksQuery,
-  ThanksQueryVariables
->;
-export const EventDocument = gql`
-  query Event($id: ID!) {
-    node(id: $id) {
-      ... on Event {
-        name
-        start
-        end
-        bandApplicationStart
-        bandApplicationEnd
-        djApplicationStart
-        djApplicationEnd
-      }
-    }
-  }
-`;
-
-/**
- * __useEventQuery__
- *
- * To run a query within a React component, call `useEventQuery` and pass it any options that fit your needs.
- * When your component renders, `useEventQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useEventQuery({
- *   variables: {
- *      id: // value for 'id'
- *   },
- * });
- */
-export function useEventQuery(
-  baseOptions: Apollo.QueryHookOptions<EventQuery, EventQueryVariables>,
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useQuery<EventQuery, EventQueryVariables>(
-    EventDocument,
-    options,
-  );
-}
-export function useEventLazyQuery(
-  baseOptions?: Apollo.LazyQueryHookOptions<EventQuery, EventQueryVariables>,
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useLazyQuery<EventQuery, EventQueryVariables>(
-    EventDocument,
-    options,
-  );
-}
-export function useEventSuspenseQuery(
-  baseOptions?: Apollo.SuspenseQueryHookOptions<
-    EventQuery,
-    EventQueryVariables
-  >,
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useSuspenseQuery<EventQuery, EventQueryVariables>(
-    EventDocument,
-    options,
-  );
-}
-export type EventQueryHookResult = ReturnType<typeof useEventQuery>;
-export type EventLazyQueryHookResult = ReturnType<typeof useEventLazyQuery>;
-export type EventSuspenseQueryHookResult = ReturnType<
-  typeof useEventSuspenseQuery
->;
-export type EventQueryResult = Apollo.QueryResult<
-  EventQuery,
-  EventQueryVariables
->;
 export const SingleEventDocument = gql`
   query SingleEvent($id: ID!, $num_photos: Int = 100) {
     event: node(id: $id) {
       ... on Event {
         name
         ...EventDetails
+        location
+        latitude
+        longitude
       }
     }
   }
@@ -3520,6 +3348,10 @@ export const LineupDocument = gql`
             }
           }
         }
+        bandApplicationStart
+        bandApplicationEnd
+        djApplicationStart
+        djApplicationEnd
       }
     }
     areas {

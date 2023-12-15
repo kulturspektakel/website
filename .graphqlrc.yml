@@ -7,16 +7,11 @@ generates:
       - typescript
       - typescript-operations
       - typescript-react-apollo
-  ./app/types/graphql.schema.json:
-    plugins:
-      - introspection
-    config:
-      minify: true
 config:
   withMutationFn: true
   scalars:
-    Date: Date
-    DateTime: Date
+    Date: string
+    DateTime: string
 hooks:
   afterOneFileWrite:
     - prettier --write

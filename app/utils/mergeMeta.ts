@@ -1,6 +1,6 @@
 // https://gist.github.com/ryanflorence/ec1849c6d690cfbffcb408ecd633e069
 import type {LoaderFunction, MetaFunction} from '@remix-run/node';
-import type {V2_ServerRuntimeMetaDescriptor} from '@remix-run/server-runtime';
+import type {ServerRuntimeMetaDescriptor} from '@remix-run/server-runtime';
 
 export default function mergedMeta<
   Loader extends LoaderFunction,
@@ -21,7 +21,8 @@ export default function mergedMeta<
             ('property' in meta &&
               'property' in parentMeta &&
               meta.property === parentMeta.property) ||
-            ('title' in meta && 'title' in parentMeta),
+            ('title' in meta && 'title' in parentMeta) ||
+            ('charset' in meta && 'charset' in parentMeta),
         );
         if (index == -1) {
           // Parent meta not found in acc, so add it
@@ -35,7 +36,7 @@ export default function mergedMeta<
     setOG(
       data,
       'og:description',
-      (meta) => meta.name === 'description',
+      (meta) => 'name' in meta && meta.name === 'description',
       'content',
     );
 
@@ -44,9 +45,9 @@ export default function mergedMeta<
 }
 
 function setOG(
-  data: V2_ServerRuntimeMetaDescriptor[],
+  data: ServerRuntimeMetaDescriptor[],
   ogProperty: string,
-  indexFinder: (meta: V2_ServerRuntimeMetaDescriptor) => boolean,
+  indexFinder: (meta: ServerRuntimeMetaDescriptor) => boolean,
   key: string,
 ) {
   const index = data.findIndex(indexFinder);

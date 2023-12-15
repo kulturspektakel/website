@@ -28,7 +28,7 @@ export default function Band({band}: {band: BandFragment}) {
     <Card
       aspectRatio={1}
       href={$path('/lineup/:year/:slug', {
-        year: band.startTime.getFullYear(),
+        year: new Date(band.startTime).getFullYear(),
         slug: band.slug,
       })}
     >

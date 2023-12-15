@@ -1,5 +1,5 @@
 import {ApolloProvider, gql} from '@apollo/client';
-import {ChakraProvider, Box, Heading, Flex} from '@chakra-ui/react';
+import {ChakraProvider, Box, Heading, Flex, Code, Text} from '@chakra-ui/react';
 import type {
   LinksFunction,
   MetaFunction,
@@ -25,25 +25,32 @@ import MetaPixel from './components/MetaPixel.client';
 import {ClientOnly} from 'remix-utils/client-only';
 import photoswipeCSS from 'photoswipe/dist/photoswipe.css';
 import fontsCSS from '../public/fonts.css';
-import {typedjson, useTypedLoaderData} from 'remix-typedjson';
+import {typedjson} from 'remix-typedjson';
 import {RootDocument} from './types/graphql';
 import type {RootQuery} from './types/graphql';
 import {dateStringComponents} from './components/DateString';
 import logo from '../public/logos/logo.png';
+import Headline from './components/Headline';
 
 export const meta: MetaFunction<typeof loader> = (props) => {
-  const {
-    date,
-    connector = '',
-    to = '',
-  } = dateStringComponents({
-    date: new Date(props.data.eventsConnection.edges[0].node.start),
-    to: new Date(props.data.eventsConnection.edges[0].node.end),
-    until: '-',
-  });
+  let title = 'Kulturspektakel Gauting';
+  let description =
+    'Open-Air-Musikfestival mit freiem Eintritt, Workshops, Kinderprogramm und mehr';
+  const event = props.data?.eventsConnection?.edges[0].node;
+  if (event) {
+    const {
+      date,
+      connector = '',
+      to = '',
+    } = dateStringComponents({
+      date: new Date(event.start),
+      to: new Date(event.end),
+      until: '-',
+    });
+    title = `Kulturspektakel Gauting ${date}${connector}${to}`;
+    description = `Open-Air-Musikfestival vom ${date} bis ${to} mit freiem Eintritt, Workshops, Kinderprogramm und mehr`;
+  }
 
-  const title = `Kulturspektakel Gauting ${date}${connector}${to}`;
-  const description = `Das Kulturspektakel Gauting ist ein Kulturfestival in Gauting. Es findet vom ${date} bis ${to} statt.`;
   return [
     {charset: 'utf-8'},
     {name: 'viewport', content: 'width=device-width,initial-scale=1'},
@@ -92,7 +99,14 @@ export const links: LinksFunction = () => [
 
 gql`
   query Root {
-    ...Header
+    eventsConnection(first: 1, type: Kulturspektakel) {
+      edges {
+        node {
+          ...Header
+          ...BookingDetails
+        }
+      }
+    }
   }
 `;
 
@@ -105,7 +119,6 @@ export async function loader(args: LoaderFunctionArgs) {
 
 function Document({children}: {children: React.ReactNode}) {
   const emotionCache = createEmotionCache({key: 'css'});
-  const data = useTypedLoaderData<typeof loader>();
 
   return (
     <html lang="de">
@@ -118,7 +131,7 @@ function Document({children}: {children: React.ReactNode}) {
           <ChakraProvider theme={theme}>
             <ApolloProvider client={apolloClient}>
               <Flex direction={'column'} minHeight={'100vh'}>
-                <Header data={data} />
+                <Header />
                 <Box
                   flex="1 1 0"
                   ml="auto"
@@ -146,8 +159,6 @@ function Document({children}: {children: React.ReactNode}) {
 }
 
 export default function App() {
-  // throw new Error('💣💥 Booooom');
-
   return (
     <Document>
       <Outlet />
@@ -173,14 +184,17 @@ export function ErrorBoundary() {
 
   return (
     <Document>
-      <Heading as="h1">Oops</Heading>
-      {isRouteErrorResponse(error) && (
+      {isRouteErrorResponse(error) && error.status == 404 ? (
         <>
-          <p>Status: {error.status}</p>
-          <p>{error.data.message}</p>
+          <Headline mb="4">Seite nicht gefunden</Headline>
+          <Text>Die Seite, die du suchst, existiert nicht.</Text>
+        </>
+      ) : (
+        <>
+          <Headline mb="4">Fehler</Headline>
+          <Text>Da stimmt etwas nicht. Hast du es kaputt gemacht?</Text>
         </>
       )}
-      {error instanceof Error && <p>{error.message}</p>}
     </Document>
   );
 }

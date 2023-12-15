@@ -1,10 +1,18 @@
-import {Box, Heading, Stack, Link as ChakraLink, Text} from '@chakra-ui/react';
+import {
+  Box,
+  Heading,
+  Stack,
+  Link as ChakraLink,
+  Text,
+  Flex,
+} from '@chakra-ui/react';
 import {$path} from 'remix-routes';
 import {gql} from '@apollo/client';
 import Image from '~/components/Image';
 import Photos from '~/components/events/Photos';
 import type {EventDetailsFragment} from '~/types/graphql';
 import {Link} from '@remix-run/react';
+import Countdown from 'react-countdown';
 
 gql`
   fragment EventDetails on Event {
@@ -13,10 +21,6 @@ gql`
     description
     start
     end
-    bandApplicationStart
-    bandApplicationEnd
-    djApplicationStart
-    djApplicationEnd
     poster {
       thumbnail: scaledUri(width: 200)
       large: scaledUri(width: 1200)
@@ -38,21 +42,7 @@ gql`
   }
 `;
 
-function applicationsOpen(event: EventDetailsFragment) {
-  return (
-    (event.bandApplicationStart &&
-      event.bandApplicationEnd &&
-      event.bandApplicationStart.getTime() < Date.now() &&
-      event.bandApplicationEnd.getTime() > Date.now()) ||
-    (event.djApplicationStart &&
-      event.djApplicationEnd &&
-      event.djApplicationStart.getTime() < Date.now() &&
-      event.djApplicationEnd.getTime() > Date.now())
-  );
-}
-
 export default function Event({event}: {event: EventDetailsFragment}) {
-  const applications = applicationsOpen(event);
   return (
     <Stack
       direction={['column', 'row']}
@@ -76,7 +66,74 @@ export default function Event({event}: {event: EventDetailsFragment}) {
           }
         />
       )}
-      <Box>
+      <Box w="100%">
+        {new Date(event.start).getTime() > new Date().getTime() && (
+          <Flex
+            textAlign="center"
+            fontWeight="bold"
+            flexDirection="row"
+            w="100%"
+            bg="brand.900"
+            color="white"
+            borderRadius="lg"
+            boxShadow="lg"
+            pt="1"
+            px="2"
+            pb={['2', '4']}
+            maxW="500px"
+            mx="auto"
+            mt="3"
+            transform="rotate(1deg)"
+          >
+            <Countdown
+              date={event.start}
+              renderer={({days, hours, minutes, seconds}) => (
+                <>
+                  <Box flexBasis={1} flexGrow={1}>
+                    <Text
+                      fontSize={['xx-large', 'xxx-large']}
+                      fontFamily="Shrimp"
+                      mb="-3"
+                    >
+                      {days}
+                    </Text>
+                    <Text>Tage</Text>
+                  </Box>
+                  <Box flexBasis={1} flexGrow={1}>
+                    <Text
+                      fontSize={['xx-large', 'xxx-large']}
+                      fontFamily="Shrimp"
+                      mb="-3"
+                    >
+                      {hours}
+                    </Text>
+                    <Text>Stunden</Text>
+                  </Box>
+                  <Box flexBasis={1} flexGrow={1}>
+                    <Text
+                      fontSize={['xx-large', 'xxx-large']}
+                      fontFamily="Shrimp"
+                      mb="-3"
+                    >
+                      {minutes}
+                    </Text>
+                    <Text>Minuten</Text>
+                  </Box>
+                  <Box flexBasis={1} flexGrow={1}>
+                    <Text
+                      fontSize={['xx-large', 'xxx-large']}
+                      fontFamily="Shrimp"
+                      mb="-3"
+                    >
+                      {seconds}
+                    </Text>
+                    <Text>Sekunden</Text>
+                  </Box>
+                </>
+              )}
+            />
+          </Flex>
+        )}
         {event.description && <Box>{event.description}</Box>}
         {event.bandsPlaying.totalCount > 0 && (
           <>
@@ -88,7 +145,7 @@ export default function Event({event}: {event: EventDetailsFragment}) {
               <ChakraLink
                 as={Link}
                 to={$path('/lineup/:year', {
-                  year: event.start.getFullYear(),
+                  year: new Date(event.start).getFullYear(),
                 })}
                 variant="inline"
               >
@@ -104,24 +161,10 @@ export default function Event({event}: {event: EventDetailsFragment}) {
             </Box>
           </>
         )}
-        {applications && (
-          <>
-            <Heading as="h3" size="md" mb="2">
-              Booking
-            </Heading>
-            <Text>
-              Die Bewerbungsphase läuft aktuell und ihr könnt euch jetzt für
-              einen Auftritt bei uns{' '}
-              <ChakraLink as={Link} to={$path('/booking')} variant="inline">
-                bewerben
-              </ChakraLink>
-              .
-            </Text>
-          </>
-        )}
+
         {event.media.edges.length > 0 && (
           <>
-            <Heading as="h3" size="md" mt="4" mb="2">
+            <Heading as="h3" size="md" mt="4" mb="2" id="fotos">
               Fotos
             </Heading>
             <Photos eventId={event.id} media={event.media} />

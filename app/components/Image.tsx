@@ -13,7 +13,7 @@ export default function Image({
 }: ImageProps & {
   originalWidth?: number;
   originalHeight?: number;
-} & Omit<ItemProps, 'width' | 'height' | 'children'>) {
+} & Omit<ItemProps<HTMLDivElement>, 'width' | 'height' | 'children'>) {
   if (original != null) {
     return (
       <Item

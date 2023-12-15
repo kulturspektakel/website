@@ -13,7 +13,12 @@ import {
   ModalContent,
   ModalOverlay,
 } from '@chakra-ui/react';
-import {useLocation, NavLink, useNavigation} from '@remix-run/react';
+import {
+  useLocation,
+  NavLink,
+  useNavigation,
+  useNavigate,
+} from '@remix-run/react';
 import {useEffect, useMemo, useState} from 'react';
 import ProgressBar from '@badrap/bar-of-progress';
 import logo from './logo.svg';
@@ -23,18 +28,12 @@ import {CloseIcon, HamburgerIcon} from '@chakra-ui/icons';
 import {$path} from 'remix-routes';
 import type {RemixNavLinkProps} from '@remix-run/react/dist/components';
 import {gql} from '@apollo/client';
-import type {HeaderFragment} from '~/types/graphql';
+import useRootData from '~/utils/useRootData';
 
 gql`
-  fragment Header on Query {
-    eventsConnection(first: 1, type: Kulturspektakel) {
-      edges {
-        node {
-          start
-          end
-        }
-      }
-    }
+  fragment Header on Event {
+    start
+    end
   }
 `;
 
@@ -96,14 +95,16 @@ function NavItems() {
   );
 }
 
-export default function Header(props: {data: HeaderFragment}) {
+export default function Header() {
   const isHome = useLocation().pathname === '/';
-  const isBooking = useLocation().pathname.startsWith('/booking');
-  const [showNav, setShowNav] = useState(true);
+  const root = useRootData();
+  const event = root?.eventsConnection?.edges[0]?.node;
+  const [showNav, setShowNav] = useState(false);
   const {state} = useNavigation();
   // Close nav on route change
   useEffect(() => setShowNav(false), [state]);
   useLoadingBar();
+  const navigate = useNavigate();
 
   return (
     <Flex
@@ -143,27 +144,33 @@ export default function Header(props: {data: HeaderFragment}) {
             alt="Kulturspektakel Gauting Logo"
             zIndex={2}
             w={['80%', '60%', '40%']}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              navigate($path('/logo'));
+            }}
           />
-          <Box
-            fontFamily="Shrimp"
-            px="4"
-            color="black"
-            transform="rotate(-2deg)"
-            fontSize={['30', '35', '40']}
-            textTransform="uppercase"
-            bg="white"
-            whiteSpace="nowrap"
-            mt="2"
-            mixBlendMode="lighten"
-            zIndex={2}
-          >
-            <DateString
-              options={{month: 'long', year: 'numeric', day: '2-digit'}}
-              date={props.data.eventsConnection.edges[0].node.start}
-              to={props.data.eventsConnection.edges[0].node.end}
-              until="-"
-            />
-          </Box>
+          {event && (
+            <Box
+              fontFamily="Shrimp"
+              px="4"
+              color="black"
+              transform="rotate(-2deg)"
+              fontSize={['30', '35', '40']}
+              textTransform="uppercase"
+              bg="white"
+              whiteSpace="nowrap"
+              mt="2"
+              mixBlendMode="lighten"
+              zIndex={2}
+            >
+              <DateString
+                options={{month: 'long', year: 'numeric', day: '2-digit'}}
+                date={new Date(event.start)}
+                to={new Date(event.end)}
+                until="-"
+              />
+            </Box>
+          )}
           <Box
             bgColor="brand.900"
             position="absolute"
@@ -202,7 +209,7 @@ export default function Header(props: {data: HeaderFragment}) {
           fontSize={['sm', 'lg', 'xl']}
           textTransform="uppercase"
           color={isHome ? 'white' : 'brand.900'}
-          display={isBooking ? 'none' : ['none', 'flex']}
+          display={['none', 'flex']}
         >
           <NavItems />
         </HStack>
@@ -254,8 +261,15 @@ export default function Header(props: {data: HeaderFragment}) {
 }
 
 function Logo() {
+  const navigate = useNavigate();
   return (
-    <NavLink to="https://kulturspektakel.de">
+    <NavLink
+      to="/"
+      onContextMenu={(e) => {
+        e.preventDefault();
+        navigate($path('/logo'));
+      }}
+    >
       <Image
         src={'/logos/logo.svg'}
         alt="Kulturspektakel Gauting Logo"

@@ -28,7 +28,8 @@ import {
 } from '~/types/graphql';
 import {gql} from '@apollo/client';
 import ReloadWarning from '~/components/booking/ReloadWarning';
-import {EVENT_ID, useUtmSource} from './booking._index';
+import {useUtmSource} from './booking._index';
+import useRootData from '~/utils/useRootData';
 
 const STEPS = [Step1, Step2, Step3] as const;
 export type FormikContextT = Partial<CreateBandApplicationInput> & {
@@ -64,6 +65,7 @@ export default function () {
   const navigate = useNavigate();
   const utm_source = useUtmSource();
   const {state} = useNavigation();
+  const root = useRootData();
 
   return (
     <VStack spacing="5">
@@ -124,7 +126,7 @@ export default function () {
                 ...values,
                 spotifyArtist: values.spotifyArtist?.id,
               } as CreateBandApplicationInput,
-              eventId: EVENT_ID,
+              eventId: root.eventsConnection.edges[0].node.id,
             },
             errorPolicy: 'all',
           });

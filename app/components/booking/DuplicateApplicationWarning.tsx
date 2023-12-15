@@ -1,7 +1,7 @@
 import {gql} from '@apollo/client';
 import {Alert, AlertIcon, AlertDescription} from '@chakra-ui/react';
 import {useDuplicateApplicationWarningQuery} from '../../types/graphql';
-import {EVENT_ID} from '~/routes/booking._index';
+import useRootData from '~/utils/useRootData';
 
 gql`
   query DuplicateApplicationWarning($bandname: String!, $eventId: ID!) {
@@ -13,10 +13,11 @@ gql`
 `;
 
 export default function DuplicateWarning(props: {bandname?: string}) {
+  const {eventsConnection} = useRootData();
   const {data} = useDuplicateApplicationWarningQuery({
     variables: {
       bandname: props.bandname!,
-      eventId: EVENT_ID,
+      eventId: eventsConnection.edges[0].node.id,
     },
     skip: !props.bandname,
   });

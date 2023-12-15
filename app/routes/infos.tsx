@@ -86,7 +86,11 @@ export default function Angebot() {
                   date={event.start}
                   to={
                     event.allDay
-                      ? new Date(event.end.getTime() - 2 * 60 * 60 * 1000 - 1) // it's not nice but CE(S)T is a maximum of 2 hours ahead of UTC
+                      ? new Date(
+                          new Date(event.end).getTime() -
+                            2 * 60 * 60 * 1000 -
+                            1,
+                        ) // it's not nice but CE(S)T is a maximum of 2 hours ahead of UTC
                       : event.end
                   }
                 />

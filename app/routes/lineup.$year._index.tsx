@@ -30,6 +30,10 @@ gql`
             }
           }
         }
+        bandApplicationStart
+        bandApplicationEnd
+        djApplicationStart
+        djApplicationEnd
       }
     }
     areas {
@@ -76,12 +80,14 @@ export default function LineupYear() {
 
   const dateStrings = new Set<string>();
   const days = event!.bandsPlaying.edges.reduce<Date[]>((acc, {node}) => {
-    const yyyyMmDd = node.startTime.toLocaleDateString('fr-CA', {timeZone});
+    const yyyyMmDd = new Date(node.startTime).toLocaleDateString('fr-CA', {
+      timeZone,
+    });
     if (dateStrings.has(yyyyMmDd)) {
       return acc;
     }
     dateStrings.add(yyyyMmDd);
-    acc.push(node.startTime);
+    acc.push(new Date(node.startTime));
     return acc;
   }, []);
 
@@ -101,6 +107,7 @@ export default function LineupYear() {
         value={stageFilter}
         options={activeAreas.map((a) => ({name: a.displayName, id: a.id}))}
       />
+
       {days.map((day) => (
         <Day
           key={day.toISOString()}

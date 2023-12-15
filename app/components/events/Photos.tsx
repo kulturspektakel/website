@@ -111,9 +111,7 @@ export default function EventComponent({
           ))}
         {media.pageInfo.hasNextPage && (
           <ChakraLink
-            to={
-              $path('/events/:id', {id: eventId.split(':')[1]}) + '#more-photos'
-            }
+            to={$path('/events/:id', {id: eventId.split(':')[1]}) + '#fotos'}
             as={Link}
             height={SIZE}
             width={SIZE}

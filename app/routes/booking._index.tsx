@@ -1,37 +1,28 @@
 import {gql} from '@apollo/client';
 import {VStack, Text, Heading, Box, Link as ChakraLink} from '@chakra-ui/react';
-import {EventDocument, type EventQuery} from '~/types/graphql';
 import DateString, {dateStringComponents} from '~/components/DateString';
-import apolloClient from '~/utils/apolloClient';
-import type {LoaderFunctionArgs} from '@remix-run/node';
-import {typedjson, useTypedLoaderData} from 'remix-typedjson';
-import type {MetaFunction} from '@remix-run/react';
+import type {MetaDescriptor, MetaFunction} from '@remix-run/react';
 import {Link, Outlet, useSearchParams} from '@remix-run/react';
 import {$path} from 'remix-routes';
 import ApplicationPhase from '~/components/booking/ApplicationPhase';
 import mergedMeta from '~/utils/mergeMeta';
-
-// TODO read from root
-export const EVENT_ID = 'Event:kult2024';
+import useRootData, {rootData} from '~/utils/useRootData';
 
 gql`
-  query Event($id: ID!) {
-    node(id: $id) {
-      ... on Event {
-        name
-        start
-        end
-        bandApplicationStart
-        bandApplicationEnd
-        djApplicationStart
-        djApplicationEnd
-      }
-    }
+  fragment BookingDetails on Event {
+    id
+    name
+    start
+    end
+    bandApplicationStart
+    bandApplicationEnd
+    djApplicationStart
+    djApplicationEnd
   }
 `;
 
 export function useUtmSource() {
-  const utm_source = useSearchParams().at(0);
+  const [utm_source] = useSearchParams();
   if (
     utm_source &&
     utm_source instanceof URLSearchParams &&
@@ -41,35 +32,29 @@ export function useUtmSource() {
   }
 }
 
-export async function loader(args: LoaderFunctionArgs) {
-  const {data} = await apolloClient.query<EventQuery>({
-    query: EventDocument,
-    variables: {
-      id: EVENT_ID,
+export const meta: MetaFunction = mergedMeta(({matches}) => {
+  const root = rootData(matches as any);
+  const event = root.eventsConnection.edges[0].node;
+  const result: MetaDescriptor[] = [
+    {
+      title: 'Band- und DJ-Bewerbungen',
     },
-  });
+  ];
 
-  if (data?.node?.__typename === 'Event') {
-    return typedjson(data.node);
+  if (event.bandApplicationEnd) {
+    result.push({
+      name: 'description',
+      content: `Die Bewerbungspahse für das ${event.name} läuft bis zum ${
+        dateStringComponents({date: event.bandApplicationEnd}).date
+      }`,
+    });
   }
-
-  throw new Error(`Event ${EVENT_ID} not found`);
-}
-
-export const meta: MetaFunction<typeof loader> = mergedMeta((args) => [
-  {
-    title: 'Band- und DJ-Bewerbungen',
-  },
-  {
-    name: 'description',
-    content: `Die Bewerbungspahse für das ${args.data.name} läuft bis zum ${
-      dateStringComponents({date: new Date(args.data.bandApplicationEnd)}).date
-    }`,
-  },
-]);
+  return result;
+});
 
 export default function Home() {
-  const data = useTypedLoaderData<typeof loader>();
+  const {eventsConnection} = useRootData();
+  const event = eventsConnection.edges[0].node;
   const utm_source = useUtmSource();
 
   return (
@@ -80,7 +65,7 @@ export default function Home() {
         <Text>
           Das Kulturspektakel Gauting findet vom{' '}
           <strong>
-            <DateString date={data.start} to={data.end} />
+            <DateString date={event.start} to={event.end} />
           </strong>{' '}
           statt. Die Bewerbung für einen Auftritt beim Kulturspektakel ist
           ausschließlich über dieses Bewerbungsformular möglich. Alle anderen
@@ -100,10 +85,12 @@ export default function Home() {
           der Bewerbungsfrist.
         </Text>
       </VStack>
-      {data.bandApplicationStart && (
+      {event.bandApplicationStart && (
         <ApplicationPhase
-          applicationStart={data.bandApplicationStart}
-          applicationEnd={data.bandApplicationEnd}
+          applicationStart={new Date(event.bandApplicationStart)}
+          applicationEnd={
+            event.bandApplicationEnd ? new Date(event.bandApplicationEnd) : null
+          }
           title="Bands"
           content="Ihr möchtet euch als Band für eine unserer Bühnen bewerben."
           buttonLabel="Als Band bewerben"
@@ -116,10 +103,12 @@ export default function Home() {
           )}
         />
       )}
-      {data.djApplicationStart && (
+      {event.djApplicationStart && (
         <ApplicationPhase
-          applicationStart={data.djApplicationStart}
-          applicationEnd={data.djApplicationEnd}
+          applicationStart={new Date(event.djApplicationStart)}
+          applicationEnd={
+            event.djApplicationEnd ? new Date(event.djApplicationEnd) : null
+          }
           title="DJs"
           content="Du möchtest dich als DJ für unsere DJ-Area bewerben."
           buttonLabel="Als DJ bewerben"

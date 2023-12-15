@@ -1,5 +1,5 @@
 import {gql} from '@apollo/client';
-import {Heading} from '@chakra-ui/react';
+import {Box, Heading, Link} from '@chakra-ui/react';
 import type {LoaderFunctionArgs} from '@remix-run/node';
 import type {MetaFunction} from '@remix-run/react';
 import {$params} from 'remix-routes';
@@ -20,6 +20,9 @@ gql`
       ... on Event {
         name
         ...EventDetails
+        location
+        latitude
+        longitude
       }
     }
   }
@@ -32,7 +35,7 @@ export async function loader(args: LoaderFunctionArgs) {
     variables: {id: `Event:${id}`},
   });
   if (data.event?.__typename === 'Event') {
-    return typedjson({event: data.event});
+    return typedjson({event: data.event, apiKey: process.env.GOOGLE_MAPS_API!});
   }
   throw new Error('Not found');
 }
@@ -62,7 +65,7 @@ export const meta: MetaFunction<typeof loader> = mergedMeta((props) => {
 });
 
 export default function EventComponent() {
-  const {event} = useTypedLoaderData<typeof loader>();
+  const {event, apiKey} = useTypedLoaderData<typeof loader>();
 
   return (
     <>
@@ -73,12 +76,29 @@ export default function EventComponent() {
         {event.name}
       </Headline>
       <Event event={event} />
-      <Heading textAlign="center" size="lg" mt="10">
-        Anfahrt
-      </Heading>
-      <Card bg="white" aspectRatio={16 / 9} mt="5" p="3">
-        <GoogleMaps />
-      </Card>
+      {event.location && event.latitude && event.longitude && (
+        <>
+          <Heading textAlign="center" size="lg" mt="10">
+            Anfahrt
+          </Heading>
+          <Card bg="white" aspectRatio={16 / 9} mt="5" p="3">
+            <GoogleMaps
+              latitude={event.latitude}
+              longitude={event.longitude}
+              apiKey={apiKey}
+            />
+          </Card>
+          <Box textAlign="center" mt="3">
+            <Link
+              href={`https://www.google.com/maps/place/${event.latitude},${event.longitude}`}
+              isExternal
+              variant="inline"
+            >
+              {event.location}
+            </Link>
+          </Box>
+        </>
+      )}
     </>
   );
 }
