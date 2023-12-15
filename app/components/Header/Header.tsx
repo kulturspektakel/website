@@ -144,6 +144,7 @@ export default function Header() {
             alt="Kulturspektakel Gauting Logo"
             zIndex={2}
             w={['80%', '60%', '40%']}
+            maxH="50%"
             onContextMenu={(e) => {
               e.preventDefault();
               navigate($path('/logo'));
