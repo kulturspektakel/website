@@ -43,6 +43,7 @@ export default function Speisekarte() {
       </Heading>
       <UnorderedList
         columnGap="10"
+        m="0"
         sx={{columnCount: [1, 2]}}
         listStyleType="none"
       >
