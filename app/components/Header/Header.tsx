@@ -203,7 +203,7 @@ export default function Header() {
         <HStack
           as="nav"
           pr="3"
-          spacing="8"
+          spacing={['4', '4', '8']}
           h="14"
           fontFamily="Shrimp"
           fontSize={['sm', 'lg', 'xl']}
