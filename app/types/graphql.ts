@@ -23,8 +23,8 @@ export type Scalars = {
   Boolean: {input: boolean; output: boolean};
   Int: {input: number; output: number};
   Float: {input: number; output: number};
-  Date: {input: string; output: string};
-  DateTime: {input: string; output: string};
+  Date: {input: Date; output: Date};
+  DateTime: {input: Date; output: Date};
 };
 
 export type Area = Node & {
@@ -874,7 +874,7 @@ export type Viewer = Node & {
   profilePicture?: Maybe<Scalars['String']['output']>;
 };
 
-export type HeaderFragment = {__typename?: 'Event'; start: string; end: string};
+export type HeaderFragment = {__typename?: 'Event'; start: Date; end: Date};
 
 export type MarkdownTextFragment = {
   __typename?: 'MarkdownString';
@@ -971,7 +971,7 @@ export type DuplicateApplicationWarningQuery = {
   __typename?: 'Query';
   checkDuplicateApplication?: {
     __typename?: 'ObfuscatedBandApplication';
-    applicationTime: string;
+    applicationTime: Date;
     obfuscatedEmail: string;
   } | null;
 };
@@ -997,8 +997,8 @@ export type EventDetailsFragment = {
   id: string;
   name: string;
   description?: string | null;
-  start: string;
-  end: string;
+  start: Date;
+  end: Date;
   poster?: {
     __typename?: 'PixelImage';
     width: number;
@@ -1099,7 +1099,7 @@ export type BandFragment = {
   __typename?: 'BandPlaying';
   id: string;
   name: string;
-  startTime: string;
+  startTime: Date;
   slug: string;
   genre?: string | null;
   area: {
@@ -1122,7 +1122,7 @@ export type BandSearchQuery = {
     __typename?: 'BandPlaying';
     id: string;
     name: string;
-    startTime: string;
+    startTime: Date;
     slug: string;
   }>;
 };
@@ -1131,7 +1131,7 @@ export type ArticleFragment = {
   __typename?: 'News';
   slug: string;
   title: string;
-  createdAt: string;
+  createdAt: Date;
   content: {
     __typename?: 'MarkdownString';
     markdown: string;
@@ -1174,14 +1174,14 @@ export type RootQuery = {
       __typename?: 'QueryEventsConnectionEdge';
       node: {
         __typename?: 'Event';
-        start: string;
-        end: string;
+        start: Date;
+        end: Date;
         id: string;
         name: string;
-        bandApplicationStart?: string | null;
-        bandApplicationEnd?: string | null;
-        djApplicationStart?: string | null;
-        djApplicationEnd?: string | null;
+        bandApplicationStart?: Date | null;
+        bandApplicationEnd?: Date | null;
+        djApplicationStart?: Date | null;
+        djApplicationEnd?: Date | null;
       };
     }>;
   };
@@ -1283,7 +1283,7 @@ export type NewsQuery = {
         __typename?: 'News';
         slug: string;
         title: string;
-        createdAt: string;
+        createdAt: Date;
         content: {
           __typename?: 'MarkdownString';
           markdown: string;
@@ -1634,12 +1634,12 @@ export type BookingDetailsFragment = {
   __typename?: 'Event';
   id: string;
   name: string;
-  start: string;
-  end: string;
-  bandApplicationStart?: string | null;
-  bandApplicationEnd?: string | null;
-  djApplicationStart?: string | null;
-  djApplicationEnd?: string | null;
+  start: Date;
+  end: Date;
+  bandApplicationStart?: Date | null;
+  bandApplicationEnd?: Date | null;
+  djApplicationStart?: Date | null;
+  djApplicationEnd?: Date | null;
 };
 
 export type SingleEventQueryVariables = Exact<{
@@ -1664,8 +1664,8 @@ export type SingleEventQuery = {
         longitude?: number | null;
         id: string;
         description?: string | null;
-        start: string;
-        end: string;
+        start: Date;
+        end: Date;
         poster?: {
           __typename?: 'PixelImage';
           width: number;
@@ -1727,8 +1727,8 @@ export type EventsOverviewQuery = {
         __typename?: 'Event';
         id: string;
         name: string;
-        start: string;
-        end: string;
+        start: Date;
+        end: Date;
         description?: string | null;
         poster?: {
           __typename?: 'PixelImage';
@@ -1775,8 +1775,8 @@ export type InfosQuery = {
   crewCalendar: Array<{
     __typename?: 'VEvent';
     summary: string;
-    start: string;
-    end: string;
+    start: Date;
+    end: Date;
     uid: string;
     location?: string | null;
     allDay: boolean;
@@ -1950,7 +1950,7 @@ export type LineupBandQuery = {
         name: string;
         shortDescription?: string | null;
         description?: string | null;
-        startTime: string;
+        startTime: Date;
         genre?: string | null;
         spotify?: string | null;
         youtube?: string | null;
@@ -2000,12 +2000,12 @@ export type LineupQuery = {
     | {
         __typename?: 'Event';
         name: string;
-        start: string;
-        end: string;
-        bandApplicationStart?: string | null;
-        bandApplicationEnd?: string | null;
-        djApplicationStart?: string | null;
-        djApplicationEnd?: string | null;
+        start: Date;
+        end: Date;
+        bandApplicationStart?: Date | null;
+        bandApplicationEnd?: Date | null;
+        djApplicationStart?: Date | null;
+        djApplicationEnd?: Date | null;
         bandsPlaying: {
           __typename?: 'EventBandsPlayingConnection';
           edges: Array<{
@@ -2014,7 +2014,7 @@ export type LineupQuery = {
               __typename?: 'BandPlaying';
               id: string;
               name: string;
-              startTime: string;
+              startTime: Date;
               slug: string;
               genre?: string | null;
               area: {
@@ -2046,7 +2046,7 @@ export type LineupsQuery = {
     __typename?: 'QueryEventsConnection';
     edges: Array<{
       __typename?: 'QueryEventsConnectionEdge';
-      node: {__typename?: 'Event'; name: string; id: string; start: string};
+      node: {__typename?: 'Event'; name: string; id: string; start: Date};
     }>;
   };
 };
@@ -2069,7 +2069,7 @@ export type NewsPageQuery = {
         __typename?: 'News';
         slug: string;
         title: string;
-        createdAt: string;
+        createdAt: Date;
         content: {
           __typename?: 'MarkdownString';
           markdown: string;
@@ -2109,7 +2109,7 @@ export type NewsArchiveQuery = {
         __typename?: 'News';
         slug: string;
         title: string;
-        createdAt: string;
+        createdAt: Date;
         content: {
           __typename?: 'MarkdownString';
           markdown: string;

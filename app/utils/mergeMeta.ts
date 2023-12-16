@@ -1,15 +1,13 @@
 // https://gist.github.com/ryanflorence/ec1849c6d690cfbffcb408ecd633e069
-import type {LoaderFunction, MetaFunction} from '@remix-run/node';
+import type {MetaFunction} from '@remix-run/node';
 import type {ServerRuntimeMetaDescriptor} from '@remix-run/server-runtime';
 
-export default function mergedMeta<
-  Loader extends LoaderFunction,
-  ParentsLoaders extends Record<string, LoaderFunction>,
->(
-  leafMetaFn: MetaFunction<Loader, ParentsLoaders>,
-): MetaFunction<Loader, ParentsLoaders> {
+export default function mergedMeta<Loader>(
+  // @ts-ignore
+  leafMetaFn: MetaFunction<Awaited<ReturnType<Awaited<Loader>>>['typedjson']>,
+): MetaFunction<Loader, any> {
   return (arg) => {
-    let leafMeta = leafMetaFn(arg);
+    let leafMeta = leafMetaFn(arg as any);
 
     const data = arg.matches.reduceRight((acc, match) => {
       for (let parentMeta of match.meta) {
@@ -52,10 +50,13 @@ function setOG(
 ) {
   const index = data.findIndex(indexFinder);
   if (index > -1) {
+    // @ts-ignore
     const title = data[index][key];
-    const ogIndex = data.findIndex((meta) => meta.property === ogProperty);
+    const ogIndex = data.findIndex(
+      (meta) => (meta as any).property === ogProperty,
+    );
     if (ogIndex > -1) {
-      data[ogIndex].content = title;
+      (data[ogIndex] as any).content = title;
     } else {
       data.push({
         property: ogProperty,

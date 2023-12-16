@@ -67,7 +67,7 @@ export default function Event({event}: {event: EventDetailsFragment}) {
         />
       )}
       <Box w="100%">
-        {new Date(event.start).getTime() > new Date().getTime() && (
+        {event.start.getTime() > new Date().getTime() && (
           <Flex
             textAlign="center"
             fontWeight="bold"
@@ -145,7 +145,7 @@ export default function Event({event}: {event: EventDetailsFragment}) {
               <ChakraLink
                 as={Link}
                 to={$path('/lineup/:year', {
-                  year: new Date(event.start).getFullYear(),
+                  year: event.start.getFullYear(),
                 })}
                 variant="inline"
               >

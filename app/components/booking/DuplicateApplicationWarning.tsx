@@ -1,7 +1,8 @@
 import {gql} from '@apollo/client';
 import {Alert, AlertIcon, AlertDescription} from '@chakra-ui/react';
 import {useDuplicateApplicationWarningQuery} from '../../types/graphql';
-import useRootData from '~/utils/useRootData';
+import type {loader as rootLoader} from '~/root';
+import {useTypedRouteLoaderData} from 'remix-typedjson';
 
 gql`
   query DuplicateApplicationWarning($bandname: String!, $eventId: ID!) {
@@ -13,7 +14,8 @@ gql`
 `;
 
 export default function DuplicateWarning(props: {bandname?: string}) {
-  const {eventsConnection} = useRootData();
+  const {eventsConnection} =
+    useTypedRouteLoaderData<typeof rootLoader>('root')!;
   const {data} = useDuplicateApplicationWarningQuery({
     variables: {
       bandname: props.bandname!,

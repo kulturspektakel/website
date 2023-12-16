@@ -1,14 +1,5 @@
 import type {LinkProps} from '@chakra-ui/react';
-import {
-  Box,
-  Flex,
-  HStack,
-  Link,
-  VStack,
-  Image,
-  Text,
-  useBreakpointValue,
-} from '@chakra-ui/react';
+import {Box, Flex, HStack, Link, VStack, Image, Text} from '@chakra-ui/react';
 import type {NavLinkProps} from '@remix-run/react';
 import {Link as RemixLink, NavLink} from '@remix-run/react';
 import {FaSpotify, FaYoutube, FaInstagram, FaFacebook} from 'react-icons/fa6';
@@ -24,12 +15,16 @@ export default function Footer() {
       paddingY="8"
       paddingX={[8, 10, 16]}
       color="white"
-      justify={'space-between'}
+      justify="space-between"
       direction={{base: 'column', md: 'row'}}
       gap={[8, 12, 20]}
       fontSize="sm"
     >
-      <HStack alignItems="flex-start" maxW="500px">
+      <HStack
+        alignItems="flex-start"
+        maxW="500px"
+        mx={{base: 'auto', md: 'initial'}}
+      >
         <Image
           src={'/logos/logo.svg'}
           alt="Kulturspektakel Gauting Logo"
@@ -63,7 +58,7 @@ export default function Footer() {
         </VStack>
       </HStack>
       <VStack>
-        <HStack gap={{base: 6, md: 4}}>
+        <HStack gap={{base: 6, md: 4}} fontSize={{base: 32, md: 24}}>
           <FooterIcon
             to="https://facebook.com/kulturspektakel"
             title="Facebook"
@@ -96,20 +91,22 @@ export default function Footer() {
   );
 }
 
-function FooterIcon({icon: Icon}: LinkProps & RemixLinkProps & {icon: any}) {
-  const iconSize = useBreakpointValue({base: 32, md: 24});
-
+function FooterIcon({
+  icon: Icon,
+  to,
+  title,
+}: LinkProps & RemixLinkProps & {icon: any}) {
   return (
     <Link
       as={RemixLink}
-      to="https://open.spotify.com/user/p7s6vlorvw05bxm881h5em4dj?si=4049483d01ec4fc3"
-      title="Spotify"
+      to={to}
+      title={title}
       target="_blank"
       _hover={{color: 'whiteAlpha.600'}}
       _active={{color: 'whiteAlpha.600'}}
       _focus={{color: 'whiteAlpha.600'}}
     >
-      <Icon size={iconSize} />
+      <Icon />
     </Link>
   );
 }

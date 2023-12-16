@@ -1,60 +1,40 @@
-import {PassThrough} from 'stream';
-import createEmotionCache from '@emotion/cache';
-import {CacheProvider as EmotionCacheProvider} from '@emotion/react';
-import createEmotionServer from '@emotion/server/create-instance';
-import type {AppLoadContext, EntryContext} from '@remix-run/node';
-import {createReadableStreamFromReadable} from '@remix-run/node';
+import type {EntryContext} from '@remix-run/node';
 import {RemixServer} from '@remix-run/react';
-import isbot from 'isbot';
-import {renderToPipeableStream} from 'react-dom/server';
+import {renderToString} from 'react-dom/server';
+import apolloClient from './utils/apolloClient';
+import {getDataFromTree} from '@apollo/client/react/ssr';
 
-const ABORT_DELAY = 2000;
-
-export default function handleRequest(
+export default async function handleRequest(
   request: Request,
   responseStatusCode: number,
   responseHeaders: Headers,
   remixContext: EntryContext,
-  loadContext: AppLoadContext,
 ) {
-  return new Promise((resolve, reject) => {
-    let didError = false;
-    const emotionCache = createEmotionCache({key: 'css'});
+  const App = <RemixServer context={remixContext} url={request.url} />;
 
-    const {pipe, abort} = renderToPipeableStream(
-      <EmotionCacheProvider value={emotionCache}>
-        <RemixServer context={remixContext} url={request.url} />
-      </EmotionCacheProvider>,
-      {
-        [isbot(request.headers.get('user-agent'))
-          ? 'onAllReady'
-          : 'onShellReady']: () => {
-          const reactBody = new PassThrough();
-          const emotionServer = createEmotionServer(emotionCache);
-          const bodyWithStyles = emotionServer.renderStylesToNodeStream();
-          reactBody.pipe(bodyWithStyles);
+  await getDataFromTree(App);
+  const initialState = apolloClient.extract();
 
-          responseHeaders.set('Content-Type', 'text/html');
+  const markup = renderToString(
+    <>
+      {App}
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `window.__APOLLO_STATE__=${JSON.stringify(initialState)
+            .replace(/</g, '\\u003c')
+            .replace(
+              /:("\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z")/g,
+              ':new Date($1)',
+            )}`, // The replace call escapes the < character to prevent cross-site scripting attacks that are possible via the presence of </script> in a string literal
+        }}
+      />
+    </>,
+  );
 
-          resolve(
-            new Response(createReadableStreamFromReadable(bodyWithStyles), {
-              headers: responseHeaders,
-              status: didError ? 500 : responseStatusCode,
-            }),
-          );
+  responseHeaders.set('Content-Type', 'text/html');
 
-          pipe(reactBody);
-        },
-        onShellError: (error: unknown) => {
-          reject(error);
-        },
-        onError: (error: unknown) => {
-          didError = true;
-          console.error(error);
-        },
-      },
-    );
-
-    setTimeout(abort, ABORT_DELAY);
+  return new Response('<!DOCTYPE html>' + markup, {
+    status: responseStatusCode,
+    headers: responseHeaders,
   });
 }

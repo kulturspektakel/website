@@ -1,12 +1,13 @@
 import {gql} from '@apollo/client';
 import {VStack, Text, Heading, Box, Link as ChakraLink} from '@chakra-ui/react';
 import DateString, {dateStringComponents} from '~/components/DateString';
-import type {MetaDescriptor, MetaFunction} from '@remix-run/react';
+import type {MetaDescriptor} from '@remix-run/react';
 import {Link, Outlet, useSearchParams} from '@remix-run/react';
 import {$path} from 'remix-routes';
 import ApplicationPhase from '~/components/booking/ApplicationPhase';
-import mergedMeta from '~/utils/mergeMeta';
-import useRootData, {rootData} from '~/utils/useRootData';
+import mergeMeta from '~/utils/mergeMeta';
+import {useTypedRouteLoaderData} from 'remix-typedjson';
+import type {loader as rootLoader} from '~/root';
 
 gql`
   fragment BookingDetails on Event {
@@ -32,9 +33,9 @@ export function useUtmSource() {
   }
 }
 
-export const meta: MetaFunction = mergedMeta(({matches}) => {
-  const root = rootData(matches as any);
-  const event = root.eventsConnection.edges[0].node;
+export const meta = mergeMeta<typeof rootLoader>(({matches}) => {
+  const event = matches.find((m) => m.id === 'root')?.data.eventsConnection
+    .edges[0].node;
   const result: MetaDescriptor[] = [
     {
       title: 'Band- und DJ-Bewerbungen',
@@ -45,7 +46,7 @@ export const meta: MetaFunction = mergedMeta(({matches}) => {
     result.push({
       name: 'description',
       content: `Die Bewerbungspahse für das ${event.name} läuft bis zum ${
-        dateStringComponents({date: event.bandApplicationEnd}).date
+        dateStringComponents({date: new Date(event.bandApplicationEnd)}).date
       }`,
     });
   }
@@ -53,8 +54,8 @@ export const meta: MetaFunction = mergedMeta(({matches}) => {
 });
 
 export default function Home() {
-  const {eventsConnection} = useRootData();
-  const event = eventsConnection.edges[0].node;
+  const root = useTypedRouteLoaderData<typeof rootLoader>('root')!;
+  const event = root.eventsConnection.edges[0].node;
   const utm_source = useUtmSource();
 
   return (
@@ -87,10 +88,8 @@ export default function Home() {
       </VStack>
       {event.bandApplicationStart && (
         <ApplicationPhase
-          applicationStart={new Date(event.bandApplicationStart)}
-          applicationEnd={
-            event.bandApplicationEnd ? new Date(event.bandApplicationEnd) : null
-          }
+          applicationStart={event.bandApplicationStart}
+          applicationEnd={event.bandApplicationEnd}
           title="Bands"
           content="Ihr möchtet euch als Band für eine unserer Bühnen bewerben."
           buttonLabel="Als Band bewerben"
@@ -105,10 +104,8 @@ export default function Home() {
       )}
       {event.djApplicationStart && (
         <ApplicationPhase
-          applicationStart={new Date(event.djApplicationStart)}
-          applicationEnd={
-            event.djApplicationEnd ? new Date(event.djApplicationEnd) : null
-          }
+          applicationStart={event.djApplicationStart}
+          applicationEnd={event.djApplicationEnd}
           title="DJs"
           content="Du möchtest dich als DJ für unsere DJ-Area bewerben."
           buttonLabel="Als DJ bewerben"

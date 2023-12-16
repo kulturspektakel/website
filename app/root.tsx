@@ -1,5 +1,5 @@
 import {ApolloProvider, gql} from '@apollo/client';
-import {ChakraProvider, Box, Heading, Flex, Code, Text} from '@chakra-ui/react';
+import {ChakraProvider, Box, Heading, Flex, Text} from '@chakra-ui/react';
 import type {
   LinksFunction,
   MetaFunction,

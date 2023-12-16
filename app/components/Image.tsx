@@ -35,6 +35,7 @@ export default function Image({
             }
             as={ChakraImage}
             title={props.caption}
+            // @ts-ignore
             loading="lazy"
             ref={ref}
           />
@@ -42,5 +43,12 @@ export default function Image({
       </Item>
     );
   }
-  return <Card {...props} as={ChakraImage} loading="lazy" />;
+  return (
+    <Card
+      {...props}
+      as={ChakraImage}
+      // @ts-ignore
+      loading="lazy"
+    />
+  );
 }

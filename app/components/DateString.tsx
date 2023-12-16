@@ -7,8 +7,8 @@ import {
 } from '~/utils/dateUtils';
 
 type Props = {
-  date: string | Date;
-  to?: string | Date;
+  date: Date;
+  to?: Date;
   options?: Intl.DateTimeFormatOptions;
   until?: string;
   timeOnly?: boolean;
@@ -32,28 +32,26 @@ export function dateStringComponents({
 } {
   // always force to Berlin timezone
   options = {...options, timeZone};
-  const dateD = new Date(date);
-  const toD = to ? new Date(to) : undefined;
 
   let dateString = timeOnly
-    ? dateD.toLocaleTimeString(locale, options)
-    : dateD.toLocaleDateString(locale, options);
-  if (toD == null || isSameDay(dateD, toD)) {
+    ? date.toLocaleTimeString(locale, options)
+    : date.toLocaleDateString(locale, options);
+  if (to == null || isSameDay(date, to)) {
     // same day
     return {date: dateString};
   }
 
-  const toString = toD.toLocaleDateString(locale, options);
+  const toString = to.toLocaleDateString(locale, options);
   let connector = ` ${until} `;
-  if (isSameDay(new Date(dateD.getTime() + 24 * 60 * 60 * 1000), toD)) {
+  if (isSameDay(new Date(date.getTime() + 24 * 60 * 60 * 1000), to)) {
     connector = ' und ';
   }
 
-  if (isSameMonth(dateD, toD)) {
+  if (isSameMonth(date, to)) {
     // same month
     return {
       date:
-        dateD.toLocaleDateString(locale, {
+        date.toLocaleDateString(locale, {
           timeZone,
           day: options.day,
           weekday: options.weekday,
@@ -61,10 +59,10 @@ export function dateStringComponents({
       connector,
       to: toString,
     };
-  } else if (isSameYear(dateD, toD)) {
+  } else if (isSameYear(date, to)) {
     // different month
     return {
-      date: dateD.toLocaleDateString(locale, {
+      date: date.toLocaleDateString(locale, {
         timeZone,
         day: options.day,
         weekday: options.weekday,
@@ -105,10 +103,10 @@ export default function DateString({
 
   return (
     <>
-      <time dateTime={new Date(date).toISOString()}>{dateString}</time>
+      <time dateTime={date.toISOString()}>{dateString}</time>
       {connector != null ? connector : ''}
       {to && toString != null ? (
-        <time dateTime={new Date(to).toISOString()}>{toString}</time>
+        <time dateTime={to.toISOString()}>{toString}</time>
       ) : (
         ''
       )}

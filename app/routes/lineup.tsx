@@ -22,7 +22,8 @@ import {$path} from 'remix-routes';
 import Search from '~/components/lineup/Search';
 import type {LineupsQuery} from '~/types/graphql';
 import {LineupsDocument} from '~/types/graphql';
-import useRootData from '~/utils/useRootData';
+import type {loader as rootLoader} from '~/root';
+import {useTypedRouteLoaderData} from 'remix-typedjson';
 
 gql`
   query Lineups {
@@ -39,18 +40,18 @@ gql`
 `;
 
 function useApplicationsOpen() {
-  const root = useRootData();
+  const root = useTypedRouteLoaderData<typeof rootLoader>('root')!;
   const event = root.eventsConnection.edges[0].node;
 
   return (
     (event.bandApplicationStart &&
       event.bandApplicationEnd &&
-      new Date(event.bandApplicationStart).getTime() < Date.now() &&
-      new Date(event.bandApplicationEnd).getTime() > Date.now()) ||
+      event.bandApplicationStart.getTime() < Date.now() &&
+      event.bandApplicationEnd.getTime() > Date.now()) ||
     (event.djApplicationStart &&
       event.djApplicationEnd &&
-      new Date(event.djApplicationStart).getTime() < Date.now() &&
-      new Date(event.djApplicationEnd).getTime() > Date.now())
+      event.djApplicationStart.getTime() < Date.now() &&
+      event.djApplicationEnd.getTime() > Date.now())
   );
 }
 
@@ -122,7 +123,7 @@ function MenuItems() {
         <MenuItem
           as={NavLink}
           to={$path('/lineup/:year', {
-            year: new Date(node.start).getFullYear(),
+            year: node.start.getFullYear(),
           })}
           key={node.id}
         >

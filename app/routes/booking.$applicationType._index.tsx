@@ -29,7 +29,8 @@ import {
 import {gql} from '@apollo/client';
 import ReloadWarning from '~/components/booking/ReloadWarning';
 import {useUtmSource} from './booking._index';
-import useRootData from '~/utils/useRootData';
+import type {loader as rootLoader} from '~/root';
+import {useTypedRouteLoaderData} from 'remix-typedjson';
 
 const STEPS = [Step1, Step2, Step3] as const;
 export type FormikContextT = Partial<CreateBandApplicationInput> & {
@@ -65,7 +66,7 @@ export default function () {
   const navigate = useNavigate();
   const utm_source = useUtmSource();
   const {state} = useNavigation();
-  const root = useRootData();
+  const root = useTypedRouteLoaderData<typeof rootLoader>('root')!;
 
   return (
     <VStack spacing="5">

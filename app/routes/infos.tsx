@@ -8,7 +8,7 @@ import {
   Link,
   Box,
 } from '@chakra-ui/react';
-import type {LoaderFunctionArgs, MetaFunction} from '@remix-run/node';
+import type {LoaderFunctionArgs} from '@remix-run/node';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import type {InfosQuery} from '~/types/graphql';
 import {InfosDocument} from '~/types/graphql';
@@ -16,7 +16,7 @@ import apolloClient from '~/utils/apolloClient';
 import Page from '~/components/Page';
 import DateString from '~/components/DateString';
 import Mark from '~/components/Mark';
-import mergedMeta from '~/utils/mergeMeta';
+import mergeMeta from '~/utils/mergeMeta';
 
 gql`
   query Infos {
@@ -43,9 +43,10 @@ gql`
   }
 `;
 
-export const meta: MetaFunction<typeof loader> = mergedMeta((props) => [
+export const meta = mergeMeta<typeof loader>(({data}) => [
   {
-    title: props.data.infos.title,
+    title:
+      data?.infos?.__typename === 'Page' ? data.infos.title : 'Informationen',
   },
   {
     name: 'description',
@@ -86,11 +87,7 @@ export default function Angebot() {
                   date={event.start}
                   to={
                     event.allDay
-                      ? new Date(
-                          new Date(event.end).getTime() -
-                            2 * 60 * 60 * 1000 -
-                            1,
-                        ) // it's not nice but CE(S)T is a maximum of 2 hours ahead of UTC
+                      ? new Date(event.end.getTime() - 2 * 60 * 60 * 1000 - 1) // it's not nice but CE(S)T is a maximum of 2 hours ahead of UTC
                       : event.end
                   }
                 />

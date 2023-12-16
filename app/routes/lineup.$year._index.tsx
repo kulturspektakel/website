@@ -11,7 +11,7 @@ import type {LineupQuery} from '~/types/graphql';
 import {LineupDocument} from '~/types/graphql';
 import apolloClient from '~/utils/apolloClient';
 import {isSameDay, timeZone} from '~/utils/dateUtils';
-import mergedMeta from '~/utils/mergeMeta';
+import mergeMeta from '~/utils/mergeMeta';
 
 gql`
   query Lineup($id: ID!) {
@@ -47,14 +47,17 @@ export type SearchParams = {
   year: number;
 };
 
-export const meta: MetaFunction<typeof loader> = mergedMeta((props) => {
+export const meta = mergeMeta<typeof loader>(({data, params}) => {
   return [
     {
-      title: `Lineup ${props.params.year}`,
+      title: `Lineup ${params.year}`,
     },
     {
       name: 'description',
-      content: `${props.data.node.bandsPlaying.edges.length} Bands und Künstler:innen treten auf dem Kulturspektakel ${props.params.year} auf`,
+      content: `${data!.node.bandsPlaying?.edges
+        .length} Bands und Künstler:innen treten auf dem Kulturspektakel ${
+        params.year
+      } auf`,
     },
   ];
 });
@@ -80,14 +83,14 @@ export default function LineupYear() {
 
   const dateStrings = new Set<string>();
   const days = event!.bandsPlaying.edges.reduce<Date[]>((acc, {node}) => {
-    const yyyyMmDd = new Date(node.startTime).toLocaleDateString('fr-CA', {
+    const yyyyMmDd = node.startTime.toLocaleDateString('fr-CA', {
       timeZone,
     });
     if (dateStrings.has(yyyyMmDd)) {
       return acc;
     }
     dateStrings.add(yyyyMmDd);
-    acc.push(new Date(node.startTime));
+    acc.push(node.startTime);
     return acc;
   }, []);
 

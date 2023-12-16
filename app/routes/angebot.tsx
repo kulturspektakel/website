@@ -1,6 +1,6 @@
 import {gql} from '@apollo/client';
 import {Text, Heading, ListItem, UnorderedList, VStack} from '@chakra-ui/react';
-import type {LoaderFunctionArgs, MetaFunction} from '@remix-run/node';
+import type {LoaderFunctionArgs} from '@remix-run/node';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import type {AngebotQuery} from '~/types/graphql';
 import {AngebotDocument} from '~/types/graphql';
@@ -8,7 +8,7 @@ import apolloClient from '~/utils/apolloClient';
 import Page from '~/components/Page';
 import {$path} from 'remix-routes';
 import LinkButton from '~/components/LinkButton';
-import mergedMeta from '~/utils/mergeMeta';
+import mergeMeta from '~/utils/mergeMeta';
 
 gql`
   query Angebot {
@@ -45,7 +45,7 @@ gql`
   }
 `;
 
-export const meta: MetaFunction<typeof loader> = mergedMeta((props) => [
+export const meta = mergeMeta<typeof loader>(({data}) => [
   {
     title: 'Angebot & Programm',
   },

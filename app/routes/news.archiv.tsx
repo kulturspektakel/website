@@ -7,7 +7,7 @@ import {
   Center,
   Button,
 } from '@chakra-ui/react';
-import type {LoaderFunctionArgs, MetaFunction} from '@remix-run/node';
+import type {LoaderFunctionArgs} from '@remix-run/node';
 import React, {useState} from 'react';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import Card from '~/components/Card';
@@ -16,7 +16,7 @@ import Mark from '~/components/Mark';
 import {NewsArchiveDocument, useNewsArchiveQuery} from '~/types/graphql';
 import type {NewsArchiveQuery} from '~/types/graphql';
 import apolloClient from '~/utils/apolloClient';
-import mergedMeta from '~/utils/mergeMeta';
+import mergeMeta from '~/utils/mergeMeta';
 
 gql`
   query NewsArchive($cursor: String) {
@@ -44,7 +44,7 @@ export async function loader(args: LoaderFunctionArgs) {
   return typedjson(data);
 }
 
-export const meta: MetaFunction<typeof loader> = mergedMeta((args) => [
+export const meta = mergeMeta<typeof loader>(({data}) => [
   {
     title: 'Newsarchiv',
   },
@@ -63,7 +63,7 @@ export default function NewsArchive() {
 
   // group data by year
   const years = data.news.edges.reduce((acc, edge) => {
-    const year = new Date(edge.node.createdAt).getFullYear();
+    const year = edge.node.createdAt.getFullYear();
     if (acc.has(year)) {
       acc.get(year)?.push(edge);
     } else {

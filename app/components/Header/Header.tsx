@@ -28,7 +28,8 @@ import {CloseIcon, HamburgerIcon} from '@chakra-ui/icons';
 import {$path} from 'remix-routes';
 import type {RemixNavLinkProps} from '@remix-run/react/dist/components';
 import {gql} from '@apollo/client';
-import useRootData from '~/utils/useRootData';
+import type {loader as rootLoader} from '~/root';
+import {useTypedRouteLoaderData} from 'remix-typedjson';
 
 gql`
   fragment Header on Event {
@@ -96,7 +97,7 @@ function NavItems() {
 
 export default function Header() {
   const isHome = useLocation().pathname === '/';
-  const root = useRootData();
+  const root = useTypedRouteLoaderData<typeof rootLoader>('root');
   const event = root?.eventsConnection?.edges[0]?.node;
   const [showNav, setShowNav] = useState(false);
   const {state} = useNavigation();
@@ -165,8 +166,8 @@ export default function Header() {
             >
               <DateString
                 options={{month: 'long', year: 'numeric', day: '2-digit'}}
-                date={new Date(event.start)}
-                to={new Date(event.end)}
+                date={event.start}
+                to={event.end}
                 until="-"
               />
             </Box>

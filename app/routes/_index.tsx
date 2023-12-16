@@ -5,7 +5,7 @@ import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import React from 'react';
 import Article from '~/components/news/Article';
 import apolloClient from '~/utils/apolloClient';
-import type {MetaFunction, LoaderFunctionArgs} from '@remix-run/node';
+import type {LoaderFunctionArgs} from '@remix-run/node';
 import LinkButton from '~/components/LinkButton';
 import mergeMeta from '~/utils/mergeMeta';
 import theme from '~/theme';
@@ -29,7 +29,7 @@ export async function loader(args: LoaderFunctionArgs) {
   return typedjson(data);
 }
 
-export const meta: MetaFunction<typeof loader> = mergeMeta((args) => [
+export const meta = mergeMeta<typeof loader>(({data}) => [
   {
     name: 'theme-color',
     content: theme.colors.brand[900],

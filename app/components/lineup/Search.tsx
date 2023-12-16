@@ -61,7 +61,7 @@ export default function Search(props: BoxProps) {
         if (selectedItem) {
           navigate(
             $path('/lineup/:year/:slug', {
-              year: new Date(selectedItem.startTime).getFullYear(),
+              year: selectedItem.startTime.getFullYear(),
               slug: selectedItem.slug,
             }),
           );
@@ -93,7 +93,7 @@ export default function Search(props: BoxProps) {
         highlightedIndex={highlightedIndex}
         itemRenderer={(band) => (
           <Text noOfLines={1}>
-            {band.name} ({new Date(band.startTime).getFullYear()})
+            {band.name} ({band.startTime.getFullYear()})
           </Text>
         )}
         keyExtractor={(band) => band.id}

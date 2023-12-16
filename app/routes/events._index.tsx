@@ -7,7 +7,7 @@ import {
   Center,
   Button,
 } from '@chakra-ui/react';
-import type {LoaderFunctionArgs, MetaFunction} from '@remix-run/node';
+import type {LoaderFunctionArgs} from '@remix-run/node';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import Event from '~/components/events/Event';
 import type {
@@ -26,7 +26,7 @@ import Selector from '~/components/Selector';
 import {useState} from 'react';
 import {$path} from 'remix-routes';
 import Headline from '~/components/Headline';
-import mergedMeta from '~/utils/mergeMeta';
+import mergeMeta from '~/utils/mergeMeta';
 
 gql`
   query EventsOverview(
@@ -58,17 +58,15 @@ const EVENT_TYPE = [
   {id: EventType.Other, name: 'Weitere'},
 ];
 
-export const meta: MetaFunction<typeof loader> = mergedMeta((props) => {
-  return [
-    {
-      title: 'Veranstaltungen',
-    },
-    {
-      name: 'description',
-      content: 'Alle Veranstaltungen des Kulturspektakel Gauting e.V.',
-    },
-  ];
-});
+export const meta = mergeMeta<typeof loader>(({data}) => [
+  {
+    title: 'Veranstaltungen',
+  },
+  {
+    name: 'description',
+    content: 'Alle Veranstaltungen des Kulturspektakel Gauting e.V.',
+  },
+]);
 
 export async function loader(args: LoaderFunctionArgs) {
   const {data} = await apolloClient.query<EventsOverviewQuery>({
