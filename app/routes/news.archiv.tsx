@@ -8,8 +8,8 @@ import {
   Button,
 } from '@chakra-ui/react';
 import type {LoaderFunctionArgs} from '@remix-run/node';
-import React, {useState} from 'react';
-import {typedjson, useTypedLoaderData} from 'remix-typedjson';
+import React from 'react';
+import {typedjson} from 'remix-typedjson';
 import Card from '~/components/Card';
 import DateString from '~/components/DateString';
 import Mark from '~/components/Mark';
@@ -51,26 +51,21 @@ export const meta = mergeMeta<typeof loader>(({data}) => [
 ]);
 
 export default function NewsArchive() {
-  const initialData = useTypedLoaderData<typeof loader>();
-  // not using Apollo's loading state because it will initially be true
-  const [loading, setLoading] = useState(false);
-
-  const {data: apolloData, fetchMore} = useNewsArchiveQuery({
+  const {data, fetchMore, loading} = useNewsArchiveQuery({
     notifyOnNetworkStatusChange: true,
   });
 
-  const data = apolloData ?? initialData;
-
   // group data by year
-  const years = data.news.edges.reduce((acc, edge) => {
-    const year = edge.node.createdAt.getFullYear();
-    if (acc.has(year)) {
-      acc.get(year)?.push(edge);
-    } else {
-      acc.set(year, [edge]);
-    }
-    return acc;
-  }, new Map<number, typeof initialData.news.edges>());
+  const years =
+    data?.news.edges.reduce((acc, edge) => {
+      const year = edge.node.createdAt.getFullYear();
+      if (acc.has(year)) {
+        acc.get(year)?.push(edge);
+      } else {
+        acc.set(year, [edge]);
+      }
+      return acc;
+    }, new Map<number, typeof data.news.edges>()) ?? [];
 
   return (
     <>
@@ -129,26 +124,22 @@ export default function NewsArchive() {
             </SimpleGrid>
           </React.Fragment>
         ))}
-      {data.news.pageInfo.hasNextPage && (
+      {data?.news.pageInfo.hasNextPage && (
         <Center p="10">
           <Button
-            onClick={() => {
-              setLoading(true);
-              return fetchMore({
+            onClick={() =>
+              fetchMore({
                 variables: {
-                  cursor: data.news.edges[data.news.edges.length - 1].cursor,
+                  cursor: data?.news.edges[data.news.edges.length - 1].cursor,
                 },
-                updateQuery: (
-                  {news = initialData.news},
-                  {fetchMoreResult},
-                ) => ({
+                updateQuery: ({news}, {fetchMoreResult}) => ({
                   news: {
                     ...fetchMoreResult.news,
                     edges: [...news.edges, ...fetchMoreResult.news.edges],
                   },
                 }),
-              }).finally(() => setLoading(false));
-            }}
+              })
+            }
             isLoading={loading}
           >
             ältere Artikel

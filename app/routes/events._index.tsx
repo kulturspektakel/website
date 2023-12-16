@@ -6,9 +6,10 @@ import {
   Divider,
   Center,
   Button,
+  Spinner,
 } from '@chakra-ui/react';
 import type {LoaderFunctionArgs} from '@remix-run/node';
-import {typedjson, useTypedLoaderData} from 'remix-typedjson';
+import {typedjson} from 'remix-typedjson';
 import Event from '~/components/events/Event';
 import type {
   EventsOverviewQuery,
@@ -77,16 +78,10 @@ export async function loader(args: LoaderFunctionArgs) {
 
 export default function Events() {
   const [variables, setVariables] = useState<EventsOverviewQueryVariables>();
-  const initialData = useTypedLoaderData<typeof loader>();
-  // not using Apollo's loading state because it will initially be true
-  const [loading, setLoading] = useState(false);
-
-  const {data: apolloData, fetchMore} = useEventsOverviewQuery({
+  const {data, fetchMore, loading} = useEventsOverviewQuery({
     variables,
     notifyOnNetworkStatusChange: true,
   });
-
-  const data = apolloData ?? initialData;
 
   return (
     <>
@@ -98,12 +93,14 @@ export default function Events() {
         value={variables?.type ?? null}
         allLabelSmall="Alle Veranstaltungen"
         onChange={(type) =>
-          setVariables(type == null ? null : {type, cursor: null})
+          setVariables(
+            type == null ? undefined : {type: type as EventType, cursor: null},
+          )
         }
       />
       <OrderedList listStyleType="none" m="0" mt="20">
         <Gallery options={{loop: false}} withCaption>
-          {data.eventsConnection.edges.map(({node: e}, i) => (
+          {data?.eventsConnection.edges.map(({node: e}, i) => (
             <ListItem key={e.id}>
               {i > 0 && <Divider width="60%" m="16" />}
               <Headline
@@ -118,31 +115,34 @@ export default function Events() {
           ))}
         </Gallery>
       </OrderedList>
-      {data.eventsConnection.pageInfo.hasNextPage && (
+      {!data && loading && (
+        <Center>
+          <Spinner />
+        </Center>
+      )}
+      {data?.eventsConnection.pageInfo.hasNextPage && (
         <Center py="16">
           <Button
             isLoading={loading}
-            onClick={() => {
-              setLoading(true);
-              return fetchMore({
+            onClick={() =>
+              fetchMore({
                 variables: {
                   ...variables,
-                  cursor: data.eventsConnection.edges.slice(-1)[0].cursor,
+                  cursor: data?.eventsConnection.edges.slice(-1)[0].cursor,
                 },
-                updateQuery: (
-                  {eventsConnection = initialData.eventsConnection},
-                  {fetchMoreResult},
-                ) => ({
-                  eventsConnection: {
-                    ...fetchMoreResult.eventsConnection,
-                    edges: [
-                      ...eventsConnection.edges,
-                      ...fetchMoreResult.eventsConnection.edges,
-                    ],
-                  },
-                }),
-              }).finally(() => setLoading(false));
-            }}
+                updateQuery: ({eventsConnection}, {fetchMoreResult}) => {
+                  return {
+                    eventsConnection: {
+                      ...fetchMoreResult.eventsConnection,
+                      edges: [
+                        ...eventsConnection.edges,
+                        ...fetchMoreResult.eventsConnection.edges,
+                      ],
+                    },
+                  };
+                },
+              })
+            }
           >
             mehr laden
           </Button>
