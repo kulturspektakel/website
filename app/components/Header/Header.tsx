@@ -69,7 +69,6 @@ function NavItems() {
   };
 
   const props: Omit<RemixNavLinkProps & LinkProps, 'to'> = {
-    _focus,
     _focusVisible: _focus,
     _hover: _focus,
     _activeLink,
