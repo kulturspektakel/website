@@ -1,6 +1,6 @@
 import {gql} from '@apollo/client';
 import {Modal, ModalContent, ModalOverlay, Spinner} from '@chakra-ui/react';
-import type {LoaderFunctionArgs, MetaFunction} from '@remix-run/node';
+import type {LoaderFunctionArgs} from '@remix-run/node';
 import {Outlet, useNavigate, useParams} from '@remix-run/react';
 import {Suspense, useMemo, useState} from 'react';
 import {$params, $path} from 'remix-routes';
@@ -54,8 +54,11 @@ export const meta = mergeMeta<typeof loader>(({data, params}) => {
     },
     {
       name: 'description',
-      content: `${data!.node.bandsPlaying?.edges
-        .length} Bands und Künstler:innen treten auf dem Kulturspektakel ${
+      content: `${
+        data?.node?.__typename === 'Event'
+          ? data.node.bandsPlaying.edges.length
+          : 'viele'
+      } Bands und Künstler:innen treten auf dem Kulturspektakel ${
         params.year
       } auf`,
     },
