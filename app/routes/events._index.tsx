@@ -107,7 +107,7 @@ export default function Events() {
         <Gallery options={{loop: false}} withCaption>
           {data.eventsConnection.edges.map(({node: e}, i) => (
             <ListItem key={e.id}>
-              {i > 0 && <Divider m="16" />}
+              {i > 0 && <Divider width="60%" m="16" />}
               <Headline
                 textAlign="center"
                 mark={<DateString date={e.start} to={e.end} />}
