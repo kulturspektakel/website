@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "build": "remix build --sourcemap && sentry-upload-sourcemaps --org kulturspektakel --project website",
+    "build": "remix build",
     "dev": "concurrently \"remix dev\" \"yarn graphql\" \"yarn routes\"",
     "start": "remix-serve build",
     "typecheck": "tsc",
