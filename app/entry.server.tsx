@@ -1,8 +1,18 @@
+import * as Sentry from "@sentry/remix";
 import type {EntryContext} from '@remix-run/node';
 import {RemixServer} from '@remix-run/react';
 import {renderToString} from 'react-dom/server';
 import apolloClient from './utils/apolloClient';
 import {getDataFromTree} from '@apollo/client/react/ssr';
+
+export function handleError(error, { request }) {
+  Sentry.captureRemixServerException(error, 'remix.server', request);
+}
+
+Sentry.init({
+    dsn: "https://0a051473668a7010ad81176d2918a88f@o489311.ingest.sentry.io/4506423472422912",
+    tracesSampleRate: 1
+})
 
 export default async function handleRequest(
   request: Request,

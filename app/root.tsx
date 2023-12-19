@@ -1,3 +1,4 @@
+import { captureRemixErrorBoundaryError, withSentry } from "@sentry/remix";
 import {ApolloProvider, gql} from '@apollo/client';
 import {ChakraProvider, Box, Heading, Flex, Text} from '@chakra-ui/react';
 import type {
@@ -158,13 +159,15 @@ function Document({children}: {children: React.ReactNode}) {
   );
 }
 
-export default function App() {
+function App() {
   return (
     <Document>
       <Outlet />
     </Document>
   );
 }
+
+export default withSentry(App);
 
 export function CatchBoundary() {
   // when true, this is what used to go to `CatchBoundary`
@@ -181,6 +184,8 @@ export function CatchBoundary() {
 
 export function ErrorBoundary() {
   const error = useRouteError();
+
+  captureRemixErrorBoundaryError(error);
 
   return (
     <Document>
