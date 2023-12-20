@@ -7,11 +7,12 @@ import {$params, $path} from 'remix-routes';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import Selector from '~/components/Selector';
 import Day from '~/components/lineup/Day';
-import type {LineupQuery} from '~/types/graphql';
+import type {LineupQuery, LineupSitemapQuery} from '~/types/graphql';
 import {LineupDocument} from '~/types/graphql';
 import apolloClient from '~/utils/apolloClient';
 import {isSameDay, timeZone} from '~/utils/dateUtils';
 import mergeMeta from '~/utils/mergeMeta';
+import type {SitemapFunction} from 'remix-sitemap';
 
 gql`
   query Lineup($id: ID!) {
@@ -45,6 +46,25 @@ gql`
 
 export type SearchParams = {
   year: number;
+};
+
+export const sitemap: SitemapFunction = async () => {
+  const {data} = await apolloClient.query<LineupSitemapQuery>({
+    query: gql`
+      query LineupSitemap {
+        eventsConnection(first: 100, type: Kulturspektakel) {
+          edges {
+            node {
+              id
+            }
+          }
+        }
+      }
+    `,
+  });
+  return data.eventsConnection.edges.map(({node}) => ({
+    loc: $path('/lineup/:year', {year: node.id.replace('Event:kult', '')}),
+  }));
 };
 
 export const meta = mergeMeta<typeof loader>(({data, params}) => {

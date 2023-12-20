@@ -8,11 +8,10 @@ import {
   Tooltip,
   Box,
 } from '@chakra-ui/react';
-import type {MetaFunction} from '@remix-run/react';
 import {Link} from '@remix-run/react';
 import DateString from '~/components/DateString';
 import Mark from '~/components/Mark';
-import type {LineupBandQuery} from '~/types/graphql';
+import type {LineupBandQuery, LineupBandSitemapQuery} from '~/types/graphql';
 import {LineupBandDocument} from '~/types/graphql';
 import {
   FaSpotify,
@@ -23,11 +22,12 @@ import {
 } from 'react-icons/fa6';
 import mergeMeta from '~/utils/mergeMeta';
 import type {LoaderFunctionArgs} from '@remix-run/node';
-import {$params} from 'remix-routes';
+import {$params, $path} from 'remix-routes';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import apolloClient from '~/utils/apolloClient';
 import Image from '~/components/Image';
 import {Gallery} from 'react-photoswipe-gallery';
+import type {SitemapFunction} from 'remix-sitemap';
 
 gql`
   query LineupBand($id: ID!) {
@@ -59,6 +59,37 @@ gql`
     }
   }
 `;
+
+export const sitemap: SitemapFunction = async () => {
+  const {data} = await apolloClient.query<LineupBandSitemapQuery>({
+    query: gql`
+      query LineupBandSitemap {
+        eventsConnection(first: 100, type: Kulturspektakel) {
+          edges {
+            node {
+              id
+              bandsPlaying(first: 100) {
+                edges {
+                  node {
+                    slug
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    `,
+  });
+  return data.eventsConnection.edges.flatMap(({node: event}) =>
+    event.bandsPlaying.edges.map(({node: band}) => ({
+      loc: $path('/lineup/:year/:slug', {
+        year: event.id.replace('Event:kult', ''),
+        slug: band.slug.split('/').pop()!,
+      }),
+    })),
+  );
+};
 
 export async function loader(args: LoaderFunctionArgs) {
   const {year, slug} = $params('/lineup/:year/:slug', args.params);

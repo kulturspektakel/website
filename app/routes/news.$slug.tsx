@@ -3,10 +3,12 @@ import type {LoaderFunctionArgs} from '@remix-run/node';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import Article from '~/components/news/Article';
 import {NewsPageDocument} from '~/types/graphql';
-import type {NewsPageQuery} from '~/types/graphql';
+import type {NewsPageQuery, NewsPageSitemapQuery} from '~/types/graphql';
 import apolloClient from '~/utils/apolloClient';
 import type {ServerRuntimeMetaDescriptor} from '@remix-run/server-runtime';
 import mergeMeta from '~/utils/mergeMeta';
+import type {SitemapFunction} from 'remix-sitemap';
+import {$path} from 'remix-routes';
 
 gql`
   query NewsPage($id: ID!) {
@@ -17,6 +19,25 @@ gql`
     }
   }
 `;
+
+export const sitemap: SitemapFunction = async () => {
+  const {data} = await apolloClient.query<NewsPageSitemapQuery>({
+    query: gql`
+      query NewsPageSitemap {
+        news(first: 200) {
+          edges {
+            node {
+              id
+            }
+          }
+        }
+      }
+    `,
+  });
+  return data.news.edges.map(({node}) => ({
+    loc: $path('/news/:slug', {slug: node.id.replace(/^News:/, '')}),
+  }));
+};
 
 export async function loader(args: LoaderFunctionArgs) {
   const {data} = await apolloClient.query<NewsPageQuery>({

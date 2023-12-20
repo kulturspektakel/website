@@ -1984,6 +1984,29 @@ export type LineupBandQuery = {
     | null;
 };
 
+export type LineupBandSitemapQueryVariables = Exact<{[key: string]: never}>;
+
+export type LineupBandSitemapQuery = {
+  __typename?: 'Query';
+  eventsConnection: {
+    __typename?: 'QueryEventsConnection';
+    edges: Array<{
+      __typename?: 'QueryEventsConnectionEdge';
+      node: {
+        __typename?: 'Event';
+        id: string;
+        bandsPlaying: {
+          __typename?: 'EventBandsPlayingConnection';
+          edges: Array<{
+            __typename?: 'EventBandsPlayingConnectionEdge';
+            node: {__typename?: 'BandPlaying'; slug: string};
+          }>;
+        };
+      };
+    }>;
+  };
+};
+
 export type LineupQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
@@ -2036,6 +2059,19 @@ export type LineupQuery = {
     | {__typename?: 'Viewer'}
     | null;
   areas: Array<{__typename?: 'Area'; id: string; displayName: string}>;
+};
+
+export type LineupSitemapQueryVariables = Exact<{[key: string]: never}>;
+
+export type LineupSitemapQuery = {
+  __typename?: 'Query';
+  eventsConnection: {
+    __typename?: 'QueryEventsConnection';
+    edges: Array<{
+      __typename?: 'QueryEventsConnectionEdge';
+      node: {__typename?: 'Event'; id: string};
+    }>;
+  };
 };
 
 export type LineupsQueryVariables = Exact<{[key: string]: never}>;
@@ -2091,6 +2127,19 @@ export type NewsPageQuery = {
     | {__typename?: 'ProductList'}
     | {__typename?: 'Viewer'}
     | null;
+};
+
+export type NewsPageSitemapQueryVariables = Exact<{[key: string]: never}>;
+
+export type NewsPageSitemapQuery = {
+  __typename?: 'Query';
+  news: {
+    __typename?: 'QueryNewsConnection';
+    edges: Array<{
+      __typename?: 'QueryNewsConnectionEdge';
+      node: {__typename?: 'News'; id: string};
+    }>;
+  };
 };
 
 export type NewsArchiveQueryVariables = Exact<{
@@ -3331,6 +3380,89 @@ export type LineupBandQueryResult = Apollo.QueryResult<
   LineupBandQuery,
   LineupBandQueryVariables
 >;
+export const LineupBandSitemapDocument = gql`
+  query LineupBandSitemap {
+    eventsConnection(first: 100, type: Kulturspektakel) {
+      edges {
+        node {
+          id
+          bandsPlaying(first: 100) {
+            edges {
+              node {
+                slug
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+/**
+ * __useLineupBandSitemapQuery__
+ *
+ * To run a query within a React component, call `useLineupBandSitemapQuery` and pass it any options that fit your needs.
+ * When your component renders, `useLineupBandSitemapQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useLineupBandSitemapQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useLineupBandSitemapQuery(
+  baseOptions?: Apollo.QueryHookOptions<
+    LineupBandSitemapQuery,
+    LineupBandSitemapQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useQuery<
+    LineupBandSitemapQuery,
+    LineupBandSitemapQueryVariables
+  >(LineupBandSitemapDocument, options);
+}
+export function useLineupBandSitemapLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    LineupBandSitemapQuery,
+    LineupBandSitemapQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useLazyQuery<
+    LineupBandSitemapQuery,
+    LineupBandSitemapQueryVariables
+  >(LineupBandSitemapDocument, options);
+}
+export function useLineupBandSitemapSuspenseQuery(
+  baseOptions?: Apollo.SuspenseQueryHookOptions<
+    LineupBandSitemapQuery,
+    LineupBandSitemapQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useSuspenseQuery<
+    LineupBandSitemapQuery,
+    LineupBandSitemapQueryVariables
+  >(LineupBandSitemapDocument, options);
+}
+export type LineupBandSitemapQueryHookResult = ReturnType<
+  typeof useLineupBandSitemapQuery
+>;
+export type LineupBandSitemapLazyQueryHookResult = ReturnType<
+  typeof useLineupBandSitemapLazyQuery
+>;
+export type LineupBandSitemapSuspenseQueryHookResult = ReturnType<
+  typeof useLineupBandSitemapSuspenseQuery
+>;
+export type LineupBandSitemapQueryResult = Apollo.QueryResult<
+  LineupBandSitemapQuery,
+  LineupBandSitemapQueryVariables
+>;
 export const LineupDocument = gql`
   query Lineup($id: ID!) {
     node(id: $id) {
@@ -3416,6 +3548,82 @@ export type LineupSuspenseQueryHookResult = ReturnType<
 export type LineupQueryResult = Apollo.QueryResult<
   LineupQuery,
   LineupQueryVariables
+>;
+export const LineupSitemapDocument = gql`
+  query LineupSitemap {
+    eventsConnection(first: 100, type: Kulturspektakel) {
+      edges {
+        node {
+          id
+        }
+      }
+    }
+  }
+`;
+
+/**
+ * __useLineupSitemapQuery__
+ *
+ * To run a query within a React component, call `useLineupSitemapQuery` and pass it any options that fit your needs.
+ * When your component renders, `useLineupSitemapQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useLineupSitemapQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useLineupSitemapQuery(
+  baseOptions?: Apollo.QueryHookOptions<
+    LineupSitemapQuery,
+    LineupSitemapQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useQuery<LineupSitemapQuery, LineupSitemapQueryVariables>(
+    LineupSitemapDocument,
+    options,
+  );
+}
+export function useLineupSitemapLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    LineupSitemapQuery,
+    LineupSitemapQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useLazyQuery<LineupSitemapQuery, LineupSitemapQueryVariables>(
+    LineupSitemapDocument,
+    options,
+  );
+}
+export function useLineupSitemapSuspenseQuery(
+  baseOptions?: Apollo.SuspenseQueryHookOptions<
+    LineupSitemapQuery,
+    LineupSitemapQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useSuspenseQuery<
+    LineupSitemapQuery,
+    LineupSitemapQueryVariables
+  >(LineupSitemapDocument, options);
+}
+export type LineupSitemapQueryHookResult = ReturnType<
+  typeof useLineupSitemapQuery
+>;
+export type LineupSitemapLazyQueryHookResult = ReturnType<
+  typeof useLineupSitemapLazyQuery
+>;
+export type LineupSitemapSuspenseQueryHookResult = ReturnType<
+  typeof useLineupSitemapSuspenseQuery
+>;
+export type LineupSitemapQueryResult = Apollo.QueryResult<
+  LineupSitemapQuery,
+  LineupSitemapQueryVariables
 >;
 export const LineupsDocument = gql`
   query Lineups {
@@ -3558,6 +3766,82 @@ export type NewsPageSuspenseQueryHookResult = ReturnType<
 export type NewsPageQueryResult = Apollo.QueryResult<
   NewsPageQuery,
   NewsPageQueryVariables
+>;
+export const NewsPageSitemapDocument = gql`
+  query NewsPageSitemap {
+    news(first: 200) {
+      edges {
+        node {
+          id
+        }
+      }
+    }
+  }
+`;
+
+/**
+ * __useNewsPageSitemapQuery__
+ *
+ * To run a query within a React component, call `useNewsPageSitemapQuery` and pass it any options that fit your needs.
+ * When your component renders, `useNewsPageSitemapQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useNewsPageSitemapQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useNewsPageSitemapQuery(
+  baseOptions?: Apollo.QueryHookOptions<
+    NewsPageSitemapQuery,
+    NewsPageSitemapQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useQuery<NewsPageSitemapQuery, NewsPageSitemapQueryVariables>(
+    NewsPageSitemapDocument,
+    options,
+  );
+}
+export function useNewsPageSitemapLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    NewsPageSitemapQuery,
+    NewsPageSitemapQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useLazyQuery<
+    NewsPageSitemapQuery,
+    NewsPageSitemapQueryVariables
+  >(NewsPageSitemapDocument, options);
+}
+export function useNewsPageSitemapSuspenseQuery(
+  baseOptions?: Apollo.SuspenseQueryHookOptions<
+    NewsPageSitemapQuery,
+    NewsPageSitemapQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useSuspenseQuery<
+    NewsPageSitemapQuery,
+    NewsPageSitemapQueryVariables
+  >(NewsPageSitemapDocument, options);
+}
+export type NewsPageSitemapQueryHookResult = ReturnType<
+  typeof useNewsPageSitemapQuery
+>;
+export type NewsPageSitemapLazyQueryHookResult = ReturnType<
+  typeof useNewsPageSitemapLazyQuery
+>;
+export type NewsPageSitemapSuspenseQueryHookResult = ReturnType<
+  typeof useNewsPageSitemapSuspenseQuery
+>;
+export type NewsPageSitemapQueryResult = Apollo.QueryResult<
+  NewsPageSitemapQuery,
+  NewsPageSitemapQueryVariables
 >;
 export const NewsArchiveDocument = gql`
   query NewsArchive($cursor: String) {
