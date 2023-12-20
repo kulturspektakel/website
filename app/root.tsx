@@ -33,8 +33,6 @@ import {dateStringComponents} from './components/DateString';
 import logo from '../public/logos/logo.png';
 import Headline from './components/Headline';
 
-export const config = {runtime: 'edge'};
-
 export const meta: MetaFunction<typeof loader> = (props) => {
   let title = 'Kulturspektakel Gauting';
   let description =

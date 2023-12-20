@@ -10,8 +10,6 @@ import LinkButton from '~/components/LinkButton';
 import mergeMeta from '~/utils/mergeMeta';
 import theme from '~/theme';
 
-export const config = {runtime: 'edge'};
-
 gql`
   query News {
     news(first: 10) {
