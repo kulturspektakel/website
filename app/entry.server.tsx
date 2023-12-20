@@ -12,7 +12,7 @@ export function handleError(error: any, {request}: LoaderFunctionArgs) {
 
 const {isSitemapUrl, sitemap} = createSitemapGenerator({
   siteUrl: 'https://kulturspektakel.de',
-  // generateRobotsTxt: true,
+  generateRobotsTxt: true,
 });
 
 Sentry.init({

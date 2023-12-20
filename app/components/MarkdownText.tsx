@@ -84,7 +84,6 @@ export default function MarkDownWithOverrides(props: Props) {
                   caption={
                     img?.copyright ? `Foto: ${img?.copyright}` : undefined
                   }
-                  {...props}
                 />
               </Gallery>
             );
