@@ -21,6 +21,7 @@
     "@remix-run/serve": "~2.4.0",
     "@sentry/remix": "^7.90.0",
     "@vercel/analytics": "^1.1.1",
+    "@vercel/speed-insights": "^1.0.2",
     "apollo-link-scalars": "^4.0.3",
     "chakra-ui-steps": "^2.1.0",
     "downshift": "^8.2.3",

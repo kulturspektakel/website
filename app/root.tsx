@@ -31,6 +31,7 @@ import {dateStringComponents} from './components/DateString';
 import logo from '../public/logos/logo.png';
 import Headline from './components/Headline';
 import {Analytics} from '@vercel/analytics/react';
+import {SpeedInsights} from '@vercel/speed-insights/remix';
 
 export const meta: MetaFunction<typeof loader> = (props) => {
   let title = 'Kulturspektakel Gauting';
@@ -145,6 +146,7 @@ function Document({children}: {children: React.ReactNode}) {
                 </Box>
                 <Footer />
                 <Analytics />
+                <SpeedInsights />
               </Flex>
             </ApolloProvider>
           </ChakraProvider>
