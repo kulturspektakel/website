@@ -27,6 +27,9 @@ export default function Image({
         {({ref, open}) => (
           <Card
             {...props}
+            aria-label="Bild vergrößern"
+            role="button"
+            aria-haspopup="dialog"
             onClick={open}
             aspectRatio={
               props.aspectRatio == null && originalWidth && originalHeight

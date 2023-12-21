@@ -70,7 +70,7 @@ export default function Angebot() {
       {data.food && data.food.__typename === 'Page' && (
         <Page {...data.food} centered />
       )}
-      <UnorderedList columnGap="5" sx={{columnCount: [1, 2, 3]}}>
+      <UnorderedList columnGap="5" sx={{columnCount: [1, 2, 3]}} m="0">
         {data.productLists.map((list) => (
           <ListItem
             key={list.id}

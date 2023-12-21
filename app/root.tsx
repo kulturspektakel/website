@@ -22,8 +22,6 @@ import createEmotionCache from '@emotion/cache';
 import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
 import theme from './theme';
-import MetaPixel from './components/MetaPixel.client';
-import {ClientOnly} from 'remix-utils/client-only';
 import photoswipeCSS from 'photoswipe/dist/photoswipe.css';
 import fontsCSS from '../public/fonts.css';
 import {typedjson} from 'remix-typedjson';
@@ -32,6 +30,7 @@ import type {RootQuery} from './types/graphql';
 import {dateStringComponents} from './components/DateString';
 import logo from '../public/logos/logo.png';
 import Headline from './components/Headline';
+import {Analytics} from '@vercel/analytics/react';
 
 export const meta: MetaFunction<typeof loader> = (props) => {
   let title = 'Kulturspektakel Gauting';
@@ -145,6 +144,7 @@ function Document({children}: {children: React.ReactNode}) {
                   {children}
                 </Box>
                 <Footer />
+                <Analytics />
               </Flex>
             </ApolloProvider>
           </ChakraProvider>
@@ -153,7 +153,6 @@ function Document({children}: {children: React.ReactNode}) {
         <ScrollRestoration />
         <Scripts />
         <LiveReload />
-        <ClientOnly>{() => <MetaPixel />}</ClientOnly>
       </body>
     </html>
   );
