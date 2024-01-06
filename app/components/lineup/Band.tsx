@@ -27,6 +27,7 @@ export default function Band({band}: {band: BandFragment}) {
   return (
     <Card
       aspectRatio={1}
+      backgroundImage={band.photo?.scaledUri ? undefined : '/fallback.svg'}
       href={$path('/lineup/:year/:slug', {
         year: band.startTime.getFullYear(),
         slug: band.slug,

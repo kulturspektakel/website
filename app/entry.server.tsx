@@ -7,11 +7,15 @@ import {getDataFromTree} from '@apollo/client/react/ssr';
 import {createSitemapGenerator} from 'remix-sitemap';
 
 export function handleError(error: any, {request}: LoaderFunctionArgs) {
-  Sentry.captureRemixServerException(error, 'remix.server', request);
+  Sentry.captureRemixServerException(
+    error in error ? error.error : error,
+    'remix.server',
+    request,
+  );
 }
 
 const {isSitemapUrl, sitemap} = createSitemapGenerator({
-  siteUrl: 'https://kulturspektakel.de',
+  siteUrl: 'https://www.kulturspektakel.de',
   generateRobotsTxt: true,
 });
 

@@ -185,7 +185,6 @@ export function CatchBoundary() {
 
 export function ErrorBoundary() {
   const error = useRouteError();
-
   captureRemixErrorBoundaryError(error);
 
   return (
