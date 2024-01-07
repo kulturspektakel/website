@@ -13,6 +13,7 @@ import Photos from '~/components/events/Photos';
 import type {EventDetailsFragment} from '~/types/graphql';
 import {Link} from '@remix-run/react';
 import Countdown from 'react-countdown';
+import {ClientOnly} from 'remix-utils/client-only';
 
 gql`
   fragment EventDetails on Event {
@@ -95,7 +96,7 @@ export default function Event({event}: {event: EventDetailsFragment}) {
                       fontFamily="Shrimp"
                       mb="-3"
                     >
-                      {days}
+                      <ClientOnly fallback="0">{() => days}</ClientOnly>
                     </Text>
                     <Text>Tage</Text>
                   </Box>
@@ -105,7 +106,7 @@ export default function Event({event}: {event: EventDetailsFragment}) {
                       fontFamily="Shrimp"
                       mb="-3"
                     >
-                      {hours}
+                      <ClientOnly fallback="0">{() => hours}</ClientOnly>
                     </Text>
                     <Text>Stunden</Text>
                   </Box>
@@ -115,7 +116,7 @@ export default function Event({event}: {event: EventDetailsFragment}) {
                       fontFamily="Shrimp"
                       mb="-3"
                     >
-                      {minutes}
+                      <ClientOnly fallback="0">{() => minutes}</ClientOnly>
                     </Text>
                     <Text>Minuten</Text>
                   </Box>
@@ -125,7 +126,7 @@ export default function Event({event}: {event: EventDetailsFragment}) {
                       fontFamily="Shrimp"
                       mb="-3"
                     >
-                      {seconds}
+                      <ClientOnly fallback="0">{() => seconds}</ClientOnly>
                     </Text>
                     <Text>Sekunden</Text>
                   </Box>
