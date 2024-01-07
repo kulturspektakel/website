@@ -28,6 +28,7 @@ import apolloClient from '~/utils/apolloClient';
 import Image from '~/components/Image';
 import {Gallery} from 'react-photoswipe-gallery';
 import type {SitemapFunction} from 'remix-sitemap';
+import truncate from '~/utils/truncate';
 
 gql`
   query LineupBand($id: ID!) {
@@ -110,7 +111,7 @@ export const meta = mergeMeta<typeof loader>(({data, params}) => [
   {title: `${data?.name} | Lineup ${params.year}`},
   {
     name: 'description',
-    content: data?.shortDescription ?? '',
+    content: truncate(data?.shortDescription, 150) ?? '',
   },
 ]);
 

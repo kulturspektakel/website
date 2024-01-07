@@ -9,12 +9,16 @@ import type {ServerRuntimeMetaDescriptor} from '@remix-run/server-runtime';
 import mergeMeta from '~/utils/mergeMeta';
 import type {SitemapFunction} from 'remix-sitemap';
 import {$path} from 'remix-routes';
+import truncate from '~/utils/truncate';
 
 gql`
   query NewsPage($id: ID!) {
     node(id: $id) {
       ... on News {
         ...Article
+        content {
+          plainText
+        }
       }
     }
   }
@@ -56,7 +60,10 @@ export const meta = mergeMeta<typeof loader>(({data}) => {
   if (!data) {
     return [];
   }
-  const result: ServerRuntimeMetaDescriptor[] = [{title: data.title}];
+  const result: ServerRuntimeMetaDescriptor[] = [
+    {title: data.title},
+    {name: 'description', content: truncate(data.content.plainText, 150)},
+  ];
   const image = data.content.images[0]?.small;
   if (image) {
     result.push({

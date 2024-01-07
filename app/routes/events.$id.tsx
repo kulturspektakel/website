@@ -12,6 +12,7 @@ import type {SingleEventQuery} from '~/types/graphql';
 import {SingleEventDocument} from '~/types/graphql';
 import apolloClient from '~/utils/apolloClient';
 import mergeMeta from '~/utils/mergeMeta';
+import truncate from '~/utils/truncate';
 
 gql`
   query SingleEvent($id: ID!, $num_photos: Int = 100) {
@@ -57,7 +58,8 @@ export const meta = mergeMeta<typeof loader>(({data}) => {
     },
     {
       name: 'description',
-      content: data.event.description ?? `am ${date}${connector}${to}`,
+      content:
+        truncate(data.event.description, 150) ?? `am ${date}${connector}${to}`,
     },
     {
       property: 'og:image',

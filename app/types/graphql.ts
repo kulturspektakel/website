@@ -2108,6 +2108,7 @@ export type NewsPageQuery = {
         createdAt: Date;
         content: {
           __typename?: 'MarkdownString';
+          plainText: string;
           markdown: string;
           images: Array<{
             __typename?: 'PixelImage';
@@ -3701,6 +3702,9 @@ export const NewsPageDocument = gql`
     node(id: $id) {
       ... on News {
         ...Article
+        content {
+          plainText
+        }
       }
     }
   }
