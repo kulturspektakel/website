@@ -96,7 +96,9 @@ export default function Event({event}: {event: EventDetailsFragment}) {
                       fontFamily="Shrimp"
                       mb="-3"
                     >
-                      <ClientOnly fallback="0">{() => days}</ClientOnly>
+                      <ClientOnly fallback={<>&nbsp;</>}>
+                        {() => days}
+                      </ClientOnly>
                     </Text>
                     <Text>Tage</Text>
                   </Box>
@@ -106,7 +108,9 @@ export default function Event({event}: {event: EventDetailsFragment}) {
                       fontFamily="Shrimp"
                       mb="-3"
                     >
-                      <ClientOnly fallback="0">{() => hours}</ClientOnly>
+                      <ClientOnly fallback={<>&nbsp;</>}>
+                        {() => hours}
+                      </ClientOnly>
                     </Text>
                     <Text>Stunden</Text>
                   </Box>
@@ -116,7 +120,9 @@ export default function Event({event}: {event: EventDetailsFragment}) {
                       fontFamily="Shrimp"
                       mb="-3"
                     >
-                      <ClientOnly fallback="0">{() => minutes}</ClientOnly>
+                      <ClientOnly fallback={<>&nbsp;</>}>
+                        {() => minutes}
+                      </ClientOnly>
                     </Text>
                     <Text>Minuten</Text>
                   </Box>
@@ -126,7 +132,9 @@ export default function Event({event}: {event: EventDetailsFragment}) {
                       fontFamily="Shrimp"
                       mb="-3"
                     >
-                      <ClientOnly fallback="0">{() => seconds}</ClientOnly>
+                      <ClientOnly fallback={<>&nbsp;</>}>
+                        {() => seconds}
+                      </ClientOnly>
                     </Text>
                     <Text>Sekunden</Text>
                   </Box>
