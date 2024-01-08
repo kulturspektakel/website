@@ -9,7 +9,7 @@ import {
   Box,
 } from '@chakra-ui/react';
 import {Link} from '@remix-run/react';
-import DateString from '~/components/DateString';
+import DateString, {dateStringComponents} from '~/components/DateString';
 import Mark from '~/components/Mark';
 import type {LineupBandQuery, LineupBandSitemapQuery} from '~/types/graphql';
 import {LineupBandDocument} from '~/types/graphql';
@@ -28,7 +28,6 @@ import apolloClient from '~/utils/apolloClient';
 import Image from '~/components/Image';
 import {Gallery} from 'react-photoswipe-gallery';
 import type {SitemapFunction} from 'remix-sitemap';
-import truncate from '~/utils/truncate';
 
 gql`
   query LineupBand($id: ID!) {
@@ -111,7 +110,18 @@ export const meta = mergeMeta<typeof loader>(({data, params}) => [
   {title: `${data?.name} | Lineup ${params.year}`},
   {
     name: 'description',
-    content: truncate(data?.shortDescription, 150) ?? '',
+    content: `${data?.genre} · ${
+      dateStringComponents({
+        date: new Date(data!.startTime),
+        options: {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+          hour: '2-digit',
+          minute: '2-digit',
+        },
+      }).date
+    } Uhr, ${data?.area.displayName}`,
   },
 ]);
 
