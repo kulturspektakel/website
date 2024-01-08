@@ -115,7 +115,7 @@ export default function NewsArchive() {
                     position="absolute"
                     width="100%"
                     height="100%"
-                    src={node.content.images[0]?.tiny}
+                    src={node.content.images[0]?.tiny ?? '/fallback.svg'}
                     loading="lazy"
                     objectFit="cover"
                   />

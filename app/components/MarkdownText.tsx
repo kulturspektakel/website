@@ -67,11 +67,13 @@ export default function MarkDownWithOverrides(props: Props) {
             const img = props.markdown.images.find(
               (image) => image.uri === imgProps.src,
             );
+            const maxH = 500;
 
             return (
               <Gallery>
                 <Image
-                  maxH="500px"
+                  h={img?.height ? Math.max(maxH, img!.height) : undefined}
+                  maxH={maxH}
                   mt="3"
                   mb="3"
                   ml="auto"
