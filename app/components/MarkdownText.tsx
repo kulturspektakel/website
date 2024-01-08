@@ -72,7 +72,6 @@ export default function MarkDownWithOverrides(props: Props) {
             return (
               <Gallery>
                 <Image
-                  h={img?.height ? Math.max(maxH, img!.height) : undefined}
                   maxH={maxH}
                   mt="3"
                   mb="3"
