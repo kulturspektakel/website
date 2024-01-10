@@ -71,17 +71,22 @@ export default function Angebot() {
       {data.verein && data.verein.__typename === 'Page' && (
         <Page {...data.verein} />
       )}
-      <Box w="100%">
+      <Box w="100%" textAlign="center">
         <Heading mb="5">Termine</Heading>
-        <OrderedList listStyleType="none" m="0" w="100%">
+        <OrderedList
+          listStyleType="none"
+          m="0"
+          w="100%"
+          sx={{columnCount: [1, 2, 3]}}
+          mb="4"
+        >
           {data.crewCalendar.map((event) => (
             <ListItem key={event.uid} mb="4">
               <Mark>
                 <DateString
                   options={{
-                    weekday: 'long',
-                    day: '2-digit',
-                    month: '2-digit',
+                    day: 'numeric',
+                    month: 'numeric',
                     year: 'numeric',
                   }}
                   date={event.start}
