@@ -1,5 +1,5 @@
 import {gql, useSuspenseQuery} from '@apollo/client';
-import {InfoIcon, TriangleDownIcon} from '@chakra-ui/icons';
+import {TriangleDownIcon} from '@chakra-ui/icons';
 import type {BoxProps} from '@chakra-ui/react';
 import {
   Stack,
@@ -12,10 +12,7 @@ import {
   Flex,
   Tooltip,
   Text,
-  Box,
-  CloseButton,
   Link as ChakraLink,
-  useDisclosure,
 } from '@chakra-ui/react';
 import {Link, NavLink, Outlet, useParams} from '@remix-run/react';
 import {$path} from 'remix-routes';
@@ -24,6 +21,7 @@ import type {LineupsQuery} from '~/types/graphql';
 import {LineupsDocument} from '~/types/graphql';
 import type {loader as rootLoader} from '~/root';
 import {useTypedRouteLoaderData} from 'remix-typedjson';
+import InfoBox from '~/components/InfoBox';
 
 gql`
   query Lineups {
@@ -136,47 +134,21 @@ function MenuItems() {
 
 function BookingAlert(props: BoxProps) {
   const applicationsOpen = useApplicationsOpen();
-  const {isOpen, onClose} = useDisclosure({defaultIsOpen: true});
 
-  if (!applicationsOpen || !isOpen) {
+  if (!applicationsOpen) {
     return null;
   }
 
   return (
-    <Flex
-      borderRadius="lg"
-      bg="offwhite.200"
-      alignItems="start"
-      p="3"
-      gap="2"
-      {...props}
-    >
-      <InfoIcon color="brand.900" />
-      <Box>
-        <Heading
-          size="sm"
-          as="h4"
-          fontFamily="Shrimp"
-          textTransform="uppercase"
-        >
-          Jetzt bewerben!
-        </Heading>
-        <Text>
-          Die Bewerbungsphase für das nächste Kulturspektakel läuft aktuell und
-          ihr könnt euch jetzt für einen Auftritt bei uns{' '}
-          <ChakraLink as={Link} to={$path('/booking')} variant="inline">
-            bewerben
-          </ChakraLink>
-          .
-        </Text>
-      </Box>
-      <CloseButton
-        alignSelf="flex-start"
-        position="relative"
-        right={-1}
-        top={-1}
-        onClick={onClose}
-      />
-    </Flex>
+    <InfoBox {...props} title="Jetzt Bewerben">
+      <Text>
+        Die Bewerbungsphase für das nächste Kulturspektakel läuft aktuell und
+        ihr könnt euch jetzt für einen Auftritt bei uns{' '}
+        <ChakraLink as={Link} to={$path('/booking')} variant="inline">
+          bewerben
+        </ChakraLink>
+        .
+      </Text>
+    </InfoBox>
   );
 }

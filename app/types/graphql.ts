@@ -2179,6 +2179,34 @@ export type NewsArchiveQuery = {
   };
 };
 
+export type PlakateQueryVariables = Exact<{[key: string]: never}>;
+
+export type PlakateQuery = {
+  __typename?: 'Query';
+  eventsConnection: {
+    __typename?: 'QueryEventsConnection';
+    pageInfo: {__typename?: 'PageInfo'; hasNextPage: boolean};
+    edges: Array<{
+      __typename?: 'QueryEventsConnectionEdge';
+      cursor: string;
+      node: {
+        __typename?: 'Event';
+        id: string;
+        name: string;
+        start: Date;
+        poster?: {
+          __typename?: 'PixelImage';
+          width: number;
+          height: number;
+          copyright?: string | null;
+          small: string;
+          large: string;
+        } | null;
+      };
+    }>;
+  };
+};
+
 export type SpeisekarteQueryVariables = Exact<{[key: string]: never}>;
 
 export type SpeisekarteQuery = {
@@ -3926,6 +3954,88 @@ export type NewsArchiveSuspenseQueryHookResult = ReturnType<
 export type NewsArchiveQueryResult = Apollo.QueryResult<
   NewsArchiveQuery,
   NewsArchiveQueryVariables
+>;
+export const PlakateDocument = gql`
+  query Plakate {
+    eventsConnection(type: Kulturspektakel, first: 50) {
+      pageInfo {
+        hasNextPage
+      }
+      edges {
+        cursor
+        node {
+          id
+          name
+          start
+          poster {
+            small: scaledUri(width: 200)
+            large: scaledUri(width: 1600)
+            width
+            height
+            copyright
+          }
+        }
+      }
+    }
+  }
+`;
+
+/**
+ * __usePlakateQuery__
+ *
+ * To run a query within a React component, call `usePlakateQuery` and pass it any options that fit your needs.
+ * When your component renders, `usePlakateQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = usePlakateQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function usePlakateQuery(
+  baseOptions?: Apollo.QueryHookOptions<PlakateQuery, PlakateQueryVariables>,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useQuery<PlakateQuery, PlakateQueryVariables>(
+    PlakateDocument,
+    options,
+  );
+}
+export function usePlakateLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    PlakateQuery,
+    PlakateQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useLazyQuery<PlakateQuery, PlakateQueryVariables>(
+    PlakateDocument,
+    options,
+  );
+}
+export function usePlakateSuspenseQuery(
+  baseOptions?: Apollo.SuspenseQueryHookOptions<
+    PlakateQuery,
+    PlakateQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useSuspenseQuery<PlakateQuery, PlakateQueryVariables>(
+    PlakateDocument,
+    options,
+  );
+}
+export type PlakateQueryHookResult = ReturnType<typeof usePlakateQuery>;
+export type PlakateLazyQueryHookResult = ReturnType<typeof usePlakateLazyQuery>;
+export type PlakateSuspenseQueryHookResult = ReturnType<
+  typeof usePlakateSuspenseQuery
+>;
+export type PlakateQueryResult = Apollo.QueryResult<
+  PlakateQuery,
+  PlakateQueryVariables
 >;
 export const SpeisekarteDocument = gql`
   query Speisekarte {
