@@ -80,7 +80,7 @@ export default function Plakate() {
             ) : null,
           )}
         </SimpleGrid>
-        <InfoBox title="Fehlende Pakate?">
+        <InfoBox title="Fehlende Plakate?">
           Falls du ein Plakat hast, das hier noch fehlt, schick es uns gerne an{' '}
           <Link
             variant="inline"
