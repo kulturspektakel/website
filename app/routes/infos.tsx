@@ -81,7 +81,7 @@ export default function Angebot() {
           mb="4"
         >
           {data.crewCalendar.map((event) => (
-            <ListItem key={event.uid} mb="4">
+            <ListItem key={event.uid} mb="4" sx={{breakInside: 'avoid'}}>
               <Mark>
                 <DateString
                   options={{
