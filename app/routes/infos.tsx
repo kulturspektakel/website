@@ -118,7 +118,7 @@ export default function Angebot() {
         </OrderedList>
         <Link
           variant="inline"
-          href="https://calendar.google.com/calendar/ical/kulturspektakel.de_r2rcls69e282dtq2dq19keu7o4%40group.calendar.google.com/private-df072e4d5a0624624d47d3af04deb9de/basic.ics"
+          href="https://calendar.google.com/calendar/ical/c_d5cfc52054d3dae0761245fee799a7c2c61691fb62554f30ea652adcca183304%40group.calendar.google.com/public/basic.ics"
         >
           Kalendar abonnieren
         </Link>
