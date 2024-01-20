@@ -1528,18 +1528,6 @@
             "deprecationReason": null
           },
           {
-            "name": "createdAt",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {"kind": "SCALAR", "name": "DateTime", "ofType": null}
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "depositAfter",
             "description": null,
             "args": [],
@@ -1559,18 +1547,6 @@
               "kind": "NON_NULL",
               "name": null,
               "ofType": {"kind": "SCALAR", "name": "Int", "ofType": null}
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "deviceTime",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {"kind": "SCALAR", "name": "DateTime", "ofType": null}
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -3182,6 +3158,27 @@
             "deprecationReason": null
           },
           {
+            "name": "createNonceRequest",
+            "description": null,
+            "args": [
+              {
+                "name": "email",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {"kind": "SCALAR", "name": "String", "ofType": null}
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {"kind": "SCALAR", "name": "String", "ofType": null},
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "createOrder",
             "description": null,
             "args": [
@@ -3333,6 +3330,27 @@
                 "ofType": null
               }
             },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "nonceFromRequest",
+            "description": null,
+            "args": [
+              {
+                "name": "nonceRequestId",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {"kind": "SCALAR", "name": "String", "ofType": null}
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {"kind": "SCALAR", "name": "String", "ofType": null},
             "isDeprecated": false,
             "deprecationReason": null
           },

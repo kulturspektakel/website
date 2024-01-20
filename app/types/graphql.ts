@@ -217,10 +217,8 @@ export type CardTransaction = Transaction & {
   balanceBefore: Scalars['Int']['output'];
   cardId: Scalars['String']['output'];
   clientId: Scalars['String']['output'];
-  createdAt: Scalars['DateTime']['output'];
   depositAfter: Scalars['Int']['output'];
   depositBefore: Scalars['Int']['output'];
-  deviceTime: Scalars['DateTime']['output'];
   transactionType: CardTransactionType;
 };
 
@@ -432,9 +430,11 @@ export type Mutation = {
   __typename?: 'Mutation';
   createBandApplication: BandApplication;
   createBandApplicationComment: BandApplication;
+  createNonceRequest?: Maybe<Scalars['String']['output']>;
   createOrder: Order;
   deleteBandApplicationComment: BandApplication;
   markBandApplicationContacted: BandApplication;
+  nonceFromRequest?: Maybe<Scalars['String']['output']>;
   rateBandApplication: BandApplication;
   updateBandApplication: BandApplication;
   updateDeviceProductList: Device;
@@ -448,6 +448,10 @@ export type MutationCreateBandApplicationArgs = {
 
 export type MutationCreateBandApplicationCommentArgs = {
   input: BandApplicationCommentInput;
+};
+
+export type MutationCreateNonceRequestArgs = {
+  email: Scalars['String']['input'];
 };
 
 export type MutationCreateOrderArgs = {
@@ -464,6 +468,10 @@ export type MutationDeleteBandApplicationCommentArgs = {
 export type MutationMarkBandApplicationContactedArgs = {
   bandApplicationId: Scalars['ID']['input'];
   contacted: Scalars['Boolean']['input'];
+};
+
+export type MutationNonceFromRequestArgs = {
+  nonceRequestId: Scalars['String']['input'];
 };
 
 export type MutationRateBandApplicationArgs = {
@@ -2177,6 +2185,24 @@ export type NewsArchiveQuery = {
       };
     }>;
   };
+};
+
+export type CreateNonceRequestMutationVariables = Exact<{
+  email: Scalars['String']['input'];
+}>;
+
+export type CreateNonceRequestMutation = {
+  __typename?: 'Mutation';
+  createNonceRequest?: string | null;
+};
+
+export type CheckNonceRequestMutationVariables = Exact<{
+  nonceRequestId: Scalars['String']['input'];
+}>;
+
+export type CheckNonceRequestMutation = {
+  __typename?: 'Mutation';
+  nonceFromRequest?: string | null;
 };
 
 export type PlakateQueryVariables = Exact<{[key: string]: never}>;
@@ -3954,6 +3980,102 @@ export type NewsArchiveSuspenseQueryHookResult = ReturnType<
 export type NewsArchiveQueryResult = Apollo.QueryResult<
   NewsArchiveQuery,
   NewsArchiveQueryVariables
+>;
+export const CreateNonceRequestDocument = gql`
+  mutation CreateNonceRequest($email: String!) {
+    createNonceRequest(email: $email)
+  }
+`;
+export type CreateNonceRequestMutationFn = Apollo.MutationFunction<
+  CreateNonceRequestMutation,
+  CreateNonceRequestMutationVariables
+>;
+
+/**
+ * __useCreateNonceRequestMutation__
+ *
+ * To run a mutation, you first call `useCreateNonceRequestMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateNonceRequestMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createNonceRequestMutation, { data, loading, error }] = useCreateNonceRequestMutation({
+ *   variables: {
+ *      email: // value for 'email'
+ *   },
+ * });
+ */
+export function useCreateNonceRequestMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    CreateNonceRequestMutation,
+    CreateNonceRequestMutationVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useMutation<
+    CreateNonceRequestMutation,
+    CreateNonceRequestMutationVariables
+  >(CreateNonceRequestDocument, options);
+}
+export type CreateNonceRequestMutationHookResult = ReturnType<
+  typeof useCreateNonceRequestMutation
+>;
+export type CreateNonceRequestMutationResult =
+  Apollo.MutationResult<CreateNonceRequestMutation>;
+export type CreateNonceRequestMutationOptions = Apollo.BaseMutationOptions<
+  CreateNonceRequestMutation,
+  CreateNonceRequestMutationVariables
+>;
+export const CheckNonceRequestDocument = gql`
+  mutation CheckNonceRequest($nonceRequestId: String!) {
+    nonceFromRequest(nonceRequestId: $nonceRequestId)
+  }
+`;
+export type CheckNonceRequestMutationFn = Apollo.MutationFunction<
+  CheckNonceRequestMutation,
+  CheckNonceRequestMutationVariables
+>;
+
+/**
+ * __useCheckNonceRequestMutation__
+ *
+ * To run a mutation, you first call `useCheckNonceRequestMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCheckNonceRequestMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [checkNonceRequestMutation, { data, loading, error }] = useCheckNonceRequestMutation({
+ *   variables: {
+ *      nonceRequestId: // value for 'nonceRequestId'
+ *   },
+ * });
+ */
+export function useCheckNonceRequestMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    CheckNonceRequestMutation,
+    CheckNonceRequestMutationVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useMutation<
+    CheckNonceRequestMutation,
+    CheckNonceRequestMutationVariables
+  >(CheckNonceRequestDocument, options);
+}
+export type CheckNonceRequestMutationHookResult = ReturnType<
+  typeof useCheckNonceRequestMutation
+>;
+export type CheckNonceRequestMutationResult =
+  Apollo.MutationResult<CheckNonceRequestMutation>;
+export type CheckNonceRequestMutationOptions = Apollo.BaseMutationOptions<
+  CheckNonceRequestMutation,
+  CheckNonceRequestMutationVariables
 >;
 export const PlakateDocument = gql`
   query Plakate {
