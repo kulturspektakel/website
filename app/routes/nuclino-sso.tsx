@@ -17,6 +17,8 @@ import {
 import mergeMeta from '~/utils/mergeMeta';
 import {FaSlack} from 'react-icons/fa6';
 import {useSearchParams} from '@remix-run/react';
+import type {LoaderFunctionArgs} from '@remix-run/node';
+import {redirect} from '@remix-run/node';
 
 gql`
   mutation CreateNonceRequest($email: String!) {
@@ -35,6 +37,23 @@ export const meta = mergeMeta(({data, params}) => {
     },
   ];
 });
+
+const LOGIN_URL = 'https://api.kulturspektakel.de/saml/login';
+
+export async function loader({request}: LoaderFunctionArgs) {
+  const cookies = request.headers.get('Cookie') ?? '';
+  const match = cookies.match(/(?:^|;\s*)nonce=([^;]*)/);
+  if (match && match?.length > 1) {
+    const url = new URL(LOGIN_URL);
+    new URL(request.url).searchParams.forEach((value, key) =>
+      url.searchParams.set(key, value),
+    );
+    url.searchParams.set('nonce', match[1]);
+    console.log(url);
+    return redirect(url.toString());
+  }
+  return null;
+}
 
 export default function Sso() {
   const [requestNonce, {loading, data}] = useCreateNonceRequestMutation();
@@ -89,9 +108,7 @@ export default function Sso() {
                       },
                     });
                     if (d?.nonceFromRequest) {
-                      const url = new URL(
-                        'https://api.kulturspektakel.de/saml/login',
-                      );
+                      const url = new URL(LOGIN_URL);
                       searchParams.forEach((value, key) =>
                         url.searchParams.set(key, value),
                       );
