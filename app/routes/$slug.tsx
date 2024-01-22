@@ -29,7 +29,10 @@ export async function loader(args: LoaderFunctionArgs) {
   if (data.node?.__typename === 'Page') {
     return typedjson(data.node);
   }
-  throw new Error('not found');
+  throw new Response(null, {
+    status: 404,
+    statusText: 'Not Found',
+  });
 }
 
 export const meta = mergeMeta<typeof loader>(({data}) => {
