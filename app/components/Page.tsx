@@ -23,12 +23,16 @@ gql`
 `;
 
 export default function Page(
-  props: PageContentFragment & {centered?: boolean},
+  props: PageContentFragment & {centered?: boolean; headingLevel?: 1 | 2 | 3},
 ) {
-  const {title, left, right, content, bottom} = props;
+  const {title, left, right, content, bottom, headingLevel = 1} = props;
   return (
     <Box as="article" mb="10" w="100%">
-      <Heading mb={5} textAlign={props.centered ? 'center' : undefined}>
+      <Heading
+        mb={5}
+        as={`h${headingLevel}`}
+        textAlign={props.centered ? 'center' : undefined}
+      >
         {title}
       </Heading>
       {content && (
