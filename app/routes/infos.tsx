@@ -112,7 +112,7 @@ export default function Angebot() {
                   {event.summary}
                 </Text>
               </Text>
-              {event.location}
+              {event.location?.split(',')[0]}
             </ListItem>
           ))}
         </OrderedList>
