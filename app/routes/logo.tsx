@@ -70,8 +70,8 @@ export default function Logo() {
       <Heading mb="8">Logo</Heading>
       <SimpleGrid columns={[1, 3]} gap="5">
         <LogoCol filename="logo" />
-        <LogoCol filename="logo-text-below-black" />
-        <LogoCol filename="logo-text-right-black" />
+        <LogoCol filename="logo-tall" />
+        <LogoCol filename="logo-wide" />
       </SimpleGrid>
       <Heading mt="16" mb="8">
         Typographie
@@ -190,10 +190,6 @@ export default function Logo() {
             <Heading size="md">Kultbühnen Gelb</Heading>
           </Box>
           #F0BD51
-          <br />
-          C5 M96 Y99 K1
-          <br />
-          Pantone 186
         </Box>
         <Box>
           <Box
@@ -210,10 +206,6 @@ export default function Logo() {
             </Heading>
           </Box>
           #5DA65C
-          <br />
-          C5 M96 Y99 K1
-          <br />
-          Pantone 186
         </Box>
         <Box>
           <Box
@@ -229,11 +221,7 @@ export default function Logo() {
               DJ-Area Lila
             </Heading>
           </Box>
-          #E12E2E
-          <br />
-          C5 M96 Y99 K1
-          <br />
-          Pantone 186
+          #100A28
         </Box>
       </SimpleGrid>
       <Heading mt="16" mb="8">
