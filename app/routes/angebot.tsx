@@ -89,13 +89,13 @@ export default function Angebot() {
         vollständige Speisekarte
       </LinkButton>
       {data.workshops && data.workshops.__typename === 'Page' && (
-        <Page {...data.workshops} centered />
+        <Page headingLevel={2} {...data.workshops} centered />
       )}
       {data.sport && data.sport.__typename === 'Page' && (
-        <Page {...data.sport} centered />
+        <Page headingLevel={2} {...data.sport} centered />
       )}
       {data.kinderkult && data.kinderkult.__typename === 'Page' && (
-        <Page {...data.kinderkult} centered />
+        <Page headingLevel={2} {...data.kinderkult} centered />
       )}
     </VStack>
   );

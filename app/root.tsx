@@ -1,6 +1,13 @@
 import {captureRemixErrorBoundaryError, withSentry} from '@sentry/remix';
 import {ApolloProvider, gql} from '@apollo/client';
-import {ChakraProvider, Box, Heading, Flex, Text} from '@chakra-ui/react';
+import {
+  ChakraProvider,
+  Box,
+  Heading,
+  Flex,
+  Text,
+  Image,
+} from '@chakra-ui/react';
 import type {
   LinksFunction,
   MetaFunction,
@@ -192,7 +199,10 @@ export function ErrorBoundary() {
       {isRouteErrorResponse(error) && error.status == 404 ? (
         <>
           <Headline mb="4">Seite nicht gefunden</Headline>
-          <Text>Die Seite, die du suchst, existiert nicht.</Text>
+          <Image
+            src="/404.svg"
+            alt="Trauriger Roboter der die Seite nicht finden konnte"
+          />
         </>
       ) : (
         <>

@@ -61,7 +61,7 @@ export async function loader(args: LoaderFunctionArgs) {
   return typedjson(data);
 }
 
-export default function Angebot() {
+export default function Infos() {
   const data = useTypedLoaderData<typeof loader>();
   return (
     <VStack spacing="10">
@@ -69,10 +69,12 @@ export default function Angebot() {
         <Page {...data.infos} centered />
       )}
       {data.verein && data.verein.__typename === 'Page' && (
-        <Page {...data.verein} />
+        <Page headingLevel={2} {...data.verein} />
       )}
       <Box w="100%" textAlign="center">
-        <Heading mb="5">Termine</Heading>
+        <Heading as="h2" mb="5">
+          Termine
+        </Heading>
         <OrderedList
           listStyleType="none"
           m="0"
@@ -112,7 +114,7 @@ export default function Angebot() {
                   {event.summary}
                 </Text>
               </Text>
-              {event.location}
+              {event.location?.split(',')[0]}
             </ListItem>
           ))}
         </OrderedList>

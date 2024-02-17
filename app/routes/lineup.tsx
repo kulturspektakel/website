@@ -13,6 +13,8 @@ import {
   Tooltip,
   Text,
   Link as ChakraLink,
+  Spinner,
+  Center,
 } from '@chakra-ui/react';
 import {Link, NavLink, Outlet, useParams} from '@remix-run/react';
 import {$path} from 'remix-routes';
@@ -22,6 +24,7 @@ import {LineupsDocument} from '~/types/graphql';
 import type {loader as rootLoader} from '~/root';
 import {useTypedRouteLoaderData} from 'remix-typedjson';
 import InfoBox from '~/components/InfoBox';
+import {Suspense} from 'react';
 
 gql`
   query Lineups {
@@ -99,7 +102,15 @@ export default function () {
                 </MenuButton>
               </Tooltip>
               <MenuList>
-                <MenuItems />
+                <Suspense
+                  fallback={
+                    <Center my="10">
+                      <Spinner />
+                    </Center>
+                  }
+                >
+                  <MenuItems />
+                </Suspense>
               </MenuList>
             </Menu>
           )}
