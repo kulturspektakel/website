@@ -34,7 +34,6 @@ export default function Band({band}: {band: BandFragment}) {
       })}
     >
       <Image
-        position="absolute"
         width="100%"
         height="100%"
         src={band.photo?.scaledUri}

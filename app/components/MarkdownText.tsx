@@ -32,7 +32,7 @@ type Props = {
   markdown: MarkdownTextFragment;
 };
 
-export default function MarkDownWithOverrides(props: Props) {
+export default function MarkdownText(props: Props) {
   return (
     <Markdown
       options={{
@@ -67,24 +67,25 @@ export default function MarkDownWithOverrides(props: Props) {
             const img = props.markdown.images.find(
               (image) => image.uri === imgProps.src,
             );
-            const maxH = 500;
 
+            if (!img) {
+              return null;
+            }
             return (
               <Gallery>
                 <Image
-                  maxH={maxH}
                   mt="3"
                   mb="3"
                   ml="auto"
                   mr="auto"
                   bgColor="white"
-                  originalHeight={img?.height}
-                  originalWidth={img?.width}
-                  src={img?.small}
-                  original={img?.large}
-                  caption={
-                    img?.copyright ? `Foto: ${img?.copyright}` : undefined
-                  }
+                  originalHeight={img.height}
+                  originalWidth={img.width}
+                  htmlHeight={500}
+                  htmlWidth={(img.width / img.height) * 500}
+                  src={img.small}
+                  original={img.large}
+                  caption={img.copyright ? `Foto: ${img.copyright}` : undefined}
                 />
               </Gallery>
             );

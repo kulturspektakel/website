@@ -11,47 +11,37 @@ export default function Image({
   cropped,
   ...props
 }: ImageProps & {
+  original: string;
   originalWidth?: number;
   originalHeight?: number;
 } & Omit<ItemProps<HTMLDivElement>, 'width' | 'height' | 'children'>) {
-  if (original != null) {
-    return (
-      <Item
-        original={original}
-        thumbnail={props.src}
-        width={originalWidth}
-        height={originalHeight}
-        caption={props.caption ?? props.alt}
-        cropped={cropped}
-      >
-        {({ref, open}) => (
-          <Card
-            {...props}
-            aria-label="Bild vergrößern"
-            role="button"
-            aria-haspopup="dialog"
-            onClick={open}
-            aspectRatio={
-              props.aspectRatio == null && originalWidth && originalHeight
-                ? originalWidth / originalHeight
-                : undefined
-            }
-            as={ChakraImage}
-            title={props.caption}
-            // @ts-ignore
-            loading="lazy"
-            ref={ref}
-          />
-        )}
-      </Item>
-    );
-  }
   return (
-    <Card
-      {...props}
-      as={ChakraImage}
-      // @ts-ignore
-      loading="lazy"
-    />
+    <Item
+      original={original}
+      thumbnail={props.src}
+      width={originalWidth}
+      height={originalHeight}
+      caption={props.caption ?? props.alt}
+      cropped={cropped}
+    >
+      {({ref, open}) => (
+        <Card
+          {...props}
+          aria-label="Bild vergrößern"
+          role="button"
+          aria-haspopup="dialog"
+          onClick={open}
+          aspectRatio={
+            props.aspectRatio == null && originalWidth && originalHeight
+              ? originalWidth / originalHeight
+              : undefined
+          }
+          as={ChakraImage}
+          title={props.caption}
+          ref={ref}
+          loading="lazy"
+        />
+      )}
+    </Item>
   );
 }
