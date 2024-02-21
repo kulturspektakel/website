@@ -81,8 +81,7 @@ export default function MarkdownText(props: Props) {
                   bgColor="white"
                   originalHeight={img.height}
                   originalWidth={img.width}
-                  htmlHeight={500}
-                  htmlWidth={(img.width / img.height) * 500}
+                  maxH={500}
                   src={img.small}
                   original={img.large}
                   caption={img.copyright ? `Foto: ${img.copyright}` : undefined}

@@ -219,6 +219,7 @@ export type CardTransaction = Transaction & {
   clientId: Scalars['String']['output'];
   depositAfter: Scalars['Int']['output'];
   depositBefore: Scalars['Int']['output'];
+  deviceTime: Scalars['DateTime']['output'];
   transactionType: CardTransactionType;
 };
 
@@ -2420,8 +2421,7 @@ export const DistanceDocument = gql`
  * });
  */
 export function useDistanceQuery(
-  baseOptions: Apollo.QueryHookOptions<DistanceQuery, DistanceQueryVariables> &
-    ({variables: DistanceQueryVariables; skip?: boolean} | {skip: boolean}),
+  baseOptions: Apollo.QueryHookOptions<DistanceQuery, DistanceQueryVariables>,
 ) {
   const options = {...defaultOptions, ...baseOptions};
   return Apollo.useQuery<DistanceQuery, DistanceQueryVariables>(
@@ -2494,11 +2494,7 @@ export function useDuplicateApplicationWarningQuery(
   baseOptions: Apollo.QueryHookOptions<
     DuplicateApplicationWarningQuery,
     DuplicateApplicationWarningQueryVariables
-  > &
-    (
-      | {variables: DuplicateApplicationWarningQueryVariables; skip?: boolean}
-      | {skip: boolean}
-    ),
+  >,
 ) {
   const options = {...defaultOptions, ...baseOptions};
   return Apollo.useQuery<
@@ -2575,11 +2571,7 @@ export function useSpotifyArtistSearchQuery(
   baseOptions: Apollo.QueryHookOptions<
     SpotifyArtistSearchQuery,
     SpotifyArtistSearchQueryVariables
-  > &
-    (
-      | {variables: SpotifyArtistSearchQueryVariables; skip?: boolean}
-      | {skip: boolean}
-    ),
+  >,
 ) {
   const options = {...defaultOptions, ...baseOptions};
   return Apollo.useQuery<
@@ -2658,8 +2650,7 @@ export function useMorePhotosQuery(
   baseOptions: Apollo.QueryHookOptions<
     MorePhotosQuery,
     MorePhotosQueryVariables
-  > &
-    ({variables: MorePhotosQueryVariables; skip?: boolean} | {skip: boolean}),
+  >,
 ) {
   const options = {...defaultOptions, ...baseOptions};
   return Apollo.useQuery<MorePhotosQuery, MorePhotosQueryVariables>(
@@ -2734,8 +2725,7 @@ export function useBandSearchQuery(
   baseOptions: Apollo.QueryHookOptions<
     BandSearchQuery,
     BandSearchQueryVariables
-  > &
-    ({variables: BandSearchQueryVariables; skip?: boolean} | {skip: boolean}),
+  >,
 ) {
   const options = {...defaultOptions, ...baseOptions};
   return Apollo.useQuery<BandSearchQuery, BandSearchQueryVariables>(
@@ -2867,8 +2857,7 @@ export const PageDocument = gql`
  * });
  */
 export function usePageQuery(
-  baseOptions: Apollo.QueryHookOptions<PageQuery, PageQueryVariables> &
-    ({variables: PageQueryVariables; skip?: boolean} | {skip: boolean}),
+  baseOptions: Apollo.QueryHookOptions<PageQuery, PageQueryVariables>,
 ) {
   const options = {...defaultOptions, ...baseOptions};
   return Apollo.useQuery<PageQuery, PageQueryVariables>(PageDocument, options);
@@ -3138,8 +3127,7 @@ export function useSingleEventQuery(
   baseOptions: Apollo.QueryHookOptions<
     SingleEventQuery,
     SingleEventQueryVariables
-  > &
-    ({variables: SingleEventQueryVariables; skip?: boolean} | {skip: boolean}),
+  >,
 ) {
   const options = {...defaultOptions, ...baseOptions};
   return Apollo.useQuery<SingleEventQuery, SingleEventQueryVariables>(
@@ -3405,8 +3393,7 @@ export function useLineupBandQuery(
   baseOptions: Apollo.QueryHookOptions<
     LineupBandQuery,
     LineupBandQueryVariables
-  > &
-    ({variables: LineupBandQueryVariables; skip?: boolean} | {skip: boolean}),
+  >,
 ) {
   const options = {...defaultOptions, ...baseOptions};
   return Apollo.useQuery<LineupBandQuery, LineupBandQueryVariables>(
@@ -3580,8 +3567,7 @@ export const LineupDocument = gql`
  * });
  */
 export function useLineupQuery(
-  baseOptions: Apollo.QueryHookOptions<LineupQuery, LineupQueryVariables> &
-    ({variables: LineupQueryVariables; skip?: boolean} | {skip: boolean}),
+  baseOptions: Apollo.QueryHookOptions<LineupQuery, LineupQueryVariables>,
 ) {
   const options = {...defaultOptions, ...baseOptions};
   return Apollo.useQuery<LineupQuery, LineupQueryVariables>(
@@ -3797,8 +3783,7 @@ export const NewsPageDocument = gql`
  * });
  */
 export function useNewsPageQuery(
-  baseOptions: Apollo.QueryHookOptions<NewsPageQuery, NewsPageQueryVariables> &
-    ({variables: NewsPageQueryVariables; skip?: boolean} | {skip: boolean}),
+  baseOptions: Apollo.QueryHookOptions<NewsPageQuery, NewsPageQueryVariables>,
 ) {
   const options = {...defaultOptions, ...baseOptions};
   return Apollo.useQuery<NewsPageQuery, NewsPageQueryVariables>(

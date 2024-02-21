@@ -9,8 +9,11 @@ export default function Image({
   originalWidth,
   originalHeight,
   cropped,
+  maxH,
   ...props
 }: ImageProps & {
+  maxH?: number;
+  maxHeight?: never;
   original: string;
   originalWidth?: number;
   originalHeight?: number;
@@ -31,8 +34,16 @@ export default function Image({
           role="button"
           aria-haspopup="dialog"
           onClick={open}
+          htmlHeight={maxH}
+          htmlWidth={
+            maxH != null && originalWidth != null && originalHeight != null
+              ? (originalWidth / originalHeight) * maxH
+              : undefined
+          }
           aspectRatio={
-            props.aspectRatio == null && originalWidth && originalHeight
+            props.aspectRatio == null &&
+            originalWidth != null &&
+            originalHeight != null
               ? originalWidth / originalHeight
               : undefined
           }

@@ -23,7 +23,11 @@ import {
 import mergeMeta from '~/utils/mergeMeta';
 import type {LoaderFunctionArgs} from '@remix-run/node';
 import {$params, $path} from 'remix-routes';
-import {typedjson, useTypedLoaderData} from 'remix-typedjson';
+import {
+  UseDataFunctionReturn,
+  typedjson,
+  useTypedLoaderData,
+} from 'remix-typedjson';
 import apolloClient from '~/utils/apolloClient';
 import Image from '~/components/Image';
 import {Gallery} from 'react-photoswipe-gallery';
@@ -128,26 +132,13 @@ export const meta = mergeMeta<typeof loader>(({data, params}) => [
 export default function LineupBand() {
   const band = useTypedLoaderData<typeof loader>();
 
-  const bandPhoto = band.photo ? (
-    <Gallery withCaption>
-      <Image
-        src={band.photo.scaledUri}
-        alt={band.name}
-        maxHeight="100%"
-        m="auto"
-        caption={
-          band.photo.copyright ? `Foto: ${band.photo.copyright}` : undefined
-        }
-        originalHeight={band.photo.height}
-        originalWidth={band.photo.width}
-        original={band.photo.large}
-      />
-    </Gallery>
-  ) : undefined;
-
   return (
     <SimpleGrid columns={[1, 1, band.photo ? 2 : 1]} spacing="5" mt="8">
-      {bandPhoto && <Box display={['none', 'none', 'block']}>{bandPhoto}</Box>}
+      {band.photo && (
+        <Box display={['none', 'none', 'block']}>
+          <BandPhoto band={band} />
+        </Box>
+      )}
       <VStack spacing="4" align="start">
         <VStack spacing="1" align="start" mt="3">
           <Text>
@@ -175,13 +166,12 @@ export default function LineupBand() {
         </VStack>
         {band.photo && (
           <Box
-            maxHeight={band.photo.height > band.photo.width ? 300 : undefined}
             display={['block', 'block', 'none']}
             textAlign="center"
             mb="4"
             w="100%"
           >
-            {bandPhoto}
+            <BandPhoto maxH={300} band={band} />
           </Box>
         )}
         {(band.spotify ||
@@ -230,5 +220,33 @@ export default function LineupBand() {
         <Text>{band.shortDescription ?? band.description}</Text>
       </VStack>
     </SimpleGrid>
+  );
+}
+
+function BandPhoto({
+  band,
+  maxH,
+}: {
+  maxH?: number;
+  band: UseDataFunctionReturn<typeof loader>;
+}) {
+  if (!band.photo) {
+    return null;
+  }
+  return (
+    <Gallery withCaption>
+      <Image
+        src={band.photo.scaledUri}
+        alt={band.name}
+        m="auto"
+        caption={
+          band.photo.copyright ? `Foto: ${band.photo.copyright}` : undefined
+        }
+        maxH={maxH}
+        originalHeight={band.photo.height}
+        originalWidth={band.photo.width}
+        original={band.photo.large}
+      />
+    </Gallery>
   );
 }
