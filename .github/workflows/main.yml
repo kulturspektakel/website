@@ -22,7 +22,7 @@ jobs:
         run: |
           yarn remix build --sourcemap
           yarn sentry-cli releases new ${{ github.sha }} --org ${{ secrets.SENTRY_ORG }} --project ${{ secrets.SENTRY_PROJECT }}
-          yarn sentry-upload-sourcemaps --org ${{ secrets.SENTRY_ORG }} --project ${{ secrets.SENTRY_PROJECT }} --release ${{ github.sha }}
+          yarn sentry-upload-sourcemaps --org ${{ secrets.SENTRY_ORG }} --project ${{ secrets.SENTRY_PROJECT }} --release ${{ github.sha }} --strip-prefix ${{ github.workspace }}
           yarn sentry-cli releases finalize ${{ github.sha }}
       - name: deploy
         run: yarn vercel --prod --token=${{ secrets.VERCEL_TOKEN }}
