@@ -17,17 +17,12 @@ jobs:
       - name: install
         run: yarn
       - name: upload sourcemaps
-        run: |
-          yarn remix build --sourcemap
-      - name: Create Sentry release
-        uses: getsentry/action-release@v1
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
-        with:
-          environment: production
-          sourcemaps: ./public/build ./build
-          strip_common_prefix: true
+        run: |
+          yarn remix build --sourcemap
+          yarn sentry-cli releases new ${{ github.sha }} --org ${{ secrets.SENTRY_ORG }} --project ${{ secrets.SENTRY_PROJECT }}
+          yarn sentry-upload-sourcemaps --org ${{ secrets.SENTRY_ORG }} --project ${{ secrets.SENTRY_PROJECT }} --release ${{ github.sha }}
+          yarn sentry-cli releases finalize ${{ github.sha }}
       - name: deploy
         run: yarn vercel --prod --token=${{ secrets.VERCEL_TOKEN }}
