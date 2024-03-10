@@ -27,6 +27,6 @@ jobs:
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
         with:
           environment: production
-          sourcemaps: ./build
+          sourcemaps: ./public/build
       - name: deploy
         run: yarn vercel --prod --token=${{ secrets.VERCEL_TOKEN }}
