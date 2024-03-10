@@ -22,7 +22,7 @@ jobs:
           SENTRY_ORG:
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
         run: |
-          yarn vercel build
+          yarn vercel build --prod
           yarn sentry-cli releases new $GITHUB_SHA
           yarn sentry-upload-sourcemaps --release $GITHUB_SHA --buildPath .vercel/output/static --project $SENTRY_PROJECT --org $SENTRY_ORG
           find .vercel/output/static/build -type f -name '*.map' -delete
