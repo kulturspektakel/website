@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "build": "remix build",
+    "build": "remix build --sourcemap",
     "dev": "concurrently \"remix dev\" \"yarn graphql\" \"yarn routes\"",
     "start": "remix-serve build",
     "typecheck": "tsc",

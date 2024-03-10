@@ -7,9 +7,11 @@ import {getDataFromTree} from '@apollo/client/react/ssr';
 import {createSitemapGenerator} from 'remix-sitemap';
 
 export function handleError(error: any, {request}: LoaderFunctionArgs) {
-  if (error instanceof Error) {
-    Sentry.captureRemixServerException(error, 'remix.server', request);
-  }
+  Sentry.captureRemixServerException(
+    error in error ? error.error : error,
+    'remix.server',
+    request,
+  );
 }
 
 const {isSitemapUrl, sitemap} = createSitemapGenerator({
@@ -20,7 +22,7 @@ const {isSitemapUrl, sitemap} = createSitemapGenerator({
 Sentry.init({
   dsn: 'https://0a051473668a7010ad81176d2918a88f@o489311.ingest.sentry.io/4506423472422912',
   tracesSampleRate: 1,
-  environment: process.env.NODE_ENV ?? 'development',
+  ignoreErrors: ['Non-Error exception captured'],
 });
 
 export default async function handleRequest(
