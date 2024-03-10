@@ -25,6 +25,6 @@ jobs:
           yarn vercel build --prod
           yarn sentry-cli releases new $GITHUB_SHA
           yarn sentry-cli sourcemaps inject .vercel/output
-          yarn sentry-upload-sourcemaps --release $GITHUB_SHA --buildPath .vercel/output/static --project $SENTRY_PROJECT --org $SENTRY_ORG
+          yarn sentry-cli sourcemaps upload .vercel/output --release $GITHUB_SHA --project $SENTRY_PROJECT --org $SENTRY_ORG
           yarn vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
           yarn sentry-cli releases finalize $GITHUB_SHA
