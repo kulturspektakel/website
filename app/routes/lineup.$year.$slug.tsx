@@ -23,11 +23,8 @@ import {
 import mergeMeta from '~/utils/mergeMeta';
 import type {LoaderFunctionArgs} from '@remix-run/node';
 import {$params, $path} from 'remix-routes';
-import {
-  UseDataFunctionReturn,
-  typedjson,
-  useTypedLoaderData,
-} from 'remix-typedjson';
+import type {UseDataFunctionReturn} from 'remix-typedjson';
+import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import apolloClient from '~/utils/apolloClient';
 import Image from '~/components/Image';
 import {Gallery} from 'react-photoswipe-gallery';
@@ -107,7 +104,10 @@ export async function loader(args: LoaderFunctionArgs) {
   if (data.node?.__typename === 'BandPlaying') {
     return typedjson(data.node);
   }
-  throw new Error('Not Found');
+  throw new Response(null, {
+    status: 404,
+    statusText: 'Not Found',
+  });
 }
 
 export const meta = mergeMeta<typeof loader>(({data, params}) => [
