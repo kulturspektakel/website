@@ -2223,6 +2223,53 @@
         "possibleTypes": null
       },
       {
+        "kind": "ENUM",
+        "name": "DirectusPixelImageFormat",
+        "description": null,
+        "fields": null,
+        "inputFields": null,
+        "interfaces": null,
+        "enumValues": [
+          {
+            "name": "auto",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "jpg",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "original",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "png",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "tiff",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "webp",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "possibleTypes": null
+      },
+      {
         "kind": "OBJECT",
         "name": "Event",
         "description": null,
@@ -4376,6 +4423,18 @@
             "name": "scaledUri",
             "description": null,
             "args": [
+              {
+                "name": "format",
+                "description": null,
+                "type": {
+                  "kind": "ENUM",
+                  "name": "DirectusPixelImageFormat",
+                  "ofType": null
+                },
+                "defaultValue": "auto",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
               {
                 "name": "height",
                 "description": null,

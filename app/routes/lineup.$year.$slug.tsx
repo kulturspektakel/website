@@ -31,32 +31,30 @@ import {Gallery} from 'react-photoswipe-gallery';
 import type {SitemapFunction} from 'remix-sitemap';
 
 gql`
-  query LineupBand($id: ID!) {
-    node(id: $id) {
-      ... on BandPlaying {
-        name
-        shortDescription
-        description
-        photo {
-          scaledUri(width: 600)
-          large: scaledUri(width: 1200)
-          width
-          height
-          copyright
-        }
-        startTime
-        area {
-          id
-          displayName
-          themeColor
-        }
-        genre
-        spotify
-        youtube
-        website
-        instagram
-        facebook
+  query LineupBand($eventId: ID!, $slug: String!) {
+    bandPlaying(eventId: $eventId, slug: $slug) {
+      name
+      shortDescription
+      description
+      photo {
+        scaledUri(width: 600)
+        large: scaledUri(width: 1200)
+        width
+        height
+        copyright
       }
+      startTime
+      area {
+        id
+        displayName
+        themeColor
+      }
+      genre
+      spotify
+      youtube
+      website
+      instagram
+      facebook
     }
   }
 `;
@@ -86,7 +84,7 @@ export const sitemap: SitemapFunction = async () => {
     event.bandsPlaying.edges.map(({node: band}) => ({
       loc: $path('/lineup/:year/:slug', {
         year: event.id.replace('Event:kult', ''),
-        slug: band.slug.split('/').pop()!,
+        slug: band.slug,
       }),
     })),
   );
@@ -97,12 +95,12 @@ export async function loader(args: LoaderFunctionArgs) {
   const {data} = await apolloClient.query<LineupBandQuery>({
     query: LineupBandDocument,
     variables: {
-      id: `BandPlaying:lineup/${year}/${slug}`,
+      eventId: `Event:kult${year}`,
+      slug,
     },
   });
-
-  if (data.node?.__typename === 'BandPlaying') {
-    return typedjson(data.node);
+  if (data.bandPlaying) {
+    return typedjson(data.bandPlaying);
   }
   throw new Response(null, {
     status: 404,

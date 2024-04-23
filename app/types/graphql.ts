@@ -309,6 +309,15 @@ export enum DeviceType {
   Ipad = 'IPAD',
 }
 
+export enum DirectusPixelImageFormat {
+  Auto = 'auto',
+  Jpg = 'jpg',
+  Original = 'original',
+  Png = 'png',
+  Tiff = 'tiff',
+  Webp = 'webp',
+}
+
 export type Event = Node & {
   __typename?: 'Event';
   bandApplication: Array<BandApplication>;
@@ -616,6 +625,7 @@ export type PixelImage = Asset & {
 };
 
 export type PixelImageScaledUriArgs = {
+  format?: InputMaybe<DirectusPixelImageFormat>;
   height?: InputMaybe<Scalars['Int']['input']>;
   width?: InputMaybe<Scalars['Int']['input']>;
 };
@@ -1945,52 +1955,39 @@ export type InfosQuery = {
 };
 
 export type LineupBandQueryVariables = Exact<{
-  id: Scalars['ID']['input'];
+  eventId: Scalars['ID']['input'];
+  slug: Scalars['String']['input'];
 }>;
 
 export type LineupBandQuery = {
   __typename?: 'Query';
-  node?:
-    | {__typename?: 'Area'}
-    | {__typename?: 'BandApplication'}
-    | {__typename?: 'BandApplicationComment'}
-    | {
-        __typename?: 'BandPlaying';
-        name: string;
-        shortDescription?: string | null;
-        description?: string | null;
-        startTime: Date;
-        genre?: string | null;
-        spotify?: string | null;
-        youtube?: string | null;
-        website?: string | null;
-        instagram?: string | null;
-        facebook?: string | null;
-        photo?: {
-          __typename?: 'PixelImage';
-          scaledUri: string;
-          width: number;
-          height: number;
-          copyright?: string | null;
-          large: string;
-        } | null;
-        area: {
-          __typename?: 'Area';
-          id: string;
-          displayName: string;
-          themeColor: string;
-        };
-      }
-    | {__typename?: 'Card'}
-    | {__typename?: 'Device'}
-    | {__typename?: 'Event'}
-    | {__typename?: 'News'}
-    | {__typename?: 'NuclinoPage'}
-    | {__typename?: 'Page'}
-    | {__typename?: 'Product'}
-    | {__typename?: 'ProductList'}
-    | {__typename?: 'Viewer'}
-    | null;
+  bandPlaying?: {
+    __typename?: 'BandPlaying';
+    name: string;
+    shortDescription?: string | null;
+    description?: string | null;
+    startTime: Date;
+    genre?: string | null;
+    spotify?: string | null;
+    youtube?: string | null;
+    website?: string | null;
+    instagram?: string | null;
+    facebook?: string | null;
+    photo?: {
+      __typename?: 'PixelImage';
+      scaledUri: string;
+      width: number;
+      height: number;
+      copyright?: string | null;
+      large: string;
+    } | null;
+    area: {
+      __typename?: 'Area';
+      id: string;
+      displayName: string;
+      themeColor: string;
+    };
+  } | null;
 };
 
 export type LineupBandSitemapQueryVariables = Exact<{[key: string]: never}>;
@@ -3356,32 +3353,30 @@ export type InfosQueryResult = Apollo.QueryResult<
   InfosQueryVariables
 >;
 export const LineupBandDocument = gql`
-  query LineupBand($id: ID!) {
-    node(id: $id) {
-      ... on BandPlaying {
-        name
-        shortDescription
-        description
-        photo {
-          scaledUri(width: 600)
-          large: scaledUri(width: 1200)
-          width
-          height
-          copyright
-        }
-        startTime
-        area {
-          id
-          displayName
-          themeColor
-        }
-        genre
-        spotify
-        youtube
-        website
-        instagram
-        facebook
+  query LineupBand($eventId: ID!, $slug: String!) {
+    bandPlaying(eventId: $eventId, slug: $slug) {
+      name
+      shortDescription
+      description
+      photo {
+        scaledUri(width: 600)
+        large: scaledUri(width: 1200)
+        width
+        height
+        copyright
       }
+      startTime
+      area {
+        id
+        displayName
+        themeColor
+      }
+      genre
+      spotify
+      youtube
+      website
+      instagram
+      facebook
     }
   }
 `;
@@ -3398,7 +3393,8 @@ export const LineupBandDocument = gql`
  * @example
  * const { data, loading, error } = useLineupBandQuery({
  *   variables: {
- *      id: // value for 'id'
+ *      eventId: // value for 'eventId'
+ *      slug: // value for 'slug'
  *   },
  * });
  */
