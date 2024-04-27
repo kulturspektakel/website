@@ -2080,6 +2080,19 @@ export type LineupSitemapQuery = {
   };
 };
 
+export type LineupIndexQueryVariables = Exact<{[key: string]: never}>;
+
+export type LineupIndexQuery = {
+  __typename?: 'Query';
+  eventsConnection: {
+    __typename?: 'QueryEventsConnection';
+    edges: Array<{
+      __typename?: 'QueryEventsConnectionEdge';
+      node: {__typename?: 'Event'; start: Date};
+    }>;
+  };
+};
+
 export type LineupsQueryVariables = Exact<{[key: string]: never}>;
 
 export type LineupsQuery = {
@@ -3691,6 +3704,80 @@ export type LineupSitemapSuspenseQueryHookResult = ReturnType<
 export type LineupSitemapQueryResult = Apollo.QueryResult<
   LineupSitemapQuery,
   LineupSitemapQueryVariables
+>;
+export const LineupIndexDocument = gql`
+  query LineupIndex {
+    eventsConnection(first: 1, hasBandsPlaying: true, type: Kulturspektakel) {
+      edges {
+        node {
+          start
+        }
+      }
+    }
+  }
+`;
+
+/**
+ * __useLineupIndexQuery__
+ *
+ * To run a query within a React component, call `useLineupIndexQuery` and pass it any options that fit your needs.
+ * When your component renders, `useLineupIndexQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useLineupIndexQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useLineupIndexQuery(
+  baseOptions?: Apollo.QueryHookOptions<
+    LineupIndexQuery,
+    LineupIndexQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useQuery<LineupIndexQuery, LineupIndexQueryVariables>(
+    LineupIndexDocument,
+    options,
+  );
+}
+export function useLineupIndexLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    LineupIndexQuery,
+    LineupIndexQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useLazyQuery<LineupIndexQuery, LineupIndexQueryVariables>(
+    LineupIndexDocument,
+    options,
+  );
+}
+export function useLineupIndexSuspenseQuery(
+  baseOptions?: Apollo.SuspenseQueryHookOptions<
+    LineupIndexQuery,
+    LineupIndexQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useSuspenseQuery<LineupIndexQuery, LineupIndexQueryVariables>(
+    LineupIndexDocument,
+    options,
+  );
+}
+export type LineupIndexQueryHookResult = ReturnType<typeof useLineupIndexQuery>;
+export type LineupIndexLazyQueryHookResult = ReturnType<
+  typeof useLineupIndexLazyQuery
+>;
+export type LineupIndexSuspenseQueryHookResult = ReturnType<
+  typeof useLineupIndexSuspenseQuery
+>;
+export type LineupIndexQueryResult = Apollo.QueryResult<
+  LineupIndexQuery,
+  LineupIndexQueryVariables
 >;
 export const LineupsDocument = gql`
   query Lineups {
