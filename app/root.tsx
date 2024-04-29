@@ -82,10 +82,6 @@ export const meta: MetaFunction<typeof loader> = (props) => {
       content: description,
     },
     {
-      property: 'og:image',
-      content: `https://kulturspektakel.de${logo}`,
-    },
-    {
       name: 'theme-color',
       content: theme.colors.offwhite[100],
     },
