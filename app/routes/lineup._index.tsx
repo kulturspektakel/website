@@ -4,6 +4,7 @@ import {$path} from 'remix-routes';
 import {redirect} from 'remix-typedjson';
 import type {LineupIndexQuery} from '~/types/graphql';
 import apolloClient from '~/utils/apolloClient';
+import type {SitemapFunction} from 'remix-sitemap';
 
 export async function loader(args: LoaderFunctionArgs) {
   const {data} = await apolloClient.query<LineupIndexQuery>({
@@ -29,3 +30,7 @@ export async function loader(args: LoaderFunctionArgs) {
     }),
   );
 }
+
+export const sitemap: SitemapFunction = () => ({
+  exclude: true,
+});
