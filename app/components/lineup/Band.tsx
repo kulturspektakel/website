@@ -1,9 +1,9 @@
-import {Heading, Text, Box, Image} from '@chakra-ui/react';
+import { Heading, Text, Box, Image } from '@chakra-ui/react';
 import DateString from '~/components//DateString';
-import {gql} from '@apollo/client';
-import type {BandFragment} from '~/types/graphql';
+import { gql } from '@apollo/client';
+import type { BandFragment } from '~/types/graphql';
 import Card from '~/components/Card';
-import {$path} from 'remix-routes';
+import { $path } from 'remix-routes';
 
 gql`
   fragment Band on BandPlaying {
@@ -23,7 +23,7 @@ gql`
   }
 `;
 
-export default function Band({band}: {band: BandFragment}) {
+export default function Band({ band }: { band: BandFragment }) {
   return (
     <Card
       aspectRatio={1}
@@ -54,7 +54,7 @@ export default function Band({band}: {band: BandFragment}) {
         borderRadius="md"
       >
         <Heading
-          sx={{hyphens: 'auto'}}
+          sx={{ hyphens: 'auto' }}
           fontSize={['md', 'lg', '2xl']}
           noOfLines={4}
           color="inherit"
@@ -62,26 +62,26 @@ export default function Band({band}: {band: BandFragment}) {
         >
           {band.name}
         </Heading>
-        {band.genre && (
-          <Text
-            noOfLines={2}
-            lineHeight="1.1"
-            fontWeight="bold"
-            fontSize={['xs', 'sm']}
-            mt="0.5"
-          >
-            <DateString
-              timeOnly
-              date={band.startTime}
-              options={{
-                hour: '2-digit',
-                minute: '2-digit',
-              }}
-            />
-            &nbsp;
-            {band.area.displayName}&nbsp;&middot; {band.genre}
-          </Text>
-        )}
+
+        <Text
+          noOfLines={2}
+          lineHeight="1.1"
+          fontWeight="bold"
+          fontSize={['xs', 'sm']}
+          mt="0.5"
+        >
+          <DateString
+            timeOnly
+            date={band.startTime}
+            options={{
+              hour: '2-digit',
+              minute: '2-digit',
+            }}
+          />
+          &nbsp;
+          {band.area.displayName} {band.genre && " · " + band.genre}
+        </Text>
+
       </Box>
     </Card>
   );
