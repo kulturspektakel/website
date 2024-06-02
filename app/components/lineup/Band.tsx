@@ -1,9 +1,9 @@
-import { Heading, Text, Box, Image } from '@chakra-ui/react';
+import {Heading, Text, Box, Image} from '@chakra-ui/react';
 import DateString from '~/components//DateString';
-import { gql } from '@apollo/client';
-import type { BandFragment } from '~/types/graphql';
+import {gql} from '@apollo/client';
+import type {BandFragment} from '~/types/graphql';
 import Card from '~/components/Card';
-import { $path } from 'remix-routes';
+import {$path} from 'remix-routes';
 
 gql`
   fragment Band on BandPlaying {
@@ -23,7 +23,7 @@ gql`
   }
 `;
 
-export default function Band({ band }: { band: BandFragment }) {
+export default function Band({band}: {band: BandFragment}) {
   return (
     <Card
       aspectRatio={1}
@@ -54,7 +54,7 @@ export default function Band({ band }: { band: BandFragment }) {
         borderRadius="md"
       >
         <Heading
-          sx={{ hyphens: 'auto' }}
+          sx={{hyphens: 'auto'}}
           fontSize={['md', 'lg', '2xl']}
           noOfLines={4}
           color="inherit"
@@ -79,9 +79,9 @@ export default function Band({ band }: { band: BandFragment }) {
             }}
           />
           &nbsp;
-          {band.area.displayName} {band.genre && " · " + band.genre}
+          {band.area.displayName}
+          {band.genre && <>&nbsp;&middot;&nbsp;{band.genre}</>}
         </Text>
-
       </Box>
     </Card>
   );

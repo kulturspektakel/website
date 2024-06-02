@@ -159,7 +159,8 @@ export default function LineupBand() {
               }}
               date={band.startTime}
             />
-            &nbsp;Uhr {band.genre && " · " + band.genre}
+            &nbsp;Uhr
+            {band.genre && <>&nbsp;&middot;&nbsp;{band.genre}</>}
           </Text>
         </VStack>
         {band.photo && (
