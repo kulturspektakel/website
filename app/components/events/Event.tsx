@@ -84,6 +84,7 @@ export default function Event({event}: {event: EventDetailsFragment}) {
             maxW="500px"
             mx="auto"
             mt="3"
+            mb="3"
             transform="rotate(1deg)"
           >
             <Countdown
