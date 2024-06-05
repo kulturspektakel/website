@@ -23,6 +23,7 @@ Sentry.init({
   dsn: 'https://0a051473668a7010ad81176d2918a88f@o489311.ingest.sentry.io/4506423472422912',
   tracesSampleRate: 1,
   ignoreErrors: ['Non-Error exception captured'],
+  enabled: process.env.NODE_ENV === 'production',
 });
 
 export default async function handleRequest(
