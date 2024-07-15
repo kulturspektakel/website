@@ -9,8 +9,9 @@ import {
   Tooltip,
   UnorderedList,
   useBreakpointValue,
+  useDisclosure,
 } from '@chakra-ui/react';
-import type {FC} from 'react';
+import {type FC} from 'react';
 import type {
   ProductAdditives,
   ProductList,
@@ -53,11 +54,6 @@ export default function ProductList({
     (item) => item.requiresDeposit,
   );
   const productListLength = productList.product.length;
-  const tooltipPlacement = useBreakpointValue<PlacementWithLogical>({
-    base: 'top',
-    lg: 'right',
-    default: 'right',
-  });
 
   return (
     <>
@@ -67,15 +63,7 @@ export default function ProductList({
             <HStack justifyContent="space-between" py={1}>
               <Text>
                 {item.name}
-                {item.additives.length > 0 && (
-                  <Tooltip
-                    label={<TooltipContent additives={item.additives} />}
-                    hasArrow
-                    placement={tooltipPlacement!}
-                  >
-                    <InfoIcon color={'offwhite.300'} ml="1" mt="-1" />
-                  </Tooltip>
-                )}
+                <Info additives={item.additives} />
               </Text>
               <span>
                 {item.requiresDeposit && (
@@ -106,5 +94,36 @@ export default function ProductList({
         </>
       )}
     </>
+  );
+}
+
+function Info({additives}: {additives: ProductAdditives[]}) {
+  const {isOpen, onOpen, onToggle, onClose} = useDisclosure();
+  const tooltipPlacement = useBreakpointValue<PlacementWithLogical>({
+    base: 'top',
+    lg: 'right',
+    default: 'right',
+  });
+
+  if (additives.length === 0) {
+    return null;
+  }
+
+  return (
+    <Tooltip
+      label={<TooltipContent additives={additives} />}
+      hasArrow
+      placement={tooltipPlacement!}
+      isOpen={isOpen}
+    >
+      <InfoIcon
+        color={'offwhite.300'}
+        ml="1"
+        mt="-1"
+        onMouseEnter={onOpen}
+        onMouseLeave={onClose}
+        onClick={onToggle}
+      />
+    </Tooltip>
   );
 }

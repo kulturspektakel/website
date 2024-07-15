@@ -212,7 +212,7 @@ export type CardStatus = {
 
 export type CardTransaction = Transaction & {
   __typename?: 'CardTransaction';
-  Order: Array<Order>;
+  Order?: Maybe<Order>;
   balanceAfter: Scalars['Int']['output'];
   balanceBefore: Scalars['Int']['output'];
   cardId: Scalars['String']['output'];
