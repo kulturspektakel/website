@@ -1,29 +1,13 @@
-import * as Sentry from '@sentry/remix';
-import type {EntryContext, LoaderFunctionArgs} from '@remix-run/node';
+import type {EntryContext} from '@remix-run/node';
 import {RemixServer} from '@remix-run/react';
 import {renderToString} from 'react-dom/server';
 import apolloClient from './utils/apolloClient';
 import {getDataFromTree} from '@apollo/client/react/ssr';
 import {createSitemapGenerator} from 'remix-sitemap';
 
-export function handleError(error: any, {request}: LoaderFunctionArgs) {
-  Sentry.captureRemixServerException(
-    error in error ? error.error : error,
-    'remix.server',
-    request,
-  );
-}
-
 const {isSitemapUrl, sitemap} = createSitemapGenerator({
   siteUrl: 'https://www.kulturspektakel.de',
   generateRobotsTxt: true,
-});
-
-Sentry.init({
-  dsn: 'https://0a051473668a7010ad81176d2918a88f@o489311.ingest.sentry.io/4506423472422912',
-  tracesSampleRate: 1,
-  ignoreErrors: ['Non-Error exception captured'],
-  enabled: process.env.NODE_ENV === 'production',
 });
 
 export default async function handleRequest(

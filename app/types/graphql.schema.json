@@ -8,6 +8,7 @@
         "kind": "OBJECT",
         "name": "Area",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "bandsPlaying",
@@ -125,6 +126,7 @@
         "kind": "INTERFACE",
         "name": "Asset",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "copyright",
@@ -190,6 +192,7 @@
         "kind": "OBJECT",
         "name": "BandApplication",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "bandApplicationRating",
@@ -650,6 +653,7 @@
         "kind": "OBJECT",
         "name": "BandApplicationComment",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "comment",
@@ -709,6 +713,7 @@
         "kind": "INPUT_OBJECT",
         "name": "BandApplicationCommentInput",
         "description": null,
+        "isOneOf": false,
         "fields": null,
         "inputFields": [
           {
@@ -744,6 +749,7 @@
         "kind": "OBJECT",
         "name": "BandApplicationCommentsConnection",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "edges",
@@ -803,6 +809,7 @@
         "kind": "OBJECT",
         "name": "BandApplicationCommentsConnectionEdge",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "cursor",
@@ -842,6 +849,7 @@
         "kind": "OBJECT",
         "name": "BandApplicationRating",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "rating",
@@ -877,6 +885,7 @@
         "kind": "INPUT_OBJECT",
         "name": "BandApplicationUpdateInput",
         "description": null,
+        "isOneOf": false,
         "fields": null,
         "inputFields": [
           {
@@ -904,6 +913,7 @@
         "kind": "OBJECT",
         "name": "BandPlaying",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "area",
@@ -1091,6 +1101,7 @@
         "kind": "ENUM",
         "name": "BandRepertoireType",
         "description": null,
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -1126,6 +1137,7 @@
         "kind": "INTERFACE",
         "name": "Billable",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "salesNumbers",
@@ -1199,6 +1211,7 @@
         "kind": "OBJECT",
         "name": "Board",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "chair",
@@ -1294,6 +1307,7 @@
         "kind": "SCALAR",
         "name": "Boolean",
         "description": "The `Boolean` scalar type represents `true` or `false`.",
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -1304,6 +1318,7 @@
         "kind": "OBJECT",
         "name": "Card",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "id",
@@ -1383,6 +1398,7 @@
         "kind": "OBJECT",
         "name": "CardStatus",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "balance",
@@ -1458,6 +1474,7 @@
         "kind": "OBJECT",
         "name": "CardTransaction",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "Order",
@@ -1579,6 +1596,7 @@
         "kind": "OBJECT",
         "name": "CardTransactionConnection",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "balanceTotal",
@@ -1674,6 +1692,7 @@
         "kind": "ENUM",
         "name": "CardTransactionType",
         "description": null,
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -1703,6 +1722,7 @@
         "kind": "OBJECT",
         "name": "Config",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "board",
@@ -1738,6 +1758,7 @@
         "kind": "INPUT_OBJECT",
         "name": "CreateBandApplicationInput",
         "description": null,
+        "isOneOf": false,
         "fields": null,
         "inputFields": [
           {
@@ -1945,6 +1966,7 @@
         "kind": "SCALAR",
         "name": "Date",
         "description": "A date string, such as 2007-12-03, compliant with the `full-date` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.",
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -1955,6 +1977,7 @@
         "kind": "SCALAR",
         "name": "DateTime",
         "description": "A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.",
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -1965,6 +1988,7 @@
         "kind": "ENUM",
         "name": "DemoEmbedType",
         "description": null,
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -2030,6 +2054,7 @@
         "kind": "OBJECT",
         "name": "Device",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "id",
@@ -2191,6 +2216,7 @@
         "kind": "ENUM",
         "name": "DeviceType",
         "description": null,
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -2214,6 +2240,7 @@
         "kind": "ENUM",
         "name": "DirectusPixelImageFormat",
         "description": null,
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -2261,6 +2288,7 @@
         "kind": "OBJECT",
         "name": "Event",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "bandApplication",
@@ -2530,6 +2558,7 @@
         "kind": "OBJECT",
         "name": "EventBandsPlayingConnection",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "edges",
@@ -2589,6 +2618,7 @@
         "kind": "OBJECT",
         "name": "EventBandsPlayingConnectionEdge",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "cursor",
@@ -2628,6 +2658,7 @@
         "kind": "OBJECT",
         "name": "EventMediaConnection",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "edges",
@@ -2687,6 +2718,7 @@
         "kind": "OBJECT",
         "name": "EventMediaConnectionEdge",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "cursor",
@@ -2722,6 +2754,7 @@
         "kind": "ENUM",
         "name": "EventType",
         "description": null,
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -2751,6 +2784,7 @@
         "kind": "SCALAR",
         "name": "Float",
         "description": "The `Float` scalar type represents signed double-precision fractional values as specified by [IEEE 754](https://en.wikipedia.org/wiki/IEEE_floating_point).",
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -2761,6 +2795,7 @@
         "kind": "ENUM",
         "name": "GenreCategory",
         "description": null,
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -2832,6 +2867,7 @@
         "kind": "ENUM",
         "name": "HeardAboutBookingFrom",
         "description": null,
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -2879,6 +2915,7 @@
         "kind": "OBJECT",
         "name": "HistoricalProduct",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "name",
@@ -2973,6 +3010,7 @@
         "kind": "SCALAR",
         "name": "ID",
         "description": "The `ID` scalar type represents a unique identifier, often used to refetch an object or as key for a cache. The ID type appears in a JSON response as a String; however, it is not intended to be human-readable. When expected as an input type, any string (such as `\"4\"`) or integer (such as `4`) input value will be accepted as an ID.",
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -2983,6 +3021,7 @@
         "kind": "SCALAR",
         "name": "Int",
         "description": "The `Int` scalar type represents non-fractional signed whole numeric values. Int can represent values between -(2^31) and 2^31 - 1.",
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -2993,6 +3032,7 @@
         "kind": "OBJECT",
         "name": "MarkdownString",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "images",
@@ -3052,6 +3092,7 @@
         "kind": "OBJECT",
         "name": "MissingTransaction",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "balanceAfter",
@@ -3125,6 +3166,7 @@
         "kind": "OBJECT",
         "name": "Mutation",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "createBandApplication",
@@ -3595,6 +3637,7 @@
         "kind": "OBJECT",
         "name": "News",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "content",
@@ -3670,6 +3713,7 @@
         "kind": "INTERFACE",
         "name": "Node",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "id",
@@ -3707,6 +3751,7 @@
         "kind": "OBJECT",
         "name": "NuclinoPage",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "content",
@@ -3782,6 +3827,7 @@
         "kind": "OBJECT",
         "name": "NuclinoSearchResult",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "highlight",
@@ -3817,6 +3863,7 @@
         "kind": "OBJECT",
         "name": "NuclinoUser",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "email",
@@ -3876,6 +3923,7 @@
         "kind": "OBJECT",
         "name": "ObfuscatedBandApplication",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "applicationTime",
@@ -3911,6 +3959,7 @@
         "kind": "OBJECT",
         "name": "OpeningHour",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "endTime",
@@ -3946,6 +3995,7 @@
         "kind": "OBJECT",
         "name": "Order",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "createdAt",
@@ -4049,6 +4099,7 @@
         "kind": "OBJECT",
         "name": "OrderItem",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "amount",
@@ -4124,6 +4175,7 @@
         "kind": "INPUT_OBJECT",
         "name": "OrderItemInput",
         "description": null,
+        "isOneOf": false,
         "fields": null,
         "inputFields": [
           {
@@ -4187,6 +4239,7 @@
         "kind": "ENUM",
         "name": "OrderPayment",
         "description": null,
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -4240,6 +4293,7 @@
         "kind": "OBJECT",
         "name": "Page",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "bottom",
@@ -4323,6 +4377,7 @@
         "kind": "OBJECT",
         "name": "PageInfo",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "endCursor",
@@ -4374,6 +4429,7 @@
         "kind": "OBJECT",
         "name": "PixelImage",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "copyright",
@@ -4502,6 +4558,7 @@
         "kind": "ENUM",
         "name": "PreviouslyPlayed",
         "description": null,
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -4531,6 +4588,7 @@
         "kind": "OBJECT",
         "name": "Product",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "additives",
@@ -4686,6 +4744,7 @@
         "kind": "OBJECT",
         "name": "ProductAdditives",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "displayName",
@@ -4721,6 +4780,7 @@
         "kind": "INPUT_OBJECT",
         "name": "ProductInput",
         "description": null,
+        "isOneOf": false,
         "fields": null,
         "inputFields": [
           {
@@ -4788,6 +4848,7 @@
         "kind": "OBJECT",
         "name": "ProductList",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "active",
@@ -4959,6 +5020,7 @@
         "kind": "OBJECT",
         "name": "Query",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "areas",
@@ -5610,6 +5672,7 @@
         "kind": "OBJECT",
         "name": "QueryEventsConnection",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "edges",
@@ -5657,6 +5720,7 @@
         "kind": "OBJECT",
         "name": "QueryEventsConnectionEdge",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "cursor",
@@ -5692,6 +5756,7 @@
         "kind": "OBJECT",
         "name": "QueryNewsConnection",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "edges",
@@ -5751,6 +5816,7 @@
         "kind": "OBJECT",
         "name": "QueryNewsConnectionEdge",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "cursor",
@@ -5786,6 +5852,7 @@
         "kind": "OBJECT",
         "name": "SalesNumber",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "count",
@@ -5870,6 +5937,7 @@
         "kind": "OBJECT",
         "name": "SpotifyArtist",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "genre",
@@ -5921,6 +5989,7 @@
         "kind": "SCALAR",
         "name": "String",
         "description": "The `String` scalar type represents textual data, represented as UTF-8 character sequences. The String type is most often used by GraphQL to represent free-form human-readable text.",
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -5931,6 +6000,7 @@
         "kind": "ENUM",
         "name": "TimeGrouping",
         "description": null,
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -5954,6 +6024,7 @@
         "kind": "OBJECT",
         "name": "TimeSeries",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "time",
@@ -5989,6 +6060,7 @@
         "kind": "INTERFACE",
         "name": "Transaction",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "balanceAfter",
@@ -6051,6 +6123,7 @@
         "kind": "INTERFACE",
         "name": "Transactionable",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "transactions",
@@ -6119,6 +6192,7 @@
         "kind": "OBJECT",
         "name": "Transactions",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "transactions",
@@ -6185,6 +6259,7 @@
         "kind": "OBJECT",
         "name": "VEvent",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "allDay",
@@ -6280,6 +6355,7 @@
         "kind": "OBJECT",
         "name": "Viewer",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "displayName",
@@ -6335,6 +6411,7 @@
         "kind": "OBJECT",
         "name": "__Directive",
         "description": "A Directive provides a way to describe alternate runtime execution and type validation behavior in a GraphQL document.\n\nIn some cases, you need to provide options to alter GraphQL's execution behavior in ways field arguments will not suffice, such as conditionally including or skipping a field. Directives provide this by describing additional information to the executor.",
+        "isOneOf": null,
         "fields": [
           {
             "name": "name",
@@ -6435,6 +6512,7 @@
         "kind": "ENUM",
         "name": "__DirectiveLocation",
         "description": "A Directive can be adjacent to many parts of the GraphQL language, a __DirectiveLocation describes one such possible adjacencies.",
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -6560,6 +6638,7 @@
         "kind": "OBJECT",
         "name": "__EnumValue",
         "description": "One possible value for a given Enum. Enum values are unique values, not a placeholder for a string or numeric value. However an Enum value is returned in a JSON response as a string.",
+        "isOneOf": null,
         "fields": [
           {
             "name": "name",
@@ -6611,6 +6690,7 @@
         "kind": "OBJECT",
         "name": "__Field",
         "description": "Object and Interface types are described by a list of Fields, each of which has a name, potentially a list of arguments, and a return type.",
+        "isOneOf": null,
         "fields": [
           {
             "name": "name",
@@ -6707,6 +6787,7 @@
         "kind": "OBJECT",
         "name": "__InputValue",
         "description": "Arguments provided to Fields or Directives and the input fields of an InputObject are represented as Input Values which describe their type and optionally a default value.",
+        "isOneOf": null,
         "fields": [
           {
             "name": "name",
@@ -6778,6 +6859,7 @@
         "kind": "OBJECT",
         "name": "__Schema",
         "description": "A GraphQL Schema defines the capabilities of a GraphQL server. It exposes all available types and directives on the server, as well as the entry points for query, mutation, and subscription operations.",
+        "isOneOf": null,
         "fields": [
           {
             "name": "description",
@@ -6869,6 +6951,7 @@
         "kind": "OBJECT",
         "name": "__Type",
         "description": "The fundamental unit of any GraphQL Schema is the type. There are many kinds of types in GraphQL as represented by the `__TypeKind` enum.\n\nDepending on the kind of a type, certain fields describe information about that type. Scalar types provide no information beyond a name, description and optional `specifiedByURL`, while Enum types provide their values. Object and Interface types provide the fields they describe. Abstract types, Union and Interface, provide the Object types possible at runtime. List and NonNull types compose other types.",
+        "isOneOf": null,
         "fields": [
           {
             "name": "kind",
@@ -7028,6 +7111,14 @@
             "type": {"kind": "OBJECT", "name": "__Type", "ofType": null},
             "isDeprecated": false,
             "deprecationReason": null
+          },
+          {
+            "name": "isOneOf",
+            "description": null,
+            "args": [],
+            "type": {"kind": "SCALAR", "name": "Boolean", "ofType": null},
+            "isDeprecated": false,
+            "deprecationReason": null
           }
         ],
         "inputFields": null,
@@ -7039,6 +7130,7 @@
         "kind": "ENUM",
         "name": "__TypeKind",
         "description": "An enum describing what kind of type a given `__Type` is.",
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
