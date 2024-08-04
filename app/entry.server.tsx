@@ -4,11 +4,21 @@ import {renderToString} from 'react-dom/server';
 import apolloClient from './utils/apolloClient';
 import {getDataFromTree} from '@apollo/client/react/ssr';
 import {createSitemapGenerator} from 'remix-sitemap';
+import * as Sentry from '@sentry/remix';
 
 const {isSitemapUrl, sitemap} = createSitemapGenerator({
   siteUrl: 'https://www.kulturspektakel.de',
   generateRobotsTxt: true,
 });
+
+Sentry.init({
+  dsn: 'https://0a051473668a7010ad81176d2918a88f@o489311.ingest.us.sentry.io/4506423472422912',
+  tracesSampleRate: 1,
+  ignoreErrors: ['Non-Error exception captured'],
+  enabled: process.env.NODE_ENV === 'production',
+});
+
+export const handleError = Sentry.sentryHandleError;
 
 export default async function handleRequest(
   request: Request,
