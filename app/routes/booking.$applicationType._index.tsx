@@ -75,7 +75,7 @@ export default function () {
       </Heading>
 
       <Steps
-        activeStep={1}
+        activeStep={currentStep}
         responsive={false}
         trackColor="offwhite.300"
         display={['none', 'flex']}
@@ -83,17 +83,18 @@ export default function () {
           '& .cui-steps__step-icon-container': {
             bg: 'offwhite.300',
             borderColor: 'offwhite.300',
-            _active: {
-              borderColor: 'brand.900',
-              bg: 'brand.900',
-            },
             '&[aria-current=step]': {
               borderColor: 'brand.900',
             },
+            '&[data-highlighted]': {
+              borderColor: 'brand.900',
+              bg: 'brand.900',
+            },
           },
-          '& .cui-steps__horizontal-step[data-active]:not(:last-child):after': {
-            bg: 'brand.900',
-          },
+          '& .cui-steps__horizontal-step[data-highlighted]:not(:last-child):after':
+            {
+              bg: 'brand.900',
+            },
         }}
       >
         <Step label="Infos" />
