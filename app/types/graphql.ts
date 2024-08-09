@@ -1331,6 +1331,52 @@ export type PageQuery = {
     | null;
 };
 
+export type KultCardQueryVariables = Exact<{
+  payload: Scalars['String']['input'];
+}>;
+
+export type KultCardQuery = {
+  __typename?: 'Query';
+  cardStatus: {
+    __typename?: 'CardStatus';
+    cardId: string;
+    hasNewerTransactions?: boolean | null;
+    balance: number;
+    deposit: number;
+    recentTransactions?: Array<
+      | {
+          __typename: 'CardTransaction';
+          deviceTime: Date;
+          depositBefore: number;
+          depositAfter: number;
+          balanceBefore: number;
+          balanceAfter: number;
+          Order?: {
+            __typename?: 'Order';
+            items: Array<{
+              __typename?: 'OrderItem';
+              amount: number;
+              name: string;
+              productList?: {
+                __typename?: 'ProductList';
+                emoji?: string | null;
+                name: string;
+              } | null;
+            }>;
+          } | null;
+        }
+      | {
+          __typename: 'MissingTransaction';
+          numberOfMissingTransactions: number;
+          depositBefore: number;
+          depositAfter: number;
+          balanceBefore: number;
+          balanceAfter: number;
+        }
+    > | null;
+  };
+};
+
 export type NewsQueryVariables = Exact<{[key: string]: never}>;
 
 export type NewsQuery = {
@@ -1993,52 +2039,6 @@ export type InfosQuery = {
     | {__typename?: 'ProductList'}
     | {__typename?: 'Viewer'}
     | null;
-};
-
-export type KultCardQueryVariables = Exact<{
-  payload: Scalars['String']['input'];
-}>;
-
-export type KultCardQuery = {
-  __typename?: 'Query';
-  cardStatus: {
-    __typename?: 'CardStatus';
-    cardId: string;
-    hasNewerTransactions?: boolean | null;
-    balance: number;
-    deposit: number;
-    recentTransactions?: Array<
-      | {
-          __typename: 'CardTransaction';
-          deviceTime: Date;
-          depositBefore: number;
-          depositAfter: number;
-          balanceBefore: number;
-          balanceAfter: number;
-          Order?: {
-            __typename?: 'Order';
-            items: Array<{
-              __typename?: 'OrderItem';
-              amount: number;
-              name: string;
-              productList?: {
-                __typename?: 'ProductList';
-                emoji?: string | null;
-                name: string;
-              } | null;
-            }>;
-          } | null;
-        }
-      | {
-          __typename: 'MissingTransaction';
-          numberOfMissingTransactions: number;
-          depositBefore: number;
-          depositAfter: number;
-          balanceBefore: number;
-          balanceAfter: number;
-        }
-    > | null;
-  };
 };
 
 export type LineupBandQueryVariables = Exact<{
@@ -3026,6 +3026,82 @@ export type PageSuspenseQueryHookResult = ReturnType<
   typeof usePageSuspenseQuery
 >;
 export type PageQueryResult = Apollo.QueryResult<PageQuery, PageQueryVariables>;
+export const KultCardDocument = gql`
+  query KultCard($payload: String!) {
+    cardStatus(payload: $payload) {
+      ...CardFragment
+      cardId
+      hasNewerTransactions
+      recentTransactions {
+        ...CardTransaction
+      }
+    }
+  }
+  ${CardFragmentFragmentDoc}
+  ${CardTransactionFragmentDoc}
+`;
+
+/**
+ * __useKultCardQuery__
+ *
+ * To run a query within a React component, call `useKultCardQuery` and pass it any options that fit your needs.
+ * When your component renders, `useKultCardQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useKultCardQuery({
+ *   variables: {
+ *      payload: // value for 'payload'
+ *   },
+ * });
+ */
+export function useKultCardQuery(
+  baseOptions: Apollo.QueryHookOptions<KultCardQuery, KultCardQueryVariables> &
+    ({variables: KultCardQueryVariables; skip?: boolean} | {skip: boolean}),
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useQuery<KultCardQuery, KultCardQueryVariables>(
+    KultCardDocument,
+    options,
+  );
+}
+export function useKultCardLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    KultCardQuery,
+    KultCardQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useLazyQuery<KultCardQuery, KultCardQueryVariables>(
+    KultCardDocument,
+    options,
+  );
+}
+export function useKultCardSuspenseQuery(
+  baseOptions?: Apollo.SuspenseQueryHookOptions<
+    KultCardQuery,
+    KultCardQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useSuspenseQuery<KultCardQuery, KultCardQueryVariables>(
+    KultCardDocument,
+    options,
+  );
+}
+export type KultCardQueryHookResult = ReturnType<typeof useKultCardQuery>;
+export type KultCardLazyQueryHookResult = ReturnType<
+  typeof useKultCardLazyQuery
+>;
+export type KultCardSuspenseQueryHookResult = ReturnType<
+  typeof useKultCardSuspenseQuery
+>;
+export type KultCardQueryResult = Apollo.QueryResult<
+  KultCardQuery,
+  KultCardQueryVariables
+>;
 export const NewsDocument = gql`
   query News {
     news(first: 10) {
@@ -3482,82 +3558,6 @@ export type InfosSuspenseQueryHookResult = ReturnType<
 export type InfosQueryResult = Apollo.QueryResult<
   InfosQuery,
   InfosQueryVariables
->;
-export const KultCardDocument = gql`
-  query KultCard($payload: String!) {
-    cardStatus(payload: $payload) {
-      ...CardFragment
-      cardId
-      hasNewerTransactions
-      recentTransactions {
-        ...CardTransaction
-      }
-    }
-  }
-  ${CardFragmentFragmentDoc}
-  ${CardTransactionFragmentDoc}
-`;
-
-/**
- * __useKultCardQuery__
- *
- * To run a query within a React component, call `useKultCardQuery` and pass it any options that fit your needs.
- * When your component renders, `useKultCardQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useKultCardQuery({
- *   variables: {
- *      payload: // value for 'payload'
- *   },
- * });
- */
-export function useKultCardQuery(
-  baseOptions: Apollo.QueryHookOptions<KultCardQuery, KultCardQueryVariables> &
-    ({variables: KultCardQueryVariables; skip?: boolean} | {skip: boolean}),
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useQuery<KultCardQuery, KultCardQueryVariables>(
-    KultCardDocument,
-    options,
-  );
-}
-export function useKultCardLazyQuery(
-  baseOptions?: Apollo.LazyQueryHookOptions<
-    KultCardQuery,
-    KultCardQueryVariables
-  >,
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useLazyQuery<KultCardQuery, KultCardQueryVariables>(
-    KultCardDocument,
-    options,
-  );
-}
-export function useKultCardSuspenseQuery(
-  baseOptions?: Apollo.SuspenseQueryHookOptions<
-    KultCardQuery,
-    KultCardQueryVariables
-  >,
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useSuspenseQuery<KultCardQuery, KultCardQueryVariables>(
-    KultCardDocument,
-    options,
-  );
-}
-export type KultCardQueryHookResult = ReturnType<typeof useKultCardQuery>;
-export type KultCardLazyQueryHookResult = ReturnType<
-  typeof useKultCardLazyQuery
->;
-export type KultCardSuspenseQueryHookResult = ReturnType<
-  typeof useKultCardSuspenseQuery
->;
-export type KultCardQueryResult = Apollo.QueryResult<
-  KultCardQuery,
-  KultCardQueryVariables
 >;
 export const LineupBandDocument = gql`
   query LineupBand($eventId: ID!, $slug: String!) {
