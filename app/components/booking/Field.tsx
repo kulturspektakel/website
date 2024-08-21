@@ -8,6 +8,7 @@ export default forwardRef(function FieldWrapper(
   {
     as = Input,
     validate,
+    value,
     ...props
   }: InputProps & {
     validate?: FieldValidator;
@@ -28,8 +29,11 @@ export default forwardRef(function FieldWrapper(
     },
   });
 
-  const inputProps: InputProps = {
+  const inputProps: InputProps & {
+    ref?: React.Ref<any>;
+  } = {
     ...field,
+    value: value ?? field.value ?? '',
     isInvalid: (meta.touched && meta.error) || isInvalid ? true : false,
     bg: 'white',
     ref,

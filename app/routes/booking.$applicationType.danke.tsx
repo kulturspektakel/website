@@ -35,8 +35,13 @@ export default function Thanks() {
         <Text>
           Wir haben dir soeben eine E-Mail zur Bestätigung geschickt. Wir
           beantworten jede Bewerbung, allerdings kann es bis nach dem
-          Bewerbungsschluss am <DateString date={applicationEnd!} /> dauern, bis
-          wir uns bei dir melden.
+          Bewerbungsschluss{' '}
+          {applicationEnd && (
+            <>
+              am <DateString date={applicationEnd} />
+            </>
+          )}{' '}
+          dauern, bis wir uns bei dir melden.
         </Text>
       </VStack>
     </>

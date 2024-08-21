@@ -10,6 +10,7 @@ import {
   Alert,
   AlertDescription,
   AlertIcon,
+  Box,
 } from '@chakra-ui/react';
 import {Link} from '@remix-run/react';
 import DistanceWarning from './DistanceWarning';
@@ -144,6 +145,13 @@ export default function Step1() {
               />
             </FormControl>
           </HStack>
+          {values.numberOfArtists != null &&
+            values.numberOfNonMaleArtists != null &&
+            values.numberOfNonMaleArtists === values.numberOfArtists && (
+              <Box fontWeight="bold" textAlign="center">
+                🌈 Yay, für mehr Diversität auf Festivalbühnen!
+              </Box>
+            )}
           <Text fontSize="sm" color="offwhite.600">
             Die Festival-Branche hat eine geringe Geschlechter&shy;diversität (
             <ChakraLink
