@@ -2571,12 +2571,14 @@ export function useDistanceLazyQuery(
   );
 }
 export function useDistanceSuspenseQuery(
-  baseOptions?: Apollo.SuspenseQueryHookOptions<
-    DistanceQuery,
-    DistanceQueryVariables
-  >,
+  baseOptions?:
+    | Apollo.SkipToken
+    | Apollo.SuspenseQueryHookOptions<DistanceQuery, DistanceQueryVariables>,
 ) {
-  const options = {...defaultOptions, ...baseOptions};
+  const options =
+    baseOptions === Apollo.skipToken
+      ? baseOptions
+      : {...defaultOptions, ...baseOptions};
   return Apollo.useSuspenseQuery<DistanceQuery, DistanceQueryVariables>(
     DistanceDocument,
     options,
@@ -2648,12 +2650,17 @@ export function useDuplicateApplicationWarningLazyQuery(
   >(DuplicateApplicationWarningDocument, options);
 }
 export function useDuplicateApplicationWarningSuspenseQuery(
-  baseOptions?: Apollo.SuspenseQueryHookOptions<
-    DuplicateApplicationWarningQuery,
-    DuplicateApplicationWarningQueryVariables
-  >,
+  baseOptions?:
+    | Apollo.SkipToken
+    | Apollo.SuspenseQueryHookOptions<
+        DuplicateApplicationWarningQuery,
+        DuplicateApplicationWarningQueryVariables
+      >,
 ) {
-  const options = {...defaultOptions, ...baseOptions};
+  const options =
+    baseOptions === Apollo.skipToken
+      ? baseOptions
+      : {...defaultOptions, ...baseOptions};
   return Apollo.useSuspenseQuery<
     DuplicateApplicationWarningQuery,
     DuplicateApplicationWarningQueryVariables
@@ -2729,12 +2736,17 @@ export function useSpotifyArtistSearchLazyQuery(
   >(SpotifyArtistSearchDocument, options);
 }
 export function useSpotifyArtistSearchSuspenseQuery(
-  baseOptions?: Apollo.SuspenseQueryHookOptions<
-    SpotifyArtistSearchQuery,
-    SpotifyArtistSearchQueryVariables
-  >,
+  baseOptions?:
+    | Apollo.SkipToken
+    | Apollo.SuspenseQueryHookOptions<
+        SpotifyArtistSearchQuery,
+        SpotifyArtistSearchQueryVariables
+      >,
 ) {
-  const options = {...defaultOptions, ...baseOptions};
+  const options =
+    baseOptions === Apollo.skipToken
+      ? baseOptions
+      : {...defaultOptions, ...baseOptions};
   return Apollo.useSuspenseQuery<
     SpotifyArtistSearchQuery,
     SpotifyArtistSearchQueryVariables
@@ -2809,12 +2821,17 @@ export function useMorePhotosLazyQuery(
   );
 }
 export function useMorePhotosSuspenseQuery(
-  baseOptions?: Apollo.SuspenseQueryHookOptions<
-    MorePhotosQuery,
-    MorePhotosQueryVariables
-  >,
+  baseOptions?:
+    | Apollo.SkipToken
+    | Apollo.SuspenseQueryHookOptions<
+        MorePhotosQuery,
+        MorePhotosQueryVariables
+      >,
 ) {
-  const options = {...defaultOptions, ...baseOptions};
+  const options =
+    baseOptions === Apollo.skipToken
+      ? baseOptions
+      : {...defaultOptions, ...baseOptions};
   return Apollo.useSuspenseQuery<MorePhotosQuery, MorePhotosQueryVariables>(
     MorePhotosDocument,
     options,
@@ -2885,12 +2902,17 @@ export function useBandSearchLazyQuery(
   );
 }
 export function useBandSearchSuspenseQuery(
-  baseOptions?: Apollo.SuspenseQueryHookOptions<
-    BandSearchQuery,
-    BandSearchQueryVariables
-  >,
+  baseOptions?:
+    | Apollo.SkipToken
+    | Apollo.SuspenseQueryHookOptions<
+        BandSearchQuery,
+        BandSearchQueryVariables
+      >,
 ) {
-  const options = {...defaultOptions, ...baseOptions};
+  const options =
+    baseOptions === Apollo.skipToken
+      ? baseOptions
+      : {...defaultOptions, ...baseOptions};
   return Apollo.useSuspenseQuery<BandSearchQuery, BandSearchQueryVariables>(
     BandSearchDocument,
     options,
@@ -2953,9 +2975,14 @@ export function useRootLazyQuery(
   );
 }
 export function useRootSuspenseQuery(
-  baseOptions?: Apollo.SuspenseQueryHookOptions<RootQuery, RootQueryVariables>,
+  baseOptions?:
+    | Apollo.SkipToken
+    | Apollo.SuspenseQueryHookOptions<RootQuery, RootQueryVariables>,
 ) {
-  const options = {...defaultOptions, ...baseOptions};
+  const options =
+    baseOptions === Apollo.skipToken
+      ? baseOptions
+      : {...defaultOptions, ...baseOptions};
   return Apollo.useSuspenseQuery<RootQuery, RootQueryVariables>(
     RootDocument,
     options,
@@ -3012,9 +3039,14 @@ export function usePageLazyQuery(
   );
 }
 export function usePageSuspenseQuery(
-  baseOptions?: Apollo.SuspenseQueryHookOptions<PageQuery, PageQueryVariables>,
+  baseOptions?:
+    | Apollo.SkipToken
+    | Apollo.SuspenseQueryHookOptions<PageQuery, PageQueryVariables>,
 ) {
-  const options = {...defaultOptions, ...baseOptions};
+  const options =
+    baseOptions === Apollo.skipToken
+      ? baseOptions
+      : {...defaultOptions, ...baseOptions};
   return Apollo.useSuspenseQuery<PageQuery, PageQueryVariables>(
     PageDocument,
     options,
@@ -3080,12 +3112,14 @@ export function useKultCardLazyQuery(
   );
 }
 export function useKultCardSuspenseQuery(
-  baseOptions?: Apollo.SuspenseQueryHookOptions<
-    KultCardQuery,
-    KultCardQueryVariables
-  >,
+  baseOptions?:
+    | Apollo.SkipToken
+    | Apollo.SuspenseQueryHookOptions<KultCardQuery, KultCardQueryVariables>,
 ) {
-  const options = {...defaultOptions, ...baseOptions};
+  const options =
+    baseOptions === Apollo.skipToken
+      ? baseOptions
+      : {...defaultOptions, ...baseOptions};
   return Apollo.useSuspenseQuery<KultCardQuery, KultCardQueryVariables>(
     KultCardDocument,
     options,
@@ -3146,9 +3180,14 @@ export function useNewsLazyQuery(
   );
 }
 export function useNewsSuspenseQuery(
-  baseOptions?: Apollo.SuspenseQueryHookOptions<NewsQuery, NewsQueryVariables>,
+  baseOptions?:
+    | Apollo.SkipToken
+    | Apollo.SuspenseQueryHookOptions<NewsQuery, NewsQueryVariables>,
 ) {
-  const options = {...defaultOptions, ...baseOptions};
+  const options =
+    baseOptions === Apollo.skipToken
+      ? baseOptions
+      : {...defaultOptions, ...baseOptions};
   return Apollo.useSuspenseQuery<NewsQuery, NewsQueryVariables>(
     NewsDocument,
     options,
@@ -3233,12 +3272,14 @@ export function useAngebotLazyQuery(
   );
 }
 export function useAngebotSuspenseQuery(
-  baseOptions?: Apollo.SuspenseQueryHookOptions<
-    AngebotQuery,
-    AngebotQueryVariables
-  >,
+  baseOptions?:
+    | Apollo.SkipToken
+    | Apollo.SuspenseQueryHookOptions<AngebotQuery, AngebotQueryVariables>,
 ) {
-  const options = {...defaultOptions, ...baseOptions};
+  const options =
+    baseOptions === Apollo.skipToken
+      ? baseOptions
+      : {...defaultOptions, ...baseOptions};
   return Apollo.useSuspenseQuery<AngebotQuery, AngebotQueryVariables>(
     AngebotDocument,
     options,
@@ -3365,12 +3406,17 @@ export function useSingleEventLazyQuery(
   );
 }
 export function useSingleEventSuspenseQuery(
-  baseOptions?: Apollo.SuspenseQueryHookOptions<
-    SingleEventQuery,
-    SingleEventQueryVariables
-  >,
+  baseOptions?:
+    | Apollo.SkipToken
+    | Apollo.SuspenseQueryHookOptions<
+        SingleEventQuery,
+        SingleEventQueryVariables
+      >,
 ) {
-  const options = {...defaultOptions, ...baseOptions};
+  const options =
+    baseOptions === Apollo.skipToken
+      ? baseOptions
+      : {...defaultOptions, ...baseOptions};
   return Apollo.useSuspenseQuery<SingleEventQuery, SingleEventQueryVariables>(
     SingleEventDocument,
     options,
@@ -3455,12 +3501,17 @@ export function useEventsOverviewLazyQuery(
   );
 }
 export function useEventsOverviewSuspenseQuery(
-  baseOptions?: Apollo.SuspenseQueryHookOptions<
-    EventsOverviewQuery,
-    EventsOverviewQueryVariables
-  >,
+  baseOptions?:
+    | Apollo.SkipToken
+    | Apollo.SuspenseQueryHookOptions<
+        EventsOverviewQuery,
+        EventsOverviewQueryVariables
+      >,
 ) {
-  const options = {...defaultOptions, ...baseOptions};
+  const options =
+    baseOptions === Apollo.skipToken
+      ? baseOptions
+      : {...defaultOptions, ...baseOptions};
   return Apollo.useSuspenseQuery<
     EventsOverviewQuery,
     EventsOverviewQueryVariables
@@ -3539,12 +3590,14 @@ export function useInfosLazyQuery(
   );
 }
 export function useInfosSuspenseQuery(
-  baseOptions?: Apollo.SuspenseQueryHookOptions<
-    InfosQuery,
-    InfosQueryVariables
-  >,
+  baseOptions?:
+    | Apollo.SkipToken
+    | Apollo.SuspenseQueryHookOptions<InfosQuery, InfosQueryVariables>,
 ) {
-  const options = {...defaultOptions, ...baseOptions};
+  const options =
+    baseOptions === Apollo.skipToken
+      ? baseOptions
+      : {...defaultOptions, ...baseOptions};
   return Apollo.useSuspenseQuery<InfosQuery, InfosQueryVariables>(
     InfosDocument,
     options,
@@ -3631,12 +3684,17 @@ export function useLineupBandLazyQuery(
   );
 }
 export function useLineupBandSuspenseQuery(
-  baseOptions?: Apollo.SuspenseQueryHookOptions<
-    LineupBandQuery,
-    LineupBandQueryVariables
-  >,
+  baseOptions?:
+    | Apollo.SkipToken
+    | Apollo.SuspenseQueryHookOptions<
+        LineupBandQuery,
+        LineupBandQueryVariables
+      >,
 ) {
-  const options = {...defaultOptions, ...baseOptions};
+  const options =
+    baseOptions === Apollo.skipToken
+      ? baseOptions
+      : {...defaultOptions, ...baseOptions};
   return Apollo.useSuspenseQuery<LineupBandQuery, LineupBandQueryVariables>(
     LineupBandDocument,
     options,
@@ -3712,12 +3770,17 @@ export function useLineupBandSitemapLazyQuery(
   >(LineupBandSitemapDocument, options);
 }
 export function useLineupBandSitemapSuspenseQuery(
-  baseOptions?: Apollo.SuspenseQueryHookOptions<
-    LineupBandSitemapQuery,
-    LineupBandSitemapQueryVariables
-  >,
+  baseOptions?:
+    | Apollo.SkipToken
+    | Apollo.SuspenseQueryHookOptions<
+        LineupBandSitemapQuery,
+        LineupBandSitemapQueryVariables
+      >,
 ) {
-  const options = {...defaultOptions, ...baseOptions};
+  const options =
+    baseOptions === Apollo.skipToken
+      ? baseOptions
+      : {...defaultOptions, ...baseOptions};
   return Apollo.useSuspenseQuery<
     LineupBandSitemapQuery,
     LineupBandSitemapQueryVariables
@@ -3803,12 +3866,14 @@ export function useLineupLazyQuery(
   );
 }
 export function useLineupSuspenseQuery(
-  baseOptions?: Apollo.SuspenseQueryHookOptions<
-    LineupQuery,
-    LineupQueryVariables
-  >,
+  baseOptions?:
+    | Apollo.SkipToken
+    | Apollo.SuspenseQueryHookOptions<LineupQuery, LineupQueryVariables>,
 ) {
-  const options = {...defaultOptions, ...baseOptions};
+  const options =
+    baseOptions === Apollo.skipToken
+      ? baseOptions
+      : {...defaultOptions, ...baseOptions};
   return Apollo.useSuspenseQuery<LineupQuery, LineupQueryVariables>(
     LineupDocument,
     options,
@@ -3875,12 +3940,17 @@ export function useLineupSitemapLazyQuery(
   );
 }
 export function useLineupSitemapSuspenseQuery(
-  baseOptions?: Apollo.SuspenseQueryHookOptions<
-    LineupSitemapQuery,
-    LineupSitemapQueryVariables
-  >,
+  baseOptions?:
+    | Apollo.SkipToken
+    | Apollo.SuspenseQueryHookOptions<
+        LineupSitemapQuery,
+        LineupSitemapQueryVariables
+      >,
 ) {
-  const options = {...defaultOptions, ...baseOptions};
+  const options =
+    baseOptions === Apollo.skipToken
+      ? baseOptions
+      : {...defaultOptions, ...baseOptions};
   return Apollo.useSuspenseQuery<
     LineupSitemapQuery,
     LineupSitemapQueryVariables
@@ -3951,12 +4021,17 @@ export function useLineupIndexLazyQuery(
   );
 }
 export function useLineupIndexSuspenseQuery(
-  baseOptions?: Apollo.SuspenseQueryHookOptions<
-    LineupIndexQuery,
-    LineupIndexQueryVariables
-  >,
+  baseOptions?:
+    | Apollo.SkipToken
+    | Apollo.SuspenseQueryHookOptions<
+        LineupIndexQuery,
+        LineupIndexQueryVariables
+      >,
 ) {
-  const options = {...defaultOptions, ...baseOptions};
+  const options =
+    baseOptions === Apollo.skipToken
+      ? baseOptions
+      : {...defaultOptions, ...baseOptions};
   return Apollo.useSuspenseQuery<LineupIndexQuery, LineupIndexQueryVariables>(
     LineupIndexDocument,
     options,
@@ -4024,12 +4099,14 @@ export function useLineupsLazyQuery(
   );
 }
 export function useLineupsSuspenseQuery(
-  baseOptions?: Apollo.SuspenseQueryHookOptions<
-    LineupsQuery,
-    LineupsQueryVariables
-  >,
+  baseOptions?:
+    | Apollo.SkipToken
+    | Apollo.SuspenseQueryHookOptions<LineupsQuery, LineupsQueryVariables>,
 ) {
-  const options = {...defaultOptions, ...baseOptions};
+  const options =
+    baseOptions === Apollo.skipToken
+      ? baseOptions
+      : {...defaultOptions, ...baseOptions};
   return Apollo.useSuspenseQuery<LineupsQuery, LineupsQueryVariables>(
     LineupsDocument,
     options,
@@ -4097,12 +4174,14 @@ export function useNewsPageLazyQuery(
   );
 }
 export function useNewsPageSuspenseQuery(
-  baseOptions?: Apollo.SuspenseQueryHookOptions<
-    NewsPageQuery,
-    NewsPageQueryVariables
-  >,
+  baseOptions?:
+    | Apollo.SkipToken
+    | Apollo.SuspenseQueryHookOptions<NewsPageQuery, NewsPageQueryVariables>,
 ) {
-  const options = {...defaultOptions, ...baseOptions};
+  const options =
+    baseOptions === Apollo.skipToken
+      ? baseOptions
+      : {...defaultOptions, ...baseOptions};
   return Apollo.useSuspenseQuery<NewsPageQuery, NewsPageQueryVariables>(
     NewsPageDocument,
     options,
@@ -4171,12 +4250,17 @@ export function useNewsPageSitemapLazyQuery(
   >(NewsPageSitemapDocument, options);
 }
 export function useNewsPageSitemapSuspenseQuery(
-  baseOptions?: Apollo.SuspenseQueryHookOptions<
-    NewsPageSitemapQuery,
-    NewsPageSitemapQueryVariables
-  >,
+  baseOptions?:
+    | Apollo.SkipToken
+    | Apollo.SuspenseQueryHookOptions<
+        NewsPageSitemapQuery,
+        NewsPageSitemapQueryVariables
+      >,
 ) {
-  const options = {...defaultOptions, ...baseOptions};
+  const options =
+    baseOptions === Apollo.skipToken
+      ? baseOptions
+      : {...defaultOptions, ...baseOptions};
   return Apollo.useSuspenseQuery<
     NewsPageSitemapQuery,
     NewsPageSitemapQueryVariables
@@ -4253,12 +4337,17 @@ export function useNewsArchiveLazyQuery(
   );
 }
 export function useNewsArchiveSuspenseQuery(
-  baseOptions?: Apollo.SuspenseQueryHookOptions<
-    NewsArchiveQuery,
-    NewsArchiveQueryVariables
-  >,
+  baseOptions?:
+    | Apollo.SkipToken
+    | Apollo.SuspenseQueryHookOptions<
+        NewsArchiveQuery,
+        NewsArchiveQueryVariables
+      >,
 ) {
-  const options = {...defaultOptions, ...baseOptions};
+  const options =
+    baseOptions === Apollo.skipToken
+      ? baseOptions
+      : {...defaultOptions, ...baseOptions};
   return Apollo.useSuspenseQuery<NewsArchiveQuery, NewsArchiveQueryVariables>(
     NewsArchiveDocument,
     options,
@@ -4433,12 +4522,14 @@ export function usePlakateLazyQuery(
   );
 }
 export function usePlakateSuspenseQuery(
-  baseOptions?: Apollo.SuspenseQueryHookOptions<
-    PlakateQuery,
-    PlakateQueryVariables
-  >,
+  baseOptions?:
+    | Apollo.SkipToken
+    | Apollo.SuspenseQueryHookOptions<PlakateQuery, PlakateQueryVariables>,
 ) {
-  const options = {...defaultOptions, ...baseOptions};
+  const options =
+    baseOptions === Apollo.skipToken
+      ? baseOptions
+      : {...defaultOptions, ...baseOptions};
   return Apollo.useSuspenseQuery<PlakateQuery, PlakateQueryVariables>(
     PlakateDocument,
     options,
@@ -4504,12 +4595,17 @@ export function useSpeisekarteLazyQuery(
   );
 }
 export function useSpeisekarteSuspenseQuery(
-  baseOptions?: Apollo.SuspenseQueryHookOptions<
-    SpeisekarteQuery,
-    SpeisekarteQueryVariables
-  >,
+  baseOptions?:
+    | Apollo.SkipToken
+    | Apollo.SuspenseQueryHookOptions<
+        SpeisekarteQuery,
+        SpeisekarteQueryVariables
+      >,
 ) {
-  const options = {...defaultOptions, ...baseOptions};
+  const options =
+    baseOptions === Apollo.skipToken
+      ? baseOptions
+      : {...defaultOptions, ...baseOptions};
   return Apollo.useSuspenseQuery<SpeisekarteQuery, SpeisekarteQueryVariables>(
     SpeisekarteDocument,
     options,

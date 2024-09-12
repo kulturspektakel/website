@@ -7230,6 +7230,13 @@
         ]
       },
       {
+        "name": "oneOf",
+        "description": "Indicates exactly one field must be supplied and this field must not be `null`.",
+        "isRepeatable": false,
+        "locations": ["INPUT_OBJECT"],
+        "args": []
+      },
+      {
         "name": "skip",
         "description": "Directs the executor to skip this field or fragment when the `if` argument is true.",
         "isRepeatable": false,

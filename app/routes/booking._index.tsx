@@ -23,13 +23,13 @@ gql`
 `;
 
 export function useUtmSource() {
-  const [utm_source] = useSearchParams();
+  const [searchParams] = useSearchParams();
   if (
-    utm_source &&
-    utm_source instanceof URLSearchParams &&
-    utm_source.has('utm_source')
+    searchParams &&
+    searchParams instanceof URLSearchParams &&
+    searchParams.has('utm_source')
   ) {
-    return utm_source.get('utm_source') ?? undefined;
+    return searchParams.get('utm_source') ?? undefined;
   }
 }
 
@@ -98,7 +98,7 @@ export default function Home() {
             {
               applicationType: 'band',
             },
-            {utm_source},
+            utm_source ? {utm_source} : undefined,
           )}
         />
       )}
