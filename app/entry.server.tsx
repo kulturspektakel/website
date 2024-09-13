@@ -20,6 +20,8 @@ Sentry.init({
 
 export const handleError = Sentry.sentryHandleError;
 
+const KULT_CASH_PATH_PREFIXES = new Set<string | undefined>(['$$', 'learn']);
+
 export default async function handleRequest(
   request: Request,
   responseStatusCode: number,
@@ -28,6 +30,19 @@ export default async function handleRequest(
 ) {
   if (isSitemapUrl(request)) {
     return await sitemap(request, remixContext);
+  }
+
+  const url = new URL(request.url);
+  if (KULT_CASH_PATH_PREFIXES.has(url.pathname.split('/')?.at(1))) {
+    if (url.hostname === 'kult.cash') {
+      // we are good
+    } else if (url.hostname === 'localhost') {
+      console.warn(
+        `Accessing ${url.pathname} in production is only possible via kult.cash`,
+      );
+    } else {
+      return new Response('Not Found', {status: 404});
+    }
   }
 
   const App = <RemixServer context={remixContext} url={request.url} />;
