@@ -4,7 +4,6 @@ import {LoaderFunctionArgs} from '@remix-run/node';
 import {useRevalidator} from '@remix-run/react';
 import {useEffect} from 'react';
 import {$params} from 'remix-routes';
-import {SitemapFunction} from 'remix-sitemap';
 import {
   typedjson,
   UseDataFunctionReturn,
@@ -173,10 +172,6 @@ const EXAMPLE_DATA: UseDataFunctionReturn<typeof loader> = {
     },
   ],
 };
-
-export const sitemap: SitemapFunction = () => ({
-  exclude: true,
-});
 
 export const meta = mergeMeta<typeof loader>(({data, params}) => {
   return [

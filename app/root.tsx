@@ -21,6 +21,7 @@ import {
   Scripts,
   ScrollRestoration,
   isRouteErrorResponse,
+  useNavigation,
   useRouteError,
 } from '@remix-run/react';
 import apolloClient from './utils/apolloClient';
@@ -31,10 +32,11 @@ import Footer from './components/Footer/Footer';
 import theme from './theme';
 import photoswipeCSS from 'photoswipe/dist/photoswipe.css';
 import fontsCSS from '../public/fonts.css';
-import {typedjson, useTypedLoaderData} from 'remix-typedjson';
+import {typedjson, useTypedRouteLoaderData} from 'remix-typedjson';
 import {RootDocument} from './types/graphql';
 import type {RootQuery} from './types/graphql';
 import {dateStringComponents} from './components/DateString';
+import logo from '../public/logos/logo.png';
 import Headline from './components/Headline';
 import {Analytics} from '@vercel/analytics/react';
 import {SpeedInsights} from '@vercel/speed-insights/remix';
@@ -127,23 +129,28 @@ export async function loader(args: LoaderFunctionArgs) {
   return typedjson({...data, base});
 }
 
-function Document({children}: {children: React.ReactNode}) {
+function Document({
+  children,
+  base,
+}: {
+  children: React.ReactNode;
+  base?: string;
+}) {
   const emotionCache = createEmotionCache({key: 'css'});
-  const data = useTypedLoaderData<typeof loader>();
 
   return (
     <html lang="de">
       <head>
         <Meta />
         <Links />
-        <base href={data.base} />
+        {base && <base href={base} />}
       </head>
       <body>
         <CacheProvider value={emotionCache}>
           <ChakraProvider theme={theme}>
             <ApolloProvider client={apolloClient}>
               <Flex direction={'column'} minHeight={'100vh'}>
-                <Header event={data.eventsConnection?.edges[0]?.node} />
+                <Header />
                 <Box
                   flex="1 1 0"
                   ml="auto"
@@ -172,8 +179,9 @@ function Document({children}: {children: React.ReactNode}) {
 }
 
 function App() {
+  const data = useTypedRouteLoaderData<typeof loader>('root');
   return (
-    <Document>
+    <Document base={data?.base}>
       <Outlet />
     </Document>
   );
