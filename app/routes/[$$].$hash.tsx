@@ -1,11 +1,17 @@
 import {gql} from '@apollo/client';
-import {Box, OrderedList} from '@chakra-ui/react';
+import {OrderedList, VStack} from '@chakra-ui/react';
 import {LoaderFunctionArgs} from '@remix-run/node';
+import {useRevalidator} from '@remix-run/react';
+import {useEffect} from 'react';
 import {$params} from 'remix-routes';
-import {typedjson, useTypedLoaderData} from 'remix-typedjson';
-import Headline from '~/components/Headline';
+import {
+  typedjson,
+  UseDataFunctionReturn,
+  useTypedLoaderData,
+} from 'remix-typedjson';
 import InfoBox from '~/components/InfoBox';
 import Card, {CardFragment} from '~/components/kultcard/Card';
+import InfoText from '~/components/kultcard/InfoText';
 import Transaction, {CardTransaction} from '~/components/kultcard/Transaction';
 import {KultCardDocument, KultCardQuery} from '~/types/graphql';
 import apolloClient from '~/utils/apolloClient';
@@ -26,6 +32,147 @@ gql`
   ${CardTransaction}
 `;
 
+const EXAMPLE_DATA: UseDataFunctionReturn<typeof loader> = {
+  balance: 1000,
+  deposit: 2,
+  cardId: '123456',
+  hasNewerTransactions: false,
+  recentTransactions: [
+    {
+      __typename: 'CardTransaction',
+      deviceTime: new Date(),
+      depositBefore: 0,
+      depositAfter: 1,
+      balanceAfter: 1000,
+      balanceBefore: 1600,
+      Order: {
+        items: [
+          {
+            amount: 1,
+            name: 'Helles',
+            productList: {
+              name: 'Ausschank',
+              emoji: '🍺',
+            },
+          },
+          {
+            amount: 1,
+            name: 'Helles',
+            productList: {
+              name: 'Ausschank',
+              emoji: '🍺',
+            },
+          },
+          {
+            amount: 1,
+            name: 'Helles',
+            productList: {
+              name: 'Ausschank',
+              emoji: '🍺',
+            },
+          },
+          {
+            amount: 1,
+            name: 'Helles',
+            productList: {
+              name: 'Ausschank',
+              emoji: '🍺',
+            },
+          },
+          {
+            amount: 1,
+            name: 'Helles',
+            productList: {
+              name: 'Ausschank',
+              emoji: '🍺',
+            },
+          },
+          {
+            amount: 1,
+            name: 'Helles',
+            productList: {
+              name: 'Ausschank',
+              emoji: '🍺',
+            },
+          },
+          {
+            amount: 1,
+            name: 'Helles',
+            productList: {
+              name: 'Ausschank',
+              emoji: '🍺',
+            },
+          },
+          {
+            amount: 1,
+            name: 'Helles',
+            productList: {
+              name: 'Ausschank',
+              emoji: '🍺',
+            },
+          },
+          {
+            amount: 1,
+            name: 'Helles',
+            productList: {
+              name: 'Ausschank',
+              emoji: '🍺',
+            },
+          },
+          {
+            amount: 1,
+            name: 'Helles',
+            productList: {
+              name: 'Ausschank',
+              emoji: '🍺',
+            },
+          },
+          {
+            amount: 1,
+            name: 'Helles',
+            productList: {
+              name: 'Ausschank',
+              emoji: '🍺',
+            },
+          },
+          {
+            amount: 1,
+            name: 'Helles',
+            productList: {
+              name: 'Ausschank',
+              emoji: '🍺',
+            },
+          },
+          {
+            amount: 1,
+            name: 'Helles',
+            productList: {
+              name: 'Ausschank',
+              emoji: '🍺',
+            },
+          },
+        ],
+      },
+    },
+    {
+      __typename: 'MissingTransaction',
+      numberOfMissingTransactions: 2,
+      depositBefore: 0,
+      depositAfter: 1,
+      balanceAfter: 1000,
+      balanceBefore: 1600,
+    },
+    {
+      __typename: 'CardTransaction',
+      deviceTime: new Date(),
+      depositBefore: 1,
+      depositAfter: 0,
+      balanceAfter: 1600,
+      balanceBefore: 1400,
+    },
+  ],
+};
+
 export const meta = mergeMeta<typeof loader>(({data, params}) => {
   return [
     {
@@ -35,7 +182,7 @@ export const meta = mergeMeta<typeof loader>(({data, params}) => {
 });
 
 export async function loader(args: LoaderFunctionArgs) {
-  const {hash} = $params('/kultcard/:hash', args.params);
+  const {hash} = $params('/$$/:hash', args.params);
   const {data} = await apolloClient.query<KultCardQuery>({
     query: KultCardDocument,
     variables: {payload: hash},
@@ -45,35 +192,53 @@ export async function loader(args: LoaderFunctionArgs) {
 }
 
 export default function () {
+  const revalidator = useRevalidator();
+  useEffect(() => {
+    const timeout = setTimeout(() => revalidator.revalidate(), 60000);
+
+    const onVisibilityChange = () => {
+      if (!document.hidden) {
+        revalidator.revalidate();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    return () => {
+      clearTimeout(timeout);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, [revalidator]);
+
   const data = useTypedLoaderData<typeof loader>();
+
   return (
-    <Box maxW="450" mr="auto" ml="auto">
+    <VStack maxW="450" mr="auto" ml="auto" spacing="7" align="stretch">
+      {data.hasNewerTransactions && (
+        <InfoBox>
+          Es liegen neuere Buchungen vor. Karte erneut auslesen um diese
+          anzuzeigen.
+        </InfoBox>
+      )}
       <Card balance={data.balance} deposit={data.deposit} />
-      <Box mt="4">
-        Das Guthaben der Karte kann an den Bonbuden ausgezahlt werden. Auf der
-        Karte selbst sind 2&nbsp;Euro Kartenpfand.
-      </Box>
+
       {data.recentTransactions && data.recentTransactions.length > 0 && (
-        <>
-          <Headline>Letzte Buchungen</Headline>
-          {data.hasNewerTransactions && (
-            <InfoBox>
-              Es liegen neuere Buchungen vor. Karte erneut auslesen um diese
-              anzuzeigen.
-            </InfoBox>
-          )}
-          <OrderedList>
+        <VStack spacing="5" align="stretch">
+          <OrderedList m="0">
             {data.recentTransactions.map((t, i) => (
-              <Transaction key={i} {...t} />
+              <Transaction
+                key={i}
+                {...t}
+                isLastItem={i === data.recentTransactions.length - 1}
+              />
             ))}
           </OrderedList>
-          <Box>
-            Es kann einige Zeit dauern, bis alle Buchungen vollständig in der
-            Liste dargestellt werden. Das angezeigte Guthaben auf der Karte ist
-            jedoch immer aktuell.
-          </Box>
-        </>
+          <InfoText textAlign="center">
+            Es kann etwas dauern, bis alle Buchungen vollständig in der Liste
+            dargestellt werden. Das angezeigte Guthaben auf der Karte ist jedoch
+            immer aktuell.
+          </InfoText>
+        </VStack>
       )}
-    </Box>
+    </VStack>
   );
 }

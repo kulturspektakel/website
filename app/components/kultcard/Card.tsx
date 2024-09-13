@@ -1,7 +1,7 @@
-import {useEffect, useState} from 'react';
 import {gql} from 'graphql-request';
 import {Box} from '@chakra-ui/react';
 import {CardFragmentFragment} from '~/types/graphql';
+import InfoText from './InfoText';
 
 export const currencyFormatter = new Intl.NumberFormat('de-DE', {
   style: 'currency',
@@ -16,15 +16,9 @@ export const CardFragment = gql`
 `;
 
 export default function Card({balance, deposit}: CardFragmentFragment) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setTimeout(() => setMounted(true), 200);
-  }, []);
-
   return (
-    <Box zIndex={2} position="relative">
+    <Box>
       <Box overflow="hidden" borderRadius={17} boxShadow="lg">
-        {/* <div className={`${styles.card} ${mounted ? styles.activeCard : ''}`}> */}
         <svg viewBox="0 0 242.65 153.01">
           <defs>
             <linearGradient
@@ -231,6 +225,11 @@ export default function Card({balance, deposit}: CardFragmentFragment) {
           </g>
         </svg>
       </Box>
+
+      <InfoText textAlign="center" mt="2">
+        Das Guthaben kann an den Bonbuden ausgezahlt werden. Auf der Karte
+        selbst sind 2&nbsp;Euro Kartenpfand.
+      </InfoText>
     </Box>
   );
 }
