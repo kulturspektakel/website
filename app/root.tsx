@@ -31,11 +31,10 @@ import Footer from './components/Footer/Footer';
 import theme from './theme';
 import photoswipeCSS from 'photoswipe/dist/photoswipe.css';
 import fontsCSS from '../public/fonts.css';
-import {typedjson} from 'remix-typedjson';
+import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import {RootDocument} from './types/graphql';
 import type {RootQuery} from './types/graphql';
 import {dateStringComponents} from './components/DateString';
-import logo from '../public/logos/logo.png';
 import Headline from './components/Headline';
 import {Analytics} from '@vercel/analytics/react';
 import {SpeedInsights} from '@vercel/speed-insights/remix';
@@ -107,7 +106,6 @@ gql`
       edges {
         node {
           ...Header
-          ...BookingDetails
         }
       }
     }
@@ -118,24 +116,34 @@ export async function loader(args: LoaderFunctionArgs) {
   const {data} = await apolloClient.query<RootQuery>({
     query: RootDocument,
   });
-  return typedjson(data);
+  let base = '';
+  const url = new URL(args.request.url);
+  if (
+    url.hostname !== 'localhost' &&
+    url.hostname !== 'www.kulturspektakel.de'
+  ) {
+    base = 'https://www.kulturspektakel.de';
+  }
+  return typedjson({...data, base});
 }
 
 function Document({children}: {children: React.ReactNode}) {
   const emotionCache = createEmotionCache({key: 'css'});
+  const data = useTypedLoaderData<typeof loader>();
 
   return (
     <html lang="de">
       <head>
         <Meta />
         <Links />
+        <base href={data.base} />
       </head>
       <body>
         <CacheProvider value={emotionCache}>
           <ChakraProvider theme={theme}>
             <ApolloProvider client={apolloClient}>
               <Flex direction={'column'} minHeight={'100vh'}>
-                <Header />
+                <Header event={data.eventsConnection?.edges[0]?.node} />
                 <Box
                   flex="1 1 0"
                   ml="auto"

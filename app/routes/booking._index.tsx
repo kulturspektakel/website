@@ -6,19 +6,28 @@ import {Link, Outlet, useSearchParams} from '@remix-run/react';
 import {$path} from 'remix-routes';
 import ApplicationPhase from '~/components/booking/ApplicationPhase';
 import mergeMeta from '~/utils/mergeMeta';
-import {useTypedRouteLoaderData} from 'remix-typedjson';
+import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import type {loader as rootLoader} from '~/root';
+import apolloClient from '~/utils/apolloClient';
+import {BookingDocument, BookingQuery} from '~/types/graphql';
+import {LoaderFunctionArgs} from '@remix-run/node';
 
 gql`
-  fragment BookingDetails on Event {
-    id
-    name
-    start
-    end
-    bandApplicationStart
-    bandApplicationEnd
-    djApplicationStart
-    djApplicationEnd
+  query Booking {
+    eventsConnection(first: 1, type: Kulturspektakel) {
+      edges {
+        node {
+          id
+          name
+          start
+          end
+          bandApplicationStart
+          bandApplicationEnd
+          djApplicationStart
+          djApplicationEnd
+        }
+      }
+    }
   }
 `;
 
@@ -53,9 +62,16 @@ export const meta = mergeMeta<typeof rootLoader>(({matches}) => {
   return result;
 });
 
-export default function Home() {
-  const root = useTypedRouteLoaderData<typeof rootLoader>('root')!;
-  const event = root.eventsConnection.edges[0].node;
+export async function loader(args: LoaderFunctionArgs) {
+  const {data} = await apolloClient.query<BookingQuery>({
+    query: BookingDocument,
+  });
+
+  return typedjson(data.eventsConnection.edges[0].node);
+}
+
+export default function Booking() {
+  const event = useTypedLoaderData<typeof loader>();
   const utm_source = useUtmSource();
 
   return (

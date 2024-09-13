@@ -1232,17 +1232,7 @@ export type RootQuery = {
     __typename?: 'QueryEventsConnection';
     edges: Array<{
       __typename?: 'QueryEventsConnectionEdge';
-      node: {
-        __typename?: 'Event';
-        start: Date;
-        end: Date;
-        id: string;
-        name: string;
-        bandApplicationStart?: Date | null;
-        bandApplicationEnd?: Date | null;
-        djApplicationStart?: Date | null;
-        djApplicationEnd?: Date | null;
-      };
+      node: {__typename?: 'Event'; start: Date; end: Date};
     }>;
   };
 };
@@ -1736,16 +1726,27 @@ export type CreateBandApplicationMutation = {
   createBandApplication: {__typename?: 'BandApplication'; id: string};
 };
 
-export type BookingDetailsFragment = {
-  __typename?: 'Event';
-  id: string;
-  name: string;
-  start: Date;
-  end: Date;
-  bandApplicationStart?: Date | null;
-  bandApplicationEnd?: Date | null;
-  djApplicationStart?: Date | null;
-  djApplicationEnd?: Date | null;
+export type BookingQueryVariables = Exact<{[key: string]: never}>;
+
+export type BookingQuery = {
+  __typename?: 'Query';
+  eventsConnection: {
+    __typename?: 'QueryEventsConnection';
+    edges: Array<{
+      __typename?: 'QueryEventsConnectionEdge';
+      node: {
+        __typename?: 'Event';
+        id: string;
+        name: string;
+        start: Date;
+        end: Date;
+        bandApplicationStart?: Date | null;
+        bandApplicationEnd?: Date | null;
+        djApplicationStart?: Date | null;
+        djApplicationEnd?: Date | null;
+      };
+    }>;
+  };
 };
 
 export type SingleEventQueryVariables = Exact<{
@@ -2514,18 +2515,6 @@ export const ProductListComponentFragmentDoc = gql`
     }
   }
 `;
-export const BookingDetailsFragmentDoc = gql`
-  fragment BookingDetails on Event {
-    id
-    name
-    start
-    end
-    bandApplicationStart
-    bandApplicationEnd
-    djApplicationStart
-    djApplicationEnd
-  }
-`;
 export const DistanceDocument = gql`
   query Distance($origin: String!) {
     distanceToKult(origin: $origin)
@@ -2935,13 +2924,11 @@ export const RootDocument = gql`
       edges {
         node {
           ...Header
-          ...BookingDetails
         }
       }
     }
   }
   ${HeaderFragmentDoc}
-  ${BookingDetailsFragmentDoc}
 `;
 
 /**
@@ -3347,6 +3334,84 @@ export type CreateBandApplicationMutationResult =
 export type CreateBandApplicationMutationOptions = Apollo.BaseMutationOptions<
   CreateBandApplicationMutation,
   CreateBandApplicationMutationVariables
+>;
+export const BookingDocument = gql`
+  query Booking {
+    eventsConnection(first: 1, type: Kulturspektakel) {
+      edges {
+        node {
+          id
+          name
+          start
+          end
+          bandApplicationStart
+          bandApplicationEnd
+          djApplicationStart
+          djApplicationEnd
+        }
+      }
+    }
+  }
+`;
+
+/**
+ * __useBookingQuery__
+ *
+ * To run a query within a React component, call `useBookingQuery` and pass it any options that fit your needs.
+ * When your component renders, `useBookingQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useBookingQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useBookingQuery(
+  baseOptions?: Apollo.QueryHookOptions<BookingQuery, BookingQueryVariables>,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useQuery<BookingQuery, BookingQueryVariables>(
+    BookingDocument,
+    options,
+  );
+}
+export function useBookingLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    BookingQuery,
+    BookingQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useLazyQuery<BookingQuery, BookingQueryVariables>(
+    BookingDocument,
+    options,
+  );
+}
+export function useBookingSuspenseQuery(
+  baseOptions?:
+    | Apollo.SkipToken
+    | Apollo.SuspenseQueryHookOptions<BookingQuery, BookingQueryVariables>,
+) {
+  const options =
+    baseOptions === Apollo.skipToken
+      ? baseOptions
+      : {...defaultOptions, ...baseOptions};
+  return Apollo.useSuspenseQuery<BookingQuery, BookingQueryVariables>(
+    BookingDocument,
+    options,
+  );
+}
+export type BookingQueryHookResult = ReturnType<typeof useBookingQuery>;
+export type BookingLazyQueryHookResult = ReturnType<typeof useBookingLazyQuery>;
+export type BookingSuspenseQueryHookResult = ReturnType<
+  typeof useBookingSuspenseQuery
+>;
+export type BookingQueryResult = Apollo.QueryResult<
+  BookingQuery,
+  BookingQueryVariables
 >;
 export const SingleEventDocument = gql`
   query SingleEvent($id: ID!, $num_photos: Int = 100) {

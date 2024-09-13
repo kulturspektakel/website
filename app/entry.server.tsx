@@ -6,10 +6,8 @@ import {getDataFromTree} from '@apollo/client/react/ssr';
 import {createSitemapGenerator} from 'remix-sitemap';
 import * as Sentry from '@sentry/remix';
 
-const siteUrl = 'www.kulturspektakel.de';
-
 const {isSitemapUrl, sitemap} = createSitemapGenerator({
-  siteUrl: 'https://' + siteUrl,
+  siteUrl: 'https://www.kulturspektakel.de',
   generateRobotsTxt: true,
 });
 
@@ -31,33 +29,13 @@ export default async function handleRequest(
   remixContext: EntryContext,
 ) {
   const url = new URL(request.url);
-  if (url.hostname === 'kult.cash') {
-    if (url.pathname === '/robots.txt') {
-      return new Response('Disallow: /', {
-        status: 200,
-        headers: {
-          'Content-Type': 'text/plain',
-        },
-      });
-    } else if (!KULT_CASH_PATH_PREFIXES.has(url.pathname.split('/')?.at(1))) {
-      url.hostname = siteUrl;
-      return new Response('Redirecting...', {
-        status: 301,
-        headers: {
-          Location: url.toString(),
-        },
-      });
-    }
-  } else if (
+  if (
     url.hostname !== 'localhost' &&
+    url.hostname !== 'kult.cash' &&
     KULT_CASH_PATH_PREFIXES.has(url.pathname.split('/')?.at(1))
   ) {
-    url.hostname = 'kult.cash';
-    return new Response('Redirecting...', {
-      status: 301,
-      headers: {
-        Location: url.toString(),
-      },
+    return new Response('Not Found', {
+      status: 404,
     });
   }
 

@@ -30,6 +30,7 @@ import type {RemixNavLinkProps} from '@remix-run/react/dist/components';
 import {gql} from '@apollo/client';
 import type {loader as rootLoader} from '~/root';
 import {useTypedRouteLoaderData} from 'remix-typedjson';
+import {HeaderFragment} from '~/types/graphql';
 
 gql`
   fragment Header on Event {
@@ -95,10 +96,8 @@ function NavItems() {
   );
 }
 
-export default function Header() {
+export default function Header({event}: {event?: HeaderFragment}) {
   const isHome = useLocation().pathname === '/';
-  const root = useTypedRouteLoaderData<typeof rootLoader>('root');
-  const event = root?.eventsConnection?.edges[0]?.node;
   const [showNav, setShowNav] = useState(false);
   const {state} = useNavigation();
   // Close nav on route change
