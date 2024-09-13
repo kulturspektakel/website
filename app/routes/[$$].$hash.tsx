@@ -212,7 +212,15 @@ export default function () {
   const data = useTypedLoaderData<typeof loader>();
 
   return (
-    <VStack maxW="450" mr="auto" ml="auto" spacing="7" align="stretch">
+    <VStack
+      maxW="450"
+      mr="auto"
+      ml="auto"
+      spacing="7"
+      minH="calc(100vh - 148px)"
+      align="stretch"
+      justifyContent="center"
+    >
       {data.hasNewerTransactions && (
         <InfoBox>
           Es liegen neuere Buchungen vor. Karte erneut auslesen um diese

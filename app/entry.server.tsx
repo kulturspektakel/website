@@ -6,8 +6,10 @@ import {getDataFromTree} from '@apollo/client/react/ssr';
 import {createSitemapGenerator} from 'remix-sitemap';
 import * as Sentry from '@sentry/remix';
 
+const siteUrl = 'www.kulturspektakel.de';
+
 const {isSitemapUrl, sitemap} = createSitemapGenerator({
-  siteUrl: 'https://www.kulturspektakel.de',
+  siteUrl: 'https://' + siteUrl,
   generateRobotsTxt: true,
 });
 
@@ -28,21 +30,39 @@ export default async function handleRequest(
   responseHeaders: Headers,
   remixContext: EntryContext,
 ) {
-  if (isSitemapUrl(request)) {
-    return await sitemap(request, remixContext);
+  const url = new URL(request.url);
+  if (url.hostname === 'kult.cash') {
+    if (url.pathname === '/robots.txt') {
+      return new Response('Disallow: /', {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/plain',
+        },
+      });
+    } else if (!KULT_CASH_PATH_PREFIXES.has(url.pathname.split('/')?.at(1))) {
+      url.hostname = siteUrl;
+      return new Response('Redirecting...', {
+        status: 301,
+        headers: {
+          Location: url.toString(),
+        },
+      });
+    }
+  } else if (
+    url.hostname !== 'localhost' &&
+    KULT_CASH_PATH_PREFIXES.has(url.pathname.split('/')?.at(1))
+  ) {
+    url.hostname = 'kult.cash';
+    return new Response('Redirecting...', {
+      status: 301,
+      headers: {
+        Location: url.toString(),
+      },
+    });
   }
 
-  const url = new URL(request.url);
-  if (KULT_CASH_PATH_PREFIXES.has(url.pathname.split('/')?.at(1))) {
-    if (url.hostname === 'kult.cash') {
-      // we are good
-    } else if (url.hostname === 'localhost') {
-      console.warn(
-        `Accessing ${url.pathname} in production is only possible via kult.cash`,
-      );
-    } else {
-      return new Response('Not Found', {status: 404});
-    }
+  if (isSitemapUrl(request)) {
+    return await sitemap(request, remixContext);
   }
 
   const App = <RemixServer context={remixContext} url={request.url} />;
