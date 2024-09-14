@@ -1,34 +1,10 @@
-import {gql} from '@apollo/client';
 import {VStack, Text, Heading, Box, Link as ChakraLink} from '@chakra-ui/react';
-import DateString, {dateStringComponents} from '~/components/DateString';
-import type {MetaDescriptor} from '@remix-run/react';
+import DateString from '~/components/DateString';
 import {Link, Outlet, useSearchParams} from '@remix-run/react';
 import {$path} from 'remix-routes';
 import ApplicationPhase from '~/components/booking/ApplicationPhase';
-import mergeMeta from '~/utils/mergeMeta';
-import {typedjson, useTypedLoaderData} from 'remix-typedjson';
-import apolloClient from '~/utils/apolloClient';
-import {BookingDocument, BookingQuery} from '~/types/graphql';
-import {LoaderFunctionArgs} from '@remix-run/node';
-
-gql`
-  query Booking {
-    eventsConnection(first: 1, type: Kulturspektakel) {
-      edges {
-        node {
-          id
-          name
-          start
-          end
-          bandApplicationStart
-          bandApplicationEnd
-          djApplicationStart
-          djApplicationEnd
-        }
-      }
-    }
-  }
-`;
+import {useTypedRouteLoaderData} from 'remix-typedjson';
+import {loader} from './booking';
 
 export function useUtmSource() {
   const [searchParams] = useSearchParams();
@@ -41,34 +17,8 @@ export function useUtmSource() {
   }
 }
 
-export const meta = mergeMeta<typeof loader>(({data}) => {
-  const result: MetaDescriptor[] = [
-    {
-      title: 'Band- und DJ-Bewerbungen',
-    },
-  ];
-
-  if (data && data?.bandApplicationEnd) {
-    result.push({
-      name: 'description',
-      content: `Die Bewerbungspahse für das ${data.name} läuft bis zum ${
-        dateStringComponents({date: new Date(data.bandApplicationEnd)}).date
-      }`,
-    });
-  }
-  return result;
-});
-
-export async function loader(args: LoaderFunctionArgs) {
-  const {data} = await apolloClient.query<BookingQuery>({
-    query: BookingDocument,
-  });
-
-  return typedjson(data.eventsConnection.edges[0].node);
-}
-
 export default function Booking() {
-  const event = useTypedLoaderData<typeof loader>();
+  const event = useTypedRouteLoaderData<typeof loader>('routes/booking')!;
   const utm_source = useUtmSource();
 
   return (

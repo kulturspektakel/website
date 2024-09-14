@@ -31,6 +31,7 @@ import ReloadWarning from '~/components/booking/ReloadWarning';
 import {useUtmSource} from './booking._index';
 import type {loader as rootLoader} from '~/root';
 import {useTypedRouteLoaderData} from 'remix-typedjson';
+import {loader} from './booking';
 
 const STEPS = [Step1, Step2, Step3] as const;
 export type FormikContextT = Partial<CreateBandApplicationInput> & {
@@ -61,6 +62,7 @@ export default function () {
   const [currentStep, setCurrentStep] = useState(0);
   const {applicationType} =
     useParams<Routes['/booking/:applicationType']['params']>();
+  const event = useTypedRouteLoaderData<typeof loader>('routes/booking')!;
   const [create, {error}] = useCreateBandApplicationMutation();
   const isLastStep = currentStep === STEPS.length - 1;
   const navigate = useNavigate();
@@ -128,7 +130,7 @@ export default function () {
                 ...values,
                 spotifyArtist: values.spotifyArtist?.id,
               } as CreateBandApplicationInput,
-              eventId: root.eventsConnection.edges[0].node.id,
+              eventId: event.id,
             },
             errorPolicy: 'all',
           });

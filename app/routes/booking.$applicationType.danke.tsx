@@ -3,16 +3,15 @@ import Confetti from '~/components/booking/Confetti.client';
 import DateString from '~/components/DateString';
 import {useParams} from '@remix-run/react';
 import {ClientOnly} from 'remix-utils/client-only';
-import type {loader as rootLoader} from '~/root';
 import {useTypedRouteLoaderData} from 'remix-typedjson';
+import {loader} from './booking';
 
 export type SearchParams = {
   applicationType: 'band' | 'dj';
 };
 
 export default function Thanks() {
-  const root = useTypedRouteLoaderData<typeof rootLoader>('root')!;
-  const event = root.eventsConnection.edges[0].node;
+  const event = useTypedRouteLoaderData<typeof loader>('routes/booking')!;
   const {applicationType} = useParams<SearchParams>();
   const applicationEnd =
     applicationType === 'dj'
