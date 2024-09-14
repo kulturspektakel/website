@@ -118,24 +118,10 @@ export async function loader(args: LoaderFunctionArgs) {
   const {data} = await apolloClient.query<RootQuery>({
     query: RootDocument,
   });
-  let base = '';
-  const url = new URL(args.request.url);
-  if (
-    url.hostname !== 'localhost' &&
-    url.hostname !== 'www.kulturspektakel.de'
-  ) {
-    base = 'https://www.kulturspektakel.de';
-  }
-  return typedjson({...data, base});
+  return typedjson(data);
 }
 
-function Document({
-  children,
-  base,
-}: {
-  children: React.ReactNode;
-  base?: string;
-}) {
+function Document({children}: {children: React.ReactNode}) {
   const emotionCache = createEmotionCache({key: 'css'});
 
   return (
@@ -143,7 +129,6 @@ function Document({
       <head>
         <Meta />
         <Links />
-        {base && <base href={base} />}
       </head>
       <body>
         <CacheProvider value={emotionCache}>
@@ -181,7 +166,7 @@ function Document({
 function App() {
   const data = useTypedRouteLoaderData<typeof loader>('root');
   return (
-    <Document base={data?.base}>
+    <Document>
       <Outlet />
     </Document>
   );

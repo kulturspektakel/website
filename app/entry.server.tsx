@@ -20,28 +20,25 @@ Sentry.init({
 
 export const handleError = Sentry.sentryHandleError;
 
-const KULT_CASH_PATH_PREFIXES = new Set<string | undefined>(['$$', 'learn']);
-
 export default async function handleRequest(
   request: Request,
   responseStatusCode: number,
   responseHeaders: Headers,
   remixContext: EntryContext,
 ) {
-  // const url = new URL(request.url);
-  // if (
-  //   url.hostname !== 'localhost' &&
-  //   url.hostname !== 'kult.cash' &&
-  //   KULT_CASH_PATH_PREFIXES.has(url.pathname.split('/')?.at(1))
-  // ) {
-  //   url.hostname = 'www.kulturspektakel.de';
-  //   return new Response('Redirecting...', {
-  //     status: 301,
-  //     headers: {
-  //       Location: url.toString(),
-  //     },
-  //   });
-  // }
+  const url = new URL(request.url);
+  if (
+    url.hostname !== 'localhost' &&
+    url.hostname !== 'www.kulturspektakel.de
+  ) {
+    url.hostname = 'www.kulturspektakel.de';
+    return new Response('Redirecting...', {
+      status: 301,
+      headers: {
+        Location: url.toString(),
+      },
+    });
+  }
 
   if (isSitemapUrl(request)) {
     return await sitemap(request, remixContext);
