@@ -7,7 +7,6 @@ import {$path} from 'remix-routes';
 import ApplicationPhase from '~/components/booking/ApplicationPhase';
 import mergeMeta from '~/utils/mergeMeta';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
-import type {loader as rootLoader} from '~/root';
 import apolloClient from '~/utils/apolloClient';
 import {BookingDocument, BookingQuery} from '~/types/graphql';
 import {LoaderFunctionArgs} from '@remix-run/node';
@@ -42,20 +41,18 @@ export function useUtmSource() {
   }
 }
 
-export const meta = mergeMeta<typeof rootLoader>(({matches}) => {
-  const event = matches.find((m) => m.id === 'root')?.data.eventsConnection
-    .edges[0].node;
+export const meta = mergeMeta<typeof loader>(({data}) => {
   const result: MetaDescriptor[] = [
     {
       title: 'Band- und DJ-Bewerbungen',
     },
   ];
 
-  if (event.bandApplicationEnd) {
+  if (data && data?.bandApplicationEnd) {
     result.push({
       name: 'description',
-      content: `Die Bewerbungspahse für das ${event.name} läuft bis zum ${
-        dateStringComponents({date: new Date(event.bandApplicationEnd)}).date
+      content: `Die Bewerbungspahse für das ${data.name} läuft bis zum ${
+        dateStringComponents({date: new Date(data.bandApplicationEnd)}).date
       }`,
     });
   }
