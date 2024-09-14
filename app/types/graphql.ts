@@ -1232,7 +1232,7 @@ export type RootQuery = {
     __typename?: 'QueryEventsConnection';
     edges: Array<{
       __typename?: 'QueryEventsConnectionEdge';
-      node: {__typename?: 'Event'; start: Date; end: Date};
+      node: {__typename?: 'Event'; id: string; start: Date; end: Date};
     }>;
   };
 };
@@ -2923,6 +2923,7 @@ export const RootDocument = gql`
     eventsConnection(first: 1, type: Kulturspektakel) {
       edges {
         node {
+          id
           ...Header
         }
       }

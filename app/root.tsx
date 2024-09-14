@@ -21,7 +21,6 @@ import {
   Scripts,
   ScrollRestoration,
   isRouteErrorResponse,
-  useNavigation,
   useRouteError,
 } from '@remix-run/react';
 import apolloClient from './utils/apolloClient';
@@ -107,6 +106,7 @@ gql`
     eventsConnection(first: 1, type: Kulturspektakel) {
       edges {
         node {
+          id
           ...Header
         }
       }
