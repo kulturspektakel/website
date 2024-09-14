@@ -29,7 +29,7 @@ export default async function handleRequest(
   const url = new URL(request.url);
   if (
     url.hostname !== 'localhost' &&
-    url.hostname !== 'www.kulturspektakel.de
+    url.hostname !== 'www.kulturspektakel.de'
   ) {
     url.hostname = 'www.kulturspektakel.de';
     return new Response('Redirecting...', {
