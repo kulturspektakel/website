@@ -85,12 +85,14 @@ export default function EventComponent() {
           <Heading textAlign="center" size="lg" mt="10">
             Anfahrt
           </Heading>
-          <Card bg="white" aspectRatio={16 / 9} mt="5" p="3">
-            <GoogleMaps
-              latitude={event.latitude}
-              longitude={event.longitude}
-              apiKey={apiKey}
-            />
+          <Card bg="white" aspectRatio={16 / 9} mt="5">
+            <Box position="absolute" bottom="3" top="3" left="3" right="3">
+              <GoogleMaps
+                latitude={event.latitude}
+                longitude={event.longitude}
+                apiKey={apiKey}
+              />
+            </Box>
           </Card>
           <Box textAlign="center" mt="3">
             <Link
