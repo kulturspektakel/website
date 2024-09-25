@@ -91,6 +91,7 @@ export type BandApplication = Node & {
   repertoire?: Maybe<BandRepertoireType>;
   spotifyArtist?: Maybe<Scalars['String']['output']>;
   spotifyMonthlyListeners?: Maybe<Scalars['Int']['output']>;
+  tags: Array<Scalars['String']['output']>;
   website?: Maybe<Scalars['String']['output']>;
 };
 
@@ -237,6 +238,7 @@ export type CardTransactionConnection = {
 export enum CardTransactionType {
   Cashout = 'Cashout',
   Charge = 'Charge',
+  Repair = 'Repair',
   TopUp = 'TopUp',
 }
 
@@ -438,6 +440,7 @@ export type MissingTransaction = Transaction & {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  addBandApplicationTag: BandApplication;
   createBandApplication: BandApplication;
   createBandApplicationComment: BandApplication;
   createNonceRequest?: Maybe<Scalars['String']['output']>;
@@ -446,9 +449,15 @@ export type Mutation = {
   markBandApplicationContacted: BandApplication;
   nonceFromRequest?: Maybe<Scalars['String']['output']>;
   rateBandApplication: BandApplication;
+  removeBandApplicationTag: BandApplication;
   updateBandApplication: BandApplication;
   updateDeviceProductList: Device;
   upsertProductList: ProductList;
+};
+
+export type MutationAddBandApplicationTagArgs = {
+  bandApplicationId: Scalars['ID']['input'];
+  tag: Scalars['String']['input'];
 };
 
 export type MutationCreateBandApplicationArgs = {
@@ -487,6 +496,11 @@ export type MutationNonceFromRequestArgs = {
 export type MutationRateBandApplicationArgs = {
   bandApplicationId: Scalars['ID']['input'];
   rating?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type MutationRemoveBandApplicationTagArgs = {
+  bandApplicationId: Scalars['ID']['input'];
+  tag: Scalars['String']['input'];
 };
 
 export type MutationUpdateBandApplicationArgs = {
@@ -687,6 +701,7 @@ export type ProductListSalesNumbersArgs = {
 export type Query = {
   __typename?: 'Query';
   areas: Array<Area>;
+  bandApplicationTags: Array<Scalars['String']['output']>;
   bandPlaying?: Maybe<BandPlaying>;
   cardStatus: CardStatus;
   checkDuplicateApplication?: Maybe<ObfuscatedBandApplication>;
