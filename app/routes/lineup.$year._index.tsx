@@ -119,8 +119,8 @@ export default function LineupYear() {
 
   const activeAreas = useMemo(
     () =>
-      areas.filter(
-        (a) => event?.bandsPlaying.edges.some((e) => e.node.area.id === a.id),
+      areas.filter((a) =>
+        event?.bandsPlaying.edges.some((e) => e.node.area.id === a.id),
       ),
     [areas, event?.bandsPlaying.edges],
   );
@@ -133,7 +133,6 @@ export default function LineupYear() {
         value={stageFilter}
         options={activeAreas.map((a) => ({name: a.displayName, id: a.id}))}
       />
-
       {days.map((day) => (
         <Day
           key={day.toISOString()}

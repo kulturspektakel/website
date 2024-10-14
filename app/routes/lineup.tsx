@@ -17,14 +17,15 @@ import {
   Center,
 } from '@chakra-ui/react';
 import {Link, NavLink, Outlet, useParams} from '@remix-run/react';
-import {$path} from 'remix-routes';
 import Search from '~/components/lineup/Search';
-import type {LineupsQuery} from '~/types/graphql';
-import {LineupsDocument} from '~/types/graphql';
-import type {loader as rootLoader} from '~/root';
-import {useTypedRouteLoaderData} from 'remix-typedjson';
+import type {BookingActiveQuery, LineupsQuery} from '~/types/graphql';
+import {BookingActiveDocument, LineupsDocument} from '~/types/graphql';
+import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import InfoBox from '~/components/InfoBox';
 import {Suspense} from 'react';
+import {LoaderFunctionArgs} from '@remix-run/node';
+import apolloClient from '~/utils/apolloClient';
+import {$path} from 'remix-routes';
 
 gql`
   query Lineups {
@@ -40,24 +41,43 @@ gql`
   }
 `;
 
-function useApplicationsOpen() {
-  const root = useTypedRouteLoaderData<typeof rootLoader>('root')!;
-  const event = root.eventsConnection.edges[0].node;
+gql`
+  query BookingActive {
+    eventsConnection(first: 1, type: Kulturspektakel) {
+      edges {
+        node {
+          id
+          bandApplicationStart
+          bandApplicationEnd
+          djApplicationStart
+          djApplicationEnd
+        }
+      }
+    }
+  }
+`;
 
-  return (
-    (event.bandApplicationStart &&
-      event.bandApplicationEnd &&
-      event.bandApplicationStart.getTime() < Date.now() &&
-      event.bandApplicationEnd.getTime() > Date.now()) ||
-    (event.djApplicationStart &&
-      event.djApplicationEnd &&
-      event.djApplicationStart.getTime() < Date.now() &&
-      event.djApplicationEnd.getTime() > Date.now())
-  );
+export async function loader(args: LoaderFunctionArgs) {
+  const {data} = await apolloClient.query<BookingActiveQuery>({
+    query: BookingActiveDocument,
+  });
+  const event = data.eventsConnection.edges[0].node;
+  return typedjson({
+    bookingAlert:
+      (event.bandApplicationStart &&
+        event.bandApplicationEnd &&
+        event.bandApplicationStart.getTime() < Date.now() &&
+        event.bandApplicationEnd.getTime() > Date.now()) ||
+      (event.djApplicationStart &&
+        event.djApplicationEnd &&
+        event.djApplicationStart.getTime() < Date.now() &&
+        event.djApplicationEnd.getTime() > Date.now()),
+  });
 }
 
 export default function () {
   const params = useParams();
+  const bookingAlert = useTypedLoaderData<typeof loader>().bookingAlert;
 
   return (
     <>
@@ -115,10 +135,10 @@ export default function () {
             </Menu>
           )}
         </Flex>
-        <BookingAlert display={['flex', 'none']} />
+        {bookingAlert && <BookingAlert display={['flex', 'none']} />}
         <Search w={['100%', 'auto']} />
       </Stack>
-      <BookingAlert display={['none', 'flex']} mt="4" />
+      {bookingAlert && <BookingAlert display={['none', 'flex']} mt="4" />}
       <Outlet />
     </>
   );
@@ -144,12 +164,6 @@ function MenuItems() {
 }
 
 function BookingAlert(props: BoxProps) {
-  const applicationsOpen = useApplicationsOpen();
-
-  if (!applicationsOpen) {
-    return null;
-  }
-
   return (
     <InfoBox {...props} title="Jetzt Bewerben">
       <Text>

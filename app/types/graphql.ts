@@ -2209,6 +2209,26 @@ export type LineupsQuery = {
   };
 };
 
+export type BookingActiveQueryVariables = Exact<{[key: string]: never}>;
+
+export type BookingActiveQuery = {
+  __typename?: 'Query';
+  eventsConnection: {
+    __typename?: 'QueryEventsConnection';
+    edges: Array<{
+      __typename?: 'QueryEventsConnectionEdge';
+      node: {
+        __typename?: 'Event';
+        id: string;
+        bandApplicationStart?: Date | null;
+        bandApplicationEnd?: Date | null;
+        djApplicationStart?: Date | null;
+        djApplicationEnd?: Date | null;
+      };
+    }>;
+  };
+};
+
 export type NewsPageQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
@@ -4201,6 +4221,91 @@ export type LineupsSuspenseQueryHookResult = ReturnType<
 export type LineupsQueryResult = Apollo.QueryResult<
   LineupsQuery,
   LineupsQueryVariables
+>;
+export const BookingActiveDocument = gql`
+  query BookingActive {
+    eventsConnection(first: 1, type: Kulturspektakel) {
+      edges {
+        node {
+          id
+          bandApplicationStart
+          bandApplicationEnd
+          djApplicationStart
+          djApplicationEnd
+        }
+      }
+    }
+  }
+`;
+
+/**
+ * __useBookingActiveQuery__
+ *
+ * To run a query within a React component, call `useBookingActiveQuery` and pass it any options that fit your needs.
+ * When your component renders, `useBookingActiveQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useBookingActiveQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useBookingActiveQuery(
+  baseOptions?: Apollo.QueryHookOptions<
+    BookingActiveQuery,
+    BookingActiveQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useQuery<BookingActiveQuery, BookingActiveQueryVariables>(
+    BookingActiveDocument,
+    options,
+  );
+}
+export function useBookingActiveLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    BookingActiveQuery,
+    BookingActiveQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useLazyQuery<BookingActiveQuery, BookingActiveQueryVariables>(
+    BookingActiveDocument,
+    options,
+  );
+}
+export function useBookingActiveSuspenseQuery(
+  baseOptions?:
+    | Apollo.SkipToken
+    | Apollo.SuspenseQueryHookOptions<
+        BookingActiveQuery,
+        BookingActiveQueryVariables
+      >,
+) {
+  const options =
+    baseOptions === Apollo.skipToken
+      ? baseOptions
+      : {...defaultOptions, ...baseOptions};
+  return Apollo.useSuspenseQuery<
+    BookingActiveQuery,
+    BookingActiveQueryVariables
+  >(BookingActiveDocument, options);
+}
+export type BookingActiveQueryHookResult = ReturnType<
+  typeof useBookingActiveQuery
+>;
+export type BookingActiveLazyQueryHookResult = ReturnType<
+  typeof useBookingActiveLazyQuery
+>;
+export type BookingActiveSuspenseQueryHookResult = ReturnType<
+  typeof useBookingActiveSuspenseQuery
+>;
+export type BookingActiveQueryResult = Apollo.QueryResult<
+  BookingActiveQuery,
+  BookingActiveQueryVariables
 >;
 export const NewsPageDocument = gql`
   query NewsPage($id: ID!) {

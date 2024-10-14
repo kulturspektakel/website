@@ -35,7 +35,6 @@ import {typedjson, useTypedRouteLoaderData} from 'remix-typedjson';
 import {RootDocument} from './types/graphql';
 import type {RootQuery} from './types/graphql';
 import {dateStringComponents} from './components/DateString';
-import logo from '../public/logos/logo.png';
 import Headline from './components/Headline';
 import {Analytics} from '@vercel/analytics/react';
 import {SpeedInsights} from '@vercel/speed-insights/remix';
@@ -154,7 +153,6 @@ function Document({children}: {children: React.ReactNode}) {
             </ApolloProvider>
           </ChakraProvider>
         </CacheProvider>
-
         <ScrollRestoration />
         <Scripts />
         <LiveReload />
@@ -164,7 +162,6 @@ function Document({children}: {children: React.ReactNode}) {
 }
 
 function App() {
-  const data = useTypedRouteLoaderData<typeof loader>('root');
   return (
     <Document>
       <Outlet />
