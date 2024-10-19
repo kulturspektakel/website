@@ -9,6 +9,7 @@ export default forwardRef(function FieldWrapper(
     as = Input,
     validate,
     value,
+    onBlur: customOnBlur,
     ...props
   }: InputProps & {
     validate?: FieldValidator;
@@ -29,6 +30,13 @@ export default forwardRef(function FieldWrapper(
     },
   });
 
+  const onBlur = customOnBlur
+    ? (e: React.FocusEvent<any>) => {
+        customOnBlur(e);
+        field.onBlur(e);
+      }
+    : field.onBlur;
+
   const inputProps: InputProps & {
     ref?: React.Ref<any>;
   } = {
@@ -37,6 +45,7 @@ export default forwardRef(function FieldWrapper(
     isInvalid: (meta.touched && meta.error) || isInvalid ? true : false,
     bg: 'white',
     ref,
+    onBlur,
     ...props,
   };
 

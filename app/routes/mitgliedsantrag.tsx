@@ -2,11 +2,11 @@ import {
   FormControl,
   FormLabel,
   Heading,
-  Checkbox,
   Text,
   Box,
   Button,
   VStack,
+  FormErrorMessage,
 } from '@chakra-ui/react';
 import {Form, Formik} from 'formik';
 import Field from '~/components/booking/Field';
@@ -18,14 +18,14 @@ import RadioStack, {RadioStackTab} from '~/components/RadioStack';
 
 const accountHolder = z
   .object({
-    accountHolderIsDifferent: z.literal(true),
+    accountHolderIsDifferent: z.literal('true'),
     accountHolderName: z.string().min(1),
     accountHolderAddress: z.string().min(1),
     accountHolderCity: z.string().min(1),
   })
   .or(
     z.object({
-      accountHolderIsDifferent: z.literal(false),
+      accountHolderIsDifferent: z.literal('false'),
     }),
   );
 
@@ -36,8 +36,14 @@ const schema = z
     address: z.string().min(1),
     city: z.string().min(1),
     email: z.string().email(),
-    iban: z.custom((iban: string) => isValid(iban)),
-    membershipFee: z.literal(1500).or(z.literal(3000)).or(z.number().gt(3000)),
+    iban: z.custom(
+      (iban: string) => isValid(iban),
+      'IBAN hat kein gültiges Format',
+    ),
+    membershipFee: z
+      .literal('1500')
+      .or(z.literal('3000'))
+      .or(z.preprocess((e: any) => parseInt(e, 10), z.number().gt(3000))),
   })
   .and(accountHolder);
 
@@ -57,14 +63,29 @@ export default function Mitglied() {
       <Heading mb="8">Mitgliedsantrag</Heading>
       <Formik<Partial<Membership>>
         initialValues={{}}
+        validateOnBlur
         validationSchema={toFormikValidationSchema(schema)}
         onSubmit={(values) => {
           console.log(values);
         }}
       >
-        {({values}) => (
+        {({values, errors, setFieldValue, touched}) => (
           <Form>
-            <VStack spacing="4" align="flex-start">
+            <VStack spacing="4" align="stretch">
+              <FormControl id="membership" isRequired>
+                <RadioStack>
+                  <RadioStackTab
+                    title="Kulturspektakel Gauting&nbsp;e.V."
+                    subtitle="Für aktive Mitgestalter:innen des Kulturspektakels"
+                    value="kult"
+                  />
+                  <RadioStackTab
+                    title="Förderverein Kulturspektakel Gauting&nbsp;e.V."
+                    subtitle="Für Unterstützer:innen des Kulturspektakels"
+                    value="foerderverein"
+                  />
+                </RadioStack>
+              </FormControl>
               <FormControl id="name" isRequired>
                 <FormLabel>Name</FormLabel>
                 <Field type="text" />
@@ -93,7 +114,7 @@ export default function Mitglied() {
                 Mitgliedsbeitrag
               </Heading>
 
-              <FormControl id="membershipFee">
+              <FormControl id="membershipFee" isRequired>
                 <RadioStack>
                   <RadioStackTab
                     title="30,00&nbsp;€"
@@ -102,20 +123,29 @@ export default function Mitglied() {
                   />
                   <RadioStackTab
                     title="15,00&nbsp;€"
-                    subtitle="Ermäßigter Jahresbeitrag für Schüler:innen, Studierende, etc."
+                    subtitle="Für Personen ohne/mit vermindertem Einkommen (z.B. Schüler:innen, Studierende)"
                     value="1500"
                   />
                 </RadioStack>
               </FormControl>
 
-              <FormControl id="iban" isRequired>
+              <FormControl
+                id="iban"
+                isRequired
+                isInvalid={touched.iban && !!errors.iban}
+              >
                 <FormLabel>IBAN</FormLabel>
                 <Field
                   type="text"
-                  onBlur={() => {
-                    console.log(printFormat(values.iban));
+                  onBlur={(e) => {
+                    if (isValid(e.target.value)) {
+                      setFieldValue('iban', printFormat(e.target.value));
+                    }
                   }}
                 />
+                <FormErrorMessage>
+                  {typeof errors.iban === 'string' ? errors.iban : ''}
+                </FormErrorMessage>
               </FormControl>
 
               <FormControl id="accountHolderIsDifferent" isRequired>
@@ -133,7 +163,7 @@ export default function Mitglied() {
                 </RadioStack>
               </FormControl>
 
-              {values.accountHolderIsDifferent && (
+              {values.accountHolderIsDifferent === 'true' && (
                 <>
                   <FormControl id="accountHolder" isRequired>
                     <FormLabel>Name des/der Kontoinhaber:in</FormLabel>
@@ -173,12 +203,12 @@ export default function Mitglied() {
               </Text>
 
               <Text fontSize="small" color="offwhite.600">
-                Die Mandatsreferenz-Nummer wird dem Kontoinhaber mit einer
-                separaten Ankündigung über den erstmaligen Einzug des
+                Die Mandatsreferenz-Nummer wird der/dem Kontoinhaber:in mit
+                einer separaten Ankündigung über den erstmaligen Einzug des
                 Lastschriftsbetrags mitgeteilt.
               </Text>
 
-              <Box textAlign="right" mt="8">
+              <Box textAlign="right">
                 <Button variant="primary" type="submit" isLoading={false}>
                   Absenden
                 </Button>

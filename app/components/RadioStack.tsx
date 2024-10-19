@@ -2,7 +2,6 @@ import {
   useFormControlContext,
   useRadioGroup,
   Stack,
-  UseRadioProps,
   useRadio,
   Box,
   Flex,
@@ -16,31 +15,12 @@ export default function RadioStack(props: {
 }) {
   const {id} = useFormControlContext();
   const [field] = useField({name: id});
-  const {getRootProps, getRadioProps} = useRadioGroup(field);
-
-  // const [customValue, setCustomValue] = useState<string | null>(null);
-  // const onChangeCustom = (event: React.ChangeEvent<HTMLInputElement>) => {
-  //   const value = event.target.value
-  //     .trim()
-  //     .split(/,\./)
-  //     .map((i) => parseInt(i, 10));
-
-  //   const newValue =
-  //     value.length === 1 ? value[0] * 100 : value[0] * 100 + value[1];
-
-  //   if (newValue === field.value) {
-  //     return;
-  //   }
-
-  //   setCustomValue(newValue.toString());
-  //   event.target.value = newValue.toString();
-  // };
+  const {getRootProps} = useRadioGroup(field);
 
   return (
     <Stack
       direction={['column', 'row']}
       gap={0}
-      mb="5"
       {...getRootProps()}
       borderRadius="var(--chakra-radii-md)"
       borderWidth="1px"
@@ -54,34 +34,7 @@ export default function RadioStack(props: {
         borderColor: '#3182ce',
       }}
     >
-      {React.Children.map(props.children, (child) =>
-        React.cloneElement(child, {
-          ...getRadioProps({value: child.props.value}),
-        }),
-      )}
-      {/* <RadioTabs
-        title="30,00&nbsp;€"
-        subtitle="Jahresbeitrag"
-        {...getRadioProps({value: '3000'})}
-      />
-      <RadioTabs
-        title="15,00&nbsp;€"
-        subtitle="Ermäßigter Jahresbeitrag für Schüler:innen, Studierende, etc."
-        {...getRadioProps({value: '1500'})}
-      /> */}
-      {/* <RadioTabs
-        title={
-          <Input
-            disabled={value !== 5000}
-            type="text"
-            placeholder="50,00 €"
-            bg="white"
-            onBlur={onChangeCustom}
-          />
-        }
-        subtitle="Förderbeitrag"
-        {...getRadioProps({value: 5000})}
-      /> */}
+      {props.children}
     </Stack>
   );
 }
@@ -89,13 +42,17 @@ export default function RadioStack(props: {
 type RadioStackTabProps = {
   title: React.ReactNode;
   subtitle: string;
-} & UseRadioProps;
+  value: string;
+};
 
-export function RadioStackTab(props: RadioStackTabProps) {
-  const {getInputProps, getRadioProps, getLabelProps} = useRadio(props);
-
-  const [field, meta] = useField({name: props.name!});
-  console.log(field);
+export function RadioStackTab({title, subtitle, value}: RadioStackTabProps) {
+  const {id} = useFormControlContext();
+  const [field] = useField({name: id});
+  const {getInputProps, getRadioProps, getLabelProps} = useRadio({
+    ...field,
+    value,
+    isChecked: value === field.value,
+  });
 
   return (
     <Box
@@ -115,8 +72,8 @@ export function RadioStackTab(props: RadioStackTabProps) {
       }}
       {...getLabelProps()}
     >
-      <input {...field} {...getInputProps()} />
-      <Flex direction="row" alignItems="center" mb="1">
+      <input {...getInputProps()} />
+      <Flex direction="row" alignItems="top" mb="1">
         <Box
           {...getRadioProps()}
           w="4"
@@ -134,10 +91,12 @@ export function RadioStackTab(props: RadioStackTabProps) {
           borderWidth={2}
           borderColor="white"
         />
-        <Text fontWeight="bold">{props.title}</Text>
+        <Text fontWeight="bold" lineHeight="120%" mt="-1px">
+          {title}
+        </Text>
       </Flex>
-      <Text fontSize="small" color="offwhite.600">
-        {props.subtitle}
+      <Text ml="6" fontSize="small" color="offwhite.600">
+        {subtitle}
       </Text>
     </Box>
   );
