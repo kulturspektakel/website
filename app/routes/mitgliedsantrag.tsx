@@ -7,6 +7,8 @@ import {
   Button,
   VStack,
   FormErrorMessage,
+  NumberInputField,
+  NumberInput,
 } from '@chakra-ui/react';
 import {Form, Formik} from 'formik';
 import Field from '~/components/booking/Field';
@@ -29,6 +31,17 @@ const accountHolder = z
     }),
   );
 
+const membershipType = z
+  .object({
+    membershipType: z.literal('reduced').or(z.literal('regular')),
+  })
+  .or(
+    z.object({
+      membershipType: z.literal('supporter'),
+      membershipFee: z.number().gt(3000),
+    }),
+  );
+
 const schema = z
   .object({
     membership: z.literal('kult').or(z.literal('foerderverein')),
@@ -40,11 +53,8 @@ const schema = z
       (iban: string) => isValid(iban),
       'IBAN hat kein gültiges Format',
     ),
-    membershipFee: z
-      .literal('1500')
-      .or(z.literal('3000'))
-      .or(z.preprocess((e: any) => parseInt(e, 10), z.number().gt(3000))),
   })
+  .and(membershipType)
   .and(accountHolder);
 
 export const meta = mergeMeta<{}>(() => [
@@ -60,7 +70,9 @@ type Membership = z.infer<typeof schema>;
 export default function Mitglied() {
   return (
     <div>
-      <Heading mb="8">Mitgliedsantrag</Heading>
+      <Heading mb="8" textAlign="center">
+        Mitgliedsantrag
+      </Heading>
       <Formik<Partial<Membership>>
         initialValues={{}}
         validateOnBlur
@@ -110,24 +122,51 @@ export default function Mitglied() {
                 der Vereinskasse verbleibt.
               </p>
 
-              <Heading as="h2" size="md" mt="8">
+              <Heading as="h2" size="md" mt="8" textAlign="center">
                 Mitgliedsbeitrag
               </Heading>
 
-              <FormControl id="membershipFee" isRequired>
+              <FormControl id="membershipType" isRequired>
                 <RadioStack>
                   <RadioStackTab
                     title="30,00&nbsp;€"
                     subtitle="Regulärer Jahresbeitrag"
-                    value="3000"
+                    value="regular"
                   />
                   <RadioStackTab
                     title="15,00&nbsp;€"
                     subtitle="Für Personen ohne/mit vermindertem Einkommen (z.B. Schüler:innen, Studierende)"
-                    value="1500"
+                    value="reduced"
                   />
+                  {values.membership === 'foerderverein' && (
+                    <RadioStackTab
+                      title="Freier Beitrag"
+                      subtitle="Für unsere großzügigen Unterstützer:innen"
+                      value="supporter"
+                    />
+                  )}
                 </RadioStack>
               </FormControl>
+
+              {values.membershipType === 'supporter' && (
+                <FormControl id="membershipFee" isRequired>
+                  <FormLabel>Mitgliedsbeitrag</FormLabel>
+                  {/* <NumberInput> */}
+                  <Field
+                    // as={NumberInputField}
+                    onBlur={(e) => {
+                      setFieldValue(
+                        'membershipFee',
+                        new Intl.NumberFormat('de-DE', {
+                          style: 'currency',
+                          currency: 'EUR',
+                        }).format(parseFloat(String(e))),
+                      );
+                    }}
+                  />
+                  {/* </NumberInput> */}
+                </FormControl>
+              )}
 
               <FormControl
                 id="iban"
