@@ -8,21 +8,28 @@ import {
   Text,
 } from '@chakra-ui/react';
 import {useField} from 'formik';
-import React from 'react';
+import React, {useEffect} from 'react';
 
 export default function RadioStack(props: {
-  children: Array<React.ReactElement<RadioStackTabProps>>;
+  children: Array<React.ReactElement<RadioStackTabProps> | boolean>;
+  onChangeEffect?: (value: string) => void;
 }) {
   const {id} = useFormControlContext();
   const [field] = useField({name: id});
   const {getRootProps} = useRadioGroup(field);
+
+  useEffect(() => {
+    if (props.onChangeEffect) {
+      props.onChangeEffect(field.value);
+    }
+  }, [field.value]);
 
   return (
     <Stack
       direction={['column', 'row']}
       gap={0}
       {...getRootProps()}
-      borderRadius="var(--chakra-radii-md)"
+      borderRadius="md"
       borderWidth="1px"
       borderColor="var(--chakra-colors-chakra-border-color)"
       _hover={{

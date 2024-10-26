@@ -246,6 +246,7 @@ export type Config = {
   __typename?: 'Config';
   board: Board;
   depositValue: Scalars['Int']['output'];
+  membershipFees: MembershipFees;
 };
 
 export type CreateBandApplicationInput = {
@@ -429,6 +430,43 @@ export type MarkdownString = {
   plainText: Scalars['String']['output'];
 };
 
+export enum Membership {
+  Foerderverein = 'foerderverein',
+  Kult = 'kult',
+}
+
+export type MembershipApplication = {
+  accountHolderAddress?: InputMaybe<Scalars['String']['input']>;
+  accountHolderCity?: InputMaybe<Scalars['String']['input']>;
+  accountHolderName?: InputMaybe<Scalars['String']['input']>;
+  address: Scalars['String']['input'];
+  city: Scalars['String']['input'];
+  email: Scalars['String']['input'];
+  iban: Scalars['String']['input'];
+  membership: Membership;
+  membershipFee: Scalars['Int']['input'];
+  membershipType: MembershipType;
+  name: Scalars['String']['input'];
+};
+
+export type MembershipFee = {
+  __typename?: 'MembershipFee';
+  reduced: Scalars['Int']['output'];
+  regular: Scalars['Int']['output'];
+};
+
+export type MembershipFees = {
+  __typename?: 'MembershipFees';
+  foerderverein: MembershipFee;
+  kult: MembershipFee;
+};
+
+export enum MembershipType {
+  Reduced = 'reduced',
+  Regular = 'regular',
+  Supporter = 'supporter',
+}
+
 export type MissingTransaction = Transaction & {
   __typename?: 'MissingTransaction';
   balanceAfter: Scalars['Int']['output'];
@@ -443,6 +481,7 @@ export type Mutation = {
   addBandApplicationTag: BandApplication;
   createBandApplication: BandApplication;
   createBandApplicationComment: BandApplication;
+  createMembershipApplication: Scalars['Boolean']['output'];
   createNonceRequest?: Maybe<Scalars['String']['output']>;
   createOrder: Order;
   deleteBandApplicationComment: BandApplication;
@@ -467,6 +506,10 @@ export type MutationCreateBandApplicationArgs = {
 
 export type MutationCreateBandApplicationCommentArgs = {
   input: BandApplicationCommentInput;
+};
+
+export type MutationCreateMembershipApplicationArgs = {
+  data: MembershipApplication;
 };
 
 export type MutationCreateNonceRequestArgs = {
@@ -2226,6 +2269,24 @@ export type BookingActiveQuery = {
         djApplicationEnd?: Date | null;
       };
     }>;
+  };
+};
+
+export type MembershipQueryVariables = Exact<{[key: string]: never}>;
+
+export type MembershipQuery = {
+  __typename?: 'Query';
+  config: {
+    __typename?: 'Config';
+    membershipFees: {
+      __typename?: 'MembershipFees';
+      kult: {__typename?: 'MembershipFee'; regular: number; reduced: number};
+      foerderverein: {
+        __typename?: 'MembershipFee';
+        regular: number;
+        reduced: number;
+      };
+    };
   };
 };
 
@@ -4306,6 +4367,90 @@ export type BookingActiveSuspenseQueryHookResult = ReturnType<
 export type BookingActiveQueryResult = Apollo.QueryResult<
   BookingActiveQuery,
   BookingActiveQueryVariables
+>;
+export const MembershipDocument = gql`
+  query Membership {
+    config {
+      membershipFees {
+        kult {
+          regular
+          reduced
+        }
+        foerderverein {
+          regular
+          reduced
+        }
+      }
+    }
+  }
+`;
+
+/**
+ * __useMembershipQuery__
+ *
+ * To run a query within a React component, call `useMembershipQuery` and pass it any options that fit your needs.
+ * When your component renders, `useMembershipQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useMembershipQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useMembershipQuery(
+  baseOptions?: Apollo.QueryHookOptions<
+    MembershipQuery,
+    MembershipQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useQuery<MembershipQuery, MembershipQueryVariables>(
+    MembershipDocument,
+    options,
+  );
+}
+export function useMembershipLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    MembershipQuery,
+    MembershipQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useLazyQuery<MembershipQuery, MembershipQueryVariables>(
+    MembershipDocument,
+    options,
+  );
+}
+export function useMembershipSuspenseQuery(
+  baseOptions?:
+    | Apollo.SkipToken
+    | Apollo.SuspenseQueryHookOptions<
+        MembershipQuery,
+        MembershipQueryVariables
+      >,
+) {
+  const options =
+    baseOptions === Apollo.skipToken
+      ? baseOptions
+      : {...defaultOptions, ...baseOptions};
+  return Apollo.useSuspenseQuery<MembershipQuery, MembershipQueryVariables>(
+    MembershipDocument,
+    options,
+  );
+}
+export type MembershipQueryHookResult = ReturnType<typeof useMembershipQuery>;
+export type MembershipLazyQueryHookResult = ReturnType<
+  typeof useMembershipLazyQuery
+>;
+export type MembershipSuspenseQueryHookResult = ReturnType<
+  typeof useMembershipSuspenseQuery
+>;
+export type MembershipQueryResult = Apollo.QueryResult<
+  MembershipQuery,
+  MembershipQueryVariables
 >;
 export const NewsPageDocument = gql`
   query NewsPage($id: ID!) {
