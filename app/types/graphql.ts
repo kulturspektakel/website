@@ -2290,6 +2290,15 @@ export type MembershipQuery = {
   };
 };
 
+export type CreateMembershipMutationVariables = Exact<{
+  data: MembershipApplication;
+}>;
+
+export type CreateMembershipMutation = {
+  __typename?: 'Mutation';
+  createMembershipApplication: boolean;
+};
+
 export type NewsPageQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
@@ -4451,6 +4460,54 @@ export type MembershipSuspenseQueryHookResult = ReturnType<
 export type MembershipQueryResult = Apollo.QueryResult<
   MembershipQuery,
   MembershipQueryVariables
+>;
+export const CreateMembershipDocument = gql`
+  mutation CreateMembership($data: MembershipApplication!) {
+    createMembershipApplication(data: $data)
+  }
+`;
+export type CreateMembershipMutationFn = Apollo.MutationFunction<
+  CreateMembershipMutation,
+  CreateMembershipMutationVariables
+>;
+
+/**
+ * __useCreateMembershipMutation__
+ *
+ * To run a mutation, you first call `useCreateMembershipMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateMembershipMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createMembershipMutation, { data, loading, error }] = useCreateMembershipMutation({
+ *   variables: {
+ *      data: // value for 'data'
+ *   },
+ * });
+ */
+export function useCreateMembershipMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    CreateMembershipMutation,
+    CreateMembershipMutationVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useMutation<
+    CreateMembershipMutation,
+    CreateMembershipMutationVariables
+  >(CreateMembershipDocument, options);
+}
+export type CreateMembershipMutationHookResult = ReturnType<
+  typeof useCreateMembershipMutation
+>;
+export type CreateMembershipMutationResult =
+  Apollo.MutationResult<CreateMembershipMutation>;
+export type CreateMembershipMutationOptions = Apollo.BaseMutationOptions<
+  CreateMembershipMutation,
+  CreateMembershipMutationVariables
 >;
 export const NewsPageDocument = gql`
   query NewsPage($id: ID!) {

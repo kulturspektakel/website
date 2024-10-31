@@ -12,7 +12,6 @@ import {
   Heading,
 } from '@chakra-ui/react';
 import {useNavigate, useNavigation, useParams} from '@remix-run/react';
-import {Steps, Step} from 'chakra-ui-steps';
 import type {Routes} from 'remix-routes';
 import {$path} from 'remix-routes';
 import {Formik, Form} from 'formik';
@@ -32,6 +31,7 @@ import {useUtmSource} from './booking._index';
 import type {loader as rootLoader} from '~/root';
 import {useTypedRouteLoaderData} from 'remix-typedjson';
 import {loader} from './booking';
+import Steps from '~/components/Steps';
 
 const STEPS = [Step1, Step2, Step3] as const;
 export type FormikContextT = Partial<CreateBandApplicationInput> & {
@@ -77,32 +77,12 @@ export default function () {
       </Heading>
 
       <Steps
-        activeStep={currentStep}
-        responsive={false}
-        trackColor="offwhite.300"
+        mt="5"
+        mb="5"
+        currentStep={currentStep}
         display={['none', 'flex']}
-        sx={{
-          '& .cui-steps__step-icon-container': {
-            bg: 'offwhite.300',
-            borderColor: 'offwhite.300',
-            '&[aria-current=step]': {
-              borderColor: 'brand.900',
-            },
-            '&[data-highlighted]': {
-              borderColor: 'brand.900',
-              bg: 'brand.900',
-            },
-          },
-          '& .cui-steps__horizontal-step[data-highlighted]:not(:last-child):after':
-            {
-              bg: 'brand.900',
-            },
-        }}
-      >
-        <Step label="Infos" />
-        <Step label="Musik" />
-        <Step label="Kontakt" />
-      </Steps>
+        steps={['Infos', 'Musik', 'Kontakt']}
+      />
 
       <Formik<FormikContextT>
         initialValues={{

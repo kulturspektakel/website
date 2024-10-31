@@ -26,6 +26,7 @@ import {useCombobox} from 'downshift';
 import {useRef, useState} from 'react';
 import DropdownMenu from '../DropdownMenu';
 import {FaSpotify} from 'react-icons/fa6';
+import Steps from '../Steps';
 
 gql`
   query SpotifyArtistSearch($query: String!, $limit: Int = 5) {

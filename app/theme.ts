@@ -1,5 +1,4 @@
 import {cssVar, extendTheme} from '@chakra-ui/react';
-import {StepsTheme as Steps} from 'chakra-ui-steps';
 
 export default extendTheme({
   colors: {
@@ -45,7 +44,6 @@ export default extendTheme({
     },
   },
   components: {
-    Steps,
     Form: {
       baseStyle: {
         helperText: {

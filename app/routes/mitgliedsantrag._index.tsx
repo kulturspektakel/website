@@ -24,46 +24,56 @@ import {gql} from '@apollo/client';
 import {LoaderFunctionArgs} from '@remix-run/node';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import apolloClient from '~/utils/apolloClient';
-import {MembershipQuery, MembershipDocument} from '~/types/graphql';
+import {
+  MembershipQuery,
+  MembershipDocument,
+  useCreateMembershipMutation,
+  MembershipType,
+  Membership as MembershipEnum,
+} from '~/types/graphql';
+import Steps from '~/components/Steps';
+import {useState} from 'react';
+import {useNavigate} from '@remix-run/react';
+import {$path} from 'remix-routes';
 
-const accountHolder = z
-  .object({
-    accountHolderIsDifferent: z.literal('true'),
-    accountHolderName: z.string().min(1),
-    accountHolderAddress: z.string().min(1),
-    accountHolderCity: z.string().min(1),
-  })
-  .or(
-    z.object({
-      accountHolderIsDifferent: z.literal('false'),
+const schemaStep1 = z.object({
+  membership: z.nativeEnum(MembershipEnum),
+  name: z.string().min(1),
+  address: z.string().min(1),
+  city: z.string().min(1),
+  email: z.string().email(),
+});
+
+const feeSchema = schemaStep1.extend({
+  membershipFee: z.coerce.number(),
+  membershipType: z.nativeEnum(MembershipType),
+  iban: z
+    .string()
+    .refine((iban: string) => isValid(iban), 'IBAN hat kein gültiges Format'),
+});
+
+const schemaStep2 = z
+  .discriminatedUnion('accountHolder', [
+    feeSchema.extend({
+      accountHolder: z.literal('different'),
+      accountHolderName: z.string().min(1),
+      accountHolderAddress: z.string().min(1),
+      accountHolderCity: z.string().min(1),
     }),
+    feeSchema.extend({
+      accountHolder: z.literal('same'),
+    }),
+  ])
+  .refine(
+    ({membership, membershipType}) =>
+      !(membership !== 'foerderverein' && membershipType === 'supporter'),
+    {
+      path: ['membershipType'],
+      message: 'Unterstützer:innen können nur im Förderverein Mitglied werden',
+    },
   );
 
-const membershipType = z
-  .object({
-    membershipType: z.literal('reduced').or(z.literal('regular')),
-  })
-  .or(
-    z.object({
-      membershipType: z.literal('supporter'),
-      membershipFee: z.number().gt(3000),
-    }),
-  );
-
-const schema = z
-  .object({
-    membership: z.literal('kult').or(z.literal('foerderverein')),
-    name: z.string().min(1),
-    address: z.string().min(1),
-    city: z.string().min(1),
-    email: z.string().email(),
-    iban: z.custom(
-      (iban: string) => isValid(iban),
-      'IBAN hat kein gültiges Format',
-    ),
-  })
-  .and(membershipType)
-  .and(accountHolder);
+const STEPS = [schemaStep1, schemaStep2] as const;
 
 export const meta = mergeMeta<{}>(() => [
   {title: `Mitgliedsantrag`},
@@ -73,7 +83,7 @@ export const meta = mergeMeta<{}>(() => [
   },
 ]);
 
-type Membership = z.infer<typeof schema>;
+type Membership = z.infer<typeof schemaStep2>;
 
 gql`
   query Membership {
@@ -92,6 +102,12 @@ gql`
   }
 `;
 
+gql`
+  mutation CreateMembership($data: MembershipApplication!) {
+    createMembershipApplication(data: $data)
+  }
+`;
+
 export async function loader(args: LoaderFunctionArgs) {
   const {data} = await apolloClient.query<MembershipQuery>({
     query: MembershipDocument,
@@ -101,6 +117,9 @@ export async function loader(args: LoaderFunctionArgs) {
 
 export default function Mitgliedsantrag() {
   const data = useTypedLoaderData<typeof loader>();
+  const navigate = useNavigate();
+  const [create, {loading}] = useCreateMembershipMutation();
+  const [step, setStep] = useState(0);
   const currencyFormatter = new Intl.NumberFormat('de-DE', {
     style: 'currency',
     currency: 'EUR',
@@ -111,66 +130,104 @@ export default function Mitgliedsantrag() {
       <Heading mb="8" textAlign="center">
         Mitgliedsantrag
       </Heading>
+      <Steps
+        mb="8"
+        display={['none', 'flex']}
+        steps={['Kontaktdaten', 'Mitgliedsbeitrag', 'Absenden']}
+        currentStep={step}
+      />
+
       <Formik<Partial<Membership>>
         initialValues={{}}
         validateOnBlur
-        validationSchema={toFormikValidationSchema(schema)}
-        onSubmit={(values) => {
-          console.log(values);
+        validationSchema={toFormikValidationSchema(STEPS[step])}
+        onSubmit={async (values) => {
+          if (step < STEPS.length - 1) {
+            setStep(step + 1);
+          } else {
+            const data = schemaStep2.parse(values);
+            delete data.accountHolder;
+            await create({
+              variables: {
+                data: data,
+              },
+            });
+            navigate($path('/mitgliedsantrag/danke'));
+          }
         }}
       >
         {({values, errors, setFieldValue, touched}) => (
           <Form>
             <VStack spacing="4" align="stretch">
-              <FormControl id="membership" isRequired>
-                <RadioStack>
-                  <RadioStackTab
-                    title={getLegalName('kult')}
-                    subtitle="Für aktive Mitgestalter:innen des Kulturspektakels"
-                    value="kult"
-                  />
-                  <RadioStackTab
-                    title={getLegalName('foerderverein')}
-                    subtitle="Für Unterstützer:innen des Kulturspektakels"
-                    value="foerderverein"
-                  />
-                </RadioStack>
-              </FormControl>
-              <FormControl id="name" isRequired>
-                <FormLabel>Name</FormLabel>
-                <Field type="text" />
-              </FormControl>
-              <FormControl id="address" isRequired>
-                <FormLabel>Adresse</FormLabel>
-                <Field type="text" />
-              </FormControl>
-              <FormControl id="city" isRequired>
-                <FormLabel>PLZ, Ort</FormLabel>
-                <Field type="text" />
-              </FormControl>
-
-              <FormControl id="email" isRequired>
-                <FormLabel>E-Mail</FormLabel>
-                <Field type="email" />
-              </FormControl>
-
-              <p>
-                Ich kann jederzeit wieder aus dem Verein austreten, wobei der
-                Mitgliedsbeitrag des laufenden Jahres in der Vereinskasse
-                verbleibt.
-              </p>
-
-              {values.membership && (
+              {step == 0 ? (
                 <>
-                  <Heading as="h2" size="md" mt="8" textAlign="center">
-                    Mitgliedsbeitrag
-                  </Heading>
-
-                  <FormControl id="membershipType" isRequired>
+                  <FormControl id="membership" isRequired>
                     <RadioStack>
                       <RadioStackTab
+                        title={getLegalName('kult')}
+                        subtitle="Für aktive Mitgestalter:innen des Kulturspektakels"
+                        value="kult"
+                      />
+                      <RadioStackTab
+                        title={getLegalName('foerderverein')}
+                        subtitle="Für Unterstützer:innen des Kulturspektakels"
+                        value="foerderverein"
+                      />
+                    </RadioStack>
+                  </FormControl>
+                  <FormControl id="name" isRequired>
+                    <FormLabel>Name</FormLabel>
+                    <Field type="text" />
+                  </FormControl>
+                  <FormControl id="address" isRequired>
+                    <FormLabel>Adresse</FormLabel>
+                    <Field type="text" />
+                  </FormControl>
+                  <FormControl id="city" isRequired>
+                    <FormLabel>PLZ, Ort</FormLabel>
+                    <Field type="text" />
+                  </FormControl>
+
+                  <FormControl id="email" isRequired>
+                    <FormLabel>E-Mail</FormLabel>
+                    <Field type="email" />
+                  </FormControl>
+
+                  <Text fontSize="small" color="offwhite.600">
+                    Ich kann jederzeit wieder aus dem Verein austreten, wobei
+                    der Mitgliedsbeitrag des laufenden Jahres in der
+                    Vereinskasse verbleibt.
+                  </Text>
+                </>
+              ) : (
+                <>
+                  <FormControl id="membershipType" isRequired>
+                    <RadioStack
+                      autoFocus
+                      onChangeEffect={() => {
+                        let membershipFee: number = 0;
+                        switch (values.membershipType) {
+                          case 'reduced':
+                            membershipFee =
+                              data.config.membershipFees[values.membership!]
+                                .reduced;
+                            break;
+                          case 'regular':
+                            membershipFee =
+                              data.config.membershipFees[values.membership!]
+                                .regular;
+                            break;
+                          case 'supporter':
+                            membershipFee = 5000;
+                            break;
+                        }
+
+                        setFieldValue('membershipFee', membershipFee);
+                      }}
+                    >
+                      <RadioStackTab
                         title={currencyFormatter.format(
-                          data.config.membershipFees[values.membership]
+                          data.config.membershipFees[values.membership!]
                             .regular / 100,
                         )}
                         subtitle="Regulärer Jahresbeitrag"
@@ -178,13 +235,13 @@ export default function Mitgliedsantrag() {
                       />
                       <RadioStackTab
                         title={currencyFormatter.format(
-                          data.config.membershipFees[values.membership]
+                          data.config.membershipFees[values.membership!]
                             .reduced / 100,
                         )}
                         subtitle="Für Personen ohne/mit vermindertem Einkommen (z.B. Schüler:innen, Studierende)"
                         value="reduced"
                       />
-                      {values.membership === 'foerderverein' && (
+                      {values.membership! === 'foerderverein' && (
                         <RadioStackTab
                           title="Freier Beitrag"
                           subtitle="Für unsere großzügigen Unterstützer:innen"
@@ -212,7 +269,7 @@ export default function Mitgliedsantrag() {
                           aria-label="Mitgliedsbeitrag"
                           value={values.membershipFee}
                           min={
-                            data.config.membershipFees[values.membership]
+                            data.config.membershipFees[values.membership!]
                               .regular
                           }
                           max={20000}
@@ -263,28 +320,28 @@ export default function Mitgliedsantrag() {
                       }}
                     />
                     <FormErrorMessage>
-                      {typeof errors.iban === 'string' ? errors.iban : ''}
+                      {typeof errors.iban === 'string' ? errors.iban : null}
                     </FormErrorMessage>
                   </FormControl>
 
-                  <FormControl id="accountHolderIsDifferent" isRequired>
+                  <FormControl id="accountHolder" isRequired>
                     <RadioStack>
                       <RadioStackTab
                         title="Mitglied ist Kontoinhaber:in"
                         subtitle="Das Mitglied ist gleichzeitig Kontoinhaber:in"
-                        value="false"
+                        value="same"
                       />
                       <RadioStackTab
                         title="Abweichender Kontoinhaber"
                         subtitle="Kontoinhaber:in ist eine andere Person als das Mitglied"
-                        value="true"
+                        value="different"
                       />
                     </RadioStack>
                   </FormControl>
 
-                  {values.accountHolderIsDifferent === 'true' && (
+                  {values.accountHolder === 'different' && (
                     <>
-                      <FormControl id="accountHolder" isRequired>
+                      <FormControl id="accountHolderName" isRequired>
                         <FormLabel>Name des/der Kontoinhaber:in</FormLabel>
                         <Field type="text" />
                       </FormControl>
@@ -299,10 +356,10 @@ export default function Mitgliedsantrag() {
                     </>
                   )}
                   <Text fontSize="small" color="offwhite.600">
-                    Ich ermächtige den {getLegalName(values.membership)}{' '}
+                    Ich ermächtige den {getLegalName(values.membership!)}{' '}
                     Zahlungen von meinem Konto mittels Lastschrift einzuziehen.
                     Zugleich weise ich mein Kreditinstitut an, die vom{' '}
-                    {getLegalName(values.membership)} auf mein Konto gezogenen
+                    {getLegalName(values.membership!)} auf mein Konto gezogenen
                     Lastschriften einzulösen. Die Kontobelastung
                     (Fälligkeitsdatum) des nebenstehenden Betrages erfolgt am
                     31.01. (oder dem folgenden Geschäftstag) jeden Jahres.
@@ -315,7 +372,7 @@ export default function Mitgliedsantrag() {
                   </Text>
 
                   <Text fontSize="small" color="offwhite.600">
-                    Zahlungsempfänger {getLegalName(values.membership)},
+                    Zahlungsempfänger {getLegalName(values.membership!)},
                     Bahnhofstr. 6, 82131 Gauting
                     <br />
                     Gläubiger-Identifikationsnummer DE33ZZZ00000119946
@@ -326,14 +383,22 @@ export default function Mitgliedsantrag() {
                     einer separaten Ankündigung über den erstmaligen Einzug des
                     Lastschriftsbetrags mitgeteilt.
                   </Text>
-
-                  <Box textAlign="right">
-                    <Button variant="primary" type="submit" isLoading={false}>
-                      Absenden
-                    </Button>
-                  </Box>
                 </>
               )}
+              <Flex justifyContent="space-between" flexDirection="row-reverse">
+                <Button variant="primary" type="submit" isLoading={loading}>
+                  {step === STEPS.length - 1 ? 'Absenden' : 'Weiter'}
+                </Button>
+                {step > 0 && (
+                  <Button
+                    disabled={loading}
+                    variant="secondary"
+                    onClick={() => setStep(step - 1)}
+                  >
+                    Zurück
+                  </Button>
+                )}
+              </Flex>
             </VStack>
           </Form>
         )}

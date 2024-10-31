@@ -13,9 +13,10 @@ import React, {useEffect} from 'react';
 export default function RadioStack(props: {
   children: Array<React.ReactElement<RadioStackTabProps> | boolean>;
   onChangeEffect?: (value: string) => void;
+  autoFocus?: boolean;
 }) {
   const {id} = useFormControlContext();
-  const [field] = useField({name: id});
+  const [field] = useField({name: id, autoFocus: props.autoFocus});
   const {getRootProps} = useRadioGroup(field);
 
   useEffect(() => {
