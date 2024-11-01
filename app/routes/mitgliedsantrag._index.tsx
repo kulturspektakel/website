@@ -176,11 +176,11 @@ export default function Mitgliedsantrag() {
                     </RadioStack>
                   </FormControl>
                   <FormControl id="name" isRequired>
-                    <FormLabel>Name</FormLabel>
+                    <FormLabel>Vor- und Nachname</FormLabel>
                     <Field type="text" />
                   </FormControl>
                   <FormControl id="address" isRequired>
-                    <FormLabel>Adresse</FormLabel>
+                    <FormLabel>Anschrift</FormLabel>
                     <Field type="text" />
                   </FormControl>
                   <FormControl id="city" isRequired>
@@ -346,7 +346,7 @@ export default function Mitgliedsantrag() {
                         <Field type="text" />
                       </FormControl>
                       <FormControl id="accountHolderAddress" isRequired>
-                        <FormLabel>Adresse des/der Kontoinhaber:in</FormLabel>
+                        <FormLabel>Anschrift des/der Kontoinhaber:in</FormLabel>
                         <Field type="text" />
                       </FormControl>
                       <FormControl id="accountHolderCity" isRequired>
