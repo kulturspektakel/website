@@ -20,7 +20,7 @@ export const meta = mergeMeta<{}>(({data}) => [
 
 function LogoCol({filename}: {filename: string}) {
   return (
-    <VStack spacing="3">
+    <VStack gap="3">
       <Flex
         p="2"
         borderRadius="md"
@@ -77,7 +77,7 @@ export default function Logo() {
         Typographie
       </Heading>
       <SimpleGrid columns={2} gap="5">
-        <VStack spacing="3" align="start">
+        <VStack gap="3" align="start">
           <Heading as="h3" size="md">
             Shrimp
           </Heading>
@@ -120,7 +120,7 @@ export default function Logo() {
             Download
           </LinkButton>
         </VStack>
-        <VStack spacing="3" align="start">
+        <VStack gap="3" align="start">
           <Heading as="h3" size="md">
             Space Grotesk
           </Heading>
@@ -228,7 +228,7 @@ export default function Logo() {
         Sprache
       </Heading>
       <SimpleGrid columns={[1, 2]} gap="5">
-        <VStack spacing="3" align="start">
+        <VStack gap="3" align="start">
           <Heading as="h3" size="md">
             Geschlechtergerechte Sprache
           </Heading>
@@ -238,7 +238,7 @@ export default function Logo() {
             Musiker:innen).
           </Text>
         </VStack>
-        <VStack spacing="3" align="start">
+        <VStack gap="3" align="start">
           <Heading as="h3" size="md">
             Eigennamen
           </Heading>

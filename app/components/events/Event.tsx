@@ -47,7 +47,7 @@ export default function Event({event}: {event: EventDetailsFragment}) {
   return (
     <Stack
       direction={['column', 'row']}
-      spacing="5"
+      gap="5"
       mt="5"
       align={['center', 'flex-start']}
     >

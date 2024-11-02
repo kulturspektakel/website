@@ -2,8 +2,8 @@ import {gql} from '@apollo/client';
 import {
   Heading,
   ListItem,
-  OrderedList,
-  Divider,
+  Box,
+  Separator,
   Center,
   Button,
   Spinner,
@@ -98,11 +98,11 @@ export default function Events() {
           )
         }
       />
-      <OrderedList listStyleType="none" m="0" mt="20">
+      <Box as="ol" listStyleType="none" m="0" mt="20">
         <Gallery options={{loop: false}} withCaption>
           {data?.eventsConnection.edges.map(({node: e}, i) => (
             <ListItem key={e.id}>
-              {i > 0 && <Divider width="60%" my="16" mx="auto" />}
+              {i > 0 && <Separator width="60%" my="16" mx="auto" />}
               <Headline
                 textAlign="center"
                 mark={<DateString date={e.start} to={e.end} />}
@@ -114,7 +114,7 @@ export default function Events() {
             </ListItem>
           ))}
         </Gallery>
-      </OrderedList>
+      </Box>
       {!data && loading && (
         <Center>
           <Spinner />

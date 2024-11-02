@@ -131,14 +131,14 @@ export default function LineupBand() {
   const band = useTypedLoaderData<typeof loader>();
 
   return (
-    <SimpleGrid columns={[1, 1, band.photo ? 2 : 1]} spacing="5" mt="8">
+    <SimpleGrid columns={[1, 1, band.photo ? 2 : 1]} gap="5" mt="8">
       {band.photo && (
         <Box display={['none', 'none', 'block']}>
           <BandPhoto band={band} />
         </Box>
       )}
-      <VStack spacing="4" align="start">
-        <VStack spacing="1" align="start" mt="3">
+      <VStack gap="4" align="start">
+        <VStack gap="1" align="start" mt="3">
           <Text>
             <Mark
               bgColor={band.area.themeColor}

@@ -41,7 +41,7 @@ export default function Page(
         </Box>
       )}
       {left && right && (
-        <SimpleGrid columns={[1, 2]} spacing="5" mt="3">
+        <SimpleGrid columns={[1, 2]} gap="5" mt="3">
           <Box>
             <MarkdownText markdown={left} />
           </Box>

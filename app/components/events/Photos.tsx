@@ -1,5 +1,5 @@
 import {gql} from '@apollo/client';
-import {Wrap, Text, Link as ChakraLink} from '@chakra-ui/react';
+import {Text, Link as ChakraLink, Box} from '@chakra-ui/react';
 import {Link} from '@remix-run/react';
 import type PhotoSwipe from 'photoswipe';
 import {useCallback} from 'react';
@@ -93,7 +93,7 @@ export default function EventComponent({
   );
 
   return (
-    <Wrap role="grid">
+    <Box role="grid">
       <Gallery options={{loop: false}} onBeforeOpen={onBeforeOpen}>
         {media.edges
           .map((m) => m.node)
@@ -111,8 +111,7 @@ export default function EventComponent({
           ))}
         {media.pageInfo.hasNextPage && (
           <ChakraLink
-            to={$path('/events/:id', {id: eventId.split(':')[1]}) + '#fotos'}
-            as={Link}
+            asChild
             height={SIZE}
             width={SIZE}
             borderRadius="md"
@@ -123,13 +122,17 @@ export default function EventComponent({
             color="brand.900"
             fontWeight="bold"
           >
-            <Text fontSize="xl" userSelect="none" mb="-3">
-              +{media.totalCount - media.edges.length}
-            </Text>
-            <Text>Fotos</Text>
+            <Link
+              to={$path('/events/:id', {id: eventId.split(':')[1]}) + '#fotos'}
+            >
+              <Text fontSize="xl" userSelect="none" mb="-3">
+                +{media.totalCount - media.edges.length}
+              </Text>
+              <Text>Fotos</Text>
+            </Link>
           </ChakraLink>
         )}
       </Gallery>
-    </Wrap>
+    </Box>
   );
 }

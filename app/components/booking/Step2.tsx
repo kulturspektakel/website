@@ -9,7 +9,7 @@ import {
   HStack,
   VStack,
   InputRightElement,
-  CloseButton,
+  IconButton,
   FormErrorMessage,
   Center,
 } from '@chakra-ui/react';
@@ -27,6 +27,7 @@ import {useRef, useState} from 'react';
 import DropdownMenu from '../DropdownMenu';
 import {FaSpotify} from 'react-icons/fa6';
 import Steps from '../Steps';
+import {CloseIcon} from '@chakra-ui/icons';
 
 gql`
   query SpotifyArtistSearch($query: String!, $limit: Int = 5) {
@@ -153,7 +154,9 @@ export default function Step2() {
             })}
           />
           <InputRightElement>
-            <CloseButton onClick={() => setInputValue('')} />
+            <IconButton onClick={() => setInputValue('')}>
+              <CloseIcon />
+            </IconButton>
           </InputRightElement>
         </InputGroup>
 
@@ -167,7 +170,7 @@ export default function Step2() {
           itemRenderer={(artist) => (
             <HStack>
               <SpotifyCover image={artist.image} width="46px" />
-              <VStack alignItems="flex-start" spacing="0">
+              <VStack alignItems="flex-start" gap="0">
                 <Text fontWeight="bold">{artist.name}</Text>
                 <Text mt="-1" textTransform="capitalize">
                   {artist.genre}

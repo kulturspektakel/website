@@ -6,7 +6,7 @@ export default function MitgliedsantragDanke() {
   return (
     <>
       <ClientOnly>{() => <Confetti />}</ClientOnly>
-      <VStack spacing="5" textAlign="center">
+      <VStack gap="5" textAlign="center">
         <Heading size="lg">Willkommen im Verein!</Heading>
         <Text>
           Vielen Dank für deine Mitgliedschaft bei uns. Wir wissen deine

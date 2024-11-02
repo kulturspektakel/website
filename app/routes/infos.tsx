@@ -1,13 +1,5 @@
 import {gql} from '@apollo/client';
-import {
-  Heading,
-  ListItem,
-  OrderedList,
-  VStack,
-  Text,
-  Link,
-  Box,
-} from '@chakra-ui/react';
+import {Heading, ListItem, VStack, Text, Link, Box} from '@chakra-ui/react';
 import type {LoaderFunctionArgs} from '@remix-run/node';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import type {InfosQuery} from '~/types/graphql';
@@ -64,7 +56,7 @@ export async function loader(args: LoaderFunctionArgs) {
 export default function Infos() {
   const data = useTypedLoaderData<typeof loader>();
   return (
-    <VStack spacing="10">
+    <VStack gap="10">
       {data.infos && data.infos.__typename === 'Page' && (
         <Page {...data.infos} centered />
       )}
@@ -75,7 +67,8 @@ export default function Infos() {
         <Heading as="h2" mb="5">
           Termine
         </Heading>
-        <OrderedList
+        <Box
+          as="ol"
           listStyleType="none"
           m="0"
           w="100%"
@@ -117,7 +110,7 @@ export default function Infos() {
               {event.location?.split(',')[0]}
             </ListItem>
           ))}
-        </OrderedList>
+        </Box>
         <Link
           variant="inline"
           href="https://calendar.google.com/calendar/ical/c_d5cfc52054d3dae0761245fee799a7c2c61691fb62554f30ea652adcca183304%40group.calendar.google.com/public/basic.ics"

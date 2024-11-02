@@ -1,6 +1,6 @@
-import {InfoIcon} from '@chakra-ui/icons';
+import {CloseIcon, InfoIcon} from '@chakra-ui/icons';
 import type {BoxProps} from '@chakra-ui/react';
-import {useDisclosure, Flex, CloseButton, Box, Heading} from '@chakra-ui/react';
+import {useDisclosure, Flex, IconButton, Box, Heading} from '@chakra-ui/react';
 
 export default function InfoBox({
   children,
@@ -44,13 +44,15 @@ export default function InfoBox({
         {children}
       </Box>
       {closeable && (
-        <CloseButton
+        <IconButton
           alignSelf="flex-start"
           position="relative"
           right={-1}
           top={-1}
           onClick={onClose}
-        />
+        >
+          <CloseIcon />
+        </IconButton>
       )}
     </Flex>
   );

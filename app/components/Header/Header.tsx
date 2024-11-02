@@ -9,9 +9,8 @@ import {
   IconButton,
   HStack,
   VStack,
-  Modal,
-  ModalContent,
-  ModalOverlay,
+  DialogRoot,
+  DialogContent,
 } from '@chakra-ui/react';
 import {
   useLocation,
@@ -64,7 +63,7 @@ function NavItems() {
     outline: 'none',
     color: 'brand.500',
   };
-  const _activeLink: SystemStyleObject = {
+  const _active: SystemStyleObject = {
     borderBottom: '3px solid',
     marginBottom: '-3px',
   };
@@ -72,7 +71,7 @@ function NavItems() {
   const props: Omit<RemixNavLinkProps & LinkProps, 'to'> = {
     _focusVisible: _focus,
     _hover: _focus,
-    _activeLink,
+    _active,
     lineHeight: 1,
     as: NavLink,
   };
@@ -196,15 +195,16 @@ export default function Header() {
         <Logo />
         <IconButton
           aria-label="Navigation öffnen"
-          isRound={true}
-          icon={<HamburgerIcon fontSize="xl" />}
+          rounded="full"
           onClick={() => setShowNav(true)}
           display={['block', 'none']}
-        />
+        >
+          <HamburgerIcon fontSize="xl" />
+        </IconButton>
         <HStack
           as="nav"
           pr="3"
-          spacing={['4', '4', '8']}
+          gap={['4', '4', '8']}
           h="14"
           fontFamily="Shrimp"
           fontSize={['sm', 'lg', 'xl']}
@@ -215,14 +215,13 @@ export default function Header() {
           <NavItems />
         </HStack>
       </Flex>
-      <Modal
+      <DialogRoot
         isOpen={showNav}
         onClose={() => setShowNav(false)}
         motionPreset="scale"
         size="full"
       >
-        <ModalOverlay bg="brand.900" backdropFilter="blur(10px)" />
-        <ModalContent
+        <DialogContent
           bgColor="transparent"
           boxShadow="none"
           // reversed, so that nav items are focused first
@@ -235,7 +234,7 @@ export default function Header() {
             textTransform="uppercase"
             justify="center"
             height="100%"
-            spacing="8"
+            gap="8"
             flexGrow={1}
             pb="16"
           >
@@ -250,13 +249,14 @@ export default function Header() {
             <Logo />
             <IconButton
               aria-label="Navigation schließen"
-              isRound={true}
-              icon={<CloseIcon fontSize="xl" />}
+              rounded="full"
               onClick={() => setShowNav(false)}
-            />
+            >
+              <CloseIcon fontSize="xl" />
+            </IconButton>
           </Flex>
-        </ModalContent>
-      </Modal>
+        </DialogContent>
+      </DialogRoot>
     </Flex>
   );
 }

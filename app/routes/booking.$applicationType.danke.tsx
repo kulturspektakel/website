@@ -1,4 +1,4 @@
-import {VStack, Heading, Text, Img} from '@chakra-ui/react';
+import {VStack, Heading, Text, Image} from '@chakra-ui/react';
 import Confetti from '~/components/booking/Confetti.client';
 import DateString from '~/components/DateString';
 import {useParams} from '@remix-run/react';
@@ -21,8 +21,8 @@ export default function Thanks() {
   return (
     <>
       <ClientOnly>{() => <Confetti />}</ClientOnly>
-      <VStack spacing="5" textAlign="center">
-        <Img
+      <VStack gap="5" textAlign="center">
+        <Image
           src={
             applicationType === 'dj' ? '/genre/disco.svg' : '/genre/metal.svg'
           }

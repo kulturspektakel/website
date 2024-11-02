@@ -76,7 +76,7 @@ export default function NewsArchive() {
             <Heading textAlign="center" mb="10">
               {year}
             </Heading>
-            <SimpleGrid columns={[2, 2, 3]} spacing={4} key={year} mb="10">
+            <SimpleGrid columns={[2, 2, 3]} gap={4} key={year} mb="10">
               {edges.map(({node}, i) => (
                 <Card
                   key={node.slug}

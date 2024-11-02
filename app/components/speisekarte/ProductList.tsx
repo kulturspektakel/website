@@ -2,12 +2,12 @@ import {gql} from '@apollo/client';
 import {InfoIcon} from '@chakra-ui/icons';
 import type {PlacementWithLogical} from '@chakra-ui/react';
 import {
-  Divider,
+  Separator,
   HStack,
   ListItem,
   Text,
   Tooltip,
-  UnorderedList,
+  Box,
   useBreakpointValue,
   useDisclosure,
 } from '@chakra-ui/react';
@@ -35,13 +35,13 @@ gql`
 
 const TooltipContent: FC<{additives: ProductAdditives[]}> = ({additives}) => {
   return (
-    <UnorderedList listStyleType={'none'} marginInlineStart={0}>
+    <Box as="ul" listStyleType={'none'} marginInlineStart={0}>
       {additives.map((additive: ProductAdditives) => (
         <Text key={additive.id} fontWeight={'normal'}>
           {additive.displayName}
         </Text>
       ))}
-    </UnorderedList>
+    </Box>
   );
 };
 
@@ -57,7 +57,7 @@ export default function ProductList({
 
   return (
     <>
-      <UnorderedList listStyleType="none" marginInlineStart={0}>
+      <Box as="ul" listStyleType="none" marginInlineStart={0}>
         {productList.product.map((item, index) => (
           <ListItem key={item.name}>
             <HStack justifyContent="space-between" py={1}>
@@ -77,10 +77,12 @@ export default function ProductList({
                 }).format(item.price / 100)}
               </span>
             </HStack>
-            {(showDepositText || index < productListLength - 1) && <Divider />}
+            {(showDepositText || index < productListLength - 1) && (
+              <Separator />
+            )}
           </ListItem>
         ))}
-      </UnorderedList>
+      </Box>
       {showDepositText && (
         <>
           <Text textAlign="right" pt="1" color="offwhite.500">

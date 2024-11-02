@@ -7,7 +7,7 @@ import {
   Text,
   Button,
   Spinner,
-  Divider,
+  Separator,
 } from '@chakra-ui/react';
 import {useRef, useState} from 'react';
 import {
@@ -63,7 +63,7 @@ export default function Sso() {
   const [searchParams] = useSearchParams();
 
   return (
-    <VStack spacing="10">
+    <VStack gap="10">
       <Heading as="h1" textAlign="center">
         Nuclino Login
       </Heading>
@@ -79,7 +79,7 @@ export default function Sso() {
             <VStack
               as="form"
               w="100%"
-              spacing="2"
+              gap="2"
               onSubmit={(e) => {
                 e.preventDefault();
                 requestNonce({
@@ -150,12 +150,12 @@ export default function Sso() {
               </Button>
             </VStack>
 
-            <Divider mt="10" mb="10" />
+            <Separator mt="10" mb="10" />
 
             <VStack
               as="form"
               w="100%"
-              spacing="2"
+              gap="2"
               method="post"
               action={`https://api.kulturspektakel.de/saml/login?${searchParams.toString()}`}
             >

@@ -24,7 +24,7 @@ export default function Booking() {
   return (
     <Box>
       <Outlet />
-      <VStack spacing="5">
+      <VStack gap="5">
         <Heading size="lg">Band- und DJ-Bewerbungen</Heading>
         <Text>
           Das Kulturspektakel Gauting findet vom{' '}

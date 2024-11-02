@@ -7,7 +7,6 @@ import {
   Button,
   VStack,
   FormErrorMessage,
-  Slider,
   SliderFilledTrack,
   SliderThumb,
   SliderTrack,
@@ -35,6 +34,7 @@ import Steps from '~/components/Steps';
 import {useState} from 'react';
 import {useNavigate} from '@remix-run/react';
 import {$path} from 'remix-routes';
+import {Slider} from '~/components/slider';
 
 const schemaStep1 = z.object({
   membership: z.nativeEnum(MembershipEnum),
@@ -158,7 +158,7 @@ export default function Mitgliedsantrag() {
       >
         {({values, errors, setFieldValue, touched}) => (
           <Form>
-            <VStack spacing="4" align="stretch">
+            <VStack gap="4" align="stretch">
               {step == 0 ? (
                 <>
                   <FormControl id="membership" isRequired>

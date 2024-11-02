@@ -1,9 +1,9 @@
 import type {BoxProps} from '@chakra-ui/react';
-import {Box, forwardRef} from '@chakra-ui/react';
-import {useMemo} from 'react';
+import {Box} from '@chakra-ui/react';
+import {forwardRef, useMemo} from 'react';
 import {Link} from '@remix-run/react';
 
-const Card = forwardRef<BoxProps, 'div'>(
+const Card = forwardRef<BoxProps>(
   (
     {
       onClick,

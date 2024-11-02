@@ -58,12 +58,12 @@ export async function loader(args: LoaderFunctionArgs) {
 export default function Plakate() {
   const data = useTypedLoaderData<typeof loader>();
   return (
-    <VStack spacing="10">
+    <VStack gap="10">
       <Heading as="h1" textAlign="center">
         Plakate
       </Heading>
       <Gallery options={{loop: false}} withCaption>
-        <SimpleGrid columns={[2, 3, 4]} spacing={5}>
+        <SimpleGrid columns={[2, 3, 4]} gap={5}>
           {data.eventsConnection.edges.map(({node}) =>
             node.poster ? (
               <Image

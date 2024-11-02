@@ -71,7 +71,7 @@ export default function () {
   const root = useTypedRouteLoaderData<typeof rootLoader>('root')!;
 
   return (
-    <VStack spacing="5">
+    <VStack gap="5">
       <Heading size="lg" mt="2">
         {applicationType === 'dj' ? 'DJ Bewerbung' : 'Bandbewerbung'}
       </Heading>
@@ -126,7 +126,7 @@ export default function () {
       >
         {(props) => (
           <Form style={{width: '100%'}}>
-            <VStack spacing="4">{createElement(STEPS[currentStep])}</VStack>
+            <VStack gap="4">{createElement(STEPS[currentStep])}</VStack>
             <HStack w="100%" mt="4">
               {currentStep > 0 && (
                 <Button

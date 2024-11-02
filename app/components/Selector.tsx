@@ -1,4 +1,10 @@
-import {ButtonGroup, Button, Select} from '@chakra-ui/react';
+import {
+  Group,
+  Button,
+  SelectContent,
+  SelectItem,
+  SelectRoot,
+} from '@chakra-ui/react';
 import {useCallback, useRef} from 'react';
 
 export default function Selector({
@@ -38,8 +44,8 @@ export default function Selector({
 
   return (
     <>
-      <ButtonGroup
-        isAttached
+      <Group
+        attached
         mt="5"
         display={['none', 'flex']}
         role="toolbar"
@@ -68,24 +74,24 @@ export default function Selector({
             {o.name}
           </Button>
         ))}
-      </ButtonGroup>
-      <Select
+      </Group>
+      <SelectRoot
         mt="2"
         display={['flex', 'none']}
         bg="white"
-        onChange={(e) =>
-          onChange(e.target.value === 'all' ? null : e.target.value, -1)
-        }
+        onValueChange={(value) => onChange(value === 'all' ? null : value, -1)}
         fontWeight="bold"
-        value={value ?? 'all'}
+        value={[value ?? 'all']}
       >
-        <option value={'all'}>{allLabelSmall ?? 'Alle'}</option>
-        {options.map((o) => (
-          <option key={o.id} value={o.id}>
-            {o.name}
-          </option>
-        ))}
-      </Select>
+        <SelectContent>
+          <SelectItem item={'all'}>{allLabelSmall ?? 'Alle'}</SelectItem>
+          {options.map((o) => (
+            <SelectItem key={o.id} item={o.id}>
+              {o.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </SelectRoot>
     </>
   );
 }

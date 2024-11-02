@@ -1,5 +1,5 @@
 import {gql} from '@apollo/client';
-import {OrderedList, VStack} from '@chakra-ui/react';
+import {Box, VStack} from '@chakra-ui/react';
 import {LoaderFunctionArgs} from '@remix-run/node';
 import {useRevalidator} from '@remix-run/react';
 import {useEffect} from 'react';
@@ -216,7 +216,7 @@ export default function () {
       maxW="450"
       mr="auto"
       ml="auto"
-      spacing="7"
+      gap="7"
       minH="calc(100vh - 148px)"
       align="stretch"
       justifyContent="center"
@@ -230,8 +230,8 @@ export default function () {
       <Card balance={data.balance} deposit={data.deposit} />
 
       {data.recentTransactions && data.recentTransactions.length > 0 && (
-        <VStack spacing="5" align="stretch">
-          <OrderedList m="0">
+        <VStack gap="5" align="stretch">
+          <Box as="ol" m="0">
             {data.recentTransactions.map((t, i) => (
               <Transaction
                 key={i}
@@ -239,7 +239,7 @@ export default function () {
                 isLastItem={i === data.recentTransactions.length - 1}
               />
             ))}
-          </OrderedList>
+          </Box>
           <InfoText textAlign="center">
             Es kann etwas dauern, bis alle Buchungen vollständig in der Liste
             dargestellt werden. Das angezeigte Guthaben auf der Karte ist jedoch

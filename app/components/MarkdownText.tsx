@@ -1,12 +1,6 @@
 import Markdown from 'markdown-to-jsx';
 import type {HeadingProps, ImageProps, LinkProps} from '@chakra-ui/react';
-import {
-  Text,
-  Heading,
-  Link as ChakraLink,
-  UnorderedList,
-  OrderedList,
-} from '@chakra-ui/react';
+import {Text, Heading, Link as ChakraLink, Box} from '@chakra-ui/react';
 import {Link} from '@remix-run/react';
 import Image from './Image';
 import {Gallery} from 'react-photoswipe-gallery';
@@ -89,8 +83,8 @@ export default function MarkdownText(props: Props) {
               </Gallery>
             );
           },
-          ul: UnorderedList,
-          ol: OrderedList,
+          ul: (props) => <Box as="ul" {...props} />,
+          ol: (props) => <Box as="ol" {...props} />,
         },
       }}
     >

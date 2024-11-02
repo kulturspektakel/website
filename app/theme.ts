@@ -1,32 +1,37 @@
-import {cssVar, extendTheme} from '@chakra-ui/react';
+import {createSystem, defaultConfig, SystemConfig} from '@chakra-ui/react';
 
-export default extendTheme({
-  colors: {
-    brand: {
-      500: '#E12E2E',
-      900: '#100A28',
-    },
-    red: {
-      500: '#E12E2E',
-    },
-    offwhite: {
-      100: '#f6f5f0',
-      200: '#dbd8d3',
-      300: '#d0cabc',
-      400: '#b6b39f',
-      500: '#9c9686',
-      600: '#5a574e',
+const overrides: SystemConfig = {
+  theme: {
+    tokens: {
+      colors: {
+        brand: {
+          500: '#E12E2E',
+          900: '#100A28',
+        },
+        red: {
+          500: '#E12E2E',
+        },
+        offwhite: {
+          100: '#f6f5f0',
+          200: '#dbd8d3',
+          300: '#d0cabc',
+          400: '#b6b39f',
+          500: '#9c9686',
+          600: '#5a574e',
+        },
+      },
+      fontWeights: {
+        normal: 400,
+        medium: 600,
+        bold: 600,
+      },
+      fonts: {
+        heading: "'Space Grotesk', sans-serif;",
+        body: "'Space Grotesk', sans-serif;",
+      },
     },
   },
-  fontWeights: {
-    normal: 400,
-    medium: 600,
-    bold: 600,
-  },
-  fonts: {
-    heading: "'Space Grotesk', sans-serif;",
-    body: "'Space Grotesk', sans-serif;",
-  },
+
   styles: {
     global: {
       html: {
@@ -107,7 +112,7 @@ export default extendTheme({
         [cssVar('popper-arrow-bg').variable]: 'colors.brand.900',
       },
     },
-    Divider: {
+    Separator: {
       baseStyle: {
         borderColor: 'offwhite.300',
       },
@@ -136,4 +141,6 @@ export default extendTheme({
       },
     },
   },
-});
+};
+
+export default createSystem(defaultConfig, overrides);

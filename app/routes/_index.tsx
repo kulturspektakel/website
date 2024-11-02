@@ -1,4 +1,4 @@
-import {Center, Divider} from '@chakra-ui/react';
+import {Center, Separator} from '@chakra-ui/react';
 import {gql} from '@apollo/client';
 import {NewsDocument, type NewsQuery} from '~/types/graphql';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
@@ -43,7 +43,7 @@ export default function Index() {
     <>
       {data.news.edges.slice(0, 8).map((edge, i) => (
         <React.Fragment key={i}>
-          {i > 0 && <Divider width="60%" m="auto" mb="16" />}
+          {i > 0 && <Separator width="60%" m="auto" mb="16" />}
           <Article key={edge.node.slug} data={edge.node} mb="12" />
         </React.Fragment>
       ))}

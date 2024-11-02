@@ -11,7 +11,7 @@ export default function Steps({
     <Stack
       align={['flex-start', 'center']}
       direction={['column', 'row']}
-      spacing={['1', '3']}
+      gap={['1', '3']}
       w="100%"
       {...props}
     >

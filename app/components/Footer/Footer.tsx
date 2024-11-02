@@ -32,7 +32,7 @@ export default function Footer() {
           htmlHeight={40}
           display={{base: 'none', md: 'initial'}}
         />
-        <VStack spacing="2" align={{base: 'center', md: 'flex-start'}}>
+        <VStack gap="2" align={{base: 'center', md: 'flex-start'}}>
           <Text as="h2" fontSize="md">
             Kulturspektakel Gauting e.V.
           </Text>

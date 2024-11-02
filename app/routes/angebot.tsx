@@ -1,5 +1,5 @@
 import {gql} from '@apollo/client';
-import {Text, Heading, ListItem, UnorderedList, VStack} from '@chakra-ui/react';
+import {Text, Heading, ListItem, Box, VStack} from '@chakra-ui/react';
 import type {LoaderFunctionArgs} from '@remix-run/node';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import type {AngebotQuery} from '~/types/graphql';
@@ -66,17 +66,17 @@ export async function loader(args: LoaderFunctionArgs) {
 export default function Angebot() {
   const data = useTypedLoaderData<typeof loader>();
   return (
-    <VStack spacing="10">
+    <VStack gap="10">
       {data.food && data.food.__typename === 'Page' && (
         <Page {...data.food} centered />
       )}
-      <UnorderedList columnGap="5" sx={{columnCount: [1, 2, 3]}} m="0">
+      <Box as="ul" columnGap="5" sx={{columnCount: [1, 2, 3]}} m="0">
         {data.productLists.map((list) => (
           <ListItem
             key={list.id}
             listStyleType="none"
             textAlign="center"
-            sx={{breakInside: 'avoid-column'}}
+            breakInside="avoid-column"
             mb="5"
           >
             <Text fontSize="lg">{list.emoji}</Text>
@@ -84,7 +84,7 @@ export default function Angebot() {
             {list.description && <Text mt="1">{list.description}</Text>}
           </ListItem>
         ))}
-      </UnorderedList>
+      </Box>
       <LinkButton href={$path('/speisekarte')}>
         vollständige Speisekarte
       </LinkButton>
