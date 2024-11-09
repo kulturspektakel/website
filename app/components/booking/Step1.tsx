@@ -1,25 +1,24 @@
 import {
-  FormControl,
-  FormLabel,
   HStack,
   Select,
-  FormHelperText,
   Textarea,
   Text,
   Link as ChakraLink,
   Alert,
   AlertDescription,
-  AlertIcon,
   Box,
+  Input,
 } from '@chakra-ui/react';
 import {Link} from '@remix-run/react';
 import DistanceWarning from './DistanceWarning';
 import DuplicateApplicationWarning from './DuplicateApplicationWarning';
-import Field from './Field';
+import {Field} from '../Field';
 import useIsDJ from './useIsDJ';
 import {BandRepertoireType, GenreCategory} from '~/types/graphql';
 import type {FormikContextT} from '~/routes/booking.$applicationType._index';
 import {useFormikContext} from 'formik';
+import {WarningIcon} from '@chakra-ui/icons';
+import {Field as FormikField} from 'formik';
 
 const GENRE_CATEGORIES: Map<GenreCategory, string> = new Map([
   [GenreCategory.Pop, 'Pop'],
@@ -49,50 +48,60 @@ export default function Step1() {
 
   return (
     <>
-      <FormControl id="bandname" isRequired>
-        <FormLabel>{isDJ ? 'Künstler:innen-Name' : 'Bandname'}</FormLabel>
-        <Field />
-      </FormControl>
+      <Field required label={isDJ ? 'Künstler:innen-Name' : 'Bandname'}>
+        <FormikField id="bandname" />
+      </Field>
       <DuplicateApplicationWarning bandname={values.bandname} />
 
       <HStack w="100%">
-        <FormControl id={isDJ ? 'genre' : 'genreCategory'} isRequired={!isDJ}>
-          <FormLabel>Musikrichtung</FormLabel>
+        <Field
+          id={isDJ ? 'genre' : 'genreCategory'}
+          required={!isDJ}
+          label="Musikrichtung"
+        >
           {isDJ ? (
-            <Field />
+            <FormikField as={Input} />
           ) : (
-            <Field as={Select} placeholder="bitte auswählen…">
+            <FormikField as={Select} placeholder="bitte auswählen…">
               {Array.from(GENRE_CATEGORIES.entries()).map(([k, v]) => (
                 <option value={k} key={k}>
                   {v}
                 </option>
               ))}
-            </Field>
+            </FormikField>
           )}
-        </FormControl>
+        </Field>
         {!isDJ && (
-          <FormControl id="genre">
-            <Field placeholder="genaues Genre (optional)" mt="8" />
-          </FormControl>
+          <Field>
+            <FormikField
+              id="genre"
+              as={Input}
+              placeholder="genaues Genre (optional)"
+              mt="8"
+            />
+          </Field>
         )}
       </HStack>
 
       {!isDJ && (
         <>
-          <FormControl id="repertoire" isRequired>
-            <FormLabel>Ihr spielt&hellip;</FormLabel>
-            <Field as={Select} placeholder="bitte auswählen…">
+          <Field label="Ihr spielt&hellip;" required>
+            <FormikField
+              id="repertoire"
+              as={Select}
+              placeholder="bitte auswählen…"
+            >
               {Array.from(REPERTOIRE.entries()).map(([k, v]) => (
                 <option value={k} key={k}>
                   {v}
                 </option>
               ))}
-            </Field>
-          </FormControl>
+            </FormikField>
+          </Field>
           {(values.repertoire === BandRepertoireType.MostlyCoverSongs ||
             values.repertoire === BandRepertoireType.ExclusivelyCoverSongs) && (
             <Alert status="warning" borderRadius="md" alignItems="flex-start">
-              <AlertIcon mt="0.5" />
+              <WarningIcon mt="0.5" />
               <AlertDescription color="yellow.900"></AlertDescription>
               Wir möchten Bands mit eigenen Songs eine Bühne bieten. Reine
               Tribute-/Coverbands ohne eigene Interpretationen buchen wir nicht.
@@ -101,39 +110,49 @@ export default function Step1() {
         </>
       )}
 
-      <FormControl isRequired id="description">
-        <FormLabel>{isDJ ? 'Beschreibung' : 'Bandbeschreibung'}</FormLabel>
-        <FormHelperText mt="-2" mb="2">
-          {isDJ
+      <Field
+        label={isDJ ? 'Beschreibung' : 'Bandbeschreibung'}
+        helperText={
+          isDJ
             ? 'Erzähl uns was über dich! Was legst du auf? Wie lange machst du das schon?'
             : `Erzählt uns etwas über eure Band! Was macht ihr für Musik? Was
-                  ist eure Bandgeschichte?`}
-        </FormHelperText>
-        <Field as={Textarea} maxLength={2000} />
+              ist eure Bandgeschichte?`
+        }
+      >
+        <FormikField as={Textarea} id="description" maxLength={2000} />
         <Text mt="1" fontSize="sm" color="offwhite.600">
           Maximal 2.000 Zeichen, wir müssen das alles lesen!
         </Text>
-      </FormControl>
+      </Field>
 
-      <FormControl id="city" isRequired>
-        <FormLabel>Anreise aus&hellip;</FormLabel>
-        <Field placeholder="Ort" />
-      </FormControl>
+      <Field label="Anreise aus&hellip;">
+        <FormikField as={Input} id="city" placeholder="Ort" />
+      </Field>
 
       <DistanceWarning origin={values.city} />
 
       {!isDJ && (
         <>
           <HStack w="100%">
-            <FormControl id="numberOfArtists" isRequired>
-              <FormLabel>Anzahl Bandmitglieder</FormLabel>
-              <Field type="number" min={1} />
-            </FormControl>
-            <FormControl id="numberOfNonMaleArtists" isRequired>
-              <FormLabel>
-                davon <strong>nicht</strong> männlich
-              </FormLabel>
-              <Field
+            <Field label="Anzahl Bandmitglieder" required>
+              <FormikField
+                id="numberOfArtists"
+                as={Input}
+                type="number"
+                min={1}
+              />
+            </Field>
+            <Field
+              label={
+                <>
+                  davon <strong>nicht</strong> männlich
+                </>
+              }
+              required
+            >
+              <FormikField
+                id="numberOfArtists"
+                as={Input}
                 type="number"
                 min={0}
                 max={values.numberOfArtists ?? 100}
@@ -143,7 +162,7 @@ export default function Step1() {
                   }
                 }}
               />
-            </FormControl>
+            </Field>
           </HStack>
           {values.numberOfArtists != null &&
             values.numberOfNonMaleArtists != null &&
@@ -154,15 +173,14 @@ export default function Step1() {
             )}
           <Text fontSize="sm" color="offwhite.600">
             Die Festival-Branche hat eine geringe Geschlechter&shy;diversität (
-            <ChakraLink
-              as={Link}
-              textDecoration="underline"
-              rel="noreferrer"
-              to="https://bit.ly/2HxZMgl"
-              target="_blank"
-              isExternal
-            >
-              mehr Informationen
+            <ChakraLink asChild textDecoration="underline">
+              <Link
+                to="https://bit.ly/2HxZMgl"
+                rel="noreferrer"
+                target="_blank"
+              >
+                mehr Informationen
+              </Link>
             </ChakraLink>
             ). Wir wählen die Bands nicht nach Geschlechter&shy;verteilung aus,
             trotzdem wollen wir einen besseren Überblick über die Situation

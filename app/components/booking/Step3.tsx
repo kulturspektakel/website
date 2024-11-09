@@ -1,11 +1,6 @@
-import {
-  FormControl,
-  FormHelperText,
-  FormLabel,
-  Textarea,
-  Select,
-} from '@chakra-ui/react';
-import Field from './Field';
+import {Textarea, Select, Input} from '@chakra-ui/react';
+import {Field} from '../Field';
+import {Field as FormikField} from 'formik';
 import useIsDJ from './useIsDJ';
 import {HeardAboutBookingFrom, PreviouslyPlayed} from '~/types/graphql';
 import {useUtmSource} from '~/routes/booking._index';
@@ -31,42 +26,44 @@ export default function Step3() {
 
   return (
     <>
-      <FormControl id="contactName" isRequired>
-        <FormLabel>
-          {isDJ ? `Vollständiger Name` : `Ansprechpartner*in`}
-        </FormLabel>
-        <Field />
-      </FormControl>
+      <Field
+        label={isDJ ? `Vollständiger Name` : `Ansprechpartner*in`}
+        required
+      >
+        <FormikField as={Input} id="contactName" />
+      </Field>
 
-      <FormControl id="email" isRequired>
-        <FormLabel>Email-Adresse</FormLabel>
-        <Field type="email" />
-      </FormControl>
+      <Field label="Email-Adresse">
+        <FormikField as={Input} id="email" type="email" />
+      </Field>
 
-      <FormControl id="contactPhone" isRequired>
-        <FormLabel>Handynummer</FormLabel>
-        <Field type="tel" />
-      </FormControl>
+      <Field label="Handynummer">
+        <FormikField as={Input} id="contactPhone" type="tel" />
+      </Field>
 
-      <FormControl id="knowsKultFrom">
-        <FormLabel>
-          {isDJ ? 'Woher kennst du das Kult?' : `Woher kennt ihr das Kult?`}
-        </FormLabel>
-        <FormHelperText mt="-2" mb="2">
-          {isDJ
+      <Field
+        label={isDJ ? 'Woher kennst du das Kult?' : `Woher kennt ihr das Kult?`}
+        helperText={
+          isDJ
             ? 'Was verbindet dich mit unserer Veranstaltung? Woher kennst du das Kulturspektakel? Was wolltest du uns schon immer mal erzählen?'
-            : `Wart ihr schonmal da? Woher kennt ihr das Kulturspektakel? Was verbindet euch mit unserer Veranstaltung? Was wolltet ihr uns schon immer mal erzählen? `}
-        </FormHelperText>
-        <Field as={Textarea} />
-      </FormControl>
+            : `Wart ihr schonmal da? Woher kennt ihr das Kulturspektakel? Was verbindet euch mit unserer Veranstaltung? Was wolltet ihr uns schon immer mal erzählen? `
+        }
+      >
+        <FormikField as={Textarea} id="knowsKultFrom" />
+      </Field>
 
-      <FormControl id="hasPreviouslyPlayed">
-        <FormLabel>
-          {isDJ
+      <Field
+        label={
+          isDJ
             ? 'Hast du schonmal bei uns aufgelegt?'
-            : `Habt ihr schonmal bei uns gespielt?`}
-        </FormLabel>
-        <Field as={Select} placeholder="bitte auswählen…">
+            : `Habt ihr schonmal bei uns gespielt?`
+        }
+      >
+        <FormikField
+          id="hasPreviouslyPlayed"
+          as={Select}
+          placeholder="bitte auswählen…"
+        >
           {Array.from(PLAYED_PREVIOUSLY.entries())
             .filter(
               ([v]) => !isDJ || (isDJ && v !== PreviouslyPlayed.OtherFormation),
@@ -76,24 +73,29 @@ export default function Step3() {
                 {v}
               </option>
             ))}
-        </Field>
-      </FormControl>
+        </FormikField>
+      </Field>
 
       {!utmSource && (
-        <FormControl id="heardAboutBookingFrom">
-          <FormLabel>
-            {isDJ
+        <Field
+          label={
+            isDJ
               ? `Wie bist du auf unser Booking aufmerksam geworden?`
-              : `Wie seid ihr auf unser Booking aufmerksam geworden?`}
-          </FormLabel>
-          <Field as={Select} placeholder="bitte auswählen…">
+              : `Wie seid ihr auf unser Booking aufmerksam geworden?`
+          }
+        >
+          <FormikField
+            id="heardAboutBookingFrom"
+            as={Select}
+            placeholder="bitte auswählen…"
+          >
             {Array.from(HEARD_ABOUT.entries()).map(([k, v]) => (
               <option key={k} value={k}>
                 {v}
               </option>
             ))}
-          </Field>
-        </FormControl>
+          </FormikField>
+        </Field>
       )}
     </>
   );

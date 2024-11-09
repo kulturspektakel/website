@@ -1,24 +1,21 @@
 import {
-  FormControl,
-  FormLabel,
   Heading,
   Text,
   Box,
   Button,
   VStack,
-  FormErrorMessage,
-  SliderFilledTrack,
-  SliderThumb,
-  SliderTrack,
   Flex,
+  RadioCardRoot,
+  HStack,
+  RadioCardItem,
+  Input,
 } from '@chakra-ui/react';
-import {Form, Formik} from 'formik';
-import Field from '~/components/booking/Field';
+import {Field as FormikField, Form, Formik} from 'formik';
+import {Field} from '~/components/Field';
 import mergeMeta from '~/utils/mergeMeta';
 import {z} from 'zod';
 import {toFormikValidationSchema} from 'zod-formik-adapter';
 import {isValid, printFormat} from 'iban-ts';
-import RadioStack, {RadioStackTab} from '~/components/RadioStack';
 import {gql} from '@apollo/client';
 import {LoaderFunctionArgs} from '@remix-run/node';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
@@ -34,7 +31,7 @@ import Steps from '~/components/Steps';
 import {useState} from 'react';
 import {useNavigate} from '@remix-run/react';
 import {$path} from 'remix-routes';
-import {Slider} from '~/components/slider';
+import {Slider} from '~/components/Slider';
 
 const schemaStep1 = z.object({
   membership: z.nativeEnum(MembershipEnum),
@@ -162,36 +159,34 @@ export default function Mitgliedsantrag() {
               {step == 0 ? (
                 <>
                   <FormControl id="membership" isRequired>
-                    <RadioStack>
-                      <RadioStackTab
-                        title={getLegalName('kult')}
-                        subtitle="Für aktive Mitgestalter:innen des Kulturspektakels"
-                        value="kult"
-                      />
-                      <RadioStackTab
-                        title={getLegalName('foerderverein')}
-                        subtitle="Für Unterstützer:innen des Kulturspektakels"
-                        value="foerderverein"
-                      />
-                    </RadioStack>
+                    <RadioCardRoot>
+                      <HStack align="stretch">
+                        <RadioCardItem
+                          label={getLegalName('kult')}
+                          description="Für aktive Mitgestalter:innen des Kulturspektakels"
+                          value="kult"
+                        />
+                        <RadioCardItem
+                          label={getLegalName('foerderverein')}
+                          subtitle="Für Unterstützer:innen des Kulturspektakels"
+                          value="foerderverein"
+                        />
+                      </HStack>
+                    </RadioCardRoot>
                   </FormControl>
-                  <FormControl id="name" isRequired>
-                    <FormLabel>Vor- und Nachname</FormLabel>
-                    <Field type="text" />
-                  </FormControl>
-                  <FormControl id="address" isRequired>
-                    <FormLabel>Anschrift</FormLabel>
-                    <Field type="text" />
-                  </FormControl>
-                  <FormControl id="city" isRequired>
-                    <FormLabel>PLZ, Ort</FormLabel>
-                    <Field type="text" />
-                  </FormControl>
+                  <Field label="Vor- und Nachname" required>
+                    <FormikField as={Input} type="text" id="name" />
+                  </Field>
+                  <Field label="Anschrift" required>
+                    <FormikField as={Input} type="text" id="address" />
+                  </Field>
+                  <Field label="PLZ, Ort" required>
+                    <FormikField as={Input} type="text" id="city" />
+                  </Field>
 
-                  <FormControl id="email" isRequired>
-                    <FormLabel>E-Mail</FormLabel>
-                    <Field type="email" />
-                  </FormControl>
+                  <Field label="E-Mail" required>
+                    <FormikField type="email" id="email" />
+                  </Field>
 
                   <Text fontSize="small" color="offwhite.600">
                     Ich kann jederzeit wieder aus dem Verein austreten, wobei
@@ -202,53 +197,33 @@ export default function Mitgliedsantrag() {
               ) : (
                 <>
                   <FormControl id="membershipType" isRequired>
-                    <RadioStack
-                      autoFocus
-                      onChangeEffect={() => {
-                        let membershipFee: number = 0;
-                        switch (values.membershipType) {
-                          case 'reduced':
-                            membershipFee =
-                              data.config.membershipFees[values.membership!]
-                                .reduced;
-                            break;
-                          case 'regular':
-                            membershipFee =
-                              data.config.membershipFees[values.membership!]
-                                .regular;
-                            break;
-                          case 'supporter':
-                            membershipFee = 5000;
-                            break;
-                        }
-
-                        setFieldValue('membershipFee', membershipFee);
-                      }}
-                    >
-                      <RadioStackTab
-                        title={currencyFormatter.format(
-                          data.config.membershipFees[values.membership!]
-                            .regular / 100,
-                        )}
-                        subtitle="Regulärer Jahresbeitrag"
-                        value="regular"
-                      />
-                      <RadioStackTab
-                        title={currencyFormatter.format(
-                          data.config.membershipFees[values.membership!]
-                            .reduced / 100,
-                        )}
-                        subtitle="Für Personen ohne/mit vermindertem Einkommen (z.B. Schüler:innen, Studierende)"
-                        value="reduced"
-                      />
-                      {values.membership! === 'foerderverein' && (
-                        <RadioStackTab
-                          title="Freier Beitrag"
-                          subtitle="Für unsere großzügigen Unterstützer:innen"
-                          value="supporter"
+                    <RadioCardRoot>
+                      <HStack align="stretch">
+                        <RadioCardItem
+                          label={currencyFormatter.format(
+                            data.config.membershipFees[values.membership!]
+                              .regular / 100,
+                          )}
+                          description="Regulärer Jahresbeitrag"
+                          value="regular"
                         />
-                      )}
-                    </RadioStack>
+                        <RadioCardItem
+                          label={currencyFormatter.format(
+                            data.config.membershipFees[values.membership!]
+                              .reduced / 100,
+                          )}
+                          description="Für Personen ohne/mit vermindertem Einkommen (z.B. Schüler:innen, Studierende)"
+                          value="reduced"
+                        />
+                        {values.membership! === 'foerderverein' && (
+                          <RadioCardItem
+                            label="Freier Beitrag"
+                            description="Für unsere großzügigen Unterstützer:innen"
+                            value="supporter"
+                          />
+                        )}
+                      </HStack>
+                    </RadioCardRoot>
                   </FormControl>
 
                   {values.membershipType === 'supporter' && (
@@ -267,7 +242,7 @@ export default function Mitgliedsantrag() {
                       >
                         <Slider
                           aria-label="Mitgliedsbeitrag"
-                          value={values.membershipFee}
+                          value={[values.membershipFee!]}
                           min={
                             data.config.membershipFees[values.membership!]
                               .regular
@@ -277,12 +252,7 @@ export default function Mitgliedsantrag() {
                           onChange={(value) => {
                             setFieldValue('membershipFee', value);
                           }}
-                        >
-                          <SliderTrack>
-                            <SliderFilledTrack />
-                          </SliderTrack>
-                          <SliderThumb />
-                        </Slider>
+                        />
                         <Box w="90px" textAlign="right" flexShrink={0}>
                           {new Intl.NumberFormat('de-DE', {
                             style: 'currency',
@@ -305,13 +275,17 @@ export default function Mitgliedsantrag() {
                     </FormControl>
                   )}
 
-                  <FormControl
-                    id="iban"
-                    isRequired
-                    isInvalid={touched.iban && !!errors.iban}
+                  <Field
+                    label="IBAN"
+                    required
+                    invalid={touched.iban && !!errors.iban}
+                    errorText={
+                      typeof errors.iban === 'string' ? errors.iban : null
+                    }
                   >
-                    <FormLabel>IBAN</FormLabel>
-                    <Field
+                    <FormikField
+                      as={Input}
+                      id="iban"
                       type="text"
                       onBlur={(e) => {
                         if (isValid(e.target.value)) {
@@ -319,40 +293,35 @@ export default function Mitgliedsantrag() {
                         }
                       }}
                     />
-                    <FormErrorMessage>
-                      {typeof errors.iban === 'string' ? errors.iban : null}
-                    </FormErrorMessage>
-                  </FormControl>
+                  </Field>
 
                   <FormControl id="accountHolder" isRequired>
-                    <RadioStack>
-                      <RadioStackTab
-                        title="Mitglied ist Kontoinhaber:in"
-                        subtitle="Das Mitglied ist gleichzeitig Kontoinhaber:in"
-                        value="same"
-                      />
-                      <RadioStackTab
-                        title="Abweichender Kontoinhaber"
-                        subtitle="Kontoinhaber:in ist eine andere Person als das Mitglied"
-                        value="different"
-                      />
-                    </RadioStack>
+                    <RadioCardRoot>
+                      <HStack align="stretch">
+                        <RadioCardItem
+                          label="Mitglied ist Kontoinhaber:in"
+                          description="Das Mitglied ist gleichzeitig Kontoinhaber:in"
+                          value="same"
+                        />
+                        <RadioCardItem
+                          label="Abweichender Kontoinhaber"
+                          description="Kontoinhaber:in ist eine andere Person als das Mitglied"
+                          value="different"
+                        />
+                      </HStack>
+                    </RadioCardRoot>
                   </FormControl>
-
                   {values.accountHolder === 'different' && (
                     <>
-                      <FormControl id="accountHolderName" isRequired>
-                        <FormLabel>Name des/der Kontoinhaber:in</FormLabel>
-                        <Field type="text" />
-                      </FormControl>
-                      <FormControl id="accountHolderAddress" isRequired>
-                        <FormLabel>Anschrift des/der Kontoinhaber:in</FormLabel>
-                        <Field type="text" />
-                      </FormControl>
-                      <FormControl id="accountHolderCity" isRequired>
-                        <FormLabel>PLZ, Ort des/der Kontoinhaber:in</FormLabel>
-                        <Field type="text" />
-                      </FormControl>
+                      <Field required label="Name des/der Kontoinhaber:in">
+                        <FormikField id="accountHolderName" type="text" />
+                      </Field>
+                      <Field required label="Anschrift des/der Kontoinhaber:in">
+                        <FormikField id="accountHolderAddress" type="text" />
+                      </Field>
+                      <Field required label="PLZ, Ort des/der Kontoinhaber:in">
+                        <FormikField id="accountHolderCity" type="text" />
+                      </Field>
                     </>
                   )}
                   <Text fontSize="small" color="offwhite.600">

@@ -56,7 +56,7 @@ export default function Band({band}: {band: BandFragment}) {
         <Heading
           sx={{hyphens: 'auto'}}
           fontSize={['md', 'lg', '2xl']}
-          noOfLines={4}
+          lineClamp={4}
           color="inherit"
           as="h3"
         >
@@ -64,7 +64,7 @@ export default function Band({band}: {band: BandFragment}) {
         </Heading>
 
         <Text
-          noOfLines={2}
+          lineClamp={2}
           lineHeight="1.1"
           fontWeight="bold"
           fontSize={['xs', 'sm']}

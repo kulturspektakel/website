@@ -1,6 +1,7 @@
 import {gql} from '@apollo/client';
-import {Alert, AlertIcon, AlertDescription} from '@chakra-ui/react';
+import {Alert, AlertDescription} from '@chakra-ui/react';
 import {useDistanceQuery} from '../../types/graphql';
+import {WarningIcon} from '@chakra-ui/icons';
 
 gql`
   query Distance($origin: String!) {
@@ -22,7 +23,7 @@ export default function DistanceWarning(props: {origin?: string}) {
 
   return (
     <Alert status="warning" borderRadius="md" alignItems="flex-start">
-      <AlertIcon mt="0.5" />
+      <WarningIcon mt="0.5" />
       <AlertDescription color="yellow.900">
         Unser Festival findet in Gauting statt und die meisten Bands kommen aus
         der Region. Da wir in der Regel keine Aufwandsentschädigungen für weite

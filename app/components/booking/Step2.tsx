@@ -1,19 +1,14 @@
 import {
-  FormControl,
-  FormHelperText,
-  FormLabel,
-  InputGroup,
-  InputLeftElement,
   Text,
   Image,
   HStack,
   VStack,
-  InputRightElement,
   IconButton,
-  FormErrorMessage,
   Center,
+  Input,
 } from '@chakra-ui/react';
-import Field from './Field';
+import {Field} from '../Field';
+import {Field as FormikField} from 'formik';
 import useIsDJ from './useIsDJ';
 import {useFormikContext} from 'formik';
 import type {FormikContextT} from '~/routes/booking.$applicationType._index';
@@ -26,8 +21,8 @@ import {useCombobox} from 'downshift';
 import {useRef, useState} from 'react';
 import DropdownMenu from '../DropdownMenu';
 import {FaSpotify} from 'react-icons/fa6';
-import Steps from '../Steps';
 import {CloseIcon} from '@chakra-ui/icons';
+import {InputGroup} from '../InputGroup';
 
 gql`
   query SpotifyArtistSearch($query: String!, $limit: Int = 5) {
@@ -113,17 +108,20 @@ export default function Step2() {
 
   return (
     <>
-      <FormControl id="demo" isRequired={!isDJ} isInvalid={!!errors.demo}>
-        <FormLabel>Demomaterial</FormLabel>
-        <FormHelperText mt="-2" mb="2">
-          {isDJ
+      <Field
+        label="Demomaterial"
+        helperText={
+          isDJ
             ? 'Bitte gib uns einen direkten Link zu ein paar Mixes/Beispielen von dir.'
-            : 'Am liebsten YouTube, Spotify, Soundcloud oder Bandcamp. Gerne auch Live-Mitschnitte.'}
-        </FormHelperText>
-        <Field
-          type="text"
-          placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-          validate={(url) => {
+            : 'Am liebsten YouTube, Spotify, Soundcloud oder Bandcamp. Gerne auch Live-Mitschnitte.'
+        }
+      >
+        <FormikField
+          as={Input}
+          id="demo"
+          required={!isDJ}
+          invalid={!!errors.demo}
+          validate={(url: string) => {
             if (
               url &&
               !/^(https?:\/\/)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)?$/.test(
@@ -133,19 +131,28 @@ export default function Step2() {
               return 'ungültige URL';
             }
           }}
+          placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         />
-      </FormControl>
+      </Field>
 
-      <FormControl id="spotifyArtist" isInvalid={spotifyInvalid}>
-        <FormLabel>Spotify</FormLabel>
-        <InputGroup>
-          <InputLeftElement
-            pointerEvents="none"
-            children={
-              <SpotifyCover image={values.spotifyArtist?.image} width="32px" />
-            }
-          />
-          <Field
+      <Field
+        id="spotifyArtist"
+        label="Spotify"
+        invalid={spotifyInvalid}
+        errorText="Spotify-Profil aus Liste auswählen"
+      >
+        <InputGroup
+          startElement={
+            <SpotifyCover image={values.spotifyArtist?.image} width="32px" />
+          }
+          endElement={
+            <IconButton onClick={() => setInputValue('')}>
+              <CloseIcon />
+            </IconButton>
+          }
+        >
+          <FormikField
+            as={Input}
             pl="40px"
             placeholder="Spotify-Profil suchen..."
             {...getInputProps({
@@ -153,11 +160,6 @@ export default function Step2() {
               onFocus: openMenu,
             })}
           />
-          <InputRightElement>
-            <IconButton onClick={() => setInputValue('')}>
-              <CloseIcon />
-            </IconButton>
-          </InputRightElement>
         </InputGroup>
 
         <DropdownMenu
@@ -180,41 +182,49 @@ export default function Step2() {
           )}
           keyExtractor={(band) => band.id}
         />
-        <FormErrorMessage>Spotify-Profil aus Liste auswählen</FormErrorMessage>
-      </FormControl>
+      </Field>
 
-      <FormControl id="instagram">
-        <FormLabel>Instagram</FormLabel>
-        <InputGroup>
-          <InputLeftElement pointerEvents="none" color="gray.400">
-            @
-          </InputLeftElement>
-          <Field placeholder="kulturspektakel" paddingStart="7" />
+      <Field label="Instagram">
+        <InputGroup startElement={<Text color="gray.400">@</Text>}>
+          <FormikField
+            as={Input}
+            id="instagram"
+            placeholder="kulturspektakel"
+            paddingStart="7"
+          />
         </InputGroup>
-      </FormControl>
+      </Field>
 
-      <FormControl id="facebook">
-        <FormLabel>Facebook</FormLabel>
-        <Field type="text" placeholder="https://facebook.com/kulturspektakel" />
-      </FormControl>
+      <Field label="Facebook">
+        <FormikField
+          as={Input}
+          id="facebook"
+          placeholder="https://facebook.com/kulturspektakel"
+        />
+      </Field>
 
-      <FormControl id="website">
-        <FormLabel>Webseite</FormLabel>
-        <Field type="text" placeholder="https://kulturspektakel.de" />
-      </FormControl>
+      <Field label="Webseite">
+        <FormikField
+          as={Input}
+          id="website"
+          placeholder="https://kulturspektakel.de"
+        />
+      </Field>
     </>
   );
 }
 
 function SpotifyCover({image, width}: {image?: string | null; width: string}) {
+  if (!image) {
+    return (
+      <Center aspectRatio={1} w={width} borderRadius="md" bg="offwhite.200">
+        <FaSpotify color="white" />
+      </Center>
+    );
+  }
   return (
     <Image
       src={image ?? undefined}
-      fallback={
-        <Center aspectRatio={1} w={width} borderRadius="md" bg="offwhite.200">
-          <FaSpotify color="white" />
-        </Center>
-      }
       w={width}
       aspectRatio={1}
       objectFit="cover"

@@ -106,7 +106,7 @@ export default function NewsArchive() {
                       size={['md', 'lg', 'lg']}
                       color={node.content.images[0]?.uri ? 'white' : undefined}
                       mt="1"
-                      noOfLines={5}
+                      lineClamp={5}
                     >
                       {node.title}
                     </Heading>

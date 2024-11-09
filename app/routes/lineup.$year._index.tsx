@@ -1,8 +1,6 @@
 import {gql} from '@apollo/client';
-import {Modal, ModalContent, ModalOverlay, Spinner} from '@chakra-ui/react';
 import type {LoaderFunctionArgs} from '@remix-run/node';
-import {Outlet, useNavigate, useParams} from '@remix-run/react';
-import {Suspense, useMemo, useState} from 'react';
+import {useMemo, useState} from 'react';
 import {$params, $path} from 'remix-routes';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import Selector from '~/components/Selector';
@@ -100,8 +98,6 @@ export async function loader(args: LoaderFunctionArgs) {
 export default function LineupYear() {
   const {areas, node} = useTypedLoaderData<typeof loader>();
   const event = node?.__typename === 'Event' ? node : null;
-  const navigate = useNavigate();
-  const {year, slug} = useParams();
   const [stageFilter, setStageFilter] = useState<string | null>(null);
 
   const dateStrings = new Set<string>();
@@ -152,21 +148,6 @@ export default function LineupYear() {
           }
         />
       ))}
-      <Modal
-        isOpen={!!slug}
-        onClose={() =>
-          navigate($path('/lineup/:year', {year: String(year)}), {
-            preventScrollReset: true,
-          })
-        }
-      >
-        <ModalOverlay />
-        <ModalContent p="6">
-          <Suspense fallback={<Spinner />}>
-            <Outlet />
-          </Suspense>
-        </ModalContent>
-      </Modal>
     </>
   );
 }

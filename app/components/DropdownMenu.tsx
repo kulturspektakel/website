@@ -21,7 +21,7 @@ export default function DropdownMenu<T>({
   highlightedIndex: number;
 }) {
   return (
-    <List
+    <List.Root
       shadow="md"
       bg="white"
       borderRadius="lg"
@@ -51,6 +51,6 @@ export default function DropdownMenu<T>({
           <Spinner size="sm" />
         </Center>
       )}
-    </List>
+    </List.Root>
   );
 }

@@ -1,5 +1,5 @@
 import type {BoxProps} from '@chakra-ui/react';
-import {Box, Input, InputGroup, InputLeftElement, Text} from '@chakra-ui/react';
+import {Box, Input, Text} from '@chakra-ui/react';
 import {gql} from '@apollo/client';
 import type {BandSearchQuery} from '~/types/graphql';
 import {BandSearchDocument} from '~/types/graphql';
@@ -11,6 +11,7 @@ import {useCombobox} from 'downshift';
 import {useNavigate} from '@remix-run/react';
 import {$path} from 'remix-routes';
 import DropdownMenu from '../DropdownMenu';
+import {InputGroup} from '../InputGroup';
 
 gql`
   query BandSearch($query: String!, $limit: Int = 5) {
@@ -72,10 +73,7 @@ export default function Search(props: BoxProps) {
 
   return (
     <Box position="relative" {...props}>
-      <InputGroup>
-        <InputLeftElement pointerEvents="none">
-          <Search2Icon color="offwhite.300" />
-        </InputLeftElement>
+      <InputGroup startElement={<Search2Icon color="offwhite.300" />}>
         <Input
           bgColor="white"
           borderRadius="full"
@@ -92,7 +90,7 @@ export default function Search(props: BoxProps) {
         data={data}
         highlightedIndex={highlightedIndex}
         itemRenderer={(band) => (
-          <Text noOfLines={1}>
+          <Text lineClamp={1}>
             {band.name} ({band.startTime.getFullYear()})
           </Text>
         )}

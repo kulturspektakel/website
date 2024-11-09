@@ -4,10 +4,9 @@ import type {BoxProps} from '@chakra-ui/react';
 import {
   Stack,
   Heading,
-  MenuButton,
+  MenuTrigger,
   Menu,
   MenuItem,
-  MenuList,
   IconButton,
   Flex,
   Tooltip,
@@ -15,6 +14,7 @@ import {
   Link as ChakraLink,
   Spinner,
   Center,
+  Button,
 } from '@chakra-ui/react';
 import {Link, NavLink, Outlet, useParams} from '@remix-run/react';
 import Search from '~/components/lineup/Search';
@@ -109,29 +109,29 @@ export default function () {
           {params.slug == null && (
             <Menu placement="bottom-end" isLazy>
               <Tooltip label="Jahr auswählen">
-                <MenuButton
-                  aria-label="Jahr auswählen"
-                  size="xs"
-                  mt="0.5"
-                  ml="1.5"
-                  isRound
-                  as={IconButton}
-                  icon={<TriangleDownIcon />}
-                >
-                  Jahr auswählen
-                </MenuButton>
+                <MenuTrigger>
+                  <Button
+                    aria-label="Jahr auswählen"
+                    size="xs"
+                    mt="0.5"
+                    ml="1.5"
+                    rounded="full"
+                    as={IconButton}
+                  >
+                    <TriangleDownIcon />
+                    Jahr auswählen
+                  </Button>
+                </MenuTrigger>
               </Tooltip>
-              <MenuList>
-                <Suspense
-                  fallback={
-                    <Center my="10">
-                      <Spinner />
-                    </Center>
-                  }
-                >
-                  <MenuItems />
-                </Suspense>
-              </MenuList>
+              <Suspense
+                fallback={
+                  <Center my="10">
+                    <Spinner />
+                  </Center>
+                }
+              >
+                <MenuItems />
+              </Suspense>
             </Menu>
           )}
         </Flex>
@@ -150,13 +150,17 @@ function MenuItems() {
     <>
       {data?.eventsConnection.edges.map(({node}) => (
         <MenuItem
-          as={NavLink}
-          to={$path('/lineup/:year', {
-            year: node.start.getFullYear(),
-          })}
+          asChild
           key={node.id}
+          value={String(node.start.getFullYear())}
         >
-          {node.name}
+          <NavLink
+            to={$path('/lineup/:year', {
+              year: node.start.getFullYear(),
+            })}
+          >
+            {node.name}
+          </NavLink>
         </MenuItem>
       ))}
     </>

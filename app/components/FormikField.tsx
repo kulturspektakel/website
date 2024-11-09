@@ -1,5 +1,5 @@
 import type {InputProps} from '@chakra-ui/react';
-import {Input, useFormControlContext} from '@chakra-ui/react';
+import {Input} from '@chakra-ui/react';
 import type {FieldValidator} from 'formik';
 import {useField} from 'formik';
 import React, {forwardRef} from 'react';
@@ -16,8 +16,6 @@ export default forwardRef(function FieldWrapper(
   },
   ref,
 ) {
-  const {id, isRequired, isInvalid} = useFormControlContext();
-
   const [field, meta] = useField({
     name: id,
     validate: (v) => {
@@ -49,5 +47,5 @@ export default forwardRef(function FieldWrapper(
     ...props,
   };
 
-  return React.createElement(as ?? Input, inputProps);
+  return React.createElement(as, inputProps);
 });
