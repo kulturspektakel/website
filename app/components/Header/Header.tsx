@@ -23,7 +23,7 @@ import ProgressBar from '@badrap/bar-of-progress';
 import logo from './logo.svg';
 import videoSrc from './Header.mov';
 import DateString from '../DateString';
-import {CloseIcon, HamburgerIcon} from '@chakra-ui/icons';
+import {FaXmark, FaBars} from 'react-icons/fa6';
 import {$path} from 'remix-routes';
 import type {RemixNavLinkProps} from '@remix-run/react/dist/components';
 import {gql} from '@apollo/client';
@@ -198,8 +198,9 @@ export default function Header() {
           rounded="full"
           onClick={() => setShowNav(true)}
           display={['block', 'none']}
+          fontSize="xl"
         >
-          <HamburgerIcon fontSize="xl" />
+          <FaBars />
         </IconButton>
         <HStack
           as="nav"
@@ -250,9 +251,10 @@ export default function Header() {
             <IconButton
               aria-label="Navigation schließen"
               rounded="full"
+              fontSize="xl"
               onClick={() => setShowNav(false)}
             >
-              <CloseIcon fontSize="xl" />
+              <FaXmark />
             </IconButton>
           </Flex>
         </DialogContent>

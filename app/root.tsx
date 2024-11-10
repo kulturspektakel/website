@@ -82,7 +82,8 @@ export const meta: MetaFunction<typeof loader> = (props) => {
     },
     {
       name: 'theme-color',
-      content: theme.colors.offwhite[100],
+      // TODO
+      // content: theme.token.offwhite[100],
     },
   ];
 };
@@ -131,7 +132,7 @@ function Document({children}: {children: React.ReactNode}) {
       </head>
       <body>
         <CacheProvider value={emotionCache}>
-          <ChakraProvider theme={theme}>
+          <ChakraProvider value={theme}>
             <ApolloProvider client={apolloClient}>
               <Flex direction={'column'} minHeight={'100vh'}>
                 <Header />

@@ -21,7 +21,7 @@ import {useCombobox} from 'downshift';
 import {useRef, useState} from 'react';
 import DropdownMenu from '../DropdownMenu';
 import {FaSpotify} from 'react-icons/fa6';
-import {CloseIcon} from '@chakra-ui/icons';
+import {FaXmark} from 'react-icons/fa6';
 import {InputGroup} from '../InputGroup';
 
 gql`
@@ -147,7 +147,7 @@ export default function Step2() {
           }
           endElement={
             <IconButton onClick={() => setInputValue('')}>
-              <CloseIcon />
+              <FaXmark />
             </IconButton>
           }
         >

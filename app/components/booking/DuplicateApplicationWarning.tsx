@@ -3,7 +3,7 @@ import {Alert, AlertDescription} from '@chakra-ui/react';
 import {useDuplicateApplicationWarningQuery} from '../../types/graphql';
 import type {loader as rootLoader} from '~/root';
 import {useTypedRouteLoaderData} from 'remix-typedjson';
-import {WarningIcon} from '@chakra-ui/icons';
+import {FaTriangleExclamation} from 'react-icons/fa6';
 
 gql`
   query DuplicateApplicationWarning($bandname: String!, $eventId: ID!) {
@@ -31,7 +31,7 @@ export default function DuplicateWarning(props: {bandname?: string}) {
 
   return (
     <Alert status="warning" borderRadius="md" alignItems="flex-start">
-      <WarningIcon mt="0.5" />
+      <FaTriangleExclamation mt="0.5" />
       <AlertDescription color="yellow.900">
         Es sieht so aus als hätten wir von euch am{' '}
         {data.checkDuplicateApplication.applicationTime.toLocaleString(

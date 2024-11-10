@@ -1,5 +1,5 @@
 import {gql, useSuspenseQuery} from '@apollo/client';
-import {TriangleDownIcon} from '@chakra-ui/icons';
+import {FaChevronDown} from 'react-icons/fa6';
 import type {BoxProps} from '@chakra-ui/react';
 import {
   Stack,
@@ -118,7 +118,7 @@ export default function () {
                     rounded="full"
                     as={IconButton}
                   >
-                    <TriangleDownIcon />
+                    <FaChevronDown />
                     Jahr auswählen
                   </Button>
                 </MenuTrigger>

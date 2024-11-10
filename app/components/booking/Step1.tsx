@@ -17,7 +17,7 @@ import useIsDJ from './useIsDJ';
 import {BandRepertoireType, GenreCategory} from '~/types/graphql';
 import type {FormikContextT} from '~/routes/booking.$applicationType._index';
 import {useFormikContext} from 'formik';
-import {WarningIcon} from '@chakra-ui/icons';
+import {FaTriangleExclamation} from 'react-icons/fa6';
 import {Field as FormikField} from 'formik';
 
 const GENRE_CATEGORIES: Map<GenreCategory, string> = new Map([
@@ -101,7 +101,7 @@ export default function Step1() {
           {(values.repertoire === BandRepertoireType.MostlyCoverSongs ||
             values.repertoire === BandRepertoireType.ExclusivelyCoverSongs) && (
             <Alert status="warning" borderRadius="md" alignItems="flex-start">
-              <WarningIcon mt="0.5" />
+              <FaTriangleExclamation mt="0.5" />
               <AlertDescription color="yellow.900"></AlertDescription>
               Wir möchten Bands mit eigenen Songs eine Bühne bieten. Reine
               Tribute-/Coverbands ohne eigene Interpretationen buchen wir nicht.

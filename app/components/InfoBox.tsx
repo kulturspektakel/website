@@ -1,20 +1,27 @@
-import {CloseIcon, InfoIcon} from '@chakra-ui/icons';
-import type {BoxProps} from '@chakra-ui/react';
-import {useDisclosure, Flex, IconButton, Box, Heading} from '@chakra-ui/react';
+import {FaXmark, FaCircleInfo} from 'react-icons/fa6';
+import type {FlexProps} from '@chakra-ui/react';
+import {
+  useDisclosure,
+  Flex,
+  IconButton,
+  Box,
+  Heading,
+  Icon,
+} from '@chakra-ui/react';
 
 export default function InfoBox({
   children,
   closeable,
   title,
   ...props
-}: BoxProps & {
+}: FlexProps & {
   title?: string;
   closeable?: boolean;
 }) {
   //   const applicationsOpen = useApplicationsOpen();
-  const {isOpen, onClose} = useDisclosure({defaultIsOpen: true});
+  const {open, onClose} = useDisclosure({defaultOpen: true});
 
-  if (!isOpen) {
+  if (!open) {
     return null;
   }
 
@@ -27,7 +34,7 @@ export default function InfoBox({
       gap="2"
       {...props}
     >
-      <InfoIcon color="brand.900" />
+      <Icon as={FaCircleInfo} color="brand.900" />
       <Box>
         {title && (
           <Heading
@@ -51,7 +58,7 @@ export default function InfoBox({
           top={-1}
           onClick={onClose}
         >
-          <CloseIcon />
+          <FaXmark />
         </IconButton>
       )}
     </Flex>

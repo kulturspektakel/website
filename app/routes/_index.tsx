@@ -32,7 +32,7 @@ export async function loader(args: LoaderFunctionArgs) {
 export const meta = mergeMeta<typeof loader>(({data}) => [
   {
     name: 'theme-color',
-    content: theme.colors.brand[900],
+    // content: theme.colors.brand[900],
   },
 ]);
 

@@ -1,4 +1,4 @@
-import {WarningTwoIcon} from '@chakra-ui/icons';
+import {FaTriangleExclamation} from 'react-icons/fa6';
 import {
   Flex,
   VStack,
@@ -57,7 +57,7 @@ export default function ApplicationPhase({
                   <DateString date={applicationEnd} />
                 ) : (
                   <Tag colorScheme="red">
-                    <WarningTwoIcon />
+                    <FaTriangleExclamation />
                     &nbsp;Abgelaufen
                   </Tag>
                 )}

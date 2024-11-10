@@ -28,8 +28,8 @@ export default function Footer() {
         <Image
           src={'/logos/logo.svg'}
           alt="Kulturspektakel Gauting Logo"
-          htmlWidth={40}
-          htmlHeight={40}
+          width="40px"
+          height="40px"
           display={{base: 'none', md: 'initial'}}
         />
         <VStack gap="2" align={{base: 'center', md: 'flex-start'}}>

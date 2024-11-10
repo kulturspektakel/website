@@ -1,4 +1,4 @@
-import {CheckIcon} from '@chakra-ui/icons';
+import {FaCheck} from 'react-icons/fa6';
 import {Box, Flex, Stack, StackProps} from '@chakra-ui/react';
 import {Fragment} from 'react';
 
@@ -34,7 +34,7 @@ export default function Steps({
                   index <= currentStep ? 'brand.900' : 'offwhite.300'
                 }
               >
-                {index < currentStep ? <CheckIcon /> : index + 1}
+                {index < currentStep ? <FaCheck /> : index + 1}
               </Flex>
               {step}
             </Flex>

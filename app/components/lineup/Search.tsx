@@ -5,7 +5,7 @@ import type {BandSearchQuery} from '~/types/graphql';
 import {BandSearchDocument} from '~/types/graphql';
 import {useTypeahead} from 'tomo-typeahead/react';
 import apolloClient from '~/utils/apolloClient';
-import {Search2Icon} from '@chakra-ui/icons';
+import {FaMagnifyingGlass} from 'react-icons/fa6';
 import {useRef} from 'react';
 import {useCombobox} from 'downshift';
 import {useNavigate} from '@remix-run/react';
@@ -73,7 +73,7 @@ export default function Search(props: BoxProps) {
 
   return (
     <Box position="relative" {...props}>
-      <InputGroup startElement={<Search2Icon color="offwhite.300" />}>
+      <InputGroup color="offwhite.300" startElement={<FaMagnifyingGlass />}>
         <Input
           bgColor="white"
           borderRadius="full"

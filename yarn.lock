@@ -913,11 +913,6 @@
   resolved "https://registry.yarnpkg.com/@badrap/bar-of-progress/-/bar-of-progress-0.2.2.tgz#4eb1a197f9727748cd9c9f5269339dd0bf6c1b0c"
   integrity sha512-Ig7MdFQM3OA7Ror5UB1ZutXNZFwxh6YExZvcd6EZloOgcXUR8PKNLH2wUVoeh92NMPnPWr6J/l9Mp+f3z7O7MQ==
 
-"@chakra-ui/icons@^2.2.4":
-  version "2.2.4"
-  resolved "https://registry.yarnpkg.com/@chakra-ui/icons/-/icons-2.2.4.tgz#fc3f59a7e377d6e4efdbe8ee0a3aec7f29a4ab32"
-  integrity sha512-l5QdBgwrAg3Sc2BRqtNkJpfuLw/pWRDwwT58J6c4PqQT6wzXxyNa8Q0PForu1ltB5qEiFb1kxr/F/HO1EwNa6g==
-
 "@chakra-ui/react@3.0.2":
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/@chakra-ui/react/-/react-3.0.2.tgz#c22b00a7cf04b804ea50033020852a05b68937b8"

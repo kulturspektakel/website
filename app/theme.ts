@@ -5,47 +5,44 @@ const overrides: SystemConfig = {
     tokens: {
       colors: {
         brand: {
-          500: '#E12E2E',
-          900: '#100A28',
+          500: {value: '#E12E2E'},
+          900: {value: '#100A28'},
         },
         red: {
-          500: '#E12E2E',
+          500: {value: '#E12E2E'},
         },
         offwhite: {
-          100: '#f6f5f0',
-          200: '#dbd8d3',
-          300: '#d0cabc',
-          400: '#b6b39f',
-          500: '#9c9686',
-          600: '#5a574e',
+          100: {value: '#f6f5f0'},
+          200: {value: '#dbd8d3'},
+          300: {value: '#d0cabc'},
+          400: {value: '#b6b39f'},
+          500: {value: '#9c9686'},
+          600: {value: '#5a574e'},
         },
       },
       fontWeights: {
-        normal: 400,
-        medium: 600,
-        bold: 600,
+        normal: {value: 400},
+        medium: {value: 600},
+        bold: {value: 600},
       },
       fonts: {
-        heading: "'Space Grotesk', sans-serif;",
-        body: "'Space Grotesk', sans-serif;",
+        heading: {value: "'Space Grotesk', sans-serif;"},
+        body: {value: "'Space Grotesk', sans-serif;"},
       },
     },
   },
-
-  styles: {
-    global: {
-      html: {
-        WebkitFontSmoothing: 'auto',
-        fontSynthesis: 'none',
-      },
-      body: {
-        bg: 'offwhite.100',
-      },
-      'h1,h2,h3': {
-        fontFamily: 'Shrimp !important',
-        textTransform: 'uppercase',
-        lineHeight: '0.95 !important',
-      },
+  globalCss: {
+    html: {
+      fontSmooth: 'auto',
+      fontSynthesis: 'none',
+    },
+    body: {
+      bg: 'offwhite.100',
+    },
+    'h1,h2,h3': {
+      fontFamily: 'Shrimp !important',
+      textTransform: 'uppercase',
+      lineHeight: '0.95 !important',
     },
   },
   components: {
@@ -109,7 +106,7 @@ const overrides: SystemConfig = {
         paddingBottom: 1,
         paddingLeft: 3,
         paddingRight: 3,
-        [cssVar('popper-arrow-bg').variable]: 'colors.brand.900',
+        // [cssVar('popper-arrow-bg').variable]: 'colors.brand.900',
       },
     },
     Separator: {

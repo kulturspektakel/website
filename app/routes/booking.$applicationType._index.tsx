@@ -31,7 +31,7 @@ import type {loader as rootLoader} from '~/root';
 import {useTypedRouteLoaderData} from 'remix-typedjson';
 import {loader} from './booking';
 import Steps from '~/components/Steps';
-import {WarningIcon} from '@chakra-ui/icons';
+import {FaTriangleExclamation} from 'react-icons/fa6';
 
 const STEPS = [Step1, Step2, Step3] as const;
 export type FormikContextT = Partial<CreateBandApplicationInput> & {
@@ -151,7 +151,7 @@ export default function () {
       </Formik>
       {error && isLastStep && (
         <Alert status="error" borderRadius="md">
-          <WarningIcon />
+          <FaTriangleExclamation />
           <Box flex="1">
             <AlertTitle mr={2}>
               Die Bewerbung konnte nicht abgeschickt werden.

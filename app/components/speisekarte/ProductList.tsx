@@ -1,5 +1,5 @@
 import {gql} from '@apollo/client';
-import {InfoIcon} from '@chakra-ui/icons';
+import {FaCircleInfo} from 'react-icons/fa6';
 import type {PlacementWithLogical} from '@chakra-ui/react';
 import {
   Separator,
@@ -10,6 +10,7 @@ import {
   Box,
   useBreakpointValue,
   useDisclosure,
+  Icon,
 } from '@chakra-ui/react';
 import {type FC} from 'react';
 import type {
@@ -118,7 +119,8 @@ function Info({additives}: {additives: ProductAdditives[]}) {
       placement={tooltipPlacement!}
       isOpen={isOpen}
     >
-      <InfoIcon
+      <Icon
+        as={FaCircleInfo}
         color={'offwhite.300'}
         ml="1"
         mt="-1"
