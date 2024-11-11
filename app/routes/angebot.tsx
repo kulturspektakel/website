@@ -1,5 +1,5 @@
 import {gql} from '@apollo/client';
-import {Text, Heading, ListItem, Box, VStack} from '@chakra-ui/react';
+import {Text, Heading, List, VStack} from '@chakra-ui/react';
 import type {LoaderFunctionArgs} from '@remix-run/node';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import type {AngebotQuery} from '~/types/graphql';
@@ -70,9 +70,9 @@ export default function Angebot() {
       {data.food && data.food.__typename === 'Page' && (
         <Page {...data.food} centered />
       )}
-      <Box as="ul" columnGap="5" sx={{columnCount: [1, 2, 3]}} m="0">
+      <List.Root columnGap="5" columnCount={[1, 2, 3]} m="0" display="block">
         {data.productLists.map((list) => (
-          <ListItem
+          <List.Item
             key={list.id}
             listStyleType="none"
             textAlign="center"
@@ -82,9 +82,9 @@ export default function Angebot() {
             <Text fontSize="lg">{list.emoji}</Text>
             <Heading size="md">{list.name}</Heading>
             {list.description && <Text mt="1">{list.description}</Text>}
-          </ListItem>
+          </List.Item>
         ))}
-      </Box>
+      </List.Root>
       <LinkButton href={$path('/speisekarte')}>
         vollständige Speisekarte
       </LinkButton>

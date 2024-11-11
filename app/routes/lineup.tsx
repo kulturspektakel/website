@@ -5,16 +5,15 @@ import {
   Stack,
   Heading,
   MenuTrigger,
-  Menu,
   MenuItem,
   IconButton,
   Flex,
-  Tooltip,
   Text,
   Link as ChakraLink,
   Spinner,
   Center,
   Button,
+  MenuRoot,
 } from '@chakra-ui/react';
 import {Link, NavLink, Outlet, useParams} from '@remix-run/react';
 import Search from '~/components/lineup/Search';
@@ -26,6 +25,7 @@ import {Suspense} from 'react';
 import {LoaderFunctionArgs} from '@remix-run/node';
 import apolloClient from '~/utils/apolloClient';
 import {$path} from 'remix-routes';
+import {Tooltip} from '~/components/tooltip';
 
 gql`
   query Lineups {
@@ -107,8 +107,8 @@ export default function () {
             {params?.year && <>&nbsp;{params.year}</>}
           </Heading>
           {params.slug == null && (
-            <Menu placement="bottom-end" isLazy>
-              <Tooltip label="Jahr auswählen">
+            <MenuRoot placement="bottom-end" isLazy>
+              <Tooltip content="Jahr auswählen">
                 <MenuTrigger>
                   <Button
                     aria-label="Jahr auswählen"
@@ -132,7 +132,7 @@ export default function () {
               >
                 <MenuItems />
               </Suspense>
-            </Menu>
+            </MenuRoot>
           )}
         </Flex>
         {bookingAlert && <BookingAlert display={['flex', 'none']} />}

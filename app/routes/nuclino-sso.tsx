@@ -152,31 +152,30 @@ export default function Sso() {
 
             <Separator mt="10" mb="10" />
 
-            <VStack
-              as="form"
-              w="100%"
-              gap="2"
+            <form
               method="post"
               action={`https://api.kulturspektakel.de/saml/login?${searchParams.toString()}`}
             >
-              <Heading as="h2" size="md">
-                Passwort
-              </Heading>
-              <Text>
-                Falls du keinen Slack-Account hast, frage jemanden aus der Crew
-                nach dem Passwort für das Wiki.
-              </Text>
-              <Input
-                display="block"
-                placeholder="Passwort"
-                type="password"
-                bg="white"
-                name="password"
-              />
-              <Button w="100%" type="submit" variant="primary">
-                Einloggen
-              </Button>
-            </VStack>
+              <VStack w="100%" gap="2">
+                <Heading as="h2" size="md">
+                  Passwort
+                </Heading>
+                <Text>
+                  Falls du keinen Slack-Account hast, frage jemanden aus der
+                  Crew nach dem Passwort für das Wiki.
+                </Text>
+                <Input
+                  display="block"
+                  placeholder="Passwort"
+                  type="password"
+                  bg="white"
+                  name="password"
+                />
+                <Button w="100%" type="submit" variant="primary">
+                  Einloggen
+                </Button>
+              </VStack>
+            </form>
           </>
         )}
       </Box>
