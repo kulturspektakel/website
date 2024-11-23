@@ -1,13 +1,5 @@
 import {gql} from '@apollo/client';
-import {
-  VStack,
-  HStack,
-  Heading,
-  Text,
-  SimpleGrid,
-  Tooltip,
-  Box,
-} from '@chakra-ui/react';
+import {VStack, HStack, Heading, Text, SimpleGrid, Box} from '@chakra-ui/react';
 import {Link} from '@remix-run/react';
 import DateString, {dateStringComponents} from '~/components/DateString';
 import Mark from '~/components/Mark';
@@ -29,6 +21,7 @@ import apolloClient from '~/utils/apolloClient';
 import Image from '~/components/Image';
 import {Gallery} from 'react-photoswipe-gallery';
 import type {SitemapFunction} from 'remix-sitemap';
+import {Tooltip} from '~/components/chakra-snippets/tooltip';
 
 gql`
   query LineupBand($eventId: ID!, $slug: String!) {
@@ -180,35 +173,35 @@ export default function LineupBand() {
           band.website) && (
           <HStack fontSize="28px" gap="6" color="brand.900">
             {band.spotify && (
-              <Tooltip label="Spotify">
+              <Tooltip content="Spotify">
                 <Link target="_blank" to={band.spotify}>
                   <FaSpotify />
                 </Link>
               </Tooltip>
             )}
             {band.youtube && (
-              <Tooltip label="YouTube">
+              <Tooltip content="YouTube">
                 <Link target="_blank" to={band.youtube}>
                   <FaYoutube />
                 </Link>
               </Tooltip>
             )}
             {band.instagram && (
-              <Tooltip label="Instagram">
+              <Tooltip content="Instagram">
                 <Link target="_blank" to={band.instagram}>
                   <FaInstagram />
                 </Link>
               </Tooltip>
             )}
             {band.facebook && (
-              <Tooltip label="Facebook">
+              <Tooltip content="Facebook">
                 <Link target="_blank" to={band.facebook}>
                   <FaFacebook />
                 </Link>
               </Tooltip>
             )}
             {band.website && (
-              <Tooltip label={band.website}>
+              <Tooltip content={band.website}>
                 <Link target="_blank" to={band.website}>
                   <FaGlobe />
                 </Link>

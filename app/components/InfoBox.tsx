@@ -18,7 +18,6 @@ export default function InfoBox({
   title?: string;
   closeable?: boolean;
 }) {
-  //   const applicationsOpen = useApplicationsOpen();
   const {open, onClose} = useDisclosure({defaultOpen: true});
 
   if (!open) {
@@ -34,7 +33,9 @@ export default function InfoBox({
       gap="2"
       {...props}
     >
-      <Icon as={FaCircleInfo} color="brand.900" />
+      <Icon asChild color="brand.900" mt="0.5">
+        <FaCircleInfo />
+      </Icon>
       <Box>
         {title && (
           <Heading

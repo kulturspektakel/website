@@ -1,6 +1,5 @@
 import {
   HStack,
-  Select,
   Textarea,
   Text,
   Link as ChakraLink,
@@ -9,16 +8,20 @@ import {
   Box,
   Input,
 } from '@chakra-ui/react';
+import {
+  NativeSelectField,
+  NativeSelectRoot,
+} from '../chakra-snippets/native-select';
 import {Link} from '@remix-run/react';
 import DistanceWarning from './DistanceWarning';
 import DuplicateApplicationWarning from './DuplicateApplicationWarning';
-import {Field} from '../Field';
 import useIsDJ from './useIsDJ';
 import {BandRepertoireType, GenreCategory} from '~/types/graphql';
 import type {FormikContextT} from '~/routes/booking.$applicationType._index';
 import {useFormikContext} from 'formik';
 import {FaTriangleExclamation} from 'react-icons/fa6';
 import {Field as FormikField} from 'formik';
+import {Field} from '../chakra-snippets/field';
 
 const GENRE_CATEGORIES: Map<GenreCategory, string> = new Map([
   [GenreCategory.Pop, 'Pop'],
@@ -49,7 +52,7 @@ export default function Step1() {
   return (
     <>
       <Field required label={isDJ ? 'Künstler:innen-Name' : 'Bandname'}>
-        <FormikField id="bandname" />
+        <FormikField name="bandname" as={Input} />
       </Field>
       <DuplicateApplicationWarning bandname={values.bandname} />
 
@@ -60,21 +63,27 @@ export default function Step1() {
           label="Musikrichtung"
         >
           {isDJ ? (
-            <FormikField as={Input} />
+            <FormikField name="genre" as={Input} />
           ) : (
-            <FormikField as={Select} placeholder="bitte auswählen…">
-              {Array.from(GENRE_CATEGORIES.entries()).map(([k, v]) => (
-                <option value={k} key={k}>
-                  {v}
-                </option>
-              ))}
-            </FormikField>
+            <NativeSelectRoot>
+              <FormikField
+                name="genreCategory"
+                as={NativeSelectField}
+                placeholder="bitte auswählen…"
+              >
+                {Array.from(GENRE_CATEGORIES.entries()).map(([k, v]) => (
+                  <option value={k} key={k}>
+                    {v}
+                  </option>
+                ))}
+              </FormikField>
+            </NativeSelectRoot>
           )}
         </Field>
         {!isDJ && (
           <Field>
             <FormikField
-              id="genre"
+              name="genre"
               as={Input}
               placeholder="genaues Genre (optional)"
               mt="8"
@@ -82,21 +91,22 @@ export default function Step1() {
           </Field>
         )}
       </HStack>
-
       {!isDJ && (
         <>
           <Field label="Ihr spielt&hellip;" required>
-            <FormikField
-              id="repertoire"
-              as={Select}
-              placeholder="bitte auswählen…"
-            >
-              {Array.from(REPERTOIRE.entries()).map(([k, v]) => (
-                <option value={k} key={k}>
-                  {v}
-                </option>
-              ))}
-            </FormikField>
+            <NativeSelectRoot>
+              <FormikField
+                name="repertoire"
+                as={NativeSelectField}
+                placeholder="bitte auswählen…"
+              >
+                {Array.from(REPERTOIRE.entries()).map(([k, v]) => (
+                  <option value={k} key={k}>
+                    {v}
+                  </option>
+                ))}
+              </FormikField>
+            </NativeSelectRoot>
           </Field>
           {(values.repertoire === BandRepertoireType.MostlyCoverSongs ||
             values.repertoire === BandRepertoireType.ExclusivelyCoverSongs) && (
@@ -119,14 +129,14 @@ export default function Step1() {
               ist eure Bandgeschichte?`
         }
       >
-        <FormikField as={Textarea} id="description" maxLength={2000} />
+        <FormikField as={Textarea} name="description" maxLength={2000} />
         <Text mt="1" fontSize="sm" color="offwhite.600">
           Maximal 2.000 Zeichen, wir müssen das alles lesen!
         </Text>
       </Field>
 
       <Field label="Anreise aus&hellip;">
-        <FormikField as={Input} id="city" placeholder="Ort" />
+        <FormikField as={Input} name="city" placeholder="Ort" />
       </Field>
 
       <DistanceWarning origin={values.city} />

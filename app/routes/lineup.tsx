@@ -1,6 +1,6 @@
 import {gql, useSuspenseQuery} from '@apollo/client';
 import {FaChevronDown} from 'react-icons/fa6';
-import type {BoxProps} from '@chakra-ui/react';
+import type {FlexProps} from '@chakra-ui/react';
 import {
   Stack,
   Heading,
@@ -25,7 +25,7 @@ import {Suspense} from 'react';
 import {LoaderFunctionArgs} from '@remix-run/node';
 import apolloClient from '~/utils/apolloClient';
 import {$path} from 'remix-routes';
-import {Tooltip} from '~/components/tooltip';
+import {Tooltip} from '~/components/chakra-snippets/tooltip';
 
 gql`
   query Lineups {
@@ -88,18 +88,25 @@ export default function () {
       >
         <Flex alignItems="center" position="relative">
           {params.slug != null && (
-            <Tooltip label={`Zum Lineup ${params.year}`} placement="top-start">
+            <Tooltip
+              content={`Zum Lineup ${params.year}`}
+              positioning={{placement: 'top-start'}}
+            >
               <IconButton
                 aria-label={`Zum Lineup ${params.year} zurückkehren`}
-                as={NavLink}
-                to={$path('/lineup/:year', {year: String(params.year)})}
-                icon={<TriangleDownIcon />}
                 transform="rotate(90deg) translateY(120%)"
                 size="xs"
-                isRound={true}
+                rounded="full"
                 position="absolute"
                 left="0"
-              />
+                asChild
+              >
+                <NavLink
+                  to={$path('/lineup/:year', {year: String(params.year)})}
+                >
+                  <FaChevronDown />
+                </NavLink>
+              </IconButton>
             </Tooltip>
           )}
           <Heading as="h1" display="inline">
@@ -107,22 +114,19 @@ export default function () {
             {params?.year && <>&nbsp;{params.year}</>}
           </Heading>
           {params.slug == null && (
-            <MenuRoot placement="bottom-end" isLazy>
-              <Tooltip content="Jahr auswählen">
-                <MenuTrigger>
-                  <Button
-                    aria-label="Jahr auswählen"
-                    size="xs"
-                    mt="0.5"
-                    ml="1.5"
-                    rounded="full"
-                    as={IconButton}
-                  >
-                    <FaChevronDown />
-                    Jahr auswählen
-                  </Button>
-                </MenuTrigger>
-              </Tooltip>
+            <MenuRoot positioning={{placement: 'bottom-end'}} lazyMount>
+              <MenuTrigger asChild>
+                <Button
+                  aria-label="Jahr auswählen"
+                  size="xs"
+                  mt="0.5"
+                  ml="1.5"
+                  rounded="full"
+                >
+                  <FaChevronDown />
+                  Jahr auswählen
+                </Button>
+              </MenuTrigger>
               <Suspense
                 fallback={
                   <Center my="10">
@@ -167,14 +171,15 @@ function MenuItems() {
   );
 }
 
-function BookingAlert(props: BoxProps) {
+function BookingAlert(props: FlexProps) {
+  return null;
   return (
     <InfoBox {...props} title="Jetzt Bewerben">
       <Text>
         Die Bewerbungsphase für das nächste Kulturspektakel läuft aktuell und
         ihr könnt euch jetzt für einen Auftritt bei uns{' '}
-        <ChakraLink as={Link} to={$path('/booking')} variant="inline">
-          bewerben
+        <ChakraLink asChild variant="inline">
+          <Link to={$path('/booking')}>bewerben</Link>
         </ChakraLink>
         .
       </Text>

@@ -93,7 +93,7 @@ export default function EventComponent({
   );
 
   return (
-    <Box role="grid">
+    <Box role="grid" display="flex" flexWrap="wrap" gap="2">
       <Gallery options={{loop: false}} onBeforeOpen={onBeforeOpen}>
         {media.edges
           .map((m) => m.node)

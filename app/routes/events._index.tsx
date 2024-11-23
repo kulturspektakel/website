@@ -7,6 +7,7 @@ import {
   Center,
   Button,
   Spinner,
+  ListRoot,
 } from '@chakra-ui/react';
 import type {LoaderFunctionArgs} from '@remix-run/node';
 import {typedjson} from 'remix-typedjson';
@@ -28,6 +29,7 @@ import {useState} from 'react';
 import {$path} from 'remix-routes';
 import Headline from '~/components/Headline';
 import mergeMeta from '~/utils/mergeMeta';
+import {SegmentedControl} from '~/components/chakra-snippets/segmented-control';
 
 gql`
   query EventsOverview(
@@ -54,9 +56,10 @@ gql`
 `;
 
 const EVENT_TYPE = [
-  {id: EventType.Kulturspektakel, name: 'Kulturspektakel'},
-  {id: EventType.Locker, name: 'Locker'},
-  {id: EventType.Other, name: 'Weitere'},
+  {value: 'ALL', label: 'Alle'},
+  {value: EventType.Kulturspektakel, label: 'Kulturspektakel'},
+  {value: EventType.Locker, label: 'Locker'},
+  {value: EventType.Other, label: 'Weitere'},
 ];
 
 export const meta = mergeMeta<typeof loader>(({data}) => [
@@ -88,17 +91,24 @@ export default function Events() {
       <Heading as="h1" textAlign="center">
         Veranstaltungen
       </Heading>
-      <Selector
+      <SegmentedControl
+        value={variables?.type ?? 'ALL'}
+        onValueChange={({value}) => {
+          setVariables(
+            value === 'ALL' ? undefined : {type: value, cursor: null},
+          );
+        }}
+        items={EVENT_TYPE}
+      />
+      {/* <Selector
         options={EVENT_TYPE}
         value={variables?.type ?? null}
         allLabelSmall="Alle Veranstaltungen"
         onChange={(type) =>
-          setVariables(
-            type == null ? undefined : {type: type as EventType, cursor: null},
-          )
+
         }
-      />
-      <Box as="ol" listStyleType="none" m="0" mt="20">
+      /> */}
+      <ListRoot as="ol" listStyleType="none" m="0" mt="20">
         <Gallery options={{loop: false}} withCaption>
           {data?.eventsConnection.edges.map(({node: e}, i) => (
             <ListItem key={e.id}>
@@ -114,7 +124,7 @@ export default function Events() {
             </ListItem>
           ))}
         </Gallery>
-      </Box>
+      </ListRoot>
       {!data && loading && (
         <Center>
           <Spinner />

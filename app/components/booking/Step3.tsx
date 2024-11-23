@@ -1,9 +1,9 @@
 import {Textarea, Select, Input} from '@chakra-ui/react';
-import {Field} from '../Field';
 import {Field as FormikField} from 'formik';
 import useIsDJ from './useIsDJ';
 import {HeardAboutBookingFrom, PreviouslyPlayed} from '~/types/graphql';
 import {useUtmSource} from '~/routes/booking._index';
+import {Field} from '../chakra-snippets/field';
 
 const HEARD_ABOUT: Map<HeardAboutBookingFrom, string> = new Map([
   [HeardAboutBookingFrom.BYon, 'BY-on'],

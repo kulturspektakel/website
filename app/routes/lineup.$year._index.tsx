@@ -11,6 +11,7 @@ import apolloClient from '~/utils/apolloClient';
 import {isSameDay, timeZone} from '~/utils/dateUtils';
 import mergeMeta from '~/utils/mergeMeta';
 import type {SitemapFunction} from 'remix-sitemap';
+import {SegmentedControl} from '~/components/chakra-snippets/segmented-control';
 
 gql`
   query Lineup($id: ID!) {
@@ -123,11 +124,14 @@ export default function LineupYear() {
 
   return (
     <>
-      <Selector
+      {/* <Selector
         allLabelSmall="Alle Bühnen"
-        onChange={setStageFilter}
-        value={stageFilter}
         options={activeAreas.map((a) => ({name: a.displayName, id: a.id}))}
+      /> */}
+      <SegmentedControl
+        onValueChange={setStageFilter}
+        value={stageFilter}
+        items={['Alle Bühnen', ...activeAreas.map((a) => a.displayName)]}
       />
       {days.map((day) => (
         <Day

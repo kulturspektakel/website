@@ -11,7 +11,7 @@ import {useCombobox} from 'downshift';
 import {useNavigate} from '@remix-run/react';
 import {$path} from 'remix-routes';
 import DropdownMenu from '../DropdownMenu';
-import {InputGroup} from '../InputGroup';
+import {InputGroup} from '../chakra-snippets/input-group';
 
 gql`
   query BandSearch($query: String!, $limit: Int = 5) {

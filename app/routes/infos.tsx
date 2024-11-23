@@ -1,5 +1,13 @@
 import {gql} from '@apollo/client';
-import {Heading, ListItem, VStack, Text, Link, Box} from '@chakra-ui/react';
+import {
+  Heading,
+  ListItem,
+  VStack,
+  Text,
+  Link,
+  Box,
+  ListRoot,
+} from '@chakra-ui/react';
 import type {LoaderFunctionArgs} from '@remix-run/node';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import type {InfosQuery} from '~/types/graphql';
@@ -67,16 +75,16 @@ export default function Infos() {
         <Heading as="h2" mb="5">
           Termine
         </Heading>
-        <Box
+        <ListRoot
           as="ol"
           listStyleType="none"
           m="0"
           w="100%"
-          sx={{columnCount: [1, 2, 3]}}
+          columnCount={[1, 2, 3]}
           mb="4"
         >
           {data.crewCalendar.map((event) => (
-            <ListItem key={event.uid} mb="4" sx={{breakInside: 'avoid'}}>
+            <ListItem key={event.uid} mb="4" breakInside="avoid">
               <Mark>
                 <DateString
                   options={{
@@ -110,7 +118,7 @@ export default function Infos() {
               {event.location?.split(',')[0]}
             </ListItem>
           ))}
-        </Box>
+        </ListRoot>
         <Link
           variant="inline"
           href="https://calendar.google.com/calendar/ical/c_d5cfc52054d3dae0761245fee799a7c2c61691fb62554f30ea652adcca183304%40group.calendar.google.com/public/basic.ics"

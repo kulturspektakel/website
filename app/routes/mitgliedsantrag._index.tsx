@@ -11,7 +11,6 @@ import {
   Input,
 } from '@chakra-ui/react';
 import {Field as FormikField, Form, Formik} from 'formik';
-import {Field} from '~/components/Field';
 import mergeMeta from '~/utils/mergeMeta';
 import {z} from 'zod';
 import {toFormikValidationSchema} from 'zod-formik-adapter';
@@ -31,7 +30,8 @@ import Steps from '~/components/Steps';
 import {useState} from 'react';
 import {useNavigate} from '@remix-run/react';
 import {$path} from 'remix-routes';
-import {Slider} from '~/components/Slider';
+import {Field} from '~/components/chakra-snippets/field';
+import {Slider} from '~/components/chakra-snippets/slider';
 
 const schemaStep1 = z.object({
   membership: z.nativeEnum(MembershipEnum),

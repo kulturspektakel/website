@@ -7,7 +7,6 @@ import {
   Center,
   Input,
 } from '@chakra-ui/react';
-import {Field} from '../Field';
 import {Field as FormikField} from 'formik';
 import useIsDJ from './useIsDJ';
 import {useFormikContext} from 'formik';
@@ -22,7 +21,8 @@ import {useRef, useState} from 'react';
 import DropdownMenu from '../DropdownMenu';
 import {FaSpotify} from 'react-icons/fa6';
 import {FaXmark} from 'react-icons/fa6';
-import {InputGroup} from '../InputGroup';
+import {InputGroup} from '../chakra-snippets/input-group';
+import {Field} from '../chakra-snippets/field';
 
 gql`
   query SpotifyArtistSearch($query: String!, $limit: Int = 5) {
