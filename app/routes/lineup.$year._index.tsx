@@ -124,14 +124,15 @@ export default function LineupYear() {
 
   return (
     <>
-      {/* <Selector
-        allLabelSmall="Alle Bühnen"
-        options={activeAreas.map((a) => ({name: a.displayName, id: a.id}))}
-      /> */}
       <SegmentedControl
-        onValueChange={setStageFilter}
-        value={stageFilter}
-        items={['Alle Bühnen', ...activeAreas.map((a) => a.displayName)]}
+        onValueChange={({value}) => {
+          setStageFilter(value === 'all' ? null : value);
+        }}
+        value={stageFilter ?? 'all'}
+        items={[
+          {value: 'all', label: 'Alle Bühnen'},
+          ...activeAreas.map((a) => ({value: a.id, label: a.displayName})),
+        ]}
       />
       {days.map((day) => (
         <Day

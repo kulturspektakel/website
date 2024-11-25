@@ -99,15 +99,17 @@ function FooterIcon({
 }: LinkProps & RemixLinkProps & {icon: any}) {
   return (
     <Link
-      as={RemixLink}
-      to={to}
+      asChild
       title={title}
       target="_blank"
+      color="white"
       _hover={{color: 'whiteAlpha.600'}}
       _active={{color: 'whiteAlpha.600'}}
       _focus={{color: 'whiteAlpha.600'}}
     >
-      <Icon />
+      <RemixLink to={to}>
+        <Icon />
+      </RemixLink>
     </Link>
   );
 }

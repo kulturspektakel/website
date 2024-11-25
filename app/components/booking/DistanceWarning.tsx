@@ -1,7 +1,7 @@
 import {gql} from '@apollo/client';
-import {Alert, AlertDescription} from '@chakra-ui/react';
 import {useDistanceQuery} from '../../types/graphql';
 import {FaTriangleExclamation} from 'react-icons/fa6';
+import {Alert} from '../chakra-snippets/alert';
 
 gql`
   query Distance($origin: String!) {
@@ -22,14 +22,11 @@ export default function DistanceWarning(props: {origin?: string}) {
   }
 
   return (
-    <Alert status="warning" borderRadius="md" alignItems="flex-start">
-      <FaTriangleExclamation mt="0.5" />
-      <AlertDescription color="yellow.900">
-        Unser Festival findet in Gauting statt und die meisten Bands kommen aus
-        der Region. Da wir in der Regel keine Aufwandsentschädigungen für weite
-        Anreisen zahlen können, bitten wir euch zu überlegen ob die Anreise für
-        euch realistisch und finanzierbar ist.
-      </AlertDescription>
+    <Alert status="warning" title="Anreisekosten" variant="surface">
+      Unser Festival findet in Gauting statt und die meisten Bands kommen aus
+      der Region. Da wir in der Regel keine Aufwandsentschädigungen für weite
+      Anreisen zahlen können, bitten wir euch zu überlegen ob die Anreise für
+      euch realistisch und finanzierbar ist.
     </Alert>
   );
 }

@@ -118,7 +118,7 @@ export default function Step2() {
       >
         <FormikField
           as={Input}
-          id="demo"
+          name="demo"
           required={!isDJ}
           invalid={!!errors.demo}
           validate={(url: string) => {
@@ -188,7 +188,7 @@ export default function Step2() {
         <InputGroup startElement={<Text color="gray.400">@</Text>}>
           <FormikField
             as={Input}
-            id="instagram"
+            name="instagram"
             placeholder="kulturspektakel"
             paddingStart="7"
           />
@@ -198,7 +198,7 @@ export default function Step2() {
       <Field label="Facebook">
         <FormikField
           as={Input}
-          id="facebook"
+          name="facebook"
           placeholder="https://facebook.com/kulturspektakel"
         />
       </Field>
@@ -206,7 +206,7 @@ export default function Step2() {
       <Field label="Webseite">
         <FormikField
           as={Input}
-          id="website"
+          name="website"
           placeholder="https://kulturspektakel.de"
         />
       </Field>
