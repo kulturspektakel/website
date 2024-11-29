@@ -1,10 +1,10 @@
 import type {EntryContext} from '@remix-run/node';
 import {RemixServer} from '@remix-run/react';
-import {renderToString} from 'react-dom/server';
 import apolloClient from './utils/apolloClient';
 import {getDataFromTree} from '@apollo/client/react/ssr';
 import {createSitemapGenerator} from 'remix-sitemap';
 import * as Sentry from '@sentry/remix';
+import {createEmotion} from './emotion-server';
 
 const {isSitemapUrl, sitemap} = createSitemapGenerator({
   siteUrl: 'https://www.kulturspektakel.de',
@@ -26,6 +26,7 @@ export default async function handleRequest(
   responseHeaders: Headers,
   remixContext: EntryContext,
 ) {
+  const {renderToString, injectStyles} = createEmotion();
   const url = new URL(request.url);
   if (
     url.hostname !== 'localhost' &&
@@ -48,7 +49,7 @@ export default async function handleRequest(
   await getDataFromTree(App);
   const initialState = apolloClient.extract();
 
-  const markup = renderToString(
+  const html = renderToString(
     <>
       {App}
       <script
@@ -66,7 +67,7 @@ export default async function handleRequest(
 
   responseHeaders.set('Content-Type', 'text/html');
 
-  return new Response('<!DOCTYPE html>' + markup, {
+  return new Response(`<!DOCTYPE html>${injectStyles(html)}`, {
     status: responseStatusCode,
     headers: responseHeaders,
   });

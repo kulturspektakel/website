@@ -2,7 +2,6 @@ import {gql} from '@apollo/client';
 import {
   Heading,
   ListItem,
-  Box,
   Separator,
   Center,
   Button,
@@ -24,7 +23,6 @@ import {
 import apolloClient from '~/utils/apolloClient';
 import {Gallery} from 'react-photoswipe-gallery';
 import DateString from '~/components/DateString';
-import Selector from '~/components/Selector';
 import {useState} from 'react';
 import {$path} from 'remix-routes';
 import Headline from '~/components/Headline';

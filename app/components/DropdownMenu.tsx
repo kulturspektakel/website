@@ -31,6 +31,7 @@ export default function DropdownMenu<T>({
       mt="1"
       w="100%"
       visibility={isOpen ? 'visible' : 'hidden'}
+      listStyle="none"
       {...getMenuProps()}
     >
       {data.map((band, index) => (

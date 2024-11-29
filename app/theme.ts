@@ -1,7 +1,50 @@
-import {createSystem, defaultConfig, SystemConfig} from '@chakra-ui/react';
+import {
+  createSystem,
+  defaultConfig,
+  defineRecipe,
+  SystemConfig,
+} from '@chakra-ui/react';
 
 const overrides: SystemConfig = {
   theme: {
+    recipes: {
+      input: defineRecipe({
+        variants: {
+          visual: {
+            custom: {
+              bg: 'white',
+            },
+          },
+        },
+        defaultVariants: {
+          visual: 'custom',
+        },
+      }),
+      NativeSelect: defineRecipe({
+        variants: {
+          visual: {
+            custom: {
+              bg: 'white',
+            },
+          },
+        },
+        defaultVariants: {
+          visual: 'custom',
+        },
+      }),
+      textarea: defineRecipe({
+        variants: {
+          visual: {
+            custom: {
+              bg: 'white',
+            },
+          },
+        },
+        defaultVariants: {
+          visual: 'custom',
+        },
+      }),
+    },
     tokens: {
       colors: {
         brand: {

@@ -24,8 +24,6 @@ import {
   useRouteError,
 } from '@remix-run/react';
 import apolloClient from './utils/apolloClient';
-import {CacheProvider} from '@emotion/react';
-import createEmotionCache from '@emotion/cache';
 import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
 import theme from './theme';
@@ -122,7 +120,7 @@ export async function loader(args: LoaderFunctionArgs) {
 }
 
 function Document({children}: {children: React.ReactNode}) {
-  const emotionCache = createEmotionCache({key: 'css'});
+  // const emotionCache = createEmotionCache({key: 'css'});
 
   return (
     <html lang="de">
@@ -131,29 +129,27 @@ function Document({children}: {children: React.ReactNode}) {
         <Links />
       </head>
       <body>
-        <CacheProvider value={emotionCache}>
-          <ChakraProvider value={theme}>
-            <ApolloProvider client={apolloClient}>
-              <Flex direction={'column'} minHeight={'100vh'}>
-                <Header />
-                <Box
-                  flex="1 1 0"
-                  ml="auto"
-                  mr="auto"
-                  maxW="3xl"
-                  p="6"
-                  pb="16"
-                  width="100%"
-                >
-                  {children}
-                </Box>
-                <Footer />
-                <Analytics />
-                <SpeedInsights />
-              </Flex>
-            </ApolloProvider>
-          </ChakraProvider>
-        </CacheProvider>
+        <ChakraProvider value={theme}>
+          <ApolloProvider client={apolloClient}>
+            <Flex direction={'column'} minHeight={'100vh'}>
+              <Header />
+              <Box
+                flex="1 1 0"
+                ml="auto"
+                mr="auto"
+                maxW="3xl"
+                p="6"
+                pb="16"
+                width="100%"
+              >
+                {children}
+              </Box>
+              <Footer />
+              <Analytics />
+              <SpeedInsights />
+            </Flex>
+          </ApolloProvider>
+        </ChakraProvider>
         <ScrollRestoration />
         <Scripts />
         <LiveReload />

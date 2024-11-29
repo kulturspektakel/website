@@ -109,7 +109,7 @@ export default function () {
               </IconButton>
             </Tooltip>
           )}
-          <Heading as="h1" display="inline">
+          <Heading as="h1" size="3xl" display="inline">
             Lineup
             {params?.year && <>&nbsp;{params.year}</>}
           </Heading>

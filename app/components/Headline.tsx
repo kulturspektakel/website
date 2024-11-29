@@ -19,16 +19,16 @@ export default function Headline({
 
   return (
     <Box textAlign={href ? undefined : 'center'} {...props}>
-      <Heading size={[href ? 'lg' : 'xl']} mb="1" as={href ? 'h2' : 'h1'}>
+      <Heading size={[href ? '2xl' : '3xl']} mb="1" as={href ? 'h2' : 'h1'}>
         {href ? (
-          <ChakraLink as={Link} to={href}>
-            {children}
+          <ChakraLink asChild>
+            <Link to={href}>{children}</Link>
           </ChakraLink>
         ) : (
           children
         )}
       </Heading>
-      {mark && <Mark fontSize="lg">{mark}</Mark>}
+      {mark && <Mark fontSize="md">{mark}</Mark>}
     </Box>
   );
 }

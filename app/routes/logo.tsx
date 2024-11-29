@@ -67,7 +67,9 @@ function LogoCol({filename}: {filename: string}) {
 export default function Logo() {
   return (
     <VStack>
-      <Heading mb="8">Logo</Heading>
+      <Heading size="3xl" mb="8">
+        Logo
+      </Heading>
       <SimpleGrid columns={[1, 3]} gap="5">
         <LogoCol filename="logo" />
         <LogoCol filename="logo-tall" />
@@ -78,7 +80,7 @@ export default function Logo() {
       </Heading>
       <SimpleGrid columns={2} gap="5">
         <VStack gap="3" align="start">
-          <Heading as="h3" size="md">
+          <Heading as="h3" size="lg">
             Shrimp
           </Heading>
           <Box
@@ -91,19 +93,11 @@ export default function Logo() {
             boxShadow="base"
           >
             The{' '}
-            <Text
-              display="inline"
-              color="white"
-              sx={{WebkitTextStroke: '1px black'}}
-            >
+            <Text display="inline" color="white" WebkitTextStroke="1px black">
               quick
             </Text>{' '}
             brown fox jumps over the lazy{' '}
-            <Text
-              display="inline"
-              color="white"
-              sx={{WebkitTextStroke: '1px black'}}
-            >
+            <Text display="inline" color="white" WebkitTextStroke="1px black">
               dog
             </Text>
             !

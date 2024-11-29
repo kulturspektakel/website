@@ -155,7 +155,7 @@ export default function Header() {
               px="4"
               color="black"
               transform="rotate(-2deg)"
-              fontSize={['30', '35', '40']}
+              fontSize={[30, 35, 40]}
               textTransform="uppercase"
               bg="white"
               whiteSpace="nowrap"

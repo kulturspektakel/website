@@ -32,16 +32,16 @@ export default function MarkdownText(props: Props) {
       options={{
         overrides: {
           h1: (props: HeadingProps) => (
-            <Heading {...props} size="md" as="h2" mb={3} mt={5} />
+            <Heading {...props} size="2xl" as="h2" mb={3} mt={5} />
           ),
           h2: (props: HeadingProps) => (
-            <Heading {...props} size="md" as="h3" mb={2} mt={4} />
+            <Heading {...props} size="xl" as="h3" mb={2} mt={4} />
           ),
           h3: (props: HeadingProps) => (
-            <Heading {...props} size="sm" as="h4" mb={1} mt={3} />
+            <Heading {...props} size="lg" as="h4" mb={1} mt={3} />
           ),
           h4: (props: HeadingProps) => (
-            <Heading {...props} size="sm" as="h5" mb={1} mt={3} />
+            <Heading {...props} size="md" as="h5" mb={1} mt={3} />
           ),
           h5: (props: HeadingProps) => (
             <Heading {...props} size="sm" as="h6" mb={1} mt={3} />

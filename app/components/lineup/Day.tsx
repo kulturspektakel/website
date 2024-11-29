@@ -12,7 +12,7 @@ export default function Day({
 }) {
   return (
     <>
-      <Heading textAlign="center" mt="10" mb="10">
+      <Heading size="2xl" textAlign="center" mt="10" mb="10">
         <DateString
           date={day}
           options={{weekday: 'long', day: '2-digit', month: 'long'}}

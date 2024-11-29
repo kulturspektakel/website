@@ -3,7 +3,6 @@ import type {LoaderFunctionArgs} from '@remix-run/node';
 import {useMemo, useState} from 'react';
 import {$params, $path} from 'remix-routes';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
-import Selector from '~/components/Selector';
 import Day from '~/components/lineup/Day';
 import type {LineupQuery, LineupSitemapQuery} from '~/types/graphql';
 import {LineupDocument} from '~/types/graphql';
@@ -124,14 +123,15 @@ export default function LineupYear() {
 
   return (
     <>
-      {/* <Selector
-        allLabelSmall="Alle Bühnen"
-        options={activeAreas.map((a) => ({name: a.displayName, id: a.id}))}
-      /> */}
       <SegmentedControl
-        onValueChange={setStageFilter}
-        value={stageFilter}
-        items={['Alle Bühnen', ...activeAreas.map((a) => a.displayName)]}
+        onValueChange={({value}) =>
+          setStageFilter(value === 'ALL' ? null : value)
+        }
+        value={stageFilter ?? 'ALL'}
+        items={[
+          {label: 'Alle Bühnen', value: 'ALL'},
+          ...activeAreas.map((a) => ({label: a.displayName, value: a.id})),
+        ]}
       />
       {days.map((day) => (
         <Day

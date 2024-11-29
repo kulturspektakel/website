@@ -30,6 +30,7 @@ export default function Page(
     <Box as="article" mb="10" w="100%">
       <Heading
         mb={5}
+        size="3xl"
         as={`h${headingLevel}`}
         textAlign={props.centered ? 'center' : undefined}
       >
