@@ -58,38 +58,41 @@ function useLoadingBar() {
   }, [progress, state]);
 }
 
+function Item({children}: {children: React.ReactNode}) {
+  return (
+    <ChakraLink
+      asChild
+      color="inherit"
+      _focus={{
+        outline: 'none',
+        color: 'brand.500',
+      }}
+      _active={{
+        borderBottom: '3px solid',
+        marginBottom: '-3px',
+      }}
+      lineHeight={1}
+    >
+      {children}
+    </ChakraLink>
+  );
+}
+
 function NavItems() {
-  const _focus: SystemStyleObject = {
-    outline: 'none',
-    color: 'brand.500',
-  };
-  const _active: SystemStyleObject = {
-    borderBottom: '3px solid',
-    marginBottom: '-3px',
-  };
-
-  const props: Omit<RemixNavLinkProps & LinkProps, 'to'> = {
-    _focusVisible: _focus,
-    _hover: _focus,
-    _active,
-    lineHeight: 1,
-    as: NavLink,
-  };
-
   return (
     <>
-      <ChakraLink to={$path('/angebot')} {...props}>
-        Angebot
-      </ChakraLink>
-      <ChakraLink to={$path('/lineup')} {...props}>
-        Lineup
-      </ChakraLink>
-      <ChakraLink to={$path('/events')} {...props}>
-        Veranstaltungen
-      </ChakraLink>
-      <ChakraLink to={$path('/infos')} {...props}>
-        Infos
-      </ChakraLink>
+      <Item>
+        <NavLink to={$path('/angebot')}>Angebot</NavLink>
+      </Item>
+      <Item>
+        <NavLink to={$path('/lineup')}>Lineup</NavLink>
+      </Item>
+      <Item>
+        <NavLink to={$path('/events')}>Veranstaltungen</NavLink>
+      </Item>
+      <Item>
+        <NavLink to={$path('/infos')}>Infos</NavLink>
+      </Item>
     </>
   );
 }
@@ -143,6 +146,7 @@ export default function Header() {
             alt="Kulturspektakel Gauting Logo"
             zIndex={2}
             w={['80%', '60%', '40%']}
+            objectFit="contain"
             maxH="50%"
             onContextMenu={(e) => {
               e.preventDefault();
@@ -217,7 +221,7 @@ export default function Header() {
         </HStack>
       </Flex>
       <DialogRoot
-        isOpen={showNav}
+        open={showNav}
         onClose={() => setShowNav(false)}
         motionPreset="scale"
         size="full"

@@ -3,10 +3,9 @@ import {
   Textarea,
   Text,
   Link as ChakraLink,
-  Alert,
-  AlertDescription,
   Box,
   Input,
+  Icon,
 } from '@chakra-ui/react';
 import {
   NativeSelectField,
@@ -22,6 +21,7 @@ import {useFormikContext} from 'formik';
 import {FaTriangleExclamation} from 'react-icons/fa6';
 import {Field as FormikField} from 'formik';
 import {Field} from '../chakra-snippets/field';
+import {Alert} from '../chakra-snippets/alert';
 
 const GENRE_CATEGORIES: Map<GenreCategory, string> = new Map([
   [GenreCategory.Pop, 'Pop'],
@@ -110,11 +110,16 @@ export default function Step1() {
           </Field>
           {(values.repertoire === BandRepertoireType.MostlyCoverSongs ||
             values.repertoire === BandRepertoireType.ExclusivelyCoverSongs) && (
-            <Alert status="warning" borderRadius="md" alignItems="flex-start">
-              <FaTriangleExclamation mt="0.5" />
-              <AlertDescription color="yellow.900"></AlertDescription>
-              Wir möchten Bands mit eigenen Songs eine Bühne bieten. Reine
-              Tribute-/Coverbands ohne eigene Interpretationen buchen wir nicht.
+            <Alert
+              status="info"
+              borderRadius="md"
+              alignItems="flex-start"
+              title="Coverbands"
+              variant="surface"
+            >
+              Wir möchten bevorzugt Bands mit eigenen Songs eine Bühne bieten.
+              Reine Tribute-/Coverbands ohne eigene Interpretationen buchen wir
+              nicht.
             </Alert>
           )}
         </>
@@ -146,7 +151,7 @@ export default function Step1() {
           <HStack w="100%">
             <Field label="Anzahl Bandmitglieder" required>
               <FormikField
-                id="numberOfArtists"
+                name="numberOfArtists"
                 as={Input}
                 type="number"
                 min={1}
@@ -161,7 +166,7 @@ export default function Step1() {
               required
             >
               <FormikField
-                id="numberOfArtists"
+                name="numberOfNonMaleArtists"
                 as={Input}
                 type="number"
                 min={0}

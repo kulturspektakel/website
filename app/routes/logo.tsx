@@ -36,6 +36,7 @@ function LogoCol({filename}: {filename: string}) {
         <Image
           src={`/logos/${filename}.svg`}
           h="100%"
+          objectFit="contain"
           alt="Kulturspektakel Gauting Logo"
         />
       </Flex>
@@ -156,8 +157,7 @@ export default function Logo() {
         <Box>
           <Box
             bg="brand.500"
-            w="200"
-            h="100"
+            h="100px"
             borderRadius="md"
             mb="2"
             p="2"
@@ -174,8 +174,7 @@ export default function Logo() {
         <Box>
           <Box
             bg="#F0BD51"
-            w="200"
-            h="100"
+            h="100px"
             borderRadius="md"
             mb="2"
             p="2"
@@ -188,8 +187,7 @@ export default function Logo() {
         <Box>
           <Box
             bg="#5DA65C"
-            w="200"
-            h="100"
+            h="100px"
             borderRadius="md"
             mb="2"
             p="2"
@@ -204,8 +202,7 @@ export default function Logo() {
         <Box>
           <Box
             bg="brand.900"
-            w="200"
-            h="100"
+            h="100px"
             borderRadius="md"
             mb="2"
             p="2"
