@@ -124,9 +124,13 @@ function Document({children}: {children: React.ReactNode}) {
 
   return (
     <html lang="de">
-      <head>
+      <head suppressHydrationWarning>
         <Meta />
         <Links />
+        <meta
+          name="emotion-insertion-point"
+          content="emotion-insertion-point"
+        />
       </head>
       <body>
         <ChakraProvider value={theme}>

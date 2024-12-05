@@ -1,16 +1,17 @@
 import {gql} from '@apollo/client';
 import {FaCircleInfo} from 'react-icons/fa6';
-import type {PlacementWithLogical} from '@chakra-ui/react';
+import type {Placement} from '@chakra-ui/react';
 import {
   Separator,
   HStack,
   ListItem,
+  ListRoot,
   Text,
-  Tooltip,
   Box,
   useBreakpointValue,
   useDisclosure,
   Icon,
+  IconButton,
 } from '@chakra-ui/react';
 import {type FC} from 'react';
 import type {
@@ -18,6 +19,7 @@ import type {
   ProductList,
   ProductListComponentFragment,
 } from '~/types/graphql';
+import {Tooltip} from '../chakra-snippets/tooltip';
 
 gql`
   fragment ProductListComponent on ProductList {
@@ -36,7 +38,7 @@ gql`
 
 const TooltipContent: FC<{additives: ProductAdditives[]}> = ({additives}) => {
   return (
-    <Box as="ul" listStyleType={'none'} marginInlineStart={0}>
+    <Box marginInlineStart={0}>
       {additives.map((additive: ProductAdditives) => (
         <Text key={additive.id} fontWeight={'normal'}>
           {additive.displayName}
@@ -58,7 +60,7 @@ export default function ProductList({
 
   return (
     <>
-      <Box as="ul" listStyleType="none" marginInlineStart={0}>
+      <ListRoot listStyleType="none" marginInlineStart={0}>
         {productList.product.map((item, index) => (
           <ListItem key={item.name}>
             <HStack justifyContent="space-between" py={1}>
@@ -83,7 +85,7 @@ export default function ProductList({
             )}
           </ListItem>
         ))}
-      </Box>
+      </ListRoot>
       {showDepositText && (
         <>
           <Text textAlign="right" pt="1" color="offwhite.500">
@@ -101,12 +103,7 @@ export default function ProductList({
 }
 
 function Info({additives}: {additives: ProductAdditives[]}) {
-  const {isOpen, onOpen, onToggle, onClose} = useDisclosure();
-  const tooltipPlacement = useBreakpointValue<PlacementWithLogical>({
-    base: 'top',
-    lg: 'right',
-    default: 'right',
-  });
+  const {open, onOpen, onToggle, onClose} = useDisclosure();
 
   if (additives.length === 0) {
     return null;
@@ -114,20 +111,21 @@ function Info({additives}: {additives: ProductAdditives[]}) {
 
   return (
     <Tooltip
-      label={<TooltipContent additives={additives} />}
-      hasArrow
-      placement={tooltipPlacement!}
-      isOpen={isOpen}
+      content={<TooltipContent additives={additives} />}
+      showArrow
+      open={open}
     >
-      <Icon
-        as={FaCircleInfo}
+      <IconButton
         color={'offwhite.300'}
         ml="1"
         mt="-1"
+        variant="ghost"
         onMouseEnter={onOpen}
         onMouseLeave={onClose}
         onClick={onToggle}
-      />
+      >
+        <FaCircleInfo />
+      </IconButton>
     </Tooltip>
   );
 }

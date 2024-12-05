@@ -54,7 +54,7 @@ export default function Band({band}: {band: BandFragment}) {
         borderRadius="md"
       >
         <Heading
-          sx={{hyphens: 'auto'}}
+          hyphens="auto"
           fontSize={['md', 'lg', '2xl']}
           lineClamp={4}
           color="inherit"

@@ -8,6 +8,7 @@ const Card = forwardRef<BoxProps>(
     {
       onClick,
       href,
+      children,
       ...props
     }: BoxProps & {
       href?: string;
@@ -40,6 +41,7 @@ const Card = forwardRef<BoxProps>(
       <Box
         ref={ref}
         as={href == null ? 'div' : Link}
+        asChild={!!href}
         bgColor="offwhite.300"
         borderRadius="xl"
         transform="rotate(-1deg)"
@@ -50,10 +52,11 @@ const Card = forwardRef<BoxProps>(
         _active={_focus}
         outlineOffset={3}
         overflow="hidden"
-        to={href}
         {...onClickProps}
         {...props}
-      />
+      >
+        {href != null ? <Link to={href}>{children}</Link> : children}
+      </Box>
     );
   },
 );

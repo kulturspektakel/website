@@ -1,5 +1,5 @@
 import {gql} from '@apollo/client';
-import {Heading, ListItem, Box} from '@chakra-ui/react';
+import {Heading, ListItem, ListRoot} from '@chakra-ui/react';
 import type {LoaderFunctionArgs} from '@remix-run/node';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
 import ProductList from '~/components/speisekarte/ProductList';
@@ -40,8 +40,8 @@ export default function Speisekarte() {
       <Heading mb="10" textAlign="center">
         Speisen & Getränke
       </Heading>
-      <Box
-        as="ul"
+      <ListRoot
+        display="block"
         columnGap="10"
         m="0"
         columnCount={[1, 2]}
@@ -55,7 +55,7 @@ export default function Speisekarte() {
             <ProductList productList={productList} />
           </ListItem>
         ))}
-      </Box>
+      </ListRoot>
     </>
   );
 }

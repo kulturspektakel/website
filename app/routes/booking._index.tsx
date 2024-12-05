@@ -1,6 +1,6 @@
 import {VStack, Text, Heading, Box, Link as ChakraLink} from '@chakra-ui/react';
 import DateString from '~/components/DateString';
-import {Link, Outlet, useSearchParams} from '@remix-run/react';
+import {Outlet, useSearchParams} from '@remix-run/react';
 import {$path} from 'remix-routes';
 import ApplicationPhase from '~/components/booking/ApplicationPhase';
 import {useTypedRouteLoaderData} from 'remix-typedjson';
@@ -34,11 +34,7 @@ export default function Booking() {
           statt. Die Bewerbung für einen Auftritt beim Kulturspektakel ist
           ausschließlich über dieses Bewerbungsformular möglich. Alle anderen
           Anfragen bitte per E-Mail an{' '}
-          <ChakraLink
-            as={Link}
-            to="mailto:info@kulturspektakel.de"
-            color="red.500"
-          >
+          <ChakraLink href="mailto:info@kulturspektakel.de" color="red.500">
             info@kulturspektakel.de
           </ChakraLink>
           .

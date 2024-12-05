@@ -1,15 +1,9 @@
 import {FaTriangleExclamation} from 'react-icons/fa6';
-import {
-  Flex,
-  VStack,
-  Heading,
-  Tag,
-  Spacer,
-  Button,
-  Text,
-} from '@chakra-ui/react';
+import {Flex, VStack, Heading, Spacer, Text} from '@chakra-ui/react';
 import {Link} from '@remix-run/react';
 import DateString from '../DateString';
+import {Button} from '../chakra-snippets/button';
+import {Tag} from '../chakra-snippets/tag';
 
 export default function ApplicationPhase({
   href,
@@ -56,9 +50,11 @@ export default function ApplicationPhase({
                 {!applicationEnded ? (
                   <DateString date={applicationEnd} />
                 ) : (
-                  <Tag colorScheme="red">
-                    <FaTriangleExclamation />
-                    &nbsp;Abgelaufen
+                  <Tag
+                    colorScheme="red"
+                    startElement={<FaTriangleExclamation />}
+                  >
+                    Abgelaufen
                   </Tag>
                 )}
               </>
@@ -68,14 +64,13 @@ export default function ApplicationPhase({
       </VStack>
       <Spacer />
       <Button
+        asChild
         flexShrink={0}
         as={disabled ? undefined : Link}
-        to={href}
         mt="3"
-        isDisabled={disabled}
-        variant="primary"
+        disabled={disabled}
       >
-        {buttonLabel}
+        <Link to={href}>{buttonLabel}</Link>
       </Button>
     </Flex>
   );

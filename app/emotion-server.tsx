@@ -2,7 +2,6 @@ import {CacheProvider} from '@emotion/react';
 import createEmotionServer from '@emotion/server/create-instance';
 import {renderToString} from 'react-dom/server';
 import {createEmotionCache} from './emotion-cache';
-import {ChakraProvider} from '@chakra-ui/react';
 
 export function createEmotion() {
   const cache = createEmotionCache();

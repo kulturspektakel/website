@@ -1,7 +1,6 @@
 import {
   VStack,
   HStack,
-  Button,
   Spacer,
   Alert,
   AlertDescription,
@@ -32,6 +31,7 @@ import {useTypedRouteLoaderData} from 'remix-typedjson';
 import {loader} from './booking';
 import Steps from '~/components/Steps';
 import {FaTriangleExclamation} from 'react-icons/fa6';
+import {Button} from '~/components/chakra-snippets/button';
 
 const STEPS = [Step1, Step2, Step3] as const;
 export type FormikContextT = Partial<CreateBandApplicationInput> & {
@@ -138,9 +138,9 @@ export default function () {
               )}
               <Spacer />
               <Button
-                variant="primary"
+                // variant="primary"
                 type="submit"
-                isLoading={props.isSubmitting || state != 'idle'}
+                loading={props.isSubmitting || state != 'idle'}
               >
                 {isLastStep ? 'Absenden' : 'Weiter'}
               </Button>
