@@ -77,6 +77,7 @@ export default function Infos() {
         </Heading>
         <ListRoot
           as="ol"
+          display="block"
           listStyleType="none"
           m="0"
           w="100%"
@@ -119,10 +120,7 @@ export default function Infos() {
             </ListItem>
           ))}
         </ListRoot>
-        <Link
-          variant="inline"
-          href="https://calendar.google.com/calendar/ical/c_d5cfc52054d3dae0761245fee799a7c2c61691fb62554f30ea652adcca183304%40group.calendar.google.com/public/basic.ics"
-        >
+        <Link href="https://calendar.google.com/calendar/ical/c_d5cfc52054d3dae0761245fee799a7c2c61691fb62554f30ea652adcca183304%40group.calendar.google.com/public/basic.ics">
           Kalendar abonnieren
         </Link>
       </Box>

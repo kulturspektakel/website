@@ -2,25 +2,24 @@ import {
   createSystem,
   defaultConfig,
   defineRecipe,
+  defineSlotRecipe,
   SystemConfig,
 } from '@chakra-ui/react';
 
 const overrides: SystemConfig = {
   theme: {
-    recipes: {
-      input: defineRecipe({
-        variants: {
-          visual: {
-            custom: {
-              bg: 'white',
-            },
+    slotRecipes: {
+      nativeSelect: defineSlotRecipe({
+        slots: ['root'],
+        base: {
+          root: {
+            bg: 'white',
           },
         },
-        defaultVariants: {
-          visual: 'custom',
-        },
       }),
-      NativeSelect: defineRecipe({
+    },
+    recipes: {
+      input: defineRecipe({
         variants: {
           visual: {
             custom: {

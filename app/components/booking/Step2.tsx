@@ -6,6 +6,7 @@ import {
   IconButton,
   Center,
   Input,
+  BoxProps,
 } from '@chakra-ui/react';
 import {Field as FormikField} from 'formik';
 import useIsDJ from './useIsDJ';
@@ -142,18 +143,25 @@ export default function Step2() {
         errorText="Spotify-Profil aus Liste auswählen"
       >
         <InputGroup
+          startOffset="-4px"
+          w="100%"
+          startElementProps={{ms: -2}}
+          endElementProps={{me: -2}}
           startElement={
             <SpotifyCover image={values.spotifyArtist?.image} width="32px" />
           }
           endElement={
-            <IconButton onClick={() => setInputValue('')}>
+            <IconButton
+              onClick={() => setInputValue('')}
+              size="xs"
+              variant="ghost"
+            >
               <FaXmark />
             </IconButton>
           }
         >
           <FormikField
             as={Input}
-            pl="40px"
             placeholder="Spotify-Profil suchen..."
             {...getInputProps({
               ref,
@@ -185,7 +193,14 @@ export default function Step2() {
       </Field>
 
       <Field label="Instagram">
-        <InputGroup startElement={<Text color="gray.400">@</Text>}>
+        <InputGroup
+          w="100%"
+          startElement={
+            <Text mt="-0.5" color="gray.400">
+              @
+            </Text>
+          }
+        >
           <FormikField
             as={Input}
             name="instagram"
@@ -214,10 +229,13 @@ export default function Step2() {
   );
 }
 
-function SpotifyCover({image, width}: {image?: string | null; width: string}) {
+function SpotifyCover({
+  image,
+  ...props
+}: {image?: string | null; width: string} & BoxProps) {
   if (!image) {
     return (
-      <Center aspectRatio={1} w={width} borderRadius="md" bg="offwhite.200">
+      <Center aspectRatio={1} borderRadius="md" bg="offwhite.200" {...props}>
         <FaSpotify color="white" />
       </Center>
     );
@@ -225,10 +243,10 @@ function SpotifyCover({image, width}: {image?: string | null; width: string}) {
   return (
     <Image
       src={image ?? undefined}
-      w={width}
       aspectRatio={1}
       objectFit="cover"
       borderRadius="md"
+      {...props}
     />
   );
 }

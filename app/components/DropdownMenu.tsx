@@ -1,5 +1,11 @@
 import {List, ListItem, Center, Spinner} from '@chakra-ui/react';
 import type {UseComboboxPropGetters} from 'downshift';
+import {
+  MenuContent,
+  MenuItem,
+  MenuRoot,
+  MenuTrigger,
+} from './chakra-snippets/menu';
 
 export default function DropdownMenu<T>({
   getMenuProps,
@@ -21,37 +27,18 @@ export default function DropdownMenu<T>({
   highlightedIndex: number;
 }) {
   return (
-    <List.Root
-      shadow="md"
-      bg="white"
-      borderRadius="lg"
-      overflow="hidden"
-      position="absolute"
-      zIndex="2"
-      mt="1"
-      w="100%"
-      visibility={isOpen ? 'visible' : 'hidden'}
-      listStyle="none"
-      {...getMenuProps()}
-    >
-      {data.map((band, index) => (
-        <ListItem
-          key={keyExtractor(band)}
-          {...getItemProps({item: band, index})}
-          py="1.5"
-          px="3"
-          cursor="pointer"
-          bg={index === highlightedIndex ? 'blue.500' : undefined}
-          color={index === highlightedIndex ? 'white' : undefined}
-        >
-          {itemRenderer(band, index)}
-        </ListItem>
-      ))}
-      {loading && (
-        <Center p="6">
-          <Spinner size="sm" />
-        </Center>
-      )}
-    </List.Root>
+    <MenuRoot>
+      <MenuTrigger asChild>{trigger}</MenuTrigger>
+      <MenuContent>
+        {data.map((band, index) => (
+          <MenuItem value={index}>{itemRenderer(band, index)}</MenuItem>
+        ))}
+        {loading && (
+          <Center p="6">
+            <Spinner size="sm" />
+          </Center>
+        )}
+      </MenuContent>
+    </MenuRoot>
   );
 }

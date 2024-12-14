@@ -124,6 +124,7 @@ export default function LineupYear() {
   return (
     <>
       <SegmentedControl
+        flexBasis={0}
         onValueChange={({value}) =>
           setStageFilter(value === 'ALL' ? null : value)
         }
