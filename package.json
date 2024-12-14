@@ -1,9 +1,10 @@
 {
   "scripts": {
     "build": "remix build --sourcemap && sentry-upload-sourcemaps --org kulturspektakel --project website --sourcemap",
-    "dev": "concurrently \"remix dev --manual\" \"yarn graphql\" \"yarn routes\"",
+    "dev": "concurrently \"remix dev --manual\" \"yarn graphql\" \"yarn routes\" \"chakra typegen app/theme.ts --watch --strict\"",
     "start": "NODE_OPTIONS='--import ./instrumentation.server.mjs' remix-serve build",
     "typecheck": "tsc",
+    "typegen": "chakra typegen app/theme.ts --strict",
     "graphql": "graphql-codegen --config ./.graphqlrc.yml --watch",
     "routes": "remix-routes --watch"
   },

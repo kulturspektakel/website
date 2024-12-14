@@ -43,6 +43,19 @@ const overrides: SystemConfig = {
           visual: 'custom',
         },
       }),
+      button: defineRecipe({
+        variants: {
+          visual: {
+            solid: {
+              bg: 'brand.500',
+              color: 'white',
+            },
+            subtle: {
+              bg: 'offwhite.400',
+            },
+          },
+        },
+      }),
     },
     tokens: {
       colors: {

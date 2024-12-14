@@ -34,8 +34,8 @@ export default function Image({
           role="button"
           aria-haspopup="dialog"
           onClick={open}
-          htmlHeight={maxH}
-          htmlWidth={
+          // h={maxH}
+          w={
             maxH != null && originalWidth != null && originalHeight != null
               ? (originalWidth / originalHeight) * maxH
               : undefined

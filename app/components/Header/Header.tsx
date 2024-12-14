@@ -11,6 +11,7 @@ import {
   VStack,
   DialogRoot,
   DialogContent,
+  DialogBackdrop,
 } from '@chakra-ui/react';
 import {
   useLocation,
@@ -201,8 +202,7 @@ export default function Header() {
           aria-label="Navigation öffnen"
           rounded="full"
           onClick={() => setShowNav(true)}
-          display={['block', 'none']}
-          fontSize="xl"
+          display={['flex', 'none']}
         >
           <FaBars />
         </IconButton>
@@ -222,10 +222,11 @@ export default function Header() {
       </Flex>
       <DialogRoot
         open={showNav}
-        onClose={() => setShowNav(false)}
-        motionPreset="scale"
+        onOpenChange={({open}) => !open && setShowNav(false)}
+        motionPreset="none"
         size="full"
       >
+        <DialogBackdrop bgColor="brand.900" opacity={1} />
         <DialogContent
           bgColor="transparent"
           boxShadow="none"
@@ -255,7 +256,6 @@ export default function Header() {
             <IconButton
               aria-label="Navigation schließen"
               rounded="full"
-              fontSize="xl"
               onClick={() => setShowNav(false)}
             >
               <FaXmark />

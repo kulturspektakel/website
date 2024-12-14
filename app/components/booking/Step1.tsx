@@ -18,7 +18,6 @@ import useIsDJ from './useIsDJ';
 import {BandRepertoireType, GenreCategory} from '~/types/graphql';
 import type {FormikContextT} from '~/routes/booking.$applicationType._index';
 import {useFormikContext} from 'formik';
-import {FaTriangleExclamation} from 'react-icons/fa6';
 import {Field as FormikField} from 'formik';
 import {Field} from '../chakra-snippets/field';
 import {Alert} from '../chakra-snippets/alert';
@@ -56,7 +55,7 @@ export default function Step1() {
       </Field>
       <DuplicateApplicationWarning bandname={values.bandname} />
 
-      <HStack w="100%">
+      <HStack w="100%" alignItems="flex-end">
         <Field
           id={isDJ ? 'genre' : 'genreCategory'}
           required={!isDJ}
@@ -86,7 +85,6 @@ export default function Step1() {
               name="genre"
               as={Input}
               placeholder="genaues Genre (optional)"
-              mt="8"
             />
           </Field>
         )}
@@ -111,7 +109,7 @@ export default function Step1() {
           {(values.repertoire === BandRepertoireType.MostlyCoverSongs ||
             values.repertoire === BandRepertoireType.ExclusivelyCoverSongs) && (
             <Alert
-              status="info"
+              status="warning"
               borderRadius="md"
               alignItems="flex-start"
               title="Coverbands"
@@ -127,20 +125,19 @@ export default function Step1() {
 
       <Field
         label={isDJ ? 'Beschreibung' : 'Bandbeschreibung'}
-        helperText={
-          isDJ
+        required
+        helperText="Maximal 2.000 Zeichen, wir müssen das alles lesen!"
+      >
+        <Text mt="1" fontSize="sm" color="offwhite.600">
+          {isDJ
             ? 'Erzähl uns was über dich! Was legst du auf? Wie lange machst du das schon?'
             : `Erzählt uns etwas über eure Band! Was macht ihr für Musik? Was
-              ist eure Bandgeschichte?`
-        }
-      >
-        <FormikField as={Textarea} name="description" maxLength={2000} />
-        <Text mt="1" fontSize="sm" color="offwhite.600">
-          Maximal 2.000 Zeichen, wir müssen das alles lesen!
+              ist eure Bandgeschichte?`}
         </Text>
+        <FormikField as={Textarea} name="description" maxLength={2000} />
       </Field>
 
-      <Field label="Anreise aus&hellip;">
+      <Field label="Anreise aus&hellip;" required>
         <FormikField as={Input} name="city" placeholder="Ort" />
       </Field>
 

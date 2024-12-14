@@ -19,6 +19,7 @@ export default function LinkButton({
   return (
     <Button
       role="link"
+      variant="subtle"
       _hover={_hover}
       _active={_hover}
       _focus={_hover}
