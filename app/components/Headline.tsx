@@ -21,7 +21,7 @@ export default function Headline({
     <Box textAlign={href ? undefined : 'center'} {...props}>
       <Heading size={[href ? '2xl' : '3xl']} mb="1" as={href ? 'h2' : 'h1'}>
         {href ? (
-          <ChakraLink asChild>
+          <ChakraLink asChild color="inherit">
             <Link to={href}>{children}</Link>
           </ChakraLink>
         ) : (

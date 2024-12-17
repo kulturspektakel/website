@@ -55,7 +55,9 @@ export default function MarkdownText(props: Props) {
             </Text>
           ),
           a: (props: LinkProps) => (
-            <ChakraLink {...props} as={Link} to={props.href} variant="inline" />
+            <ChakraLink {...props} asChild>
+              <Link to={props.href!}>{props.children}</Link>
+            </ChakraLink>
           ),
           img: (imgProps: ImageProps) => {
             const img = props.markdown.images.find(

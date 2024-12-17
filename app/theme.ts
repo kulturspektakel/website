@@ -17,6 +17,29 @@ const overrides: SystemConfig = {
           },
         },
       }),
+      segmentGroup: defineSlotRecipe({
+        slots: ['root', 'item', 'indicator'],
+        base: {
+          root: {
+            w: 'full',
+            bg: 'offwhite.200',
+            fontWeight: 'bold',
+          },
+          item: {
+            flexGrow: 1,
+            flexBasis: 0,
+            justifyContent: 'center',
+            '&[data-state=checked]': {
+              bg: 'brand.900',
+              color: 'white',
+            },
+          },
+          indicator: {
+            bg: 'offwhite.100',
+            color: 'white',
+          },
+        },
+      }),
     },
     recipes: {
       input: defineRecipe({
@@ -45,13 +68,24 @@ const overrides: SystemConfig = {
       }),
       button: defineRecipe({
         variants: {
-          visual: {
+          variant: {
             solid: {
-              bg: 'brand.500',
-              color: 'white',
+              bg: 'brand.900',
             },
             subtle: {
-              bg: 'offwhite.400',
+              bg: 'offwhite.200',
+              _hover: {
+                bg: 'offwhite.300',
+              },
+            },
+          },
+        },
+      }),
+      link: defineRecipe({
+        variants: {
+          variant: {
+            plain: {
+              color: 'brand.500',
             },
           },
         },
@@ -85,14 +119,16 @@ const overrides: SystemConfig = {
         body: {value: "'Space Grotesk', sans-serif;"},
       },
     },
+    semanticTokens: {
+      colors: {
+        bg: {value: '{colors.offwhite.100}'},
+      },
+    },
   },
   globalCss: {
     html: {
       fontSmooth: 'auto',
       fontSynthesis: 'none',
-    },
-    body: {
-      bg: 'offwhite.100',
     },
     'h1,h2,h3': {
       fontFamily: 'Shrimp !important',

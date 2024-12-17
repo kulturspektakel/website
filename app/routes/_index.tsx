@@ -9,6 +9,7 @@ import type {LoaderFunctionArgs} from '@remix-run/node';
 import LinkButton from '~/components/LinkButton';
 import mergeMeta from '~/utils/mergeMeta';
 import theme from '~/theme';
+import {Button} from '~/components/chakra-snippets/button';
 
 gql`
   query News {

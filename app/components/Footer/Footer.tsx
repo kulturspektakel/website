@@ -81,12 +81,12 @@ export default function Footer() {
             icon={FaSpotify}
           />
         </HStack>
-        <Box mt="2" color="whiteAlpha.600">
+        {/* <Box mt="2" color="whiteAlpha.600">
           Gefördert von
-          <Link as={RemixLink} to="https://popkultur.bayern" target="_blank">
+          <Link href="https://popkultur.bayern" target="_blank">
             <Image src={vpby} alt="Verband für Popkultur" />
           </Link>
-        </Box>
+        </Box> */}
       </VStack>
     </Flex>
   );

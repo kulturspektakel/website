@@ -86,10 +86,11 @@ export default function Events() {
 
   return (
     <>
-      <Heading as="h1" textAlign="center">
+      <Heading as="h1" textAlign="center" size="3xl">
         Veranstaltungen
       </Heading>
       <SegmentedControl
+        mt="5"
         value={variables?.type ?? 'ALL'}
         onValueChange={({value}) => {
           setVariables(
@@ -106,7 +107,7 @@ export default function Events() {
 
         }
       /> */}
-      <ListRoot as="ol" listStyleType="none" m="0" mt="20">
+      <ListRoot as="ol" listStyleType="none" m="0" mt="12">
         <Gallery options={{loop: false}} withCaption>
           {data?.eventsConnection.edges.map(({node: e}, i) => (
             <ListItem key={e.id}>

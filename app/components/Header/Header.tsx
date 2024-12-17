@@ -26,7 +26,6 @@ import videoSrc from './Header.mov';
 import DateString from '../DateString';
 import {FaXmark, FaBars} from 'react-icons/fa6';
 import {$path} from 'remix-routes';
-import type {RemixNavLinkProps} from '@remix-run/react/dist/components';
 import {gql} from '@apollo/client';
 import type {loader as rootLoader} from '~/root';
 import {useTypedRouteLoaderData} from 'remix-typedjson';
@@ -67,10 +66,6 @@ function Item({children}: {children: React.ReactNode}) {
       _focus={{
         outline: 'none',
         color: 'brand.500',
-      }}
-      _active={{
-        borderBottom: '3px solid',
-        marginBottom: '-3px',
       }}
       lineHeight={1}
     >

@@ -1,6 +1,5 @@
 import {gql} from '@apollo/client';
-import {VStack, HStack, Heading, Text, SimpleGrid, Box} from '@chakra-ui/react';
-import {Link} from '@remix-run/react';
+import {VStack, HStack, Heading, Text, Link, Box} from '@chakra-ui/react';
 import DateString, {dateStringComponents} from '~/components/DateString';
 import Mark from '~/components/Mark';
 import type {LineupBandQuery, LineupBandSitemapQuery} from '~/types/graphql';
@@ -124,94 +123,97 @@ export default function LineupBand() {
   const band = useTypedLoaderData<typeof loader>();
 
   return (
-    <SimpleGrid columns={[1, 1, band.photo ? 2 : 1]} gap="5" mt="8">
+    <Box mt="6">
       {band.photo && (
-        <Box display={['none', 'none', 'block']}>
+        <Box
+          float="left"
+          maxW="50%"
+          mr="6"
+          mb="4"
+          display={['none', 'none', 'block']}
+        >
           <BandPhoto band={band} />
         </Box>
       )}
-      <VStack gap="4" align="start">
-        <VStack gap="1" align="start" mt="3">
-          <Text>
-            <Mark
-              bgColor={band.area.themeColor}
-              color={band.area.id === 'Area:dj' ? 'white' : undefined}
-            >
-              {band.area.displayName}
-            </Mark>
-          </Text>
-          <Heading as="h2" size="lg">
-            {band.name}
-          </Heading>
-          <Text fontWeight="bold">
-            <DateString
-              options={{
-                hour: '2-digit',
-                minute: '2-digit',
-                weekday: 'long',
-              }}
-              date={band.startTime}
-            />
-            &nbsp;Uhr
-            {band.genre && <>&nbsp;&middot;&nbsp;{band.genre}</>}
-          </Text>
-        </VStack>
-        {band.photo && (
-          <Box
-            display={['block', 'block', 'none']}
-            textAlign="center"
-            mb="4"
-            w="100%"
-          >
-            <BandPhoto maxH={300} band={band} />
-          </Box>
-        )}
-        {(band.spotify ||
-          band.youtube ||
-          band.instagram ||
-          band.facebook ||
-          band.website) && (
-          <HStack fontSize="28px" gap="6" color="brand.900">
-            {band.spotify && (
-              <Tooltip content="Spotify">
-                <Link target="_blank" to={band.spotify}>
-                  <FaSpotify />
-                </Link>
-              </Tooltip>
-            )}
-            {band.youtube && (
-              <Tooltip content="YouTube">
-                <Link target="_blank" to={band.youtube}>
-                  <FaYoutube />
-                </Link>
-              </Tooltip>
-            )}
-            {band.instagram && (
-              <Tooltip content="Instagram">
-                <Link target="_blank" to={band.instagram}>
-                  <FaInstagram />
-                </Link>
-              </Tooltip>
-            )}
-            {band.facebook && (
-              <Tooltip content="Facebook">
-                <Link target="_blank" to={band.facebook}>
-                  <FaFacebook />
-                </Link>
-              </Tooltip>
-            )}
-            {band.website && (
-              <Tooltip content={band.website}>
-                <Link target="_blank" to={band.website}>
-                  <FaGlobe />
-                </Link>
-              </Tooltip>
-            )}
-          </HStack>
-        )}
-        <Text>{band.shortDescription ?? band.description}</Text>
-      </VStack>
-    </SimpleGrid>
+      <Text>
+        <Mark
+          bgColor={band.area.themeColor}
+          color={band.area.id === 'Area:dj' ? 'white' : undefined}
+        >
+          {band.area.displayName}
+        </Mark>
+      </Text>
+      <Heading as="h2" size="2xl">
+        {band.name}
+      </Heading>
+      <Text fontWeight="bold">
+        <DateString
+          options={{
+            hour: '2-digit',
+            minute: '2-digit',
+            weekday: 'long',
+          }}
+          date={band.startTime}
+        />
+        &nbsp;Uhr
+        {band.genre && <>&nbsp;&middot;&nbsp;{band.genre}</>}
+      </Text>
+      {band.photo && (
+        <Box
+          display={['block', 'block', 'none']}
+          textAlign="center"
+          mb="4"
+          mt="4"
+          w="100%"
+        >
+          <BandPhoto maxH={300} band={band} />
+        </Box>
+      )}
+      {(band.spotify ||
+        band.youtube ||
+        band.instagram ||
+        band.facebook ||
+        band.website) && (
+        <HStack fontSize="28px" gap="6" mt="2">
+          {band.spotify && (
+            <Tooltip content="Spotify">
+              <Link target="_blank" href={band.spotify} color="inherit">
+                <FaSpotify />
+              </Link>
+            </Tooltip>
+          )}
+          {band.youtube && (
+            <Tooltip content="YouTube">
+              <Link target="_blank" href={band.youtube} color="inherit">
+                <FaYoutube />
+              </Link>
+            </Tooltip>
+          )}
+          {band.instagram && (
+            <Tooltip content="Instagram">
+              <Link target="_blank" href={band.instagram} color="inherit">
+                <FaInstagram />
+              </Link>
+            </Tooltip>
+          )}
+          {band.facebook && (
+            <Tooltip content="Facebook">
+              <Link target="_blank" href={band.facebook} color="inherit">
+                <FaFacebook />
+              </Link>
+            </Tooltip>
+          )}
+          {band.website && (
+            <Tooltip content={band.website}>
+              <Link target="_blank" href={band.website} color="inherit">
+                <FaGlobe />
+              </Link>
+            </Tooltip>
+          )}
+        </HStack>
+      )}
+      <Text mt="4">{band.shortDescription ?? band.description}</Text>
+    </Box>
   );
 }
 

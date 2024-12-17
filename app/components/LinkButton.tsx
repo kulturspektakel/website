@@ -10,23 +10,12 @@ export default function LinkButton({
   ...props
 }: ButtonProps & LinkProps & {href: string}) {
   const navigate = useNavigate();
-  const _hover = {
-    bg: 'offwhite.300',
-  };
-
   const isAbsolute = /^https?:\/\//.test(href);
 
   return (
-    <Button
-      role="link"
-      variant="subtle"
-      _hover={_hover}
-      _active={_hover}
-      _focus={_hover}
-      asChild
-      {...props}
-    >
+    <Button role="link" variant="subtle" asChild {...props}>
       <Link
+        _hover={{textDecoration: 'none'}}
         href={href}
         download={download}
         onClick={(e) => {

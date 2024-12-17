@@ -1,6 +1,5 @@
 import {gql} from '@apollo/client';
 import {FaCircleInfo} from 'react-icons/fa6';
-import type {Placement} from '@chakra-ui/react';
 import {
   Separator,
   HStack,
@@ -8,7 +7,6 @@ import {
   ListRoot,
   Text,
   Box,
-  useBreakpointValue,
   useDisclosure,
   Icon,
   IconButton,
@@ -69,11 +67,7 @@ export default function ProductList({
                 <Info additives={item.additives} />
               </Text>
               <span>
-                {item.requiresDeposit && (
-                  <Text color="offwhite.500" as="span">
-                    *{' '}
-                  </Text>
-                )}
+                {item.requiresDeposit && <Text as="span">* </Text>}
                 {new Intl.NumberFormat('de-DE', {
                   style: 'currency',
                   currency: 'EUR',
@@ -88,7 +82,7 @@ export default function ProductList({
       </ListRoot>
       {showDepositText && (
         <>
-          <Text textAlign="right" pt="1" color="offwhite.500">
+          <Text textAlign="center" pt="1" fontSize="sm">
             * zuzüglich{' '}
             {new Intl.NumberFormat('de-DE', {
               style: 'currency',
@@ -116,10 +110,12 @@ function Info({additives}: {additives: ProductAdditives[]}) {
       open={open}
     >
       <IconButton
-        color={'offwhite.300'}
-        ml="1"
+        color="offwhite.300"
+        ml="-1"
         mt="-1"
         variant="ghost"
+        size="xs"
+        _hover={{bg: 'transparent', color: 'brand.900'}}
         onMouseEnter={onOpen}
         onMouseLeave={onClose}
         onClick={onToggle}

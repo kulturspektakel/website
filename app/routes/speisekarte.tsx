@@ -37,7 +37,7 @@ export default function Speisekarte() {
 
   return (
     <>
-      <Heading mb="10" textAlign="center">
+      <Heading mb="10" textAlign="center" size="3xl">
         Speisen & Getränke
       </Heading>
       <ListRoot

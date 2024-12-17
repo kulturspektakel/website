@@ -59,7 +59,7 @@ export default function Plakate() {
   const data = useTypedLoaderData<typeof loader>();
   return (
     <VStack gap="10">
-      <Heading as="h1" textAlign="center">
+      <Heading as="h1" textAlign="center" size="3xl">
         Plakate
       </Heading>
       <Gallery options={{loop: false}} withCaption>
@@ -82,10 +82,7 @@ export default function Plakate() {
         </SimpleGrid>
         <InfoBox title="Fehlende Plakate?">
           Falls du ein Plakat hast, das hier noch fehlt, schick es uns gerne an{' '}
-          <Link
-            variant="inline"
-            href="mailto:info@kulturspektakel.de?subject=Fehlendes Plakat"
-          >
+          <Link href="mailto:info@kulturspektakel.de?subject=Fehlendes Plakat">
             info@kulturspektakel.de
           </Link>
         </InfoBox>

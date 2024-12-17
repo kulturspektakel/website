@@ -5,7 +5,6 @@ import {
   Link as ChakraLink,
   Box,
   Input,
-  Icon,
 } from '@chakra-ui/react';
 import {
   NativeSelectField,
@@ -185,14 +184,8 @@ export default function Step1() {
             )}
           <Text fontSize="sm" color="offwhite.600">
             Die Festival-Branche hat eine geringe Geschlechter&shy;diversität (
-            <ChakraLink asChild textDecoration="underline">
-              <Link
-                to="https://bit.ly/2HxZMgl"
-                rel="noreferrer"
-                target="_blank"
-              >
-                mehr Informationen
-              </Link>
+            <ChakraLink href="https://bit.ly/2HxZMgl" target="_blank">
+              mehr Informationen
             </ChakraLink>
             ). Wir wählen die Bands nicht nach Geschlechter&shy;verteilung aus,
             trotzdem wollen wir einen besseren Überblick über die Situation
