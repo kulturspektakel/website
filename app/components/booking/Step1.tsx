@@ -127,7 +127,7 @@ export default function Step1() {
         required
         helperText="Maximal 2.000 Zeichen, wir müssen das alles lesen!"
       >
-        <Text mt="1" fontSize="sm" color="offwhite.600">
+        <Text mt="1" fontSize="sm" color="fg.muted">
           {isDJ
             ? 'Erzähl uns was über dich! Was legst du auf? Wie lange machst du das schon?'
             : `Erzählt uns etwas über eure Band! Was macht ihr für Musik? Was

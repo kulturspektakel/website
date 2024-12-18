@@ -80,7 +80,7 @@ export default function Band({band}: {band: BandFragment}) {
           />
           &nbsp;
           {band.area.displayName}
-          {band.genre && <>&nbsp;&middot;&nbsp;{band.genre}</>}
+          {band.genre && <>&nbsp;&middot; {band.genre}</>}
         </Text>
       </Box>
     </Card>

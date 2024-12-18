@@ -16,7 +16,11 @@ const Card = forwardRef<BoxProps>(
     ref,
   ) => {
     const _focus = useMemo(
-      () => ({transform: 'rotate(1deg) scale(1.03)', boxShadow: 'md'}),
+      () => ({
+        transform: 'rotate(1deg) scale(1.03)',
+        boxShadow: 'md',
+        outlineColor: 'brand.900',
+      }),
       [],
     );
 

@@ -132,13 +132,13 @@ export default function () {
                 <Button
                   disabled={props.isSubmitting || state != 'idle'}
                   onClick={() => setCurrentStep(currentStep - 1)}
+                  variant="subtle"
                 >
                   Zurück
                 </Button>
               )}
               <Spacer />
               <Button
-                // variant="primary"
                 type="submit"
                 loading={props.isSubmitting || state != 'idle'}
               >

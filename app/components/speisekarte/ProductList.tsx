@@ -111,8 +111,9 @@ function Info({additives}: {additives: ProductAdditives[]}) {
     >
       <IconButton
         color="offwhite.300"
-        ml="-1"
-        mt="-1"
+        ml="-0.5"
+        mt="-2"
+        mb="-1.5"
         variant="ghost"
         size="xs"
         _hover={{bg: 'transparent', color: 'brand.900'}}

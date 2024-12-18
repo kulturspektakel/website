@@ -22,7 +22,6 @@ const overrides: SystemConfig = {
         base: {
           root: {
             w: 'full',
-            bg: 'offwhite.200',
             fontWeight: 'bold',
           },
           item: {
@@ -33,9 +32,11 @@ const overrides: SystemConfig = {
               bg: 'brand.900',
               color: 'white',
             },
+            _before: {
+              bg: 'offwhite.300',
+            },
           },
           indicator: {
-            bg: 'offwhite.100',
             color: 'white',
           },
         },
@@ -66,21 +67,6 @@ const overrides: SystemConfig = {
           visual: 'custom',
         },
       }),
-      button: defineRecipe({
-        variants: {
-          variant: {
-            solid: {
-              bg: 'brand.900',
-            },
-            subtle: {
-              bg: 'offwhite.200',
-              _hover: {
-                bg: 'offwhite.300',
-              },
-            },
-          },
-        },
-      }),
       link: defineRecipe({
         variants: {
           variant: {
@@ -108,6 +94,13 @@ const overrides: SystemConfig = {
           500: {value: '#9c9686'},
           600: {value: '#5a574e'},
         },
+        gray: {
+          100: {value: '{colors.offwhite.100}'},
+          200: {value: '{colors.offwhite.200}'},
+          300: {value: '{colors.offwhite.300}'},
+          400: {value: '{colors.offwhite.400}'},
+          500: {value: '{colors.offwhite.500}'},
+        },
       },
       fontWeights: {
         normal: {value: 400},
@@ -121,112 +114,55 @@ const overrides: SystemConfig = {
     },
     semanticTokens: {
       colors: {
-        bg: {value: '{colors.offwhite.100}'},
+        bg: {
+          DEFAULT: {
+            value: '{colors.offwhite.100}',
+          },
+          subtle: {
+            value: '{colors.offwhite.200}',
+          },
+          muted: {
+            value: '{colors.offwhite.200}',
+          },
+          emphasized: {
+            value: '{colors.offwhite.300}',
+          },
+          inverted: {
+            value: '{colors.brand.900}',
+          },
+        },
+        fg: {
+          muted: {
+            value: '{colors.offwhite.600}',
+          },
+        },
+        gray: {
+          solid: {
+            value: '{colors.brand.900}',
+          },
+          fg: {
+            value: '{colors.brand.900}',
+          },
+          focusRing: {
+            value: '{colors.brand.900}',
+          },
+        },
+      },
+      shadows: {
+        inset: {value: 'inset 0 0 0 1px {colors.offwhite.300}'},
       },
     },
   },
   globalCss: {
-    html: {
+    '*': {
       fontSmooth: 'auto',
+      WebkitFontSmoothing: 'auto',
       fontSynthesis: 'none',
     },
     'h1,h2,h3': {
       fontFamily: 'Shrimp !important',
       textTransform: 'uppercase',
       lineHeight: '0.95 !important',
-    },
-  },
-  components: {
-    Form: {
-      baseStyle: {
-        helperText: {
-          color: 'offwhite.600',
-        },
-      },
-    },
-    Heading: {
-      baseStyle: {
-        color: 'brand.900',
-      },
-    },
-    Button: {
-      baseStyle: {
-        bg: 'offwhite.200',
-        _focusVisible: {
-          outlineOffset: '3',
-          outlineColor: 'blue.500',
-          boxShadow: 'none',
-        },
-      },
-      variants: {
-        primary: {
-          bg: 'brand.900',
-          color: 'white',
-          _hover: {
-            _disabled: {
-              bg: 'brand.900',
-            },
-          },
-        },
-      },
-      defaultProps: {
-        variant: 'base',
-      },
-    },
-    Input: {
-      defaultProps: {
-        focusBorderColor: 'blue.500',
-      },
-      // baseStyle: {
-      //   field: {
-      //     // _focus: {
-      //     //   bg: 'red.500',
-      //     //   outlineOffset: '3',
-      //     //   outlineColor: 'blue.500',
-      //     //   boxShadow: 'none',
-      //     },
-      //   },
-      // },
-    },
-    Tooltip: {
-      baseStyle: {
-        bg: 'brand.900',
-        color: 'white',
-        borderRadius: '0.5rem',
-        paddingTop: 1,
-        paddingBottom: 1,
-        paddingLeft: 3,
-        paddingRight: 3,
-        // [cssVar('popper-arrow-bg').variable]: 'colors.brand.900',
-      },
-    },
-    Separator: {
-      baseStyle: {
-        borderColor: 'offwhite.300',
-      },
-    },
-    Link: {
-      baseStyle: {
-        _hover: {
-          color: 'brand.500',
-          textDecoration: 'none',
-        },
-        _focus: {
-          color: 'brand.500',
-          textDecoration: 'none',
-        },
-      },
-      variants: {
-        inline: {
-          color: 'brand.500',
-          _hover: {
-            textDecoration: 'underline',
-          },
-          _focus: {
-            textDecoration: 'underline',
-          },
-        },
-      },
     },
   },
 };
