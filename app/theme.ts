@@ -17,6 +17,17 @@ const overrides: SystemConfig = {
           },
         },
       }),
+      radioCard: defineSlotRecipe({
+        slots: ['item'],
+        base: {
+          item: {
+            bg: 'white',
+            _focus: {
+              bg: 'white',
+            },
+          },
+        },
+      }),
       segmentGroup: defineSlotRecipe({
         slots: ['root', 'item', 'indicator'],
         base: {
@@ -72,6 +83,18 @@ const overrides: SystemConfig = {
           variant: {
             plain: {
               color: 'brand.500',
+            },
+          },
+        },
+      }),
+      button: defineRecipe({
+        variants: {
+          variant: {
+            subtle: {
+              bg: 'offwhite.200',
+              _hover: {
+                bg: 'offwhite.300',
+              },
             },
           },
         },

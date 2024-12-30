@@ -73,9 +73,8 @@ export default function Search(props: BoxProps) {
 
   return (
     <Box position="relative" {...props}>
-      <InputGroup color="offwhite.300" startElement={<FaMagnifyingGlass />}>
+      <InputGroup startElement={<FaMagnifyingGlass />}>
         <Input
-          bgColor="white"
           borderRadius="full"
           placeholder="Bands suchen..."
           type="search"

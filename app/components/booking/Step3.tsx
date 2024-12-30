@@ -1,9 +1,8 @@
-import {Textarea, Select, Input} from '@chakra-ui/react';
-import {Field as FormikField} from 'formik';
+import {Textarea} from '@chakra-ui/react';
 import useIsDJ from './useIsDJ';
 import {HeardAboutBookingFrom, PreviouslyPlayed} from '~/types/graphql';
 import {useUtmSource} from '~/routes/booking._index';
-import {Field} from '../chakra-snippets/field';
+import {ConnectedField} from '../ConnectedField';
 
 const HEARD_ABOUT: Map<HeardAboutBookingFrom, string> = new Map([
   [HeardAboutBookingFrom.BYon, 'BY-on'],
@@ -26,76 +25,54 @@ export default function Step3() {
 
   return (
     <>
-      <Field
+      <ConnectedField
         label={isDJ ? `Vollständiger Name` : `Ansprechpartner*in`}
         required
-      >
-        <FormikField as={Input} id="contactName" />
-      </Field>
+        name="contactName"
+      />
 
-      <Field label="Email-Adresse">
-        <FormikField as={Input} id="email" type="email" />
-      </Field>
+      <ConnectedField label="Email-Adresse" name="email" type="email" />
 
-      <Field label="Handynummer">
-        <FormikField as={Input} id="contactPhone" type="tel" />
-      </Field>
+      <ConnectedField label="Handynummer" name="contactPhone" type="tel" />
 
-      <Field
+      <ConnectedField
         label={isDJ ? 'Woher kennst du das Kult?' : `Woher kennt ihr das Kult?`}
+        as={Textarea}
+        name="knowsKultFrom"
         helperText={
           isDJ
             ? 'Was verbindet dich mit unserer Veranstaltung? Woher kennst du das Kulturspektakel? Was wolltest du uns schon immer mal erzählen?'
             : `Wart ihr schonmal da? Woher kennt ihr das Kulturspektakel? Was verbindet euch mit unserer Veranstaltung? Was wolltet ihr uns schon immer mal erzählen? `
         }
-      >
-        <FormikField as={Textarea} id="knowsKultFrom" />
-      </Field>
+      />
 
-      <Field
+      <ConnectedField
         label={
           isDJ
             ? 'Hast du schonmal bei uns aufgelegt?'
             : `Habt ihr schonmal bei uns gespielt?`
         }
-      >
-        <FormikField
-          id="hasPreviouslyPlayed"
-          as={Select}
-          placeholder="bitte auswählen…"
-        >
-          {Array.from(PLAYED_PREVIOUSLY.entries())
-            .filter(
-              ([v]) => !isDJ || (isDJ && v !== PreviouslyPlayed.OtherFormation),
-            )
-            .map(([k, v]) => (
-              <option key={k} value={k}>
-                {v}
-              </option>
-            ))}
-        </FormikField>
-      </Field>
+        name="hasPreviouslyPlayed"
+        options={Array.from(PLAYED_PREVIOUSLY.entries())
+          .filter(
+            ([v]) => !isDJ || (isDJ && v !== PreviouslyPlayed.OtherFormation),
+          )
+          .map(([value, label]) => ({value, label}))}
+      />
 
       {!utmSource && (
-        <Field
+        <ConnectedField
           label={
             isDJ
               ? `Wie bist du auf unser Booking aufmerksam geworden?`
               : `Wie seid ihr auf unser Booking aufmerksam geworden?`
           }
-        >
-          <FormikField
-            id="heardAboutBookingFrom"
-            as={Select}
-            placeholder="bitte auswählen…"
-          >
-            {Array.from(HEARD_ABOUT.entries()).map(([k, v]) => (
-              <option key={k} value={k}>
-                {v}
-              </option>
-            ))}
-          </FormikField>
-        </Field>
+          name="heardAboutBookingFrom"
+          options={Array.from(HEARD_ABOUT.entries()).map(([value, label]) => ({
+            value,
+            label,
+          }))}
+        />
       )}
     </>
   );

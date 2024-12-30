@@ -1,16 +1,10 @@
 import {gql} from '@apollo/client';
-import {
-  Box,
-  Heading,
-  SimpleGrid,
-  Image,
-  Center,
-  Button,
-} from '@chakra-ui/react';
+import {Box, Heading, SimpleGrid, Image, Center} from '@chakra-ui/react';
 import type {LoaderFunctionArgs} from '@remix-run/node';
 import React from 'react';
 import {typedjson} from 'remix-typedjson';
 import Card from '~/components/Card';
+import {Button} from '~/components/chakra-snippets/button';
 import DateString from '~/components/DateString';
 import Mark from '~/components/Mark';
 import {NewsArchiveDocument, useNewsArchiveQuery} from '~/types/graphql';
@@ -103,7 +97,8 @@ export default function NewsArchive() {
                       <DateString date={node.createdAt} />
                     </Mark>
                     <Heading
-                      size={['md', 'lg', 'lg']}
+                      size={['lg', '2xl', '2xl']}
+                      hyphens="auto"
                       color={node.content.images[0]?.uri ? 'white' : undefined}
                       mt="1"
                       lineClamp={5}
@@ -140,7 +135,7 @@ export default function NewsArchive() {
                 }),
               })
             }
-            isLoading={loading}
+            loading={loading}
           >
             ältere Artikel
           </Button>

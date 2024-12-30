@@ -2,7 +2,6 @@ import {
   VStack,
   HStack,
   Spacer,
-  Alert,
   AlertDescription,
   AlertTitle,
   Box,
@@ -26,12 +25,12 @@ import {
 import {gql} from '@apollo/client';
 import ReloadWarning from '~/components/booking/ReloadWarning';
 import {useUtmSource} from './booking._index';
-import type {loader as rootLoader} from '~/root';
 import {useTypedRouteLoaderData} from 'remix-typedjson';
 import {loader} from './booking';
 import Steps from '~/components/Steps';
 import {FaTriangleExclamation} from 'react-icons/fa6';
 import {Button} from '~/components/chakra-snippets/button';
+import {Alert} from '~/components/chakra-snippets/alert';
 
 const STEPS = [Step1, Step2, Step3] as const;
 export type FormikContextT = Partial<CreateBandApplicationInput> & {
@@ -68,11 +67,10 @@ export default function () {
   const navigate = useNavigate();
   const utm_source = useUtmSource();
   const {state} = useNavigation();
-  const root = useTypedRouteLoaderData<typeof rootLoader>('root')!;
 
   return (
     <VStack gap="5">
-      <Heading size="lg" mt="2">
+      <Heading size="3xl" mt="2">
         {applicationType === 'dj' ? 'DJ Bewerbung' : 'Bandbewerbung'}
       </Heading>
 

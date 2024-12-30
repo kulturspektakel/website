@@ -7,6 +7,7 @@ import {
   Center,
   Input,
   BoxProps,
+  Box,
 } from '@chakra-ui/react';
 import {Field as FormikField} from 'formik';
 import useIsDJ from './useIsDJ';
@@ -24,6 +25,7 @@ import {FaSpotify} from 'react-icons/fa6';
 import {FaXmark} from 'react-icons/fa6';
 import {InputGroup} from '../chakra-snippets/input-group';
 import {Field} from '../chakra-snippets/field';
+import {ConnectedField} from '../ConnectedField';
 
 gql`
   query SpotifyArtistSearch($query: String!, $limit: Int = 5) {
@@ -38,7 +40,7 @@ gql`
 
 export default function Step2() {
   const isDJ = useIsDJ();
-  const {values, errors, setFieldValue} = useFormikContext<FormikContextT>();
+  const {values, setFieldValue} = useFormikContext<FormikContextT>();
 
   const {loading, data, setQuery} = useTypeahead<
     SpotifyArtistSearchQuery['spotifyArtist'][number]
@@ -109,37 +111,31 @@ export default function Step2() {
 
   return (
     <>
-      <Field
+      <ConnectedField
         label="Demomaterial"
         helperText={
           isDJ
             ? 'Bitte gib uns einen direkten Link zu ein paar Mixes/Beispielen von dir.'
             : 'Am liebsten YouTube, Spotify, Soundcloud oder Bandcamp. Gerne auch Live-Mitschnitte.'
         }
-      >
-        <FormikField
-          as={Input}
-          name="demo"
-          required={!isDJ}
-          invalid={!!errors.demo}
-          validate={(url: string) => {
-            if (
-              url &&
-              !/^(https?:\/\/)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)?$/.test(
-                url,
-              )
-            ) {
-              return 'ungültige URL';
-            }
-          }}
-          placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-        />
-      </Field>
-
+        name="demo"
+        required={!isDJ}
+        validate={(url: string) => {
+          if (
+            url &&
+            !/^(https?:\/\/)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)?$/.test(
+              url,
+            )
+          ) {
+            return 'ungültige URL';
+          }
+        }}
+        placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      />
       <Field
         id="spotifyArtist"
         label="Spotify"
-        invalid={spotifyInvalid}
+        invalid={!isOpen && spotifyInvalid}
         errorText="Spotify-Profil aus Liste auswählen"
       >
         <InputGroup
@@ -151,13 +147,15 @@ export default function Step2() {
             <SpotifyCover image={values.spotifyArtist?.image} width="32px" />
           }
           endElement={
-            <IconButton
-              onClick={() => setInputValue('')}
-              size="xs"
-              variant="ghost"
-            >
-              <FaXmark />
-            </IconButton>
+            values.spotifyArtist && (
+              <IconButton
+                onClick={() => setInputValue('')}
+                size="xs"
+                variant="ghost"
+              >
+                <FaXmark />
+              </IconButton>
+            )
           }
         >
           <FormikField
@@ -169,7 +167,8 @@ export default function Step2() {
             })}
           />
         </InputGroup>
-
+      </Field>
+      <Box position="relative" w="full" mt="-4">
         <DropdownMenu
           getMenuProps={getMenuProps}
           getItemProps={getItemProps}
@@ -190,8 +189,7 @@ export default function Step2() {
           )}
           keyExtractor={(band) => band.id}
         />
-      </Field>
-
+      </Box>
       <Field label="Instagram">
         <InputGroup
           w="100%"
@@ -209,22 +207,16 @@ export default function Step2() {
           />
         </InputGroup>
       </Field>
-
-      <Field label="Facebook">
-        <FormikField
-          as={Input}
-          name="facebook"
-          placeholder="https://facebook.com/kulturspektakel"
-        />
-      </Field>
-
-      <Field label="Webseite">
-        <FormikField
-          as={Input}
-          name="website"
-          placeholder="https://kulturspektakel.de"
-        />
-      </Field>
+      <ConnectedField
+        label="Facebook"
+        name="facebook"
+        placeholder="https://facebook.com/kulturspektakel"
+      />
+      <ConnectedField
+        label="Webseite"
+        name="website"
+        placeholder="https://kulturspektakel.de"
+      />
     </>
   );
 }

@@ -80,7 +80,7 @@ export default function Angebot() {
             mb="5"
           >
             <Text fontSize="lg">{list.emoji}</Text>
-            <Heading size="md">{list.name}</Heading>
+            <Heading size="lg">{list.name}</Heading>
             {list.description && <Text mt="1">{list.description}</Text>}
           </List.Item>
         ))}

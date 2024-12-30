@@ -1,15 +1,4 @@
-import {
-  Heading,
-  Text,
-  Box,
-  Button,
-  VStack,
-  Flex,
-  RadioCardRoot,
-  HStack,
-  RadioCardItem,
-  Input,
-} from '@chakra-ui/react';
+import {Heading, Text, Box, VStack, Flex, HStack} from '@chakra-ui/react';
 import {Field as FormikField, Form, Formik} from 'formik';
 import mergeMeta from '~/utils/mergeMeta';
 import {z} from 'zod';
@@ -32,6 +21,12 @@ import {useNavigate} from '@remix-run/react';
 import {$path} from 'remix-routes';
 import {Field} from '~/components/chakra-snippets/field';
 import {Slider} from '~/components/chakra-snippets/slider';
+import {Button} from '~/components/chakra-snippets/button';
+import {ConnectedField} from '~/components/ConnectedField';
+import {
+  RadioCardItem,
+  RadioCardRoot,
+} from '~/components/chakra-snippets/radio-card';
 
 const schemaStep1 = z.object({
   membership: z.nativeEnum(MembershipEnum),
@@ -124,7 +119,7 @@ export default function Mitgliedsantrag() {
 
   return (
     <div>
-      <Heading mb="8" textAlign="center">
+      <Heading mb="8" textAlign="center" size="3xl">
         Mitgliedsantrag
       </Heading>
       <Steps
@@ -136,7 +131,7 @@ export default function Mitgliedsantrag() {
 
       <Formik<Partial<Membership>>
         initialValues={{}}
-        validateOnBlur
+        validateOnChange={false}
         validationSchema={toFormikValidationSchema(STEPS[step])}
         onSubmit={async (values) => {
           if (step < STEPS.length - 1) {
@@ -153,40 +148,49 @@ export default function Mitgliedsantrag() {
           }
         }}
       >
-        {({values, errors, setFieldValue, touched}) => (
+        {({values, errors, setFieldValue}) => (
           <Form>
             <VStack gap="4" align="stretch">
               {step == 0 ? (
                 <>
-                  <FormControl id="membership" isRequired>
-                    <RadioCardRoot>
-                      <HStack align="stretch">
-                        <RadioCardItem
-                          label={getLegalName('kult')}
-                          description="Für aktive Mitgestalter:innen des Kulturspektakels"
-                          value="kult"
-                        />
-                        <RadioCardItem
-                          label={getLegalName('foerderverein')}
-                          subtitle="Für Unterstützer:innen des Kulturspektakels"
-                          value="foerderverein"
-                        />
-                      </HStack>
-                    </RadioCardRoot>
-                  </FormControl>
-                  <Field label="Vor- und Nachname" required>
-                    <FormikField as={Input} type="text" id="name" />
-                  </Field>
-                  <Field label="Anschrift" required>
-                    <FormikField as={Input} type="text" id="address" />
-                  </Field>
-                  <Field label="PLZ, Ort" required>
-                    <FormikField as={Input} type="text" id="city" />
+                  <Field
+                    required
+                    label="Mitgliedschaft"
+                    invalid={!!errors.membershipType}
+                  >
+                    <FormikField name="membershipType">
+                      <RadioCardRoot>
+                        <HStack align="stretch">
+                          <RadioCardItem
+                            label={getLegalName('kult')}
+                            description="Für aktive Mitgestalter:innen des Kulturspektakels"
+                            value="kult"
+                          />
+                          <RadioCardItem
+                            label={getLegalName('foerderverein')}
+                            description="Für Unterstützer:innen des Kulturspektakels"
+                            value="foerderverein"
+                          />
+                        </HStack>
+                      </RadioCardRoot>
+                    </FormikField>
                   </Field>
 
-                  <Field label="E-Mail" required>
-                    <FormikField type="email" id="email" />
-                  </Field>
+                  <ConnectedField
+                    name="name"
+                    label="Vor- und Nachname"
+                    required
+                  />
+                  <ConnectedField name="address" label="Anschrift" required />
+
+                  <ConnectedField name="city" label="PLZ, Ort" required />
+
+                  <ConnectedField
+                    name="email"
+                    label="E-Mail"
+                    required
+                    type="email"
+                  />
 
                   <Text fontSize="small" color="offwhite.600">
                     Ich kann jederzeit wieder aus dem Verein austreten, wobei
@@ -196,7 +200,7 @@ export default function Mitgliedsantrag() {
                 </>
               ) : (
                 <>
-                  <FormControl id="membershipType" isRequired>
+                  <Field name="membershipType" required>
                     <RadioCardRoot>
                       <HStack align="stretch">
                         <RadioCardItem
@@ -224,11 +228,14 @@ export default function Mitgliedsantrag() {
                         )}
                       </HStack>
                     </RadioCardRoot>
-                  </FormControl>
+                  </Field>
 
                   {values.membershipType === 'supporter' && (
-                    <FormControl id="membershipFee" isRequired>
-                      <FormLabel>Mitgliedsbeitrag</FormLabel>
+                    <Field
+                      name="membershipFee"
+                      required
+                      label="Mitgliedsbeitrag"
+                    >
                       <Flex
                         bg="white"
                         p="4"
@@ -241,7 +248,6 @@ export default function Mitgliedsantrag() {
                         }}
                       >
                         <Slider
-                          aria-label="Mitgliedsbeitrag"
                           value={[values.membershipFee!]}
                           min={
                             data.config.membershipFees[values.membership!]
@@ -272,30 +278,24 @@ export default function Mitgliedsantrag() {
                           );
                         }}
                       />
-                    </FormControl>
+                    </Field>
                   )}
 
-                  <Field
+                  <ConnectedField
                     label="IBAN"
                     required
-                    invalid={touched.iban && !!errors.iban}
-                    errorText={
-                      typeof errors.iban === 'string' ? errors.iban : null
+                    name="iban"
+                    validate={(v) =>
+                      isValid(v) ? undefined : 'IBAN hat kein gültiges Format'
                     }
-                  >
-                    <FormikField
-                      as={Input}
-                      id="iban"
-                      type="text"
-                      onBlur={(e) => {
-                        if (isValid(e.target.value)) {
-                          setFieldValue('iban', printFormat(e.target.value));
-                        }
-                      }}
-                    />
-                  </Field>
+                    onBlur={(e: React.SyntheticEvent<HTMLInputElement>) => {
+                      if (isValid(e.target.value)) {
+                        setFieldValue('iban', printFormat(e.target.value));
+                      }
+                    }}
+                  />
 
-                  <FormControl id="accountHolder" isRequired>
+                  <Field name="accountHolder" required>
                     <RadioCardRoot>
                       <HStack align="stretch">
                         <RadioCardItem
@@ -310,7 +310,7 @@ export default function Mitgliedsantrag() {
                         />
                       </HStack>
                     </RadioCardRoot>
-                  </FormControl>
+                  </Field>
                   {values.accountHolder === 'different' && (
                     <>
                       <Field required label="Name des/der Kontoinhaber:in">
@@ -355,13 +355,13 @@ export default function Mitgliedsantrag() {
                 </>
               )}
               <Flex justifyContent="space-between" flexDirection="row-reverse">
-                <Button variant="primary" type="submit" isLoading={loading}>
+                <Button type="submit" loading={loading}>
                   {step === STEPS.length - 1 ? 'Absenden' : 'Weiter'}
                 </Button>
                 {step > 0 && (
                   <Button
                     disabled={loading}
-                    variant="secondary"
+                    variant="subtle"
                     onClick={() => setStep(step - 1)}
                   >
                     Zurück

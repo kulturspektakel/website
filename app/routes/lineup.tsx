@@ -4,16 +4,12 @@ import type {FlexProps} from '@chakra-ui/react';
 import {
   Stack,
   Heading,
-  MenuTrigger,
-  MenuItem,
   IconButton,
   Flex,
   Text,
   Link as ChakraLink,
   Spinner,
   Center,
-  Button,
-  MenuRoot,
 } from '@chakra-ui/react';
 import {Link, NavLink, Outlet, useParams} from '@remix-run/react';
 import Search from '~/components/lineup/Search';
@@ -26,6 +22,12 @@ import {LoaderFunctionArgs} from '@remix-run/node';
 import apolloClient from '~/utils/apolloClient';
 import {$path} from 'remix-routes';
 import {Tooltip} from '~/components/chakra-snippets/tooltip';
+import {
+  MenuContent,
+  MenuItem,
+  MenuRoot,
+  MenuTrigger,
+} from '~/components/chakra-snippets/menu';
 
 gql`
   query Lineups {
@@ -114,9 +116,12 @@ export default function () {
             {params?.year && <>&nbsp;{params.year}</>}
           </Heading>
           {params.slug == null && (
-            <MenuRoot positioning={{placement: 'bottom-end'}} lazyMount>
+            <MenuRoot
+              positioning={{placement: 'bottom-end'}}
+              highlightedValue={params?.year}
+            >
               <MenuTrigger asChild>
-                <Button
+                <IconButton
                   aria-label="Jahr auswählen"
                   size="xs"
                   mt="0.5"
@@ -124,18 +129,19 @@ export default function () {
                   rounded="full"
                 >
                   <FaChevronDown />
-                  Jahr auswählen
-                </Button>
+                </IconButton>
               </MenuTrigger>
-              <Suspense
-                fallback={
-                  <Center my="10">
-                    <Spinner />
-                  </Center>
-                }
-              >
-                <MenuItems />
-              </Suspense>
+              <MenuContent>
+                <Suspense
+                  fallback={
+                    <Center my="10">
+                      <Spinner />
+                    </Center>
+                  }
+                >
+                  <MenuItems />
+                </Suspense>
+              </MenuContent>
             </MenuRoot>
           )}
         </Flex>

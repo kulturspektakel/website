@@ -10,7 +10,7 @@ import apolloClient from '~/utils/apolloClient';
 import {isSameDay, timeZone} from '~/utils/dateUtils';
 import mergeMeta from '~/utils/mergeMeta';
 import type {SitemapFunction} from 'remix-sitemap';
-import {SegmentedControl} from '~/components/chakra-snippets/segmented-control';
+import {SegmentedControlOrSelect} from '~/components/SegmentedControlOrSelect';
 
 gql`
   query Lineup($id: ID!) {
@@ -123,7 +123,7 @@ export default function LineupYear() {
 
   return (
     <>
-      <SegmentedControl
+      <SegmentedControlOrSelect
         mt="5"
         onValueChange={({value}) =>
           setStageFilter(value === 'ALL' ? null : value)

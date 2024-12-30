@@ -4,22 +4,15 @@ import {
   Text,
   Link as ChakraLink,
   Box,
-  Input,
 } from '@chakra-ui/react';
-import {
-  NativeSelectField,
-  NativeSelectRoot,
-} from '../chakra-snippets/native-select';
-import {Link} from '@remix-run/react';
 import DistanceWarning from './DistanceWarning';
 import DuplicateApplicationWarning from './DuplicateApplicationWarning';
 import useIsDJ from './useIsDJ';
 import {BandRepertoireType, GenreCategory} from '~/types/graphql';
 import type {FormikContextT} from '~/routes/booking.$applicationType._index';
 import {useFormikContext} from 'formik';
-import {Field as FormikField} from 'formik';
-import {Field} from '../chakra-snippets/field';
 import {Alert} from '../chakra-snippets/alert';
+import {ConnectedField} from '../ConnectedField';
 
 const GENRE_CATEGORIES: Map<GenreCategory, string> = new Map([
   [GenreCategory.Pop, 'Pop'],
@@ -49,62 +42,45 @@ export default function Step1() {
 
   return (
     <>
-      <Field required label={isDJ ? 'Künstler:innen-Name' : 'Bandname'}>
-        <FormikField name="bandname" as={Input} />
-      </Field>
+      <ConnectedField
+        label={isDJ ? 'Künstler:innen-Name' : 'Bandname'}
+        name="bandname"
+        required
+      />
+
       <DuplicateApplicationWarning bandname={values.bandname} />
 
       <HStack w="100%" alignItems="flex-end">
-        <Field
-          id={isDJ ? 'genre' : 'genreCategory'}
+        <ConnectedField
+          name={isDJ ? 'genre' : 'genreCategory'}
           required={!isDJ}
           label="Musikrichtung"
-        >
-          {isDJ ? (
-            <FormikField name="genre" as={Input} />
-          ) : (
-            <NativeSelectRoot>
-              <FormikField
-                name="genreCategory"
-                as={NativeSelectField}
-                placeholder="bitte auswählen…"
-              >
-                {Array.from(GENRE_CATEGORIES.entries()).map(([k, v]) => (
-                  <option value={k} key={k}>
-                    {v}
-                  </option>
-                ))}
-              </FormikField>
-            </NativeSelectRoot>
-          )}
-        </Field>
+          options={
+            isDJ
+              ? undefined
+              : Array.from(GENRE_CATEGORIES.entries()).map(
+                  ([value, label]) => ({
+                    value,
+                    label,
+                  }),
+                )
+          }
+        />
         {!isDJ && (
-          <Field>
-            <FormikField
-              name="genre"
-              as={Input}
-              placeholder="genaues Genre (optional)"
-            />
-          </Field>
+          <ConnectedField name="genre" placeholder="genaues Genre (optional)" />
         )}
       </HStack>
       {!isDJ && (
         <>
-          <Field label="Ihr spielt&hellip;" required>
-            <NativeSelectRoot>
-              <FormikField
-                name="repertoire"
-                as={NativeSelectField}
-                placeholder="bitte auswählen…"
-              >
-                {Array.from(REPERTOIRE.entries()).map(([k, v]) => (
-                  <option value={k} key={k}>
-                    {v}
-                  </option>
-                ))}
-              </FormikField>
-            </NativeSelectRoot>
-          </Field>
+          <ConnectedField
+            name="repertoire"
+            label="Ihr spielt&hellip;"
+            required
+            options={Array.from(REPERTOIRE.entries()).map(([value, label]) => ({
+              value,
+              label,
+            }))}
+          />
           {(values.repertoire === BandRepertoireType.MostlyCoverSongs ||
             values.repertoire === BandRepertoireType.ExclusivelyCoverSongs) && (
             <Alert
@@ -122,58 +98,57 @@ export default function Step1() {
         </>
       )}
 
-      <Field
+      <ConnectedField
         label={isDJ ? 'Beschreibung' : 'Bandbeschreibung'}
         required
         helperText="Maximal 2.000 Zeichen, wir müssen das alles lesen!"
-      >
-        <Text mt="1" fontSize="sm" color="fg.muted">
-          {isDJ
+        name="description"
+        maxLength={2000}
+        as={Textarea}
+        description={
+          isDJ
             ? 'Erzähl uns was über dich! Was legst du auf? Wie lange machst du das schon?'
             : `Erzählt uns etwas über eure Band! Was macht ihr für Musik? Was
-              ist eure Bandgeschichte?`}
-        </Text>
-        <FormikField as={Textarea} name="description" maxLength={2000} />
-      </Field>
+            ist eure Bandgeschichte?`
+        }
+      />
 
-      <Field label="Anreise aus&hellip;" required>
-        <FormikField as={Input} name="city" placeholder="Ort" />
-      </Field>
+      <ConnectedField
+        name="city"
+        placeholder="Ort"
+        label="Anreise aus&hellip;"
+        required
+      />
 
       <DistanceWarning origin={values.city} />
 
       {!isDJ && (
         <>
-          <HStack w="100%">
-            <Field label="Anzahl Bandmitglieder" required>
-              <FormikField
-                name="numberOfArtists"
-                as={Input}
-                type="number"
-                min={1}
-              />
-            </Field>
-            <Field
+          <HStack w="100%" align="top">
+            <ConnectedField
+              label="Anzahl Bandmitglieder"
+              required
+              name="numberOfArtists"
+              type="number"
+              min={1}
+            />
+            <ConnectedField
               label={
                 <>
                   davon <strong>nicht</strong> männlich
                 </>
               }
               required
-            >
-              <FormikField
-                name="numberOfNonMaleArtists"
-                as={Input}
-                type="number"
-                min={0}
-                max={values.numberOfArtists ?? 100}
-                validate={(v) => {
-                  if (values.numberOfArtists && v > values.numberOfArtists) {
-                    return 'wrong number';
-                  }
-                }}
-              />
-            </Field>
+              name="numberOfNonMaleArtists"
+              type="number"
+              min={0}
+              max={values.numberOfArtists ?? 100}
+              validate={(v: number) => {
+                if (values.numberOfArtists && v > values.numberOfArtists) {
+                  return 'Anzahl zu hoch';
+                }
+              }}
+            />
           </HStack>
           {values.numberOfArtists != null &&
             values.numberOfNonMaleArtists != null &&

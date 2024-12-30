@@ -38,7 +38,7 @@ export default function MarkdownText(props: Props) {
             <Heading {...props} size="xl" as="h3" mb={2} mt={4} />
           ),
           h3: (props: HeadingProps) => (
-            <Heading {...props} size="lg" as="h4" mb={1} mt={3} />
+            <Heading {...props} size="md" as="h4" mb={1} mt={3} />
           ),
           h4: (props: HeadingProps) => (
             <Heading {...props} size="md" as="h5" mb={1} mt={3} />
