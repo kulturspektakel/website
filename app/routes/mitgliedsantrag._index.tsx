@@ -1,5 +1,5 @@
-import {Heading, Text, Box, VStack, Flex, HStack} from '@chakra-ui/react';
-import {Field as FormikField, Form, Formik} from 'formik';
+import {Heading, Text, Box, VStack, Flex} from '@chakra-ui/react';
+import {Form, Formik} from 'formik';
 import mergeMeta from '~/utils/mergeMeta';
 import {z} from 'zod';
 import {toFormikValidationSchema} from 'zod-formik-adapter';
@@ -23,10 +23,9 @@ import {Field} from '~/components/chakra-snippets/field';
 import {Slider} from '~/components/chakra-snippets/slider';
 import {Button} from '~/components/chakra-snippets/button';
 import {ConnectedField} from '~/components/ConnectedField';
-import {
-  RadioCardItem,
-  RadioCardRoot,
-} from '~/components/chakra-snippets/radio-card';
+import {RadioCardItem} from '~/components/chakra-snippets/radio-card';
+import React from 'react';
+import {ConnectedRadioCard} from '~/components/ConnectedRadioCard';
 
 const schemaStep1 = z.object({
   membership: z.nativeEnum(MembershipEnum),
@@ -134,6 +133,7 @@ export default function Mitgliedsantrag() {
         validateOnChange={false}
         validationSchema={toFormikValidationSchema(STEPS[step])}
         onSubmit={async (values) => {
+          console.log(values);
           if (step < STEPS.length - 1) {
             setStep(step + 1);
           } else {
@@ -150,31 +150,22 @@ export default function Mitgliedsantrag() {
       >
         {({values, errors, setFieldValue}) => (
           <Form>
+            {console.log(errors, values)}
             <VStack gap="4" align="stretch">
               {step == 0 ? (
-                <>
-                  <Field
-                    required
-                    label="Mitgliedschaft"
-                    invalid={!!errors.membershipType}
-                  >
-                    <FormikField name="membershipType">
-                      <RadioCardRoot>
-                        <HStack align="stretch">
-                          <RadioCardItem
-                            label={getLegalName('kult')}
-                            description="Für aktive Mitgestalter:innen des Kulturspektakels"
-                            value="kult"
-                          />
-                          <RadioCardItem
-                            label={getLegalName('foerderverein')}
-                            description="Für Unterstützer:innen des Kulturspektakels"
-                            value="foerderverein"
-                          />
-                        </HStack>
-                      </RadioCardRoot>
-                    </FormikField>
-                  </Field>
+                <React.Fragment key="step1">
+                  <ConnectedRadioCard name="membership">
+                    <RadioCardItem
+                      label={getLegalName('kult')}
+                      description="Für aktive Mitgestalter:innen des Kulturspektakels"
+                      value="kult"
+                    />
+                    <RadioCardItem
+                      label={getLegalName('foerderverein')}
+                      description="Für Unterstützer:innen des Kulturspektakels"
+                      value="foerderverein"
+                    />
+                  </ConnectedRadioCard>
 
                   <ConnectedField
                     name="name"
@@ -197,46 +188,49 @@ export default function Mitgliedsantrag() {
                     der Mitgliedsbeitrag des laufenden Jahres in der
                     Vereinskasse verbleibt.
                   </Text>
-                </>
+                </React.Fragment>
               ) : (
-                <>
-                  <Field name="membershipType" required>
-                    <RadioCardRoot>
-                      <HStack align="stretch">
-                        <RadioCardItem
-                          label={currencyFormatter.format(
-                            data.config.membershipFees[values.membership!]
-                              .regular / 100,
-                          )}
-                          description="Regulärer Jahresbeitrag"
-                          value="regular"
-                        />
-                        <RadioCardItem
-                          label={currencyFormatter.format(
-                            data.config.membershipFees[values.membership!]
-                              .reduced / 100,
-                          )}
-                          description="Für Personen ohne/mit vermindertem Einkommen (z.B. Schüler:innen, Studierende)"
-                          value="reduced"
-                        />
-                        {values.membership! === 'foerderverein' && (
-                          <RadioCardItem
-                            label="Freier Beitrag"
-                            description="Für unsere großzügigen Unterstützer:innen"
-                            value="supporter"
-                          />
-                        )}
-                      </HStack>
-                    </RadioCardRoot>
-                  </Field>
+                <React.Fragment key="step2">
+                  <ConnectedRadioCard name="membershipFee">
+                    <RadioCardItem
+                      label={currencyFormatter.format(
+                        data.config.membershipFees[values.membership!].regular /
+                          100,
+                      )}
+                      description="Regulärer Jahresbeitrag"
+                      value={
+                        data.config.membershipFees[values.membership!].regular
+                      }
+                    />
+                    <RadioCardItem
+                      label={currencyFormatter.format(
+                        data.config.membershipFees[values.membership!].reduced /
+                          100,
+                      )}
+                      description="Für Personen ohne/mit vermindertem Einkommen (z.B. Schüler:innen, Studierende)"
+                      value={
+                        data.config.membershipFees[values.membership!].reduced
+                      }
+                    />
+                    {values.membership === MembershipEnum.Foerderverein && (
+                      <RadioCardItem
+                        label="Freier Beitrag"
+                        description="Für unsere großzügigen Unterstützer:innen"
+                        value="supporter"
+                      />
+                    )}
+                  </ConnectedRadioCard>
 
-                  {values.membershipType === 'supporter' && (
+                  {values.membershipType === MembershipType.Supporter && (
                     <Field
-                      name="membershipFee"
                       required
                       label="Mitgliedsbeitrag"
+                      invalid={Boolean(errors.membershipFee)}
+                      errorText={errors.membershipFee}
                     >
                       <Flex
+                        direction="row"
+                        w="full"
                         bg="white"
                         p="4"
                         borderRadius="md"
@@ -254,8 +248,9 @@ export default function Mitgliedsantrag() {
                               .regular
                           }
                           max={20000}
+                          w="full"
                           step={500}
-                          onChange={(value) => {
+                          onValueChange={({value}) => {
                             setFieldValue('membershipFee', value);
                           }}
                         />
@@ -266,18 +261,6 @@ export default function Mitgliedsantrag() {
                           }).format((values.membershipFee ?? 5000) / 100)}
                         </Box>
                       </Flex>
-                      <Field
-                        as={Slider}
-                        onBlur={(e) => {
-                          setFieldValue(
-                            'membershipFee',
-                            new Intl.NumberFormat('de-DE', {
-                              style: 'currency',
-                              currency: 'EUR',
-                            }).format(parseFloat(String(e))),
-                          );
-                        }}
-                      />
                     </Field>
                   )}
 
@@ -295,33 +278,35 @@ export default function Mitgliedsantrag() {
                     }}
                   />
 
-                  <Field name="accountHolder" required>
-                    <RadioCardRoot>
-                      <HStack align="stretch">
-                        <RadioCardItem
-                          label="Mitglied ist Kontoinhaber:in"
-                          description="Das Mitglied ist gleichzeitig Kontoinhaber:in"
-                          value="same"
-                        />
-                        <RadioCardItem
-                          label="Abweichender Kontoinhaber"
-                          description="Kontoinhaber:in ist eine andere Person als das Mitglied"
-                          value="different"
-                        />
-                      </HStack>
-                    </RadioCardRoot>
-                  </Field>
+                  <ConnectedRadioCard name="accountHolder">
+                    <RadioCardItem
+                      label="Mitglied ist Kontoinhaber:in"
+                      description="Das Mitglied ist gleichzeitig Kontoinhaber:in"
+                      value="same"
+                    />
+                    <RadioCardItem
+                      label="Abweichender Kontoinhaber"
+                      description="Kontoinhaber:in ist eine andere Person als das Mitglied"
+                      value="different"
+                    />
+                  </ConnectedRadioCard>
                   {values.accountHolder === 'different' && (
                     <>
-                      <Field required label="Name des/der Kontoinhaber:in">
-                        <FormikField id="accountHolderName" type="text" />
-                      </Field>
-                      <Field required label="Anschrift des/der Kontoinhaber:in">
-                        <FormikField id="accountHolderAddress" type="text" />
-                      </Field>
-                      <Field required label="PLZ, Ort des/der Kontoinhaber:in">
-                        <FormikField id="accountHolderCity" type="text" />
-                      </Field>
+                      <ConnectedField
+                        name="accountHolderName"
+                        required
+                        label="Name des/der Kontoinhaber:in"
+                      />
+                      <ConnectedField
+                        name="accountHolderAddress"
+                        required
+                        label="Anschrift des/der Kontoinhaber:in"
+                      />
+                      <ConnectedField
+                        name="accountHolderCity"
+                        required
+                        label="PLZ, Ort des/der Kontoinhaber:in"
+                      />
                     </>
                   )}
                   <Text fontSize="small" color="offwhite.600">
@@ -352,7 +337,7 @@ export default function Mitgliedsantrag() {
                     einer separaten Ankündigung über den erstmaligen Einzug des
                     Lastschriftsbetrags mitgeteilt.
                   </Text>
-                </>
+                </React.Fragment>
               )}
               <Flex justifyContent="space-between" flexDirection="row-reverse">
                 <Button type="submit" loading={loading}>

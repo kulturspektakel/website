@@ -1,5 +1,7 @@
-import {NativeSelectRoot} from '@chakra-ui/react/native-select';
-import {NativeSelectField} from './chakra-snippets/native-select';
+import {
+  NativeSelectField,
+  NativeSelectRoot,
+} from './chakra-snippets/native-select';
 import {
   SegmentedControl,
   SegmentedControlProps,
@@ -7,26 +9,31 @@ import {
 
 export function SegmentedControlOrSelect({
   items,
+  onValueChange,
+  value,
   ...props
-}: SegmentedControlProps) {
+}: SegmentedControlProps & {
+  value: string;
+  onValueChange: (args: {value: string}) => void;
+}) {
   return (
     <>
-      <NativeSelectRoot
-        size="sm"
-        width="240px"
-        hideFrom="md"
-        {...props}
-        w="full"
-      >
-        <NativeSelectField>
+      <NativeSelectRoot hideFrom="md" {...props}>
+        <NativeSelectField
+          onChange={(e) => onValueChange({value: String(e.target.value)})}
+          value={value}
+        >
           {items.map((item) => (
-            <option value={typeof item === 'string' ? item : item.value}>
+            <option
+              key={typeof item === 'string' ? item : item.value}
+              value={typeof item === 'string' ? item : item.value}
+            >
               {typeof item === 'string' ? item : item.label}
             </option>
           ))}
         </NativeSelectField>
       </NativeSelectRoot>
-      <SegmentedControl hideBelow="lg" {...props} items={items} />
+      <SegmentedControl hideBelow="md" items={items} {...props} />
     </>
   );
 }

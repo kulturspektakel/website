@@ -1,9 +1,9 @@
-import type {LinkProps, SystemStyleObject} from '@chakra-ui/react';
 import {
   Flex,
   Image,
   Link as ChakraLink,
   useToken,
+  Text,
   Box,
   Center,
   IconButton,
@@ -58,18 +58,25 @@ function useLoadingBar() {
   }, [progress, state]);
 }
 
-function Item({children}: {children: React.ReactNode}) {
+function Item({children, to}: {children: React.ReactNode; to: string}) {
   return (
     <ChakraLink
       asChild
       color="inherit"
       _focus={{
         outline: 'none',
-        color: 'brand.500',
+        textDecoration: 'underline',
+        textUnderlineOffset: '3px',
       }}
       lineHeight={1}
     >
-      {children}
+      <NavLink to={to}>
+        {({isActive, isPending}) => (
+          <Text color={isActive || isPending ? 'brand.500' : undefined}>
+            {children}
+          </Text>
+        )}
+      </NavLink>
     </ChakraLink>
   );
 }
@@ -77,18 +84,10 @@ function Item({children}: {children: React.ReactNode}) {
 function NavItems() {
   return (
     <>
-      <Item>
-        <NavLink to={$path('/angebot')}>Angebot</NavLink>
-      </Item>
-      <Item>
-        <NavLink to={$path('/lineup')}>Lineup</NavLink>
-      </Item>
-      <Item>
-        <NavLink to={$path('/events')}>Veranstaltungen</NavLink>
-      </Item>
-      <Item>
-        <NavLink to={$path('/infos')}>Infos</NavLink>
-      </Item>
+      <Item to={$path('/angebot')}>Angebot</Item>
+      <Item to={$path('/lineup')}>Lineup</Item>
+      <Item to={$path('/events')}>Veranstaltungen</Item>
+      <Item to={$path('/infos')}>Infos</Item>
     </>
   );
 }

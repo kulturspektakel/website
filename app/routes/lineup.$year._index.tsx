@@ -124,7 +124,7 @@ export default function LineupYear() {
   return (
     <>
       <SegmentedControlOrSelect
-        mt="5"
+        mt={['3', '5']}
         onValueChange={({value}) =>
           setStageFilter(value === 'ALL' ? null : value)
         }

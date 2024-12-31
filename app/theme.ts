@@ -33,13 +33,21 @@ const overrides: SystemConfig = {
         base: {
           root: {
             w: 'full',
+            maxW: 'full',
             fontWeight: 'bold',
+            minW: 'full',
           },
           item: {
             flexGrow: 1,
             flexBasis: 0,
+            hyphens: 'auto',
+            lineHeight: '1rem',
             justifyContent: 'center',
             '&[data-state=checked]': {
+              bg: 'brand.900',
+              color: 'white',
+            },
+            '&[data-state=checked][data-ssr]': {
               bg: 'brand.900',
               color: 'white',
             },

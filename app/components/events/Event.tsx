@@ -152,21 +152,21 @@ export default function Event({event}: {event: EventDetailsFragment}) {
             </Heading>
             <Box>
               mit {event.bandsPlaying.edges.map((b) => b.node.name).join(', ')}{' '}
-              <ChakraLink
-                as={Link}
-                to={$path('/lineup/:year', {
-                  year: event.start.getFullYear(),
-                })}
-                variant="inline"
-              >
-                {event.bandsPlaying.totalCount > 12 ? (
-                  <>
-                    und {event.bandsPlaying.totalCount - 12} weiteren
-                    Bands&hellip;
-                  </>
-                ) : (
-                  <>Lineup</>
-                )}
+              <ChakraLink asChild display="inline">
+                <Link
+                  to={$path('/lineup/:year', {
+                    year: event.start.getFullYear(),
+                  })}
+                >
+                  {event.bandsPlaying.totalCount > 12 ? (
+                    <>
+                      und {event.bandsPlaying.totalCount - 12} weiteren
+                      Bands&hellip;
+                    </>
+                  ) : (
+                    <>Lineup</>
+                  )}
+                </Link>
               </ChakraLink>
             </Box>
           </>
@@ -174,7 +174,7 @@ export default function Event({event}: {event: EventDetailsFragment}) {
 
         {event.media.edges.length > 0 && (
           <>
-            <Heading as="h3" size="md" mt="4" mb="2" id="fotos">
+            <Heading as="h3" size="lg" mt="4" mb="2" id="fotos">
               Fotos
             </Heading>
             <Photos eventId={event.id} media={event.media} />

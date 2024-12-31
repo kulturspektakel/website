@@ -31,9 +31,19 @@ export default function Step3() {
         name="contactName"
       />
 
-      <ConnectedField label="Email-Adresse" name="email" type="email" />
+      <ConnectedField
+        required
+        label="Email-Adresse"
+        name="email"
+        type="email"
+      />
 
-      <ConnectedField label="Handynummer" name="contactPhone" type="tel" />
+      <ConnectedField
+        required
+        label="Handynummer"
+        name="contactPhone"
+        type="tel"
+      />
 
       <ConnectedField
         label={isDJ ? 'Woher kennst du das Kult?' : `Woher kennt ihr das Kult?`}

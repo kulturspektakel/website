@@ -4,7 +4,6 @@ import {
   ListItem,
   Separator,
   Center,
-  Button,
   Spinner,
   ListRoot,
 } from '@chakra-ui/react';
@@ -27,7 +26,8 @@ import {useState} from 'react';
 import {$path} from 'remix-routes';
 import Headline from '~/components/Headline';
 import mergeMeta from '~/utils/mergeMeta';
-import {SegmentedControl} from '~/components/chakra-snippets/segmented-control';
+import {Button} from '~/components/chakra-snippets/button';
+import {SegmentedControlOrSelect} from '~/components/SegmentedControlOrSelect';
 
 gql`
   query EventsOverview(
@@ -89,7 +89,7 @@ export default function Events() {
       <Heading as="h1" textAlign="center" size="3xl">
         Veranstaltungen
       </Heading>
-      <SegmentedControl
+      <SegmentedControlOrSelect
         mt="5"
         value={variables?.type ?? 'ALL'}
         onValueChange={({value}) => {
@@ -132,7 +132,7 @@ export default function Events() {
       {data?.eventsConnection.pageInfo.hasNextPage && (
         <Center py="16">
           <Button
-            isLoading={loading}
+            loading={loading}
             onClick={() =>
               fetchMore({
                 variables: {
