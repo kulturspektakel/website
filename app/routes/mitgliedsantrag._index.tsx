@@ -149,9 +149,9 @@ export default function Mitgliedsantrag() {
           }
         }}
       >
-        {({values, errors, setFieldValue, dirty}) => (
+        {({values, errors, setFieldValue, dirty, isSubmitting}) => (
           <Form>
-            <ReloadWarning dirty={dirty} />
+            <ReloadWarning dirty={dirty && !isSubmitting} />
             <VStack gap="4" align="stretch">
               {step == 0 ? (
                 <React.Fragment key="step1">
