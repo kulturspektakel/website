@@ -28,7 +28,7 @@ export default function Thanks() {
           }
           width="16"
         />
-        <Heading size="lg">
+        <Heading size="3xl">
           Danke für {applicationType === 'dj' ? 'deine' : 'eure'} Bewerbung!
         </Heading>
         <Text>
