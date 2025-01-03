@@ -152,6 +152,8 @@ export default function Header() {
             <Box
               fontFamily="Shrimp"
               px="4"
+              pt="2"
+              lineHeight="120%"
               color="black"
               transform="rotate(-2deg)"
               fontSize={[30, 35, 40]}

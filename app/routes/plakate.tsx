@@ -3,8 +3,8 @@ import {Heading, Link, SimpleGrid, VStack} from '@chakra-ui/react';
 import type {LoaderFunctionArgs} from '@remix-run/node';
 import {Gallery} from 'react-photoswipe-gallery';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
+import {Alert} from '~/components/chakra-snippets/alert';
 import Image from '~/components/Image';
-import InfoBox from '~/components/InfoBox';
 import type {PlakateQuery} from '~/types/graphql';
 import {PlakateDocument} from '~/types/graphql';
 import apolloClient from '~/utils/apolloClient';
@@ -80,12 +80,12 @@ export default function Plakate() {
             ) : null,
           )}
         </SimpleGrid>
-        <InfoBox title="Fehlende Plakate?">
+        <Alert title="Fehlende Plakate?">
           Falls du ein Plakat hast, das hier noch fehlt, schick es uns gerne an{' '}
           <Link href="mailto:info@kulturspektakel.de?subject=Fehlendes Plakat">
             info@kulturspektakel.de
           </Link>
-        </InfoBox>
+        </Alert>
       </Gallery>
     </VStack>
   );

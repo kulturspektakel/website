@@ -28,7 +28,7 @@ import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
 import theme from './theme';
 import photoswipeCSS from 'photoswipe/dist/photoswipe.css?url';
-import fontsCSS from '/fonts.css?url';
+import fontsCSS from '~/styles/fonts.css?url';
 import {typedjson} from 'remix-typedjson';
 import {RootDocument} from './types/graphql';
 import type {RootQuery} from './types/graphql';

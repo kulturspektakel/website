@@ -3,7 +3,7 @@ import {Box} from '@chakra-ui/react';
 import {forwardRef, useMemo} from 'react';
 import {Link} from '@remix-run/react';
 
-const Card = forwardRef<BoxProps>(
+const Card = forwardRef<BoxProps, any>(
   (
     {
       onClick,

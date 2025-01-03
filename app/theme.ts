@@ -9,6 +9,29 @@ import {
 const overrides: SystemConfig = {
   theme: {
     slotRecipes: {
+      alert: defineSlotRecipe({
+        slots: ['root', 'title', 'indicator'],
+        variants: {
+          variant: {
+            surface: {
+              root: {
+                bg: 'offwhite.200',
+                color: 'brand.900',
+                shadowColor: 'offwhite.300',
+              },
+              title: {
+                fontWeight: 'bold',
+              },
+              indicator: {
+                color: 'brand.900',
+              },
+            },
+          },
+        },
+        defaultVariants: {
+          variant: 'surface',
+        },
+      }),
       nativeSelect: defineSlotRecipe({
         slots: ['root'],
         base: {
@@ -160,6 +183,9 @@ const overrides: SystemConfig = {
           },
           inverted: {
             value: '{colors.brand.900}',
+          },
+          info: {
+            value: '{colors.brand.500}',
           },
         },
         fg: {

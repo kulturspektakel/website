@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "build": "remix vite:build --sourcemap && sentry-upload-sourcemaps --org kulturspektakel --project website --sourcemap",
+    "build": "remix vite:build && sentry-upload-sourcemaps --org kulturspektakel --project website --sourcemap",
     "dev": "concurrently \"remix vite:dev\" \"yarn graphql\" \"yarn routes\" \"chakra typegen app/theme.ts --watch --strict\"",
     "start": "NODE_OPTIONS='--import ./instrumentation.server.mjs' remix-serve ./build/server/index.js",
     "typecheck": "tsc",

@@ -72,76 +72,72 @@ export default function Event({event}: {event: EventDetailsFragment}) {
           <Flex
             textAlign="center"
             fontWeight="bold"
+            alignItems="center"
             flexDirection="row"
             w="100%"
             bg="brand.900"
             color="white"
             borderRadius="lg"
             boxShadow="lg"
-            pt="1"
-            px="2"
-            pb={['2', '4']}
             maxW="500px"
+            pb="2"
+            h={['80px', '110px']}
             mx="auto"
             mt="3"
             mb="3"
             transform="rotate(1deg)"
           >
-            <Countdown
-              date={event.start}
-              renderer={({days, hours, minutes, seconds}) => (
-                <>
-                  <Box flexBasis={1} flexGrow={1}>
-                    <Text
-                      fontSize={['xx-large', 'xxx-large']}
-                      fontFamily="Shrimp"
-                      mb="-3"
-                    >
-                      <ClientOnly fallback={<>&nbsp;</>}>
-                        {() => days}
-                      </ClientOnly>
-                    </Text>
-                    <Text>Tage</Text>
-                  </Box>
-                  <Box flexBasis={1} flexGrow={1}>
-                    <Text
-                      fontSize={['xx-large', 'xxx-large']}
-                      fontFamily="Shrimp"
-                      mb="-3"
-                    >
-                      <ClientOnly fallback={<>&nbsp;</>}>
-                        {() => hours}
-                      </ClientOnly>
-                    </Text>
-                    <Text>Stunden</Text>
-                  </Box>
-                  <Box flexBasis={1} flexGrow={1}>
-                    <Text
-                      fontSize={['xx-large', 'xxx-large']}
-                      fontFamily="Shrimp"
-                      mb="-3"
-                    >
-                      <ClientOnly fallback={<>&nbsp;</>}>
-                        {() => minutes}
-                      </ClientOnly>
-                    </Text>
-                    <Text>Minuten</Text>
-                  </Box>
-                  <Box flexBasis={1} flexGrow={1}>
-                    <Text
-                      fontSize={['xx-large', 'xxx-large']}
-                      fontFamily="Shrimp"
-                      mb="-3"
-                    >
-                      <ClientOnly fallback={<>&nbsp;</>}>
-                        {() => seconds}
-                      </ClientOnly>
-                    </Text>
-                    <Text>Sekunden</Text>
-                  </Box>
-                </>
+            <ClientOnly fallback={<>&nbsp;</>}>
+              {() => (
+                <Countdown
+                  date={event.start}
+                  renderer={({days, hours, minutes, seconds}) => (
+                    <>
+                      <Box flexBasis={1} flexGrow={1}>
+                        <Text
+                          fontSize={['xx-large', 'xxx-large']}
+                          fontFamily="Shrimp"
+                          mb="-3"
+                        >
+                          {days}
+                        </Text>
+                        <Text>Tage</Text>
+                      </Box>
+                      <Box flexBasis={1} flexGrow={1}>
+                        <Text
+                          fontSize={['xx-large', 'xxx-large']}
+                          fontFamily="Shrimp"
+                          mb="-3"
+                        >
+                          {hours}
+                        </Text>
+                        <Text>Stunden</Text>
+                      </Box>
+                      <Box flexBasis={1} flexGrow={1}>
+                        <Text
+                          fontSize={['xx-large', 'xxx-large']}
+                          fontFamily="Shrimp"
+                          mb="-3"
+                        >
+                          {minutes}
+                        </Text>
+                        <Text>Minuten</Text>
+                      </Box>
+                      <Box flexBasis={1} flexGrow={1}>
+                        <Text
+                          fontSize={['xx-large', 'xxx-large']}
+                          fontFamily="Shrimp"
+                          mb="-3"
+                        >
+                          {seconds}
+                        </Text>
+                        <Text>Sekunden</Text>
+                      </Box>
+                    </>
+                  )}
+                />
               )}
-            />
+            </ClientOnly>
           </Flex>
         )}
         {event.description && <Box>{event.description}</Box>}

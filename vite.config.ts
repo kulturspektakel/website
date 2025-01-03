@@ -24,4 +24,7 @@ export default defineConfig({
   ssr: {
     noExternal: ['@apollo/client', 'iban-ts'],
   },
+  build: {
+    sourcemap: true,
+  },
 });

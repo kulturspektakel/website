@@ -49,7 +49,6 @@ export async function loader({request}: LoaderFunctionArgs) {
       url.searchParams.set(key, value),
     );
     url.searchParams.set('nonce', match[1]);
-    console.log(url);
     return redirect(url.toString());
   }
   return null;

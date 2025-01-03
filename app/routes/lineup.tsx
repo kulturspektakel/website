@@ -1,6 +1,5 @@
 import {gql, useSuspenseQuery} from '@apollo/client';
 import {FaChevronDown, FaChevronLeft} from 'react-icons/fa6';
-import type {FlexProps} from '@chakra-ui/react';
 import {
   Stack,
   Heading,
@@ -16,7 +15,6 @@ import Search from '~/components/lineup/Search';
 import type {BookingActiveQuery, LineupsQuery} from '~/types/graphql';
 import {BookingActiveDocument, LineupsDocument} from '~/types/graphql';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
-import InfoBox from '~/components/InfoBox';
 import {Suspense} from 'react';
 import {LoaderFunctionArgs} from '@remix-run/node';
 import apolloClient from '~/utils/apolloClient';
@@ -28,6 +26,7 @@ import {
   MenuRoot,
   MenuTrigger,
 } from '~/components/chakra-snippets/menu';
+import {Alert, AlertProps} from '~/components/chakra-snippets/alert';
 
 gql`
   query Lineups {
@@ -176,18 +175,15 @@ function MenuItems() {
   );
 }
 
-function BookingAlert(props: FlexProps) {
-  return null;
+function BookingAlert(props: AlertProps) {
   return (
-    <InfoBox {...props} title="Jetzt Bewerben">
-      <Text>
-        Die Bewerbungsphase für das nächste Kulturspektakel läuft aktuell und
-        ihr könnt euch jetzt für einen Auftritt bei uns{' '}
-        <ChakraLink asChild variant="inline">
-          <Link to={$path('/booking')}>bewerben</Link>
-        </ChakraLink>
-        .
-      </Text>
-    </InfoBox>
+    <Alert title="Jetzt bewerben" status="info" {...props}>
+      Die Bewerbungsphase für das nächste Kulturspektakel läuft aktuell und ihr
+      könnt euch jetzt für einen Auftritt bei uns{' '}
+      <ChakraLink asChild>
+        <Link to={$path('/booking')}>bewerben</Link>
+      </ChakraLink>
+      .
+    </Alert>
   );
 }

@@ -1,5 +1,5 @@
 import {gql} from '@apollo/client';
-import {Box, ListRoot, VStack} from '@chakra-ui/react';
+import {ListRoot, VStack} from '@chakra-ui/react';
 import {LoaderFunctionArgs} from '@remix-run/node';
 import {useRevalidator} from '@remix-run/react';
 import {useEffect} from 'react';
@@ -9,7 +9,7 @@ import {
   UseDataFunctionReturn,
   useTypedLoaderData,
 } from 'remix-typedjson';
-import InfoBox from '~/components/InfoBox';
+import {Alert} from '~/components/chakra-snippets/alert';
 import Card, {CardFragment} from '~/components/kultcard/Card';
 import InfoText from '~/components/kultcard/InfoText';
 import Transaction, {CardTransaction} from '~/components/kultcard/Transaction';
@@ -222,10 +222,10 @@ export default function () {
       justifyContent="center"
     >
       {data.hasNewerTransactions && (
-        <InfoBox>
+        <Alert title="Neue Buchungen">
           Es liegen neuere Buchungen vor. Karte erneut auslesen um diese
           anzuzeigen.
-        </InfoBox>
+        </Alert>
       )}
       <Card balance={data.balance} deposit={data.deposit} />
 
