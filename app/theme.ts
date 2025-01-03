@@ -182,6 +182,11 @@ const overrides: SystemConfig = {
       shadows: {
         inset: {value: 'inset 0 0 0 1px {colors.offwhite.300}'},
       },
+      radii: {
+        l1: {value: '{radii.sm}'},
+        l2: {value: '{radii.md}'},
+        l3: {value: '{radii.lg}'},
+      },
     },
   },
   globalCss: {

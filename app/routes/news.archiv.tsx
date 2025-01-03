@@ -67,7 +67,7 @@ export default function NewsArchive() {
         .sort(([a], [b]) => b - a)
         .map(([year, edges]) => (
           <React.Fragment key={year}>
-            <Heading textAlign="center" mb="10">
+            <Heading size="3xl" textAlign="center" mb="10">
               {year}
             </Heading>
             <SimpleGrid columns={[2, 2, 3]} gap={4} key={year} mb="10">

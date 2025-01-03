@@ -1,5 +1,5 @@
 import {gql} from '@apollo/client';
-import {Box, VStack} from '@chakra-ui/react';
+import {Box, ListRoot, VStack} from '@chakra-ui/react';
 import {LoaderFunctionArgs} from '@remix-run/node';
 import {useRevalidator} from '@remix-run/react';
 import {useEffect} from 'react';
@@ -231,15 +231,15 @@ export default function () {
 
       {data.recentTransactions && data.recentTransactions.length > 0 && (
         <VStack gap="5" align="stretch">
-          <Box as="ol" m="0">
+          <ListRoot as="ol" m="0">
             {data.recentTransactions.map((t, i) => (
               <Transaction
                 key={i}
                 {...t}
-                isLastItem={i === data.recentTransactions.length - 1}
+                isLastItem={i === data.recentTransactions!.length - 1}
               />
             ))}
-          </Box>
+          </ListRoot>
           <InfoText textAlign="center">
             Es kann etwas dauern, bis alle Buchungen vollständig in der Liste
             dargestellt werden. Das angezeigte Guthaben auf der Karte ist jedoch

@@ -1,6 +1,5 @@
 import type {LinkProps} from '@chakra-ui/react';
-import {Box, Flex, HStack, Link, VStack, Image, Text} from '@chakra-ui/react';
-import type {NavLinkProps} from '@remix-run/react';
+import {Flex, HStack, Link, VStack, Image, Text} from '@chakra-ui/react';
 import {Link as RemixLink, NavLink} from '@remix-run/react';
 import {FaSpotify, FaYoutube, FaInstagram, FaFacebook} from 'react-icons/fa6';
 import vpby from './vpby.svg';
@@ -114,17 +113,22 @@ function FooterIcon({
   );
 }
 
-function FooterLink({children, ...props}: LinkProps & NavLinkProps) {
+function FooterLink({children, to}: {to: string; children: string}) {
   return (
     <Link
-      as={NavLink}
-      {...props}
       color="whiteAlpha.600"
       _hover={{color: 'white'}}
       _active={{color: 'white'}}
       _focus={{color: 'white'}}
+      asChild
     >
-      {children}
+      <NavLink to={to}>
+        {(a) => (
+          <Text color={a.isActive || a.isPending ? 'white' : undefined}>
+            {children}
+          </Text>
+        )}
+      </NavLink>
     </Link>
   );
 }

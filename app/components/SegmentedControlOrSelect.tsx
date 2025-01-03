@@ -18,7 +18,7 @@ export function SegmentedControlOrSelect({
 }) {
   return (
     <>
-      <NativeSelectRoot hideFrom="md" {...props}>
+      <NativeSelectRoot hideFrom="md" {...props} defaultValue={undefined}>
         <NativeSelectField
           onChange={(e) => onValueChange({value: String(e.target.value)})}
           value={value}
@@ -33,7 +33,13 @@ export function SegmentedControlOrSelect({
           ))}
         </NativeSelectField>
       </NativeSelectRoot>
-      <SegmentedControl hideBelow="md" items={items} {...props} />
+      <SegmentedControl
+        hideBelow="md"
+        items={items}
+        value={value}
+        onValueChange={onValueChange}
+        {...props}
+      />
     </>
   );
 }

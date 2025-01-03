@@ -7,7 +7,7 @@ export default function MitgliedsantragDanke() {
     <>
       <ClientOnly>{() => <Confetti />}</ClientOnly>
       <VStack gap="5" textAlign="center">
-        <Heading size="lg">Willkommen im Verein!</Heading>
+        <Heading size="3xl">Willkommen im Verein!</Heading>
         <Text>
           Vielen Dank für deine Mitgliedschaft bei uns. Wir wissen deine
           Unterstützung sehr zu schätzen. Du solltest so eben eine E-Mail

@@ -26,6 +26,7 @@ import {ConnectedField} from '~/components/ConnectedField';
 import {RadioCardItem} from '~/components/chakra-snippets/radio-card';
 import React from 'react';
 import {ConnectedRadioCard} from '~/components/ConnectedRadioCard';
+import ReloadWarning from '~/components/ReloadWarning';
 
 const schemaStep1 = z.object({
   membership: z.nativeEnum(MembershipEnum),
@@ -148,20 +149,26 @@ export default function Mitgliedsantrag() {
           }
         }}
       >
-        {({values, errors, setFieldValue}) => (
+        {({values, errors, setFieldValue, dirty}) => (
           <Form>
-            {console.log(errors, values)}
+            <ReloadWarning dirty={dirty} />
             <VStack gap="4" align="stretch">
               {step == 0 ? (
                 <React.Fragment key="step1">
-                  <ConnectedRadioCard name="membership">
+                  <ConnectedRadioCard
+                    name="membership"
+                    onValueChange={() => {
+                      setFieldValue('membershipType', undefined);
+                      setFieldValue('membershipFee', undefined);
+                    }}
+                  >
                     <RadioCardItem
-                      label={getLegalName('kult')}
+                      label={getLegalName(MembershipEnum.Kult)}
                       description="Für aktive Mitgestalter:innen des Kulturspektakels"
                       value="kult"
                     />
                     <RadioCardItem
-                      label={getLegalName('foerderverein')}
+                      label={getLegalName(MembershipEnum.Foerderverein)}
                       description="Für Unterstützer:innen des Kulturspektakels"
                       value="foerderverein"
                     />
@@ -191,16 +198,26 @@ export default function Mitgliedsantrag() {
                 </React.Fragment>
               ) : (
                 <React.Fragment key="step2">
-                  <ConnectedRadioCard name="membershipFee">
+                  <ConnectedRadioCard
+                    name="membershipType"
+                    onValueChange={(v) => {
+                      setFieldValue(
+                        'membershipFee',
+                        v === MembershipType.Reduced
+                          ? data.config.membershipFees[values.membership!]
+                              .reduced
+                          : data.config.membershipFees[values.membership!]
+                              .regular,
+                      );
+                    }}
+                  >
                     <RadioCardItem
                       label={currencyFormatter.format(
                         data.config.membershipFees[values.membership!].regular /
                           100,
                       )}
                       description="Regulärer Jahresbeitrag"
-                      value={
-                        data.config.membershipFees[values.membership!].regular
-                      }
+                      value={MembershipType.Regular}
                     />
                     <RadioCardItem
                       label={currencyFormatter.format(
@@ -208,15 +225,13 @@ export default function Mitgliedsantrag() {
                           100,
                       )}
                       description="Für Personen ohne/mit vermindertem Einkommen (z.B. Schüler:innen, Studierende)"
-                      value={
-                        data.config.membershipFees[values.membership!].reduced
-                      }
+                      value={MembershipType.Reduced}
                     />
                     {values.membership === MembershipEnum.Foerderverein && (
                       <RadioCardItem
                         label="Freier Beitrag"
                         description="Für unsere großzügigen Unterstützer:innen"
-                        value="supporter"
+                        value={MembershipType.Supporter}
                       />
                     )}
                   </ConnectedRadioCard>
@@ -235,10 +250,10 @@ export default function Mitgliedsantrag() {
                         p="4"
                         borderRadius="md"
                         borderWidth="1px"
-                        borderColor="var(--chakra-colors-chakra-border-color)"
+                        borderColor="var(--chakra-colors-border)"
                         _focusWithin={{
-                          boxShadow: '0 0 0 1px #3182ce',
-                          borderColor: '#3182ce',
+                          boxShadow: '0 0 0 1px var(--chakra-colors-black)',
+                          borderColor: 'var(--focus-ring-color);',
                         }}
                       >
                         <Slider
@@ -248,6 +263,7 @@ export default function Mitgliedsantrag() {
                               .regular
                           }
                           max={20000}
+                          mt="0.5"
                           w="full"
                           step={500}
                           onValueChange={({value}) => {
@@ -329,7 +345,8 @@ export default function Mitgliedsantrag() {
                     Zahlungsempfänger {getLegalName(values.membership!)},
                     Bahnhofstr. 6, 82131 Gauting
                     <br />
-                    Gläubiger-Identifikationsnummer DE33ZZZ00000119946
+                    Gläubiger-Identifikationsnummer{' '}
+                    {getCreditorIdentifier(values.membership!)}
                   </Text>
 
                   <Text fontSize="small" color="offwhite.600">
@@ -341,7 +358,7 @@ export default function Mitgliedsantrag() {
               )}
               <Flex justifyContent="space-between" flexDirection="row-reverse">
                 <Button type="submit" loading={loading}>
-                  {step === STEPS.length - 1 ? 'Absenden' : 'Weiter'}
+                  {step === STEPS.length - 1 ? 'Mitglied werden' : 'Weiter'}
                 </Button>
                 {step > 0 && (
                   <Button
@@ -361,13 +378,20 @@ export default function Mitgliedsantrag() {
   );
 }
 
-function getLegalName(name: 'kult' | 'foerderverein') {
+function getLegalName(name: MembershipEnum) {
   switch (name) {
     case 'foerderverein':
       return 'Förderverein Kulturspektakel Gauting e.V.';
     case 'kult':
       return 'Kulturspektakel Gauting e.V.';
-    default:
-      return 'Unbekannt';
+  }
+}
+
+function getCreditorIdentifier(name: MembershipEnum) {
+  switch (name) {
+    case 'kult':
+      return 'DE33ZZZ00000119946';
+    case 'foerderverein':
+      return 'DE68ZZZ00000117958';
   }
 }

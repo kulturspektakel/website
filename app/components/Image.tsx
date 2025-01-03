@@ -38,7 +38,7 @@ export default function Image({
           w={
             maxH != null && originalWidth != null && originalHeight != null
               ? (originalWidth / originalHeight) * maxH
-              : undefined
+              : props.w
           }
           aspectRatio={
             props.aspectRatio == null &&

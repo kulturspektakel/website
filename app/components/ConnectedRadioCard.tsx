@@ -5,9 +5,11 @@ import {useField} from 'formik';
 
 export function ConnectedRadioCard({
   children,
+  onValueChange,
   ...props
 }: FieldProps & {
   name: string;
+  onValueChange?: (value: string) => void;
   children: Array<
     React.ReactElement<React.ComponentProps<typeof RadioCardRoot>> | false
   >;
@@ -18,7 +20,10 @@ export function ConnectedRadioCard({
       <RadioCardRoot
         w="full"
         value={value}
-        onValueChange={({value}) => setValue(value)}
+        onValueChange={({value}) => {
+          setValue(value);
+          onValueChange?.(value);
+        }}
       >
         <Stack direction={{base: 'column', sm: 'row'}}>{children}</Stack>
       </RadioCardRoot>

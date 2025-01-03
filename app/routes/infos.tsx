@@ -17,6 +17,7 @@ import Page from '~/components/Page';
 import DateString from '~/components/DateString';
 import Mark from '~/components/Mark';
 import mergeMeta from '~/utils/mergeMeta';
+import {LinkButton} from '~/components/chakra-snippets/link-button';
 
 gql`
   query Infos {
@@ -120,9 +121,9 @@ export default function Infos() {
             </ListItem>
           ))}
         </ListRoot>
-        <Link href="https://calendar.google.com/calendar/ical/c_d5cfc52054d3dae0761245fee799a7c2c61691fb62554f30ea652adcca183304%40group.calendar.google.com/public/basic.ics">
+        <LinkButton href="https://calendar.google.com/calendar/ical/c_d5cfc52054d3dae0761245fee799a7c2c61691fb62554f30ea652adcca183304%40group.calendar.google.com/public/basic.ics">
           Kalendar abonnieren
-        </Link>
+        </LinkButton>
       </Box>
     </VStack>
   );

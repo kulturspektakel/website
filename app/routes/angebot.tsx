@@ -81,7 +81,11 @@ export default function Angebot() {
           >
             <Text fontSize="lg">{list.emoji}</Text>
             <Heading size="lg">{list.name}</Heading>
-            {list.description && <Text mt="1">{list.description}</Text>}
+            {list.description && (
+              <Text mt="1" hyphens="auto">
+                {list.description}
+              </Text>
+            )}
           </List.Item>
         ))}
       </List.Root>

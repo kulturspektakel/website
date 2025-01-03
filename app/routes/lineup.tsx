@@ -1,5 +1,5 @@
 import {gql, useSuspenseQuery} from '@apollo/client';
-import {FaChevronDown} from 'react-icons/fa6';
+import {FaChevronDown, FaChevronLeft} from 'react-icons/fa6';
 import type {FlexProps} from '@chakra-ui/react';
 import {
   Stack,
@@ -96,17 +96,16 @@ export default function () {
             >
               <IconButton
                 aria-label={`Zum Lineup ${params.year} zurückkehren`}
-                transform="rotate(90deg) translateY(120%)"
                 size="xs"
                 rounded="full"
-                position="absolute"
+                me="2"
                 left="0"
                 asChild
               >
                 <NavLink
                   to={$path('/lineup/:year', {year: String(params.year)})}
                 >
-                  <FaChevronDown />
+                  <FaChevronLeft />
                 </NavLink>
               </IconButton>
             </Tooltip>

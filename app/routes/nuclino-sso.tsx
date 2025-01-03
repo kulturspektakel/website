@@ -5,7 +5,6 @@ import {
   VStack,
   Input,
   Text,
-  Button,
   Spinner,
   Separator,
 } from '@chakra-ui/react';
@@ -19,6 +18,7 @@ import {FaSlack} from 'react-icons/fa6';
 import {useSearchParams} from '@remix-run/react';
 import type {LoaderFunctionArgs} from '@remix-run/node';
 import {redirect} from '@remix-run/node';
+import {Button} from '~/components/chakra-snippets/button';
 
 gql`
   mutation CreateNonceRequest($email: String!) {
@@ -64,7 +64,7 @@ export default function Sso() {
 
   return (
     <VStack gap="10">
-      <Heading as="h1" textAlign="center">
+      <Heading size="3xl" as="h1" textAlign="center">
         Nuclino Login
       </Heading>
 
@@ -123,8 +123,8 @@ export default function Sso() {
                 });
               }}
             >
-              <Heading as="h2" size="md">
-                <FaSlack style={{display: 'inline-block', marginBottom: -2}} />
+              <Heading as="h2" size="xl">
+                <FaSlack style={{display: 'inline-block', marginTop: -4}} />
                 &nbsp;Slack
               </Heading>
               <Text>
@@ -140,12 +140,7 @@ export default function Sso() {
                 w="100%"
                 onChange={(e) => setEmail(e.target.value.trim())}
               />
-              <Button
-                w="100%"
-                type="submit"
-                isLoading={loading}
-                variant="primary"
-              >
+              <Button w="full" type="submit" loading={loading}>
                 Einloggen
               </Button>
             </VStack>
@@ -157,7 +152,7 @@ export default function Sso() {
               action={`https://api.kulturspektakel.de/saml/login?${searchParams.toString()}`}
             >
               <VStack w="100%" gap="2">
-                <Heading as="h2" size="md">
+                <Heading as="h2" size="xl">
                   Passwort
                 </Heading>
                 <Text>
@@ -171,7 +166,7 @@ export default function Sso() {
                   bg="white"
                   name="password"
                 />
-                <Button w="100%" type="submit" variant="primary">
+                <Button w="full" type="submit">
                   Einloggen
                 </Button>
               </VStack>

@@ -127,12 +127,12 @@ export default function LineupBand() {
       {band.photo && (
         <Box
           float="left"
-          maxW="50%"
           mr="6"
           mb="4"
           display={['none', 'none', 'block']}
+          ms="-10"
         >
-          <BandPhoto band={band} />
+          <BandPhoto band={band} w={400} />
         </Box>
       )}
       <Text>
@@ -219,9 +219,11 @@ export default function LineupBand() {
 
 function BandPhoto({
   band,
+  w,
   maxH,
 }: {
   maxH?: number;
+  w?: number;
   band: UseDataFunctionReturn<typeof loader>;
 }) {
   if (!band.photo) {
@@ -240,6 +242,8 @@ function BandPhoto({
         originalHeight={band.photo.height}
         originalWidth={band.photo.width}
         original={band.photo.large}
+        display="block"
+        w={w}
       />
     </Gallery>
   );

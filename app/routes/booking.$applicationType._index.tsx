@@ -23,7 +23,7 @@ import {
   useCreateBandApplicationMutation,
 } from '~/types/graphql';
 import {gql} from '@apollo/client';
-import ReloadWarning from '~/components/booking/ReloadWarning';
+import ReloadWarning from '~/components/ReloadWarning';
 import {useUtmSource} from './booking._index';
 import {useTypedRouteLoaderData} from 'remix-typedjson';
 import {loader} from './booking';
