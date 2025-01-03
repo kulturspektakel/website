@@ -152,7 +152,7 @@ export default function Header() {
             <Box
               fontFamily="Shrimp"
               px="4"
-              pt="2"
+              py="1"
               lineHeight="120%"
               color="black"
               transform="rotate(-2deg)"
