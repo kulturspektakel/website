@@ -15,7 +15,7 @@ import Search from '~/components/lineup/Search';
 import type {BookingActiveQuery, LineupsQuery} from '~/types/graphql';
 import {BookingActiveDocument, LineupsDocument} from '~/types/graphql';
 import {typedjson, useTypedLoaderData} from 'remix-typedjson';
-import {Suspense} from 'react';
+import {Suspense, useState} from 'react';
 import {LoaderFunctionArgs} from '@remix-run/node';
 import apolloClient from '~/utils/apolloClient';
 import {$path} from 'remix-routes';
@@ -176,8 +176,18 @@ function MenuItems() {
 }
 
 function BookingAlert(props: AlertProps) {
+  const [visisble, setVisisble] = useState(true);
+  if (!visisble) {
+    return null;
+  }
   return (
-    <Alert title="Jetzt bewerben" status="info" {...props}>
+    <Alert
+      title="Jetzt bewerben"
+      closable
+      onClose={() => setVisisble(false)}
+      status="info"
+      {...props}
+    >
       Die Bewerbungsphase für das nächste Kulturspektakel läuft aktuell und ihr
       könnt euch jetzt für einen Auftritt bei uns{' '}
       <ChakraLink asChild>

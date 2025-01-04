@@ -10,21 +10,10 @@ const overrides: SystemConfig = {
   theme: {
     slotRecipes: {
       alert: defineSlotRecipe({
-        slots: ['root', 'title', 'indicator'],
         variants: {
-          variant: {
-            surface: {
-              root: {
-                bg: 'offwhite.200',
-                color: 'brand.900',
-                shadowColor: 'offwhite.300',
-              },
-              title: {
-                fontWeight: 'bold',
-              },
-              indicator: {
-                color: 'brand.900',
-              },
+          status: {
+            info: {
+              root: {colorPalette: 'gray'},
             },
           },
         },
@@ -202,6 +191,12 @@ const overrides: SystemConfig = {
           },
           focusRing: {
             value: '{colors.brand.900}',
+          },
+          subtle: {
+            value: '{colors.offwhite.200}',
+          },
+          muted: {
+            value: '{colors.offwhite.300}',
           },
         },
       },
