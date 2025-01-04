@@ -26,6 +26,22 @@ import {FaXmark} from 'react-icons/fa6';
 import {InputGroup} from '../chakra-snippets/input-group';
 import {Field} from '../chakra-snippets/field';
 import {ConnectedField} from '../ConnectedField';
+import {z} from 'zod';
+
+export const schema = z.object({
+  demo: z.string().min(1),
+  spotifyArtist: z
+    .object({
+      id: z.string(),
+      name: z.string(),
+      genre: z.string(),
+      image: z.string().nullable(),
+    })
+    .nullable(),
+  instagram: z.string(),
+  facebook: z.string(),
+  website: z.string(),
+});
 
 gql`
   query SpotifyArtistSearch($query: String!, $limit: Int = 5) {

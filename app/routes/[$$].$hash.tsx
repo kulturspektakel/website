@@ -209,15 +209,15 @@ export default function () {
     };
   }, [revalidator]);
 
-  const data = useTypedLoaderData<typeof loader>();
+  const data = useTypedLoaderData<typeof loader>(); // EXAMPLE_DATA
 
   return (
     <VStack
-      maxW="450"
+      maxW="450px"
       mr="auto"
       ml="auto"
       gap="7"
-      minH="calc(100vh - 148px)"
+      minH="calc(100dvh - 148px)"
       align="stretch"
       justifyContent="center"
     >
