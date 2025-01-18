@@ -1,93 +1,132 @@
 import type {LinkProps} from '@chakra-ui/react';
-import {Flex, HStack, Link, VStack, Image, Text} from '@chakra-ui/react';
-import {Link as RemixLink, NavLink} from '@remix-run/react';
+import {
+  Flex,
+  HStack,
+  Link,
+  VStack,
+  Image,
+  Text,
+  Heading,
+  Stack,
+} from '@chakra-ui/react';
+import {Link as RemixLink, NavLink, useLocation} from '@remix-run/react';
 import {FaSpotify, FaYoutube, FaInstagram, FaFacebook} from 'react-icons/fa6';
 import vpby from './vpby.svg';
 import {$path} from 'remix-routes';
 import type {RemixLinkProps} from '@remix-run/react/dist/components';
+import LinkButton from '../LinkButton';
 
 export default function Footer() {
+  const location = useLocation();
   return (
-    <Flex
-      as="footer"
-      bgColor="brand.900"
-      paddingY="8"
-      paddingX={[8, 10, 16]}
-      color="white"
-      justify="space-between"
-      direction={{base: 'column', md: 'row'}}
-      gap={[8, 12, 20]}
-      fontSize="sm"
-    >
-      <HStack
-        alignItems="flex-start"
-        maxW="500px"
-        mx={{base: 'auto', md: 'initial'}}
+    <>
+      {location.pathname !== '/spenden' && (
+        <Stack
+          as="aside"
+          bgColor="offwhite.200"
+          paddingY="8"
+          paddingX={[8, 10, 16]}
+          justify="space-between"
+          alignItems="center"
+          fontSize="sm"
+          direction={{base: 'column', md: 'row'}}
+          gap="4"
+          textAlign={{base: 'center', md: 'left'}}
+        >
+          <div>
+            <Heading mb="1">Unterstütze das Kult&hellip;</Heading>
+            <Text>
+              Als kostenloses und ehrenamtliches Festival sind wir auf eure
+              Unterstütung angewiesen. Erfahre wie du uns mit Spenden und
+              anderweitig helfen kannst.
+            </Text>
+          </div>
+          <LinkButton variant="solid" href="/spenden">
+            Mehr Erfahren
+          </LinkButton>
+        </Stack>
+      )}
+      <Flex
+        as="footer"
+        bgColor="brand.900"
+        paddingY="8"
+        paddingX={[8, 10, 16]}
+        color="white"
+        justify="space-between"
+        direction={{base: 'column', md: 'row'}}
+        gap={[8, 12, 20]}
+        fontSize="sm"
       >
-        <Image
-          src={'/logos/logo.svg'}
-          alt="Kulturspektakel Gauting Logo"
-          width="40px"
-          height="40px"
-          display={{base: 'none', md: 'initial'}}
-        />
-        <VStack gap="2" align={{base: 'center', md: 'flex-start'}}>
-          <Text as="h2" fontSize="md">
-            Kulturspektakel Gauting e.V.
-          </Text>
-          <Text textAlign={{base: 'center', md: 'left'}} lineHeight="1.2">
-            Das Kult ist ein dreitägiges ehrenamtlich von Jugendlichen
-            organisiertes Musikfestival in Gauting.
-          </Text>
-          <HStack
-            color="whiteAlpha.600"
-            flexWrap={'wrap'}
-            justifyContent={'center'}
-          >
-            <FooterLink to={$path('/booking')}>Booking</FooterLink>
-            <FooterLink to={$path('/:slug', {slug: 'impressum'})}>
-              Impressum
-            </FooterLink>
-            <FooterLink to={$path('/:slug', {slug: 'foerderverein'})}>
-              Förderverein
-            </FooterLink>
-            <FooterLink to={$path('/:slug', {slug: 'datenschutz'})}>
-              Datenschutz
-            </FooterLink>
-          </HStack>
-        </VStack>
-      </HStack>
-      <VStack>
-        <HStack gap={{base: 6, md: 4}} fontSize={{base: 32, md: 24}}>
-          <FooterIcon
-            to="https://facebook.com/kulturspektakel"
-            title="Facebook"
-            icon={FaFacebook}
+        <HStack
+          alignItems="flex-start"
+          maxW="500px"
+          mx={{base: 'auto', md: 'initial'}}
+        >
+          <Image
+            src={'/logos/logo.svg'}
+            alt="Kulturspektakel Gauting Logo"
+            width="40px"
+            height="40px"
+            display={{base: 'none', md: 'initial'}}
           />
-          <FooterIcon
-            to="https://www.youtube.com/channel/UCLOU06fHSN3Hwe0rmbrFtpA"
-            title="Youtube"
-            icon={FaYoutube}
-          />
-          <FooterIcon
-            to="https://instagram.com/kulturspektakel"
-            title="Instagram"
-            icon={FaInstagram}
-          />
-          <FooterIcon
-            to="https://open.spotify.com/user/p7s6vlorvw05bxm881h5em4dj?si=4049483d01ec4fc3"
-            title="Spotify"
-            icon={FaSpotify}
-          />
+          <VStack gap="2" align={{base: 'center', md: 'flex-start'}}>
+            <Text as="h2" fontSize="md">
+              Kulturspektakel Gauting e.V.
+            </Text>
+            <Text textAlign={{base: 'center', md: 'left'}} lineHeight="1.2">
+              Das Kult ist ein dreitägiges ehrenamtlich von Jugendlichen
+              organisiertes Musikfestival in Gauting.
+            </Text>
+            <HStack
+              color="whiteAlpha.600"
+              flexWrap={'wrap'}
+              justifyContent={'center'}
+            >
+              <FooterLink to={$path('/booking')}>Booking</FooterLink>
+              <FooterLink to={$path('/:slug', {slug: 'impressum'})}>
+                Impressum
+              </FooterLink>
+              <FooterLink to={$path('/:slug', {slug: 'foerderverein'})}>
+                Förderverein
+              </FooterLink>
+              <FooterLink to={$path('/:slug', {slug: 'datenschutz'})}>
+                Datenschutz
+              </FooterLink>
+            </HStack>
+          </VStack>
         </HStack>
-        {/* <Box mt="2" color="whiteAlpha.600">
+        <VStack>
+          <HStack gap={{base: 6, md: 4}} fontSize={{base: 32, md: 24}}>
+            <FooterIcon
+              to="https://facebook.com/kulturspektakel"
+              title="Facebook"
+              icon={FaFacebook}
+            />
+            <FooterIcon
+              to="https://www.youtube.com/channel/UCLOU06fHSN3Hwe0rmbrFtpA"
+              title="Youtube"
+              icon={FaYoutube}
+            />
+            <FooterIcon
+              to="https://instagram.com/kulturspektakel"
+              title="Instagram"
+              icon={FaInstagram}
+            />
+            <FooterIcon
+              to="https://open.spotify.com/user/p7s6vlorvw05bxm881h5em4dj?si=4049483d01ec4fc3"
+              title="Spotify"
+              icon={FaSpotify}
+            />
+          </HStack>
+          {/* <Box mt="2" color="whiteAlpha.600">
           Gefördert von
           <Link href="https://popkultur.bayern" target="_blank">
             <Image src={vpby} alt="Verband für Popkultur" />
           </Link>
         </Box> */}
-      </VStack>
-    </Flex>
+        </VStack>
+      </Flex>
+    </>
   );
 }
 

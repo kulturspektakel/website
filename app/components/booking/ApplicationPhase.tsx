@@ -4,6 +4,7 @@ import {useNavigate} from '@remix-run/react';
 import DateString from '../DateString';
 import {Button} from '../chakra-snippets/button';
 import {Tag} from '../chakra-snippets/tag';
+import LinkButton from '../LinkButton';
 
 export default function ApplicationPhase({
   href,
@@ -64,14 +65,15 @@ export default function ApplicationPhase({
         </Text>
       </VStack>
       <Spacer />
-      <Button
+      <LinkButton
         flexShrink={0}
         mt="3"
         disabled={disabled}
-        onClick={() => navigate(href)}
+        href="href"
+        variant="solid"
       >
         {buttonLabel}
-      </Button>
+      </LinkButton>
     </Flex>
   );
 }
