@@ -126,7 +126,7 @@ export default function Sso() {
           <Box textAlign="center">
             <Spinner mt="5" mb="5" />
             <Text>Bestätige deinen Login in der Slack-App</Text>
-            <NonceChecker requestId="nonceRequestId" />
+            <NonceChecker requestId={nonceRequestId} />
           </Box>
         ) : (
           <>
