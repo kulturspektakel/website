@@ -8,7 +8,7 @@ import {
   Spinner,
   Separator,
 } from '@chakra-ui/react';
-import {useRef, useState} from 'react';
+import {useRef, useState, useEffect, useCallback} from 'react';
 import {
   CheckNonceRequestDocument,
   useCreateNonceRequestMutation,
@@ -54,12 +54,66 @@ export async function loader({request}: LoaderFunctionArgs) {
   return null;
 }
 
+function usePolling(asyncFn: () => Promise<boolean>, delay: number) {
+  const isPolling = useRef(false);
+
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout | null = null;
+
+    const executePolling = async () => {
+      if (isPolling.current) return;
+
+      isPolling.current = true;
+      try {
+        const result = await asyncFn();
+        if (!result) {
+          timeoutId = setTimeout(executePolling, delay);
+        }
+      } finally {
+        isPolling.current = false;
+      }
+    };
+
+    executePolling();
+
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [asyncFn, delay, isPolling]);
+}
+
+function NonceChecker({requestId}: {requestId: string}) {
+  const apolloClient = useApolloClient();
+  const [searchParams] = useSearchParams();
+  const checkNonceRequest = useCallback(async () => {
+    const {data: d} = await apolloClient.mutate({
+      mutation: CheckNonceRequestDocument,
+      variables: {
+        nonceRequestId: requestId,
+      },
+    });
+    if (!d?.nonceFromRequest) {
+      return false;
+    }
+    const url = new URL(LOGIN_URL);
+    searchParams.forEach((value, key) => url.searchParams.set(key, value));
+    url.searchParams.set('nonce', d.nonceFromRequest);
+    window.location.href = url.toString();
+    return true;
+  }, [requestId, searchParams]);
+
+  usePolling(checkNonceRequest, 500);
+  return null;
+}
+
 export default function Sso() {
   const [requestNonce, {loading, data}] = useCreateNonceRequestMutation();
-  const apolloClient = useApolloClient();
   const [email, setEmail] = useState('');
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [searchParams] = useSearchParams();
+
+  const nonceRequestId = data?.createNonceRequest;
 
   return (
     <VStack gap="10">
@@ -68,10 +122,11 @@ export default function Sso() {
       </Heading>
 
       <Box my="auto" maxW="400px">
-        {data?.createNonceRequest ? (
+        {nonceRequestId ? (
           <Box textAlign="center">
             <Spinner mt="5" mb="5" />
             <Text>Bestätige deinen Login in der Slack-App</Text>
+            <NonceChecker requestId="nonceRequestId" />
           </Box>
         ) : (
           <>
@@ -81,44 +136,10 @@ export default function Sso() {
               gap="2"
               onSubmit={(e) => {
                 e.preventDefault();
-                requestNonce({
+                return requestNonce({
                   variables: {
                     email,
                   },
-                }).then(({data}) => {
-                  if (timeoutRef.current) {
-                    clearTimeout(timeoutRef.current);
-                  }
-                  if (!data?.createNonceRequest) {
-                    return;
-                  }
-
-                  let counter = 0;
-
-                  const checkNonceRequest = async () => {
-                    counter++;
-                    if (counter > 600) {
-                      return;
-                    }
-                    const {data: d} = await apolloClient.mutate({
-                      mutation: CheckNonceRequestDocument,
-                      variables: {
-                        nonceRequestId: data.createNonceRequest,
-                      },
-                    });
-                    if (d?.nonceFromRequest) {
-                      const url = new URL(LOGIN_URL);
-                      searchParams.forEach((value, key) =>
-                        url.searchParams.set(key, value),
-                      );
-                      url.searchParams.set('nonce', d.nonceFromRequest);
-                      window.location.href = url.toString();
-                    } else {
-                      timeoutRef.current = setTimeout(checkNonceRequest, 500);
-                    }
-                  };
-
-                  timeoutRef.current = setTimeout(checkNonceRequest, 500);
                 });
               }}
             >
@@ -139,7 +160,12 @@ export default function Sso() {
                 w="100%"
                 onChange={(e) => setEmail(e.target.value.trim())}
               />
-              <Button w="full" type="submit" loading={loading}>
+              <Button
+                w="full"
+                type="submit"
+                loading={loading}
+                disabled={Boolean(data?.createNonceRequest)}
+              >
                 Einloggen
               </Button>
             </VStack>
