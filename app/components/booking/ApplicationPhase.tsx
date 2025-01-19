@@ -1,9 +1,10 @@
 import {FaTriangleExclamation} from 'react-icons/fa6';
 import {Flex, VStack, Heading, Spacer, Text} from '@chakra-ui/react';
-import {Link} from '@remix-run/react';
+import {useNavigate} from '@remix-run/react';
 import DateString from '../DateString';
 import {Button} from '../chakra-snippets/button';
 import {Tag} from '../chakra-snippets/tag';
+import LinkButton from '../LinkButton';
 
 export default function ApplicationPhase({
   href,
@@ -23,6 +24,7 @@ export default function ApplicationPhase({
   const applicationEnded = applicationEnd ? applicationEnd < new Date() : false;
   const applicationNotStarted = applicationStart > new Date();
   const disabled = applicationEnded || applicationNotStarted;
+  const navigate = useNavigate();
 
   return (
     <Flex
@@ -63,15 +65,15 @@ export default function ApplicationPhase({
         </Text>
       </VStack>
       <Spacer />
-      <Button
-        asChild
+      <LinkButton
         flexShrink={0}
-        as={disabled ? undefined : Link}
         mt="3"
         disabled={disabled}
+        href={href}
+        variant="solid"
       >
-        <Link to={href}>{buttonLabel}</Link>
-      </Button>
+        {buttonLabel}
+      </LinkButton>
     </Flex>
   );
 }

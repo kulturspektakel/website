@@ -13,6 +13,20 @@ import type {FormikContextT} from '~/routes/booking.$applicationType._index';
 import {useFormikContext} from 'formik';
 import {Alert} from '../chakra-snippets/alert';
 import {ConnectedField} from '../ConnectedField';
+import {z} from 'zod';
+
+export const schema = z.object({
+  bandname: z.string().min(1),
+  genreCategory: z.nativeEnum(GenreCategory),
+  genre: z.string(),
+  description: z.string().min(1),
+  city: z.string().min(1),
+
+  // Bands only
+  numberOfArtists: z.number(),
+  numberOfNonMaleArtists: z.number(),
+  repertoire: z.nativeEnum(BandRepertoireType),
+});
 
 const GENRE_CATEGORIES: Map<GenreCategory, string> = new Map([
   [GenreCategory.Pop, 'Pop'],

@@ -16,9 +16,12 @@ export default function LinkButton({
     <Button role="link" variant="subtle" asChild {...props}>
       <Link
         _hover={{textDecoration: 'none'}}
-        href={href}
+        href={props.disabled ? undefined : href}
         download={download}
         onClick={(e) => {
+          if (props.disabled) {
+            return e.preventDefault();
+          }
           if (!isAbsolute && !download) {
             e.preventDefault();
             navigate(href);

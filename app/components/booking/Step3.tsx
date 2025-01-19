@@ -3,6 +3,16 @@ import useIsDJ from './useIsDJ';
 import {HeardAboutBookingFrom, PreviouslyPlayed} from '~/types/graphql';
 import {useUtmSource} from '~/routes/booking._index';
 import {ConnectedField} from '../ConnectedField';
+import {z} from 'zod';
+
+export const schema = z.object({
+  contactName: z.string().min(1),
+  email: z.string().email(),
+  contactPhone: z.string().min(1),
+  knowsKultFrom: z.string(),
+  hasPreviouslyPlayed: z.nativeEnum(PreviouslyPlayed),
+  heardAboutBookingFrom: z.nativeEnum(HeardAboutBookingFrom),
+});
 
 const HEARD_ABOUT: Map<HeardAboutBookingFrom, string> = new Map([
   [HeardAboutBookingFrom.BYon, 'BY-on'],
