@@ -117,14 +117,16 @@ function Badge(props: {
         e instanceof MouseEvent ? e.clientX : e.changedTouches[0].clientX;
       const elapsedTime = Date.now() - startTime;
       if (elapsedTime === 0) {
+        velocity.current = 20;
         return;
       }
       const distance = clientX - startX;
-      if (distance === 0) {
+      if (distance < 4) {
+        velocity.current = 20;
         return;
       }
       let speed = distance / elapsedTime;
-      velocity.current = speed * 5;
+      velocity.current = speed * 10;
     };
 
     window.addEventListener('mousemove', onMove);
