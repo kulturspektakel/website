@@ -19,6 +19,8 @@
     "@remix-run/react": "~2.15.2",
     "@remix-run/serve": "~2.15.2",
     "@sentry/remix": "^8.50.0",
+    "@twemoji/api": "^15.1.0",
+    "@twemoji/svg": "^15.0.0",
     "@vercel/analytics": "1.4.1",
     "@vercel/speed-insights": "^1.1.0",
     "apollo-link-scalars": "^4.0.3",
