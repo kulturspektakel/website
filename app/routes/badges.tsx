@@ -142,9 +142,9 @@ function Badge(props: {
           rotation.current += velocity.current;
 
           if (Math.abs(velocity.current) > DEFAULT_VELOCITY) {
-            velocity.current *= 0.97;
+            velocity.current *= 0.96;
           } else if (Math.abs(velocity.current) < DEFAULT_VELOCITY) {
-            velocity.current *= 1.03;
+            velocity.current *= 1.04;
           }
         }
         svgRef.current.style.transform = `rotateY(${rotation.current}deg)`;
