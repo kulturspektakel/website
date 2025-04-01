@@ -106,8 +106,6 @@ function Badge(props: {
       }
       previousX = clientX;
     };
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('touchmove', onMove);
 
     const onEnd = (e: MouseEvent | TouchEvent) => {
       isDragging.current = false;
@@ -118,10 +116,19 @@ function Badge(props: {
       const clientX =
         e instanceof MouseEvent ? e.clientX : e.changedTouches[0].clientX;
       const elapsedTime = Date.now() - startTime;
+      if (elapsedTime === 0) {
+        return;
+      }
       const distance = clientX - startX;
-      const speed = distance / elapsedTime;
+      if (distance === 0) {
+        return;
+      }
+      let speed = distance / elapsedTime;
       velocity.current = speed * 5;
     };
+
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('touchmove', onMove);
     window.addEventListener('mouseup', onEnd);
     window.addEventListener('touchend', onEnd);
   }, []);
@@ -158,8 +165,8 @@ function Badge(props: {
       flexShrink={0}
       onMouseDown={onStart}
       onTouchStart={onStart}
-      touchAction="none"
       cursor="grab"
+      touchAction="pan-y"
       // filter={props.enabled === false ? 'grayscale(1)' : undefined}
       filter="drop-shadow(5px 5px 10px rgba(0, 0, 0, 0.15))"
     >
