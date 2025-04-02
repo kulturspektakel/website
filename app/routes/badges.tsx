@@ -1,4 +1,4 @@
-import {Box, Flex, Heading, VStack, Text, SimpleGrid} from '@chakra-ui/react';
+import {Box, Heading, VStack, Text, SimpleGrid} from '@chakra-ui/react';
 import bird from '@twemoji/svg/1f426.svg';
 import camping from '@twemoji/svg/1f3d5.svg';
 import pretzel from '@twemoji/svg/1f968.svg';
@@ -169,6 +169,10 @@ function Badge(props: {
       onTouchStart={onStart}
       cursor="grab"
       touchAction="pan-y"
+      transition="transform 0.2s ease"
+      _active={{
+        transform: 'scale(0.8)',
+      }}
       // filter={props.enabled === false ? 'grayscale(1)' : undefined}
       filter="drop-shadow(5px 5px 10px rgba(0, 0, 0, 0.15))"
     >
