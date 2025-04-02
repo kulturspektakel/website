@@ -37,7 +37,7 @@ export default function Footer() {
             <Heading mb="1">Unterstütze das Kult&hellip;</Heading>
             <Text>
               Als kostenloses und ehrenamtliches Festival sind wir auf eure
-              Unterstütung angewiesen. Erfahre wie du uns mit Spenden und
+              Unterstützung angewiesen. Erfahre wie du uns mit Spenden und
               anderweitig helfen kannst.
             </Text>
           </div>
