@@ -4,7 +4,7 @@ import {
   isSameDay,
   isSameMonth,
   isSameYear,
-} from '~/utils/dateUtils';
+} from '../utils/dateUtils';
 
 type Props = {
   date: Date;

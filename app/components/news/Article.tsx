@@ -3,7 +3,6 @@ import type {BoxProps} from '@chakra-ui/react';
 import {Box} from '@chakra-ui/react';
 import type {ArticleFragment} from '../../types/graphql';
 import MarkDownWithOverrides from '../MarkdownText';
-import {$path} from 'remix-routes';
 import DateString from '../DateString';
 import Headline from '../Headline';
 
@@ -25,7 +24,7 @@ export default function Article({
   return (
     <Box as="article" {...props}>
       <Headline
-        href={$path('/news/:slug', {slug: data.slug})}
+        href={`/news/${data.slug}`}
         mark={
           <DateString
             options={{

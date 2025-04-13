@@ -1,7 +1,7 @@
 import type {BoxProps} from '@chakra-ui/react';
 import {Box} from '@chakra-ui/react';
+import {Link} from '@tanstack/react-router';
 import {forwardRef, useMemo} from 'react';
-import {Link} from '@remix-run/react';
 
 const Card = forwardRef<BoxProps, any>(
   (

@@ -13,22 +13,14 @@ import {
   DialogContent,
   DialogBackdrop,
 } from '@chakra-ui/react';
-import {
-  useLocation,
-  NavLink,
-  useNavigation,
-  useNavigate,
-} from '@remix-run/react';
+import {Link, useLocation, useNavigate} from '@tanstack/react-router';
 import {useEffect, useMemo, useState} from 'react';
 import ProgressBar from '@badrap/bar-of-progress';
 import logo from './logo.svg';
 import videoSrc from './Header.mov';
 import DateString from '../DateString';
 import {FaXmark, FaBars} from 'react-icons/fa6';
-import {$path} from 'remix-routes';
 import {gql} from '@apollo/client';
-import type {loader as rootLoader} from '~/root';
-import {useTypedRouteLoaderData} from 'remix-typedjson';
 
 gql`
   fragment Header on Event {
@@ -48,14 +40,14 @@ function useLoadingBar() {
       }),
     [blue500],
   );
-  const {state} = useNavigation();
-  useEffect(() => {
-    if (state === 'loading' || state === 'submitting') {
-      progress.start();
-    } else {
-      progress.finish();
-    }
-  }, [progress, state]);
+  // const {state} = useNavigation();
+  // useEffect(() => {
+  //   if (state === 'loading' || state === 'submitting') {
+  //     progress.start();
+  //   } else {
+  //     progress.finish();
+  //   }
+  // }, [progress, state]);
 }
 
 function Item({children, to}: {children: React.ReactNode; to: string}) {
@@ -70,13 +62,13 @@ function Item({children, to}: {children: React.ReactNode; to: string}) {
       }}
       lineHeight={1}
     >
-      <NavLink to={to}>
-        {({isActive, isPending}) => (
-          <Text color={isActive || isPending ? 'brand.500' : undefined}>
+      <Link to={to}>
+        {({isActive, isTransitioning}) => (
+          <Text color={isActive || isTransitioning ? 'brand.500' : undefined}>
             {children}
           </Text>
         )}
-      </NavLink>
+      </Link>
     </ChakraLink>
   );
 }
@@ -84,22 +76,18 @@ function Item({children, to}: {children: React.ReactNode; to: string}) {
 function NavItems() {
   return (
     <>
-      <Item to={$path('/angebot')}>Angebot</Item>
-      <Item to={$path('/lineup')}>Lineup</Item>
-      <Item to={$path('/events')}>Veranstaltungen</Item>
-      <Item to={$path('/infos')}>Infos</Item>
+      <Item to="/angebot">Angebot</Item>
+      <Item to="/lineup">Lineup</Item>
+      <Item to="/events">Veranstaltungen</Item>
+      <Item to="/infos">Infos</Item>
     </>
   );
 }
 
 export default function Header() {
   const isHome = useLocation().pathname === '/';
-  const root = useTypedRouteLoaderData<typeof rootLoader>('root');
-  const event = root?.eventsConnection?.edges[0]?.node;
   const [showNav, setShowNav] = useState(false);
-  const {state} = useNavigation();
   // Close nav on route change
-  useEffect(() => setShowNav(false), [state]);
   useLoadingBar();
   const navigate = useNavigate();
 
@@ -145,7 +133,9 @@ export default function Header() {
             maxH="50%"
             onContextMenu={(e) => {
               e.preventDefault();
-              navigate($path('/logo'));
+              navigate({
+                to: '/logo',
+              });
             }}
           />
           {event && (
@@ -266,11 +256,13 @@ export default function Header() {
 function Logo() {
   const navigate = useNavigate();
   return (
-    <NavLink
+    <Link
       to="/"
       onContextMenu={(e) => {
         e.preventDefault();
-        navigate($path('/logo'));
+        navigate({
+          to: '/logo',
+        });
       }}
     >
       <Image
@@ -278,6 +270,6 @@ function Logo() {
         alt="Kulturspektakel Gauting Logo"
         w="14"
       />
-    </NavLink>
+    </Link>
   );
 }

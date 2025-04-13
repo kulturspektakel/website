@@ -1,6 +1,6 @@
 import type {ButtonProps, LinkProps} from '@chakra-ui/react';
 import {Button, Link} from '@chakra-ui/react';
-import {useNavigate} from '@remix-run/react';
+import {useNavigate} from '@tanstack/react-router';
 
 export default function LinkButton({
   target,
@@ -24,7 +24,9 @@ export default function LinkButton({
           }
           if (!isAbsolute && !download) {
             e.preventDefault();
-            navigate(href);
+            navigate({
+              to: href,
+            });
           }
         }}
         target={isAbsolute ? '_blank' : undefined}

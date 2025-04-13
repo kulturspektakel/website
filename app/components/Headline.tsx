@@ -2,7 +2,7 @@ import type {BoxProps} from '@chakra-ui/react';
 import {Box, Heading, Link as ChakraLink} from '@chakra-ui/react';
 import React from 'react';
 import Mark from './Mark';
-import {Link, useLocation} from '@remix-run/react';
+import {Link, useLocation} from '@tanstack/react-router';
 
 export default function Headline({
   children,

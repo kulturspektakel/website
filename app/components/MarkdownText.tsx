@@ -7,11 +7,11 @@ import {
   ListRoot,
   ListItem,
 } from '@chakra-ui/react';
-import {Link} from '@remix-run/react';
 import Image from './Image';
 import {Gallery} from 'react-photoswipe-gallery';
 import {gql} from '@apollo/client';
-import type {MarkdownTextFragment} from '~/types/graphql';
+import type {MarkdownTextFragment} from '../types/graphql';
+import {Link} from '@tanstack/react-router';
 
 gql`
   fragment MarkdownText on MarkdownString {

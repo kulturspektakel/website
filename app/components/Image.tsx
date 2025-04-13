@@ -1,4 +1,4 @@
-import Card from '~/components/Card';
+import Card from './Card';
 import type {ImageProps} from '@chakra-ui/react';
 import {Image as ChakraImage} from '@chakra-ui/react';
 import type {ItemProps} from 'react-photoswipe-gallery';

@@ -1,9 +1,8 @@
+import {ApolloLink, HttpLink} from '@apollo/client';
 import {
   ApolloClient,
-  ApolloLink,
-  HttpLink,
   InMemoryCache,
-} from '@apollo/client';
+} from '@apollo/client-integration-tanstack-start';
 import {GraphQLDateTime, GraphQLDate} from 'graphql-scalars';
 import type {IntrospectionQuery} from 'graphql';
 import {buildClientSchema} from 'graphql';
@@ -21,9 +20,7 @@ const scalarLink = withScalars({
 });
 
 const apolloClient = new ApolloClient({
-  cache: new InMemoryCache().restore(
-    typeof window !== 'undefined' ? window.__APOLLO_STATE__ : undefined,
-  ),
+  cache: new InMemoryCache(),
   link: ApolloLink.from([
     scalarLink,
     new HttpLink({
