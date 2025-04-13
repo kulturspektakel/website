@@ -1,26 +1,24 @@
-import {gql} from '@apollo/client';
 import type {BoxProps} from '@chakra-ui/react';
 import {Box} from '@chakra-ui/react';
-import type {ArticleFragment} from '../../types/graphql';
 import MarkDownWithOverrides from '../MarkdownText';
 import DateString from '../DateString';
 import Headline from '../Headline';
-
-gql`
-  fragment Article on News {
-    slug
-    title
-    createdAt
-    content {
-      ...MarkdownText
-    }
-  }
-`;
+import {DirectusImage} from '../../utils/directusImage';
 
 export default function Article({
   data,
   ...props
-}: {data: ArticleFragment} & BoxProps) {
+}: {
+  data: {
+    slug: string;
+    title: string;
+    createdAt: Date;
+    content: {
+      markdown: string;
+      images: Array<DirectusImage>;
+    };
+  };
+} & BoxProps) {
   return (
     <Box as="article" {...props}>
       <Headline
@@ -39,7 +37,10 @@ export default function Article({
         {data.title}
       </Headline>
       <Box mt="3">
-        <MarkDownWithOverrides markdown={data.content} />
+        <MarkDownWithOverrides
+          markdown={data.content.markdown}
+          images={data.content.images}
+        />
       </Box>
     </Box>
   );

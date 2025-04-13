@@ -1,36 +1,51 @@
 import {Center, Separator} from '@chakra-ui/react';
-import {gql} from '@apollo/client';
 import React from 'react';
 import Article from '../components/news/Article';
 import LinkButton from '../components/LinkButton';
-import {useNewsSuspenseQuery} from '../types/graphql';
 import {createFileRoute} from '@tanstack/react-router';
-
-gql`
-  query News {
-    news(first: 10) {
-      edges {
-        node {
-          ...Article
-        }
-      }
-    }
-  }
-`;
+import {createServerFn} from '@tanstack/react-start';
+import {prismaClient} from '../utils/prismaClient';
+import {markdownText} from '../utils/markdownText';
 
 export const Route = createFileRoute('/')({
   component: Index,
+  loader: async () => await newsLoader(),
+});
+
+const newsLoader = createServerFn().handler(async () => {
+  const news = await prismaClient.news.findMany({
+    take: 10,
+    orderBy: {
+      createdAt: 'desc',
+    },
+    select: {
+      title: true,
+      slug: true,
+      createdAt: true,
+      content: true,
+    },
+  });
+
+  return Promise.all(
+    news.map(async (item) => {
+      const content = await markdownText(item.content);
+      return {
+        ...item,
+        content,
+      };
+    }),
+  );
 });
 
 export function Index() {
-  const {data} = useNewsSuspenseQuery();
+  const news = Route.useLoaderData();
 
   return (
     <>
-      {data?.news.edges.slice(0, 8).map((edge, i) => (
+      {news.map((item, i) => (
         <React.Fragment key={i}>
           {i > 0 && <Separator width="60%" m="auto" mb="16" />}
-          <Article key={edge.node.slug} data={edge.node} mb="12" />
+          <Article key={item.slug} data={item} mb="12" />
         </React.Fragment>
       ))}
       <Center>

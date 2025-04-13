@@ -1,0 +1,422 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Area {
+  id              String            @id
+  displayName     String
+  order           Int
+  themeColor      String
+  latitude        Float
+  longitude       Float
+  AreaOpeningHour AreaOpeningHour[]
+  BandPlaying     BandPlaying[]
+}
+
+model AreaOpeningHour {
+  id        Int      @id @default(autoincrement())
+  startTime DateTime
+  endTime   DateTime
+  areaId    String
+  Area      Area     @relation(fields: [areaId], references: [id])
+}
+
+model BandApplication {
+  id                      String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt               DateTime                 @default(now())
+  email                   String
+  bandname                String
+  genre                   String?
+  city                    String
+  facebook                String?
+  demo                    String?
+  description             String?
+  numberOfArtists         Int?
+  numberOfNonMaleArtists  Int?
+  contactName             String
+  contactPhone            String
+  knowsKultFrom           String?
+  distance                Float?
+  facebookLikes           Int?
+  website                 String?
+  genreCategory           GenreCategory
+  heardAboutBookingFrom   HeardAboutBookingFrom?
+  contactedByViewerId     String?
+  instagram               String?
+  instagramFollower       Int?
+  eventId                 String
+  hasPreviouslyPlayed     PreviouslyPlayed?
+  lastContactedAt         DateTime?
+  latitude                Float?
+  longitude               Float?
+  demoEmbedUrl            String?
+  demoEmbed               String?
+  demoEmbedType           DemoEmbedType?
+  repertoire              BandRepertoire?
+  spotifyArtist           String?
+  spotifyMonthlyListeners Int?
+  Viewer                  Viewer?                  @relation(fields: [contactedByViewerId], references: [id])
+  Event                   Event                    @relation(fields: [eventId], references: [id])
+  BandApplicationComment  BandApplicationComment[]
+  BandApplicationRating   BandApplicationRating[]
+  BandApplicationTag      BandApplicationTag[]
+}
+
+model BandApplicationComment {
+  id                String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt         DateTime        @default(now())
+  viewerId          String
+  comment           String
+  bandApplicationId String          @db.Uuid
+  BandApplication   BandApplication @relation(fields: [bandApplicationId], references: [id])
+  Viewer            Viewer          @relation(fields: [viewerId], references: [id])
+}
+
+model BandApplicationRating {
+  viewerId          String
+  rating            Int
+  bandApplicationId String          @db.Uuid
+  BandApplication   BandApplication @relation(fields: [bandApplicationId], references: [id])
+  Viewer            Viewer          @relation(fields: [viewerId], references: [id])
+
+  @@id([viewerId, bandApplicationId])
+  @@index([bandApplicationId])
+}
+
+model BandApplicationTag {
+  bandApplicationId String          @db.Uuid
+  tag               String          @db.Citext
+  createdAt         DateTime        @default(now())
+  createdByViewerId String
+  BandApplication   BandApplication @relation(fields: [bandApplicationId], references: [id])
+  Viewer            Viewer          @relation(fields: [createdByViewerId], references: [id])
+
+  @@unique([bandApplicationId, tag])
+}
+
+model BandPlaying {
+  name             String
+  startTime        DateTime
+  endTime          DateTime
+  description      String?
+  shortDescription String?
+  genre            String?
+  instagram        String?
+  spotify          String?
+  facebook         String?
+  website          String?
+  youtube          String?
+  soundcloud       String?
+  areaId           String
+  eventId          String
+  slug             String
+  photo            String?   @db.Uuid
+  announcementTime DateTime?
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  Area             Area      @relation(fields: [areaId], references: [id])
+  Event            Event     @relation(fields: [eventId], references: [id])
+
+  @@unique([areaId, startTime])
+  @@unique([eventId, slug])
+}
+
+model CardTransaction {
+  clientId        String              @id
+  cardId          String
+  depositBefore   Int
+  depositAfter    Int
+  balanceBefore   Int
+  balanceAfter    Int
+  transactionType CardTransactionType
+  counter         Int?
+  orderId         Int?
+  DeviceLog       DeviceLog           @relation(fields: [clientId], references: [clientId])
+  Order           Order?              @relation(fields: [orderId], references: [id])
+}
+
+model CrewCard {
+  id         Bytes    @id
+  nickname   String?
+  suspended  Boolean?
+  privileged Boolean?
+  viewerId   String?
+  validUntil DateTime
+  Viewer     Viewer?  @relation(fields: [viewerId], references: [id])
+  Order      Order[]
+}
+
+model Device {
+  id              String       @id
+  lastSeen        DateTime?
+  productListId   Int?
+  softwareVersion String?
+  type            DeviceType
+  ProductList     ProductList? @relation(fields: [productListId], references: [id])
+  DeviceLog       DeviceLog[]
+  Order           Order[]
+}
+
+model DeviceConfigVersion {
+  crc32     Int      @unique
+  version   Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+}
+
+model DeviceLog {
+  clientId        String           @id
+  batteryVoltage  Int?
+  usbVoltage      Int?
+  deviceId        String
+  createdAt       DateTime         @default(now())
+  deviceTime      DateTime
+  CardTransaction CardTransaction?
+  Device          Device           @relation(fields: [deviceId], references: [id])
+}
+
+model DevicePrivilegeToken {
+  id    Bytes   @id
+  label String?
+}
+
+model Event {
+  id                   String            @id
+  name                 String
+  start                DateTime
+  end                  DateTime
+  eventType            EventType
+  bandApplicationStart DateTime?
+  bandApplicationEnd   DateTime?
+  djApplicationEnd     DateTime?
+  poster               String?           @db.Uuid
+  description          String?
+  djApplicationStart   DateTime?
+  latitude             Float?
+  location             String?
+  longitude            Float?
+  BandApplication      BandApplication[]
+  BandPlaying          BandPlaying[]
+}
+
+model GmailReminders {
+  messageId String @id
+  account   String
+}
+
+model ItemLocation {
+  timeStamp DateTime @id
+  latitude  Float
+  longitude Float
+  payload   Json
+}
+
+model News {
+  slug      String   @id
+  title     String
+  content   String
+  createdAt DateTime @default(now())
+}
+
+model Nonce {
+  nonce        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  expiresAt    DateTime
+  createdForId String?
+  Viewer       Viewer?  @relation(fields: [createdForId], references: [id])
+}
+
+model NonceRequest {
+  expiresAt    DateTime
+  createdForId String?
+  status       NonceRequestStatus @default(Pending)
+  id           String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  Viewer       Viewer?            @relation(fields: [createdForId], references: [id])
+}
+
+model Order {
+  id              Int               @id @default(autoincrement())
+  createdAt       DateTime          @default(now())
+  payment         OrderPayment
+  deposit         Int               @default(0)
+  deviceId        String?
+  crewCardId      Bytes?
+  CardTransaction CardTransaction[]
+  CrewCard        CrewCard?         @relation(fields: [crewCardId], references: [id])
+  Device          Device?           @relation(fields: [deviceId], references: [id])
+  OrderItem       OrderItem[]
+}
+
+model OrderItem {
+  id            Int          @id @default(autoincrement())
+  orderId       Int
+  amount        Int
+  note          String?
+  name          String
+  perUnitPrice  Int
+  productListId Int?
+  Order         Order        @relation(fields: [orderId], references: [id])
+  ProductList   ProductList? @relation(fields: [productListId], references: [id])
+}
+
+model Page {
+  slug    String  @id
+  content String?
+  left    String?
+  right   String?
+  bottom  String?
+  title   String
+}
+
+model Product {
+  id               Int                @id @default(autoincrement())
+  name             String             @db.VarChar(30)
+  price            Int
+  order            Int
+  productListId    Int
+  requiresDeposit  Boolean            @default(false)
+  ProductList      ProductList        @relation(fields: [productListId], references: [id])
+  ProductAdditives ProductAdditives[]
+}
+
+model ProductAdditives {
+  id          String    @id
+  displayName String
+  Product     Product[]
+}
+
+model ProductList {
+  id          Int         @id @default(autoincrement())
+  name        String      @db.VarChar(20)
+  emoji       String?
+  active      Boolean     @default(true)
+  updatedAt   DateTime?
+  description String?
+  Device      Device[]
+  OrderItem   OrderItem[]
+  Product     Product[]
+}
+
+model ShortDomainRedirect {
+  slug      String @id
+  targetUrl String
+}
+
+model TwoFactor {
+  account String
+  service String
+  secret  String
+
+  @@unique([account, service])
+}
+
+model Viewer {
+  id                     String                   @id
+  displayName            String
+  email                  String
+  profilePicture         String?
+  slackToken             String?
+  slackScopes            String[]
+  updatedAt              DateTime                 @default(now())
+  BandApplication        BandApplication[]
+  BandApplicationComment BandApplicationComment[]
+  BandApplicationRating  BandApplicationRating[]
+  BandApplicationTag     BandApplicationTag[]
+  CrewCard               CrewCard[]
+  Nonce                  Nonce[]
+  NonceRequest           NonceRequest[]
+  ViewerLocation         ViewerLocation[]
+}
+
+model ViewerLocation {
+  id        String   @id
+  viewerId  String
+  createdAt DateTime
+  latitude  Float
+  longitude Float
+  payload   Json
+  Viewer    Viewer   @relation(fields: [viewerId], references: [id])
+}
+
+enum BandRepertoire {
+  ExclusivelyOwnSongs
+  MostlyOwnSongs
+  MostlyCoverSongs
+  ExclusivelyCoverSongs
+}
+
+enum CardTransactionType {
+  TopUp
+  Charge
+  Cashout
+  Repair
+}
+
+enum DemoEmbedType {
+  Unresolvable
+  YouTubeVideo
+  YouTubePlaylist
+  BandcampAlbum
+  BandcampTrack
+  SoundcloudUrl
+  SpotifyTrack
+  SpotifyArtist
+  SpotifyAlbum
+}
+
+enum DeviceType {
+  CONTACTLESS_TERMINAL
+  IPAD
+}
+
+enum EventType {
+  Kulturspektakel
+  Other
+  Locker
+}
+
+enum GenreCategory {
+  Rock
+  Pop
+  Indie
+  Reggae_Ska
+  Blues_Funk_Jazz_Soul
+  Folk_SingerSongwriter_Country
+  Elektro_HipHop
+  Hardrock_Metal_Punk
+  Other
+  DJ
+}
+
+enum HeardAboutBookingFrom {
+  BYon
+  Newspaper
+  Friends
+  Website
+  Facebook
+  Instagram
+}
+
+enum NonceRequestStatus {
+  Pending
+  Approved
+  Rejected
+}
+
+enum OrderPayment {
+  CASH
+  BON
+  SUM_UP
+  VOUCHER
+  FREE_CREW
+  FREE_BAND
+  KULT_CARD
+}
+
+enum PreviouslyPlayed {
+  Yes
+  OtherFormation
+  No
+}

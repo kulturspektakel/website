@@ -20,14 +20,6 @@ import logo from './logo.svg';
 import videoSrc from './Header.mov';
 import DateString from '../DateString';
 import {FaXmark, FaBars} from 'react-icons/fa6';
-import {gql} from '@apollo/client';
-
-gql`
-  fragment Header on Event {
-    start
-    end
-  }
-`;
 
 function useLoadingBar() {
   const [blue500] = useToken('colors', ['blue.500']);
@@ -84,7 +76,14 @@ function NavItems() {
   );
 }
 
-export default function Header() {
+export default function Header({
+  event,
+}: {
+  event: {
+    start: Date;
+    end: Date;
+  };
+}) {
   const isHome = useLocation().pathname === '/';
   const [showNav, setShowNav] = useState(false);
   // Close nav on route change

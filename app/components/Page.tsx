@@ -2,6 +2,7 @@ import {Box, Heading, SimpleGrid} from '@chakra-ui/react';
 import type {PageContentFragment} from '~/types/graphql';
 import MarkdownText from './MarkdownText';
 import {gql} from '@apollo/client';
+import {Markdown} from '../utils/markdownText';
 
 gql`
   fragment PageContent on Page {
@@ -23,7 +24,13 @@ gql`
 `;
 
 export default function Page(
-  props: PageContentFragment & {centered?: boolean; headingLevel?: 1 | 2 | 3},
+  props: {
+    title: string;
+    left?: Markdown;
+    right?: Markdown;
+    content?: Markdown;
+    bottom?: Markdown;
+  } & {centered?: boolean; headingLevel?: 1 | 2 | 3},
 ) {
   const {title, left, right, content, bottom, headingLevel = 1} = props;
   return (

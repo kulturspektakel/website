@@ -18,7 +18,7 @@ export const Route = createFileRoute('/demo')({
 });
 
 gql`
-  query Root {
+  query Demo {
     eventsConnection(first: 1, type: Kulturspektakel) {
       edges {
         node {

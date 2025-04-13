@@ -12,6 +12,7 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as DemoImport } from './routes/demo'
+import { Route as SlugImport } from './routes/$slug'
 import { Route as IndexImport } from './routes/index'
 
 // Create/Update Routes
@@ -19,6 +20,12 @@ import { Route as IndexImport } from './routes/index'
 const DemoRoute = DemoImport.update({
   id: '/demo',
   path: '/demo',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const SlugRoute = SlugImport.update({
+  id: '/$slug',
+  path: '/$slug',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -39,6 +46,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
+    '/$slug': {
+      id: '/$slug'
+      path: '/$slug'
+      fullPath: '/$slug'
+      preLoaderRoute: typeof SlugImport
+      parentRoute: typeof rootRoute
+    }
     '/demo': {
       id: '/demo'
       path: '/demo'
@@ -53,36 +67,41 @@ declare module '@tanstack/react-router' {
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/$slug': typeof SlugRoute
   '/demo': typeof DemoRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/$slug': typeof SlugRoute
   '/demo': typeof DemoRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
+  '/$slug': typeof SlugRoute
   '/demo': typeof DemoRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/demo'
+  fullPaths: '/' | '/$slug' | '/demo'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/demo'
-  id: '__root__' | '/' | '/demo'
+  to: '/' | '/$slug' | '/demo'
+  id: '__root__' | '/' | '/$slug' | '/demo'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  SlugRoute: typeof SlugRoute
   DemoRoute: typeof DemoRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  SlugRoute: SlugRoute,
   DemoRoute: DemoRoute,
 }
 
@@ -97,11 +116,15 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
+        "/$slug",
         "/demo"
       ]
     },
     "/": {
       "filePath": "index.tsx"
+    },
+    "/$slug": {
+      "filePath": "$slug.tsx"
     },
     "/demo": {
       "filePath": "demo.tsx"

@@ -9,30 +9,11 @@ import {
 } from '@chakra-ui/react';
 import Image from './Image';
 import {Gallery} from 'react-photoswipe-gallery';
-import {gql} from '@apollo/client';
-import type {MarkdownTextFragment} from '../types/graphql';
 import {Link} from '@tanstack/react-router';
+import {imageUrl} from '../utils/directusImage';
+import {Markdown as MarkdownT} from '../utils/markdownText';
 
-gql`
-  fragment MarkdownText on MarkdownString {
-    markdown
-    images {
-      uri
-      tiny: scaledUri(width: 250)
-      small: scaledUri(width: 900)
-      large: scaledUri(width: 1600)
-      width
-      height
-      copyright
-    }
-  }
-`;
-
-type Props = {
-  markdown: MarkdownTextFragment;
-};
-
-export default function MarkdownText(props: Props) {
+export default function MarkdownText(props: MarkdownT) {
   return (
     <Markdown
       options={{
@@ -66,8 +47,8 @@ export default function MarkdownText(props: Props) {
             </ChakraLink>
           ),
           img: (imgProps: ImageProps) => {
-            const img = props.markdown.images.find(
-              (image) => image.uri === imgProps.src,
+            const img = props.images.find(
+              (image) => imageUrl({id: image.id}) === imgProps.src,
             );
 
             if (!img) {
@@ -84,8 +65,8 @@ export default function MarkdownText(props: Props) {
                   originalHeight={img.height}
                   originalWidth={img.width}
                   maxH={500}
-                  src={img.small}
-                  original={img.large}
+                  src={imageUrl({id: img.id, width: 500})}
+                  original={imageUrl({id: img.id, width: 1600})}
                   caption={img.copyright ? `Foto: ${img.copyright}` : undefined}
                 />
               </Gallery>
@@ -101,7 +82,7 @@ export default function MarkdownText(props: Props) {
         },
       }}
     >
-      {props.markdown.markdown}
+      {props.markdown}
     </Markdown>
   );
 }

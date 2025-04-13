@@ -9,12 +9,10 @@ import {
   Heading,
   Stack,
 } from '@chakra-ui/react';
-import {Link as RemixLink, NavLink, useLocation} from '@remix-run/react';
 import {FaSpotify, FaYoutube, FaInstagram, FaFacebook} from 'react-icons/fa6';
 import vpby from './vpby.svg';
-import {$path} from 'remix-routes';
-import type {RemixLinkProps} from '@remix-run/react/dist/components';
 import LinkButton from '../LinkButton';
+import {Link as RouterLink, useLocation} from '@tanstack/react-router';
 
 export default function Footer() {
   const location = useLocation();
@@ -82,38 +80,32 @@ export default function Footer() {
               flexWrap={'wrap'}
               justifyContent={'center'}
             >
-              <FooterLink to={$path('/booking')}>Booking</FooterLink>
-              <FooterLink to={$path('/:slug', {slug: 'impressum'})}>
-                Impressum
-              </FooterLink>
-              <FooterLink to={$path('/:slug', {slug: 'foerderverein'})}>
-                Förderverein
-              </FooterLink>
-              <FooterLink to={$path('/:slug', {slug: 'datenschutz'})}>
-                Datenschutz
-              </FooterLink>
+              <FooterLink to="/booking">Booking</FooterLink>
+              <FooterLink to="/impressum">Impressum</FooterLink>
+              <FooterLink to="/foerderverein">Förderverein</FooterLink>
+              <FooterLink to="/datenschutz">Datenschutz</FooterLink>
             </HStack>
           </VStack>
         </HStack>
         <VStack>
           <HStack gap={{base: 6, md: 4}} fontSize={{base: 32, md: 24}}>
             <FooterIcon
-              to="https://facebook.com/kulturspektakel"
+              href="https://facebook.com/kulturspektakel"
               title="Facebook"
               icon={FaFacebook}
             />
             <FooterIcon
-              to="https://www.youtube.com/channel/UCLOU06fHSN3Hwe0rmbrFtpA"
+              href="https://www.youtube.com/channel/UCLOU06fHSN3Hwe0rmbrFtpA"
               title="Youtube"
               icon={FaYoutube}
             />
             <FooterIcon
-              to="https://instagram.com/kulturspektakel"
+              href="https://instagram.com/kulturspektakel"
               title="Instagram"
               icon={FaInstagram}
             />
             <FooterIcon
-              to="https://open.spotify.com/user/p7s6vlorvw05bxm881h5em4dj?si=4049483d01ec4fc3"
+              href="https://open.spotify.com/user/p7s6vlorvw05bxm881h5em4dj?si=4049483d01ec4fc3"
               title="Spotify"
               icon={FaSpotify}
             />
@@ -130,11 +122,7 @@ export default function Footer() {
   );
 }
 
-function FooterIcon({
-  icon: Icon,
-  to,
-  title,
-}: LinkProps & RemixLinkProps & {icon: any}) {
+function FooterIcon({icon: Icon, title, href}: LinkProps & {icon: any}) {
   return (
     <Link
       asChild
@@ -145,9 +133,9 @@ function FooterIcon({
       _active={{color: 'whiteAlpha.600'}}
       _focus={{color: 'whiteAlpha.600'}}
     >
-      <RemixLink to={to}>
+      <RouterLink to={href}>
         <Icon />
-      </RemixLink>
+      </RouterLink>
     </Link>
   );
 }
@@ -161,13 +149,13 @@ function FooterLink({children, to}: {to: string; children: string}) {
       _focus={{color: 'white'}}
       asChild
     >
-      <NavLink to={to}>
+      <RouterLink to={to}>
         {(a) => (
-          <Text color={a.isActive || a.isPending ? 'white' : undefined}>
+          <Text color={a.isActive || a.isTransitioning ? 'white' : undefined}>
             {children}
           </Text>
         )}
-      </NavLink>
+      </RouterLink>
     </Link>
   );
 }

@@ -10,34 +10,95 @@ import theme from '../theme';
 import {type ApolloClientRouterContext} from '@apollo/client-integration-tanstack-start';
 import Footer from '../components/Footer/Footer';
 import Header from '../components/Header/Header';
+import photoswipeCSS from 'photoswipe/dist/photoswipe.css?url';
+import {createServerFn} from '@tanstack/react-start';
+import {dateStringComponents} from '../components/DateString';
+import {prismaClient} from '../utils/prismaClient';
 
 export const Route = createRootRouteWithContext<ApolloClientRouterContext>()({
-  head: () => ({
-    meta: [
-      {
-        charSet: 'utf-8',
-      },
-      {
-        name: 'viewport',
-        content: 'width=device-width, initial-scale=1',
-      },
-      {
-        title: 'TanStack Start Starter',
-      },
-    ],
-  }),
+  head: ({loaderData}) => {
+    let title = 'Kulturspektakel Gauting';
+    let description =
+      'Open-Air-Musikfestival mit freiem Eintritt, Workshops, Kinderprogramm und mehr';
+    if (loaderData) {
+      const {
+        date,
+        connector = '',
+        to = '',
+      } = dateStringComponents({
+        date: loaderData.start,
+        to: loaderData.end,
+        until: '-',
+      });
+      title = `Kulturspektakel Gauting ${date}${connector}${to}`;
+      description = `Open-Air-Musikfestival vom ${date} bis ${to} mit freiem Eintritt, Workshops, Kinderprogramm und mehr`;
+    }
+
+    return {
+      meta: [
+        {charset: 'utf-8'},
+        {name: 'viewport', content: 'width=device-width,initial-scale=1'},
+        {
+          title,
+        },
+        {
+          name: 'description',
+          content: description,
+        },
+        {
+          property: 'og:title',
+          content: title,
+        },
+        {
+          property: 'og:locale',
+          content: 'de_DE',
+        },
+        {
+          property: 'og:description',
+          content: description,
+        },
+      ],
+      links: [
+        {
+          rel: 'stylesheet',
+          href: photoswipeCSS,
+        },
+      ],
+    };
+  },
   component: RootComponent,
+  loader: async () => {
+    return await rootLoader();
+  },
 });
 
 function RootComponent() {
   return (
-    <RootDocument>
+    <RootDoc>
       <Outlet />
-    </RootDocument>
+    </RootDoc>
   );
 }
 
-function RootDocument({children}: Readonly<{children: ReactNode}>) {
+const rootLoader = createServerFn().handler(async () => {
+  const event = await prismaClient.event.findFirstOrThrow({
+    where: {
+      eventType: 'Kulturspektakel',
+    },
+    orderBy: {
+      start: 'desc',
+    },
+    select: {
+      start: true,
+      end: true,
+    },
+  });
+
+  return event;
+});
+
+function RootDoc({children}: Readonly<{children: ReactNode}>) {
+  const event = Route.useLoaderData();
   return (
     <html lang="de">
       <head>
@@ -46,7 +107,7 @@ function RootDocument({children}: Readonly<{children: ReactNode}>) {
       <body>
         <ChakraProvider value={theme}>
           <Flex direction={'column'} minHeight={'100vh'}>
-            <Header />
+            <Header event={event} />
             <Box
               flex="1 1 0"
               ml="auto"

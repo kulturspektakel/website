@@ -951,8 +951,6 @@ export type Viewer = Node & {
   profilePicture?: Maybe<Scalars['String']['output']>;
 };
 
-export type HeaderFragment = {__typename?: 'Event'; start: Date; end: Date};
-
 export type MarkdownTextFragment = {
   __typename?: 'MarkdownString';
   markdown: string;
@@ -1282,9 +1280,9 @@ export type ProductListComponentFragment = {
   }>;
 };
 
-export type RootQueryVariables = Exact<{[key: string]: never}>;
+export type DemoQueryVariables = Exact<{[key: string]: never}>;
 
-export type RootQuery = {
+export type DemoQuery = {
   __typename?: 'Query';
   eventsConnection: {
     __typename?: 'QueryEventsConnection';
@@ -1327,12 +1325,6 @@ export type NewsQuery = {
   };
 };
 
-export const HeaderFragmentDoc = gql`
-  fragment Header on Event {
-    start
-    end
-  }
-`;
 export const MarkdownTextFragmentDoc = gql`
   fragment MarkdownText on MarkdownString {
     markdown
@@ -1890,8 +1882,8 @@ export type BandSearchQueryResult = Apollo.QueryResult<
   BandSearchQuery,
   BandSearchQueryVariables
 >;
-export const RootDocument = gql`
-  query Root {
+export const DemoDocument = gql`
+  query Demo {
     eventsConnection(first: 1, type: Kulturspektakel) {
       edges {
         node {
@@ -1904,55 +1896,55 @@ export const RootDocument = gql`
 `;
 
 /**
- * __useRootQuery__
+ * __useDemoQuery__
  *
- * To run a query within a React component, call `useRootQuery` and pass it any options that fit your needs.
- * When your component renders, `useRootQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useDemoQuery` and pass it any options that fit your needs.
+ * When your component renders, `useDemoQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useRootQuery({
+ * const { data, loading, error } = useDemoQuery({
  *   variables: {
  *   },
  * });
  */
-export function useRootQuery(
-  baseOptions?: Apollo.QueryHookOptions<RootQuery, RootQueryVariables>,
+export function useDemoQuery(
+  baseOptions?: Apollo.QueryHookOptions<DemoQuery, DemoQueryVariables>,
 ) {
   const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useQuery<RootQuery, RootQueryVariables>(RootDocument, options);
+  return Apollo.useQuery<DemoQuery, DemoQueryVariables>(DemoDocument, options);
 }
-export function useRootLazyQuery(
-  baseOptions?: Apollo.LazyQueryHookOptions<RootQuery, RootQueryVariables>,
+export function useDemoLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<DemoQuery, DemoQueryVariables>,
 ) {
   const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useLazyQuery<RootQuery, RootQueryVariables>(
-    RootDocument,
+  return Apollo.useLazyQuery<DemoQuery, DemoQueryVariables>(
+    DemoDocument,
     options,
   );
 }
-export function useRootSuspenseQuery(
+export function useDemoSuspenseQuery(
   baseOptions?:
     | Apollo.SkipToken
-    | Apollo.SuspenseQueryHookOptions<RootQuery, RootQueryVariables>,
+    | Apollo.SuspenseQueryHookOptions<DemoQuery, DemoQueryVariables>,
 ) {
   const options =
     baseOptions === Apollo.skipToken
       ? baseOptions
       : {...defaultOptions, ...baseOptions};
-  return Apollo.useSuspenseQuery<RootQuery, RootQueryVariables>(
-    RootDocument,
+  return Apollo.useSuspenseQuery<DemoQuery, DemoQueryVariables>(
+    DemoDocument,
     options,
   );
 }
-export type RootQueryHookResult = ReturnType<typeof useRootQuery>;
-export type RootLazyQueryHookResult = ReturnType<typeof useRootLazyQuery>;
-export type RootSuspenseQueryHookResult = ReturnType<
-  typeof useRootSuspenseQuery
+export type DemoQueryHookResult = ReturnType<typeof useDemoQuery>;
+export type DemoLazyQueryHookResult = ReturnType<typeof useDemoLazyQuery>;
+export type DemoSuspenseQueryHookResult = ReturnType<
+  typeof useDemoSuspenseQuery
 >;
-export type RootQueryResult = Apollo.QueryResult<RootQuery, RootQueryVariables>;
+export type DemoQueryResult = Apollo.QueryResult<DemoQuery, DemoQueryVariables>;
 export const NewsDocument = gql`
   query News {
     news(first: 10) {
