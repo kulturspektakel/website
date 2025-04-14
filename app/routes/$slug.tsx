@@ -1,8 +1,4 @@
-import {Center, Separator} from '@chakra-ui/react';
-import React from 'react';
-import Article from '../components/news/Article';
-import LinkButton from '../components/LinkButton';
-import {createFileRoute} from '@tanstack/react-router';
+import {createFileRoute, notFound} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
 import {prismaClient} from '../utils/prismaClient';
 import {markdownText} from '../utils/markdownText';
@@ -14,22 +10,26 @@ export const Route = createFileRoute('/$slug')({
 });
 
 const pageLoader = createServerFn()
-  .validator((slug: string): string => String(slug))
-  .handler(async (ctx) => {
-    const {left, right, bottom, content, ...page} =
-      await prismaClient.page.findUniqueOrThrow({
-        where: {
-          slug: ctx.data,
-        },
-        select: {
-          title: true,
-          slug: true,
-          content: true,
-          left: true,
-          right: true,
-          bottom: true,
-        },
-      });
+  .validator((slug: string) => slug)
+  .handler(async ({data: slug}) => {
+    const data = await prismaClient.page.findUnique({
+      where: {
+        slug,
+      },
+      select: {
+        title: true,
+        content: true,
+        left: true,
+        right: true,
+        bottom: true,
+      },
+    });
+
+    if (!data) {
+      throw notFound();
+    }
+
+    const {left, right, bottom, content, ...page} = data;
 
     const [contentMd, leftMd, rightMd, bottomMd] = await Promise.all([
       content ? markdownText(content) : null,

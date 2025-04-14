@@ -1,27 +1,6 @@
 import {Box, Heading, SimpleGrid} from '@chakra-ui/react';
-import type {PageContentFragment} from '~/types/graphql';
 import MarkdownText from './MarkdownText';
-import {gql} from '@apollo/client';
 import {Markdown} from '../utils/markdownText';
-
-gql`
-  fragment PageContent on Page {
-    title
-    content {
-      ...MarkdownText
-      plainText
-    }
-    left {
-      ...MarkdownText
-    }
-    right {
-      ...MarkdownText
-    }
-    bottom {
-      ...MarkdownText
-    }
-  }
-`;
 
 export default function Page(
   props: {
@@ -45,22 +24,22 @@ export default function Page(
       </Heading>
       {content && (
         <Box mt="3" textAlign={props.centered ? 'center' : undefined}>
-          <MarkdownText markdown={content} />
+          <MarkdownText {...content} />
         </Box>
       )}
       {left && right && (
         <SimpleGrid columns={[1, 2]} gap="5" mt="3">
           <Box>
-            <MarkdownText markdown={left} />
+            <MarkdownText {...left} />
           </Box>
           <Box>
-            <MarkdownText markdown={right} />
+            <MarkdownText {...right} />
           </Box>
         </SimpleGrid>
       )}
       {bottom && (
         <Box mt="3" textAlign={props.centered ? 'center' : undefined}>
-          <MarkdownText markdown={bottom} />
+          <MarkdownText {...bottom} />
         </Box>
       )}
     </Box>

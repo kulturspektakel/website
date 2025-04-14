@@ -9,7 +9,7 @@ export type DirectusImage = {
   title: string;
 };
 
-export function directusImages(ids: string[]) {
+export function directusImages(ids: string[]): Promise<Array<DirectusImage>> {
   if (!ids.length) {
     return Promise.resolve([]);
   }

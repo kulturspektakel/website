@@ -11,17 +11,10 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as DemoImport } from './routes/demo'
 import { Route as SlugImport } from './routes/$slug'
 import { Route as IndexImport } from './routes/index'
 
 // Create/Update Routes
-
-const DemoRoute = DemoImport.update({
-  id: '/demo',
-  path: '/demo',
-  getParentRoute: () => rootRoute,
-} as any)
 
 const SlugRoute = SlugImport.update({
   id: '/$slug',
@@ -53,13 +46,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SlugImport
       parentRoute: typeof rootRoute
     }
-    '/demo': {
-      id: '/demo'
-      path: '/demo'
-      fullPath: '/demo'
-      preLoaderRoute: typeof DemoImport
-      parentRoute: typeof rootRoute
-    }
   }
 }
 
@@ -68,41 +54,36 @@ declare module '@tanstack/react-router' {
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$slug': typeof SlugRoute
-  '/demo': typeof DemoRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$slug': typeof SlugRoute
-  '/demo': typeof DemoRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/$slug': typeof SlugRoute
-  '/demo': typeof DemoRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/$slug' | '/demo'
+  fullPaths: '/' | '/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/$slug' | '/demo'
-  id: '__root__' | '/' | '/$slug' | '/demo'
+  to: '/' | '/$slug'
+  id: '__root__' | '/' | '/$slug'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SlugRoute: typeof SlugRoute
-  DemoRoute: typeof DemoRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SlugRoute: SlugRoute,
-  DemoRoute: DemoRoute,
 }
 
 export const routeTree = rootRoute
@@ -116,8 +97,7 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/$slug",
-        "/demo"
+        "/$slug"
       ]
     },
     "/": {
@@ -125,9 +105,6 @@ export const routeTree = rootRoute
     },
     "/$slug": {
       "filePath": "$slug.tsx"
-    },
-    "/demo": {
-      "filePath": "demo.tsx"
     }
   }
 }

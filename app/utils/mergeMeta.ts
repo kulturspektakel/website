@@ -20,7 +20,7 @@ export default function mergedMeta<Loader>(
               'property' in parentMeta &&
               meta.property === parentMeta.property) ||
             ('title' in meta && 'title' in parentMeta) ||
-            ('charset' in meta && 'charset' in parentMeta),
+            ('charSet' in meta && 'charSet' in parentMeta),
         );
         if (index == -1) {
           // Parent meta not found in acc, so add it

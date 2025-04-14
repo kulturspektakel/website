@@ -1,6 +1,6 @@
 import {directusImages, imageUrl} from './directusImage';
 
-export type Markdown = ReturnType<typeof markdownText>;
+export type Markdown = Awaited<ReturnType<typeof markdownText>>;
 export async function markdownText(text: string) {
   const imageBaseUrl = imageUrl();
   const markdown = text.replaceAll(
@@ -18,7 +18,9 @@ export async function markdownText(text: string) {
   );
 
   const matches = markdown.match(imgRegex) || [];
-  const imageIDs = matches.map((match) => match.replace(imgRegex, '$2'));
+  const imageIDs = matches.map((match: string) =>
+    match.replace(imgRegex, '$2'),
+  );
 
   return {
     images: await directusImages(imageIDs),
