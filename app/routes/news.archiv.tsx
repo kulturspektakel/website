@@ -10,7 +10,6 @@ import {prismaClient} from '../utils/prismaClient';
 import {markdownPages} from '../utils/markdownText';
 import {imageUrl} from '../utils/directusImage';
 import {useInfiniteQuery} from '@tanstack/react-query';
-import Markdown from 'markdown-to-jsx';
 
 const PAGE_SIZE = 30;
 

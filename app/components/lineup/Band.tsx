@@ -1,41 +1,40 @@
 import {Heading, Text, Box, Image} from '@chakra-ui/react';
-import DateString from '~/components//DateString';
-import {gql} from '@apollo/client';
-import type {BandFragment} from '~/types/graphql';
-import Card from '~/components/Card';
-import {$path} from 'remix-routes';
+import DateString from '../DateString';
+import Card from '../Card';
+import {imageUrl} from '../../utils/directusImage';
 
-gql`
-  fragment Band on BandPlaying {
-    id
-    name
-    startTime
-    slug
-    area {
-      id
-      displayName
-      themeColor
-    }
-    genre
-    photo {
-      scaledUri(height: 200, width: 200)
-    }
-  }
-`;
-
-export default function Band({band}: {band: BandFragment}) {
+export default function Band({
+  band,
+  area,
+}: {
+  area: {
+    id: string;
+    displayName: string;
+    themeColor: string;
+  };
+  band: {
+    name: string;
+    startTime: Date;
+    slug: string;
+    genre: string | null;
+    photo: string | null;
+  };
+}) {
   return (
     <Card
       aspectRatio={1}
-      href={$path('/lineup/:year/:slug', {
-        year: band.startTime.getFullYear(),
-        slug: band.slug,
-      })}
+      link={{
+        to: `/lineup/${band.startTime.getFullYear()}/${band.slug}`,
+        params: {
+          year: band.startTime.getFullYear(),
+          slug: band.slug,
+        },
+      }}
     >
       <Image
         width="100%"
         height="100%"
-        src={band.photo?.scaledUri ?? '/fallback.svg'}
+        src={imageUrl(band.photo, {width: 250}) ?? '/fallback.svg'}
         loading="lazy"
         objectFit="cover"
       />
@@ -44,11 +43,11 @@ export default function Band({band}: {band: BandFragment}) {
         bottom="2"
         left="2"
         mr="2"
-        bgColor={band.area.themeColor}
+        bgColor={area.themeColor}
         pt="2"
         pb="1"
         px="2"
-        color={band.area.id === 'Area:a' ? undefined : 'white'}
+        color={area.id === 'Area:a' ? undefined : 'white'}
         textAlign="left"
         borderRadius="md"
       >
@@ -78,7 +77,7 @@ export default function Band({band}: {band: BandFragment}) {
             }}
           />
           &nbsp;
-          {band.area.displayName}
+          {area.displayName}
           {band.genre && <>&nbsp;&middot; {band.genre}</>}
         </Text>
       </Box>

@@ -1,17 +1,17 @@
 import type {BoxProps} from '@chakra-ui/react';
 import {Box} from '@chakra-ui/react';
-import {Link} from '@tanstack/react-router';
+import {Link, LinkProps} from '@tanstack/react-router';
 import {forwardRef, useMemo} from 'react';
 
 const Card = forwardRef<BoxProps, any>(
   (
     {
       onClick,
-      href,
       children,
+      link,
       ...props
     }: BoxProps & {
-      href?: string;
+      link?: LinkProps;
     },
     ref,
   ) => {
@@ -44,8 +44,8 @@ const Card = forwardRef<BoxProps, any>(
     return (
       <Box
         ref={ref}
-        as={href == null ? 'div' : Link}
-        asChild={!!href}
+        as={link == null ? 'div' : Link}
+        asChild={!!link}
         bgColor="offwhite.300"
         borderRadius="xl"
         transform="rotate(-1deg)"
@@ -59,7 +59,7 @@ const Card = forwardRef<BoxProps, any>(
         {...onClickProps}
         {...props}
       >
-        {href != null ? <Link to={href}>{children}</Link> : children}
+        {link != null ? <Link {...link}>{children}</Link> : children}
       </Box>
     );
   },

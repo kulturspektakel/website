@@ -11,29 +11,48 @@ import {type ApolloClientRouterContext} from '@apollo/client-integration-tanstac
 import Footer from '../components/Footer/Footer';
 import Header from '../components/Header/Header';
 import photoswipeCSS from 'photoswipe/dist/photoswipe.css?url';
-import {createServerFn} from '@tanstack/react-start';
 import {dateStringComponents} from '../components/DateString';
 import {prismaClient} from '../utils/prismaClient';
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
+import {createServerFn} from '@tanstack/react-start';
+
+const beforeLoad = createServerFn().handler(async () => {
+  const event = await prismaClient.event.findFirstOrThrow({
+    where: {
+      eventType: 'Kulturspektakel',
+    },
+    orderBy: {
+      start: 'desc',
+    },
+    select: {
+      start: true,
+      end: true,
+      id: true,
+      bandApplicationStart: true,
+      bandApplicationEnd: true,
+      djApplicationStart: true,
+      djApplicationEnd: true,
+    },
+  });
+  return {event};
+});
 
 export const Route = createRootRouteWithContext<ApolloClientRouterContext>()({
-  head: ({loaderData}) => {
+  head: ({match: {context}}) => {
     let title = 'Kulturspektakel Gauting';
     let description =
       'Open-Air-Musikfestival mit freiem Eintritt, Workshops, Kinderprogramm und mehr';
-    if (loaderData) {
-      const {
-        date,
-        connector = '',
-        to = '',
-      } = dateStringComponents({
-        date: loaderData.start,
-        to: loaderData.end,
-        until: '-',
-      });
-      title = `Kulturspektakel Gauting ${date}${connector}${to}`;
-      description = `Open-Air-Musikfestival vom ${date} bis ${to} mit freiem Eintritt, Workshops, Kinderprogramm und mehr`;
-    }
+    const {
+      date,
+      connector = '',
+      to = '',
+    } = dateStringComponents({
+      date: context.event.start,
+      to: context.event.end,
+      until: '-',
+    });
+    title = `Kulturspektakel Gauting ${date}${connector}${to}`;
+    description = `Open-Air-Musikfestival vom ${date} bis ${to} mit freiem Eintritt, Workshops, Kinderprogramm und mehr`;
 
     return {
       meta: [
@@ -68,7 +87,7 @@ export const Route = createRootRouteWithContext<ApolloClientRouterContext>()({
     };
   },
   component: RootComponent,
-  loader: async () => await rootLoader(),
+  beforeLoad: async () => await beforeLoad(),
 });
 
 const queryClient = new QueryClient({
@@ -89,25 +108,8 @@ function RootComponent() {
   );
 }
 
-const rootLoader = createServerFn().handler(async () => {
-  const event = await prismaClient.event.findFirstOrThrow({
-    where: {
-      eventType: 'Kulturspektakel',
-    },
-    orderBy: {
-      start: 'desc',
-    },
-    select: {
-      start: true,
-      end: true,
-    },
-  });
-
-  return event;
-});
-
 function RootDoc({children}: Readonly<{children: ReactNode}>) {
-  const event = Route.useLoaderData();
+  const context = Route.useRouteContext();
   return (
     <html lang="de">
       <head>
@@ -116,7 +118,7 @@ function RootDoc({children}: Readonly<{children: ReactNode}>) {
       <body>
         <ChakraProvider value={theme}>
           <Flex direction={'column'} minHeight={'100vh'}>
-            <Header event={event} />
+            <Header event={context.event} />
             <Box
               flex="1 1 0"
               ml="auto"

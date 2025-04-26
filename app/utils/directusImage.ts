@@ -58,10 +58,22 @@ export async function directusImageConnection(
 }
 
 export const BASE_URL = 'https://files.kulturspektakel.de/';
+
 export function imageUrl(
   id: string,
   options?: {width: number} | {height: number},
+): string;
+export function imageUrl(
+  id?: string | null,
+  options?: {width: number} | {height: number},
+): string | null;
+export function imageUrl(
+  id?: string | null,
+  options?: {width: number} | {height: number},
 ) {
+  if (!id) {
+    return null;
+  }
   const url = new URL(BASE_URL);
   url.pathname = id;
   if (options?.width) {

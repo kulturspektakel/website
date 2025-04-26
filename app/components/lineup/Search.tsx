@@ -1,42 +1,45 @@
 import type {BoxProps} from '@chakra-ui/react';
 import {Box, Input, Text} from '@chakra-ui/react';
-import {gql} from '@apollo/client';
-import type {BandSearchQuery} from '~/types/graphql';
-import {BandSearchDocument} from '~/types/graphql';
 import {useTypeahead} from 'tomo-typeahead/react';
-import apolloClient from '~/utils/apolloClient';
 import {FaMagnifyingGlass} from 'react-icons/fa6';
 import {useRef} from 'react';
 import {useCombobox} from 'downshift';
-import {useNavigate} from '@remix-run/react';
-import {$path} from 'remix-routes';
 import DropdownMenu from '../DropdownMenu';
 import {InputGroup} from '../chakra-snippets/input-group';
+import {createServerFn, useServerFn} from '@tanstack/react-start';
+import {prismaClient} from '../../utils/prismaClient';
+import {useNavigate} from '@tanstack/react-router';
 
-gql`
-  query BandSearch($query: String!, $limit: Int = 5) {
-    findBandPlaying(query: $query, limit: $limit) {
-      id
-      name
-      startTime
-      slug
-    }
-  }
-`;
+const serverFn = createServerFn()
+  .validator((query: string) => query)
+  .handler(({data: query}) => {
+    let q = query
+      // sanitize tsquery: Only Letters, spaces, dash
+      .replace(/[^\p{L}0-9- ]/gu, ' ')
+      // remove spaces in front and beginning
+      .trim()
+      // sanitize tsquery: Only Letters, spaces, dash
+      .replace(/\s\s*/g, '<->');
+    // prefix matching
+    q += ':*';
+
+    return prismaClient.bandPlaying.findMany({
+      where: {
+        name: {
+          search: q,
+        },
+      },
+      orderBy: {
+        startTime: 'desc',
+      },
+      take: 10,
+    });
+  });
 
 export default function Search(props: BoxProps) {
-  const {loading, data, setQuery} = useTypeahead<
-    BandSearchQuery['findBandPlaying'][number]
-  >({
-    fetcher: async (query) => {
-      const {data: d} = await apolloClient.query({
-        query: BandSearchDocument,
-        variables: {
-          query,
-        },
-      });
-      return d.findBandPlaying;
-    },
+  const queryBands = useServerFn(serverFn);
+  const {loading, data, setQuery} = useTypeahead({
+    fetcher: async (query) => queryBands({data: query}),
     keyExtractor: (item) => item.id,
     matchStringExtractor: (item) => item.name,
   });
@@ -60,12 +63,13 @@ export default function Search(props: BoxProps) {
       onInputValueChange: (e) => setQuery(e.inputValue ?? ''),
       onSelectedItemChange: ({selectedItem}) => {
         if (selectedItem) {
-          navigate(
-            $path('/lineup/:year/:slug', {
-              year: selectedItem.startTime.getFullYear(),
+          navigate({
+            to: '/lineup/$year/$slug',
+            params: {
+              year: String(selectedItem.startTime.getFullYear()),
               slug: selectedItem.slug,
-            }),
-          );
+            },
+          });
           ref.current?.blur();
         }
       },

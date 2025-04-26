@@ -15,15 +15,19 @@ import { Route as SpeisekarteImport } from './routes/speisekarte'
 import { Route as PlakateImport } from './routes/plakate'
 import { Route as NuclinoSsoImport } from './routes/nuclino-sso'
 import { Route as LogoImport } from './routes/logo'
+import { Route as LineupImport } from './routes/lineup'
 import { Route as InfosImport } from './routes/infos'
 import { Route as EventsImport } from './routes/events'
 import { Route as BadgesImport } from './routes/badges'
 import { Route as AngebotImport } from './routes/angebot'
 import { Route as SlugImport } from './routes/$slug'
 import { Route as IndexImport } from './routes/index'
+import { Route as LineupIndexImport } from './routes/lineup.index'
 import { Route as NewsArchivImport } from './routes/news.archiv'
 import { Route as NewsSlugImport } from './routes/news.$slug'
+import { Route as LineupYearImport } from './routes/lineup.$year'
 import { Route as EventsIdImport } from './routes/events_.$id'
+import { Route as LineupYearSlugImport } from './routes/lineup.$year.$slug'
 
 // Create/Update Routes
 
@@ -48,6 +52,12 @@ const NuclinoSsoRoute = NuclinoSsoImport.update({
 const LogoRoute = LogoImport.update({
   id: '/logo',
   path: '/logo',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const LineupRoute = LineupImport.update({
+  id: '/lineup',
+  path: '/lineup',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -87,6 +97,12 @@ const IndexRoute = IndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const LineupIndexRoute = LineupIndexImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => LineupRoute,
+} as any)
+
 const NewsArchivRoute = NewsArchivImport.update({
   id: '/news/archiv',
   path: '/news/archiv',
@@ -99,10 +115,22 @@ const NewsSlugRoute = NewsSlugImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const LineupYearRoute = LineupYearImport.update({
+  id: '/$year',
+  path: '/$year',
+  getParentRoute: () => LineupRoute,
+} as any)
+
 const EventsIdRoute = EventsIdImport.update({
   id: '/events_/$id',
   path: '/events/$id',
   getParentRoute: () => rootRoute,
+} as any)
+
+const LineupYearSlugRoute = LineupYearSlugImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => LineupYearRoute,
 } as any)
 
 // Populate the FileRoutesByPath interface
@@ -151,6 +179,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InfosImport
       parentRoute: typeof rootRoute
     }
+    '/lineup': {
+      id: '/lineup'
+      path: '/lineup'
+      fullPath: '/lineup'
+      preLoaderRoute: typeof LineupImport
+      parentRoute: typeof rootRoute
+    }
     '/logo': {
       id: '/logo'
       path: '/logo'
@@ -186,6 +221,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsIdImport
       parentRoute: typeof rootRoute
     }
+    '/lineup/$year': {
+      id: '/lineup/$year'
+      path: '/$year'
+      fullPath: '/lineup/$year'
+      preLoaderRoute: typeof LineupYearImport
+      parentRoute: typeof LineupImport
+    }
     '/news/$slug': {
       id: '/news/$slug'
       path: '/news/$slug'
@@ -200,10 +242,49 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NewsArchivImport
       parentRoute: typeof rootRoute
     }
+    '/lineup/': {
+      id: '/lineup/'
+      path: '/'
+      fullPath: '/lineup/'
+      preLoaderRoute: typeof LineupIndexImport
+      parentRoute: typeof LineupImport
+    }
+    '/lineup/$year/$slug': {
+      id: '/lineup/$year/$slug'
+      path: '/$slug'
+      fullPath: '/lineup/$year/$slug'
+      preLoaderRoute: typeof LineupYearSlugImport
+      parentRoute: typeof LineupYearImport
+    }
   }
 }
 
 // Create and export the route tree
+
+interface LineupYearRouteChildren {
+  LineupYearSlugRoute: typeof LineupYearSlugRoute
+}
+
+const LineupYearRouteChildren: LineupYearRouteChildren = {
+  LineupYearSlugRoute: LineupYearSlugRoute,
+}
+
+const LineupYearRouteWithChildren = LineupYearRoute._addFileChildren(
+  LineupYearRouteChildren,
+)
+
+interface LineupRouteChildren {
+  LineupYearRoute: typeof LineupYearRouteWithChildren
+  LineupIndexRoute: typeof LineupIndexRoute
+}
+
+const LineupRouteChildren: LineupRouteChildren = {
+  LineupYearRoute: LineupYearRouteWithChildren,
+  LineupIndexRoute: LineupIndexRoute,
+}
+
+const LineupRouteWithChildren =
+  LineupRoute._addFileChildren(LineupRouteChildren)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -212,13 +293,17 @@ export interface FileRoutesByFullPath {
   '/badges': typeof BadgesRoute
   '/events': typeof EventsRoute
   '/infos': typeof InfosRoute
+  '/lineup': typeof LineupRouteWithChildren
   '/logo': typeof LogoRoute
   '/nuclino-sso': typeof NuclinoSsoRoute
   '/plakate': typeof PlakateRoute
   '/speisekarte': typeof SpeisekarteRoute
   '/events/$id': typeof EventsIdRoute
+  '/lineup/$year': typeof LineupYearRouteWithChildren
   '/news/$slug': typeof NewsSlugRoute
   '/news/archiv': typeof NewsArchivRoute
+  '/lineup/': typeof LineupIndexRoute
+  '/lineup/$year/$slug': typeof LineupYearSlugRoute
 }
 
 export interface FileRoutesByTo {
@@ -233,8 +318,11 @@ export interface FileRoutesByTo {
   '/plakate': typeof PlakateRoute
   '/speisekarte': typeof SpeisekarteRoute
   '/events/$id': typeof EventsIdRoute
+  '/lineup/$year': typeof LineupYearRouteWithChildren
   '/news/$slug': typeof NewsSlugRoute
   '/news/archiv': typeof NewsArchivRoute
+  '/lineup': typeof LineupIndexRoute
+  '/lineup/$year/$slug': typeof LineupYearSlugRoute
 }
 
 export interface FileRoutesById {
@@ -245,13 +333,17 @@ export interface FileRoutesById {
   '/badges': typeof BadgesRoute
   '/events': typeof EventsRoute
   '/infos': typeof InfosRoute
+  '/lineup': typeof LineupRouteWithChildren
   '/logo': typeof LogoRoute
   '/nuclino-sso': typeof NuclinoSsoRoute
   '/plakate': typeof PlakateRoute
   '/speisekarte': typeof SpeisekarteRoute
   '/events_/$id': typeof EventsIdRoute
+  '/lineup/$year': typeof LineupYearRouteWithChildren
   '/news/$slug': typeof NewsSlugRoute
   '/news/archiv': typeof NewsArchivRoute
+  '/lineup/': typeof LineupIndexRoute
+  '/lineup/$year/$slug': typeof LineupYearSlugRoute
 }
 
 export interface FileRouteTypes {
@@ -263,13 +355,17 @@ export interface FileRouteTypes {
     | '/badges'
     | '/events'
     | '/infos'
+    | '/lineup'
     | '/logo'
     | '/nuclino-sso'
     | '/plakate'
     | '/speisekarte'
     | '/events/$id'
+    | '/lineup/$year'
     | '/news/$slug'
     | '/news/archiv'
+    | '/lineup/'
+    | '/lineup/$year/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -283,8 +379,11 @@ export interface FileRouteTypes {
     | '/plakate'
     | '/speisekarte'
     | '/events/$id'
+    | '/lineup/$year'
     | '/news/$slug'
     | '/news/archiv'
+    | '/lineup'
+    | '/lineup/$year/$slug'
   id:
     | '__root__'
     | '/'
@@ -293,13 +392,17 @@ export interface FileRouteTypes {
     | '/badges'
     | '/events'
     | '/infos'
+    | '/lineup'
     | '/logo'
     | '/nuclino-sso'
     | '/plakate'
     | '/speisekarte'
     | '/events_/$id'
+    | '/lineup/$year'
     | '/news/$slug'
     | '/news/archiv'
+    | '/lineup/'
+    | '/lineup/$year/$slug'
   fileRoutesById: FileRoutesById
 }
 
@@ -310,6 +413,7 @@ export interface RootRouteChildren {
   BadgesRoute: typeof BadgesRoute
   EventsRoute: typeof EventsRoute
   InfosRoute: typeof InfosRoute
+  LineupRoute: typeof LineupRouteWithChildren
   LogoRoute: typeof LogoRoute
   NuclinoSsoRoute: typeof NuclinoSsoRoute
   PlakateRoute: typeof PlakateRoute
@@ -326,6 +430,7 @@ const rootRouteChildren: RootRouteChildren = {
   BadgesRoute: BadgesRoute,
   EventsRoute: EventsRoute,
   InfosRoute: InfosRoute,
+  LineupRoute: LineupRouteWithChildren,
   LogoRoute: LogoRoute,
   NuclinoSsoRoute: NuclinoSsoRoute,
   PlakateRoute: PlakateRoute,
@@ -351,6 +456,7 @@ export const routeTree = rootRoute
         "/badges",
         "/events",
         "/infos",
+        "/lineup",
         "/logo",
         "/nuclino-sso",
         "/plakate",
@@ -378,6 +484,13 @@ export const routeTree = rootRoute
     "/infos": {
       "filePath": "infos.tsx"
     },
+    "/lineup": {
+      "filePath": "lineup.tsx",
+      "children": [
+        "/lineup/$year",
+        "/lineup/"
+      ]
+    },
     "/logo": {
       "filePath": "logo.tsx"
     },
@@ -393,11 +506,26 @@ export const routeTree = rootRoute
     "/events_/$id": {
       "filePath": "events_.$id.tsx"
     },
+    "/lineup/$year": {
+      "filePath": "lineup.$year.tsx",
+      "parent": "/lineup",
+      "children": [
+        "/lineup/$year/$slug"
+      ]
+    },
     "/news/$slug": {
       "filePath": "news.$slug.tsx"
     },
     "/news/archiv": {
       "filePath": "news.archiv.tsx"
+    },
+    "/lineup/": {
+      "filePath": "lineup.index.tsx",
+      "parent": "/lineup"
+    },
+    "/lineup/$year/$slug": {
+      "filePath": "lineup.$year.$slug.tsx",
+      "parent": "/lineup/$year"
     }
   }
 }

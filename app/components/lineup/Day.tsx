@@ -1,14 +1,13 @@
 import {Heading, SimpleGrid} from '@chakra-ui/react';
 import DateString from '../DateString';
 import Band from './Band';
-import type {BandFragment} from '~/types/graphql';
 
 export default function Day({
   day,
   bandsPlaying,
 }: {
   day: Date;
-  bandsPlaying: BandFragment[];
+  bandsPlaying: Array<React.ComponentProps<typeof Band>>;
 }) {
   return (
     <>
@@ -19,8 +18,8 @@ export default function Day({
         />
       </Heading>
       <SimpleGrid columns={[2, 3]} gap="3">
-        {bandsPlaying.map((band) => (
-          <Band key={band.id} band={band} />
+        {bandsPlaying.map(({band, area}) => (
+          <Band key={band.slug} band={band} area={area} />
         ))}
       </SimpleGrid>
     </>
