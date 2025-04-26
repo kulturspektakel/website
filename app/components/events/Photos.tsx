@@ -1,115 +1,99 @@
-import {gql} from '@apollo/client';
 import {Text, Link as ChakraLink, Box} from '@chakra-ui/react';
-import {Link} from '@remix-run/react';
 import type PhotoSwipe from 'photoswipe';
-import {useCallback} from 'react';
+import {useCallback, useRef} from 'react';
 import {Gallery} from 'react-photoswipe-gallery';
-import {$path} from 'remix-routes';
-import Image from '~/components/Image';
+import Image from '../Image';
+import {Link} from '@tanstack/react-router';
 import {
-  type EventPhotosFragment,
-  type MorePhotosQuery,
-  MorePhotosDocument,
-} from '~/types/graphql';
-import apolloClient from '~/utils/apolloClient';
-
-gql`
-  fragment EventPhotos on EventMediaConnection {
-    totalCount
-    pageInfo {
-      hasNextPage
-    }
-    edges {
-      cursor
-      node {
-        id
-        ... on PixelImage {
-          width
-          height
-          thumbnail: scaledUri(width: 140)
-          large: scaledUri(width: 1200)
-        }
-      }
-    }
-  }
-
-  query MorePhotos($event: ID!, $cursor: String) {
-    node(id: $event) {
-      ... on Event {
-        media(after: $cursor, first: 100) {
-          ...EventPhotos
-        }
-      }
-    }
-  }
-`;
+  DirectusImage,
+  directusImageConnection,
+  imageUrl,
+} from '../../utils/directusImage';
+import {createServerFn, useServerFn} from '@tanstack/react-start';
+import {DataSourceArray} from 'photoswipe';
 
 const SIZE = 70;
 
+const loadMoreImages = createServerFn()
+  .validator(
+    (params: {limit: number; offset: number; eventId: string}) => params,
+  )
+  .handler(async ({data: {eventId, offset, limit}}) => {
+    return await directusImageConnection('Event', eventId, limit, offset);
+  });
+
 export default function EventComponent({
-  media,
+  files,
+  totalCount,
   eventId,
 }: {
-  media: EventPhotosFragment;
+  files: DirectusImage[];
+  totalCount: number;
   eventId: string;
 }) {
+  const onLoadMoreImages = useServerFn(loadMoreImages);
+  const inflightRequests = useRef(new Map<number, Promise<any>>());
   const onBeforeOpen = useCallback(
     async (pswp: PhotoSwipe) => {
-      pswp.addFilter('numItems', () => media.totalCount);
-
-      const {data} = await apolloClient.query<MorePhotosQuery>({
-        query: MorePhotosDocument,
-        fetchPolicy: 'cache-first',
-        variables: {
-          event: eventId,
-          cursor: media.edges[media.edges.length - 1]?.cursor,
-        },
-      });
-
-      const event = data.node?.__typename === 'Event' ? data.node : null;
-      if (!event) {
-        return;
-      }
+      pswp.addFilter('numItems', () => totalCount);
 
       pswp.addFilter('itemData', (itemData, index) => {
-        if (!itemData.src) {
-          const {
-            width: w,
-            height: h,
-            thumbnail: msrc,
-            large: src,
-          } = event.media.edges[index - media.edges.length].node;
-          return {
-            w,
-            h,
-            msrc,
-            src,
-          };
+        if (itemData.src) {
+          return itemData;
         }
-        return itemData;
+
+        const limit = files.length;
+        const page = Math.floor((index + 1) / limit);
+        const offset = page * limit;
+
+        if (inflightRequests.current.has(page)) {
+          return {};
+        }
+
+        inflightRequests.current.set(
+          page,
+          onLoadMoreImages({
+            data: {
+              eventId,
+              offset,
+              limit,
+            },
+          }).then((data) => {
+            data.files.forEach((image, i) => {
+              (pswp.options.dataSource as DataSourceArray)[offset + i] = {
+                w: image.width,
+                h: image.height,
+                msrc: imageUrl(image.id, {height: SIZE}),
+                src: imageUrl(image.id, {width: 1600}),
+              };
+              pswp.refreshSlideContent(offset + i);
+            });
+            inflightRequests.current.delete(page);
+          }),
+        );
+        return {};
       });
     },
-    [eventId, media.edges, media.totalCount],
+
+    [eventId, files, totalCount, onLoadMoreImages],
   );
 
   return (
     <Box role="grid" display="flex" flexWrap="wrap" gap="2">
       <Gallery options={{loop: false}} onBeforeOpen={onBeforeOpen}>
-        {media.edges
-          .map((m) => m.node)
-          .map((m) => (
-            <Image
-              key={m.id}
-              original={m.large}
-              originalWidth={m.width}
-              originalHeight={m.height}
-              src={m.thumbnail}
-              objectFit="cover"
-              height={SIZE}
-              borderRadius="md"
-            />
-          ))}
-        {media.pageInfo.hasNextPage && (
+        {files.map((m) => (
+          <Image
+            key={m.id}
+            original={imageUrl(m.id, {width: 1600})}
+            originalWidth={m.width}
+            originalHeight={m.height}
+            src={imageUrl(m.id, {height: SIZE})}
+            objectFit="cover"
+            height={SIZE}
+            borderRadius="md"
+          />
+        ))}
+        {files.length < totalCount && (
           <ChakraLink
             asChild
             height={SIZE}
@@ -123,10 +107,13 @@ export default function EventComponent({
             fontWeight="bold"
           >
             <Link
-              to={$path('/events/:id', {id: eventId.split(':')[1]}) + '#fotos'}
+              to={'/events/$id'}
+              params={{
+                id: eventId,
+              }}
             >
               <Text fontSize="xl" userSelect="none" mb="-3">
-                +{media.totalCount - media.edges.length}
+                +{totalCount - files.length}
               </Text>
               <Text>Fotos</Text>
             </Link>

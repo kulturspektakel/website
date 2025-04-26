@@ -3,7 +3,7 @@ export default function truncate(
   length: number,
 ) {
   if (!str) {
-    return null;
+    return;
   }
   if (str.length < length) {
     return str;

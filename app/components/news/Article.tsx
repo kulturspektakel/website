@@ -13,7 +13,7 @@ export default function Article({
     slug: string;
     title: string;
     createdAt: Date;
-    content: {
+    content?: {
       markdown: string;
       images: Array<DirectusImage>;
     };
@@ -36,12 +36,14 @@ export default function Article({
       >
         {data.title}
       </Headline>
-      <Box mt="3">
-        <MarkDownWithOverrides
-          markdown={data.content.markdown}
-          images={data.content.images}
-        />
-      </Box>
+      {data.content && (
+        <Box mt="3">
+          <MarkDownWithOverrides
+            markdown={data.content.markdown}
+            images={data.content.images}
+          />
+        </Box>
+      )}
     </Box>
   );
 }

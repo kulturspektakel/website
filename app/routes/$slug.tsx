@@ -1,28 +1,32 @@
 import {createFileRoute, notFound} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
 import {prismaClient} from '../utils/prismaClient';
-import {markdownText} from '../utils/markdownText';
-import Page from '../components/Page';
+import {imageIDsFromMarkdown, markdownText} from '../utils/markdownText';
+import Page, {pageSelect} from '../components/Page';
+import {directusImages} from '../utils/directusImage';
 
 export const Route = createFileRoute('/$slug')({
   component: PageRoute,
-  loader: async ({params}) => await pageLoader({data: params.slug}),
+  loader: async ({params}) => await loader({data: params.slug}),
+  head: ({loaderData}) => ({
+    meta: [
+      {title: loaderData.title},
+      {
+        name: 'description',
+        content: 'Details of an event',
+      },
+    ],
+  }),
 });
 
-const pageLoader = createServerFn()
+const loader = createServerFn()
   .validator((slug: string) => slug)
   .handler(async ({data: slug}) => {
     const data = await prismaClient.page.findUnique({
       where: {
         slug,
       },
-      select: {
-        title: true,
-        content: true,
-        left: true,
-        right: true,
-        bottom: true,
-      },
+      select: pageSelect,
     });
 
     if (!data) {
@@ -30,12 +34,15 @@ const pageLoader = createServerFn()
     }
 
     const {left, right, bottom, content, ...page} = data;
+    const imageMap = await directusImages(
+      imageIDsFromMarkdown(left, right, bottom, content),
+    );
 
     const [contentMd, leftMd, rightMd, bottomMd] = await Promise.all([
-      content ? markdownText(content) : null,
-      left ? markdownText(left) : null,
-      right ? markdownText(right) : null,
-      bottom ? markdownText(bottom) : null,
+      content ? markdownText(content, imageMap) : undefined,
+      left ? markdownText(left, imageMap) : undefined,
+      right ? markdownText(right, imageMap) : undefined,
+      bottom ? markdownText(bottom, imageMap) : undefined,
     ]);
 
     return {
@@ -49,6 +56,5 @@ const pageLoader = createServerFn()
 
 export function PageRoute() {
   const page = Route.useLoaderData();
-
   return <Page {...page} />;
 }

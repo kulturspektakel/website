@@ -1,4 +1,3 @@
-import {gql} from '@apollo/client';
 import {FaCircleInfo} from 'react-icons/fa6';
 import {
   Separator,
@@ -8,36 +7,22 @@ import {
   Text,
   Box,
   useDisclosure,
-  Icon,
   IconButton,
 } from '@chakra-ui/react';
 import {type FC} from 'react';
-import type {
-  ProductAdditives,
-  ProductList,
-  ProductListComponentFragment,
-} from '~/types/graphql';
 import {Tooltip} from '../chakra-snippets/tooltip';
 
-gql`
-  fragment ProductListComponent on ProductList {
-    description
-    product {
-      additives {
-        displayName
-        id
-      }
-      name
-      price
-      requiresDeposit
-    }
-  }
-`;
+type ProductAdditive = {
+  id: string;
+  displayName: string;
+};
 
-const TooltipContent: FC<{additives: ProductAdditives[]}> = ({additives}) => {
+const TooltipContent: FC<{
+  additives: Array<ProductAdditive>;
+}> = ({additives}) => {
   return (
     <Box marginInlineStart={0}>
-      {additives.map((additive: ProductAdditives) => (
+      {additives.map((additive) => (
         <Text key={additive.id} fontWeight={'normal'}>
           {additive.displayName}
         </Text>
@@ -49,22 +34,30 @@ const TooltipContent: FC<{additives: ProductAdditives[]}> = ({additives}) => {
 export default function ProductList({
   productList,
 }: {
-  productList: ProductListComponentFragment;
+  productList: {
+    description: string | null;
+    Product: {
+      name: string;
+      price: number;
+      requiresDeposit: boolean;
+      ProductAdditives: Array<ProductAdditive>;
+    }[];
+  };
 }) {
-  const showDepositText = productList.product.some(
+  const showDepositText = productList.Product.some(
     (item) => item.requiresDeposit,
   );
-  const productListLength = productList.product.length;
+  const productListLength = productList.Product.length;
 
   return (
     <>
       <ListRoot listStyleType="none" marginInlineStart={0}>
-        {productList.product.map((item, index) => (
+        {productList.Product.map((item, index) => (
           <ListItem key={item.name}>
             <HStack justifyContent="space-between" py={1}>
               <Text>
                 {item.name}
-                <Info additives={item.additives} />
+                <Info additives={item.ProductAdditives} />
               </Text>
               <span>
                 {item.requiresDeposit && <Text as="span">* </Text>}
@@ -96,7 +89,7 @@ export default function ProductList({
   );
 }
 
-function Info({additives}: {additives: ProductAdditives[]}) {
+function Info({additives}: {additives: ProductAdditive[]}) {
   const {open, onOpen, onToggle, onClose} = useDisclosure();
 
   if (additives.length === 0) {

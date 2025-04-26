@@ -14,6 +14,7 @@ import photoswipeCSS from 'photoswipe/dist/photoswipe.css?url';
 import {createServerFn} from '@tanstack/react-start';
 import {dateStringComponents} from '../components/DateString';
 import {prismaClient} from '../utils/prismaClient';
+import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 
 export const Route = createRootRouteWithContext<ApolloClientRouterContext>()({
   head: ({loaderData}) => {
@@ -67,15 +68,23 @@ export const Route = createRootRouteWithContext<ApolloClientRouterContext>()({
     };
   },
   component: RootComponent,
-  loader: async () => {
-    return await rootLoader();
+  loader: async () => await rootLoader(),
+});
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnMount: false,
+    },
   },
 });
 
 function RootComponent() {
   return (
     <RootDoc>
-      <Outlet />
+      <QueryClientProvider client={queryClient}>
+        <Outlet />
+      </QueryClientProvider>
     </RootDoc>
   );
 }

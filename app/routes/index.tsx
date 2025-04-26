@@ -5,7 +5,7 @@ import LinkButton from '../components/LinkButton';
 import {createFileRoute} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
 import {prismaClient} from '../utils/prismaClient';
-import {markdownText} from '../utils/markdownText';
+import {markdownPages} from '../utils/markdownText';
 
 export const Route = createFileRoute('/')({
   component: Index,
@@ -26,15 +26,7 @@ const newsLoader = createServerFn().handler(async () => {
     },
   });
 
-  return Promise.all(
-    news.map(async (item) => {
-      const content = await markdownText(item.content);
-      return {
-        ...item,
-        content,
-      };
-    }),
-  );
+  return markdownPages(news);
 });
 
 export function Index() {

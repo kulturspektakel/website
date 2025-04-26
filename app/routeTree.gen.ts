@@ -11,10 +11,69 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as SpeisekarteImport } from './routes/speisekarte'
+import { Route as PlakateImport } from './routes/plakate'
+import { Route as NuclinoSsoImport } from './routes/nuclino-sso'
+import { Route as LogoImport } from './routes/logo'
+import { Route as InfosImport } from './routes/infos'
+import { Route as EventsImport } from './routes/events'
+import { Route as BadgesImport } from './routes/badges'
+import { Route as AngebotImport } from './routes/angebot'
 import { Route as SlugImport } from './routes/$slug'
 import { Route as IndexImport } from './routes/index'
+import { Route as NewsArchivImport } from './routes/news.archiv'
+import { Route as NewsSlugImport } from './routes/news.$slug'
+import { Route as EventsIdImport } from './routes/events_.$id'
 
 // Create/Update Routes
+
+const SpeisekarteRoute = SpeisekarteImport.update({
+  id: '/speisekarte',
+  path: '/speisekarte',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const PlakateRoute = PlakateImport.update({
+  id: '/plakate',
+  path: '/plakate',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const NuclinoSsoRoute = NuclinoSsoImport.update({
+  id: '/nuclino-sso',
+  path: '/nuclino-sso',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const LogoRoute = LogoImport.update({
+  id: '/logo',
+  path: '/logo',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const InfosRoute = InfosImport.update({
+  id: '/infos',
+  path: '/infos',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const EventsRoute = EventsImport.update({
+  id: '/events',
+  path: '/events',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const BadgesRoute = BadgesImport.update({
+  id: '/badges',
+  path: '/badges',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const AngebotRoute = AngebotImport.update({
+  id: '/angebot',
+  path: '/angebot',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const SlugRoute = SlugImport.update({
   id: '/$slug',
@@ -25,6 +84,24 @@ const SlugRoute = SlugImport.update({
 const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const NewsArchivRoute = NewsArchivImport.update({
+  id: '/news/archiv',
+  path: '/news/archiv',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const NewsSlugRoute = NewsSlugImport.update({
+  id: '/news/$slug',
+  path: '/news/$slug',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const EventsIdRoute = EventsIdImport.update({
+  id: '/events_/$id',
+  path: '/events/$id',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -46,6 +123,83 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SlugImport
       parentRoute: typeof rootRoute
     }
+    '/angebot': {
+      id: '/angebot'
+      path: '/angebot'
+      fullPath: '/angebot'
+      preLoaderRoute: typeof AngebotImport
+      parentRoute: typeof rootRoute
+    }
+    '/badges': {
+      id: '/badges'
+      path: '/badges'
+      fullPath: '/badges'
+      preLoaderRoute: typeof BadgesImport
+      parentRoute: typeof rootRoute
+    }
+    '/events': {
+      id: '/events'
+      path: '/events'
+      fullPath: '/events'
+      preLoaderRoute: typeof EventsImport
+      parentRoute: typeof rootRoute
+    }
+    '/infos': {
+      id: '/infos'
+      path: '/infos'
+      fullPath: '/infos'
+      preLoaderRoute: typeof InfosImport
+      parentRoute: typeof rootRoute
+    }
+    '/logo': {
+      id: '/logo'
+      path: '/logo'
+      fullPath: '/logo'
+      preLoaderRoute: typeof LogoImport
+      parentRoute: typeof rootRoute
+    }
+    '/nuclino-sso': {
+      id: '/nuclino-sso'
+      path: '/nuclino-sso'
+      fullPath: '/nuclino-sso'
+      preLoaderRoute: typeof NuclinoSsoImport
+      parentRoute: typeof rootRoute
+    }
+    '/plakate': {
+      id: '/plakate'
+      path: '/plakate'
+      fullPath: '/plakate'
+      preLoaderRoute: typeof PlakateImport
+      parentRoute: typeof rootRoute
+    }
+    '/speisekarte': {
+      id: '/speisekarte'
+      path: '/speisekarte'
+      fullPath: '/speisekarte'
+      preLoaderRoute: typeof SpeisekarteImport
+      parentRoute: typeof rootRoute
+    }
+    '/events_/$id': {
+      id: '/events_/$id'
+      path: '/events/$id'
+      fullPath: '/events/$id'
+      preLoaderRoute: typeof EventsIdImport
+      parentRoute: typeof rootRoute
+    }
+    '/news/$slug': {
+      id: '/news/$slug'
+      path: '/news/$slug'
+      fullPath: '/news/$slug'
+      preLoaderRoute: typeof NewsSlugImport
+      parentRoute: typeof rootRoute
+    }
+    '/news/archiv': {
+      id: '/news/archiv'
+      path: '/news/archiv'
+      fullPath: '/news/archiv'
+      preLoaderRoute: typeof NewsArchivImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -54,36 +208,131 @@ declare module '@tanstack/react-router' {
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$slug': typeof SlugRoute
+  '/angebot': typeof AngebotRoute
+  '/badges': typeof BadgesRoute
+  '/events': typeof EventsRoute
+  '/infos': typeof InfosRoute
+  '/logo': typeof LogoRoute
+  '/nuclino-sso': typeof NuclinoSsoRoute
+  '/plakate': typeof PlakateRoute
+  '/speisekarte': typeof SpeisekarteRoute
+  '/events/$id': typeof EventsIdRoute
+  '/news/$slug': typeof NewsSlugRoute
+  '/news/archiv': typeof NewsArchivRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$slug': typeof SlugRoute
+  '/angebot': typeof AngebotRoute
+  '/badges': typeof BadgesRoute
+  '/events': typeof EventsRoute
+  '/infos': typeof InfosRoute
+  '/logo': typeof LogoRoute
+  '/nuclino-sso': typeof NuclinoSsoRoute
+  '/plakate': typeof PlakateRoute
+  '/speisekarte': typeof SpeisekarteRoute
+  '/events/$id': typeof EventsIdRoute
+  '/news/$slug': typeof NewsSlugRoute
+  '/news/archiv': typeof NewsArchivRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/$slug': typeof SlugRoute
+  '/angebot': typeof AngebotRoute
+  '/badges': typeof BadgesRoute
+  '/events': typeof EventsRoute
+  '/infos': typeof InfosRoute
+  '/logo': typeof LogoRoute
+  '/nuclino-sso': typeof NuclinoSsoRoute
+  '/plakate': typeof PlakateRoute
+  '/speisekarte': typeof SpeisekarteRoute
+  '/events_/$id': typeof EventsIdRoute
+  '/news/$slug': typeof NewsSlugRoute
+  '/news/archiv': typeof NewsArchivRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/$slug'
+  fullPaths:
+    | '/'
+    | '/$slug'
+    | '/angebot'
+    | '/badges'
+    | '/events'
+    | '/infos'
+    | '/logo'
+    | '/nuclino-sso'
+    | '/plakate'
+    | '/speisekarte'
+    | '/events/$id'
+    | '/news/$slug'
+    | '/news/archiv'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/$slug'
-  id: '__root__' | '/' | '/$slug'
+  to:
+    | '/'
+    | '/$slug'
+    | '/angebot'
+    | '/badges'
+    | '/events'
+    | '/infos'
+    | '/logo'
+    | '/nuclino-sso'
+    | '/plakate'
+    | '/speisekarte'
+    | '/events/$id'
+    | '/news/$slug'
+    | '/news/archiv'
+  id:
+    | '__root__'
+    | '/'
+    | '/$slug'
+    | '/angebot'
+    | '/badges'
+    | '/events'
+    | '/infos'
+    | '/logo'
+    | '/nuclino-sso'
+    | '/plakate'
+    | '/speisekarte'
+    | '/events_/$id'
+    | '/news/$slug'
+    | '/news/archiv'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SlugRoute: typeof SlugRoute
+  AngebotRoute: typeof AngebotRoute
+  BadgesRoute: typeof BadgesRoute
+  EventsRoute: typeof EventsRoute
+  InfosRoute: typeof InfosRoute
+  LogoRoute: typeof LogoRoute
+  NuclinoSsoRoute: typeof NuclinoSsoRoute
+  PlakateRoute: typeof PlakateRoute
+  SpeisekarteRoute: typeof SpeisekarteRoute
+  EventsIdRoute: typeof EventsIdRoute
+  NewsSlugRoute: typeof NewsSlugRoute
+  NewsArchivRoute: typeof NewsArchivRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SlugRoute: SlugRoute,
+  AngebotRoute: AngebotRoute,
+  BadgesRoute: BadgesRoute,
+  EventsRoute: EventsRoute,
+  InfosRoute: InfosRoute,
+  LogoRoute: LogoRoute,
+  NuclinoSsoRoute: NuclinoSsoRoute,
+  PlakateRoute: PlakateRoute,
+  SpeisekarteRoute: SpeisekarteRoute,
+  EventsIdRoute: EventsIdRoute,
+  NewsSlugRoute: NewsSlugRoute,
+  NewsArchivRoute: NewsArchivRoute,
 }
 
 export const routeTree = rootRoute
@@ -97,7 +346,18 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/$slug"
+        "/$slug",
+        "/angebot",
+        "/badges",
+        "/events",
+        "/infos",
+        "/logo",
+        "/nuclino-sso",
+        "/plakate",
+        "/speisekarte",
+        "/events_/$id",
+        "/news/$slug",
+        "/news/archiv"
       ]
     },
     "/": {
@@ -105,6 +365,39 @@ export const routeTree = rootRoute
     },
     "/$slug": {
       "filePath": "$slug.tsx"
+    },
+    "/angebot": {
+      "filePath": "angebot.tsx"
+    },
+    "/badges": {
+      "filePath": "badges.tsx"
+    },
+    "/events": {
+      "filePath": "events.tsx"
+    },
+    "/infos": {
+      "filePath": "infos.tsx"
+    },
+    "/logo": {
+      "filePath": "logo.tsx"
+    },
+    "/nuclino-sso": {
+      "filePath": "nuclino-sso.tsx"
+    },
+    "/plakate": {
+      "filePath": "plakate.tsx"
+    },
+    "/speisekarte": {
+      "filePath": "speisekarte.tsx"
+    },
+    "/events_/$id": {
+      "filePath": "events_.$id.tsx"
+    },
+    "/news/$slug": {
+      "filePath": "news.$slug.tsx"
+    },
+    "/news/archiv": {
+      "filePath": "news.archiv.tsx"
     }
   }
 }

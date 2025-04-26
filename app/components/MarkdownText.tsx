@@ -48,7 +48,7 @@ export default function MarkdownText(props: MarkdownT) {
           ),
           img: (imgProps: ImageProps) => {
             const img = props.images.find(
-              (image) => imageUrl({id: image.id}) === imgProps.src,
+              (image) => imageUrl(image.id) === imgProps.src,
             );
 
             if (!img) {
@@ -65,8 +65,8 @@ export default function MarkdownText(props: MarkdownT) {
                   originalHeight={img.height}
                   originalWidth={img.width}
                   maxH={500}
-                  src={imageUrl({id: img.id, width: 500})}
-                  original={imageUrl({id: img.id, width: 1600})}
+                  src={imageUrl(img.id, {width: 720})}
+                  original={imageUrl(img.id, {width: 1600})}
                   caption={img.copyright ? `Foto: ${img.copyright}` : undefined}
                 />
               </Gallery>

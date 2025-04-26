@@ -1,6 +1,16 @@
 import {Box, Heading, SimpleGrid} from '@chakra-ui/react';
 import MarkdownText from './MarkdownText';
 import {Markdown} from '../utils/markdownText';
+import {Prisma} from '@prisma/client';
+
+export const pageSelect: Prisma.PageSelect = {
+  slug: true,
+  title: true,
+  content: true,
+  left: true,
+  right: true,
+  bottom: true,
+};
 
 export default function Page(
   props: {

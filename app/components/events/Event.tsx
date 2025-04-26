@@ -5,45 +5,54 @@ import {
   Link as ChakraLink,
   Text,
   Flex,
+  ClientOnly,
 } from '@chakra-ui/react';
-import {$path} from 'remix-routes';
-import {gql} from '@apollo/client';
-import Image from '~/components/Image';
-import Photos from '~/components/events/Photos';
-import type {EventDetailsFragment} from '~/types/graphql';
-import {Link} from '@remix-run/react';
+import Image from '../Image';
+import Photos from './Photos';
 import Countdown from 'react-countdown';
-import {ClientOnly} from 'remix-utils/client-only';
+import {Link} from '@tanstack/react-router';
+import {DirectusImage, imageUrl} from '../../utils/directusImage';
+import {Prisma} from '@prisma/client';
 
-gql`
-  fragment EventDetails on Event {
-    id
-    name
-    description
-    start
-    end
-    poster {
-      thumbnail: scaledUri(width: 200)
-      large: scaledUri(width: 1200)
-      width
-      height
-      copyright
-    }
-    bandsPlaying(first: 12) {
-      totalCount
-      edges {
-        node {
-          name
-        }
-      }
-    }
-    media(first: $num_photos) {
-      ...EventPhotos
-    }
-  }
-`;
+export const eventSelect: Prisma.EventSelect = {
+  id: true,
+  name: true,
+  description: true,
+  location: true,
+  start: true,
+  end: true,
+  poster: true,
+  eventType: true,
+  BandPlaying: {
+    select: {
+      name: true,
+    },
+    where: {
+      OR: [{announcementTime: {lte: new Date()}}, {announcementTime: null}],
+    },
+  },
+};
 
-export default function Event({event}: {event: EventDetailsFragment}) {
+export default function Event({
+  event,
+}: {
+  event: {
+    id: string;
+    start: Date;
+    end: Date;
+    name: string;
+    description: string | null;
+    location: string | null;
+    poster: DirectusImage | null;
+    BandPlaying: Array<{
+      name: string;
+    }>;
+    media: {
+      files: DirectusImage[];
+      totalCount: number;
+    };
+  };
+}) {
   return (
     <Stack
       direction={['column', 'row']}
@@ -55,8 +64,8 @@ export default function Event({event}: {event: EventDetailsFragment}) {
         <Image
           w="200px"
           flexShrink="0"
-          src={event.poster.thumbnail}
-          original={event.poster.large}
+          src={imageUrl(event.poster.id, {width: 200})}
+          original={imageUrl(event.poster.id, {width: 1600})}
           originalHeight={event.poster.height}
           originalWidth={event.poster.width}
           alt={`${event.name} Poster`}
@@ -87,77 +96,76 @@ export default function Event({event}: {event: EventDetailsFragment}) {
             mb="3"
             transform="rotate(1deg)"
           >
-            <ClientOnly fallback={<>&nbsp;</>}>
-              {() => (
-                <Countdown
-                  date={event.start}
-                  renderer={({days, hours, minutes, seconds}) => (
-                    <>
-                      <Box flexBasis={1} flexGrow={1}>
-                        <Text
-                          fontSize={['xx-large', 'xxx-large']}
-                          fontFamily="Shrimp"
-                          mb="-3"
-                        >
-                          {days}
-                        </Text>
-                        <Text>Tage</Text>
-                      </Box>
-                      <Box flexBasis={1} flexGrow={1}>
-                        <Text
-                          fontSize={['xx-large', 'xxx-large']}
-                          fontFamily="Shrimp"
-                          mb="-3"
-                        >
-                          {hours}
-                        </Text>
-                        <Text>Stunden</Text>
-                      </Box>
-                      <Box flexBasis={1} flexGrow={1}>
-                        <Text
-                          fontSize={['xx-large', 'xxx-large']}
-                          fontFamily="Shrimp"
-                          mb="-3"
-                        >
-                          {minutes}
-                        </Text>
-                        <Text>Minuten</Text>
-                      </Box>
-                      <Box flexBasis={1} flexGrow={1}>
-                        <Text
-                          fontSize={['xx-large', 'xxx-large']}
-                          fontFamily="Shrimp"
-                          mb="-3"
-                        >
-                          {seconds}
-                        </Text>
-                        <Text>Sekunden</Text>
-                      </Box>
-                    </>
-                  )}
-                />
-              )}
+            <ClientOnly>
+              <Countdown
+                date={event.start}
+                renderer={({days, hours, minutes, seconds}) => (
+                  <>
+                    <Box flexBasis={1} flexGrow={1}>
+                      <Text
+                        fontSize={['xx-large', 'xxx-large']}
+                        fontFamily="Shrimp"
+                        mb="-3"
+                      >
+                        {days}
+                      </Text>
+                      <Text>Tage</Text>
+                    </Box>
+                    <Box flexBasis={1} flexGrow={1}>
+                      <Text
+                        fontSize={['xx-large', 'xxx-large']}
+                        fontFamily="Shrimp"
+                        mb="-3"
+                      >
+                        {hours}
+                      </Text>
+                      <Text>Stunden</Text>
+                    </Box>
+                    <Box flexBasis={1} flexGrow={1}>
+                      <Text
+                        fontSize={['xx-large', 'xxx-large']}
+                        fontFamily="Shrimp"
+                        mb="-3"
+                      >
+                        {minutes}
+                      </Text>
+                      <Text>Minuten</Text>
+                    </Box>
+                    <Box flexBasis={1} flexGrow={1}>
+                      <Text
+                        fontSize={['xx-large', 'xxx-large']}
+                        fontFamily="Shrimp"
+                        mb="-3"
+                      >
+                        {seconds}
+                      </Text>
+                      <Text>Sekunden</Text>
+                    </Box>
+                  </>
+                )}
+              />
             </ClientOnly>
           </Flex>
         )}
         {event.description && <Box>{event.description}</Box>}
-        {event.bandsPlaying.totalCount > 0 && (
+        {event.BandPlaying.length > 0 && (
           <>
             <Heading as="h3" size="md" mb="2">
               Lineup
             </Heading>
             <Box>
-              mit {event.bandsPlaying.edges.map((b) => b.node.name).join(', ')}{' '}
+              mit{' '}
+              {event.BandPlaying.slice(0, 12)
+                .map((b) => b.name)
+                .join(', ')}{' '}
               <ChakraLink asChild display="inline">
                 <Link
-                  to={$path('/lineup/:year', {
-                    year: event.start.getFullYear(),
-                  })}
+                  to="/lineup/year/:year"
+                  params={{year: event.start.getFullYear()}}
                 >
-                  {event.bandsPlaying.totalCount > 12 ? (
+                  {event.BandPlaying.length > 12 ? (
                     <>
-                      und {event.bandsPlaying.totalCount - 12} weiteren
-                      Bands&hellip;
+                      und {event.BandPlaying.length - 12} weiteren Bands&hellip;
                     </>
                   ) : (
                     <>Lineup</>
@@ -168,12 +176,16 @@ export default function Event({event}: {event: EventDetailsFragment}) {
           </>
         )}
 
-        {event.media.edges.length > 0 && (
+        {event.media.files.length > 0 && (
           <>
             <Heading as="h3" size="lg" mt="4" mb="2" id="fotos">
               Fotos
             </Heading>
-            <Photos eventId={event.id} media={event.media} />
+            <Photos
+              eventId={event.id}
+              files={event.media.files}
+              totalCount={event.media.totalCount}
+            />
           </>
         )}
       </Box>
