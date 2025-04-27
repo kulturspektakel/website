@@ -4,6 +4,7 @@ import {
   HeadContent,
   Scripts,
   createRootRouteWithContext,
+  useRouter,
 } from '@tanstack/react-router';
 import {Box, ChakraProvider, Flex} from '@chakra-ui/react';
 import theme from '../theme';
@@ -26,6 +27,7 @@ const beforeLoad = createServerFn().handler(async () => {
     },
     select: {
       start: true,
+      name: true,
       end: true,
       id: true,
       bandApplicationStart: true,

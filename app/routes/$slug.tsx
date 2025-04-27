@@ -54,7 +54,7 @@ const loader = createServerFn()
     };
   });
 
-export function PageRoute() {
+function PageRoute() {
   const page = Route.useLoaderData();
   return <Page {...page} />;
 }

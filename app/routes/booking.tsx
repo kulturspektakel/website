@@ -1,29 +1,35 @@
 import {VStack, Text, Heading, Box, Link as ChakraLink} from '@chakra-ui/react';
-import DateString from '~/components/DateString';
-import {Outlet, useSearchParams} from '@remix-run/react';
-import {$path} from 'remix-routes';
-import ApplicationPhase from '~/components/booking/ApplicationPhase';
-import {useTypedRouteLoaderData} from 'remix-typedjson';
-import {loader} from './booking';
+import DateString, {dateStringComponents} from '../components/DateString';
+import ApplicationPhase from '../components/booking/ApplicationPhase';
+import {createFileRoute} from '@tanstack/react-router';
 
-export function useUtmSource() {
-  const [searchParams] = useSearchParams();
-  if (
-    searchParams &&
-    searchParams instanceof URLSearchParams &&
-    searchParams.has('utm_source')
-  ) {
-    return searchParams.get('utm_source') ?? undefined;
-  }
-}
+export const Route = createFileRoute('/booking')({
+  component: Booking,
+  head: ({match: {context}}) => ({
+    meta: [
+      {
+        title: 'Band- und DJ-Bewerbungen',
+      },
+      context.event.bandApplicationEnd
+        ? {
+            name: 'description',
+            content: `Die Bewerbungspahse für das ${context.event.name} läuft bis zum ${
+              dateStringComponents({
+                date: new Date(context.event.bandApplicationEnd),
+              }).date
+            }`,
+          }
+        : undefined,
+    ],
+  }),
+});
 
-export default function Booking() {
-  const event = useTypedRouteLoaderData<typeof loader>('routes/booking')!;
-  const utm_source = useUtmSource();
+function Booking() {
+  const {event} = Route.useRouteContext();
+  const search = Route.useSearch();
 
   return (
     <Box>
-      <Outlet />
       <VStack gap="5">
         <Heading size="3xl">Band- und DJ-Bewerbungen</Heading>
         <Text>
@@ -52,13 +58,13 @@ export default function Booking() {
           title="Bands"
           content="Ihr möchtet euch als Band für eine unserer Bühnen bewerben."
           buttonLabel="Als Band bewerben"
-          href={$path(
-            '/booking/:applicationType',
-            {
+          link={{
+            to: '/booking/$applicationType',
+            params: {
               applicationType: 'band',
             },
-            utm_source ? {utm_source} : undefined,
-          )}
+            search,
+          }}
         />
       )}
       {event.djApplicationStart && (
@@ -68,13 +74,13 @@ export default function Booking() {
           title="DJs"
           content="Du möchtest dich als DJ für unsere DJ-Area bewerben."
           buttonLabel="Als DJ bewerben"
-          href={$path(
-            '/booking/:applicationType',
-            {
+          link={{
+            to: '/booking/$applicationType',
+            params: {
               applicationType: 'dj',
             },
-            {utm_source},
-          )}
+            search,
+          }}
         />
       )}
     </Box>

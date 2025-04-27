@@ -8,37 +8,55 @@ import {
   Code,
   Heading,
 } from '@chakra-ui/react';
-import {useNavigate, useNavigation, useParams} from '@remix-run/react';
-import type {Routes} from 'remix-routes';
-import {$path} from 'remix-routes';
 import {Formik, Form} from 'formik';
-import Step1 from '~/components/booking/Step1';
-import Step3 from '~/components/booking/Step3';
-import Step2 from '~/components/booking/Step2';
+import Step1 from '../components/booking/Step1';
+import Step3 from '../components/booking/Step3';
+import Step2 from '../components/booking/Step2';
 import {createElement, useState} from 'react';
-import type {CreateBandApplicationInput, SpotifyArtist} from '~/types/graphql';
+import type {CreateBandApplicationInput, SpotifyArtist} from '../types/graphql';
 import {
   GenreCategory,
   HeardAboutBookingFrom,
   useCreateBandApplicationMutation,
-} from '~/types/graphql';
+} from '../types/graphql';
 import {gql} from '@apollo/client';
-import ReloadWarning from '~/components/ReloadWarning';
-import {useUtmSource} from './booking._index';
-import {useTypedRouteLoaderData} from 'remix-typedjson';
-import {loader} from './booking';
-import Steps from '~/components/Steps';
+import ReloadWarning from '../components/ReloadWarning';
+import Steps from '../components/Steps';
 import {FaTriangleExclamation} from 'react-icons/fa6';
-import {Button} from '~/components/chakra-snippets/button';
-import {Alert} from '~/components/chakra-snippets/alert';
+import {Button} from '../components/chakra-snippets/button';
+import {Alert} from '../components/chakra-snippets/alert';
+import {createFileRoute, notFound, useNavigate} from '@tanstack/react-router';
+import {useRouterState} from '@tanstack/react-router';
+
+export function parseBookingParams(params: {applicationType: string}) {
+  switch (params.applicationType) {
+    case 'band':
+      return {applicationType: 'band' as const};
+    case 'dj':
+      return {applicationType: 'dj' as const};
+    default:
+      throw notFound();
+  }
+}
+
+export const Route = createFileRoute('/booking_/$applicationType')({
+  component: BookingForm,
+  validateSearch: (search) => {
+    if (search.utm_source && typeof search.utm_source === 'string') {
+      switch (search.utm_source) {
+        case 'fb':
+          return {utm_source: HeardAboutBookingFrom.Facebook};
+        case 'ig':
+          return {utm_source: HeardAboutBookingFrom.Instagram};
+      }
+    }
+  },
+  parseParams: parseBookingParams,
+});
 
 const STEPS = [Step1, Step2, Step3] as const;
 export type FormikContextT = Partial<CreateBandApplicationInput> & {
   spotifyArtist?: SpotifyArtist;
-};
-
-export type SearchParams = {
-  utm_source?: string;
 };
 
 gql`
@@ -52,21 +70,16 @@ gql`
   }
 `;
 
-const utmSourceMapping: Record<string, HeardAboutBookingFrom> = Object.freeze({
-  fb: HeardAboutBookingFrom.Facebook,
-  ig: HeardAboutBookingFrom.Instagram,
-});
-
-export default function () {
+function BookingForm() {
   const [currentStep, setCurrentStep] = useState(0);
-  const {applicationType} =
-    useParams<Routes['/booking/:applicationType']['params']>();
-  const event = useTypedRouteLoaderData<typeof loader>('routes/booking')!;
+  const {applicationType} = Route.useParams();
+  const {event} = Route.useRouteContext();
   const [create, {error}] = useCreateBandApplicationMutation();
   const isLastStep = currentStep === STEPS.length - 1;
   const navigate = useNavigate();
-  const utm_source = useUtmSource();
-  const {state} = useNavigation();
+  const utmSource = Route.useSearch();
+  const routerState = useRouterState();
+  const isNavigating = routerState.isLoading || routerState.isTransitioning;
 
   return (
     <VStack gap="5">
@@ -84,7 +97,7 @@ export default function () {
 
       <Formik<FormikContextT>
         initialValues={{
-          heardAboutBookingFrom: utmSourceMapping[utm_source ?? ''],
+          heardAboutBookingFrom: utmSource?.utm_source,
           genreCategory:
             applicationType === 'dj' ? GenreCategory.Dj : undefined,
         }}
@@ -113,11 +126,12 @@ export default function () {
             errorPolicy: 'all',
           });
           if (res?.createBandApplication?.id && applicationType) {
-            navigate(
-              $path('/booking/:applicationType/danke', {
+            navigate({
+              to: '/booking/$applicationType/danke',
+              params: {
                 applicationType,
-              }),
-            );
+              },
+            });
           }
         }}
         validateOnChange={false}
@@ -128,7 +142,7 @@ export default function () {
             <HStack w="100%" mt="4">
               {currentStep > 0 && (
                 <Button
-                  disabled={props.isSubmitting || state != 'idle'}
+                  disabled={props.isSubmitting || isNavigating}
                   onClick={() => setCurrentStep(currentStep - 1)}
                   variant="subtle"
                 >
@@ -138,7 +152,7 @@ export default function () {
               <Spacer />
               <Button
                 type="submit"
-                loading={props.isSubmitting || state != 'idle'}
+                loading={props.isSubmitting || isNavigating}
               >
                 {isLastStep ? 'Absenden' : 'Weiter'}
               </Button>

@@ -1,14 +1,21 @@
 import type {ButtonProps, LinkProps} from '@chakra-ui/react';
 import {Button, Link} from '@chakra-ui/react';
-import {useNavigate} from '@tanstack/react-router';
+import {
+  RegisteredRouter,
+  useNavigate,
+  ValidateLinkOptions,
+} from '@tanstack/react-router';
 
-export default function LinkButton({
+export default function LinkButton<
+  TRouter extends RegisteredRouter = RegisteredRouter,
+  TOptions = unknown,
+>({
   target,
   children,
   href,
   download,
   ...props
-}: ButtonProps & LinkProps & {href: string}) {
+}: ButtonProps & LinkProps & {href: ValidateLinkOptions<TRouter, TOptions>}) {
   const navigate = useNavigate();
   const isAbsolute = /^https?:\/\//.test(href);
 
@@ -24,9 +31,7 @@ export default function LinkButton({
           }
           if (!isAbsolute && !download) {
             e.preventDefault();
-            navigate({
-              to: href,
-            });
+            navigate(href);
           }
         }}
         target={isAbsolute ? '_blank' : undefined}

@@ -1,20 +1,21 @@
 import type {BoxProps} from '@chakra-ui/react';
 import {Box} from '@chakra-ui/react';
-import {Link, LinkProps} from '@tanstack/react-router';
+import {
+  Link,
+  RegisteredRouter,
+  ValidateLinkOptions,
+} from '@tanstack/react-router';
 import {forwardRef, useMemo} from 'react';
 
-const Card = forwardRef<BoxProps, any>(
-  (
-    {
-      onClick,
-      children,
-      link,
-      ...props
-    }: BoxProps & {
-      link?: LinkProps;
-    },
-    ref,
-  ) => {
+type Props<
+  TRouter extends RegisteredRouter = RegisteredRouter,
+  TOptions = unknown,
+> = BoxProps & {
+  link?: ValidateLinkOptions<TRouter, TOptions>;
+};
+
+const Card = forwardRef<HTMLDivElement, Props>(
+  ({onClick, children, link, ...props}, ref) => {
     const _focus = useMemo(
       () => ({
         transform: 'rotate(1deg) scale(1.03)',

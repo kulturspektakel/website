@@ -1,21 +1,13 @@
 import {gql} from '@apollo/client';
 import {ListRoot, VStack} from '@chakra-ui/react';
-import {LoaderFunctionArgs} from '@remix-run/node';
-import {useRevalidator} from '@remix-run/react';
-import {useEffect} from 'react';
-import {$params} from 'remix-routes';
-import {
-  typedjson,
-  UseDataFunctionReturn,
-  useTypedLoaderData,
-} from 'remix-typedjson';
-import {Alert} from '~/components/chakra-snippets/alert';
-import Card, {CardFragment} from '~/components/kultcard/Card';
-import InfoText from '~/components/kultcard/InfoText';
-import Transaction, {CardTransaction} from '~/components/kultcard/Transaction';
-import {KultCardDocument, KultCardQuery} from '~/types/graphql';
-import apolloClient from '~/utils/apolloClient';
-import mergeMeta from '~/utils/mergeMeta';
+import {Alert} from '../components/chakra-snippets/alert';
+import Card, {CardFragment} from '../components/kultcard/Card';
+import InfoText from '../components/kultcard/InfoText';
+import Transaction, {CardTransaction} from '../components/kultcard/Transaction';
+import {KultCardDocument, KultCardQuery} from '../types/graphql';
+import apolloClient from '../utils/apolloClient';
+import {createFileRoute, notFound} from '@tanstack/react-router';
+import {createServerFn} from '@tanstack/react-start';
 
 gql`
   query KultCard($payload: String!) {
@@ -32,7 +24,7 @@ gql`
   ${CardTransaction}
 `;
 
-const EXAMPLE_DATA: UseDataFunctionReturn<typeof loader> = {
+const EXAMPLE_DATA = {
   balance: 1000,
   deposit: 2,
   cardId: '123456',
@@ -173,43 +165,40 @@ const EXAMPLE_DATA: UseDataFunctionReturn<typeof loader> = {
   ],
 };
 
-export const meta = mergeMeta<typeof loader>(({data, params}) => {
-  return [
-    {
-      title: 'KultCard Guthaben',
-    },
-  ];
-});
+const loader = createServerFn()
+  .validator((data: {hash: string}) => data)
+  .handler(async ({data}) => {
+    const result = await apolloClient.query<KultCardQuery>({
+      query: KultCardDocument,
+      variables: {payload: data.hash},
+    });
 
-export async function loader(args: LoaderFunctionArgs) {
-  const {hash} = $params('/$$/:hash', args.params);
-  const {data} = await apolloClient.query<KultCardQuery>({
-    query: KultCardDocument,
-    variables: {payload: hash},
+    if (!result.data?.cardStatus) {
+      throw notFound();
+    }
+
+    return result.data.cardStatus;
   });
 
-  return typedjson(data.cardStatus);
-}
+export const currencyFormatter = new Intl.NumberFormat('de-DE', {
+  style: 'currency',
+  currency: 'EUR',
+});
 
-export default function () {
-  const revalidator = useRevalidator();
-  useEffect(() => {
-    const timeout = setTimeout(() => revalidator.revalidate(), 60000);
+export const Route = createFileRoute('/$$$/$hash')({
+  component: KultCard,
+  loader: async ({params}) => await loader({data: params}),
+  head: ({loaderData}) => ({
+    meta: [
+      {
+        title: `KultCard Guthaben ${currencyFormatter.format(loaderData.balance / 100)}`,
+      },
+    ],
+  }),
+});
 
-    const onVisibilityChange = () => {
-      if (!document.hidden) {
-        revalidator.revalidate();
-      }
-    };
-    document.addEventListener('visibilitychange', onVisibilityChange);
-
-    return () => {
-      clearTimeout(timeout);
-      document.removeEventListener('visibilitychange', onVisibilityChange);
-    };
-  }, [revalidator]);
-
-  const data = useTypedLoaderData<typeof loader>(); // EXAMPLE_DATA
+function KultCard() {
+  const cardStatus = Route.useLoaderData(); // EXAMPLE_DATA
 
   return (
     <VStack
@@ -221,32 +210,33 @@ export default function () {
       align="stretch"
       justifyContent="center"
     >
-      {data.hasNewerTransactions && (
+      {cardStatus.hasNewerTransactions && (
         <Alert title="Neue Buchungen">
           Es liegen neuere Buchungen vor. Karte erneut auslesen um diese
           anzuzeigen.
         </Alert>
       )}
-      <Card balance={data.balance} deposit={data.deposit} />
+      <Card balance={cardStatus.balance} deposit={cardStatus.deposit} />
 
-      {data.recentTransactions && data.recentTransactions.length > 0 && (
-        <VStack gap="5" align="stretch">
-          <ListRoot as="ol" m="0">
-            {data.recentTransactions.map((t, i) => (
-              <Transaction
-                key={i}
-                {...t}
-                isLastItem={i === data.recentTransactions!.length - 1}
-              />
-            ))}
-          </ListRoot>
-          <InfoText textAlign="center">
-            Es kann etwas dauern, bis alle Buchungen vollständig in der Liste
-            dargestellt werden. Das angezeigte Guthaben auf der Karte ist jedoch
-            immer aktuell.
-          </InfoText>
-        </VStack>
-      )}
+      {cardStatus.recentTransactions &&
+        cardStatus.recentTransactions.length > 0 && (
+          <VStack gap="5" align="stretch">
+            <ListRoot as="ol" m="0">
+              {cardStatus.recentTransactions.map((t, i) => (
+                <Transaction
+                  key={i}
+                  {...t}
+                  isLastItem={i === cardStatus.recentTransactions!.length - 1}
+                />
+              ))}
+            </ListRoot>
+            <InfoText textAlign="center">
+              Es kann etwas dauern, bis alle Buchungen vollständig in der Liste
+              dargestellt werden. Das angezeigte Guthaben auf der Karte ist
+              jedoch immer aktuell.
+            </InfoText>
+          </VStack>
+        )}
     </VStack>
   );
 }

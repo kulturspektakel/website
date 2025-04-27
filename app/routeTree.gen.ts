@@ -17,8 +17,10 @@ import { Route as NuclinoSsoImport } from './routes/nuclino-sso'
 import { Route as MitgliedsantragImport } from './routes/mitgliedsantrag'
 import { Route as LogoImport } from './routes/logo'
 import { Route as LineupImport } from './routes/lineup'
+import { Route as LearnImport } from './routes/learn'
 import { Route as InfosImport } from './routes/infos'
 import { Route as EventsImport } from './routes/events'
+import { Route as BookingImport } from './routes/booking'
 import { Route as BadgesImport } from './routes/badges'
 import { Route as AngebotImport } from './routes/angebot'
 import { Route as SlugImport } from './routes/$slug'
@@ -29,7 +31,10 @@ import { Route as NewsSlugImport } from './routes/news.$slug'
 import { Route as MitgliedsantragDankeImport } from './routes/mitgliedsantrag.danke'
 import { Route as LineupYearImport } from './routes/lineup.$year'
 import { Route as EventsIdImport } from './routes/events_.$id'
+import { Route as BookingApplicationTypeImport } from './routes/booking_.$applicationType'
+import { Route as HashImport } from './routes/$$$.$hash'
 import { Route as LineupYearSlugImport } from './routes/lineup.$year_.$slug'
+import { Route as BookingApplicationTypeDankeImport } from './routes/booking_.$applicationType_.danke'
 
 // Create/Update Routes
 
@@ -69,6 +74,12 @@ const LineupRoute = LineupImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const LearnRoute = LearnImport.update({
+  id: '/learn',
+  path: '/learn',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const InfosRoute = InfosImport.update({
   id: '/infos',
   path: '/infos',
@@ -78,6 +89,12 @@ const InfosRoute = InfosImport.update({
 const EventsRoute = EventsImport.update({
   id: '/events',
   path: '/events',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const BookingRoute = BookingImport.update({
+  id: '/booking',
+  path: '/booking',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -141,11 +158,30 @@ const EventsIdRoute = EventsIdImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const BookingApplicationTypeRoute = BookingApplicationTypeImport.update({
+  id: '/booking_/$applicationType',
+  path: '/booking/$applicationType',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const HashRoute = HashImport.update({
+  id: '/$$$/$hash',
+  path: '/$$$/$hash',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const LineupYearSlugRoute = LineupYearSlugImport.update({
   id: '/$year_/$slug',
   path: '/$year/$slug',
   getParentRoute: () => LineupRoute,
 } as any)
+
+const BookingApplicationTypeDankeRoute =
+  BookingApplicationTypeDankeImport.update({
+    id: '/booking_/$applicationType_/danke',
+    path: '/booking/$applicationType/danke',
+    getParentRoute: () => rootRoute,
+  } as any)
 
 // Populate the FileRoutesByPath interface
 
@@ -179,6 +215,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BadgesImport
       parentRoute: typeof rootRoute
     }
+    '/booking': {
+      id: '/booking'
+      path: '/booking'
+      fullPath: '/booking'
+      preLoaderRoute: typeof BookingImport
+      parentRoute: typeof rootRoute
+    }
     '/events': {
       id: '/events'
       path: '/events'
@@ -191,6 +234,13 @@ declare module '@tanstack/react-router' {
       path: '/infos'
       fullPath: '/infos'
       preLoaderRoute: typeof InfosImport
+      parentRoute: typeof rootRoute
+    }
+    '/learn': {
+      id: '/learn'
+      path: '/learn'
+      fullPath: '/learn'
+      preLoaderRoute: typeof LearnImport
       parentRoute: typeof rootRoute
     }
     '/lineup': {
@@ -235,6 +285,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SpeisekarteImport
       parentRoute: typeof rootRoute
     }
+    '/$$$/$hash': {
+      id: '/$$$/$hash'
+      path: '/$$$/$hash'
+      fullPath: '/$$$/$hash'
+      preLoaderRoute: typeof HashImport
+      parentRoute: typeof rootRoute
+    }
+    '/booking_/$applicationType': {
+      id: '/booking_/$applicationType'
+      path: '/booking/$applicationType'
+      fullPath: '/booking/$applicationType'
+      preLoaderRoute: typeof BookingApplicationTypeImport
+      parentRoute: typeof rootRoute
+    }
     '/events_/$id': {
       id: '/events_/$id'
       path: '/events/$id'
@@ -276,6 +340,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/lineup/'
       preLoaderRoute: typeof LineupIndexImport
       parentRoute: typeof LineupImport
+    }
+    '/booking_/$applicationType_/danke': {
+      id: '/booking_/$applicationType_/danke'
+      path: '/booking/$applicationType/danke'
+      fullPath: '/booking/$applicationType/danke'
+      preLoaderRoute: typeof BookingApplicationTypeDankeImport
+      parentRoute: typeof rootRoute
     }
     '/lineup/$year_/$slug': {
       id: '/lineup/$year_/$slug'
@@ -321,20 +392,25 @@ export interface FileRoutesByFullPath {
   '/$slug': typeof SlugRoute
   '/angebot': typeof AngebotRoute
   '/badges': typeof BadgesRoute
+  '/booking': typeof BookingRoute
   '/events': typeof EventsRoute
   '/infos': typeof InfosRoute
+  '/learn': typeof LearnRoute
   '/lineup': typeof LineupRouteWithChildren
   '/logo': typeof LogoRoute
   '/mitgliedsantrag': typeof MitgliedsantragRouteWithChildren
   '/nuclino-sso': typeof NuclinoSsoRoute
   '/plakate': typeof PlakateRoute
   '/speisekarte': typeof SpeisekarteRoute
+  '/$$$/$hash': typeof HashRoute
+  '/booking/$applicationType': typeof BookingApplicationTypeRoute
   '/events/$id': typeof EventsIdRoute
   '/lineup/$year': typeof LineupYearRoute
   '/mitgliedsantrag/danke': typeof MitgliedsantragDankeRoute
   '/news/$slug': typeof NewsSlugRoute
   '/news/archiv': typeof NewsArchivRoute
   '/lineup/': typeof LineupIndexRoute
+  '/booking/$applicationType/danke': typeof BookingApplicationTypeDankeRoute
   '/lineup/$year/$slug': typeof LineupYearSlugRoute
 }
 
@@ -343,19 +419,24 @@ export interface FileRoutesByTo {
   '/$slug': typeof SlugRoute
   '/angebot': typeof AngebotRoute
   '/badges': typeof BadgesRoute
+  '/booking': typeof BookingRoute
   '/events': typeof EventsRoute
   '/infos': typeof InfosRoute
+  '/learn': typeof LearnRoute
   '/logo': typeof LogoRoute
   '/mitgliedsantrag': typeof MitgliedsantragRouteWithChildren
   '/nuclino-sso': typeof NuclinoSsoRoute
   '/plakate': typeof PlakateRoute
   '/speisekarte': typeof SpeisekarteRoute
+  '/$$$/$hash': typeof HashRoute
+  '/booking/$applicationType': typeof BookingApplicationTypeRoute
   '/events/$id': typeof EventsIdRoute
   '/lineup/$year': typeof LineupYearRoute
   '/mitgliedsantrag/danke': typeof MitgliedsantragDankeRoute
   '/news/$slug': typeof NewsSlugRoute
   '/news/archiv': typeof NewsArchivRoute
   '/lineup': typeof LineupIndexRoute
+  '/booking/$applicationType/danke': typeof BookingApplicationTypeDankeRoute
   '/lineup/$year/$slug': typeof LineupYearSlugRoute
 }
 
@@ -365,20 +446,25 @@ export interface FileRoutesById {
   '/$slug': typeof SlugRoute
   '/angebot': typeof AngebotRoute
   '/badges': typeof BadgesRoute
+  '/booking': typeof BookingRoute
   '/events': typeof EventsRoute
   '/infos': typeof InfosRoute
+  '/learn': typeof LearnRoute
   '/lineup': typeof LineupRouteWithChildren
   '/logo': typeof LogoRoute
   '/mitgliedsantrag': typeof MitgliedsantragRouteWithChildren
   '/nuclino-sso': typeof NuclinoSsoRoute
   '/plakate': typeof PlakateRoute
   '/speisekarte': typeof SpeisekarteRoute
+  '/$$$/$hash': typeof HashRoute
+  '/booking_/$applicationType': typeof BookingApplicationTypeRoute
   '/events_/$id': typeof EventsIdRoute
   '/lineup/$year': typeof LineupYearRoute
   '/mitgliedsantrag/danke': typeof MitgliedsantragDankeRoute
   '/news/$slug': typeof NewsSlugRoute
   '/news/archiv': typeof NewsArchivRoute
   '/lineup/': typeof LineupIndexRoute
+  '/booking_/$applicationType_/danke': typeof BookingApplicationTypeDankeRoute
   '/lineup/$year_/$slug': typeof LineupYearSlugRoute
 }
 
@@ -389,20 +475,25 @@ export interface FileRouteTypes {
     | '/$slug'
     | '/angebot'
     | '/badges'
+    | '/booking'
     | '/events'
     | '/infos'
+    | '/learn'
     | '/lineup'
     | '/logo'
     | '/mitgliedsantrag'
     | '/nuclino-sso'
     | '/plakate'
     | '/speisekarte'
+    | '/$$$/$hash'
+    | '/booking/$applicationType'
     | '/events/$id'
     | '/lineup/$year'
     | '/mitgliedsantrag/danke'
     | '/news/$slug'
     | '/news/archiv'
     | '/lineup/'
+    | '/booking/$applicationType/danke'
     | '/lineup/$year/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -410,19 +501,24 @@ export interface FileRouteTypes {
     | '/$slug'
     | '/angebot'
     | '/badges'
+    | '/booking'
     | '/events'
     | '/infos'
+    | '/learn'
     | '/logo'
     | '/mitgliedsantrag'
     | '/nuclino-sso'
     | '/plakate'
     | '/speisekarte'
+    | '/$$$/$hash'
+    | '/booking/$applicationType'
     | '/events/$id'
     | '/lineup/$year'
     | '/mitgliedsantrag/danke'
     | '/news/$slug'
     | '/news/archiv'
     | '/lineup'
+    | '/booking/$applicationType/danke'
     | '/lineup/$year/$slug'
   id:
     | '__root__'
@@ -430,20 +526,25 @@ export interface FileRouteTypes {
     | '/$slug'
     | '/angebot'
     | '/badges'
+    | '/booking'
     | '/events'
     | '/infos'
+    | '/learn'
     | '/lineup'
     | '/logo'
     | '/mitgliedsantrag'
     | '/nuclino-sso'
     | '/plakate'
     | '/speisekarte'
+    | '/$$$/$hash'
+    | '/booking_/$applicationType'
     | '/events_/$id'
     | '/lineup/$year'
     | '/mitgliedsantrag/danke'
     | '/news/$slug'
     | '/news/archiv'
     | '/lineup/'
+    | '/booking_/$applicationType_/danke'
     | '/lineup/$year_/$slug'
   fileRoutesById: FileRoutesById
 }
@@ -453,17 +554,22 @@ export interface RootRouteChildren {
   SlugRoute: typeof SlugRoute
   AngebotRoute: typeof AngebotRoute
   BadgesRoute: typeof BadgesRoute
+  BookingRoute: typeof BookingRoute
   EventsRoute: typeof EventsRoute
   InfosRoute: typeof InfosRoute
+  LearnRoute: typeof LearnRoute
   LineupRoute: typeof LineupRouteWithChildren
   LogoRoute: typeof LogoRoute
   MitgliedsantragRoute: typeof MitgliedsantragRouteWithChildren
   NuclinoSsoRoute: typeof NuclinoSsoRoute
   PlakateRoute: typeof PlakateRoute
   SpeisekarteRoute: typeof SpeisekarteRoute
+  HashRoute: typeof HashRoute
+  BookingApplicationTypeRoute: typeof BookingApplicationTypeRoute
   EventsIdRoute: typeof EventsIdRoute
   NewsSlugRoute: typeof NewsSlugRoute
   NewsArchivRoute: typeof NewsArchivRoute
+  BookingApplicationTypeDankeRoute: typeof BookingApplicationTypeDankeRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -471,17 +577,22 @@ const rootRouteChildren: RootRouteChildren = {
   SlugRoute: SlugRoute,
   AngebotRoute: AngebotRoute,
   BadgesRoute: BadgesRoute,
+  BookingRoute: BookingRoute,
   EventsRoute: EventsRoute,
   InfosRoute: InfosRoute,
+  LearnRoute: LearnRoute,
   LineupRoute: LineupRouteWithChildren,
   LogoRoute: LogoRoute,
   MitgliedsantragRoute: MitgliedsantragRouteWithChildren,
   NuclinoSsoRoute: NuclinoSsoRoute,
   PlakateRoute: PlakateRoute,
   SpeisekarteRoute: SpeisekarteRoute,
+  HashRoute: HashRoute,
+  BookingApplicationTypeRoute: BookingApplicationTypeRoute,
   EventsIdRoute: EventsIdRoute,
   NewsSlugRoute: NewsSlugRoute,
   NewsArchivRoute: NewsArchivRoute,
+  BookingApplicationTypeDankeRoute: BookingApplicationTypeDankeRoute,
 }
 
 export const routeTree = rootRoute
@@ -498,17 +609,22 @@ export const routeTree = rootRoute
         "/$slug",
         "/angebot",
         "/badges",
+        "/booking",
         "/events",
         "/infos",
+        "/learn",
         "/lineup",
         "/logo",
         "/mitgliedsantrag",
         "/nuclino-sso",
         "/plakate",
         "/speisekarte",
+        "/$$$/$hash",
+        "/booking_/$applicationType",
         "/events_/$id",
         "/news/$slug",
-        "/news/archiv"
+        "/news/archiv",
+        "/booking_/$applicationType_/danke"
       ]
     },
     "/": {
@@ -523,11 +639,17 @@ export const routeTree = rootRoute
     "/badges": {
       "filePath": "badges.tsx"
     },
+    "/booking": {
+      "filePath": "booking.tsx"
+    },
     "/events": {
       "filePath": "events.tsx"
     },
     "/infos": {
       "filePath": "infos.tsx"
+    },
+    "/learn": {
+      "filePath": "learn.tsx"
     },
     "/lineup": {
       "filePath": "lineup.tsx",
@@ -555,6 +677,12 @@ export const routeTree = rootRoute
     "/speisekarte": {
       "filePath": "speisekarte.tsx"
     },
+    "/$$$/$hash": {
+      "filePath": "$$$.$hash.tsx"
+    },
+    "/booking_/$applicationType": {
+      "filePath": "booking_.$applicationType.tsx"
+    },
     "/events_/$id": {
       "filePath": "events_.$id.tsx"
     },
@@ -575,6 +703,9 @@ export const routeTree = rootRoute
     "/lineup/": {
       "filePath": "lineup.index.tsx",
       "parent": "/lineup"
+    },
+    "/booking_/$applicationType_/danke": {
+      "filePath": "booking_.$applicationType_.danke.tsx"
     },
     "/lineup/$year_/$slug": {
       "filePath": "lineup.$year_.$slug.tsx",

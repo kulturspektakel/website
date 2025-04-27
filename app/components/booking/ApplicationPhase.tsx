@@ -1,20 +1,22 @@
 import {FaTriangleExclamation} from 'react-icons/fa6';
 import {Flex, VStack, Heading, Spacer, Text} from '@chakra-ui/react';
-import {useNavigate} from '@remix-run/react';
 import DateString from '../DateString';
-import {Button} from '../chakra-snippets/button';
 import {Tag} from '../chakra-snippets/tag';
 import LinkButton from '../LinkButton';
+import {RegisteredRouter, ValidateLinkOptions} from '@tanstack/react-router';
 
-export default function ApplicationPhase({
-  href,
+export default function ApplicationPhase<
+  TRouter extends RegisteredRouter = RegisteredRouter,
+  TOptions = unknown,
+>({
+  link,
   buttonLabel,
   applicationStart,
   applicationEnd,
   title,
   content,
 }: {
-  href: string;
+  link: ValidateLinkOptions<TRouter, TOptions>;
   title: string;
   content: string;
   buttonLabel: string;
@@ -24,7 +26,6 @@ export default function ApplicationPhase({
   const applicationEnded = applicationEnd ? applicationEnd < new Date() : false;
   const applicationNotStarted = applicationStart > new Date();
   const disabled = applicationEnded || applicationNotStarted;
-  const navigate = useNavigate();
 
   return (
     <Flex
@@ -69,7 +70,7 @@ export default function ApplicationPhase({
         flexShrink={0}
         mt="3"
         disabled={disabled}
-        href={href}
+        href={link}
         variant="solid"
       >
         {buttonLabel}

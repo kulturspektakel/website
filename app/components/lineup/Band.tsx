@@ -24,9 +24,9 @@ export default function Band({
     <Card
       aspectRatio={1}
       link={{
-        to: `/lineup/${band.startTime.getFullYear()}/${band.slug}`,
+        to: '/lineup/$year/$slug',
         params: {
-          year: band.startTime.getFullYear(),
+          year: String(band.startTime.getFullYear()),
           slug: band.slug,
         },
       }}

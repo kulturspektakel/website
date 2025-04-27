@@ -1,18 +1,17 @@
 import {VStack, Heading, Text, Image} from '@chakra-ui/react';
-import Confetti from '~/components/booking/Confetti.client';
-import DateString from '~/components/DateString';
-import {useParams} from '@remix-run/react';
-import {ClientOnly} from 'remix-utils/client-only';
-import {useTypedRouteLoaderData} from 'remix-typedjson';
-import {loader} from './booking';
+import Confetti from '../components/booking/Confetti.client';
+import DateString from '../components/DateString';
+import {createFileRoute} from '@tanstack/react-router';
+import {parseBookingParams} from './booking_.$applicationType';
 
-export type SearchParams = {
-  applicationType: 'band' | 'dj';
-};
+export const Route = createFileRoute('/booking_/$applicationType_/danke')({
+  component: Thanks,
+  parseParams: parseBookingParams,
+});
 
-export default function Thanks() {
-  const event = useTypedRouteLoaderData<typeof loader>('routes/booking')!;
-  const {applicationType} = useParams<SearchParams>();
+function Thanks() {
+  const {event} = Route.useRouteContext();
+  const {applicationType} = Route.useParams();
   const applicationEnd =
     applicationType === 'dj'
       ? event.djApplicationEnd
@@ -20,7 +19,7 @@ export default function Thanks() {
 
   return (
     <>
-      <ClientOnly>{() => <Confetti />}</ClientOnly>
+      <Confetti />
       <VStack gap="5" textAlign="center">
         <Image
           src={
