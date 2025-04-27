@@ -1,9 +1,9 @@
 import {Textarea} from '@chakra-ui/react';
 import useIsDJ from './useIsDJ';
-import {HeardAboutBookingFrom, PreviouslyPlayed} from '~/types/graphql';
-import {useUtmSource} from '~/routes/booking._index';
+import {HeardAboutBookingFrom, PreviouslyPlayed} from '../../types/graphql';
 import {ConnectedField} from '../ConnectedField';
 import {z} from 'zod';
+import {useSearch} from '@tanstack/react-router';
 
 export const schema = z.object({
   contactName: z.string().min(1),
@@ -31,7 +31,9 @@ const PLAYED_PREVIOUSLY: Map<PreviouslyPlayed, string> = new Map([
 
 export default function Step3() {
   const isDJ = useIsDJ();
-  const utmSource = useUtmSource();
+  const search = useSearch({
+    from: '/booking_/$applicationType',
+  });
 
   return (
     <>
@@ -80,7 +82,7 @@ export default function Step3() {
           .map(([value, label]) => ({value, label}))}
       />
 
-      {!utmSource && (
+      {!search?.utm_source && (
         <ConnectedField
           label={
             isDJ

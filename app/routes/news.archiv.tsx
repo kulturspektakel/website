@@ -91,7 +91,12 @@ export default function NewsArchive() {
             {news.map((node) => (
               <Card
                 key={node.slug}
-                href={`/news/${node.slug}`}
+                link={{
+                  to: '/news/$slug',
+                  params: {
+                    slug: node.slug,
+                  },
+                }}
                 aspectRatio={1}
                 bgSize="cover"
                 bgPosition="center"

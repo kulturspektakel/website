@@ -8,12 +8,12 @@ import {
 import DistanceWarning from './DistanceWarning';
 import DuplicateApplicationWarning from './DuplicateApplicationWarning';
 import useIsDJ from './useIsDJ';
-import {BandRepertoireType, GenreCategory} from '~/types/graphql';
-import type {FormikContextT} from '~/routes/booking.$applicationType._index';
+import {BandRepertoireType, GenreCategory} from '../../types/graphql';
 import {useFormikContext} from 'formik';
 import {Alert} from '../chakra-snippets/alert';
 import {ConnectedField} from '../ConnectedField';
 import {z} from 'zod';
+import {FormikContextT} from '../../routes/booking_.$applicationType';
 
 export const schema = z.object({
   bandname: z.string().min(1),

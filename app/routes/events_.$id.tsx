@@ -88,7 +88,7 @@ export default function EventComponent() {
         {event.name}
       </Headline>
       <Event event={event} />
-      {event.location && event.latitude && event.longitude && (
+      {event.location && event.latitude && event.longitude && apiKey && (
         <>
           <Heading textAlign="center" size="lg" mt="10">
             Anfahrt

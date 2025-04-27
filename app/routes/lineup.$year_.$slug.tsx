@@ -52,7 +52,7 @@ const loader = createServerFn()
     if (!band) {
       throw notFound();
     }
-    console.log(band);
+
     return {
       ...band,
       photo: await directusImage(band.photo),

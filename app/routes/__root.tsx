@@ -4,7 +4,6 @@ import {
   HeadContent,
   Scripts,
   createRootRouteWithContext,
-  useRouter,
 } from '@tanstack/react-router';
 import {Box, ChakraProvider, Flex} from '@chakra-ui/react';
 import theme from '../theme';
@@ -16,6 +15,7 @@ import {dateStringComponents} from '../components/DateString';
 import {prismaClient} from '../utils/prismaClient';
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 import {createServerFn} from '@tanstack/react-start';
+import {wrapCreateRootRouteWithSentry} from '@sentry/tanstackstart-react';
 
 const beforeLoad = createServerFn().handler(async () => {
   const event = await prismaClient.event.findFirstOrThrow({
@@ -39,7 +39,9 @@ const beforeLoad = createServerFn().handler(async () => {
   return {event};
 });
 
-export const Route = createRootRouteWithContext<ApolloClientRouterContext>()({
+export const Route = wrapCreateRootRouteWithSentry(
+  createRootRouteWithContext<ApolloClientRouterContext>,
+)()({
   head: ({match: {context}}) => {
     let title = 'Kulturspektakel Gauting';
     let description =

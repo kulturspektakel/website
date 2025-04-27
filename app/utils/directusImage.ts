@@ -76,9 +76,9 @@ export function imageUrl(
   }
   const url = new URL(BASE_URL);
   url.pathname = id;
-  if (options?.width) {
+  if (options && 'width' in options) {
     url.searchParams.append('width', String(options.width));
-  } else if (options?.height) {
+  } else if (options && 'height' in options) {
     url.searchParams.append('height', String(options.height));
   }
   return url.toString();

@@ -18,7 +18,7 @@ const overrides: SystemConfig = {
           },
         },
         defaultVariants: {
-          variant: 'surface',
+          variant: 'subtle',
         },
       }),
       nativeSelect: defineSlotRecipe({

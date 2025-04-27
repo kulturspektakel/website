@@ -2,7 +2,6 @@ import {
   Flex,
   Image,
   Link as ChakraLink,
-  useToken,
   Text,
   Box,
   Center,
@@ -14,33 +13,11 @@ import {
   DialogBackdrop,
 } from '@chakra-ui/react';
 import {Link, useLocation, useNavigate} from '@tanstack/react-router';
-import {useEffect, useMemo, useState} from 'react';
-import ProgressBar from '@badrap/bar-of-progress';
+import {useState} from 'react';
 import logo from './logo.svg';
 import videoSrc from './Header.mov';
 import DateString from '../DateString';
 import {FaXmark, FaBars} from 'react-icons/fa6';
-
-function useLoadingBar() {
-  const [blue500] = useToken('colors', ['blue.500']);
-  const progress = useMemo(
-    () =>
-      new ProgressBar({
-        size: 2,
-        color: blue500,
-        delay: 80,
-      }),
-    [blue500],
-  );
-  // const {state} = useNavigation();
-  // useEffect(() => {
-  //   if (state === 'loading' || state === 'submitting') {
-  //     progress.start();
-  //   } else {
-  //     progress.finish();
-  //   }
-  // }, [progress, state]);
-}
 
 function Item({children, to}: {children: React.ReactNode; to: string}) {
   return (
@@ -87,7 +64,6 @@ export default function Header({
   const isHome = useLocation().pathname === '/';
   const [showNav, setShowNav] = useState(false);
   // Close nav on route change
-  useLoadingBar();
   const navigate = useNavigate();
 
   return (
@@ -123,6 +99,7 @@ export default function Header({
               position: 'absolute',
             }}
           />
+
           <Image
             src={logo}
             alt="Kulturspektakel Gauting Logo"

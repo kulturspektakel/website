@@ -12,11 +12,10 @@ import {
 import {Field as FormikField} from 'formik';
 import useIsDJ from './useIsDJ';
 import {useFormikContext} from 'formik';
-import type {FormikContextT} from '~/routes/booking.$applicationType._index';
 import {useTypeahead} from 'tomo-typeahead/react';
-import type {SpotifyArtistSearchQuery} from '~/types/graphql';
-import {SpotifyArtistSearchDocument} from '~/types/graphql';
-import apolloClient from '~/utils/apolloClient';
+import type {SpotifyArtistSearchQuery} from '../../types/graphql';
+import {SpotifyArtistSearchDocument} from '../../types/graphql';
+import apolloClient from '../../utils/apolloClient';
 import {gql} from '@apollo/client';
 import {useCombobox} from 'downshift';
 import {useRef, useState} from 'react';
@@ -27,6 +26,7 @@ import {InputGroup} from '../chakra-snippets/input-group';
 import {Field} from '../chakra-snippets/field';
 import {ConnectedField} from '../ConnectedField';
 import {z} from 'zod';
+import {FormikContextT} from '../../routes/booking_.$applicationType';
 
 export const schema = z.object({
   demo: z.string().min(1),

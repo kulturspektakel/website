@@ -137,7 +137,6 @@ function Mitgliedsantrag() {
         validateOnChange={false}
         validationSchema={toFormikValidationSchema(STEPS[step])}
         onSubmit={async (values) => {
-          console.log(values);
           if (step < STEPS.length - 1) {
             setStep(step + 1);
           } else {
@@ -292,7 +291,7 @@ function Mitgliedsantrag() {
                     validate={(v) =>
                       isValid(v) ? undefined : 'IBAN hat kein gültiges Format'
                     }
-                    onBlur={(e: React.SyntheticEvent<HTMLInputElement>) => {
+                    onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
                       if (isValid(e.target.value)) {
                         setFieldValue('iban', printFormat(e.target.value));
                       }
