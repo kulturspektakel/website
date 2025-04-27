@@ -52,13 +52,14 @@ const loader = createServerFn()
     if (!band) {
       throw notFound();
     }
+    console.log(band);
     return {
       ...band,
       photo: await directusImage(band.photo),
     };
   });
 
-export const Route = createFileRoute('/lineup/$year/$slug')({
+export const Route = createFileRoute('/lineup/$year_/$slug')({
   component: LineupBand,
   loader: async ({params}) => await loader({data: params}),
   head: ({params, loaderData}) => {

@@ -14,6 +14,7 @@ import { Route as rootRoute } from './routes/__root'
 import { Route as SpeisekarteImport } from './routes/speisekarte'
 import { Route as PlakateImport } from './routes/plakate'
 import { Route as NuclinoSsoImport } from './routes/nuclino-sso'
+import { Route as MitgliedsantragImport } from './routes/mitgliedsantrag'
 import { Route as LogoImport } from './routes/logo'
 import { Route as LineupImport } from './routes/lineup'
 import { Route as InfosImport } from './routes/infos'
@@ -25,9 +26,10 @@ import { Route as IndexImport } from './routes/index'
 import { Route as LineupIndexImport } from './routes/lineup.index'
 import { Route as NewsArchivImport } from './routes/news.archiv'
 import { Route as NewsSlugImport } from './routes/news.$slug'
+import { Route as MitgliedsantragDankeImport } from './routes/mitgliedsantrag.danke'
 import { Route as LineupYearImport } from './routes/lineup.$year'
 import { Route as EventsIdImport } from './routes/events_.$id'
-import { Route as LineupYearSlugImport } from './routes/lineup.$year.$slug'
+import { Route as LineupYearSlugImport } from './routes/lineup.$year_.$slug'
 
 // Create/Update Routes
 
@@ -46,6 +48,12 @@ const PlakateRoute = PlakateImport.update({
 const NuclinoSsoRoute = NuclinoSsoImport.update({
   id: '/nuclino-sso',
   path: '/nuclino-sso',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const MitgliedsantragRoute = MitgliedsantragImport.update({
+  id: '/mitgliedsantrag',
+  path: '/mitgliedsantrag',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -115,6 +123,12 @@ const NewsSlugRoute = NewsSlugImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const MitgliedsantragDankeRoute = MitgliedsantragDankeImport.update({
+  id: '/danke',
+  path: '/danke',
+  getParentRoute: () => MitgliedsantragRoute,
+} as any)
+
 const LineupYearRoute = LineupYearImport.update({
   id: '/$year',
   path: '/$year',
@@ -128,9 +142,9 @@ const EventsIdRoute = EventsIdImport.update({
 } as any)
 
 const LineupYearSlugRoute = LineupYearSlugImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => LineupYearRoute,
+  id: '/$year_/$slug',
+  path: '/$year/$slug',
+  getParentRoute: () => LineupRoute,
 } as any)
 
 // Populate the FileRoutesByPath interface
@@ -193,6 +207,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LogoImport
       parentRoute: typeof rootRoute
     }
+    '/mitgliedsantrag': {
+      id: '/mitgliedsantrag'
+      path: '/mitgliedsantrag'
+      fullPath: '/mitgliedsantrag'
+      preLoaderRoute: typeof MitgliedsantragImport
+      parentRoute: typeof rootRoute
+    }
     '/nuclino-sso': {
       id: '/nuclino-sso'
       path: '/nuclino-sso'
@@ -228,6 +249,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LineupYearImport
       parentRoute: typeof LineupImport
     }
+    '/mitgliedsantrag/danke': {
+      id: '/mitgliedsantrag/danke'
+      path: '/danke'
+      fullPath: '/mitgliedsantrag/danke'
+      preLoaderRoute: typeof MitgliedsantragDankeImport
+      parentRoute: typeof MitgliedsantragImport
+    }
     '/news/$slug': {
       id: '/news/$slug'
       path: '/news/$slug'
@@ -249,42 +277,44 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LineupIndexImport
       parentRoute: typeof LineupImport
     }
-    '/lineup/$year/$slug': {
-      id: '/lineup/$year/$slug'
-      path: '/$slug'
+    '/lineup/$year_/$slug': {
+      id: '/lineup/$year_/$slug'
+      path: '/$year/$slug'
       fullPath: '/lineup/$year/$slug'
       preLoaderRoute: typeof LineupYearSlugImport
-      parentRoute: typeof LineupYearImport
+      parentRoute: typeof LineupImport
     }
   }
 }
 
 // Create and export the route tree
 
-interface LineupYearRouteChildren {
+interface LineupRouteChildren {
+  LineupYearRoute: typeof LineupYearRoute
+  LineupIndexRoute: typeof LineupIndexRoute
   LineupYearSlugRoute: typeof LineupYearSlugRoute
 }
 
-const LineupYearRouteChildren: LineupYearRouteChildren = {
-  LineupYearSlugRoute: LineupYearSlugRoute,
-}
-
-const LineupYearRouteWithChildren = LineupYearRoute._addFileChildren(
-  LineupYearRouteChildren,
-)
-
-interface LineupRouteChildren {
-  LineupYearRoute: typeof LineupYearRouteWithChildren
-  LineupIndexRoute: typeof LineupIndexRoute
-}
-
 const LineupRouteChildren: LineupRouteChildren = {
-  LineupYearRoute: LineupYearRouteWithChildren,
+  LineupYearRoute: LineupYearRoute,
   LineupIndexRoute: LineupIndexRoute,
+  LineupYearSlugRoute: LineupYearSlugRoute,
 }
 
 const LineupRouteWithChildren =
   LineupRoute._addFileChildren(LineupRouteChildren)
+
+interface MitgliedsantragRouteChildren {
+  MitgliedsantragDankeRoute: typeof MitgliedsantragDankeRoute
+}
+
+const MitgliedsantragRouteChildren: MitgliedsantragRouteChildren = {
+  MitgliedsantragDankeRoute: MitgliedsantragDankeRoute,
+}
+
+const MitgliedsantragRouteWithChildren = MitgliedsantragRoute._addFileChildren(
+  MitgliedsantragRouteChildren,
+)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -295,11 +325,13 @@ export interface FileRoutesByFullPath {
   '/infos': typeof InfosRoute
   '/lineup': typeof LineupRouteWithChildren
   '/logo': typeof LogoRoute
+  '/mitgliedsantrag': typeof MitgliedsantragRouteWithChildren
   '/nuclino-sso': typeof NuclinoSsoRoute
   '/plakate': typeof PlakateRoute
   '/speisekarte': typeof SpeisekarteRoute
   '/events/$id': typeof EventsIdRoute
-  '/lineup/$year': typeof LineupYearRouteWithChildren
+  '/lineup/$year': typeof LineupYearRoute
+  '/mitgliedsantrag/danke': typeof MitgliedsantragDankeRoute
   '/news/$slug': typeof NewsSlugRoute
   '/news/archiv': typeof NewsArchivRoute
   '/lineup/': typeof LineupIndexRoute
@@ -314,11 +346,13 @@ export interface FileRoutesByTo {
   '/events': typeof EventsRoute
   '/infos': typeof InfosRoute
   '/logo': typeof LogoRoute
+  '/mitgliedsantrag': typeof MitgliedsantragRouteWithChildren
   '/nuclino-sso': typeof NuclinoSsoRoute
   '/plakate': typeof PlakateRoute
   '/speisekarte': typeof SpeisekarteRoute
   '/events/$id': typeof EventsIdRoute
-  '/lineup/$year': typeof LineupYearRouteWithChildren
+  '/lineup/$year': typeof LineupYearRoute
+  '/mitgliedsantrag/danke': typeof MitgliedsantragDankeRoute
   '/news/$slug': typeof NewsSlugRoute
   '/news/archiv': typeof NewsArchivRoute
   '/lineup': typeof LineupIndexRoute
@@ -335,15 +369,17 @@ export interface FileRoutesById {
   '/infos': typeof InfosRoute
   '/lineup': typeof LineupRouteWithChildren
   '/logo': typeof LogoRoute
+  '/mitgliedsantrag': typeof MitgliedsantragRouteWithChildren
   '/nuclino-sso': typeof NuclinoSsoRoute
   '/plakate': typeof PlakateRoute
   '/speisekarte': typeof SpeisekarteRoute
   '/events_/$id': typeof EventsIdRoute
-  '/lineup/$year': typeof LineupYearRouteWithChildren
+  '/lineup/$year': typeof LineupYearRoute
+  '/mitgliedsantrag/danke': typeof MitgliedsantragDankeRoute
   '/news/$slug': typeof NewsSlugRoute
   '/news/archiv': typeof NewsArchivRoute
   '/lineup/': typeof LineupIndexRoute
-  '/lineup/$year/$slug': typeof LineupYearSlugRoute
+  '/lineup/$year_/$slug': typeof LineupYearSlugRoute
 }
 
 export interface FileRouteTypes {
@@ -357,11 +393,13 @@ export interface FileRouteTypes {
     | '/infos'
     | '/lineup'
     | '/logo'
+    | '/mitgliedsantrag'
     | '/nuclino-sso'
     | '/plakate'
     | '/speisekarte'
     | '/events/$id'
     | '/lineup/$year'
+    | '/mitgliedsantrag/danke'
     | '/news/$slug'
     | '/news/archiv'
     | '/lineup/'
@@ -375,11 +413,13 @@ export interface FileRouteTypes {
     | '/events'
     | '/infos'
     | '/logo'
+    | '/mitgliedsantrag'
     | '/nuclino-sso'
     | '/plakate'
     | '/speisekarte'
     | '/events/$id'
     | '/lineup/$year'
+    | '/mitgliedsantrag/danke'
     | '/news/$slug'
     | '/news/archiv'
     | '/lineup'
@@ -394,15 +434,17 @@ export interface FileRouteTypes {
     | '/infos'
     | '/lineup'
     | '/logo'
+    | '/mitgliedsantrag'
     | '/nuclino-sso'
     | '/plakate'
     | '/speisekarte'
     | '/events_/$id'
     | '/lineup/$year'
+    | '/mitgliedsantrag/danke'
     | '/news/$slug'
     | '/news/archiv'
     | '/lineup/'
-    | '/lineup/$year/$slug'
+    | '/lineup/$year_/$slug'
   fileRoutesById: FileRoutesById
 }
 
@@ -415,6 +457,7 @@ export interface RootRouteChildren {
   InfosRoute: typeof InfosRoute
   LineupRoute: typeof LineupRouteWithChildren
   LogoRoute: typeof LogoRoute
+  MitgliedsantragRoute: typeof MitgliedsantragRouteWithChildren
   NuclinoSsoRoute: typeof NuclinoSsoRoute
   PlakateRoute: typeof PlakateRoute
   SpeisekarteRoute: typeof SpeisekarteRoute
@@ -432,6 +475,7 @@ const rootRouteChildren: RootRouteChildren = {
   InfosRoute: InfosRoute,
   LineupRoute: LineupRouteWithChildren,
   LogoRoute: LogoRoute,
+  MitgliedsantragRoute: MitgliedsantragRouteWithChildren,
   NuclinoSsoRoute: NuclinoSsoRoute,
   PlakateRoute: PlakateRoute,
   SpeisekarteRoute: SpeisekarteRoute,
@@ -458,6 +502,7 @@ export const routeTree = rootRoute
         "/infos",
         "/lineup",
         "/logo",
+        "/mitgliedsantrag",
         "/nuclino-sso",
         "/plakate",
         "/speisekarte",
@@ -488,11 +533,18 @@ export const routeTree = rootRoute
       "filePath": "lineup.tsx",
       "children": [
         "/lineup/$year",
-        "/lineup/"
+        "/lineup/",
+        "/lineup/$year_/$slug"
       ]
     },
     "/logo": {
       "filePath": "logo.tsx"
+    },
+    "/mitgliedsantrag": {
+      "filePath": "mitgliedsantrag.tsx",
+      "children": [
+        "/mitgliedsantrag/danke"
+      ]
     },
     "/nuclino-sso": {
       "filePath": "nuclino-sso.tsx"
@@ -508,10 +560,11 @@ export const routeTree = rootRoute
     },
     "/lineup/$year": {
       "filePath": "lineup.$year.tsx",
-      "parent": "/lineup",
-      "children": [
-        "/lineup/$year/$slug"
-      ]
+      "parent": "/lineup"
+    },
+    "/mitgliedsantrag/danke": {
+      "filePath": "mitgliedsantrag.danke.tsx",
+      "parent": "/mitgliedsantrag"
     },
     "/news/$slug": {
       "filePath": "news.$slug.tsx"
@@ -523,9 +576,9 @@ export const routeTree = rootRoute
       "filePath": "lineup.index.tsx",
       "parent": "/lineup"
     },
-    "/lineup/$year/$slug": {
-      "filePath": "lineup.$year.$slug.tsx",
-      "parent": "/lineup/$year"
+    "/lineup/$year_/$slug": {
+      "filePath": "lineup.$year_.$slug.tsx",
+      "parent": "/lineup"
     }
   }
 }

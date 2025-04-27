@@ -1,11 +1,17 @@
-import {VStack, Heading, Text} from '@chakra-ui/react';
-import {ClientOnly} from 'remix-utils/client-only';
-import Confetti from '~/components/booking/Confetti.client';
+import {VStack, Heading, Text, ClientOnly} from '@chakra-ui/react';
+import Confetti from '../components/booking/Confetti.client';
+import {createFileRoute} from '@tanstack/react-router';
 
-export default function MitgliedsantragDanke() {
+export const Route = createFileRoute('/mitgliedsantrag/danke')({
+  component: MitgliedsantragDanke,
+});
+
+function MitgliedsantragDanke() {
   return (
     <>
-      <ClientOnly>{() => <Confetti />}</ClientOnly>
+      <ClientOnly>
+        <Confetti />
+      </ClientOnly>
       <VStack gap="5" textAlign="center">
         <Heading size="3xl">Willkommen im Verein!</Heading>
         <Text>

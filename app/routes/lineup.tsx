@@ -8,16 +8,12 @@ import {
   Link as ChakraLink,
   Spinner,
   Center,
+  Menu,
 } from '@chakra-ui/react';
 import Search from '../components/lineup/Search';
 import {Suspense, useState} from 'react';
 import {Tooltip} from '../components/chakra-snippets/tooltip';
-import {
-  MenuContent,
-  MenuItem,
-  MenuRoot,
-  MenuTrigger,
-} from '../components/chakra-snippets/menu';
+
 import {Alert, AlertProps} from '../components/chakra-snippets/alert';
 import {createFileRoute, Link, Outlet, useMatch} from '@tanstack/react-router';
 import {prismaClient} from '../utils/prismaClient';
@@ -32,13 +28,9 @@ const lineups = createServerFn().handler(async () => {
   const lineups = await prismaClient.event.findMany({
     where: {
       eventType: 'Kulturspektakel',
-      // BandPlaying: {
-      // none: {
-      //   description: {
-      //     contains: '',
-      //   },
-      // },
-      // },
+      BandPlaying: {
+        some: {},
+      },
     },
     select: {
       id: true,
@@ -58,8 +50,11 @@ const lineups = createServerFn().handler(async () => {
 function Lineup() {
   const event = Route.useRouteContext().event;
   const matchYear = useMatch({from: '/lineup/$year', shouldThrow: false});
-  const matchSlug = useMatch({from: '/lineup/$year/$slug', shouldThrow: false});
-  const year = matchYear?.params.year;
+  const matchSlug = useMatch({
+    from: '/lineup/$year_/$slug',
+    shouldThrow: false,
+  });
+  const year = matchYear?.params.year ?? matchSlug?.params.year;
   const slug = matchSlug?.params.slug;
 
   const bookingAlert =
@@ -87,9 +82,10 @@ function Lineup() {
             >
               <IconButton
                 aria-label={`Zum Lineup ${year} zurückkehren`}
-                size="xs"
+                size="2xs"
                 rounded="full"
-                me="2"
+                me="1.5"
+                mt="-1.5"
                 left="0"
                 asChild
               >
@@ -104,33 +100,35 @@ function Lineup() {
             {year && <>&nbsp;{year}</>}
           </Heading>
           {slug == null && (
-            <MenuRoot
+            <Menu.Root
               positioning={{placement: 'bottom-end'}}
               highlightedValue={year}
             >
-              <MenuTrigger asChild>
+              <Menu.Trigger asChild>
                 <IconButton
                   aria-label="Jahr auswählen"
-                  size="xs"
-                  mt="0.5"
+                  size="2xs"
+                  mt="-1.5"
                   ml="1.5"
                   rounded="full"
                 >
                   <FaChevronDown />
                 </IconButton>
-              </MenuTrigger>
-              <MenuContent>
-                <Suspense
-                  fallback={
-                    <Center my="10">
-                      <Spinner />
-                    </Center>
-                  }
-                >
-                  <MenuItems />
-                </Suspense>
-              </MenuContent>
-            </MenuRoot>
+              </Menu.Trigger>
+              <Menu.Positioner>
+                <Menu.Content>
+                  <Suspense
+                    fallback={
+                      <Center my="10">
+                        <Spinner />
+                      </Center>
+                    }
+                  >
+                    <MenuItems />
+                  </Suspense>
+                </Menu.Content>
+              </Menu.Positioner>
+            </Menu.Root>
           )}
         </Flex>
         {bookingAlert && <BookingAlert display={['flex', 'none']} />}
@@ -151,7 +149,7 @@ function MenuItems() {
   return (
     <>
       {data.lineups.map((node) => (
-        <MenuItem
+        <Menu.Item
           asChild
           key={node.id}
           value={String(node.start.getFullYear())}
@@ -162,7 +160,7 @@ function MenuItems() {
           >
             {node.name}
           </Link>
-        </MenuItem>
+        </Menu.Item>
       ))}
     </>
   );

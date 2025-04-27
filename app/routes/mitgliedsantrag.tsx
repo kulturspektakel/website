@@ -1,32 +1,29 @@
 import {Heading, Text, Box, VStack, Flex} from '@chakra-ui/react';
 import {Form, Formik} from 'formik';
-import mergeMeta from '~/utils/mergeMeta';
 import {z} from 'zod';
 import {toFormikValidationSchema} from 'zod-formik-adapter';
 import {isValid, printFormat} from 'iban-ts';
 import {gql} from '@apollo/client';
-import {LoaderFunctionArgs} from '@remix-run/node';
-import {typedjson, useTypedLoaderData} from 'remix-typedjson';
-import apolloClient from '~/utils/apolloClient';
+import apolloClient from '../utils/apolloClient';
 import {
   MembershipQuery,
   MembershipDocument,
   useCreateMembershipMutation,
   MembershipType,
   Membership as MembershipEnum,
-} from '~/types/graphql';
-import Steps from '~/components/Steps';
+} from '../types/graphql';
+import Steps from '../components/Steps';
 import {useState} from 'react';
-import {useNavigate} from '@remix-run/react';
-import {$path} from 'remix-routes';
-import {Field} from '~/components/chakra-snippets/field';
-import {Slider} from '~/components/chakra-snippets/slider';
-import {Button} from '~/components/chakra-snippets/button';
-import {ConnectedField} from '~/components/ConnectedField';
-import {RadioCardItem} from '~/components/chakra-snippets/radio-card';
+import {Field} from '../components/chakra-snippets/field';
+import {Slider} from '../components/chakra-snippets/slider';
+import {Button} from '../components/chakra-snippets/button';
+import {ConnectedField} from '../components/ConnectedField';
+import {RadioCardItem} from '../components/chakra-snippets/radio-card';
 import React from 'react';
-import {ConnectedRadioCard} from '~/components/ConnectedRadioCard';
-import ReloadWarning from '~/components/ReloadWarning';
+import {ConnectedRadioCard} from '../components/ConnectedRadioCard';
+import ReloadWarning from '../components/ReloadWarning';
+import {createFileRoute, useNavigate} from '@tanstack/react-router';
+import {createServerFn} from '@tanstack/react-start';
 
 const schemaStep1 = z.object({
   membership: z.nativeEnum(MembershipEnum),
@@ -67,13 +64,26 @@ const schemaStep2 = z
 
 const STEPS = [schemaStep1, schemaStep2] as const;
 
-export const meta = mergeMeta<{}>(() => [
-  {title: `Mitgliedsantrag`},
-  {
-    name: 'description',
-    content: 'Mitgliedsantrag für die Aufnahme in den Verein',
-  },
-]);
+const loader = createServerFn().handler(async () => {
+  const {data} = await apolloClient.query<MembershipQuery>({
+    query: MembershipDocument,
+  });
+  return data;
+});
+
+export const Route = createFileRoute('/mitgliedsantrag')({
+  component: Mitgliedsantrag,
+  loader: async ({params}) => await loader({data: params}),
+  head: () => ({
+    meta: [
+      {title: `Mitgliedsantrag`},
+      {
+        name: 'description',
+        content: 'Mitgliedsantrag für die Aufnahme in den Verein',
+      },
+    ],
+  }),
+});
 
 type Membership = z.infer<typeof schemaStep2>;
 
@@ -100,15 +110,8 @@ gql`
   }
 `;
 
-export async function loader(args: LoaderFunctionArgs) {
-  const {data} = await apolloClient.query<MembershipQuery>({
-    query: MembershipDocument,
-  });
-  return typedjson(data);
-}
-
-export default function Mitgliedsantrag() {
-  const data = useTypedLoaderData<typeof loader>();
+function Mitgliedsantrag() {
+  const data = Route.useLoaderData();
   const navigate = useNavigate();
   const [create, {loading}] = useCreateMembershipMutation();
   const [step, setStep] = useState(0);
@@ -145,7 +148,9 @@ export default function Mitgliedsantrag() {
                 data: data,
               },
             });
-            navigate($path('/mitgliedsantrag/danke'));
+            navigate({
+              to: '/mitgliedsantrag/danke',
+            });
           }
         }}
       >
