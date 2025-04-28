@@ -24,6 +24,7 @@ import {ConnectedRadioCard} from '../components/ConnectedRadioCard';
 import ReloadWarning from '../components/ReloadWarning';
 import {createFileRoute, useNavigate} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
+import {seo} from '../utils/seo';
 
 const schemaStep1 = z.object({
   membership: z.nativeEnum(MembershipEnum),
@@ -73,16 +74,12 @@ const loader = createServerFn().handler(async () => {
 
 export const Route = createFileRoute('/mitgliedsantrag')({
   component: Mitgliedsantrag,
-  loader: async ({params}) => await loader({data: params}),
-  head: () => ({
-    meta: [
-      {title: `Mitgliedsantrag`},
-      {
-        name: 'description',
-        content: 'Mitgliedsantrag für die Aufnahme in den Verein',
-      },
-    ],
-  }),
+  loader: async () => await loader(),
+  head: () =>
+    seo({
+      title: 'Mitgliedsantrag',
+      description: 'Mitgliedsantrag für die Aufnahme in den Verein',
+    }),
 });
 
 type Membership = z.infer<typeof schemaStep2>;

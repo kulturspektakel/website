@@ -19,6 +19,7 @@ import {prismaClient} from '../utils/prismaClient';
 import {directusImage, directusImageConnection} from '../utils/directusImage';
 import {useInfiniteQuery} from '@tanstack/react-query';
 import {useState} from 'react';
+import {seo} from '../utils/seo';
 
 const PAGE_SIZE = 10;
 
@@ -32,17 +33,11 @@ const EVENT_TYPE = [
 export const Route = createFileRoute('/events')({
   loader: async () => await loader({data: {eventType: 'ALL'}}),
   component: Events,
-  head: () => ({
-    meta: [
-      {
-        title: 'Veranstaltungen',
-      },
-      {
-        name: 'description',
-        content: 'Alle Veranstaltungen des Kulturspektakel Gauting e.V.',
-      },
-    ],
-  }),
+  head: () =>
+    seo({
+      title: 'Veranstaltungen',
+      description: 'Alle Veranstaltungen des Kulturspektakel Gauting e.V.',
+    }),
 });
 
 const loader = createServerFn()

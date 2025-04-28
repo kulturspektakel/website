@@ -5,6 +5,7 @@ import {SegmentedControlOrSelect} from '../components/SegmentedControlOrSelect';
 import {prismaClient} from '../utils/prismaClient';
 import {createFileRoute} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
+import {seo} from '../utils/seo';
 
 const loader = createServerFn()
   .validator((data: {year: string}) => data)
@@ -43,21 +44,13 @@ const loader = createServerFn()
 export const Route = createFileRoute('/lineup/$year')({
   component: LineupYear,
   loader: async ({params}) => await loader({data: {year: params.year}}),
-  head: ({params, loaderData}) => {
-    return {
-      meta: [
-        {
-          title: `Lineup ${params.year}`,
-        },
-        {
-          name: 'description',
-          content: `${loaderData.bands.length} Bands und Künstler:innen treten auf dem Kulturspektakel ${
-            params.year
-          } auf`,
-        },
-      ],
-    };
-  },
+  head: ({params, loaderData}) =>
+    seo({
+      title: `Lineup ${params.year}`,
+      description: `${loaderData.bands.length} Bands und Künstler:innen treten auf dem Kulturspektakel ${
+        params.year
+      } auf`,
+    }),
 });
 
 function LineupYear() {

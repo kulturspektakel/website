@@ -6,19 +6,16 @@ import Image from '../components/Image';
 import {createServerFn} from '@tanstack/react-start';
 import {prismaClient} from '../utils/prismaClient';
 import {directusImages, imageUrl} from '../utils/directusImage';
+import {seo} from '../utils/seo';
 
 export const Route = createFileRoute('/plakate')({
   component: Plakate,
   loader: async () => await loader(),
-  head: () => ({
-    meta: [
-      {title: 'Plakate'},
-      {
-        name: 'description',
-        content: 'Übersicht aller Kulturspektakel Plakate',
-      },
-    ],
-  }),
+  head: () =>
+    seo({
+      title: 'Plakate',
+      description: 'Übersicht aller Kulturspektakel Plakate',
+    }),
 });
 
 const loader = createServerFn().handler(async ({data: slug}) => {

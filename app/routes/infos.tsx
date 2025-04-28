@@ -7,21 +7,16 @@ import {createServerFn} from '@tanstack/react-start';
 import {createFileRoute} from '@tanstack/react-router';
 import {multiPage} from '../utils/markdownText';
 import {convertIcsCalendar, type IcsCalendar} from 'ts-ics';
+import {seo} from '../utils/seo';
 
 export const Route = createFileRoute('/infos')({
   component: Infos,
   loader: async () => await loader(),
-  head: () => ({
-    meta: [
-      {
-        title: 'Informationen',
-      },
-      {
-        name: 'description',
-        content: 'Informationen zum Kulturspektakel und dem Verein dahinter',
-      },
-    ],
-  }),
+  head: () =>
+    seo({
+      title: 'Informationen',
+      description: 'Informationen zum Kulturspektakel und dem Verein dahinter',
+    }),
 });
 
 const loader = createServerFn().handler(async () => {

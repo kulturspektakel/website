@@ -6,6 +6,25 @@ import {
   ValidateLinkOptions,
 } from '@tanstack/react-router';
 
+type BaseLinkButtonProps = Omit<ButtonProps & LinkProps, 'href'> & {
+  target?: string;
+  children: React.ReactNode;
+  download?: boolean;
+};
+
+type HrefProps = BaseLinkButtonProps & {
+  href: string;
+  linkProps?: never;
+};
+
+type LinkPropsVariant<
+  TRouter extends RegisteredRouter = RegisteredRouter,
+  TOptions = unknown,
+> = BaseLinkButtonProps & {
+  href?: never;
+  linkProps: ValidateLinkOptions<TRouter, TOptions>;
+};
+
 export default function LinkButton<
   TRouter extends RegisteredRouter = RegisteredRouter,
   TOptions = unknown,
@@ -14,10 +33,10 @@ export default function LinkButton<
   children,
   href,
   download,
+  linkProps,
   ...props
-}: ButtonProps & LinkProps & {href: ValidateLinkOptions<TRouter, TOptions>}) {
+}: HrefProps | LinkPropsVariant<TRouter, TOptions>) {
   const navigate = useNavigate();
-  const isAbsolute = /^https?:\/\//.test(href);
 
   return (
     <Button role="link" variant="subtle" asChild {...props}>
@@ -26,15 +45,16 @@ export default function LinkButton<
         href={props.disabled ? undefined : href}
         download={download}
         onClick={(e) => {
+          if (!linkProps) {
+            return
+          }
           if (props.disabled) {
             return e.preventDefault();
           }
-          if (!isAbsolute && !download) {
-            e.preventDefault();
-            navigate(href);
-          }
+          e.preventDefault();
+          navigate(linkProps);
         }}
-        target={isAbsolute ? '_blank' : undefined}
+        target={href ? '_blank' : undefined}
       >
         {children}
       </Link>

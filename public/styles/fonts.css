@@ -1,0 +1,26 @@
+@font-face {
+  font-family: 'Shrimp';
+  src:
+    url('shrimp-webfont.woff2') format('woff2'),
+    url('shrimp-webfont.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 400;
+  src:
+    url('space-grotesk-latin-400-normal.woff2') format('woff2'),
+    url('space-grotesk-latin-400-normal.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: bold;
+  src:
+    url('space-grotesk-latin-600-normal.woff2') format('woff2'),
+    url('space-grotesk-latin-600-normal.woff') format('woff');
+}

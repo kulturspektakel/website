@@ -16,6 +16,7 @@ import {prismaClient} from '../utils/prismaClient';
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 import {createServerFn} from '@tanstack/react-start';
 import {wrapCreateRootRouteWithSentry} from '@sentry/tanstackstart-react';
+import {seo} from '../utils/seo';
 
 const beforeLoad = createServerFn().handler(async () => {
   const event = await prismaClient.event.findFirstOrThrow({
@@ -42,7 +43,7 @@ const beforeLoad = createServerFn().handler(async () => {
 export const Route = wrapCreateRootRouteWithSentry(
   createRootRouteWithContext<ApolloClientRouterContext>,
 )()({
-  head: ({match: {context}}) => {
+  head: ({match: {context}, ...args}) => {
     let title = 'Kulturspektakel Gauting';
     let description =
       'Open-Air-Musikfestival mit freiem Eintritt, Workshops, Kinderprogramm und mehr';
@@ -58,34 +59,31 @@ export const Route = wrapCreateRootRouteWithSentry(
     title = `Kulturspektakel Gauting ${date}${connector}${to}`;
     description = `Open-Air-Musikfestival vom ${date} bis ${to} mit freiem Eintritt, Workshops, Kinderprogramm und mehr`;
 
+    const {meta} = seo({title, description});
+
     return {
       meta: [
+        ...meta,
         {charSet: 'utf-8'},
         {name: 'viewport', content: 'width=device-width,initial-scale=1'},
-        {
-          title,
-        },
-        {
-          name: 'description',
-          content: description,
-        },
-        {
-          property: 'og:title',
-          content: title,
-        },
         {
           property: 'og:locale',
           content: 'de_DE',
         },
-        {
-          property: 'og:description',
-          content: description,
-        },
+        {name: 'og:type', content: 'website'},
       ],
       links: [
         {
           rel: 'stylesheet',
           href: photoswipeCSS,
+        },
+        {
+          rel: 'stylesheet',
+          href: '/styles/fonts.css',
+        },
+        {
+          rel: 'icon',
+          href: '/logos/logo.png',
         },
       ],
     };

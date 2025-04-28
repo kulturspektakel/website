@@ -2,26 +2,21 @@ import {VStack, Text, Heading, Box, Link as ChakraLink} from '@chakra-ui/react';
 import DateString, {dateStringComponents} from '../components/DateString';
 import ApplicationPhase from '../components/booking/ApplicationPhase';
 import {createFileRoute} from '@tanstack/react-router';
+import {seo} from '../utils/seo';
 
 export const Route = createFileRoute('/booking')({
   component: Booking,
-  head: ({match: {context}}) => ({
-    meta: [
-      {
-        title: 'Band- und DJ-Bewerbungen',
-      },
-      context.event.bandApplicationEnd
-        ? {
-            name: 'description',
-            content: `Die Bewerbungspahse für das ${context.event.name} läuft bis zum ${
-              dateStringComponents({
-                date: new Date(context.event.bandApplicationEnd),
-              }).date
-            }`,
-          }
-        : undefined,
-    ],
-  }),
+  head: ({match: {context}}) =>
+    seo({
+      title: 'Band- und DJ-Bewerbungen',
+      description: context.event.bandApplicationEnd
+        ? `Die Bewerbungspahse für das ${context.event.name} läuft bis zum ${
+            dateStringComponents({
+              date: new Date(context.event.bandApplicationEnd),
+            }).date
+          }`
+        : 'Aktuell keine Bewerbungen möglich',
+    }),
 });
 
 function Booking() {

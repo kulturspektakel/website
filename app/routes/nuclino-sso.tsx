@@ -19,6 +19,7 @@ import {
   useCreateNonceRequestMutation,
 } from '../types/graphql';
 import {createServerFn} from '@tanstack/react-start';
+import {seo} from '../utils/seo';
 
 gql`
   mutation CreateNonceRequest($email: String!) {
@@ -75,9 +76,10 @@ export const Route = createFileRoute('/nuclino-sso')({
     return {};
   },
   beforeLoad: async ({search}) => await beforeLoad({data: search}),
-  head: () => ({
-    meta: [{title: 'Nuclino Login'}],
-  }),
+  head: () =>
+    seo({
+      title: 'Nuclino Login',
+    }),
 });
 
 const LOGIN_URL = 'https://api.kulturspektakel.de/saml/login';

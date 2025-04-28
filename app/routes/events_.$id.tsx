@@ -4,48 +4,36 @@ import DateString, {dateStringComponents} from '../components/DateString';
 import GoogleMaps from '../components/GoogleMaps';
 import Headline from '../components/Headline';
 import Event, {eventSelect} from '../components/events/Event';
-import truncate from '../utils/truncate';
 import {prismaClient} from '../utils/prismaClient';
 import {createServerFn} from '@tanstack/react-start';
 import {createFileRoute, notFound} from '@tanstack/react-router';
-import {
-  directusImage,
-  directusImageConnection,
-  imageUrl,
-} from '../utils/directusImage';
+import {directusImage, directusImageConnection} from '../utils/directusImage';
+import {seo} from '../utils/seo';
 
 export const Route = createFileRoute('/events_/$id')({
   component: EventComponent,
   loader: async ({params}) => await loader({data: params.id}),
-  head: ({loaderData: {event}}) => {
-    const {name, description, start, end, poster} = event;
-    const {
-      date,
-      to = '',
-      connector = '',
-    } = dateStringComponents({
-      date: start,
-      to: end,
-    });
-
-    const meta = [
-      {title: `${name} am ${date}${connector}${to}`},
-      {
-        name: 'description',
-        content: truncate(description, 150),
-      },
-    ];
-
-    if (poster) {
-      meta.push({
-        property: 'og:image',
-        content: imageUrl(poster.id, {width: 960}),
-      });
-    }
-    return {
-      meta,
-    };
-  },
+  head: ({loaderData: {event}}) =>
+    seo({
+      title: `${event.name} am ${
+        dateStringComponents({
+          date: event.start,
+          to: event.end,
+        }).date
+      }${
+        dateStringComponents({
+          date: event.start,
+          to: event.end,
+        }).connector
+      }${
+        dateStringComponents({
+          date: event.start,
+          to: event.end,
+        }).to
+      }`,
+      description: event.description ?? undefined,
+      imageId: event.poster?.id,
+    }),
 });
 
 const loader = createServerFn()

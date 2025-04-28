@@ -10,19 +10,17 @@ import {prismaClient} from '../utils/prismaClient';
 import {markdownPages} from '../utils/markdownText';
 import {imageUrl} from '../utils/directusImage';
 import {useInfiniteQuery} from '@tanstack/react-query';
+import {seo} from '../utils/seo';
 
 const PAGE_SIZE = 30;
 
 export const Route = createFileRoute('/news/archiv')({
   component: NewsArchive,
   loader: async () => await loader(),
-  head: () => ({
-    meta: [
-      {
-        title: 'Newsarchiv',
-      },
-    ],
-  }),
+  head: () =>
+    seo({
+      title: 'Newsarchiv',
+    }),
 });
 
 const loader = createServerFn()
@@ -46,7 +44,7 @@ const loader = createServerFn()
     return await markdownPages(data);
   });
 
-export default function NewsArchive() {
+function NewsArchive() {
   const initialData = Route.useLoaderData();
   const queryFn = useServerFn(loader);
   const {data, isFetchingNextPage, fetchNextPage} = useInfiniteQuery({

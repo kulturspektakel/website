@@ -9,18 +9,16 @@ import {
 } from '@chakra-ui/react';
 import LinkButton from '../components/LinkButton';
 import {createFileRoute} from '@tanstack/react-router';
+import {seo} from '../utils/seo';
 
 export const Route = createFileRoute('/logo')({
   component: Logo,
-  head: () => ({
-    meta: [
-      {
-        title: `Logo`,
-        description:
-          'Logos, Typographie, Farben und Sprache des Kulturspektakels',
-      },
-    ],
-  }),
+  head: () =>
+    seo({
+      title: 'Logo',
+      description:
+        'Logos, Typographie, Farben und Sprache des Kulturspektakels',
+    }),
 });
 
 function LogoCol({filename}: {filename: string}) {

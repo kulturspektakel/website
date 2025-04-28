@@ -3,17 +3,16 @@ import ProductList from '../components/speisekarte/ProductList';
 import {createFileRoute} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
 import {prismaClient} from '../utils/prismaClient';
+import {seo} from '../utils/seo';
 
 export const Route = createFileRoute('/speisekarte')({
   component: Speisekarte,
   loader: async () => await loader(),
-  head: () => ({
-    meta: [
-      {
-        title: 'Speisen & Getränke',
-      },
-    ],
-  }),
+  head: () =>
+    seo({
+      title: 'Speisen & Getränke',
+      description: 'Unser kulinarisches Angebot auf dem Kulturspektakel',
+    }),
 });
 
 const loader = createServerFn().handler(async ({data: slug}) => {

@@ -160,8 +160,8 @@ export default function Event({
                 .join(', ')}{' '}
               <ChakraLink asChild display="inline">
                 <Link
-                  to="/lineup/year/:year"
-                  params={{year: event.start.getFullYear()}}
+                  to="/lineup/$year"
+                  params={{year: event.start.getFullYear().toString()}}
                 >
                   {event.BandPlaying.length > 12 ? (
                     <>

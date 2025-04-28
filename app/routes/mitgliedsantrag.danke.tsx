@@ -1,9 +1,15 @@
 import {VStack, Heading, Text} from '@chakra-ui/react';
 import Confetti from '../components/booking/Confetti.client';
 import {createFileRoute} from '@tanstack/react-router';
+import {seo} from '../utils/seo';
 
 export const Route = createFileRoute('/mitgliedsantrag/danke')({
   component: MitgliedsantragDanke,
+  head: () =>
+    seo({
+      title: 'Mitgliedsantrag',
+      description: 'Mitgliedsantrag für die Aufnahme in den Verein',
+    }),
 });
 
 function MitgliedsantragDanke() {

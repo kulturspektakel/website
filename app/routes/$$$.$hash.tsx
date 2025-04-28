@@ -8,6 +8,7 @@ import {KultCardDocument, KultCardQuery} from '../types/graphql';
 import apolloClient from '../utils/apolloClient';
 import {createFileRoute, notFound} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
+import {seo} from '../utils/seo';
 
 gql`
   query KultCard($payload: String!) {
@@ -188,13 +189,10 @@ export const currencyFormatter = new Intl.NumberFormat('de-DE', {
 export const Route = createFileRoute('/$$$/$hash')({
   component: KultCard,
   loader: async ({params}) => await loader({data: params}),
-  head: ({loaderData}) => ({
-    meta: [
-      {
-        title: `KultCard Guthaben ${currencyFormatter.format(loaderData.balance / 100)}`,
-      },
-    ],
-  }),
+  head: ({loaderData}) =>
+    seo({
+      title: `KultCard Guthaben ${currencyFormatter.format(loaderData.balance / 100)}`,
+    }),
 });
 
 function KultCard() {

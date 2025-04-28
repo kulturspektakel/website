@@ -1,35 +1,21 @@
 import Article from '../components/news/Article';
-import {createFileRoute, notFound} from '@tanstack/react-router';
+import {AnyRouteMatch, createFileRoute, notFound} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
 import {prismaClient} from '../utils/prismaClient';
 import {markdownText} from '../utils/markdownText';
 import truncate from '../utils/truncate';
-import {imageUrl} from '../utils/directusImage';
 import {markdownToTxt} from 'markdown-to-txt';
+import {seo} from '../utils/seo';
 
 export const Route = createFileRoute('/news/$slug')({
   component: News,
   loader: async ({params}) => await loader({data: params.slug}),
-  head: ({loaderData}) => {
-    const meta = [
-      {title: loaderData.title},
-      {
-        name: 'description',
-        content: truncate(markdownToTxt(loaderData.content.markdown), 150),
-      },
-    ];
-
-    if (loaderData.content.images.length > 0) {
-      meta.push({
-        property: 'og:image',
-        content: imageUrl(loaderData!.content.images[0].id, {width: 960}),
-      });
-    }
-
-    return {
-      meta,
-    };
-  },
+  head: ({loaderData}) =>
+    seo({
+      imageId: loaderData?.content.images[0]?.id,
+      description: truncate(markdownToTxt(loaderData.content.markdown), 150),
+      title: loaderData.title,
+    }),
 });
 
 const loader = createServerFn()

@@ -70,7 +70,7 @@ export default function ApplicationPhase<
         flexShrink={0}
         mt="3"
         disabled={disabled}
-        href={link}
+        linkProps={link}
         variant="solid"
       >
         {buttonLabel}

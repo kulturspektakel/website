@@ -4,19 +4,16 @@ import {prismaClient} from '../utils/prismaClient';
 import {imageIDsFromMarkdown, markdownText} from '../utils/markdownText';
 import Page, {pageSelect} from '../components/Page';
 import {directusImages} from '../utils/directusImage';
+import {seo} from '../utils/seo';
 
 export const Route = createFileRoute('/$slug')({
   component: PageRoute,
   loader: async ({params}) => await loader({data: params.slug}),
-  head: ({loaderData}) => ({
-    meta: [
-      {title: loaderData.title},
-      {
-        name: 'description',
-        content: 'Details of an event',
-      },
-    ],
-  }),
+  head: ({loaderData}) =>
+    seo({
+      title: loaderData.title,
+      description: loaderData?.content?.markdown,
+    }),
 });
 
 const loader = createServerFn()

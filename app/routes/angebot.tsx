@@ -5,22 +5,17 @@ import {createFileRoute} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
 import {prismaClient} from '../utils/prismaClient';
 import {multiPage} from '../utils/markdownText';
+import {seo} from '../utils/seo';
 
 export const Route = createFileRoute('/angebot')({
   component: Angebot,
   loader: async () => await loader(),
-  head: () => ({
-    meta: [
-      {
-        title: 'Angebot & Programm',
-      },
-      {
-        name: 'description',
-        content:
-          'Essens- und Getränkeangebot, Workshops, Sportturniere und Kinderprogramm',
-      },
-    ],
-  }),
+  head: () =>
+    seo({
+      title: 'Angebot & Programm',
+      description:
+        'Essens- und Getränkeangebot, Workshops, Sportturniere und Kinderprogramm',
+    }),
 });
 
 const loader = createServerFn().handler(async () => {

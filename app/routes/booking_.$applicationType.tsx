@@ -41,7 +41,7 @@ export function parseBookingParams(params: {applicationType: string}) {
 
 export const Route = createFileRoute('/booking_/$applicationType')({
   component: BookingForm,
-  validateSearch: (search) => {
+  validateSearch: (search: any) => {
     if (search.utm_source && typeof search.utm_source === 'string') {
       switch (search.utm_source) {
         case 'fb':
