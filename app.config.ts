@@ -9,9 +9,18 @@ const config = defineConfig({
         projects: ['./tsconfig.json'],
       }),
     ],
+    resolve: {
+      alias: {
+        '.prisma/client/index-browser':
+          './node_modules/.prisma/client/index-browser.js',
+      },
+    },
     ssr: {
       noExternal: ['@apollo/client', 'iban-ts'],
     },
+  },
+  server: {
+    preset: 'vercel',
   },
 });
 

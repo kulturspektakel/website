@@ -18,6 +18,7 @@ import {
   CheckNonceRequestDocument,
   useCreateNonceRequestMutation,
 } from '../types/graphql';
+import {createServerFn} from '@tanstack/react-start';
 
 gql`
   mutation CreateNonceRequest($email: String!) {
@@ -29,23 +30,16 @@ gql`
   }
 `;
 
-export const Route = createFileRoute('/nuclino-sso')({
-  component: Sso,
-  validateSearch: (
-    search: Record<string, unknown>,
-  ): {SAMLRequest: string; RelayState: string} | {} => {
-    if (
-      typeof search['SAMLRequest'] === 'string' &&
-      typeof search['RelayState'] === 'string'
-    ) {
-      return {
-        SAMLRequest: search['SAMLRequest'],
-        RelayState: search['RelayState'],
-      };
+type SearchParams =
+  | {
+      SAMLRequest: string;
+      RelayState: string;
     }
-    return {};
-  },
-  beforeLoad: ({search}) => {
+  | {};
+
+const beforeLoad = createServerFn()
+  .validator((search: SearchParams) => search)
+  .handler(({data}) => {
     const request = getWebRequest();
     const cookies = request?.headers.get('Cookie') ?? '';
     const match = cookies.match(/(?:^|;\s*)nonce=([^;]*)/);
@@ -59,12 +53,28 @@ export const Route = createFileRoute('/nuclino-sso')({
         href: url.toString(),
       });
     }
-    if (!search['SAMLRequest']) {
+    if (!data['SAMLRequest']) {
       throw redirect({
         href: 'https://app.nuclino.com/Kulturspektakel/login',
       });
     }
+  });
+
+export const Route = createFileRoute('/nuclino-sso')({
+  component: Sso,
+  validateSearch: (search: Record<string, unknown>): SearchParams => {
+    if (
+      typeof search['SAMLRequest'] === 'string' &&
+      typeof search['RelayState'] === 'string'
+    ) {
+      return {
+        SAMLRequest: search['SAMLRequest'],
+        RelayState: search['RelayState'],
+      };
+    }
+    return {};
   },
+  beforeLoad: async ({search}) => await beforeLoad({data: search}),
   head: () => ({
     meta: [{title: 'Nuclino Login'}],
   }),
@@ -136,7 +146,7 @@ function NonceChecker({
   );
 }
 
-export default function Sso() {
+function Sso() {
   const [requestNonce, {loading, data}] = useCreateNonceRequestMutation();
   const [email, setEmail] = useState('');
   const search = Route.useSearch();

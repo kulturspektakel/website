@@ -6,8 +6,9 @@
   "type": "module",
   "scripts": {
     "dev": "vinxi dev",
-    "build": "vinxi build",
+    "build": "yarn generate:prisma && vinxi build",
     "start": "vinxi start",
+    "generate:prisma": "prisma generate",
     "generate:theme": "chakra typegen app/theme.ts --strict",
     "generate:graphql": "graphql-codegen --config ./.graphqlrc.yml",
     "generate:env": "dotenv-vault pull"

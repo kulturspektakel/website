@@ -19,3 +19,6 @@ yarn-error.log
 .flaskenv*
 !.env.project
 !.env.vault
+/.output
+/.vinxi
+.vercel
