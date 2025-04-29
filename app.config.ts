@@ -18,6 +18,9 @@ const config = defineConfig({
     ssr: {
       noExternal: ['@apollo/client', 'iban-ts'],
     },
+    build: {
+      sourcemap: true,
+    },
   },
   server: {
     preset: 'vercel',
