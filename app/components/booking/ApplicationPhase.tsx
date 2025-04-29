@@ -1,5 +1,5 @@
 import {FaTriangleExclamation} from 'react-icons/fa6';
-import {Flex, VStack, Heading, Spacer, Text} from '@chakra-ui/react';
+import {Flex, VStack, Heading, Spacer, Box} from '@chakra-ui/react';
 import DateString from '../DateString';
 import {Tag} from '../chakra-snippets/tag';
 import LinkButton from '../LinkButton';
@@ -41,7 +41,7 @@ export default function ApplicationPhase<
         <Heading size="md" textAlign="left">
           {title}
         </Heading>
-        <Text>
+        <Box>
           {content}
           <br />
           {applicationNotStarted ? (
@@ -55,6 +55,7 @@ export default function ApplicationPhase<
                 ) : (
                   <Tag
                     colorScheme="red"
+                    mt="0.5"
                     startElement={<FaTriangleExclamation />}
                   >
                     Abgelaufen
@@ -63,7 +64,7 @@ export default function ApplicationPhase<
               </>
             )
           )}
-        </Text>
+        </Box>
       </VStack>
       <Spacer />
       <LinkButton
