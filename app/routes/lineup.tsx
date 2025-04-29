@@ -85,7 +85,6 @@ function Lineup() {
                 size="2xs"
                 rounded="full"
                 me="1.5"
-                mt="-1.5"
                 left="0"
                 asChild
               >
@@ -108,7 +107,6 @@ function Lineup() {
                 <IconButton
                   aria-label="Jahr auswählen"
                   size="2xs"
-                  mt="-1.5"
                   ml="1.5"
                   rounded="full"
                 >

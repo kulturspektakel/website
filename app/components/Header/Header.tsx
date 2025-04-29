@@ -13,7 +13,7 @@ import {
   DialogBackdrop,
 } from '@chakra-ui/react';
 import {Link, useLocation, useNavigate} from '@tanstack/react-router';
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import logo from './logo.svg';
 import videoSrc from './Header.mov';
 import DateString from '../DateString';
@@ -61,10 +61,11 @@ export default function Header({
     end: Date;
   };
 }) {
-  const isHome = useLocation().pathname === '/';
+  const pathname = useLocation().pathname;
+  const isHome = pathname === '/';
   const [showNav, setShowNav] = useState(false);
   // Close nav on route change
-  const navigate = useNavigate();
+  useEffect(() => setShowNav(false), [pathname]);
 
   return (
     <Flex
