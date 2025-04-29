@@ -114,13 +114,7 @@ function usePolling(asyncFn: () => Promise<boolean>, delay: number) {
   }, [asyncFn, delay, isPolling]);
 }
 
-function NonceChecker({
-  requestId,
-  searchParams,
-}: {
-  requestId: string;
-  searchParams: URLSearchParams;
-}) {
+function NonceChecker({requestId}: {requestId: string}) {
   const apolloClient = useApolloClient();
   const search = Route.useSearch()!;
   const checkNonceRequest = useCallback(async () => {
@@ -134,7 +128,9 @@ function NonceChecker({
       return false;
     }
     const url = new URL(LOGIN_URL);
-    searchParams.forEach(([key, value]) => url.searchParams.set(key, value));
+    Object.entries(search).forEach(([key, value]) =>
+      url.searchParams.set(key, value),
+    );
     url.searchParams.set('nonce', d.nonceFromRequest);
     window.location.href = url.toString();
     return true;
@@ -173,10 +169,7 @@ function Sso() {
           <Box textAlign="center">
             <Spinner mt="5" mb="5" />
             <Text>Bestätige deinen Login in der Slack-App</Text>
-            <NonceChecker
-              requestId={nonceRequestId}
-              searchParams={searchParams}
-            />
+            <NonceChecker requestId={nonceRequestId} />
           </Box>
         ) : (
           <>
