@@ -1,4 +1,3 @@
-import ProgressBar from '@badrap/bar-of-progress';
 import {routeTree} from './routeTree.gen';
 import apolloClient from './utils/apolloClient';
 import {routerWithApolloClient} from '@apollo/client-integration-tanstack-start';
@@ -7,7 +6,6 @@ import {NotFound} from './components/NotFound/NotFound';
 import {Error} from './components/Error';
 import * as Sentry from '@sentry/tanstackstart-react';
 
-let progress: ProgressBar;
 export function createRouter() {
   const router = createTanStackRouter({
     routeTree,
@@ -15,19 +13,6 @@ export function createRouter() {
     context: {} as any,
     defaultNotFoundComponent: NotFound,
     defaultErrorComponent: Error,
-  });
-
-  router.subscribe('onBeforeNavigate', () => {
-    if (typeof window !== 'undefined') {
-      progress = new ProgressBar();
-      progress.start();
-    }
-  });
-
-  router.subscribe('onRendered', () => {
-    if (typeof window !== 'undefined') {
-      progress?.finish();
-    }
   });
 
   return routerWithApolloClient(router, apolloClient);

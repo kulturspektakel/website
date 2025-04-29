@@ -1,9 +1,10 @@
-import type {ReactNode} from 'react';
+import {useEffect, useMemo, useRef, type ReactNode} from 'react';
 import {
   Outlet,
   HeadContent,
   Scripts,
   createRootRouteWithContext,
+  useRouter,
 } from '@tanstack/react-router';
 import {Box, ChakraProvider, Flex} from '@chakra-ui/react';
 import theme from '../theme';
@@ -17,6 +18,7 @@ import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 import {createServerFn} from '@tanstack/react-start';
 import {wrapCreateRootRouteWithSentry} from '@sentry/tanstackstart-react';
 import {seo} from '../utils/seo';
+import ProgressBar from '@badrap/bar-of-progress';
 
 const beforeLoad = createServerFn().handler(async () => {
   const event = await prismaClient.event.findFirstOrThrow({
@@ -112,6 +114,27 @@ function RootComponent() {
 
 function RootDoc({children}: Readonly<{children: ReactNode}>) {
   const context = Route.useRouteContext();
+  const router = useRouter();
+  const progressBar = useRef<ProgressBar | null>(null);
+
+  useEffect(() => {
+    router.subscribe('onBeforeNavigate', () => {
+      console.log('before');
+      if (typeof window !== 'undefined') {
+        progressBar.current?.finish();
+        progressBar.current = new ProgressBar();
+        progressBar.current.start();
+      }
+    });
+
+    router.subscribe('onRendered', () => {
+      if (typeof window !== 'undefined') {
+        progressBar.current?.finish();
+        progressBar.current = null;
+      }
+    });
+  }, [router, progressBar]);
+
   return (
     <html lang="de">
       <head>
