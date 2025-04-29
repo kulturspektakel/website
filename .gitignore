@@ -9,8 +9,6 @@ yarn-error.log
 
 # Sentry Config File
 .sentryclirc
-/.vercel/output
-/.vercel/.env.preview.local
 
 # Sentry Config File
 .sentryclirc
@@ -21,4 +19,5 @@ yarn-error.log
 !.env.vault
 /.output
 /.vinxi
-.vercel
+.vercel/*
+!.vercel/project.json
