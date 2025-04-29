@@ -93,8 +93,6 @@ export default function EventComponent() {
           <Box textAlign="center" mt="3">
             <Link
               href={`https://www.google.com/maps/place/${event.latitude},${event.longitude}`}
-              isExternal
-              variant="inline"
             >
               {event.location}
             </Link>
