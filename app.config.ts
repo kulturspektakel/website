@@ -1,12 +1,18 @@
 import {defineConfig} from '@tanstack/react-start/config';
 import tsConfigPaths from 'vite-tsconfig-paths';
 import {wrapVinxiConfigWithSentry} from '@sentry/tanstackstart-react';
+import {sentryVitePlugin} from '@sentry/vite-plugin';
 
 const config = defineConfig({
   vite: {
     plugins: [
       tsConfigPaths({
         projects: ['./tsconfig.json'],
+      }),
+      sentryVitePlugin({
+        authToken: process.env.SENTRY_AUTH_TOKEN,
+        org: 'kulturspektakel',
+        project: 'website',
       }),
     ],
     resolve: {

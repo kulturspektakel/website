@@ -21,3 +21,6 @@ yarn-error.log
 /.vinxi
 .vercel/*
 !.vercel/project.json
+
+# Sentry Config File
+.env.sentry-build-plugin
