@@ -26,6 +26,6 @@ jobs:
         run: |
           yarn vercel build --prod
           yarn sentry-cli releases new $GITHUB_SHA
-          yarn sentry-upload-sourcemaps --release $GITHUB_SHA --org $SENTRY_ORG --project $SENTRY_PROJECT --urlPrefix /var/task .vercel/output/static
+          yarn sentry-cli sourcemaps upload --release $GITHUB_SHA --org $SENTRY_ORG --project $SENTRY_PROJECT
           yarn vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
           yarn sentry-cli releases finalize $GITHUB_SHA
