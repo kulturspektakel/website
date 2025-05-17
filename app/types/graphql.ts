@@ -951,284 +951,6 @@ export type Viewer = Node & {
   profilePicture?: Maybe<Scalars['String']['output']>;
 };
 
-export type KultCardQueryVariables = Exact<{
-  payload: Scalars['String']['input'];
-}>;
-
-export type KultCardQuery = {
-  __typename?: 'Query';
-  cardStatus: {
-    __typename?: 'CardStatus';
-    cardId: string;
-    hasNewerTransactions?: boolean | null;
-    balance: number;
-    deposit: number;
-    recentTransactions?: Array<
-      | {
-          __typename: 'CardTransaction';
-          deviceTime: Date;
-          depositBefore: number;
-          depositAfter: number;
-          balanceBefore: number;
-          balanceAfter: number;
-          Order?: {
-            __typename?: 'Order';
-            items: Array<{
-              __typename?: 'OrderItem';
-              amount: number;
-              name: string;
-              productList?: {
-                __typename?: 'ProductList';
-                emoji?: string | null;
-                name: string;
-              } | null;
-            }>;
-          } | null;
-        }
-      | {
-          __typename: 'MissingTransaction';
-          numberOfMissingTransactions: number;
-          depositBefore: number;
-          depositAfter: number;
-          balanceBefore: number;
-          balanceAfter: number;
-        }
-    > | null;
-  };
-};
-
-export type CreateBandApplicationMutationVariables = Exact<{
-  eventId: Scalars['ID']['input'];
-  data: CreateBandApplicationInput;
-}>;
-
-export type CreateBandApplicationMutation = {
-  __typename?: 'Mutation';
-  createBandApplication: {__typename?: 'BandApplication'; id: string};
-};
-
-export type BookingQueryVariables = Exact<{[key: string]: never}>;
-
-export type BookingQuery = {
-  __typename?: 'Query';
-  eventsConnection: {
-    __typename?: 'QueryEventsConnection';
-    edges: Array<{
-      __typename?: 'QueryEventsConnectionEdge';
-      node: {
-        __typename?: 'Event';
-        id: string;
-        name: string;
-        start: Date;
-        end: Date;
-        bandApplicationStart?: Date | null;
-        bandApplicationEnd?: Date | null;
-        djApplicationStart?: Date | null;
-        djApplicationEnd?: Date | null;
-      };
-    }>;
-  };
-};
-
-export type LineupBandQueryVariables = Exact<{
-  eventId: Scalars['ID']['input'];
-  slug: Scalars['String']['input'];
-}>;
-
-export type LineupBandQuery = {
-  __typename?: 'Query';
-  bandPlaying?: {
-    __typename?: 'BandPlaying';
-    name: string;
-    shortDescription?: string | null;
-    description?: string | null;
-    startTime: Date;
-    genre?: string | null;
-    spotify?: string | null;
-    youtube?: string | null;
-    website?: string | null;
-    instagram?: string | null;
-    facebook?: string | null;
-    photo?: {
-      __typename?: 'PixelImage';
-      scaledUri: string;
-      width: number;
-      height: number;
-      copyright?: string | null;
-      large: string;
-    } | null;
-    area: {
-      __typename?: 'Area';
-      id: string;
-      displayName: string;
-      themeColor: string;
-    };
-  } | null;
-};
-
-export type LineupBandSitemapQueryVariables = Exact<{[key: string]: never}>;
-
-export type LineupBandSitemapQuery = {
-  __typename?: 'Query';
-  eventsConnection: {
-    __typename?: 'QueryEventsConnection';
-    edges: Array<{
-      __typename?: 'QueryEventsConnectionEdge';
-      node: {
-        __typename?: 'Event';
-        id: string;
-        bandsPlaying: {
-          __typename?: 'EventBandsPlayingConnection';
-          edges: Array<{
-            __typename?: 'EventBandsPlayingConnectionEdge';
-            node: {__typename?: 'BandPlaying'; slug: string};
-          }>;
-        };
-      };
-    }>;
-  };
-};
-
-export type LineupQueryVariables = Exact<{
-  id: Scalars['ID']['input'];
-}>;
-
-export type LineupQuery = {
-  __typename?: 'Query';
-  node?:
-    | {__typename?: 'Area'}
-    | {__typename?: 'BandApplication'}
-    | {__typename?: 'BandApplicationComment'}
-    | {__typename?: 'BandPlaying'}
-    | {__typename?: 'Card'}
-    | {__typename?: 'Device'}
-    | {
-        __typename?: 'Event';
-        name: string;
-        start: Date;
-        end: Date;
-        bandApplicationStart?: Date | null;
-        bandApplicationEnd?: Date | null;
-        djApplicationStart?: Date | null;
-        djApplicationEnd?: Date | null;
-        bandsPlaying: {
-          __typename?: 'EventBandsPlayingConnection';
-          edges: Array<{
-            __typename?: 'EventBandsPlayingConnectionEdge';
-            node: {
-              __typename?: 'BandPlaying';
-              id: string;
-              name: string;
-              startTime: Date;
-              slug: string;
-              genre?: string | null;
-              area: {
-                __typename?: 'Area';
-                id: string;
-                displayName: string;
-                themeColor: string;
-              };
-              photo?: {__typename?: 'PixelImage'; scaledUri: string} | null;
-            };
-          }>;
-        };
-      }
-    | {__typename?: 'News'}
-    | {__typename?: 'NuclinoPage'}
-    | {__typename?: 'Page'}
-    | {__typename?: 'Product'}
-    | {__typename?: 'ProductList'}
-    | {__typename?: 'Viewer'}
-    | null;
-  areas: Array<{__typename?: 'Area'; id: string; displayName: string}>;
-};
-
-export type LineupSitemapQueryVariables = Exact<{[key: string]: never}>;
-
-export type LineupSitemapQuery = {
-  __typename?: 'Query';
-  eventsConnection: {
-    __typename?: 'QueryEventsConnection';
-    edges: Array<{
-      __typename?: 'QueryEventsConnectionEdge';
-      node: {__typename?: 'Event'; id: string};
-    }>;
-  };
-};
-
-export type LineupIndexQueryVariables = Exact<{[key: string]: never}>;
-
-export type LineupIndexQuery = {
-  __typename?: 'Query';
-  eventsConnection: {
-    __typename?: 'QueryEventsConnection';
-    edges: Array<{
-      __typename?: 'QueryEventsConnectionEdge';
-      node: {__typename?: 'Event'; start: Date};
-    }>;
-  };
-};
-
-export type LineupsQueryVariables = Exact<{[key: string]: never}>;
-
-export type LineupsQuery = {
-  __typename?: 'Query';
-  eventsConnection: {
-    __typename?: 'QueryEventsConnection';
-    edges: Array<{
-      __typename?: 'QueryEventsConnectionEdge';
-      node: {__typename?: 'Event'; name: string; id: string; start: Date};
-    }>;
-  };
-};
-
-export type BookingActiveQueryVariables = Exact<{[key: string]: never}>;
-
-export type BookingActiveQuery = {
-  __typename?: 'Query';
-  eventsConnection: {
-    __typename?: 'QueryEventsConnection';
-    edges: Array<{
-      __typename?: 'QueryEventsConnectionEdge';
-      node: {
-        __typename?: 'Event';
-        id: string;
-        bandApplicationStart?: Date | null;
-        bandApplicationEnd?: Date | null;
-        djApplicationStart?: Date | null;
-        djApplicationEnd?: Date | null;
-      };
-    }>;
-  };
-};
-
-export type MembershipQueryVariables = Exact<{[key: string]: never}>;
-
-export type MembershipQuery = {
-  __typename?: 'Query';
-  config: {
-    __typename?: 'Config';
-    membershipFees: {
-      __typename?: 'MembershipFees';
-      kult: {__typename?: 'MembershipFee'; regular: number; reduced: number};
-      foerderverein: {
-        __typename?: 'MembershipFee';
-        regular: number;
-        reduced: number;
-      };
-    };
-  };
-};
-
-export type CreateMembershipMutationVariables = Exact<{
-  data: MembershipApplication;
-}>;
-
-export type CreateMembershipMutation = {
-  __typename?: 'Mutation';
-  createMembershipApplication: boolean;
-};
-
 export type DistanceQueryVariables = Exact<{
   origin: Scalars['String']['input'];
 }>;
@@ -1309,36 +1031,87 @@ export type CardTransactionFragment =
   | CardTransaction_CardTransaction_Fragment
   | CardTransaction_MissingTransaction_Fragment;
 
-export type BandFragment = {
-  __typename?: 'BandPlaying';
-  id: string;
-  name: string;
-  startTime: Date;
-  slug: string;
-  genre?: string | null;
-  area: {
-    __typename?: 'Area';
-    id: string;
-    displayName: string;
-    themeColor: string;
-  };
-  photo?: {__typename?: 'PixelImage'; scaledUri: string} | null;
-};
-
-export type BandSearchQueryVariables = Exact<{
-  query: Scalars['String']['input'];
-  limit?: InputMaybe<Scalars['Int']['input']>;
+export type CreateBandApplicationMutationVariables = Exact<{
+  eventId: Scalars['ID']['input'];
+  data: CreateBandApplicationInput;
 }>;
 
-export type BandSearchQuery = {
+export type CreateBandApplicationMutation = {
+  __typename?: 'Mutation';
+  createBandApplication: {__typename?: 'BandApplication'; id: string};
+};
+
+export type KultCardQueryVariables = Exact<{
+  payload: Scalars['String']['input'];
+}>;
+
+export type KultCardQuery = {
   __typename?: 'Query';
-  findBandPlaying: Array<{
-    __typename?: 'BandPlaying';
-    id: string;
-    name: string;
-    startTime: Date;
-    slug: string;
-  }>;
+  cardStatus: {
+    __typename?: 'CardStatus';
+    cardId: string;
+    hasNewerTransactions?: boolean | null;
+    balance: number;
+    deposit: number;
+    recentTransactions?: Array<
+      | {
+          __typename: 'CardTransaction';
+          deviceTime: Date;
+          depositBefore: number;
+          depositAfter: number;
+          balanceBefore: number;
+          balanceAfter: number;
+          Order?: {
+            __typename?: 'Order';
+            items: Array<{
+              __typename?: 'OrderItem';
+              amount: number;
+              name: string;
+              productList?: {
+                __typename?: 'ProductList';
+                emoji?: string | null;
+                name: string;
+              } | null;
+            }>;
+          } | null;
+        }
+      | {
+          __typename: 'MissingTransaction';
+          numberOfMissingTransactions: number;
+          depositBefore: number;
+          depositAfter: number;
+          balanceBefore: number;
+          balanceAfter: number;
+        }
+    > | null;
+  };
+};
+
+export type MembershipQueryVariables = Exact<{[key: string]: never}>;
+
+export type MembershipQuery = {
+  __typename?: 'Query';
+  config: {
+    __typename?: 'Config';
+    membershipFees: {
+      __typename?: 'MembershipFees';
+      kult: {__typename?: 'MembershipFee'; regular: number; reduced: number};
+      foerderverein: {
+        __typename?: 'MembershipFee';
+        regular: number;
+        reduced: number;
+      };
+    };
+  };
+};
+
+export type CreateMembershipMutationVariables = Exact<{
+  data: MembershipApplication;
+}>;
+
+export type CreateMembershipMutation = {
+  __typename?: 'Mutation';
+  createMembershipApplication: boolean;
 };
 
 export type CreateNonceRequestMutationVariables = Exact<{
@@ -1390,959 +1163,6 @@ export const CardTransactionFragmentDoc = gql`
     }
   }
 `;
-export const BandFragmentDoc = gql`
-  fragment Band on BandPlaying {
-    id
-    name
-    startTime
-    slug
-    area {
-      id
-      displayName
-      themeColor
-    }
-    genre
-    photo {
-      scaledUri(height: 200, width: 200)
-    }
-  }
-`;
-export const KultCardDocument = gql`
-  query KultCard($payload: String!) {
-    cardStatus(payload: $payload) {
-      ...CardFragment
-      cardId
-      hasNewerTransactions
-      recentTransactions {
-        ...CardTransaction
-      }
-    }
-  }
-  ${CardFragmentFragmentDoc}
-  ${CardTransactionFragmentDoc}
-`;
-
-/**
- * __useKultCardQuery__
- *
- * To run a query within a React component, call `useKultCardQuery` and pass it any options that fit your needs.
- * When your component renders, `useKultCardQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useKultCardQuery({
- *   variables: {
- *      payload: // value for 'payload'
- *   },
- * });
- */
-export function useKultCardQuery(
-  baseOptions: Apollo.QueryHookOptions<KultCardQuery, KultCardQueryVariables> &
-    ({variables: KultCardQueryVariables; skip?: boolean} | {skip: boolean}),
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useQuery<KultCardQuery, KultCardQueryVariables>(
-    KultCardDocument,
-    options,
-  );
-}
-export function useKultCardLazyQuery(
-  baseOptions?: Apollo.LazyQueryHookOptions<
-    KultCardQuery,
-    KultCardQueryVariables
-  >,
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useLazyQuery<KultCardQuery, KultCardQueryVariables>(
-    KultCardDocument,
-    options,
-  );
-}
-export function useKultCardSuspenseQuery(
-  baseOptions?:
-    | Apollo.SkipToken
-    | Apollo.SuspenseQueryHookOptions<KultCardQuery, KultCardQueryVariables>,
-) {
-  const options =
-    baseOptions === Apollo.skipToken
-      ? baseOptions
-      : {...defaultOptions, ...baseOptions};
-  return Apollo.useSuspenseQuery<KultCardQuery, KultCardQueryVariables>(
-    KultCardDocument,
-    options,
-  );
-}
-export type KultCardQueryHookResult = ReturnType<typeof useKultCardQuery>;
-export type KultCardLazyQueryHookResult = ReturnType<
-  typeof useKultCardLazyQuery
->;
-export type KultCardSuspenseQueryHookResult = ReturnType<
-  typeof useKultCardSuspenseQuery
->;
-export type KultCardQueryResult = Apollo.QueryResult<
-  KultCardQuery,
-  KultCardQueryVariables
->;
-export const CreateBandApplicationDocument = gql`
-  mutation CreateBandApplication(
-    $eventId: ID!
-    $data: CreateBandApplicationInput!
-  ) {
-    createBandApplication(eventId: $eventId, data: $data) {
-      id
-    }
-  }
-`;
-export type CreateBandApplicationMutationFn = Apollo.MutationFunction<
-  CreateBandApplicationMutation,
-  CreateBandApplicationMutationVariables
->;
-
-/**
- * __useCreateBandApplicationMutation__
- *
- * To run a mutation, you first call `useCreateBandApplicationMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useCreateBandApplicationMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [createBandApplicationMutation, { data, loading, error }] = useCreateBandApplicationMutation({
- *   variables: {
- *      eventId: // value for 'eventId'
- *      data: // value for 'data'
- *   },
- * });
- */
-export function useCreateBandApplicationMutation(
-  baseOptions?: Apollo.MutationHookOptions<
-    CreateBandApplicationMutation,
-    CreateBandApplicationMutationVariables
-  >,
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useMutation<
-    CreateBandApplicationMutation,
-    CreateBandApplicationMutationVariables
-  >(CreateBandApplicationDocument, options);
-}
-export type CreateBandApplicationMutationHookResult = ReturnType<
-  typeof useCreateBandApplicationMutation
->;
-export type CreateBandApplicationMutationResult =
-  Apollo.MutationResult<CreateBandApplicationMutation>;
-export type CreateBandApplicationMutationOptions = Apollo.BaseMutationOptions<
-  CreateBandApplicationMutation,
-  CreateBandApplicationMutationVariables
->;
-export const BookingDocument = gql`
-  query Booking {
-    eventsConnection(first: 1, type: Kulturspektakel) {
-      edges {
-        node {
-          id
-          name
-          start
-          end
-          bandApplicationStart
-          bandApplicationEnd
-          djApplicationStart
-          djApplicationEnd
-        }
-      }
-    }
-  }
-`;
-
-/**
- * __useBookingQuery__
- *
- * To run a query within a React component, call `useBookingQuery` and pass it any options that fit your needs.
- * When your component renders, `useBookingQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useBookingQuery({
- *   variables: {
- *   },
- * });
- */
-export function useBookingQuery(
-  baseOptions?: Apollo.QueryHookOptions<BookingQuery, BookingQueryVariables>,
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useQuery<BookingQuery, BookingQueryVariables>(
-    BookingDocument,
-    options,
-  );
-}
-export function useBookingLazyQuery(
-  baseOptions?: Apollo.LazyQueryHookOptions<
-    BookingQuery,
-    BookingQueryVariables
-  >,
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useLazyQuery<BookingQuery, BookingQueryVariables>(
-    BookingDocument,
-    options,
-  );
-}
-export function useBookingSuspenseQuery(
-  baseOptions?:
-    | Apollo.SkipToken
-    | Apollo.SuspenseQueryHookOptions<BookingQuery, BookingQueryVariables>,
-) {
-  const options =
-    baseOptions === Apollo.skipToken
-      ? baseOptions
-      : {...defaultOptions, ...baseOptions};
-  return Apollo.useSuspenseQuery<BookingQuery, BookingQueryVariables>(
-    BookingDocument,
-    options,
-  );
-}
-export type BookingQueryHookResult = ReturnType<typeof useBookingQuery>;
-export type BookingLazyQueryHookResult = ReturnType<typeof useBookingLazyQuery>;
-export type BookingSuspenseQueryHookResult = ReturnType<
-  typeof useBookingSuspenseQuery
->;
-export type BookingQueryResult = Apollo.QueryResult<
-  BookingQuery,
-  BookingQueryVariables
->;
-export const LineupBandDocument = gql`
-  query LineupBand($eventId: ID!, $slug: String!) {
-    bandPlaying(eventId: $eventId, slug: $slug) {
-      name
-      shortDescription
-      description
-      photo {
-        scaledUri(width: 600)
-        large: scaledUri(width: 1200)
-        width
-        height
-        copyright
-      }
-      startTime
-      area {
-        id
-        displayName
-        themeColor
-      }
-      genre
-      spotify
-      youtube
-      website
-      instagram
-      facebook
-    }
-  }
-`;
-
-/**
- * __useLineupBandQuery__
- *
- * To run a query within a React component, call `useLineupBandQuery` and pass it any options that fit your needs.
- * When your component renders, `useLineupBandQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useLineupBandQuery({
- *   variables: {
- *      eventId: // value for 'eventId'
- *      slug: // value for 'slug'
- *   },
- * });
- */
-export function useLineupBandQuery(
-  baseOptions: Apollo.QueryHookOptions<
-    LineupBandQuery,
-    LineupBandQueryVariables
-  > &
-    ({variables: LineupBandQueryVariables; skip?: boolean} | {skip: boolean}),
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useQuery<LineupBandQuery, LineupBandQueryVariables>(
-    LineupBandDocument,
-    options,
-  );
-}
-export function useLineupBandLazyQuery(
-  baseOptions?: Apollo.LazyQueryHookOptions<
-    LineupBandQuery,
-    LineupBandQueryVariables
-  >,
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useLazyQuery<LineupBandQuery, LineupBandQueryVariables>(
-    LineupBandDocument,
-    options,
-  );
-}
-export function useLineupBandSuspenseQuery(
-  baseOptions?:
-    | Apollo.SkipToken
-    | Apollo.SuspenseQueryHookOptions<
-        LineupBandQuery,
-        LineupBandQueryVariables
-      >,
-) {
-  const options =
-    baseOptions === Apollo.skipToken
-      ? baseOptions
-      : {...defaultOptions, ...baseOptions};
-  return Apollo.useSuspenseQuery<LineupBandQuery, LineupBandQueryVariables>(
-    LineupBandDocument,
-    options,
-  );
-}
-export type LineupBandQueryHookResult = ReturnType<typeof useLineupBandQuery>;
-export type LineupBandLazyQueryHookResult = ReturnType<
-  typeof useLineupBandLazyQuery
->;
-export type LineupBandSuspenseQueryHookResult = ReturnType<
-  typeof useLineupBandSuspenseQuery
->;
-export type LineupBandQueryResult = Apollo.QueryResult<
-  LineupBandQuery,
-  LineupBandQueryVariables
->;
-export const LineupBandSitemapDocument = gql`
-  query LineupBandSitemap {
-    eventsConnection(first: 100, type: Kulturspektakel) {
-      edges {
-        node {
-          id
-          bandsPlaying(first: 100) {
-            edges {
-              node {
-                slug
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-`;
-
-/**
- * __useLineupBandSitemapQuery__
- *
- * To run a query within a React component, call `useLineupBandSitemapQuery` and pass it any options that fit your needs.
- * When your component renders, `useLineupBandSitemapQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useLineupBandSitemapQuery({
- *   variables: {
- *   },
- * });
- */
-export function useLineupBandSitemapQuery(
-  baseOptions?: Apollo.QueryHookOptions<
-    LineupBandSitemapQuery,
-    LineupBandSitemapQueryVariables
-  >,
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useQuery<
-    LineupBandSitemapQuery,
-    LineupBandSitemapQueryVariables
-  >(LineupBandSitemapDocument, options);
-}
-export function useLineupBandSitemapLazyQuery(
-  baseOptions?: Apollo.LazyQueryHookOptions<
-    LineupBandSitemapQuery,
-    LineupBandSitemapQueryVariables
-  >,
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useLazyQuery<
-    LineupBandSitemapQuery,
-    LineupBandSitemapQueryVariables
-  >(LineupBandSitemapDocument, options);
-}
-export function useLineupBandSitemapSuspenseQuery(
-  baseOptions?:
-    | Apollo.SkipToken
-    | Apollo.SuspenseQueryHookOptions<
-        LineupBandSitemapQuery,
-        LineupBandSitemapQueryVariables
-      >,
-) {
-  const options =
-    baseOptions === Apollo.skipToken
-      ? baseOptions
-      : {...defaultOptions, ...baseOptions};
-  return Apollo.useSuspenseQuery<
-    LineupBandSitemapQuery,
-    LineupBandSitemapQueryVariables
-  >(LineupBandSitemapDocument, options);
-}
-export type LineupBandSitemapQueryHookResult = ReturnType<
-  typeof useLineupBandSitemapQuery
->;
-export type LineupBandSitemapLazyQueryHookResult = ReturnType<
-  typeof useLineupBandSitemapLazyQuery
->;
-export type LineupBandSitemapSuspenseQueryHookResult = ReturnType<
-  typeof useLineupBandSitemapSuspenseQuery
->;
-export type LineupBandSitemapQueryResult = Apollo.QueryResult<
-  LineupBandSitemapQuery,
-  LineupBandSitemapQueryVariables
->;
-export const LineupDocument = gql`
-  query Lineup($id: ID!) {
-    node(id: $id) {
-      ... on Event {
-        name
-        start
-        end
-        bandsPlaying(first: 100) {
-          edges {
-            node {
-              ...Band
-              area {
-                id
-              }
-            }
-          }
-        }
-        bandApplicationStart
-        bandApplicationEnd
-        djApplicationStart
-        djApplicationEnd
-      }
-    }
-    areas {
-      id
-      displayName
-    }
-  }
-  ${BandFragmentDoc}
-`;
-
-/**
- * __useLineupQuery__
- *
- * To run a query within a React component, call `useLineupQuery` and pass it any options that fit your needs.
- * When your component renders, `useLineupQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useLineupQuery({
- *   variables: {
- *      id: // value for 'id'
- *   },
- * });
- */
-export function useLineupQuery(
-  baseOptions: Apollo.QueryHookOptions<LineupQuery, LineupQueryVariables> &
-    ({variables: LineupQueryVariables; skip?: boolean} | {skip: boolean}),
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useQuery<LineupQuery, LineupQueryVariables>(
-    LineupDocument,
-    options,
-  );
-}
-export function useLineupLazyQuery(
-  baseOptions?: Apollo.LazyQueryHookOptions<LineupQuery, LineupQueryVariables>,
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useLazyQuery<LineupQuery, LineupQueryVariables>(
-    LineupDocument,
-    options,
-  );
-}
-export function useLineupSuspenseQuery(
-  baseOptions?:
-    | Apollo.SkipToken
-    | Apollo.SuspenseQueryHookOptions<LineupQuery, LineupQueryVariables>,
-) {
-  const options =
-    baseOptions === Apollo.skipToken
-      ? baseOptions
-      : {...defaultOptions, ...baseOptions};
-  return Apollo.useSuspenseQuery<LineupQuery, LineupQueryVariables>(
-    LineupDocument,
-    options,
-  );
-}
-export type LineupQueryHookResult = ReturnType<typeof useLineupQuery>;
-export type LineupLazyQueryHookResult = ReturnType<typeof useLineupLazyQuery>;
-export type LineupSuspenseQueryHookResult = ReturnType<
-  typeof useLineupSuspenseQuery
->;
-export type LineupQueryResult = Apollo.QueryResult<
-  LineupQuery,
-  LineupQueryVariables
->;
-export const LineupSitemapDocument = gql`
-  query LineupSitemap {
-    eventsConnection(first: 100, type: Kulturspektakel) {
-      edges {
-        node {
-          id
-        }
-      }
-    }
-  }
-`;
-
-/**
- * __useLineupSitemapQuery__
- *
- * To run a query within a React component, call `useLineupSitemapQuery` and pass it any options that fit your needs.
- * When your component renders, `useLineupSitemapQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useLineupSitemapQuery({
- *   variables: {
- *   },
- * });
- */
-export function useLineupSitemapQuery(
-  baseOptions?: Apollo.QueryHookOptions<
-    LineupSitemapQuery,
-    LineupSitemapQueryVariables
-  >,
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useQuery<LineupSitemapQuery, LineupSitemapQueryVariables>(
-    LineupSitemapDocument,
-    options,
-  );
-}
-export function useLineupSitemapLazyQuery(
-  baseOptions?: Apollo.LazyQueryHookOptions<
-    LineupSitemapQuery,
-    LineupSitemapQueryVariables
-  >,
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useLazyQuery<LineupSitemapQuery, LineupSitemapQueryVariables>(
-    LineupSitemapDocument,
-    options,
-  );
-}
-export function useLineupSitemapSuspenseQuery(
-  baseOptions?:
-    | Apollo.SkipToken
-    | Apollo.SuspenseQueryHookOptions<
-        LineupSitemapQuery,
-        LineupSitemapQueryVariables
-      >,
-) {
-  const options =
-    baseOptions === Apollo.skipToken
-      ? baseOptions
-      : {...defaultOptions, ...baseOptions};
-  return Apollo.useSuspenseQuery<
-    LineupSitemapQuery,
-    LineupSitemapQueryVariables
-  >(LineupSitemapDocument, options);
-}
-export type LineupSitemapQueryHookResult = ReturnType<
-  typeof useLineupSitemapQuery
->;
-export type LineupSitemapLazyQueryHookResult = ReturnType<
-  typeof useLineupSitemapLazyQuery
->;
-export type LineupSitemapSuspenseQueryHookResult = ReturnType<
-  typeof useLineupSitemapSuspenseQuery
->;
-export type LineupSitemapQueryResult = Apollo.QueryResult<
-  LineupSitemapQuery,
-  LineupSitemapQueryVariables
->;
-export const LineupIndexDocument = gql`
-  query LineupIndex {
-    eventsConnection(first: 1, hasBandsPlaying: true, type: Kulturspektakel) {
-      edges {
-        node {
-          start
-        }
-      }
-    }
-  }
-`;
-
-/**
- * __useLineupIndexQuery__
- *
- * To run a query within a React component, call `useLineupIndexQuery` and pass it any options that fit your needs.
- * When your component renders, `useLineupIndexQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useLineupIndexQuery({
- *   variables: {
- *   },
- * });
- */
-export function useLineupIndexQuery(
-  baseOptions?: Apollo.QueryHookOptions<
-    LineupIndexQuery,
-    LineupIndexQueryVariables
-  >,
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useQuery<LineupIndexQuery, LineupIndexQueryVariables>(
-    LineupIndexDocument,
-    options,
-  );
-}
-export function useLineupIndexLazyQuery(
-  baseOptions?: Apollo.LazyQueryHookOptions<
-    LineupIndexQuery,
-    LineupIndexQueryVariables
-  >,
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useLazyQuery<LineupIndexQuery, LineupIndexQueryVariables>(
-    LineupIndexDocument,
-    options,
-  );
-}
-export function useLineupIndexSuspenseQuery(
-  baseOptions?:
-    | Apollo.SkipToken
-    | Apollo.SuspenseQueryHookOptions<
-        LineupIndexQuery,
-        LineupIndexQueryVariables
-      >,
-) {
-  const options =
-    baseOptions === Apollo.skipToken
-      ? baseOptions
-      : {...defaultOptions, ...baseOptions};
-  return Apollo.useSuspenseQuery<LineupIndexQuery, LineupIndexQueryVariables>(
-    LineupIndexDocument,
-    options,
-  );
-}
-export type LineupIndexQueryHookResult = ReturnType<typeof useLineupIndexQuery>;
-export type LineupIndexLazyQueryHookResult = ReturnType<
-  typeof useLineupIndexLazyQuery
->;
-export type LineupIndexSuspenseQueryHookResult = ReturnType<
-  typeof useLineupIndexSuspenseQuery
->;
-export type LineupIndexQueryResult = Apollo.QueryResult<
-  LineupIndexQuery,
-  LineupIndexQueryVariables
->;
-export const LineupsDocument = gql`
-  query Lineups {
-    eventsConnection(type: Kulturspektakel, hasBandsPlaying: true, first: 100) {
-      edges {
-        node {
-          name
-          id
-          start
-        }
-      }
-    }
-  }
-`;
-
-/**
- * __useLineupsQuery__
- *
- * To run a query within a React component, call `useLineupsQuery` and pass it any options that fit your needs.
- * When your component renders, `useLineupsQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useLineupsQuery({
- *   variables: {
- *   },
- * });
- */
-export function useLineupsQuery(
-  baseOptions?: Apollo.QueryHookOptions<LineupsQuery, LineupsQueryVariables>,
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useQuery<LineupsQuery, LineupsQueryVariables>(
-    LineupsDocument,
-    options,
-  );
-}
-export function useLineupsLazyQuery(
-  baseOptions?: Apollo.LazyQueryHookOptions<
-    LineupsQuery,
-    LineupsQueryVariables
-  >,
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useLazyQuery<LineupsQuery, LineupsQueryVariables>(
-    LineupsDocument,
-    options,
-  );
-}
-export function useLineupsSuspenseQuery(
-  baseOptions?:
-    | Apollo.SkipToken
-    | Apollo.SuspenseQueryHookOptions<LineupsQuery, LineupsQueryVariables>,
-) {
-  const options =
-    baseOptions === Apollo.skipToken
-      ? baseOptions
-      : {...defaultOptions, ...baseOptions};
-  return Apollo.useSuspenseQuery<LineupsQuery, LineupsQueryVariables>(
-    LineupsDocument,
-    options,
-  );
-}
-export type LineupsQueryHookResult = ReturnType<typeof useLineupsQuery>;
-export type LineupsLazyQueryHookResult = ReturnType<typeof useLineupsLazyQuery>;
-export type LineupsSuspenseQueryHookResult = ReturnType<
-  typeof useLineupsSuspenseQuery
->;
-export type LineupsQueryResult = Apollo.QueryResult<
-  LineupsQuery,
-  LineupsQueryVariables
->;
-export const BookingActiveDocument = gql`
-  query BookingActive {
-    eventsConnection(first: 1, type: Kulturspektakel) {
-      edges {
-        node {
-          id
-          bandApplicationStart
-          bandApplicationEnd
-          djApplicationStart
-          djApplicationEnd
-        }
-      }
-    }
-  }
-`;
-
-/**
- * __useBookingActiveQuery__
- *
- * To run a query within a React component, call `useBookingActiveQuery` and pass it any options that fit your needs.
- * When your component renders, `useBookingActiveQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useBookingActiveQuery({
- *   variables: {
- *   },
- * });
- */
-export function useBookingActiveQuery(
-  baseOptions?: Apollo.QueryHookOptions<
-    BookingActiveQuery,
-    BookingActiveQueryVariables
-  >,
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useQuery<BookingActiveQuery, BookingActiveQueryVariables>(
-    BookingActiveDocument,
-    options,
-  );
-}
-export function useBookingActiveLazyQuery(
-  baseOptions?: Apollo.LazyQueryHookOptions<
-    BookingActiveQuery,
-    BookingActiveQueryVariables
-  >,
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useLazyQuery<BookingActiveQuery, BookingActiveQueryVariables>(
-    BookingActiveDocument,
-    options,
-  );
-}
-export function useBookingActiveSuspenseQuery(
-  baseOptions?:
-    | Apollo.SkipToken
-    | Apollo.SuspenseQueryHookOptions<
-        BookingActiveQuery,
-        BookingActiveQueryVariables
-      >,
-) {
-  const options =
-    baseOptions === Apollo.skipToken
-      ? baseOptions
-      : {...defaultOptions, ...baseOptions};
-  return Apollo.useSuspenseQuery<
-    BookingActiveQuery,
-    BookingActiveQueryVariables
-  >(BookingActiveDocument, options);
-}
-export type BookingActiveQueryHookResult = ReturnType<
-  typeof useBookingActiveQuery
->;
-export type BookingActiveLazyQueryHookResult = ReturnType<
-  typeof useBookingActiveLazyQuery
->;
-export type BookingActiveSuspenseQueryHookResult = ReturnType<
-  typeof useBookingActiveSuspenseQuery
->;
-export type BookingActiveQueryResult = Apollo.QueryResult<
-  BookingActiveQuery,
-  BookingActiveQueryVariables
->;
-export const MembershipDocument = gql`
-  query Membership {
-    config {
-      membershipFees {
-        kult {
-          regular
-          reduced
-        }
-        foerderverein {
-          regular
-          reduced
-        }
-      }
-    }
-  }
-`;
-
-/**
- * __useMembershipQuery__
- *
- * To run a query within a React component, call `useMembershipQuery` and pass it any options that fit your needs.
- * When your component renders, `useMembershipQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useMembershipQuery({
- *   variables: {
- *   },
- * });
- */
-export function useMembershipQuery(
-  baseOptions?: Apollo.QueryHookOptions<
-    MembershipQuery,
-    MembershipQueryVariables
-  >,
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useQuery<MembershipQuery, MembershipQueryVariables>(
-    MembershipDocument,
-    options,
-  );
-}
-export function useMembershipLazyQuery(
-  baseOptions?: Apollo.LazyQueryHookOptions<
-    MembershipQuery,
-    MembershipQueryVariables
-  >,
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useLazyQuery<MembershipQuery, MembershipQueryVariables>(
-    MembershipDocument,
-    options,
-  );
-}
-export function useMembershipSuspenseQuery(
-  baseOptions?:
-    | Apollo.SkipToken
-    | Apollo.SuspenseQueryHookOptions<
-        MembershipQuery,
-        MembershipQueryVariables
-      >,
-) {
-  const options =
-    baseOptions === Apollo.skipToken
-      ? baseOptions
-      : {...defaultOptions, ...baseOptions};
-  return Apollo.useSuspenseQuery<MembershipQuery, MembershipQueryVariables>(
-    MembershipDocument,
-    options,
-  );
-}
-export type MembershipQueryHookResult = ReturnType<typeof useMembershipQuery>;
-export type MembershipLazyQueryHookResult = ReturnType<
-  typeof useMembershipLazyQuery
->;
-export type MembershipSuspenseQueryHookResult = ReturnType<
-  typeof useMembershipSuspenseQuery
->;
-export type MembershipQueryResult = Apollo.QueryResult<
-  MembershipQuery,
-  MembershipQueryVariables
->;
-export const CreateMembershipDocument = gql`
-  mutation CreateMembership($data: MembershipApplication!) {
-    createMembershipApplication(data: $data)
-  }
-`;
-export type CreateMembershipMutationFn = Apollo.MutationFunction<
-  CreateMembershipMutation,
-  CreateMembershipMutationVariables
->;
-
-/**
- * __useCreateMembershipMutation__
- *
- * To run a mutation, you first call `useCreateMembershipMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useCreateMembershipMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [createMembershipMutation, { data, loading, error }] = useCreateMembershipMutation({
- *   variables: {
- *      data: // value for 'data'
- *   },
- * });
- */
-export function useCreateMembershipMutation(
-  baseOptions?: Apollo.MutationHookOptions<
-    CreateMembershipMutation,
-    CreateMembershipMutationVariables
-  >,
-) {
-  const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useMutation<
-    CreateMembershipMutation,
-    CreateMembershipMutationVariables
-  >(CreateMembershipDocument, options);
-}
-export type CreateMembershipMutationHookResult = ReturnType<
-  typeof useCreateMembershipMutation
->;
-export type CreateMembershipMutationResult =
-  Apollo.MutationResult<CreateMembershipMutation>;
-export type CreateMembershipMutationOptions = Apollo.BaseMutationOptions<
-  CreateMembershipMutation,
-  CreateMembershipMutationVariables
->;
 export const DistanceDocument = gql`
   query Distance($origin: String!) {
     distanceToKult(origin: $origin)
@@ -2582,86 +1402,269 @@ export type SpotifyArtistSearchQueryResult = Apollo.QueryResult<
   SpotifyArtistSearchQuery,
   SpotifyArtistSearchQueryVariables
 >;
-export const BandSearchDocument = gql`
-  query BandSearch($query: String!, $limit: Int = 5) {
-    findBandPlaying(query: $query, limit: $limit) {
+export const CreateBandApplicationDocument = gql`
+  mutation CreateBandApplication(
+    $eventId: ID!
+    $data: CreateBandApplicationInput!
+  ) {
+    createBandApplication(eventId: $eventId, data: $data) {
       id
-      name
-      startTime
-      slug
     }
   }
 `;
+export type CreateBandApplicationMutationFn = Apollo.MutationFunction<
+  CreateBandApplicationMutation,
+  CreateBandApplicationMutationVariables
+>;
 
 /**
- * __useBandSearchQuery__
+ * __useCreateBandApplicationMutation__
  *
- * To run a query within a React component, call `useBandSearchQuery` and pass it any options that fit your needs.
- * When your component renders, `useBandSearchQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a mutation, you first call `useCreateBandApplicationMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateBandApplicationMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createBandApplicationMutation, { data, loading, error }] = useCreateBandApplicationMutation({
+ *   variables: {
+ *      eventId: // value for 'eventId'
+ *      data: // value for 'data'
+ *   },
+ * });
+ */
+export function useCreateBandApplicationMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    CreateBandApplicationMutation,
+    CreateBandApplicationMutationVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useMutation<
+    CreateBandApplicationMutation,
+    CreateBandApplicationMutationVariables
+  >(CreateBandApplicationDocument, options);
+}
+export type CreateBandApplicationMutationHookResult = ReturnType<
+  typeof useCreateBandApplicationMutation
+>;
+export type CreateBandApplicationMutationResult =
+  Apollo.MutationResult<CreateBandApplicationMutation>;
+export type CreateBandApplicationMutationOptions = Apollo.BaseMutationOptions<
+  CreateBandApplicationMutation,
+  CreateBandApplicationMutationVariables
+>;
+export const KultCardDocument = gql`
+  query KultCard($payload: String!) {
+    cardStatus(payload: $payload) {
+      ...CardFragment
+      cardId
+      hasNewerTransactions
+      recentTransactions {
+        ...CardTransaction
+      }
+    }
+  }
+  ${CardFragmentFragmentDoc}
+  ${CardTransactionFragmentDoc}
+`;
+
+/**
+ * __useKultCardQuery__
+ *
+ * To run a query within a React component, call `useKultCardQuery` and pass it any options that fit your needs.
+ * When your component renders, `useKultCardQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useBandSearchQuery({
+ * const { data, loading, error } = useKultCardQuery({
  *   variables: {
- *      query: // value for 'query'
- *      limit: // value for 'limit'
+ *      payload: // value for 'payload'
  *   },
  * });
  */
-export function useBandSearchQuery(
-  baseOptions: Apollo.QueryHookOptions<
-    BandSearchQuery,
-    BandSearchQueryVariables
-  > &
-    ({variables: BandSearchQueryVariables; skip?: boolean} | {skip: boolean}),
+export function useKultCardQuery(
+  baseOptions: Apollo.QueryHookOptions<KultCardQuery, KultCardQueryVariables> &
+    ({variables: KultCardQueryVariables; skip?: boolean} | {skip: boolean}),
 ) {
   const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useQuery<BandSearchQuery, BandSearchQueryVariables>(
-    BandSearchDocument,
+  return Apollo.useQuery<KultCardQuery, KultCardQueryVariables>(
+    KultCardDocument,
     options,
   );
 }
-export function useBandSearchLazyQuery(
+export function useKultCardLazyQuery(
   baseOptions?: Apollo.LazyQueryHookOptions<
-    BandSearchQuery,
-    BandSearchQueryVariables
+    KultCardQuery,
+    KultCardQueryVariables
   >,
 ) {
   const options = {...defaultOptions, ...baseOptions};
-  return Apollo.useLazyQuery<BandSearchQuery, BandSearchQueryVariables>(
-    BandSearchDocument,
+  return Apollo.useLazyQuery<KultCardQuery, KultCardQueryVariables>(
+    KultCardDocument,
     options,
   );
 }
-export function useBandSearchSuspenseQuery(
+export function useKultCardSuspenseQuery(
+  baseOptions?:
+    | Apollo.SkipToken
+    | Apollo.SuspenseQueryHookOptions<KultCardQuery, KultCardQueryVariables>,
+) {
+  const options =
+    baseOptions === Apollo.skipToken
+      ? baseOptions
+      : {...defaultOptions, ...baseOptions};
+  return Apollo.useSuspenseQuery<KultCardQuery, KultCardQueryVariables>(
+    KultCardDocument,
+    options,
+  );
+}
+export type KultCardQueryHookResult = ReturnType<typeof useKultCardQuery>;
+export type KultCardLazyQueryHookResult = ReturnType<
+  typeof useKultCardLazyQuery
+>;
+export type KultCardSuspenseQueryHookResult = ReturnType<
+  typeof useKultCardSuspenseQuery
+>;
+export type KultCardQueryResult = Apollo.QueryResult<
+  KultCardQuery,
+  KultCardQueryVariables
+>;
+export const MembershipDocument = gql`
+  query Membership {
+    config {
+      membershipFees {
+        kult {
+          regular
+          reduced
+        }
+        foerderverein {
+          regular
+          reduced
+        }
+      }
+    }
+  }
+`;
+
+/**
+ * __useMembershipQuery__
+ *
+ * To run a query within a React component, call `useMembershipQuery` and pass it any options that fit your needs.
+ * When your component renders, `useMembershipQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useMembershipQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useMembershipQuery(
+  baseOptions?: Apollo.QueryHookOptions<
+    MembershipQuery,
+    MembershipQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useQuery<MembershipQuery, MembershipQueryVariables>(
+    MembershipDocument,
+    options,
+  );
+}
+export function useMembershipLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    MembershipQuery,
+    MembershipQueryVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useLazyQuery<MembershipQuery, MembershipQueryVariables>(
+    MembershipDocument,
+    options,
+  );
+}
+export function useMembershipSuspenseQuery(
   baseOptions?:
     | Apollo.SkipToken
     | Apollo.SuspenseQueryHookOptions<
-        BandSearchQuery,
-        BandSearchQueryVariables
+        MembershipQuery,
+        MembershipQueryVariables
       >,
 ) {
   const options =
     baseOptions === Apollo.skipToken
       ? baseOptions
       : {...defaultOptions, ...baseOptions};
-  return Apollo.useSuspenseQuery<BandSearchQuery, BandSearchQueryVariables>(
-    BandSearchDocument,
+  return Apollo.useSuspenseQuery<MembershipQuery, MembershipQueryVariables>(
+    MembershipDocument,
     options,
   );
 }
-export type BandSearchQueryHookResult = ReturnType<typeof useBandSearchQuery>;
-export type BandSearchLazyQueryHookResult = ReturnType<
-  typeof useBandSearchLazyQuery
+export type MembershipQueryHookResult = ReturnType<typeof useMembershipQuery>;
+export type MembershipLazyQueryHookResult = ReturnType<
+  typeof useMembershipLazyQuery
 >;
-export type BandSearchSuspenseQueryHookResult = ReturnType<
-  typeof useBandSearchSuspenseQuery
+export type MembershipSuspenseQueryHookResult = ReturnType<
+  typeof useMembershipSuspenseQuery
 >;
-export type BandSearchQueryResult = Apollo.QueryResult<
-  BandSearchQuery,
-  BandSearchQueryVariables
+export type MembershipQueryResult = Apollo.QueryResult<
+  MembershipQuery,
+  MembershipQueryVariables
+>;
+export const CreateMembershipDocument = gql`
+  mutation CreateMembership($data: MembershipApplication!) {
+    createMembershipApplication(data: $data)
+  }
+`;
+export type CreateMembershipMutationFn = Apollo.MutationFunction<
+  CreateMembershipMutation,
+  CreateMembershipMutationVariables
+>;
+
+/**
+ * __useCreateMembershipMutation__
+ *
+ * To run a mutation, you first call `useCreateMembershipMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateMembershipMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createMembershipMutation, { data, loading, error }] = useCreateMembershipMutation({
+ *   variables: {
+ *      data: // value for 'data'
+ *   },
+ * });
+ */
+export function useCreateMembershipMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    CreateMembershipMutation,
+    CreateMembershipMutationVariables
+  >,
+) {
+  const options = {...defaultOptions, ...baseOptions};
+  return Apollo.useMutation<
+    CreateMembershipMutation,
+    CreateMembershipMutationVariables
+  >(CreateMembershipDocument, options);
+}
+export type CreateMembershipMutationHookResult = ReturnType<
+  typeof useCreateMembershipMutation
+>;
+export type CreateMembershipMutationResult =
+  Apollo.MutationResult<CreateMembershipMutation>;
+export type CreateMembershipMutationOptions = Apollo.BaseMutationOptions<
+  CreateMembershipMutation,
+  CreateMembershipMutationVariables
 >;
 export const CreateNonceRequestDocument = gql`
   mutation CreateNonceRequest($email: String!) {

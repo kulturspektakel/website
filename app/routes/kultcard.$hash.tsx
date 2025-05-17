@@ -3,7 +3,10 @@ import {ListRoot, VStack} from '@chakra-ui/react';
 import {Alert} from '../components/chakra-snippets/alert';
 import Card, {CardFragment} from '../components/kultcard/Card';
 import InfoText from '../components/kultcard/InfoText';
-import Transaction, {CardTransaction} from '../components/kultcard/Transaction';
+import Transaction, {
+  CardTransaction,
+  Transactions,
+} from '../components/kultcard/Transaction';
 import {KultCardDocument, KultCardQuery} from '../types/graphql';
 import apolloClient from '../utils/apolloClient';
 import {createFileRoute, notFound} from '@tanstack/react-router';
@@ -186,7 +189,7 @@ export const currencyFormatter = new Intl.NumberFormat('de-DE', {
   currency: 'EUR',
 });
 
-export const Route = createFileRoute('/$$$/$hash')({
+export const Route = createFileRoute('/kultcard/$hash')({
   component: KultCard,
   loader: async ({params}) => await loader({data: params}),
   head: ({loaderData}) =>
@@ -196,7 +199,7 @@ export const Route = createFileRoute('/$$$/$hash')({
 });
 
 function KultCard() {
-  const cardStatus = Route.useLoaderData(); // EXAMPLE_DATA
+  const cardStatus = EXAMPLE_DATA;
 
   return (
     <VStack
@@ -219,15 +222,7 @@ function KultCard() {
       {cardStatus.recentTransactions &&
         cardStatus.recentTransactions.length > 0 && (
           <VStack gap="5" align="stretch">
-            <ListRoot as="ol" m="0">
-              {cardStatus.recentTransactions.map((t, i) => (
-                <Transaction
-                  key={i}
-                  {...t}
-                  isLastItem={i === cardStatus.recentTransactions!.length - 1}
-                />
-              ))}
-            </ListRoot>
+            <Transactions data={cardStatus.recentTransactions} />
             <InfoText textAlign="center">
               Es kann etwas dauern, bis alle Buchungen vollständig in der Liste
               dargestellt werden. Das angezeigte Guthaben auf der Karte ist

@@ -30,9 +30,10 @@ import { Route as NewsArchivImport } from './routes/news.archiv'
 import { Route as NewsSlugImport } from './routes/news.$slug'
 import { Route as MitgliedsantragDankeImport } from './routes/mitgliedsantrag.danke'
 import { Route as LineupYearImport } from './routes/lineup.$year'
+import { Route as KultcardHashImport } from './routes/kultcard.$hash'
 import { Route as EventsIdImport } from './routes/events_.$id'
+import { Route as CrewcardHashImport } from './routes/crewcard.$hash'
 import { Route as BookingApplicationTypeImport } from './routes/booking_.$applicationType'
-import { Route as HashImport } from './routes/$$$.$hash'
 import { Route as LineupYearSlugImport } from './routes/lineup.$year_.$slug'
 import { Route as BookingApplicationTypeDankeImport } from './routes/booking_.$applicationType_.danke'
 
@@ -152,21 +153,27 @@ const LineupYearRoute = LineupYearImport.update({
   getParentRoute: () => LineupRoute,
 } as any)
 
+const KultcardHashRoute = KultcardHashImport.update({
+  id: '/kultcard/$hash',
+  path: '/kultcard/$hash',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const EventsIdRoute = EventsIdImport.update({
   id: '/events_/$id',
   path: '/events/$id',
   getParentRoute: () => rootRoute,
 } as any)
 
-const BookingApplicationTypeRoute = BookingApplicationTypeImport.update({
-  id: '/booking_/$applicationType',
-  path: '/booking/$applicationType',
+const CrewcardHashRoute = CrewcardHashImport.update({
+  id: '/crewcard/$hash',
+  path: '/crewcard/$hash',
   getParentRoute: () => rootRoute,
 } as any)
 
-const HashRoute = HashImport.update({
-  id: '/$$$/$hash',
-  path: '/$$$/$hash',
+const BookingApplicationTypeRoute = BookingApplicationTypeImport.update({
+  id: '/booking_/$applicationType',
+  path: '/booking/$applicationType',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -285,13 +292,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SpeisekarteImport
       parentRoute: typeof rootRoute
     }
-    '/$$$/$hash': {
-      id: '/$$$/$hash'
-      path: '/$$$/$hash'
-      fullPath: '/$$$/$hash'
-      preLoaderRoute: typeof HashImport
-      parentRoute: typeof rootRoute
-    }
     '/booking_/$applicationType': {
       id: '/booking_/$applicationType'
       path: '/booking/$applicationType'
@@ -299,11 +299,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BookingApplicationTypeImport
       parentRoute: typeof rootRoute
     }
+    '/crewcard/$hash': {
+      id: '/crewcard/$hash'
+      path: '/crewcard/$hash'
+      fullPath: '/crewcard/$hash'
+      preLoaderRoute: typeof CrewcardHashImport
+      parentRoute: typeof rootRoute
+    }
     '/events_/$id': {
       id: '/events_/$id'
       path: '/events/$id'
       fullPath: '/events/$id'
       preLoaderRoute: typeof EventsIdImport
+      parentRoute: typeof rootRoute
+    }
+    '/kultcard/$hash': {
+      id: '/kultcard/$hash'
+      path: '/kultcard/$hash'
+      fullPath: '/kultcard/$hash'
+      preLoaderRoute: typeof KultcardHashImport
       parentRoute: typeof rootRoute
     }
     '/lineup/$year': {
@@ -402,9 +416,10 @@ export interface FileRoutesByFullPath {
   '/nuclino-sso': typeof NuclinoSsoRoute
   '/plakate': typeof PlakateRoute
   '/speisekarte': typeof SpeisekarteRoute
-  '/$$$/$hash': typeof HashRoute
   '/booking/$applicationType': typeof BookingApplicationTypeRoute
+  '/crewcard/$hash': typeof CrewcardHashRoute
   '/events/$id': typeof EventsIdRoute
+  '/kultcard/$hash': typeof KultcardHashRoute
   '/lineup/$year': typeof LineupYearRoute
   '/mitgliedsantrag/danke': typeof MitgliedsantragDankeRoute
   '/news/$slug': typeof NewsSlugRoute
@@ -428,9 +443,10 @@ export interface FileRoutesByTo {
   '/nuclino-sso': typeof NuclinoSsoRoute
   '/plakate': typeof PlakateRoute
   '/speisekarte': typeof SpeisekarteRoute
-  '/$$$/$hash': typeof HashRoute
   '/booking/$applicationType': typeof BookingApplicationTypeRoute
+  '/crewcard/$hash': typeof CrewcardHashRoute
   '/events/$id': typeof EventsIdRoute
+  '/kultcard/$hash': typeof KultcardHashRoute
   '/lineup/$year': typeof LineupYearRoute
   '/mitgliedsantrag/danke': typeof MitgliedsantragDankeRoute
   '/news/$slug': typeof NewsSlugRoute
@@ -456,9 +472,10 @@ export interface FileRoutesById {
   '/nuclino-sso': typeof NuclinoSsoRoute
   '/plakate': typeof PlakateRoute
   '/speisekarte': typeof SpeisekarteRoute
-  '/$$$/$hash': typeof HashRoute
   '/booking_/$applicationType': typeof BookingApplicationTypeRoute
+  '/crewcard/$hash': typeof CrewcardHashRoute
   '/events_/$id': typeof EventsIdRoute
+  '/kultcard/$hash': typeof KultcardHashRoute
   '/lineup/$year': typeof LineupYearRoute
   '/mitgliedsantrag/danke': typeof MitgliedsantragDankeRoute
   '/news/$slug': typeof NewsSlugRoute
@@ -485,9 +502,10 @@ export interface FileRouteTypes {
     | '/nuclino-sso'
     | '/plakate'
     | '/speisekarte'
-    | '/$$$/$hash'
     | '/booking/$applicationType'
+    | '/crewcard/$hash'
     | '/events/$id'
+    | '/kultcard/$hash'
     | '/lineup/$year'
     | '/mitgliedsantrag/danke'
     | '/news/$slug'
@@ -510,9 +528,10 @@ export interface FileRouteTypes {
     | '/nuclino-sso'
     | '/plakate'
     | '/speisekarte'
-    | '/$$$/$hash'
     | '/booking/$applicationType'
+    | '/crewcard/$hash'
     | '/events/$id'
+    | '/kultcard/$hash'
     | '/lineup/$year'
     | '/mitgliedsantrag/danke'
     | '/news/$slug'
@@ -536,9 +555,10 @@ export interface FileRouteTypes {
     | '/nuclino-sso'
     | '/plakate'
     | '/speisekarte'
-    | '/$$$/$hash'
     | '/booking_/$applicationType'
+    | '/crewcard/$hash'
     | '/events_/$id'
+    | '/kultcard/$hash'
     | '/lineup/$year'
     | '/mitgliedsantrag/danke'
     | '/news/$slug'
@@ -564,9 +584,10 @@ export interface RootRouteChildren {
   NuclinoSsoRoute: typeof NuclinoSsoRoute
   PlakateRoute: typeof PlakateRoute
   SpeisekarteRoute: typeof SpeisekarteRoute
-  HashRoute: typeof HashRoute
   BookingApplicationTypeRoute: typeof BookingApplicationTypeRoute
+  CrewcardHashRoute: typeof CrewcardHashRoute
   EventsIdRoute: typeof EventsIdRoute
+  KultcardHashRoute: typeof KultcardHashRoute
   NewsSlugRoute: typeof NewsSlugRoute
   NewsArchivRoute: typeof NewsArchivRoute
   BookingApplicationTypeDankeRoute: typeof BookingApplicationTypeDankeRoute
@@ -587,9 +608,10 @@ const rootRouteChildren: RootRouteChildren = {
   NuclinoSsoRoute: NuclinoSsoRoute,
   PlakateRoute: PlakateRoute,
   SpeisekarteRoute: SpeisekarteRoute,
-  HashRoute: HashRoute,
   BookingApplicationTypeRoute: BookingApplicationTypeRoute,
+  CrewcardHashRoute: CrewcardHashRoute,
   EventsIdRoute: EventsIdRoute,
+  KultcardHashRoute: KultcardHashRoute,
   NewsSlugRoute: NewsSlugRoute,
   NewsArchivRoute: NewsArchivRoute,
   BookingApplicationTypeDankeRoute: BookingApplicationTypeDankeRoute,
@@ -619,9 +641,10 @@ export const routeTree = rootRoute
         "/nuclino-sso",
         "/plakate",
         "/speisekarte",
-        "/$$$/$hash",
         "/booking_/$applicationType",
+        "/crewcard/$hash",
         "/events_/$id",
+        "/kultcard/$hash",
         "/news/$slug",
         "/news/archiv",
         "/booking_/$applicationType_/danke"
@@ -677,14 +700,17 @@ export const routeTree = rootRoute
     "/speisekarte": {
       "filePath": "speisekarte.tsx"
     },
-    "/$$$/$hash": {
-      "filePath": "$$$.$hash.tsx"
-    },
     "/booking_/$applicationType": {
       "filePath": "booking_.$applicationType.tsx"
     },
+    "/crewcard/$hash": {
+      "filePath": "crewcard.$hash.tsx"
+    },
     "/events_/$id": {
       "filePath": "events_.$id.tsx"
+    },
+    "/kultcard/$hash": {
+      "filePath": "kultcard.$hash.tsx"
     },
     "/lineup/$year": {
       "filePath": "lineup.$year.tsx",

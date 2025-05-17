@@ -1,10 +1,11 @@
-import {useEffect, useMemo, useRef, type ReactNode} from 'react';
+import {useEffect, useRef, type ReactNode} from 'react';
 import {
   Outlet,
   HeadContent,
   Scripts,
   createRootRouteWithContext,
   useRouter,
+  redirect,
 } from '@tanstack/react-router';
 import {Box, ChakraProvider, Flex} from '@chakra-ui/react';
 import theme from '../theme';
@@ -19,6 +20,7 @@ import {createServerFn} from '@tanstack/react-start';
 import {wrapCreateRootRouteWithSentry} from '@sentry/tanstackstart-react';
 import {seo} from '../utils/seo';
 import ProgressBar from '@badrap/bar-of-progress';
+import {getRequestURL} from '@tanstack/react-start/server';
 
 const beforeLoad = createServerFn().handler(async () => {
   const event = await prismaClient.event.findFirstOrThrow({
@@ -91,7 +93,27 @@ export const Route = wrapCreateRootRouteWithSentry(
     };
   },
   component: RootComponent,
-  beforeLoad: async () => await beforeLoad(),
+  beforeLoad: async () => {
+    const url = getRequestURL();
+    if (
+      url.hostname !== 'localhost' &&
+      url.hostname !== 'www.kulturspektakel.de'
+    ) {
+      const newURL = new URL(url);
+      const match = url.pathname.match(/^\/\$([\$c])\/([A-Za-z0-9\-_]+)\/?$/);
+      url.protocol = 'https:';
+      if (match && match.length == 3) {
+        if (url.hostname === 'kult.cash') {
+          url.hostname = 'www.kulturspektakel.de';
+        }
+        newURL.pathname = `/${match[1] === 'c' ? 'crewcard' : 'kultcard'}/${match[2]}`;
+      }
+      throw redirect({
+        href: newURL.toString(),
+      });
+    }
+    return await beforeLoad();
+  },
 });
 
 const queryClient = new QueryClient({
@@ -119,7 +141,6 @@ function RootDoc({children}: Readonly<{children: ReactNode}>) {
 
   useEffect(() => {
     router.subscribe('onBeforeNavigate', () => {
-      console.log('before');
       if (typeof window !== 'undefined') {
         progressBar.current?.finish();
         progressBar.current = new ProgressBar();
