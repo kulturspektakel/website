@@ -1,17 +1,18 @@
 import {gql} from '@apollo/client';
-import {ListRoot, VStack} from '@chakra-ui/react';
+import {VStack} from '@chakra-ui/react';
 import {Alert} from '../components/chakra-snippets/alert';
 import Card, {CardFragment} from '../components/kultcard/Card';
 import InfoText from '../components/kultcard/InfoText';
-import Transaction, {
-  CardTransaction,
-  Transactions,
-} from '../components/kultcard/Transaction';
 import {KultCardDocument, KultCardQuery} from '../types/graphql';
 import apolloClient from '../utils/apolloClient';
 import {createFileRoute, notFound} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
 import {seo} from '../utils/seo';
+import {
+  CardActivities,
+  CardActivity,
+  DEPOSIT_VALUE,
+} from '../components/kultcard/CardActivities';
 
 gql`
   query KultCard($payload: String!) {
@@ -20,12 +21,33 @@ gql`
       cardId
       hasNewerTransactions
       recentTransactions {
-        ...CardTransaction
+        depositBefore
+        depositAfter
+        balanceBefore
+        balanceAfter
+        __typename
+
+        ... on CardTransaction {
+          deviceTime
+          transactionType
+          Order {
+            items {
+              amount
+              name
+              productList {
+                emoji
+                name
+              }
+            }
+          }
+        }
+        ... on MissingTransaction {
+          numberOfMissingTransactions
+        }
       }
     }
   }
   ${CardFragment}
-  ${CardTransaction}
 `;
 
 const EXAMPLE_DATA = {
@@ -199,7 +221,7 @@ export const Route = createFileRoute('/kultcard/$hash')({
 });
 
 function KultCard() {
-  const cardStatus = EXAMPLE_DATA;
+  const cardStatus = Route.useLoaderData(); //EXAMPLE_DATA;
 
   return (
     <VStack
@@ -222,7 +244,47 @@ function KultCard() {
       {cardStatus.recentTransactions &&
         cardStatus.recentTransactions.length > 0 && (
           <VStack gap="5" align="stretch">
-            <Transactions data={cardStatus.recentTransactions} />
+            <CardActivities
+              data={cardStatus.recentTransactions.map<CardActivity>((t) => {
+                if (t.__typename === 'MissingTransaction') {
+                  return {
+                    type: 'missing' as const,
+                    numberOfMissingTransactions: t.numberOfMissingTransactions,
+                  };
+                } else if (t.Order && t.Order.items.length > 0) {
+                  const productList = t.Order.items.find(
+                    () => true,
+                  )?.productList;
+                  return {
+                    type: 'order' as const,
+                    items: t.Order.items,
+                    productList: productList?.name ?? '',
+                    emoji: productList?.emoji ?? null,
+                    deposit: t.depositBefore - t.depositAfter,
+                  };
+                } else if (t.transactionType === 'TopUp') {
+                  return {
+                    type: 'topup' as const,
+                    amount: t.balanceAfter - t.balanceBefore,
+                    deposit: t.depositBefore - t.depositAfter,
+                  };
+                } else if (
+                  t.depositAfter !== t.depositBefore &&
+                  t.balanceAfter - t.balanceBefore ===
+                    (t.depositBefore - t.depositAfter) * DEPOSIT_VALUE
+                ) {
+                  return {
+                    type: 'deposit' as const,
+                    deposit: t.depositBefore - t.depositAfter,
+                  };
+                }
+                return {
+                  type: 'unknown' as const,
+                  amount: t.balanceBefore - t.balanceAfter,
+                  deposit: t.depositBefore - t.depositAfter,
+                };
+              })}
+            />
             <InfoText textAlign="center">
               Es kann etwas dauern, bis alle Buchungen vollständig in der Liste
               dargestellt werden. Das angezeigte Guthaben auf der Karte ist

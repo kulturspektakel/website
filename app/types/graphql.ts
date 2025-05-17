@@ -996,41 +996,6 @@ export type CardFragmentFragment = {
   deposit: number;
 };
 
-type CardTransaction_CardTransaction_Fragment = {
-  __typename: 'CardTransaction';
-  deviceTime: Date;
-  depositBefore: number;
-  depositAfter: number;
-  balanceBefore: number;
-  balanceAfter: number;
-  Order?: {
-    __typename?: 'Order';
-    items: Array<{
-      __typename?: 'OrderItem';
-      amount: number;
-      name: string;
-      productList?: {
-        __typename?: 'ProductList';
-        emoji?: string | null;
-        name: string;
-      } | null;
-    }>;
-  } | null;
-};
-
-type CardTransaction_MissingTransaction_Fragment = {
-  __typename: 'MissingTransaction';
-  numberOfMissingTransactions: number;
-  depositBefore: number;
-  depositAfter: number;
-  balanceBefore: number;
-  balanceAfter: number;
-};
-
-export type CardTransactionFragment =
-  | CardTransaction_CardTransaction_Fragment
-  | CardTransaction_MissingTransaction_Fragment;
-
 export type CreateBandApplicationMutationVariables = Exact<{
   eventId: Scalars['ID']['input'];
   data: CreateBandApplicationInput;
@@ -1057,6 +1022,7 @@ export type KultCardQuery = {
       | {
           __typename: 'CardTransaction';
           deviceTime: Date;
+          transactionType: CardTransactionType;
           depositBefore: number;
           depositAfter: number;
           balanceBefore: number;
@@ -1136,31 +1102,6 @@ export const CardFragmentFragmentDoc = gql`
   fragment CardFragment on CardStatus {
     balance
     deposit
-  }
-`;
-export const CardTransactionFragmentDoc = gql`
-  fragment CardTransaction on Transaction {
-    depositBefore
-    depositAfter
-    balanceBefore
-    balanceAfter
-    __typename
-    ... on CardTransaction {
-      deviceTime
-      Order {
-        items {
-          amount
-          name
-          productList {
-            emoji
-            name
-          }
-        }
-      }
-    }
-    ... on MissingTransaction {
-      numberOfMissingTransactions
-    }
   }
 `;
 export const DistanceDocument = gql`
@@ -1463,12 +1404,32 @@ export const KultCardDocument = gql`
       cardId
       hasNewerTransactions
       recentTransactions {
-        ...CardTransaction
+        depositBefore
+        depositAfter
+        balanceBefore
+        balanceAfter
+        __typename
+        ... on CardTransaction {
+          deviceTime
+          transactionType
+          Order {
+            items {
+              amount
+              name
+              productList {
+                emoji
+                name
+              }
+            }
+          }
+        }
+        ... on MissingTransaction {
+          numberOfMissingTransactions
+        }
       }
     }
   }
   ${CardFragmentFragmentDoc}
-  ${CardTransactionFragmentDoc}
 `;
 
 /**

@@ -1,45 +1,109 @@
-import {gql} from 'graphql-request';
 import {currencyFormatter} from './Card';
-import {CardTransactionFragment} from '../../types/graphql';
-import {Box, Flex, Heading, ListItem, ListRoot, Text} from '@chakra-ui/react';
+import {Box, Flex, Heading, ListItem, ListRoot} from '@chakra-ui/react';
 import InfoText from './InfoText';
 
-export const CardTransaction = gql`
-  fragment CardTransaction on Transaction {
-    depositBefore
-    depositAfter
-    balanceBefore
-    balanceAfter
-    __typename
+export const DEPOSIT_VALUE = 200;
 
-    ... on CardTransaction {
-      deviceTime
-      Order {
-        items {
-          amount
-          name
-          productList {
-            emoji
-            name
-          }
-        }
-      }
-    }
-    ... on MissingTransaction {
-      numberOfMissingTransactions
-    }
-  }
-`;
+type CardChange = {
+  balanceBefore: number;
+  balanceAfter: number;
+  depositBefore: number;
+  depositAfter: number;
+};
 
-export function Transactions({data}: {data?: Array<CardTransactionFragment>}) {
+type MissingTransaction = CardChange & {
+  type: 'missing';
+  numberOfMissingTransactions: number;
+};
+
+type Order = {
+  type: 'order';
+  productList: string;
+  emoji: string | null;
+  items: Array<{amount: number}>;
+  cardChange?: CardChange;
+  deviceTime: Date;
+};
+
+type GenericTransaction = CardChange & {
+  type: 'generic';
+  deviceTime: Date;
+};
+
+type Badge = {
+  type: 'badge';
+};
+
+export type CardActivity =
+  | MissingTransaction
+  | Order
+  | Badge
+  | GenericTransaction;
+
+export function CardActivities({data}: {data?: Array<CardActivity>}) {
   return (
     <ListRoot as="ol" m="0">
-      {data?.map((t, i) => <Transaction key={i} {...t} />)}
+      {data?.map((t, i) => <ActivityItem key={i} data={t} />)}
     </ListRoot>
   );
 }
 
-function Transaction(props: CardTransactionFragment) {
+function genericTitle(data: CardChange) {
+  const depositOnly =
+    data.depositAfter !== data.depositBefore &&
+    data.balanceAfter - data.balanceBefore ===
+      (data.depositBefore - data.depositAfter) * DEPOSIT_VALUE;
+
+  if (depositOnly) {
+    return data.depositBefore > data.depositAfter
+      ? 'Pfandrückgabe'
+      : 'Pfandausgabe';
+  }
+
+  if (data.balanceBefore > data.balanceAfter) {
+    return 'Abbuchung';
+  } else if (data.balanceBefore < data.balanceAfter) {
+    return 'Gutschrift';
+  } else {
+    return 'Unbekannte Buchung';
+  }
+}
+
+function ActivityItem({data}: {data: CardActivity}) {
+  switch (data.type) {
+    case 'missing':
+      return (
+        <Cell
+          title={genericTitle(data)}
+          description={
+            data.numberOfMissingTransactions === 1
+              ? 'Details noch nicht verfügbar'
+              : `Details von ${data.numberOfMissingTransactions} Buchungen noch nicht verfügbar`
+          }
+          total={data.balanceAfter - data.balanceBefore}
+        />
+      );
+    case 'generic':
+      return (
+        <Cell
+          title={genericTitle(data)}
+          total={data.balanceAfter - data.balanceBefore}
+          description={<CellDateTime time={data.deviceTime} />}
+          accessoryStart={data.balanceAfter > data.balanceBefore ? '💰' : ''}
+        />
+      );
+    case 'order':
+      return (
+        <Cell
+          title={data.productList}
+          accessoryStart={data.emoji}
+          subtitle={<CellProducts />}
+          description={<CellDateTime time={data.deviceTime} />}
+        />
+      );
+    case 'badge':
+      return null;
+  }
   const total = props.balanceBefore - props.balanceAfter;
   const isTopUp = props.balanceAfter > props.balanceBefore;
 
@@ -71,25 +135,10 @@ function Transaction(props: CardTransactionFragment) {
     if (props.numberOfMissingTransactions === 1) {
       description = 'Details noch nicht verfügbar';
     } else {
-      description = `Details von ${props.numberOfMissingTransactions} Buchungen noch nicht verfügbar`;
+      description = '';
       emoji = undefined;
     }
   }
-
-  return (
-    <Cell
-      title={title}
-      subtitle={subtitle}
-      description={description}
-      accessoryStart={emoji}
-      accessoryEnd={
-        <Text fontWeight="bold">
-          {total < 0 ? '+' : ''}
-          {currencyFormatter.format(Math.abs(total) / 100)}
-        </Text>
-      }
-    />
-  );
 }
 
 function CellProducts({
@@ -143,7 +192,7 @@ function Cell(props: {
   subtitle?: React.ReactNode;
   description?: React.ReactNode;
   accessoryStart: React.ReactNode;
-  accessoryEnd?: React.ReactNode;
+  total?: number;
 }) {
   return (
     <ListItem
@@ -173,9 +222,10 @@ function Cell(props: {
         {props.subtitle && <Box>{props.subtitle}</Box>}
         {props.description && <InfoText>{props.description}</InfoText>}
       </Flex>
-      {props.accessoryEnd && (
+      {props.total && (
         <Box fontWeight="bold" ms="3">
-          {props.accessoryEnd}
+          {props.total < 0 ? '+' : ''}
+          {currencyFormatter.format(Math.abs(props.total) / 100)}
         </Box>
       )}
     </ListItem>
