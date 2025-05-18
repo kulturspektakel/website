@@ -20,7 +20,7 @@ type Order = {
   type: 'order';
   productList: string;
   emoji: string | null;
-  items: Array<{amount: number}>;
+  items: Array<{amount: number; name: string}>;
   cardChange?: CardChange;
   deviceTime: Date;
 };
@@ -93,11 +93,21 @@ function ActivityItem({data}: {data: CardActivity}) {
         />
       );
     case 'order':
+      const products = data.items.map((i) => `${i.amount}× ${i.name}`) ?? [];
+      const deposit = data.cardChange
+        ? data.cardChange.depositAfter - data.cardChange.depositBefore
+        : 0;
+      if (deposit > 0) {
+        products.push(`${deposit}× Pfand`);
+      } else if (deposit < 0) {
+        products.push(`${deposit * -1}× Pfandrückgabe`);
+      }
+
       return (
         <Cell
           title={data.productList}
           accessoryStart={data.emoji}
-          subtitle={<CellProducts />}
+          subtitle={products.join(', ')}
           description={<CellDateTime time={data.deviceTime} />}
         />
       );
@@ -191,7 +201,7 @@ function Cell(props: {
   title: React.ReactNode;
   subtitle?: React.ReactNode;
   description?: React.ReactNode;
-  accessoryStart: React.ReactNode;
+  accessoryStart?: React.ReactNode;
   total?: number;
 }) {
   return (
