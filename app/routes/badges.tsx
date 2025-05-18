@@ -7,70 +7,115 @@ import plane from '@twemoji/svg/2708.svg';
 import moneyBag from '@twemoji/svg/1f4b0.svg';
 import {useRef, useEffect, useCallback, useId} from 'react';
 import {createFileRoute} from '@tanstack/react-router';
+import {CardActivity} from '../components/kultcard/CardActivities';
 
 export const Route = createFileRoute('/badges')({
   component: Badges,
 });
 
+type BadgeDescription = {
+  name: string;
+  description: string;
+  bgStart: string;
+  bgEnd: string;
+  crewOnly: boolean;
+  emoji: string;
+};
+
+type ComputeFn = (
+  cardActivities: Array<CardActivity>,
+  event: {start: Date; end: Date},
+) =>
+  | {
+      awardedAt: Date;
+    }
+  | null
+  | undefined
+  | void;
+
+const badgeConfig: Record<string, BadgeDescription & {compute: ComputeFn}> = {
+  earlyBird: {
+    name: 'Early Bird',
+    description: 'Das Kult hat kaum aufgemacht und du bist schon da?',
+    bgStart: '#ABDFFF',
+    bgEnd: '#3B88C3',
+    emoji: '1f426',
+    crewOnly: false,
+    compute: () => {},
+  },
+  dauercamper: {
+    name: 'Dauercamper',
+    description: 'Mehr als fünf Stunden auf dem Kult und immer noch hier?',
+    bgStart: '#C6E5B3',
+    bgEnd: '#5C913B',
+    emoji: '1f3d5',
+    crewOnly: false,
+    compute: () => {},
+  },
+  lokalpatriot: {
+    name: 'Lokalpatriot',
+    description: 'Frühschoppen und Weißbiergarten sind deine Heimat',
+    bgStart: '#AA8DD8',
+    bgEnd: '#7450A8',
+    emoji: '1f968',
+    crewOnly: false,
+    compute: () => {},
+  },
+  richkid: {
+    name: 'Rich Kid',
+    description:
+      'Kult ist nur einmal im Jahr, da kann man auch mal Geld ausgeben',
+    bgStart: '#F7DECE',
+    bgEnd: '#F4ABBA',
+    emoji: '1f4b0',
+    crewOnly: false,
+    compute: () => {},
+  },
+  globetrotter: {
+    name: 'Globetrotter',
+    description:
+      'Große Bühne, Kultbühne, Rondell und Waldbühne heute. New York, Rio und Hong Kong morgen',
+    bgStart: '#C6E5B3',
+    bgEnd: '#5C913B',
+    emoji: '2708',
+    crewOnly: false,
+    compute: () => {},
+  },
+  bucketlist: {
+    name: 'Bucketlist',
+    description: 'Keine Essensbude, die du nicht besucht hast',
+    bgStart: '#FFE8B6',
+    bgEnd: '#FFCC4D',
+    emoji: '1faa3',
+    crewOnly: false,
+    compute: () => {},
+  },
+};
+
 export function Badges() {
   return (
     <SimpleGrid columns={[2, null, 3]} gap="10">
-      <BadgeBox
-        title="Early Bird"
-        description="Das Kult hat kaum aufgemacht und du bist schon da?"
-        src={bird}
-        bgStart="#ABDFFF"
-        bgEnd="#3B88C3"
-      />
-
-      <BadgeBox
-        title="Dauercamper"
-        description="Mehr als fünf Stunden auf dem Kult und immer noch hier?"
-        src={camping}
-        bgStart="#C6E5B3"
-        bgEnd="#5C913B"
-      />
-      <BadgeBox
-        title="Lokalpatriot"
-        description="Frühschoppen und Weißbiergarten sind deine Heimat"
-        src={pretzel}
-        bgStart="#AA8DD8"
-        bgEnd="#7450A8"
-      />
-      <BadgeBox
-        title="Rich Kid"
-        description="Kult ist nur einmal im Jahr, da kann man auch mal Geld ausgeben"
-        src={moneyBag}
-        bgStart="#F7DECE"
-        bgEnd="#F4ABBA"
-      />
-      <BadgeBox
-        title="Globetrotter"
-        description="Große Bühne, Kultbühne, Rondell und Waldbühne heute. New York, Rio und Hong Kong morgen"
-        src={plane}
-        bgStart="#C6E5B3"
-        bgEnd="#5C913B"
-      />
-      <BadgeBox
-        title="Bucketlist"
-        description="Keine Essensbude, die du nicht besucht hast"
-        src={bucket}
-        bgStart="#FFE8B6"
-        bgEnd="#FFCC4D"
-      />
+      {Object.entries(badgeConfig).map(([key, badge]) => (
+        <BadgeBox key={key} {...badge} />
+      ))}
     </SimpleGrid>
   );
 }
 
-function BadgeBox({
-  title,
-  description,
-  ...props
-}: {title: string; description: string} & React.ComponentProps<typeof Badge>) {
+function BadgeBox({name, description, emoji, ...props}: BadgeDescription) {
+  const src = {
+    '1f426': bird,
+    '1f3d5': camping,
+    '1f968': pretzel,
+    '1faa3': bucket,
+    '2708': plane,
+    '1f4b0': moneyBag,
+  };
+
   return (
     <VStack alignItems="center" w="100%">
-      <Badge {...props} width="50%" />
-      <Heading mt="5">{title}</Heading>
+      <Badge {...props} src={src[emoji]} width="50%" />
+      <Heading mt="5">{name}</Heading>
       <Text textAlign="center">{description}</Text>
     </VStack>
   );
@@ -78,7 +123,7 @@ function BadgeBox({
 
 const DEFAULT_VELOCITY = 0.5;
 
-function Badge(props: {
+export function Badge(props: {
   enabled?: boolean;
   width?: string;
   src: string;
@@ -118,6 +163,7 @@ function Badge(props: {
       window.removeEventListener('mouseup', onEnd);
       window.removeEventListener('touchmove', onMove);
       window.removeEventListener('touchend', onEnd);
+      window.removeEventListener('blur', onEnd);
       const clientX =
         e instanceof MouseEvent ? e.clientX : e.changedTouches[0].clientX;
       const elapsedTime = Date.now() - startTime;
@@ -138,6 +184,7 @@ function Badge(props: {
     window.addEventListener('touchmove', onMove);
     window.addEventListener('mouseup', onEnd);
     window.addEventListener('touchend', onEnd);
+    window.addEventListener('blur', onEnd);
   }, []);
 
   useEffect(() => {

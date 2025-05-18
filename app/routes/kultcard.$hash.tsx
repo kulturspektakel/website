@@ -11,7 +11,6 @@ import {seo} from '../utils/seo';
 import {
   CardActivities,
   CardActivity,
-  DEPOSIT_VALUE,
 } from '../components/kultcard/CardActivities';
 
 gql`
@@ -246,12 +245,22 @@ function KultCard() {
           <VStack gap="5" align="stretch">
             <CardActivities
               data={cardStatus.recentTransactions.map<CardActivity>((t) => {
+                const cardChange = {
+                  depositAfter: t.depositAfter,
+                  depositBefore: t.depositBefore,
+                  balanceAfter: t.balanceAfter,
+                  balanceBefore: t.balanceBefore,
+                };
+
                 if (t.__typename === 'MissingTransaction') {
                   return {
                     type: 'missing' as const,
                     numberOfMissingTransactions: t.numberOfMissingTransactions,
+                    ...cardChange,
                   };
-                } else if (t.Order && t.Order.items.length > 0) {
+                }
+
+                if (t.Order && t.Order.items.length > 0) {
                   const productList = t.Order.items.find(
                     () => true,
                   )?.productList;
@@ -260,28 +269,14 @@ function KultCard() {
                     items: t.Order.items,
                     productList: productList?.name ?? '',
                     emoji: productList?.emoji ?? null,
-                    deposit: t.depositBefore - t.depositAfter,
-                  };
-                } else if (t.transactionType === 'TopUp') {
-                  return {
-                    type: 'topup' as const,
-                    amount: t.balanceAfter - t.balanceBefore,
-                    deposit: t.depositBefore - t.depositAfter,
-                  };
-                } else if (
-                  t.depositAfter !== t.depositBefore &&
-                  t.balanceAfter - t.balanceBefore ===
-                    (t.depositBefore - t.depositAfter) * DEPOSIT_VALUE
-                ) {
-                  return {
-                    type: 'deposit' as const,
-                    deposit: t.depositBefore - t.depositAfter,
+                    time: t.deviceTime,
+                    cardChange,
                   };
                 }
                 return {
-                  type: 'unknown' as const,
-                  amount: t.balanceBefore - t.balanceAfter,
-                  deposit: t.depositBefore - t.depositAfter,
+                  type: 'generic' as const,
+                  time: t.deviceTime,
+                  ...cardChange,
                 };
               })}
             />

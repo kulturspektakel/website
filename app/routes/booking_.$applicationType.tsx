@@ -7,6 +7,7 @@ import {
   Box,
   Code,
   Heading,
+  Button,
 } from '@chakra-ui/react';
 import {Formik, Form} from 'formik';
 import Step1 from '../components/booking/Step1';
@@ -23,7 +24,6 @@ import {gql} from '@apollo/client';
 import ReloadWarning from '../components/ReloadWarning';
 import Steps from '../components/Steps';
 import {FaTriangleExclamation} from 'react-icons/fa6';
-import {Button} from '../components/chakra-snippets/button';
 import {Alert} from '../components/chakra-snippets/alert';
 import {createFileRoute, notFound, useNavigate} from '@tanstack/react-router';
 import {useRouterState} from '@tanstack/react-router';

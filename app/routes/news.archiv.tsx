@@ -1,8 +1,14 @@
-import {Box, Heading, SimpleGrid, Image, Center} from '@chakra-ui/react';
+import {
+  Box,
+  Heading,
+  SimpleGrid,
+  Image,
+  Center,
+  Button,
+} from '@chakra-ui/react';
 import {createFileRoute} from '@tanstack/react-router';
 import React, {useMemo} from 'react';
 import Card from '../components/Card';
-import {Button} from '../components/chakra-snippets/button';
 import DateString from '../components/DateString';
 import Mark from '../components/Mark';
 import {createServerFn, useServerFn} from '@tanstack/react-start';

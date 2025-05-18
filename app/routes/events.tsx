@@ -5,12 +5,12 @@ import {
   Center,
   Spinner,
   ListRoot,
+  Button,
 } from '@chakra-ui/react';
 import Event, {eventSelect} from '../components/events/Event';
 import {Gallery} from 'react-photoswipe-gallery';
 import DateString from '../components/DateString';
 import Headline from '../components/Headline';
-import {Button} from '../components/chakra-snippets/button';
 import {SegmentedControlOrSelect} from '../components/SegmentedControlOrSelect';
 import {createFileRoute} from '@tanstack/react-router';
 import {createServerFn, useServerFn} from '@tanstack/react-start';

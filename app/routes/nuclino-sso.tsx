@@ -7,11 +7,11 @@ import {
   Text,
   Spinner,
   Separator,
+  Button,
 } from '@chakra-ui/react';
 import {useRef, useState, useEffect, useCallback, useMemo} from 'react';
 
 import {FaSlack} from 'react-icons/fa6';
-import {Button} from '../components/chakra-snippets/button';
 import {createFileRoute, redirect} from '@tanstack/react-router';
 import {getWebRequest} from '@tanstack/react-start/server';
 import {

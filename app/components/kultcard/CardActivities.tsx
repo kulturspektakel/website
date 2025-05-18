@@ -1,14 +1,16 @@
 import {currencyFormatter} from './Card';
 import {Box, Flex, Heading, ListItem, ListRoot} from '@chakra-ui/react';
 import InfoText from './InfoText';
+import {CardTransactionType} from '@prisma/client';
 
-export const DEPOSIT_VALUE = 200;
+const DEPOSIT_VALUE = 200;
 
 type CardChange = {
   balanceBefore: number;
   balanceAfter: number;
   depositBefore: number;
   depositAfter: number;
+  transactionType: CardTransactionType;
 };
 
 type MissingTransaction = CardChange & {
@@ -22,16 +24,18 @@ type Order = {
   emoji: string | null;
   items: Array<{amount: number; name: string}>;
   cardChange?: CardChange;
-  deviceTime: Date;
+  time: Date;
 };
 
 type GenericTransaction = CardChange & {
   type: 'generic';
-  deviceTime: Date;
+  time: Date;
 };
 
 type Badge = {
   type: 'badge';
+  time: Date;
+  badgeType: 'TEST';
 };
 
 export type CardActivity =
@@ -88,7 +92,7 @@ function ActivityItem({data}: {data: CardActivity}) {
         <Cell
           title={genericTitle(data)}
           total={data.balanceAfter - data.balanceBefore}
-          description={<CellDateTime time={data.deviceTime} />}
+          description={<CellDateTime time={data.time} />}
           accessoryStart={data.balanceAfter > data.balanceBefore ? '💰' : ''}
         />
       );
@@ -108,71 +112,17 @@ function ActivityItem({data}: {data: CardActivity}) {
           title={data.productList}
           accessoryStart={data.emoji}
           subtitle={products.join(', ')}
-          description={<CellDateTime time={data.deviceTime} />}
+          description={<CellDateTime time={data.time} />}
+          total={
+            data.cardChange
+              ? data.cardChange.balanceAfter - data.cardChange.balanceBefore
+              : undefined
+          }
         />
       );
     case 'badge':
       return null;
   }
-  const total = props.balanceBefore - props.balanceAfter;
-  const isTopUp = props.balanceAfter > props.balanceBefore;
-
-  let title: string = isTopUp ? 'Gutschrift' : 'Abbuchung';
-  if (total === 0) {
-    title = 'Unbekannte Buchung';
-  }
-  let subtitle: React.ReactNode = undefined;
-  let description: React.ReactNode = undefined;
-  let emoji: string | undefined = isTopUp ? '💰' : undefined;
-
-  if (props.__typename === 'CardTransaction') {
-    const order = props.Order;
-    const productList = order?.items.find(() => true)?.productList;
-    if (productList?.emoji) {
-      emoji = productList.emoji;
-    }
-    if (productList?.name) {
-      title = productList?.name;
-    }
-    subtitle = (
-      <CellProducts
-        items={order?.items}
-        deposit={props.depositAfter - props.depositBefore}
-      />
-    );
-    description = <CellDateTime time={props.deviceTime} />;
-  } else if (props.__typename === 'MissingTransaction') {
-    if (props.numberOfMissingTransactions === 1) {
-      description = 'Details noch nicht verfügbar';
-    } else {
-      description = '';
-      emoji = undefined;
-    }
-  }
-}
-
-function CellProducts({
-  deposit,
-  items,
-}: {
-  deposit?: number;
-  items?: Array<{
-    amount: number;
-    name: string;
-  }>;
-}) {
-  if (!items && !deposit) {
-    return null;
-  }
-  const p = items?.map((i) => `${i.amount}× ${i.name}`) ?? [];
-
-  if (deposit && deposit > 0) {
-    p.push(`${deposit}× Pfand`);
-  } else if (deposit && deposit < 0) {
-    p.push(`${deposit * -1}× Pfandrückgabe`);
-  }
-
-  return p.join(', ');
 }
 
 function CellDateTime(props: {time: Date}) {

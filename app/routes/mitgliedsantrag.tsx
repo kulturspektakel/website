@@ -1,4 +1,4 @@
-import {Heading, Text, Box, VStack, Flex} from '@chakra-ui/react';
+import {Heading, Text, Box, VStack, Flex, Button} from '@chakra-ui/react';
 import {Form, Formik} from 'formik';
 import {z} from 'zod';
 import {toFormikValidationSchema} from 'zod-formik-adapter';
@@ -16,7 +16,6 @@ import Steps from '../components/Steps';
 import {useState} from 'react';
 import {Field} from '../components/chakra-snippets/field';
 import {Slider} from '../components/chakra-snippets/slider';
-import {Button} from '../components/chakra-snippets/button';
 import {ConnectedField} from '../components/ConnectedField';
 import {RadioCardItem} from '../components/chakra-snippets/radio-card';
 import React from 'react';
