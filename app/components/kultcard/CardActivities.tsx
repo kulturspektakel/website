@@ -147,7 +147,7 @@ function CellDateTime(props: {time: Date}) {
   );
 }
 
-function Cell(props: {
+export function Cell(props: {
   title: React.ReactNode;
   subtitle?: React.ReactNode;
   description?: React.ReactNode;
@@ -172,7 +172,7 @@ function Cell(props: {
         pb: 0,
       }}
     >
-      <Box flexShrink="0" w="10" ps="1" fontSize="xl">
+      <Box flexShrink="0" w="12" px="2" fontSize="xl">
         {props.accessoryStart}
       </Box>
       <Flex direction="column" flexGrow="1">

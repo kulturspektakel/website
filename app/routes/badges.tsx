@@ -33,8 +33,11 @@ type ComputeFn = (
   | undefined
   | void;
 
-const badgeConfig: Record<string, BadgeDescription & {compute: ComputeFn}> = {
-  earlyBird: {
+export const badgeConfig: Record<
+  string,
+  BadgeDescription & {compute: ComputeFn}
+> = {
+  earlybird: {
     name: 'Early Bird',
     description: 'Das Kult hat kaum aufgemacht und du bist schon da?',
     bgStart: '#ABDFFF',
@@ -95,26 +98,19 @@ const badgeConfig: Record<string, BadgeDescription & {compute: ComputeFn}> = {
 export function Badges() {
   return (
     <SimpleGrid columns={[2, null, 3]} gap="10">
-      {Object.entries(badgeConfig).map(([key, badge]) => (
-        <BadgeBox key={key} {...badge} />
+      {Object.keys(badgeConfig).map((key) => (
+        <BadgeBox key={key} type={key} />
       ))}
     </SimpleGrid>
   );
 }
 
-function BadgeBox({name, description, emoji, ...props}: BadgeDescription) {
-  const src = {
-    '1f426': bird,
-    '1f3d5': camping,
-    '1f968': pretzel,
-    '1faa3': bucket,
-    '2708': plane,
-    '1f4b0': moneyBag,
-  };
+function BadgeBox({type}: {type: keyof typeof badgeConfig}) {
+  const {name, description} = badgeConfig[type];
 
   return (
     <VStack alignItems="center" w="100%">
-      <Badge {...props} src={src[emoji]} width="50%" />
+      <Badge type={type} width="50%" />
       <Heading mt="5">{name}</Heading>
       <Text textAlign="center">{description}</Text>
     </VStack>
@@ -126,10 +122,19 @@ const DEFAULT_VELOCITY = 0.5;
 export function Badge(props: {
   enabled?: boolean;
   width?: string;
-  src: string;
-  bgStart: string;
-  bgEnd: string;
+  type: keyof typeof badgeConfig;
 }) {
+  const enabled = props.enabled === false ? false : true;
+  const {emoji, bgStart, bgEnd} = badgeConfig[props.type];
+  const src = {
+    '1f426': bird,
+    '1f3d5': camping,
+    '1f968': pretzel,
+    '1faa3': bucket,
+    '2708': plane,
+    '1f4b0': moneyBag,
+  }[emoji];
+
   const isDragging = useRef(false);
   const svgRef = useRef<SVGSVGElement>(null);
   const raf = useRef<number | null>(null);
@@ -204,14 +209,16 @@ export function Badge(props: {
       raf.current = requestAnimationFrame(animate);
     };
 
-    raf.current = requestAnimationFrame(animate);
+    if (enabled) {
+      raf.current = requestAnimationFrame(animate);
+    }
 
     return () => {
       if (raf.current) {
         cancelAnimationFrame(raf.current);
       }
     };
-  }, []);
+  }, [enabled]);
 
   return (
     <Box
@@ -225,8 +232,11 @@ export function Badge(props: {
       _active={{
         transform: 'scale(0.8)',
       }}
-      // filter={props.enabled === false ? 'grayscale(1)' : undefined}
-      filter="drop-shadow(5px 5px 10px rgba(0, 0, 0, 0.15))"
+      filter={
+        enabled
+          ? 'drop-shadow(5px 5px 10px rgba(0, 0, 0, 0.15))'
+          : 'grayscale(1)'
+      }
     >
       <svg
         viewBox="0 0 97 109"
@@ -244,7 +254,7 @@ export function Badge(props: {
           stroke="white"
           strokeWidth="10"
         />
-        <image href={props.src} width="84%" height="84%" x="8%" y="8%" />
+        <image href={src} width="84%" height="84%" x="8%" y="8%" />
         <defs>
           <linearGradient
             id={id}
@@ -254,8 +264,8 @@ export function Badge(props: {
             y2="110"
             gradientUnits="userSpaceOnUse"
           >
-            <stop stopColor={props.bgStart} />
-            <stop offset="1" stopColor={props.bgEnd} />
+            <stop stopColor={bgStart} />
+            <stop offset="1" stopColor={bgEnd} />
           </linearGradient>
         </defs>
       </svg>
