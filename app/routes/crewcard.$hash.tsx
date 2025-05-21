@@ -6,11 +6,8 @@ import {
   Flex,
   Heading,
   VStack,
-  Image,
   Button,
-  BoxProps,
   ListRoot,
-  SimpleGrid,
 } from '@chakra-ui/react';
 import InfoText from '../components/kultcard/InfoText';
 import {createFileRoute, notFound} from '@tanstack/react-router';
@@ -18,51 +15,38 @@ import {createServerFn} from '@tanstack/react-start';
 import {seo} from '../utils/seo';
 import {CardActivities, Cell} from '../components/kultcard/CardActivities';
 import {prismaClient} from '../utils/prismaClient';
-import {Badge, badgeConfig} from './badges';
+import {BadgeActivity} from '../components/kultcard/Badges';
 import {SegmentedControl} from '../components/chakra-snippets/segmented-control';
 import {useRef, useState} from 'react';
+import {badgeConfig, BadgeDefinition} from '../utils/badgeConfig';
 
 function decodePayload(hash: string) {
   const binary = atob(hash);
   const bytes = new Uint8Array([...binary].map((char) => char.charCodeAt(0)));
-  const payload = [...bytes]
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
+  const payload = byteArrayToString(bytes);
   return {
     cardId: payload.substring(0, 14),
   };
 }
 
-const highscore = createServerFn()
-  .validator((data: {start: Date; end: Date}) => data)
-  .handler(async ({data: {start, end}}) => {
-    const highscores = await prismaClient.productList.aggregate({
-      where: {
-        active: true,
-        OrderItem: {
-          // Order: {
-          //   crewCardId: {not: null},
-          //   createdAt: {
-          //     gt: start,
-          //     lt: end,
-          //   },
-          // },
-        },
-      },
-      orderBy: {
-        name: 'asc',
-      },
-    });
-  });
+function byteArrayToString(bytes: Uint8Array) {
+  return [...bytes]
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
+    .toUpperCase();
+}
+
+function stringToByteArray(str: string) {
+  return new Uint8Array(str.match(/.{1,2}/g)!.map((b) => parseInt(b, 16)));
+}
 
 const loader = createServerFn()
   .validator((data: {hash: string; event: {start: Date; end: Date}}) => data)
-  .handler(async () => {
-    const res = await prismaClient.crewCard.findUnique({
+  .handler(async ({data: {hash, event}}) => {
+    const cardId = '53BD92EA300001';
+    const _crewCard = await prismaClient.crewCard.findUnique({
       where: {
-        id: new Uint8Array(
-          '53BD92EA300001'.match(/.{1,2}/g)!.map((b) => parseInt(b, 16)),
-        ),
+        id: stringToByteArray(cardId), //hash
       },
       select: {
         validUntil: true,
@@ -76,6 +60,12 @@ const loader = createServerFn()
           },
         },
         Order: {
+          // where: {
+          //   createdAt: {
+          //     lt: event.end,
+          //     gt: event.start,
+          //   },
+          // },
           select: {
             createdAt: true,
             OrderItem: {
@@ -92,27 +82,91 @@ const loader = createServerFn()
               },
             },
           },
+          orderBy: {
+            createdAt: 'asc',
+          },
         },
       },
     });
 
-    if (!res) {
+    if (!_crewCard) {
       throw notFound();
     }
 
-    const productLists = await prismaClient.productList.findMany({
-      where: {active: true},
-      orderBy: {
-        name: 'asc',
-      },
-      select: {
-        id: true,
-        name: true,
-        emoji: true,
-      },
-    });
+    const _highscores = await prismaClient.$queryRaw<
+      Array<{
+        productListId: number;
+        emoji: string | null;
+        name: string;
+        cardId: Uint8Array;
+        nickname: string | null;
+        displayName: string | null;
+        amount: BigInt;
+        rnk: BigInt;
+      }>
+    >`SELECT * FROM (
+          SELECT
+            pl.id AS "productListId",
+            pl.emoji,
+            pl.name,
+            c.id AS "cardId",
+            c.nickname,
+            v."displayName",
+            SUM(oi.amount) AS "amount",
+            RANK() OVER (PARTITION BY pl.id ORDER BY SUM(oi.amount) DESC) AS rnk
+          FROM "ProductList" pl
+          JOIN "OrderItem" oi ON oi."productListId" = pl.id
+          JOIN "Order" o ON o.id = oi."orderId"
+          JOIN "CrewCard" c ON o."crewCardId" = c.id
+          JOIN "Viewer" v ON c."viewerId" = v.id
+          WHERE pl.active AND o."crewCardId" IS NOT NULL
+          GROUP BY 1, 2, 3, 4, 5, 6
+        ) ranked
+        WHERE rnk <= 3
+        ORDER BY "productListId", rnk;`;
 
-    return {productLists, res};
+    const highscores = _highscores.map(({cardId, amount, rnk, ...h}) => ({
+      ...h,
+      cardId: byteArrayToString(cardId),
+      amount: Number(amount),
+      rnk: Number(rnk),
+    }));
+
+    const {Order, ...crewCard} = _crewCard;
+
+    return {
+      highscores: highscores.reduce<Record<number, typeof highscores>>(
+        (acc, cv) => {
+          if (!acc[cv.productListId]) {
+            acc[cv.productListId] = [];
+          }
+          acc[cv.productListId].push(cv);
+          return acc;
+        },
+        {},
+      ),
+      crewCard,
+      cardActivities: Order.map((o) => ({
+        type: 'order' as const,
+        productList: o.OrderItem[0].ProductList?.name!,
+        emoji: o.OrderItem[0].ProductList?.emoji ?? null,
+        items: o.OrderItem,
+        time: o.createdAt,
+      })),
+      totals: {
+        Konsum: Order.reduce(
+          (acc, cv) =>
+            acc + cv.OrderItem.reduce((acc, cv) => acc + cv.amount, 0),
+          0,
+        ),
+        Highscores: highscores.reduce(
+          (acc, cv) => (cv.cardId === cardId ? acc + 1 : acc),
+          0,
+        ),
+        Badges: 0, // client side computed
+      },
+      event,
+    };
   });
 
 export const Route = createFileRoute('/crewcard/$hash')({
@@ -135,22 +189,22 @@ const ringCss = defineStyle({
 const TABS = ['Konsum', 'Badges', 'Highscores'];
 
 function CrewCard() {
-  const {res: data, productLists} = Route.useLoaderData();
+  const {crewCard, highscores, totals, cardActivities, event} =
+    Route.useLoaderData();
   const {hash} = Route.useParams();
-  const cardId = decodePayload(hash).cardId.toUpperCase();
+  const cardId = decodePayload(hash).cardId;
   const ref = useRef<HTMLDivElement | null>(null);
-
   const [active, setActive] = useState(TABS[0]);
-  const name = data.Viewer?.displayName ?? data.nickname;
-
-  const awardedBadges = ['lokalpatriot', 'dauercamper', 'earlybird'];
-
-  const totals = {
-    Konsum: data.Order.reduce(
-      (acc, cv) => acc + cv.OrderItem.reduce((acc, cv) => acc + cv.amount, 0),
-      0,
-    ),
-  };
+  const name = crewCard.Viewer?.displayName ?? crewCard.nickname ?? 'Unbekannt';
+  const badgeStatus = Object.entries(badgeConfig).map(
+    ([badgeKey, {compute}]: [keyof typeof badgeConfig, BadgeDefinition]) => ({
+      badgeKey,
+      ...compute(cardActivities, event),
+    }),
+  );
+  const awardedBadges = badgeStatus.filter((b) => b.status === 'awarded');
+  const unawardedBadges = badgeStatus.filter((b) => b.status === 'not awarded');
+  totals.Badges = awardedBadges.length;
 
   return (
     <VStack gap="5" align="stretch">
@@ -164,8 +218,10 @@ function CrewCard() {
         position="relative"
         justifyContent="space-between"
         p="5"
+        pb="3"
         maxW="320px"
         mx="auto"
+        overflow="hidden"
       >
         <Box
           w="15%"
@@ -186,12 +242,12 @@ function CrewCard() {
               fontSize="7xl"
               color="white"
             />
-            {data.Viewer?.profilePicture && (
+            {crewCard.Viewer?.profilePicture && (
               <Avatar.Image
                 width="auto"
                 aspectRatio={1}
                 objectFit="cover"
-                src={data.Viewer.profilePicture}
+                src={crewCard.Viewer.profilePicture}
               />
             )}
           </Avatar.Root>
@@ -199,50 +255,62 @@ function CrewCard() {
         <Box textAlign="center">
           <Heading fontSize="3xl">{name}</Heading>
           <Text fontSize="lg" mt="1" opacity="0.5">
-            Kulturspektakel Crew
+            {crewCard.privileged ? 'Bonbude' : 'Kulturspektakel Crew'}
           </Text>
         </Box>
-
-        <Flex direction="column" w="full">
-          <Info label="Gültig bis">
-            {data.suspended || data.validUntil < new Date() ? (
-              <Text color="brand.500">ungültig</Text>
-            ) : (
-              data.validUntil.toLocaleDateString('de-DE', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
-                timeZone: '-06:00',
-              })
-            )}
-          </Info>
-          <Info label="Bonbude">{data.privileged ? 'ja' : 'nein'}</Info>
-          <Info label="Chip-ID">{cardId.match(/.{1,2}/g)?.join(':')}</Info>
-        </Flex>
-
-        <Flex direction="row" w="full" mb="3">
-          {TABS.map((t) => (
-            <Button
-              display="flex"
-              background="transparent"
-              color="black"
-              flexDirection="column"
-              textAlign="center"
-              flexGrow="1"
-              flexBasis="0"
-              onClick={() => {
-                ref.current?.scrollIntoView({
-                  block: 'start',
-                  behavior: 'smooth',
-                });
-                setActive(t);
-              }}
-            >
-              <Label>{t}</Label>
-              <Text fontSize="4xl">{totals[t] ?? 0}</Text>
-            </Button>
-          ))}
-        </Flex>
+        {(crewCard.suspended || crewCard.validUntil < new Date()) && (
+          <Box
+            background="brand.500"
+            color="white"
+            position="absolute"
+            fontWeight="bold"
+            textTransform="uppercase"
+            transformOrigin="top center"
+            transform="translateX(50%) rotate(45deg)"
+            top="10"
+            right="10"
+            fontSize="xl"
+            px="20"
+          >
+            ungültig
+          </Box>
+        )}
+        <VStack gap="2">
+          <Flex direction="row" w="full" mb="3">
+            {TABS.map((t) => (
+              <Button
+                display="flex"
+                background="transparent"
+                gap="3"
+                color="black"
+                flexDirection="column"
+                textAlign="center"
+                flexGrow="1"
+                flexBasis="0"
+                onClick={() => {
+                  ref.current?.scrollIntoView({
+                    block: 'start',
+                    behavior: 'smooth',
+                  });
+                  setActive(t);
+                }}
+              >
+                <Box
+                  textTransform="uppercase"
+                  opacity="0.5"
+                  fontSize="sm"
+                  fontWeight="bold"
+                >
+                  {t}
+                </Box>
+                <Text fontSize="4xl">{totals[t] ?? 0}</Text>
+              </Button>
+            ))}
+          </Flex>
+          <Text textAlign="center" opacity="0.5">
+            {cardId.match(/.{1,2}/g)?.join(':')}
+          </Text>
+        </VStack>
       </Flex>
 
       <SegmentedControl
@@ -253,75 +321,30 @@ function CrewCard() {
         ref={ref}
       />
       {active === 'Konsum' && (
-        <CardActivities
-          data={data?.Order.map((o) => ({
-            type: 'order',
-            productList: o.OrderItem[0].ProductList?.name!,
-            emoji: o.OrderItem[0].ProductList?.emoji ?? null,
-            items: o.OrderItem,
-            time: o.createdAt,
-          }))}
-        />
+        <CardActivities newestToOldest={cardActivities.reverse()} />
       )}
       {active === 'Badges' && (
-        <>
-          <SimpleGrid columns={[2, 2, 3]} gap="3">
-            {Object.keys(badgeConfig)
-              .filter((b) => awardedBadges.includes(b))
-              .map((k) => (
-                <VStack alignItems="center" w="100%">
-                  <Badge type={k} width="50%" />
-                  <Heading mt="5">{badgeConfig[k].name}</Heading>
-                  <Text textAlign="center" fontSize="sm" color="offwhite.500">
-                    {badgeConfig[k].description}
-                  </Text>
-                </VStack>
-              ))}
-          </SimpleGrid>
-          <ListRoot
-            as="ol"
-            m="0"
-            borderTopColor="offwhite.200"
-            borderTopStyle="solid"
-            borderTopWidth={1}
-            pt="4"
-          >
-            {Object.keys(badgeConfig)
-              .filter((b) => !awardedBadges.includes(b))
-              .map((k) => (
-                <Cell
-                  key={k}
-                  accessoryStart={<Badge enabled={false} type={k} />}
-                  title={badgeConfig[k].name}
-                  description={badgeConfig[k].description}
-                />
-              ))}
-          </ListRoot>
-        </>
+        <BadgeActivity
+          awardedBadges={awardedBadges}
+          unawardedBadges={unawardedBadges}
+        />
       )}
       {active === 'Highscores' && (
         <>
-          {productLists.map((p) => (
+          {Object.values(highscores).map((values) => (
             <>
               <Heading textAlign="center" mt="3">
-                {p.emoji} {p.name}
+                {values[0].emoji} {values[0].name}
               </Heading>
               <ListRoot as="ol" m="0">
-                <Cell
-                  accessoryStart="🥇"
-                  subtitle="Daniel Büchele"
-                  description="3 Produkte"
-                />
-                <Cell
-                  accessoryStart="🥈"
-                  subtitle="Daniel Büchele"
-                  description="3 Produkte"
-                />
-                <Cell
-                  accessoryStart="🥉"
-                  subtitle="Daniel Büchele"
-                  description="3 Produkte"
-                />
+                {values.map((value) => (
+                  <Highscore
+                    key={value.cardId}
+                    name={value.displayName ?? value.nickname ?? 'Unbekannt'}
+                    place={value.rnk}
+                    points={value.amount}
+                  />
+                ))}
               </ListRoot>
             </>
           ))}
@@ -335,27 +358,25 @@ function CrewCard() {
   );
 }
 
-function Info(props: {children: React.ReactNode; label: React.ReactNode}) {
+function Highscore({
+  name,
+  place,
+  points,
+}: {
+  place: number;
+  name: string;
+  points: number;
+}) {
   return (
-    <Flex alignItems="center">
-      <Label w="80px" textAlign="right" mr="1">
-        {props.label}
-      </Label>
-      <Box ml="1" fontFamily="mono">
-        {props.children}
-      </Box>
-    </Flex>
-  );
-}
-
-function Label(props: BoxProps) {
-  return (
-    <Box
-      textTransform="uppercase"
-      opacity="0.5"
-      fontSize="sm"
-      fontWeight="bold"
-      {...props}
+    <Cell
+      accessoryStart={place === 1 ? '🥇' : place === 2 ? '🥈' : '🥉'}
+      subtitle={
+        <>
+          <Text fontWeight="bold">{name}</Text>
+          Test
+        </>
+      }
+      accessoryEnd={points}
     />
   );
 }

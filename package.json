@@ -11,7 +11,8 @@
     "generate:prisma": "prisma generate",
     "generate:theme": "chakra typegen app/theme.ts --strict",
     "generate:graphql": "graphql-codegen --config ./.graphqlrc.yml",
-    "generate:env": "dotenv-vault pull"
+    "generate:env": "dotenv-vault pull",
+    "test": "vitest"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "^5.0.6",
@@ -27,7 +28,8 @@
     "prettier": "^3.5.3",
     "typescript": "^5.8.3",
     "vercel": "^41.7.8",
-    "vite-tsconfig-paths": "^5.1.4"
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^3.1.4"
   },
   "dependencies": {
     "@apollo/client": "^3.13.8",
@@ -44,6 +46,7 @@
     "@tanstack/react-start": "^1.120.5",
     "@twemoji/svg": "^15.0.0",
     "apollo-link-scalars": "^4.0.3",
+    "date-fns": "^4.1.0",
     "downshift": "^9.0.9",
     "formik": "^2.4.6",
     "graphql": "^16.11.0",

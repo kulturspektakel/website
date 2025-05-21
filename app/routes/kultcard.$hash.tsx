@@ -215,7 +215,7 @@ export const Route = createFileRoute('/kultcard/$hash')({
   loader: async ({params}) => await loader({data: params}),
   head: ({loaderData}) =>
     seo({
-      title: `KultCard Guthaben ${currencyFormatter.format(loaderData.balance / 100)}`,
+      title: `KultCard Guthaben ${loaderData ? currencyFormatter.format(loaderData.balance / 100) : ''}`,
     }),
 });
 
@@ -244,41 +244,44 @@ function KultCard() {
         cardStatus.recentTransactions.length > 0 && (
           <VStack gap="5" align="stretch">
             <CardActivities
-              data={cardStatus.recentTransactions.map<CardActivity>((t) => {
-                const cardChange = {
-                  depositAfter: t.depositAfter,
-                  depositBefore: t.depositBefore,
-                  balanceAfter: t.balanceAfter,
-                  balanceBefore: t.balanceBefore,
-                };
+              newestToOldest={cardStatus.recentTransactions.map<CardActivity>(
+                (t) => {
+                  const cardChange = {
+                    depositAfter: t.depositAfter,
+                    depositBefore: t.depositBefore,
+                    balanceAfter: t.balanceAfter,
+                    balanceBefore: t.balanceBefore,
+                  };
 
-                if (t.__typename === 'MissingTransaction') {
+                  if (t.__typename === 'MissingTransaction') {
+                    return {
+                      type: 'missing' as const,
+                      numberOfMissingTransactions:
+                        t.numberOfMissingTransactions,
+                      ...cardChange,
+                    };
+                  }
+
+                  if (t.Order && t.Order.items.length > 0) {
+                    const productList = t.Order.items.find(
+                      () => true,
+                    )?.productList;
+                    return {
+                      type: 'order' as const,
+                      items: t.Order.items,
+                      productList: productList?.name ?? '',
+                      emoji: productList?.emoji ?? null,
+                      time: t.deviceTime,
+                      cardChange,
+                    };
+                  }
                   return {
-                    type: 'missing' as const,
-                    numberOfMissingTransactions: t.numberOfMissingTransactions,
+                    type: 'generic' as const,
+                    time: t.deviceTime,
                     ...cardChange,
                   };
-                }
-
-                if (t.Order && t.Order.items.length > 0) {
-                  const productList = t.Order.items.find(
-                    () => true,
-                  )?.productList;
-                  return {
-                    type: 'order' as const,
-                    items: t.Order.items,
-                    productList: productList?.name ?? '',
-                    emoji: productList?.emoji ?? null,
-                    time: t.deviceTime,
-                    cardChange,
-                  };
-                }
-                return {
-                  type: 'generic' as const,
-                  time: t.deviceTime,
-                  ...cardChange,
-                };
-              })}
+                },
+              )}
             />
             <InfoText textAlign="center">
               Es kann etwas dauern, bis alle Buchungen vollständig in der Liste

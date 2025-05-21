@@ -1,6 +1,6 @@
 import {gql} from 'graphql-request';
 import {Box} from '@chakra-ui/react';
-import {CardFragmentFragment} from '../types/graphql';
+import {CardFragmentFragment} from '../../types/graphql';
 import InfoText from './InfoText';
 
 export const currencyFormatter = new Intl.NumberFormat('de-DE', {

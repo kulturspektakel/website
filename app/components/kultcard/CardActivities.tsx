@@ -1,5 +1,5 @@
 import {currencyFormatter} from './Card';
-import {Box, Flex, Heading, ListItem, ListRoot} from '@chakra-ui/react';
+import {Box, Flex, Heading, ListItem, ListRoot, Text} from '@chakra-ui/react';
 import InfoText from './InfoText';
 import {CardTransactionType} from '@prisma/client';
 
@@ -44,7 +44,18 @@ export type CardActivity =
   | Badge
   | GenericTransaction;
 
-export function CardActivities({data}: {data?: Array<CardActivity>}) {
+export function CardActivities({
+  newestToOldest: data,
+}: {
+  newestToOldest?: Array<CardActivity>;
+}) {
+  if (data?.length === 0) {
+    return (
+      <Box textAlign="center" p="10" color="offwhite.500">
+        Bisher keine Buchungen
+      </Box>
+    );
+  }
   return (
     <ListRoot as="ol" m="0">
       {data?.map((t, i) => <ActivityItem key={i} data={t} />)}
@@ -84,14 +95,18 @@ function ActivityItem({data}: {data: CardActivity}) {
               ? 'Details noch nicht verfügbar'
               : `Details von ${data.numberOfMissingTransactions} Buchungen noch nicht verfügbar`
           }
-          total={data.balanceAfter - data.balanceBefore}
+          accessoryEnd={
+            <CellTotal total={data.balanceAfter - data.balanceBefore} />
+          }
         />
       );
     case 'generic':
       return (
         <Cell
           title={genericTitle(data)}
-          total={data.balanceAfter - data.balanceBefore}
+          accessoryEnd={
+            <CellTotal total={data.balanceAfter - data.balanceBefore} />
+          }
           description={<CellDateTime time={data.time} />}
           accessoryStart={data.balanceAfter > data.balanceBefore ? '💰' : ''}
         />
@@ -113,10 +128,14 @@ function ActivityItem({data}: {data: CardActivity}) {
           accessoryStart={data.emoji}
           subtitle={products.join(', ')}
           description={<CellDateTime time={data.time} />}
-          total={
-            data.cardChange
-              ? data.cardChange.balanceAfter - data.cardChange.balanceBefore
-              : undefined
+          accessoryEnd={
+            data.cardChange ? (
+              <CellTotal
+                total={
+                  data.cardChange.balanceAfter - data.cardChange.balanceBefore
+                }
+              />
+            ) : undefined
           }
         />
       );
@@ -147,12 +166,21 @@ function CellDateTime(props: {time: Date}) {
   );
 }
 
+function CellTotal(props: {total: number}) {
+  return (
+    <Text fontWeight="bold">
+      {props.total < 0 ? '+' : ''}
+      {currencyFormatter.format(Math.abs(props.total) / 100)}
+    </Text>
+  );
+}
+
 export function Cell(props: {
-  title: React.ReactNode;
+  title?: React.ReactNode;
   subtitle?: React.ReactNode;
   description?: React.ReactNode;
   accessoryStart?: React.ReactNode;
-  total?: number;
+  accessoryEnd?: React.ReactNode;
 }) {
   return (
     <ListItem
@@ -166,28 +194,26 @@ export function Cell(props: {
       borderBottomColor="offwhite.200"
       borderBottomStyle="solid"
       borderBottomWidth={1}
+      gap="1"
       _last={{
         borderBottomWidth: 0,
         mb: 0,
         pb: 0,
       }}
     >
-      <Box flexShrink="0" w="12" px="2" fontSize="xl">
+      <Box flexShrink="0" w="10" fontSize="2xl" textAlign="center">
         {props.accessoryStart}
       </Box>
       <Flex direction="column" flexGrow="1">
-        <Heading size="md" mb="1">
-          {props.title}
-        </Heading>
+        {props.title && (
+          <Heading size="md" mb="1">
+            {props.title}
+          </Heading>
+        )}
         {props.subtitle && <Box>{props.subtitle}</Box>}
         {props.description && <InfoText>{props.description}</InfoText>}
       </Flex>
-      {props.total && (
-        <Box fontWeight="bold" ms="3">
-          {props.total < 0 ? '+' : ''}
-          {currencyFormatter.format(Math.abs(props.total) / 100)}
-        </Box>
-      )}
+      {props.accessoryEnd && <Box fontWeight="bold">{props.accessoryEnd}</Box>}
     </ListItem>
   );
 }
