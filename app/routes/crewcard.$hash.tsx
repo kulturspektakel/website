@@ -18,7 +18,7 @@ import {prismaClient} from '../utils/prismaClient';
 import {BadgeActivity} from '../components/kultcard/Badges';
 import {SegmentedControl} from '../components/chakra-snippets/segmented-control';
 import {useRef, useState} from 'react';
-import {badgeConfig, BadgeDefinition} from '../utils/badgeConfig';
+import {useBadges} from '../utils/useBadges';
 
 function decodePayload(hash: string) {
   const binary = atob(hash);
@@ -43,10 +43,10 @@ function stringToByteArray(str: string) {
 const loader = createServerFn()
   .validator((data: {hash: string; event: {start: Date; end: Date}}) => data)
   .handler(async ({data: {hash, event}}) => {
-    const cardId = '53BD92EA300001';
+    const {cardId} = decodePayload(hash);
     const _crewCard = await prismaClient.crewCard.findUnique({
       where: {
-        id: stringToByteArray(cardId), //hash
+        id: stringToByteArray(cardId),
       },
       select: {
         validUntil: true,
@@ -60,12 +60,12 @@ const loader = createServerFn()
           },
         },
         Order: {
-          // where: {
-          //   createdAt: {
-          //     lt: event.end,
-          //     gt: event.start,
-          //   },
-          // },
+          where: {
+            createdAt: {
+              lt: event.end,
+              gt: event.start,
+            },
+          },
           select: {
             createdAt: true,
             OrderItem: {
@@ -83,7 +83,7 @@ const loader = createServerFn()
             },
           },
           orderBy: {
-            createdAt: 'asc',
+            createdAt: 'desc',
           },
         },
       },
@@ -119,7 +119,7 @@ const loader = createServerFn()
           JOIN "Order" o ON o.id = oi."orderId"
           JOIN "CrewCard" c ON o."crewCardId" = c.id
           JOIN "Viewer" v ON c."viewerId" = v.id
-          WHERE pl.active AND o."crewCardId" IS NOT NULL
+          WHERE pl.active AND o."crewCardId" IS NOT NULL AND o."createdAt" > ${event.start} AND o."createdAt" < ${event.end}
           GROUP BY 1, 2, 3, 4, 5, 6
         ) ranked
         WHERE rnk <= 3
@@ -196,14 +196,11 @@ function CrewCard() {
   const ref = useRef<HTMLDivElement | null>(null);
   const [active, setActive] = useState(TABS[0]);
   const name = crewCard.Viewer?.displayName ?? crewCard.nickname ?? 'Unbekannt';
-  const badgeStatus = Object.entries(badgeConfig).map(
-    ([badgeKey, {compute}]: [keyof typeof badgeConfig, BadgeDefinition]) => ({
-      badgeKey,
-      ...compute(cardActivities, event),
-    }),
+  const {awardedBadges, unawardedBadges} = useBadges(
+    cardActivities,
+    event,
+    true,
   );
-  const awardedBadges = badgeStatus.filter((b) => b.status === 'awarded');
-  const unawardedBadges = badgeStatus.filter((b) => b.status === 'not awarded');
   totals.Badges = awardedBadges.length;
 
   return (
@@ -321,7 +318,7 @@ function CrewCard() {
         ref={ref}
       />
       {active === 'Konsum' && (
-        <CardActivities newestToOldest={cardActivities.reverse()} />
+        <CardActivities newestToOldest={cardActivities} />
       )}
       {active === 'Badges' && (
         <BadgeActivity
@@ -370,12 +367,7 @@ function Highscore({
   return (
     <Cell
       accessoryStart={place === 1 ? '🥇' : place === 2 ? '🥈' : '🥉'}
-      subtitle={
-        <>
-          <Text fontWeight="bold">{name}</Text>
-          Test
-        </>
-      }
+      subtitle={<Text fontWeight="bold">{name}</Text>}
       accessoryEnd={points}
     />
   );

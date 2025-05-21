@@ -2,6 +2,7 @@ import {currencyFormatter} from './Card';
 import {Box, Flex, Heading, ListItem, ListRoot, Text} from '@chakra-ui/react';
 import InfoText from './InfoText';
 import {CardTransactionType} from '@prisma/client';
+import {FaBan} from 'react-icons/fa6';
 
 const DEPOSIT_VALUE = 200;
 
@@ -32,17 +33,7 @@ type GenericTransaction = CardChange & {
   time: Date;
 };
 
-type Badge = {
-  type: 'badge';
-  time: Date;
-  badgeType: 'TEST';
-};
-
-export type CardActivity =
-  | MissingTransaction
-  | Order
-  | Badge
-  | GenericTransaction;
+export type CardActivity = MissingTransaction | Order | GenericTransaction;
 
 export function CardActivities({
   newestToOldest: data,
@@ -51,9 +42,16 @@ export function CardActivities({
 }) {
   if (data?.length === 0) {
     return (
-      <Box textAlign="center" p="10" color="offwhite.500">
+      <Flex
+        direction="column"
+        alignItems="center"
+        gap="1"
+        p="8"
+        color="offwhite.500"
+      >
+        <FaBan />
         Bisher keine Buchungen
-      </Box>
+      </Flex>
     );
   }
   return (
@@ -139,8 +137,6 @@ function ActivityItem({data}: {data: CardActivity}) {
           }
         />
       );
-    case 'badge':
-      return null;
   }
 }
 

@@ -5,6 +5,8 @@ import {
   SimpleGrid,
   VStack,
   Text,
+  Progress,
+  HStack,
 } from '@chakra-ui/react';
 import {useRef, useEffect, useCallback, useId} from 'react';
 import {badgeConfig, BadgeStatus} from '../../utils/badgeConfig';
@@ -198,14 +200,35 @@ export function BadgeActivity({
         </SimpleGrid>
       )}
       <ListRoot as="ol" m="0">
-        {unawardedBadges.map(({badgeKey}) => (
+        {unawardedBadges.map((badge) => (
           <Cell
-            key={badgeKey}
-            accessoryStart={<Badge enabled={false} type={badgeKey} />}
+            key={badge.badgeKey}
+            accessoryStart={<Badge enabled={false} type={badge.badgeKey} />}
             title={
-              <Text color="offwhite.500">{badgeConfig[badgeKey].name}</Text>
+              <Text color="offwhite.500">
+                {badgeConfig[badge.badgeKey].name}
+              </Text>
             }
-            description={badgeConfig[badgeKey].description}
+            description={badgeConfig[badge.badgeKey].description}
+            subtitle={
+              badge.status === 'not awarded' &&
+              badge.progress && (
+                <Progress.Root
+                  defaultValue={badge.progress.current / badge.progress.target}
+                  maxW="sm"
+                  my="1"
+                >
+                  <HStack gap="2">
+                    <Progress.Track flex="1">
+                      <Progress.Range />
+                    </Progress.Track>
+                    <Progress.ValueText color="offwhite.500">
+                      {badge.progress.current}/{badge.progress.target}
+                    </Progress.ValueText>
+                  </HStack>
+                </Progress.Root>
+              )
+            }
           />
         ))}
       </ListRoot>
