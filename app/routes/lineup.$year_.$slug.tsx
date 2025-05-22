@@ -64,21 +64,23 @@ export const Route = createFileRoute('/lineup/$year_/$slug')({
   component: LineupBand,
   loader: async ({params}) => await loader({data: params}),
   head: ({params, loaderData}) =>
-    seo({
-      title: `${loaderData.name} | Lineup ${params.year}`,
-      description: `${loaderData.genre} · ${
-        dateStringComponents({
-          date: new Date(loaderData.startTime),
-          options: {
-            weekday: 'long',
-            day: 'numeric',
-            month: 'long',
-            hour: '2-digit',
-            minute: '2-digit',
-          },
-        }).date
-      } Uhr, ${loaderData.Area.displayName}`,
-    }),
+    loaderData
+      ? seo({
+          title: `${loaderData.name} | Lineup ${params.year}`,
+          description: `${loaderData.genre} · ${
+            dateStringComponents({
+              date: new Date(loaderData.startTime),
+              options: {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+                hour: '2-digit',
+                minute: '2-digit',
+              },
+            }).date
+          } Uhr, ${loaderData.Area.displayName}`,
+        })
+      : {},
 });
 
 function LineupBand() {

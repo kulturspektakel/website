@@ -1,10 +1,8 @@
-import {gql} from '@apollo/client';
 import {VStack} from '@chakra-ui/react';
 import {Alert} from '../components/chakra-snippets/alert';
-import Card, {CardFragment} from '../components/kultcard/Card';
+import Card from '../components/kultcard/Card';
 import InfoText from '../components/kultcard/InfoText';
 import {KultCardDocument, KultCardQuery} from '../types/graphql';
-import apolloClient from '../utils/apolloClient';
 import {createFileRoute, notFound} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
 import {seo} from '../utils/seo';
@@ -16,237 +14,113 @@ import {SegmentedControl} from '../components/chakra-snippets/segmented-control'
 import {useState} from 'react';
 import {BadgeActivity} from '../components/kultcard/Badges';
 import {useBadges} from '../utils/useBadges';
-
-gql`
-  query KultCard($payload: String!) {
-    cardStatus(payload: $payload) {
-      ...CardFragment
-      cardId
-      hasNewerTransactions
-      recentTransactions {
-        depositBefore
-        depositAfter
-        balanceBefore
-        balanceAfter
-        __typename
-
-        ... on CardTransaction {
-          deviceTime
-          transactionType
-          Order {
-            items {
-              amount
-              name
-              productList {
-                emoji
-                name
-              }
-            }
-          }
-        }
-        ... on MissingTransaction {
-          numberOfMissingTransactions
-        }
-      }
-    }
-  }
-  ${CardFragment}
-`;
-
-const EXAMPLE_DATA = {
-  balance: 1000,
-  deposit: 2,
-  cardId: '123456',
-  hasNewerTransactions: false,
-  recentTransactions: [
-    {
-      __typename: 'CardTransaction',
-      deviceTime: new Date(),
-      depositBefore: 0,
-      depositAfter: 1,
-      balanceAfter: 1000,
-      balanceBefore: 1600,
-      Order: {
-        items: [
-          {
-            amount: 1,
-            name: 'Helles',
-            productList: {
-              name: 'Ausschank',
-              emoji: '🍺',
-            },
-          },
-          {
-            amount: 1,
-            name: 'Helles',
-            productList: {
-              name: 'Ausschank',
-              emoji: '🍺',
-            },
-          },
-          {
-            amount: 1,
-            name: 'Helles',
-            productList: {
-              name: 'Ausschank',
-              emoji: '🍺',
-            },
-          },
-          {
-            amount: 1,
-            name: 'Helles',
-            productList: {
-              name: 'Ausschank',
-              emoji: '🍺',
-            },
-          },
-          {
-            amount: 1,
-            name: 'Helles',
-            productList: {
-              name: 'Ausschank',
-              emoji: '🍺',
-            },
-          },
-          {
-            amount: 1,
-            name: 'Helles',
-            productList: {
-              name: 'Ausschank',
-              emoji: '🍺',
-            },
-          },
-          {
-            amount: 1,
-            name: 'Helles',
-            productList: {
-              name: 'Ausschank',
-              emoji: '🍺',
-            },
-          },
-          {
-            amount: 1,
-            name: 'Helles',
-            productList: {
-              name: 'Ausschank',
-              emoji: '🍺',
-            },
-          },
-          {
-            amount: 1,
-            name: 'Helles',
-            productList: {
-              name: 'Ausschank',
-              emoji: '🍺',
-            },
-          },
-          {
-            amount: 1,
-            name: 'Helles',
-            productList: {
-              name: 'Ausschank',
-              emoji: '🍺',
-            },
-          },
-          {
-            amount: 1,
-            name: 'Helles',
-            productList: {
-              name: 'Ausschank',
-              emoji: '🍺',
-            },
-          },
-          {
-            amount: 1,
-            name: 'Helles',
-            productList: {
-              name: 'Ausschank',
-              emoji: '🍺',
-            },
-          },
-          {
-            amount: 1,
-            name: 'Helles',
-            productList: {
-              name: 'Ausschank',
-              emoji: '🍺',
-            },
-          },
-        ],
-      },
-    },
-    {
-      __typename: 'MissingTransaction',
-      numberOfMissingTransactions: 2,
-      depositBefore: 0,
-      depositAfter: 1,
-      balanceAfter: 1000,
-      balanceBefore: 1600,
-    },
-    {
-      __typename: 'CardTransaction',
-      deviceTime: new Date(),
-      depositBefore: 1,
-      depositAfter: 0,
-      balanceAfter: 1600,
-      balanceBefore: 1400,
-    },
-  ],
-};
+import {prismaClient} from '../utils/prismaClient';
+import {decodePayload} from '../utils/cardUtils';
+import {isPast, sub} from 'date-fns';
 
 const loader = createServerFn()
   .validator((data: {hash: string; event: {start: Date; end: Date}}) => data)
-  .handler(async ({data}) => {
-    const result = await apolloClient.query<KultCardQuery>({
-      query: KultCardDocument,
-      variables: {payload: data.hash},
-    });
+  .handler(async ({data: {event, hash}}) => {
+    const {cardId, counter, balance, deposit} = decodePayload('kultcard', hash);
 
-    if (!result.data?.cardStatus) {
-      throw notFound();
+    const transactions = await prismaClient.cardTransaction.findMany({
+      include: {
+        DeviceLog: true,
+        Order: {
+          include: {
+            OrderItem: {
+              include: {
+                ProductList: true,
+              },
+            },
+          },
+        },
+      },
+      where: {
+        cardId,
+        DeviceLog: {
+          deviceTime: {
+            gte: isPast(event.end) ? event.start : sub(new Date(), {days: 7}),
+          },
+        },
+        counter: {
+          not: null,
+        },
+      },
+      orderBy: {
+        counter: 'desc',
+      },
+    });
+    // remove eveything after the current counter value
+    const newerTransactions =
+      transactions.findIndex((t) => t.counter! <= counter) + 1;
+    if (newerTransactions > 0) {
+      transactions.splice(0, newerTransactions);
+    }
+    // remove everything before last cashout
+    const cashout = transactions.findIndex(
+      (t) => t.transactionType === 'Cashout',
+    );
+    if (cashout > -1) {
+      transactions.length = cashout;
     }
 
-    const {recentTransactions, ...cardStatus} = result.data.cardStatus;
+    const cardActivities: Array<CardActivity> = [];
+    let counterBefore = -1;
+    let balanceBefore = -1;
+    let depositBefore = -1;
+    for (let i = transactions.length - 1; i >= 0; i--) {
+      const transaction = transactions[i];
 
-    const cardActivities =
-      recentTransactions?.map<CardActivity>((t) => {
-        const cardChange = {
-          depositAfter: t.depositAfter,
-          depositBefore: t.depositBefore,
-          balanceAfter: t.balanceAfter,
-          balanceBefore: t.balanceBefore,
-        };
+      if (counterBefore > -1 && transaction.counter! - counterBefore > 1) {
+        cardActivities.push({
+          type: 'missing',
+          numberOfMissingTransactions: transaction.counter! - counterBefore,
+          balanceAfter: transaction.balanceBefore,
+          depositAfter: transaction.depositBefore,
+          balanceBefore,
+          depositBefore,
+        });
+      }
 
-        if (t.__typename === 'MissingTransaction') {
-          return {
-            type: 'missing' as const,
-            numberOfMissingTransactions: t.numberOfMissingTransactions,
-            ...cardChange,
-          };
-        }
+      if (transaction.Order) {
+        cardActivities.push({
+          type: 'order',
+          productList:
+            transaction.Order.OrderItem?.[0].ProductList?.name ?? 'Unbekannt',
+          emoji: transaction.Order.OrderItem?.[0].ProductList?.emoji ?? null,
+          time: transaction.Order.createdAt,
+          items: transaction.Order.OrderItem.map((oi) => ({
+            amount: oi.amount,
+            name: oi.name,
+          })),
+        });
+      } else if (
+        transaction.transactionType === 'Charge' ||
+        transaction.transactionType === 'TopUp'
+      ) {
+        cardActivities.push({
+          type: 'generic',
+          balanceAfter: transaction.balanceAfter,
+          balanceBefore: transaction.balanceBefore,
+          depositAfter: transaction.depositAfter,
+          depositBefore: transaction.depositBefore,
+          transactionType: transaction.transactionType,
+          time: transaction.DeviceLog.deviceTime,
+        });
+      }
 
-        if (t.Order && t.Order.items.length > 0) {
-          const productList = t.Order.items.find(() => true)?.productList;
-          return {
-            type: 'order' as const,
-            items: t.Order.items,
-            productList: productList?.name ?? '',
-            emoji: productList?.emoji ?? null,
-            time: t.deviceTime,
-            cardChange,
-          };
-        }
-        return {
-          type: 'generic' as const,
-          time: t.deviceTime,
-          ...cardChange,
-        };
-      }) ?? [];
+      counterBefore = transaction.counter!;
+      balanceBefore = transaction.balanceAfter;
+      depositBefore = transaction.depositAfter;
+    }
 
     return {
-      cardStatus,
       cardActivities,
-      event: data.event,
+      event,
+      hasNewerTransactions: newerTransactions > 0,
+      balance,
+      deposit,
     };
   });
 
@@ -260,15 +134,18 @@ export const Route = createFileRoute('/kultcard/$hash')({
   loader: async ({params: {hash}, context: {event}}) =>
     await loader({data: {hash, event}}),
   head: ({loaderData}) =>
-    seo({
-      title: `KultCard Guthaben ${loaderData ? currencyFormatter.format(loaderData.cardStatus.balance / 100) : ''}`,
-    }),
+    loaderData
+      ? seo({
+          title: `KultCard Guthaben ${currencyFormatter.format(loaderData.balance / 100)}`,
+        })
+      : {},
 });
 
 const TABS = ['Buchungen', 'Badges'];
 
 function KultCard() {
-  const {cardStatus, cardActivities, event} = Route.useLoaderData();
+  const {hasNewerTransactions, balance, deposit, cardActivities, event} =
+    Route.useLoaderData();
   const [active, setActive] = useState(TABS[0]);
   const {awardedBadges, unawardedBadges} = useBadges(
     cardActivities,
@@ -278,13 +155,13 @@ function KultCard() {
 
   return (
     <VStack maxW="450px" mr="auto" ml="auto" align="stretch" minH="70dvh">
-      {cardStatus.hasNewerTransactions && (
+      {hasNewerTransactions && (
         <Alert title="Neue Buchungen">
           Es liegen neuere Buchungen vor. Karte erneut auslesen um diese
           anzuzeigen.
         </Alert>
       )}
-      <Card balance={cardStatus.balance} deposit={cardStatus.deposit} />
+      <Card balance={balance} deposit={deposit} />
 
       <SegmentedControl
         mt="5"

@@ -10,10 +10,12 @@ export const Route = createFileRoute('/$slug')({
   component: PageRoute,
   loader: async ({params}) => await loader({data: params.slug}),
   head: ({loaderData}) =>
-    seo({
-      title: loaderData.title,
-      description: loaderData?.content?.markdown,
-    }),
+    loaderData
+      ? seo({
+          title: loaderData.title,
+          description: loaderData.content?.markdown,
+        })
+      : {},
 });
 
 const loader = createServerFn()

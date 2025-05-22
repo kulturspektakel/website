@@ -45,12 +45,14 @@ export const Route = createFileRoute('/lineup/$year')({
   component: LineupYear,
   loader: async ({params}) => await loader({data: {year: params.year}}),
   head: ({params, loaderData}) =>
-    seo({
-      title: `Lineup ${params.year}`,
-      description: `${loaderData.bands.length} Bands und Künstler:innen treten auf dem Kulturspektakel ${
-        params.year
-      } auf`,
-    }),
+    loaderData
+      ? seo({
+          title: `Lineup ${params.year}`,
+          description: `${loaderData.bands.length} Bands und Künstler:innen treten auf dem Kulturspektakel ${
+            params.year
+          } auf`,
+        })
+      : {},
 });
 
 function LineupYear() {

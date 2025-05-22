@@ -19,37 +19,21 @@ import {BadgeActivity} from '../components/kultcard/Badges';
 import {SegmentedControl} from '../components/chakra-snippets/segmented-control';
 import {useRef, useState} from 'react';
 import {useBadges} from '../utils/useBadges';
-
-function decodePayload(hash: string) {
-  const binary = atob(hash);
-  const bytes = new Uint8Array([...binary].map((char) => char.charCodeAt(0)));
-  const payload = byteArrayToString(bytes);
-  return {
-    cardId: payload.substring(0, 14),
-  };
-}
-
-function byteArrayToString(bytes: Uint8Array) {
-  return [...bytes]
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('')
-    .toUpperCase();
-}
-
-function stringToByteArray(str: string) {
-  return new Uint8Array(str.match(/.{1,2}/g)!.map((b) => parseInt(b, 16)));
-}
+import {
+  byteArrayToString,
+  decodePayload,
+  stringToByteArray,
+} from '../utils/cardUtils';
 
 const loader = createServerFn()
   .validator((data: {hash: string; event: {start: Date; end: Date}}) => data)
   .handler(async ({data: {hash, event}}) => {
-    const {cardId} = decodePayload(hash);
+    const {cardId, validUntil} = decodePayload('crewcard', hash);
     const _crewCard = await prismaClient.crewCard.findUnique({
       where: {
         id: stringToByteArray(cardId),
       },
       select: {
-        validUntil: true,
         privileged: true,
         suspended: true,
         nickname: true,
@@ -166,6 +150,8 @@ const loader = createServerFn()
         Badges: 0, // client side computed
       },
       event,
+      cardId,
+      validUntil,
     };
   });
 
@@ -189,10 +175,16 @@ const ringCss = defineStyle({
 const TABS = ['Konsum', 'Badges', 'Highscores'];
 
 function CrewCard() {
-  const {crewCard, highscores, totals, cardActivities, event} =
-    Route.useLoaderData();
+  const {
+    crewCard,
+    highscores,
+    totals,
+    cardActivities,
+    event,
+    cardId,
+    validUntil,
+  } = Route.useLoaderData();
   const {hash} = Route.useParams();
-  const cardId = decodePayload(hash).cardId;
   const ref = useRef<HTMLDivElement | null>(null);
   const [active, setActive] = useState(TABS[0]);
   const name = crewCard.Viewer?.displayName ?? crewCard.nickname ?? 'Unbekannt';
@@ -255,7 +247,7 @@ function CrewCard() {
             {crewCard.privileged ? 'Bonbude' : 'Kulturspektakel Crew'}
           </Text>
         </Box>
-        {(crewCard.suspended || crewCard.validUntil < new Date()) && (
+        {(crewCard.suspended || validUntil < new Date()) && (
           <Box
             background="brand.500"
             color="white"

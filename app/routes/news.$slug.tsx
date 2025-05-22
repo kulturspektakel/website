@@ -11,11 +11,16 @@ export const Route = createFileRoute('/news/$slug')({
   component: News,
   loader: async ({params}) => await loader({data: params.slug}),
   head: ({loaderData}) =>
-    seo({
-      imageId: loaderData?.content.images[0]?.id,
-      description: truncate(markdownToTxt(loaderData.content.markdown), 150),
-      title: loaderData.title,
-    }),
+    loaderData
+      ? seo({
+          imageId: loaderData?.content.images[0]?.id,
+          description: truncate(
+            markdownToTxt(loaderData.content.markdown),
+            150,
+          ),
+          title: loaderData.title,
+        })
+      : {},
 });
 
 const loader = createServerFn()

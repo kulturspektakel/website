@@ -13,27 +13,29 @@ import {seo} from '../utils/seo';
 export const Route = createFileRoute('/events_/$id')({
   component: EventComponent,
   loader: async ({params}) => await loader({data: params.id}),
-  head: ({loaderData: {event}}) =>
-    seo({
-      title: `${event.name} am ${
-        dateStringComponents({
-          date: event.start,
-          to: event.end,
-        }).date
-      }${
-        dateStringComponents({
-          date: event.start,
-          to: event.end,
-        }).connector
-      }${
-        dateStringComponents({
-          date: event.start,
-          to: event.end,
-        }).to
-      }`,
-      description: event.description ?? undefined,
-      imageId: event.poster?.id,
-    }),
+  head: ({loaderData}) =>
+    loaderData
+      ? seo({
+          title: `${loaderData?.event.name} am ${
+            dateStringComponents({
+              date: loaderData?.event.start,
+              to: loaderData?.event.end,
+            }).date
+          }${
+            dateStringComponents({
+              date: loaderData?.event.start,
+              to: loaderData?.event.end,
+            }).connector
+          }${
+            dateStringComponents({
+              date: loaderData?.event.start,
+              to: loaderData?.event.end,
+            }).to
+          }`,
+          description: loaderData?.event.description ?? undefined,
+          imageId: loaderData?.event.poster?.id,
+        })
+      : {},
 });
 
 const loader = createServerFn()

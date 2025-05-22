@@ -1,6 +1,4 @@
-import {gql} from 'graphql-request';
 import {Box} from '@chakra-ui/react';
-import {CardFragmentFragment} from '../../types/graphql';
 import InfoText from './InfoText';
 
 export const currencyFormatter = new Intl.NumberFormat('de-DE', {
@@ -8,14 +6,13 @@ export const currencyFormatter = new Intl.NumberFormat('de-DE', {
   currency: 'EUR',
 });
 
-export const CardFragment = gql`
-  fragment CardFragment on CardStatus {
-    balance
-    deposit
-  }
-`;
-
-export default function Card({balance, deposit}: CardFragmentFragment) {
+export default function Card({
+  balance,
+  deposit,
+}: {
+  balance: number;
+  deposit: number;
+}) {
   return (
     <Box>
       <Box overflow="hidden" borderRadius={17} boxShadow="lg">

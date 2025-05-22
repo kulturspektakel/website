@@ -22,7 +22,9 @@ export function ConnectedRadioCard({
         value={value}
         onValueChange={({value}) => {
           setValue(value);
-          onValueChange?.(value);
+          if (value && onValueChange) {
+            onValueChange(value);
+          }
         }}
       >
         <Stack direction={{base: 'column', sm: 'row'}}>{children}</Stack>

@@ -170,13 +170,7 @@ function BookingAlert(props: AlertProps) {
     return null;
   }
   return (
-    <Alert
-      title="Jetzt bewerben"
-      closable
-      onClose={() => setVisisble(false)}
-      status="info"
-      {...props}
-    >
+    <Alert title="Jetzt bewerben" status="info" {...props}>
       Die Bewerbungsphase für das nächste Kulturspektakel läuft aktuell und ihr
       könnt euch jetzt für einen Auftritt bei uns{' '}
       <ChakraLink asChild>

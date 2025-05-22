@@ -11,7 +11,6 @@ type CardChange = {
   balanceAfter: number;
   depositBefore: number;
   depositAfter: number;
-  transactionType: CardTransactionType;
 };
 
 type MissingTransaction = CardChange & {
@@ -31,6 +30,7 @@ type Order = {
 type GenericTransaction = CardChange & {
   type: 'generic';
   time: Date;
+  transactionType: CardTransactionType;
 };
 
 export type CardActivity = MissingTransaction | Order | GenericTransaction;

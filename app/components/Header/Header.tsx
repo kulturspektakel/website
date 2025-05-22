@@ -66,6 +66,7 @@ export default function Header({
   const [showNav, setShowNav] = useState(false);
   // Close nav on route change
   useEffect(() => setShowNav(false), [pathname]);
+  const navigate = useNavigate();
 
   return (
     <Flex
