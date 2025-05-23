@@ -3,7 +3,6 @@ import {AnyRouteMatch, createFileRoute, notFound} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
 import {prismaClient} from '../utils/prismaClient';
 import {markdownText} from '../utils/markdownText';
-import truncate from '../utils/truncate';
 import {markdownToTxt} from 'markdown-to-txt';
 import {seo} from '../utils/seo';
 
@@ -14,10 +13,7 @@ export const Route = createFileRoute('/news/$slug')({
     loaderData
       ? seo({
           imageId: loaderData?.content.images[0]?.id,
-          description: truncate(
-            markdownToTxt(loaderData.content.markdown),
-            150,
-          ),
+          description: markdownToTxt(loaderData.content.markdown),
           title: loaderData.title,
         })
       : {},
