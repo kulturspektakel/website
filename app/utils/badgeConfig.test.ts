@@ -40,7 +40,7 @@ test('no badge is awarded by default', () => {
 });
 
 describe('earlyBird', () => {
-  test('awards in teh first hour', () => {
+  test('awards in the first hour', () => {
     expect(
       badgeConfig.earlyBird.compute(
         [topUp(new Date('2025-07-25 16:00:00+02:00'))],
@@ -176,6 +176,99 @@ describe('lokalPatriot', () => {
       status: 'not awarded',
       progress: {
         target: 2,
+        current: 0,
+      },
+    });
+  });
+});
+
+describe('bucketList', () => {
+  const orders = [
+    order({
+      productList: 'Weißbiergarten',
+      time: new Date('2025-07-27 11:00:00+02:00'),
+    }),
+    order({
+      productList: 'Empanadas',
+      time: new Date('2025-07-27 10:30:00+02:00'),
+    }),
+    order({
+      productList: 'Grill',
+      time: new Date('2025-07-27 11:30:00+02:00'),
+    }),
+    order({
+      productList: 'Frittiererei',
+      time: new Date('2025-07-27 12:30:00+02:00'),
+    }),
+    order({
+      productList: 'Hot Dog',
+      time: new Date('2025-07-27 12:00:00+02:00'),
+    }),
+    order({
+      productList: 'Italien',
+      time: new Date('2025-07-27 13:30:00+02:00'),
+    }),
+    order({
+      productList: 'Waffel',
+      time: new Date('2025-07-27 15:00:00+02:00'),
+    }),
+  ];
+
+  test('awards if has activities from all productLists', () => {
+    expect(
+      badgeConfig.bucketlist.compute(
+        [
+          ...orders,
+          order({
+            productList: 'Pizza',
+            time: new Date('2025-07-27 18:00:00+02:00'),
+          }),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'awarded',
+      awardedAt: new Date('2025-07-27 18:00:00+02:00'),
+    });
+  });
+
+  test('shows correct progress if not all productLists are ordered', () => {
+    expect(badgeConfig.bucketlist.compute(orders, event)).toEqual({
+      status: 'not awarded',
+      progress: {
+        target: 8,
+        current: 7,
+      },
+    });
+
+    expect(badgeConfig.bucketlist.compute(orders.slice(0, 6), event)).toEqual({
+      status: 'not awarded',
+      progress: {
+        target: 8,
+        current: 6,
+      },
+    });
+  });
+
+  test('only counts orders from allowlisted productLists', () => {
+    expect(
+      badgeConfig.bucketlist.compute(
+        [
+          order({
+            productList: 'EKP',
+            time: new Date('2025-07-27 11:00:00+02:00'),
+          }),
+          order({
+            productList: 'Frühschoppen',
+            time: new Date('2025-07-27 10:30:00+02:00'),
+          }),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'not awarded',
+      progress: {
+        target: 8,
         current: 0,
       },
     });

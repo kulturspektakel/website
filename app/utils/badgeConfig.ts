@@ -6,6 +6,9 @@ import bucket from '@twemoji/svg/1faa3.svg';
 import plane from '@twemoji/svg/2708.svg';
 import moneyBag from '@twemoji/svg/1f4b0.svg';
 import {addDays, differenceInMinutes, isAfter, isEqual, max} from 'date-fns';
+import {a} from 'vitest/dist/chunks/suite.d.FvehnV49.js';
+import {ProductList} from '@prisma/client';
+import {ac} from 'vitest/dist/chunks/reporters.d.C-cu31ET.js';
 
 export type BadgeStatus =
   | {
@@ -150,9 +153,45 @@ export const badgeConfig = createBadgeDefinitions({
     bgEnd: '#FFCC4D',
     crewOnly: false,
     emoji: bucket,
-    compute: () => {
-      // TODO: not implemented yet
-      return {status: 'not awarded'};
+    compute: (activities) => {
+      const allProductLists = new Set<string>([
+        'Weißbiergarten',
+        'Hot Dog',
+        'Italien',
+        'Waffel',
+        'Frittiererei',
+        'Pizza',
+        'Grill',
+        'Empanadas',
+      ]);
+      const allListsLength = allProductLists.size;
+
+      for (const activity of activities) {
+        if (allProductLists.size === 0) {
+          break;
+        }
+        if (activity.type !== 'order') {
+          continue;
+        }
+        if (allProductLists.has(activity.productList)) {
+          allProductLists.delete(activity.productList);
+
+          if (allProductLists.size === 0) {
+            return {
+              status: 'awarded',
+              awardedAt: activity.time,
+            };
+          }
+        }
+      }
+
+      return {
+        status: 'not awarded',
+        progress: {
+          target: allListsLength,
+          current: allListsLength - allProductLists.size,
+        },
+      };
     },
   },
 });
