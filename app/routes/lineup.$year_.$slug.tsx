@@ -175,7 +175,7 @@ function LineupBand() {
           )}
         </HStack>
       )}
-      <Text mt="4">{band.shortDescription ?? band.description}</Text>
+      <Text mt="4">{band.shortDescription || band.description}</Text>
     </Box>
   );
 }
