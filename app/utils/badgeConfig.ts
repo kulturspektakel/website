@@ -150,9 +150,45 @@ export const badgeConfig = createBadgeDefinitions({
     bgEnd: '#FFCC4D',
     crewOnly: false,
     emoji: bucket,
-    compute: () => {
-      // TODO: not implemented yet
-      return {status: 'not awarded'};
+    compute: (activities) => {
+      const allProductLists = new Set<string>([
+        'Weißbiergarten',
+        'Hot Dog',
+        'Italien',
+        'Waffel',
+        'Frittiererei',
+        'Pizza',
+        'Grill',
+        'Empanadas',
+      ]);
+      const allListsLength = allProductLists.size;
+
+      for (const activity of activities) {
+        if (allProductLists.size === 0) {
+          break;
+        }
+        if (activity.type !== 'order') {
+          continue;
+        }
+        if (allProductLists.has(activity.productList)) {
+          allProductLists.delete(activity.productList);
+
+          if (allProductLists.size === 0) {
+            return {
+              status: 'awarded',
+              awardedAt: activity.time,
+            };
+          }
+        }
+      }
+
+      return {
+        status: 'not awarded',
+        progress: {
+          target: allListsLength,
+          current: allListsLength - allProductLists.size,
+        },
+      };
     },
   },
 });
