@@ -20,7 +20,6 @@ import {createServerFn} from '@tanstack/react-start';
 import {wrapCreateRootRouteWithSentry} from '@sentry/tanstackstart-react';
 import {seo} from '../utils/seo';
 import ProgressBar from '@badrap/bar-of-progress';
-import {getRequestURL} from '@tanstack/react-start/server';
 
 const beforeLoad = createServerFn().handler(async () => {
   const event = await prismaClient.event.findFirstOrThrow({
@@ -95,8 +94,9 @@ export const Route = wrapCreateRootRouteWithSentry(
   component: RootComponent,
   beforeLoad: async () => {
     if (typeof window === 'undefined') {
-      const url = getRequestURL();
+      const url = new URL('');
       if (
+        false &&
         url.hostname !== 'localhost' &&
         url.hostname !== 'www.kulturspektakel.de'
       ) {

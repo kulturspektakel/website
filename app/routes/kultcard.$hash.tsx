@@ -2,25 +2,19 @@ import {VStack} from '@chakra-ui/react';
 import {Alert} from '../components/chakra-snippets/alert';
 import Card from '../components/kultcard/Card';
 import InfoText from '../components/kultcard/InfoText';
-import {KultCardDocument, KultCardQuery} from '../types/graphql';
-import {createFileRoute, notFound} from '@tanstack/react-router';
+import {createFileRoute} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
 import {seo} from '../utils/seo';
-import {
-  CardActivities,
-  CardActivity,
-} from '../components/kultcard/CardActivities';
+import {CardActivities} from '../components/kultcard/CardActivities';
 import {SegmentedControl} from '../components/chakra-snippets/segmented-control';
 import {useState} from 'react';
 import {BadgeActivity} from '../components/kultcard/Badges';
 import {useBadges} from '../utils/useBadges';
-import {prismaClient} from '../utils/prismaClient';
 import {
   decodePayload,
   queryCardTransactions,
   transformCardAvtivities,
 } from '../utils/cardUtils';
-import {isPast, sub} from 'date-fns';
 
 const loader = createServerFn()
   .validator((data: {hash: string; event: {start: Date; end: Date}}) => data)
@@ -65,7 +59,8 @@ export const Route = createFileRoute('/kultcard/$hash')({
 const TABS = ['Buchungen', 'Badges'];
 
 function KultCard() {
-  const {balance, deposit, cardActivities, event} = Route.useLoaderData();
+  const {balance, deposit, cardActivities, event, hasNewerTransactions} =
+    Route.useLoaderData();
   const [active, setActive] = useState(TABS[0]);
   const {awardedBadges, unawardedBadges} = useBadges(
     cardActivities,
