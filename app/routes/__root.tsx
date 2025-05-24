@@ -20,6 +20,7 @@ import {createServerFn} from '@tanstack/react-start';
 import {wrapCreateRootRouteWithSentry} from '@sentry/tanstackstart-react';
 import {seo} from '../utils/seo';
 import ProgressBar from '@badrap/bar-of-progress';
+import {getURL} from '../utils/getURL';
 
 const beforeLoad = createServerFn().handler(async () => {
   const event = await prismaClient.event.findFirstOrThrow({
@@ -92,28 +93,28 @@ export const Route = wrapCreateRootRouteWithSentry(
     };
   },
   component: RootComponent,
-  beforeLoad: async () => {
-    // if (typeof window === 'undefined') {
-    //   const url = new URL('');
-    //   if (
-    //     false &&
-    //     url.hostname !== 'localhost' &&
-    //     url.hostname !== 'www.kulturspektakel.de'
-    //   ) {
-    //     const newURL = new URL(url);
-    //     const match = url.pathname.match(/^\/\$([\$c])\/([A-Za-z0-9\-_]+)\/?$/);
-    //     url.protocol = 'https:';
-    //     if (match && match.length == 3) {
-    //       if (url.hostname === 'kult.cash') {
-    //         url.hostname = 'www.kulturspektakel.de';
-    //       }
-    //       newURL.pathname = `/${match[1] === 'c' ? 'crewcard' : 'kultcard'}/${match[2]}`;
-    //     }
-    //     throw redirect({
-    //       href: newURL.toString(),
-    //     });
-    //   }
-    // }
+  beforeLoad: async ({location}) => {
+    if (typeof window === 'undefined') {
+      const url = new URL(await getURL());
+      url.pathname = location.pathname;
+      if (
+        url.hostname !== 'localhost' &&
+        url.hostname !== 'www.kulturspektakel.de'
+      ) {
+        const newURL = new URL(url);
+        const match = url.pathname.match(/^\/\$([\$c])\/([A-Za-z0-9\-_]+)\/?$/);
+        url.protocol = 'https:';
+        if (match && match.length == 3) {
+          if (url.hostname === 'kult.cash') {
+            url.hostname = 'www.kulturspektakel.de';
+          }
+          newURL.pathname = `/${match[1] === 'c' ? 'crewcard' : 'kultcard'}/${match[2]}`;
+        }
+        throw redirect({
+          href: newURL.toString(),
+        });
+      }
+    }
     return await beforeLoad();
   },
 });
