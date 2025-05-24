@@ -6,9 +6,6 @@ import bucket from '@twemoji/svg/1faa3.svg';
 import plane from '@twemoji/svg/2708.svg';
 import moneyBag from '@twemoji/svg/1f4b0.svg';
 import {addDays, differenceInMinutes, isAfter, isEqual, max} from 'date-fns';
-import {a} from 'vitest/dist/chunks/suite.d.FvehnV49.js';
-import {ProductList} from '@prisma/client';
-import {ac} from 'vitest/dist/chunks/reporters.d.C-cu31ET.js';
 
 export type BadgeStatus =
   | {
