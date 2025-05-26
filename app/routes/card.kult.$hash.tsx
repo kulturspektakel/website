@@ -1,15 +1,8 @@
-import {VStack} from '@chakra-ui/react';
 import {Alert} from '../components/chakra-snippets/alert';
 import Card from '../components/kultcard/Card';
-import InfoText from '../components/kultcard/InfoText';
 import {createFileRoute} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
 import {seo} from '../utils/seo';
-import {CardActivities} from '../components/kultcard/CardActivities';
-import {SegmentedControl} from '../components/chakra-snippets/segmented-control';
-import {useState} from 'react';
-import {BadgeActivity} from '../components/kultcard/Badges';
-import {useBadges} from '../utils/useBadges';
 import {
   decodePayload,
   queryCardTransactions,
@@ -34,6 +27,7 @@ const loader = createServerFn()
       event,
       balance,
       deposit,
+      cardId,
       hasNewerTransactions:
         transactions.length > 0 && transactions[0].counter! > counter,
     };
@@ -44,7 +38,7 @@ export const currencyFormatter = new Intl.NumberFormat('de-DE', {
   currency: 'EUR',
 });
 
-export const Route = createFileRoute('/kultcard/$hash')({
+export const Route = createFileRoute('/card/kult/$hash')({
   component: KultCard,
   loader: async ({params: {hash}, context: {event}}) =>
     await loader({data: {hash, event}}),
@@ -56,20 +50,11 @@ export const Route = createFileRoute('/kultcard/$hash')({
       : {},
 });
 
-const TABS = ['Buchungen', 'Badges'];
-
 function KultCard() {
-  const {balance, deposit, cardActivities, event, hasNewerTransactions} =
-    Route.useLoaderData();
-  const [active, setActive] = useState(TABS[0]);
-  const {awardedBadges, unawardedBadges} = useBadges(
-    cardActivities,
-    event,
-    false,
-  );
+  const {balance, deposit, hasNewerTransactions} = Route.useLoaderData();
 
   return (
-    <VStack maxW="450px" mr="auto" ml="auto" align="stretch" minH="70dvh">
+    <>
       {hasNewerTransactions && (
         <Alert title="Neue Buchungen">
           Es liegen neuere Buchungen vor. Karte erneut auslesen um diese
@@ -77,29 +62,6 @@ function KultCard() {
         </Alert>
       )}
       <Card balance={balance} deposit={deposit} />
-
-      <SegmentedControl
-        mt="5"
-        value={active}
-        onValueChange={({value}) => setActive(value!)}
-        items={TABS.map((t) => ({value: t, label: t}))}
-      />
-      <VStack gap="5" align="stretch" mt="3">
-        {active === 'Buchungen' && (
-          <CardActivities newestToOldest={cardActivities} />
-        )}
-        {active === 'Badges' && (
-          <BadgeActivity
-            awardedBadges={awardedBadges}
-            unawardedBadges={unawardedBadges}
-          />
-        )}
-        <InfoText textAlign="center">
-          Es kann etwas dauern, bis alle Buchungen vollständig in der Liste
-          dargestellt werden. Das angezeigte Guthaben auf der Karte ist jedoch
-          immer aktuell.
-        </InfoText>
-      </VStack>
-    </VStack>
+    </>
   );
 }

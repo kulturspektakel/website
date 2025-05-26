@@ -20,6 +20,7 @@ import { Route as LineupImport } from './routes/lineup'
 import { Route as LearnImport } from './routes/learn'
 import { Route as InfosImport } from './routes/infos'
 import { Route as EventsImport } from './routes/events'
+import { Route as CardImport } from './routes/card'
 import { Route as BookingImport } from './routes/booking'
 import { Route as BadgesImport } from './routes/badges'
 import { Route as AngebotImport } from './routes/angebot'
@@ -30,11 +31,11 @@ import { Route as NewsArchivImport } from './routes/news.archiv'
 import { Route as NewsSlugImport } from './routes/news.$slug'
 import { Route as MitgliedsantragDankeImport } from './routes/mitgliedsantrag.danke'
 import { Route as LineupYearImport } from './routes/lineup.$year'
-import { Route as KultcardHashImport } from './routes/kultcard.$hash'
 import { Route as EventsIdImport } from './routes/events_.$id'
-import { Route as CrewcardHashImport } from './routes/crewcard.$hash'
 import { Route as BookingApplicationTypeImport } from './routes/booking_.$applicationType'
 import { Route as LineupYearSlugImport } from './routes/lineup.$year_.$slug'
+import { Route as CardKultHashImport } from './routes/card.kult.$hash'
+import { Route as CardCrewHashImport } from './routes/card.crew.$hash'
 import { Route as BookingApplicationTypeDankeImport } from './routes/booking_.$applicationType_.danke'
 
 // Create/Update Routes
@@ -90,6 +91,12 @@ const InfosRoute = InfosImport.update({
 const EventsRoute = EventsImport.update({
   id: '/events',
   path: '/events',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const CardRoute = CardImport.update({
+  id: '/card',
+  path: '/card',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -153,21 +160,9 @@ const LineupYearRoute = LineupYearImport.update({
   getParentRoute: () => LineupRoute,
 } as any)
 
-const KultcardHashRoute = KultcardHashImport.update({
-  id: '/kultcard/$hash',
-  path: '/kultcard/$hash',
-  getParentRoute: () => rootRoute,
-} as any)
-
 const EventsIdRoute = EventsIdImport.update({
   id: '/events_/$id',
   path: '/events/$id',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const CrewcardHashRoute = CrewcardHashImport.update({
-  id: '/crewcard/$hash',
-  path: '/crewcard/$hash',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -181,6 +176,18 @@ const LineupYearSlugRoute = LineupYearSlugImport.update({
   id: '/$year_/$slug',
   path: '/$year/$slug',
   getParentRoute: () => LineupRoute,
+} as any)
+
+const CardKultHashRoute = CardKultHashImport.update({
+  id: '/kult/$hash',
+  path: '/kult/$hash',
+  getParentRoute: () => CardRoute,
+} as any)
+
+const CardCrewHashRoute = CardCrewHashImport.update({
+  id: '/crew/$hash',
+  path: '/crew/$hash',
+  getParentRoute: () => CardRoute,
 } as any)
 
 const BookingApplicationTypeDankeRoute =
@@ -227,6 +234,13 @@ declare module '@tanstack/react-router' {
       path: '/booking'
       fullPath: '/booking'
       preLoaderRoute: typeof BookingImport
+      parentRoute: typeof rootRoute
+    }
+    '/card': {
+      id: '/card'
+      path: '/card'
+      fullPath: '/card'
+      preLoaderRoute: typeof CardImport
       parentRoute: typeof rootRoute
     }
     '/events': {
@@ -299,25 +313,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BookingApplicationTypeImport
       parentRoute: typeof rootRoute
     }
-    '/crewcard/$hash': {
-      id: '/crewcard/$hash'
-      path: '/crewcard/$hash'
-      fullPath: '/crewcard/$hash'
-      preLoaderRoute: typeof CrewcardHashImport
-      parentRoute: typeof rootRoute
-    }
     '/events_/$id': {
       id: '/events_/$id'
       path: '/events/$id'
       fullPath: '/events/$id'
       preLoaderRoute: typeof EventsIdImport
-      parentRoute: typeof rootRoute
-    }
-    '/kultcard/$hash': {
-      id: '/kultcard/$hash'
-      path: '/kultcard/$hash'
-      fullPath: '/kultcard/$hash'
-      preLoaderRoute: typeof KultcardHashImport
       parentRoute: typeof rootRoute
     }
     '/lineup/$year': {
@@ -362,6 +362,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BookingApplicationTypeDankeImport
       parentRoute: typeof rootRoute
     }
+    '/card/crew/$hash': {
+      id: '/card/crew/$hash'
+      path: '/crew/$hash'
+      fullPath: '/card/crew/$hash'
+      preLoaderRoute: typeof CardCrewHashImport
+      parentRoute: typeof CardImport
+    }
+    '/card/kult/$hash': {
+      id: '/card/kult/$hash'
+      path: '/kult/$hash'
+      fullPath: '/card/kult/$hash'
+      preLoaderRoute: typeof CardKultHashImport
+      parentRoute: typeof CardImport
+    }
     '/lineup/$year_/$slug': {
       id: '/lineup/$year_/$slug'
       path: '/$year/$slug'
@@ -373,6 +387,18 @@ declare module '@tanstack/react-router' {
 }
 
 // Create and export the route tree
+
+interface CardRouteChildren {
+  CardCrewHashRoute: typeof CardCrewHashRoute
+  CardKultHashRoute: typeof CardKultHashRoute
+}
+
+const CardRouteChildren: CardRouteChildren = {
+  CardCrewHashRoute: CardCrewHashRoute,
+  CardKultHashRoute: CardKultHashRoute,
+}
+
+const CardRouteWithChildren = CardRoute._addFileChildren(CardRouteChildren)
 
 interface LineupRouteChildren {
   LineupYearRoute: typeof LineupYearRoute
@@ -407,6 +433,7 @@ export interface FileRoutesByFullPath {
   '/angebot': typeof AngebotRoute
   '/badges': typeof BadgesRoute
   '/booking': typeof BookingRoute
+  '/card': typeof CardRouteWithChildren
   '/events': typeof EventsRoute
   '/infos': typeof InfosRoute
   '/learn': typeof LearnRoute
@@ -417,15 +444,15 @@ export interface FileRoutesByFullPath {
   '/plakate': typeof PlakateRoute
   '/speisekarte': typeof SpeisekarteRoute
   '/booking/$applicationType': typeof BookingApplicationTypeRoute
-  '/crewcard/$hash': typeof CrewcardHashRoute
   '/events/$id': typeof EventsIdRoute
-  '/kultcard/$hash': typeof KultcardHashRoute
   '/lineup/$year': typeof LineupYearRoute
   '/mitgliedsantrag/danke': typeof MitgliedsantragDankeRoute
   '/news/$slug': typeof NewsSlugRoute
   '/news/archiv': typeof NewsArchivRoute
   '/lineup/': typeof LineupIndexRoute
   '/booking/$applicationType/danke': typeof BookingApplicationTypeDankeRoute
+  '/card/crew/$hash': typeof CardCrewHashRoute
+  '/card/kult/$hash': typeof CardKultHashRoute
   '/lineup/$year/$slug': typeof LineupYearSlugRoute
 }
 
@@ -435,6 +462,7 @@ export interface FileRoutesByTo {
   '/angebot': typeof AngebotRoute
   '/badges': typeof BadgesRoute
   '/booking': typeof BookingRoute
+  '/card': typeof CardRouteWithChildren
   '/events': typeof EventsRoute
   '/infos': typeof InfosRoute
   '/learn': typeof LearnRoute
@@ -444,15 +472,15 @@ export interface FileRoutesByTo {
   '/plakate': typeof PlakateRoute
   '/speisekarte': typeof SpeisekarteRoute
   '/booking/$applicationType': typeof BookingApplicationTypeRoute
-  '/crewcard/$hash': typeof CrewcardHashRoute
   '/events/$id': typeof EventsIdRoute
-  '/kultcard/$hash': typeof KultcardHashRoute
   '/lineup/$year': typeof LineupYearRoute
   '/mitgliedsantrag/danke': typeof MitgliedsantragDankeRoute
   '/news/$slug': typeof NewsSlugRoute
   '/news/archiv': typeof NewsArchivRoute
   '/lineup': typeof LineupIndexRoute
   '/booking/$applicationType/danke': typeof BookingApplicationTypeDankeRoute
+  '/card/crew/$hash': typeof CardCrewHashRoute
+  '/card/kult/$hash': typeof CardKultHashRoute
   '/lineup/$year/$slug': typeof LineupYearSlugRoute
 }
 
@@ -463,6 +491,7 @@ export interface FileRoutesById {
   '/angebot': typeof AngebotRoute
   '/badges': typeof BadgesRoute
   '/booking': typeof BookingRoute
+  '/card': typeof CardRouteWithChildren
   '/events': typeof EventsRoute
   '/infos': typeof InfosRoute
   '/learn': typeof LearnRoute
@@ -473,15 +502,15 @@ export interface FileRoutesById {
   '/plakate': typeof PlakateRoute
   '/speisekarte': typeof SpeisekarteRoute
   '/booking_/$applicationType': typeof BookingApplicationTypeRoute
-  '/crewcard/$hash': typeof CrewcardHashRoute
   '/events_/$id': typeof EventsIdRoute
-  '/kultcard/$hash': typeof KultcardHashRoute
   '/lineup/$year': typeof LineupYearRoute
   '/mitgliedsantrag/danke': typeof MitgliedsantragDankeRoute
   '/news/$slug': typeof NewsSlugRoute
   '/news/archiv': typeof NewsArchivRoute
   '/lineup/': typeof LineupIndexRoute
   '/booking_/$applicationType_/danke': typeof BookingApplicationTypeDankeRoute
+  '/card/crew/$hash': typeof CardCrewHashRoute
+  '/card/kult/$hash': typeof CardKultHashRoute
   '/lineup/$year_/$slug': typeof LineupYearSlugRoute
 }
 
@@ -493,6 +522,7 @@ export interface FileRouteTypes {
     | '/angebot'
     | '/badges'
     | '/booking'
+    | '/card'
     | '/events'
     | '/infos'
     | '/learn'
@@ -503,15 +533,15 @@ export interface FileRouteTypes {
     | '/plakate'
     | '/speisekarte'
     | '/booking/$applicationType'
-    | '/crewcard/$hash'
     | '/events/$id'
-    | '/kultcard/$hash'
     | '/lineup/$year'
     | '/mitgliedsantrag/danke'
     | '/news/$slug'
     | '/news/archiv'
     | '/lineup/'
     | '/booking/$applicationType/danke'
+    | '/card/crew/$hash'
+    | '/card/kult/$hash'
     | '/lineup/$year/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -520,6 +550,7 @@ export interface FileRouteTypes {
     | '/angebot'
     | '/badges'
     | '/booking'
+    | '/card'
     | '/events'
     | '/infos'
     | '/learn'
@@ -529,15 +560,15 @@ export interface FileRouteTypes {
     | '/plakate'
     | '/speisekarte'
     | '/booking/$applicationType'
-    | '/crewcard/$hash'
     | '/events/$id'
-    | '/kultcard/$hash'
     | '/lineup/$year'
     | '/mitgliedsantrag/danke'
     | '/news/$slug'
     | '/news/archiv'
     | '/lineup'
     | '/booking/$applicationType/danke'
+    | '/card/crew/$hash'
+    | '/card/kult/$hash'
     | '/lineup/$year/$slug'
   id:
     | '__root__'
@@ -546,6 +577,7 @@ export interface FileRouteTypes {
     | '/angebot'
     | '/badges'
     | '/booking'
+    | '/card'
     | '/events'
     | '/infos'
     | '/learn'
@@ -556,15 +588,15 @@ export interface FileRouteTypes {
     | '/plakate'
     | '/speisekarte'
     | '/booking_/$applicationType'
-    | '/crewcard/$hash'
     | '/events_/$id'
-    | '/kultcard/$hash'
     | '/lineup/$year'
     | '/mitgliedsantrag/danke'
     | '/news/$slug'
     | '/news/archiv'
     | '/lineup/'
     | '/booking_/$applicationType_/danke'
+    | '/card/crew/$hash'
+    | '/card/kult/$hash'
     | '/lineup/$year_/$slug'
   fileRoutesById: FileRoutesById
 }
@@ -575,6 +607,7 @@ export interface RootRouteChildren {
   AngebotRoute: typeof AngebotRoute
   BadgesRoute: typeof BadgesRoute
   BookingRoute: typeof BookingRoute
+  CardRoute: typeof CardRouteWithChildren
   EventsRoute: typeof EventsRoute
   InfosRoute: typeof InfosRoute
   LearnRoute: typeof LearnRoute
@@ -585,9 +618,7 @@ export interface RootRouteChildren {
   PlakateRoute: typeof PlakateRoute
   SpeisekarteRoute: typeof SpeisekarteRoute
   BookingApplicationTypeRoute: typeof BookingApplicationTypeRoute
-  CrewcardHashRoute: typeof CrewcardHashRoute
   EventsIdRoute: typeof EventsIdRoute
-  KultcardHashRoute: typeof KultcardHashRoute
   NewsSlugRoute: typeof NewsSlugRoute
   NewsArchivRoute: typeof NewsArchivRoute
   BookingApplicationTypeDankeRoute: typeof BookingApplicationTypeDankeRoute
@@ -599,6 +630,7 @@ const rootRouteChildren: RootRouteChildren = {
   AngebotRoute: AngebotRoute,
   BadgesRoute: BadgesRoute,
   BookingRoute: BookingRoute,
+  CardRoute: CardRouteWithChildren,
   EventsRoute: EventsRoute,
   InfosRoute: InfosRoute,
   LearnRoute: LearnRoute,
@@ -609,9 +641,7 @@ const rootRouteChildren: RootRouteChildren = {
   PlakateRoute: PlakateRoute,
   SpeisekarteRoute: SpeisekarteRoute,
   BookingApplicationTypeRoute: BookingApplicationTypeRoute,
-  CrewcardHashRoute: CrewcardHashRoute,
   EventsIdRoute: EventsIdRoute,
-  KultcardHashRoute: KultcardHashRoute,
   NewsSlugRoute: NewsSlugRoute,
   NewsArchivRoute: NewsArchivRoute,
   BookingApplicationTypeDankeRoute: BookingApplicationTypeDankeRoute,
@@ -632,6 +662,7 @@ export const routeTree = rootRoute
         "/angebot",
         "/badges",
         "/booking",
+        "/card",
         "/events",
         "/infos",
         "/learn",
@@ -642,9 +673,7 @@ export const routeTree = rootRoute
         "/plakate",
         "/speisekarte",
         "/booking_/$applicationType",
-        "/crewcard/$hash",
         "/events_/$id",
-        "/kultcard/$hash",
         "/news/$slug",
         "/news/archiv",
         "/booking_/$applicationType_/danke"
@@ -664,6 +693,13 @@ export const routeTree = rootRoute
     },
     "/booking": {
       "filePath": "booking.tsx"
+    },
+    "/card": {
+      "filePath": "card.tsx",
+      "children": [
+        "/card/crew/$hash",
+        "/card/kult/$hash"
+      ]
     },
     "/events": {
       "filePath": "events.tsx"
@@ -703,14 +739,8 @@ export const routeTree = rootRoute
     "/booking_/$applicationType": {
       "filePath": "booking_.$applicationType.tsx"
     },
-    "/crewcard/$hash": {
-      "filePath": "crewcard.$hash.tsx"
-    },
     "/events_/$id": {
       "filePath": "events_.$id.tsx"
-    },
-    "/kultcard/$hash": {
-      "filePath": "kultcard.$hash.tsx"
     },
     "/lineup/$year": {
       "filePath": "lineup.$year.tsx",
@@ -732,6 +762,14 @@ export const routeTree = rootRoute
     },
     "/booking_/$applicationType_/danke": {
       "filePath": "booking_.$applicationType_.danke.tsx"
+    },
+    "/card/crew/$hash": {
+      "filePath": "card.crew.$hash.tsx",
+      "parent": "/card"
+    },
+    "/card/kult/$hash": {
+      "filePath": "card.kult.$hash.tsx",
+      "parent": "/card"
     },
     "/lineup/$year_/$slug": {
       "filePath": "lineup.$year_.$slug.tsx",

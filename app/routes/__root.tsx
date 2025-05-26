@@ -100,9 +100,21 @@ export const Route = wrapCreateRootRouteWithSentry(
     );
 
     if (match && match.length == 3) {
-      throw redirect({
-        href: `/${match[1] === 'c' ? 'crewcard' : 'kultcard'}/${match[2]}`,
-      });
+      throw redirect(
+        match[1] === 'c'
+          ? {
+              to: '/card/crew/$hash',
+              params: {
+                hash: match[2],
+              },
+            }
+          : {
+              to: '/card/kult/$hash',
+              params: {
+                hash: match[2],
+              },
+            },
+      );
     }
 
     return await beforeLoad();
