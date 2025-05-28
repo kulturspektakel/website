@@ -1,20 +1,38 @@
 import {Cell} from './CardActivities';
-import {Text} from '@chakra-ui/react';
+import {Heading, ListRoot, Text} from '@chakra-ui/react';
 
-export function Highscore({
-  name,
-  place,
-  points,
-}: {
-  place: number;
+export type HighscoreEntry = {
+  cardId: string;
+  amount: number;
+  rank: number;
+  emoji: string | null;
   name: string;
-  points: number;
-}) {
+  productList: string;
+};
+export type HighscoreProps = {
+  [x: number]: Array<HighscoreEntry>;
+};
+export function Highscore({data}: {data: HighscoreProps}) {
   return (
-    <Cell
-      accessoryStart={place === 1 ? '🥇' : place === 2 ? '🥈' : '🥉'}
-      subtitle={<Text fontWeight="bold">{name}</Text>}
-      accessoryEnd={points}
-    />
+    <>
+      {Object.values(data).map((values) => (
+        <>
+          <Heading textAlign="center" mt="3">
+            {values[0].emoji} {values[0].name}
+          </Heading>
+          <ListRoot as="ol" m="0">
+            {values.map((value) => (
+              <Cell
+                accessoryStart={
+                  value.rank === 1 ? '🥇' : value.rank === 2 ? '🥈' : '🥉'
+                }
+                subtitle={<Text fontWeight="bold">{value.name}</Text>}
+                accessoryEnd={value.amount}
+              />
+            ))}
+          </ListRoot>
+        </>
+      ))}
+    </>
   );
 }

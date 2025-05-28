@@ -10,24 +10,29 @@ export function useNewlyAwardedBadge(
   awarded: Array<{badgeKey: keyof typeof badgeConfig}>,
 ) {
   const search = useSearch({
-    strict: false,
+    from: '/card/$hash',
   });
   if (typeof window === 'undefined') {
     return;
   }
   const key = `badges:${cardId}`;
-  const oldData = localStorage.getItem(key) || '[]';
+  const oldData = localStorage.getItem(key);
   localStorage.setItem(key, JSON.stringify(awarded.map((b) => b.badgeKey)));
 
   if (search?.badge && awarded.find((a) => a.badgeKey === search.badge)) {
     return search.badge;
   }
 
+  if (!oldData) {
+    // don't show modal on first visit
+    return;
+  }
+
   try {
-    const badgesData = JSON.parse(oldData) as {
+    const oldBadges = JSON.parse(oldData) as {
       awarded: Array<keyof typeof badgeConfig>;
     };
-    return awarded.find(({badgeKey}) => !badgesData.awarded.includes(badgeKey))
+    return awarded.find(({badgeKey}) => !oldBadges.awarded.includes(badgeKey))
       ?.badgeKey;
   } catch (e) {
     console.error(e);
@@ -63,7 +68,7 @@ export function NewBadge({type}: {type: keyof typeof badgeConfig}) {
             </Dialog.Header>
             <Dialog.Body fontSize="md">
               <Text>{badge.description}</Text>
-              <Text mt="3">
+              <Text mt="4">
                 Durch deine Käufe an unseren Buden kannst du virtuelle Badges
                 sammeln. Wie viele hast du schon?
               </Text>

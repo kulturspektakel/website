@@ -2,6 +2,7 @@ import {createHash} from 'crypto';
 import {addDays, isPast, sub} from 'date-fns';
 import {CardActivity} from '../components/kultcard/CardActivities';
 import {prismaClient} from './prismaClient';
+import {badgeConfig} from './badgeConfig';
 
 export function decodePayload(
   type: 'kultcard',
@@ -137,6 +138,65 @@ export async function queryCardTransactions(
   });
 }
 
+export function queryCrewCard(cardId: string, event: {start: Date; end: Date}) {
+  return prismaClient.crewCard.findUnique({
+    where: {
+      id: stringToByteArray(cardId),
+    },
+    select: {
+      privileged: true,
+      suspended: true,
+      nickname: true,
+      Viewer: {
+        select: {
+          displayName: true,
+          profilePicture: true,
+        },
+      },
+      Order: {
+        where: {
+          createdAt: {
+            lt: event.end,
+            gt: event.start,
+          },
+        },
+        select: {
+          id: true,
+          createdAt: true,
+          OrderItem: {
+            select: {
+              name: true,
+              amount: true,
+              ProductList: {
+                select: {
+                  id: true,
+                  name: true,
+                  emoji: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      },
+    },
+  });
+}
+
+export function orderToCardActivity(
+  order: NonNullable<Awaited<ReturnType<typeof queryCrewCard>>>['Order'],
+): Array<CardActivity> {
+  return order.map((o) => ({
+    type: 'order' as const,
+    productList: o.OrderItem[0].ProductList?.name!,
+    emoji: o.OrderItem[0].ProductList?.emoji ?? null,
+    items: o.OrderItem,
+    time: o.createdAt,
+  }));
+}
+
 export function transformCardAvtivities(
   transactions: Awaited<ReturnType<typeof queryCardTransactions>>,
   counter: number,
@@ -233,3 +293,9 @@ export function transformCardAvtivities(
 
   return cardActivities;
 }
+
+export const validateSearch = (search: {badge?: string}) => {
+  if (search.badge && search.badge in badgeConfig) {
+    return search as {badge: keyof typeof badgeConfig};
+  }
+};

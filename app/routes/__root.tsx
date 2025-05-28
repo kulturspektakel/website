@@ -20,28 +20,11 @@ import {createServerFn} from '@tanstack/react-start';
 import {wrapCreateRootRouteWithSentry} from '@sentry/tanstackstart-react';
 import {seo} from '../utils/seo';
 import ProgressBar from '@badrap/bar-of-progress';
+import {getCurrentEvent} from '../utils/getCurrentEvent';
 
-const beforeLoad = createServerFn().handler(async () => {
-  const event = await prismaClient.event.findFirstOrThrow({
-    where: {
-      eventType: 'Kulturspektakel',
-    },
-    orderBy: {
-      start: 'desc',
-    },
-    select: {
-      start: true,
-      name: true,
-      end: true,
-      id: true,
-      bandApplicationStart: true,
-      bandApplicationEnd: true,
-      djApplicationStart: true,
-      djApplicationEnd: true,
-    },
-  });
-  return {event};
-});
+const beforeLoad = createServerFn().handler(async () => ({
+  event: await getCurrentEvent(),
+}));
 
 export const Route = wrapCreateRootRouteWithSentry(
   createRootRouteWithContext<
@@ -103,13 +86,13 @@ export const Route = wrapCreateRootRouteWithSentry(
       throw redirect(
         match[1] === 'c'
           ? {
-              to: '/card/crew/$hash',
+              to: '/card/$hash/crew',
               params: {
                 hash: match[2],
               },
             }
           : {
-              to: '/card/kult/$hash',
+              to: '/card/$hash/kult',
               params: {
                 hash: match[2],
               },

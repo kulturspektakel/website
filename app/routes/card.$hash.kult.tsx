@@ -8,6 +8,7 @@ import {
   queryCardTransactions,
   transformCardAvtivities,
 } from '../utils/cardUtils';
+import {CardDetails} from '../components/kultcard/CardDetails';
 
 const loader = createServerFn()
   .validator((data: {hash: string; event: {start: Date; end: Date}}) => data)
@@ -24,7 +25,6 @@ const loader = createServerFn()
     );
     return {
       cardActivities,
-      event,
       balance,
       deposit,
       cardId,
@@ -38,7 +38,7 @@ export const currencyFormatter = new Intl.NumberFormat('de-DE', {
   currency: 'EUR',
 });
 
-export const Route = createFileRoute('/card/kult/$hash')({
+export const Route = createFileRoute('/card/$hash/kult')({
   component: KultCard,
   loader: async ({params: {hash}, context: {event}}) =>
     await loader({data: {hash, event}}),
@@ -51,10 +51,17 @@ export const Route = createFileRoute('/card/kult/$hash')({
 });
 
 function KultCard() {
-  const {balance, deposit, hasNewerTransactions} = Route.useLoaderData();
+  const {balance, deposit, hasNewerTransactions, cardActivities, cardId} =
+    Route.useLoaderData();
 
   return (
-    <>
+    <CardDetails
+      infoText="Es kann etwas dauern, bis alle Buchungen vollständig in der Liste dargestellt werden. Das angezeigte Guthaben auf der Karte ist jedoch immer aktuell."
+      cardActivities={cardActivities}
+      cardId={cardId}
+      maxW="450px"
+      minH="70dvh"
+    >
       {hasNewerTransactions && (
         <Alert title="Neue Buchungen">
           Es liegen neuere Buchungen vor. Karte erneut auslesen um diese
@@ -62,6 +69,6 @@ function KultCard() {
         </Alert>
       )}
       <Card balance={balance} deposit={deposit} />
-    </>
+    </CardDetails>
   );
 }

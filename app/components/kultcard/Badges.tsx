@@ -8,7 +8,7 @@ import {
   Progress,
   HStack,
 } from '@chakra-ui/react';
-import {useRef, useEffect, useCallback, useId} from 'react';
+import {useRef, useEffect, useCallback, useId, forwardRef} from 'react';
 import {badgeConfig, BadgeStatus} from '../../utils/badgeConfig';
 import {Cell} from './CardActivities';
 
@@ -20,14 +20,12 @@ export function Badge(props: {
   type: keyof typeof badgeConfig;
 }) {
   const enabled = props.enabled === false ? false : true;
-  const {bgStart, bgEnd, emoji} = badgeConfig[props.type];
 
   const isDragging = useRef(false);
   const svgRef = useRef<SVGSVGElement>(null);
   const raf = useRef<number | null>(null);
   const rotation = useRef(Math.random() * 360);
   const velocity = useRef(DEFAULT_VELOCITY);
-  const id = useId();
 
   const onStart = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     isDragging.current = true;
@@ -129,40 +127,52 @@ export function Badge(props: {
           : 'grayscale(1) sepia(0.1)'
       }
     >
-      <svg
-        viewBox="0 0 97 109"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        ref={svgRef}
-        style={{
-          transformOrigin: 'center center',
-          perspective: '1000px',
-        }}
-      >
-        <path
-          d="M50 5.63953L90.0644 28.7707C90.9926 29.3066 91.5644 30.297 91.5644 31.3688V77.6312C91.5644 78.703 90.9926 79.6934 90.0644 80.2293L50 103.36C49.0718 103.896 47.9282 103.896 47 103.36L6.93559 80.2293C6.00739 79.6934 5.43559 78.703 5.43559 77.6312V31.3688C5.43559 30.297 6.00738 29.3066 6.93559 28.7707L47 5.63953C47.9282 5.10363 49.0718 5.10363 50 5.63953Z"
-          fill={`url(#${id})`}
-          stroke="white"
-          strokeWidth="10"
-        />
-        <image href={emoji} width="84%" height="84%" x="8%" y="8%" />
-        <defs>
-          <linearGradient
-            id={id}
-            x1="48.5"
-            y1="-1"
-            x2="48.5"
-            y2="110"
-            gradientUnits="userSpaceOnUse"
-          >
-            <stop stopColor={bgStart} />
-            <stop offset="1" stopColor={bgEnd} />
-          </linearGradient>
-        </defs>
-      </svg>
+      <BadgeSVG type={props.type} ref={svgRef} />
     </Box>
   );
 }
+
+export const BadgeSVG = forwardRef<
+  SVGSVGElement,
+  {type: keyof typeof badgeConfig}
+>(function ({type}, ref) {
+  const {bgStart, bgEnd, emoji} = badgeConfig[type];
+  const id = useId();
+
+  return (
+    <svg
+      viewBox="0 0 97 109"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      ref={ref}
+      style={{
+        transformOrigin: 'center center',
+        perspective: '1000px',
+      }}
+    >
+      <path
+        d="M50 5.63953L90.0644 28.7707C90.9926 29.3066 91.5644 30.297 91.5644 31.3688V77.6312C91.5644 78.703 90.9926 79.6934 90.0644 80.2293L50 103.36C49.0718 103.896 47.9282 103.896 47 103.36L6.93559 80.2293C6.00739 79.6934 5.43559 78.703 5.43559 77.6312V31.3688C5.43559 30.297 6.00738 29.3066 6.93559 28.7707L47 5.63953C47.9282 5.10363 49.0718 5.10363 50 5.63953Z"
+        fill={`url(#${id})`}
+        stroke="white"
+        strokeWidth="10"
+      />
+      <image href={emoji} width="84%" height="84%" x="8%" y="8%" />
+      <defs>
+        <linearGradient
+          id={id}
+          x1="48.5"
+          y1="-1"
+          x2="48.5"
+          y2="110"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stopColor={bgStart} />
+          <stop offset="1" stopColor={bgEnd} />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+});
 
 export function BadgeActivity({
   awardedBadges,
@@ -216,7 +226,7 @@ export function BadgeActivity({
                 badge.progress && (
                   <Progress.Root
                     defaultValue={
-                      badge.progress.current / badge.progress.target
+                      (badge.progress.current / badge.progress.target) * 100
                     }
                     maxW="sm"
                     my="1"
