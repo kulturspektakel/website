@@ -4,11 +4,11 @@ import {createFileRoute} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
 import {seo} from '../utils/seo';
 import {
-  decodePayload,
   queryCardTransactions,
   transformCardAvtivities,
 } from '../utils/cardUtils';
 import {CardDetails} from '../components/kultcard/CardDetails';
+import {decodePayload} from '../utils/decodePayload';
 
 const loader = createServerFn()
   .validator((data: {hash: string; event: {start: Date; end: Date}}) => data)
