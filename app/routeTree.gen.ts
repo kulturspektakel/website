@@ -24,7 +24,6 @@ import { Route as BookingImport } from './routes/booking'
 import { Route as BadgesImport } from './routes/badges'
 import { Route as AngebotImport } from './routes/angebot'
 import { Route as RouteImport } from './routes/Route'
-import { Route as APIRouteImport } from './routes/APIRoute'
 import { Route as SlugImport } from './routes/$slug'
 import { Route as IndexImport } from './routes/index'
 import { Route as LineupIndexImport } from './routes/lineup.index'
@@ -117,12 +116,6 @@ const AngebotRoute = AngebotImport.update({
 const RouteRoute = RouteImport.update({
   id: '/Route',
   path: '/Route',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const APIRouteRoute = APIRouteImport.update({
-  id: '/APIRoute',
-  path: '/APIRoute',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -227,13 +220,6 @@ declare module '@tanstack/react-router' {
       path: '/$slug'
       fullPath: '/$slug'
       preLoaderRoute: typeof SlugImport
-      parentRoute: typeof rootRoute
-    }
-    '/APIRoute': {
-      id: '/APIRoute'
-      path: '/APIRoute'
-      fullPath: '/APIRoute'
-      preLoaderRoute: typeof APIRouteImport
       parentRoute: typeof rootRoute
     }
     '/Route': {
@@ -460,7 +446,6 @@ const CardHashRouteWithChildren = CardHashRoute._addFileChildren(
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$slug': typeof SlugRoute
-  '/APIRoute': typeof APIRouteRoute
   '/Route': typeof RouteRoute
   '/angebot': typeof AngebotRoute
   '/badges': typeof BadgesRoute
@@ -491,7 +476,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$slug': typeof SlugRoute
-  '/APIRoute': typeof APIRouteRoute
   '/Route': typeof RouteRoute
   '/angebot': typeof AngebotRoute
   '/badges': typeof BadgesRoute
@@ -522,7 +506,6 @@ export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/$slug': typeof SlugRoute
-  '/APIRoute': typeof APIRouteRoute
   '/Route': typeof RouteRoute
   '/angebot': typeof AngebotRoute
   '/badges': typeof BadgesRoute
@@ -555,7 +538,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/$slug'
-    | '/APIRoute'
     | '/Route'
     | '/angebot'
     | '/badges'
@@ -585,7 +567,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/$slug'
-    | '/APIRoute'
     | '/Route'
     | '/angebot'
     | '/badges'
@@ -614,7 +595,6 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/$slug'
-    | '/APIRoute'
     | '/Route'
     | '/angebot'
     | '/badges'
@@ -646,7 +626,6 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SlugRoute: typeof SlugRoute
-  APIRouteRoute: typeof APIRouteRoute
   RouteRoute: typeof RouteRoute
   AngebotRoute: typeof AngebotRoute
   BadgesRoute: typeof BadgesRoute
@@ -671,7 +650,6 @@ export interface RootRouteChildren {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SlugRoute: SlugRoute,
-  APIRouteRoute: APIRouteRoute,
   RouteRoute: RouteRoute,
   AngebotRoute: AngebotRoute,
   BadgesRoute: BadgesRoute,
@@ -705,7 +683,6 @@ export const routeTree = rootRoute
       "children": [
         "/",
         "/$slug",
-        "/APIRoute",
         "/Route",
         "/angebot",
         "/badges",
@@ -732,9 +709,6 @@ export const routeTree = rootRoute
     },
     "/$slug": {
       "filePath": "$slug.tsx"
-    },
-    "/APIRoute": {
-      "filePath": "APIRoute.ts"
     },
     "/Route": {
       "filePath": "Route.tsx"
