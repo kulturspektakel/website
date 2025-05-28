@@ -14,12 +14,12 @@ import {prismaClient} from '../utils/prismaClient';
 import {useBadges} from '../utils/useBadges';
 import {
   byteArrayToString,
-  decodePayload,
   orderToCardActivity,
   queryCrewCard,
 } from '../utils/cardUtils';
 import {CardDetails} from '../components/kultcard/CardDetails';
 import {HighscoreEntry} from '../components/kultcard/Highscore';
+import {decodePayload} from '../utils/decodePayload';
 
 const loader = createServerFn()
   .validator((data: {hash: string; event: {start: Date; end: Date}}) => data)

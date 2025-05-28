@@ -1,6 +1,6 @@
 import {beforeAll, describe, expect, test, assert} from 'vitest';
-import {decodePayload, transformCardAvtivities} from './cardUtils';
-import {act} from 'react';
+import {transformCardAvtivities} from './cardUtils';
+import {decodePayload} from './decodePayload';
 
 describe('decodePayload', () => {
   beforeAll(() => {
