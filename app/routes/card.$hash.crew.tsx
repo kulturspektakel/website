@@ -131,7 +131,7 @@ function CrewCard() {
     validUntil,
     highscores,
   } = Route.useLoaderData();
-  const name = crewCard.Viewer?.displayName ?? crewCard.nickname ?? 'Unbekannt';
+  const name = crewCard.Viewer?.displayName ?? crewCard.nickname;
   const {awardedBadges} = useBadges(cardActivities, event, true);
   totals.Badges = awardedBadges.length;
 
@@ -155,7 +155,8 @@ function CrewCard() {
         justifyContent="space-between"
         p="5"
         pb="3"
-        maxW="320px"
+        maxW="290px"
+        w="full"
         mx="auto"
         overflow="hidden"
         mb="8"
@@ -168,11 +169,7 @@ function CrewCard() {
           boxShadow="inset"
         />
         <Box w="50%" aspectRatio={1}>
-          <Avatar.Root
-            css={ringCss}
-            size="full"
-            background="linear-gradient(141deg,rgba(131, 58, 180, 1) 0%, rgba(253, 29, 29, 1) 50%, rgba(252, 176, 69, 1) 100%)"
-          >
+          <Avatar.Root css={ringCss} size="full" background="blue.500">
             <Avatar.Fallback
               name={name ?? '?'}
               fontFamily="Shrimp"
@@ -190,7 +187,7 @@ function CrewCard() {
           </Avatar.Root>
         </Box>
         <Box textAlign="center">
-          <Heading fontSize="3xl">{name}</Heading>
+          <Heading fontSize="3xl">{name ?? 'Unbekannt'}</Heading>
           <Text fontSize="lg" mt="1" opacity="0.5">
             {crewCard.privileged ? 'Bonbude' : 'Kulturspektakel Crew'}
           </Text>
