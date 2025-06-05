@@ -13,7 +13,7 @@ import {useRef, useState, useEffect, useCallback, useMemo} from 'react';
 
 import {FaSlack} from 'react-icons/fa6';
 import {createFileRoute, redirect} from '@tanstack/react-router';
-import {getWebRequest} from '@tanstack/react-start/server';
+import {getCookie, getWebRequest} from '@tanstack/react-start/server';
 import {
   CheckNonceRequestDocument,
   useCreateNonceRequestMutation,
@@ -31,25 +31,17 @@ gql`
   }
 `;
 
-type SearchParams =
-  | {
-      SAMLRequest: string;
-      RelayState: string;
-    }
-  | {};
-
 const beforeLoad = createServerFn()
-  .validator((search: SearchParams) => search)
+  .validator((query: Record<string, any>) => query)
   .handler(({data}) => {
     const request = getWebRequest();
-    const cookies = request?.headers.get('Cookie') ?? '';
-    const match = cookies.match(/(?:^|;\s*)nonce=([^;]*)/);
-    if (request && match && match?.length > 1) {
+    const nonce = getCookie('nonce');
+    if (request && nonce) {
       const url = new URL(LOGIN_URL);
-      new URL(request.url).searchParams.forEach((value, key) =>
+      Object.entries(data).forEach(([key, value]) =>
         url.searchParams.set(key, value),
       );
-      url.searchParams.set('nonce', match[1]);
+      url.searchParams.set('nonce', nonce);
       throw redirect({
         href: url.toString(),
       });
@@ -63,18 +55,7 @@ const beforeLoad = createServerFn()
 
 export const Route = createFileRoute('/nuclino-sso')({
   component: Sso,
-  validateSearch: (search: Record<string, unknown>): SearchParams => {
-    if (
-      typeof search['SAMLRequest'] === 'string' &&
-      typeof search['RelayState'] === 'string'
-    ) {
-      return {
-        SAMLRequest: search['SAMLRequest'],
-        RelayState: search['RelayState'],
-      };
-    }
-    return {};
-  },
+  validateSearch: (search): Record<string, any> => search,
   beforeLoad: async ({search}) => await beforeLoad({data: search}),
   head: () =>
     seo({
@@ -150,9 +131,11 @@ function Sso() {
   const search = Route.useSearch();
   const searchParams = useMemo(() => {
     const searchParams = new URLSearchParams();
-    Object.entries(search).forEach(([key, value]) =>
-      searchParams.set(key, value),
-    );
+    if (search) {
+      Object.entries(search).forEach(([key, value]) =>
+        searchParams.set(key, value),
+      );
+    }
     return searchParams;
   }, [search]);
 
