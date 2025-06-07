@@ -8,7 +8,13 @@ import {seo} from '../utils/seo';
 
 export const Route = createFileRoute('/$slug')({
   component: PageRoute,
-  loader: async ({params}) => await loader({data: params.slug}),
+  loader: async ({params}) => {
+    const data = await pageLoader({data: params.slug});
+    if (!data) {
+      throw notFound();
+    }
+    return data;
+  },
   head: ({loaderData}) =>
     loaderData
       ? seo({
@@ -18,7 +24,7 @@ export const Route = createFileRoute('/$slug')({
       : {},
 });
 
-const loader = createServerFn()
+export const pageLoader = createServerFn()
   .validator((slug: string) => slug)
   .handler(async ({data: slug}) => {
     const data = await prismaClient.page.findUnique({
@@ -29,7 +35,7 @@ const loader = createServerFn()
     });
 
     if (!data) {
-      throw notFound();
+      return null;
     }
 
     const {left, right, bottom, content, ...page} = data;

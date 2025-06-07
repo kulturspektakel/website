@@ -73,10 +73,13 @@ export async function queryCardTransactions(
   });
 }
 
-export function queryCrewCard(cardId: string, event: {start: Date; end: Date}) {
+export function queryCrewCard(
+  cardId: Uint8Array<ArrayBuffer>,
+  event: {start: Date; end: Date},
+) {
   return prismaClient.crewCard.findUnique({
     where: {
-      id: stringToByteArray(cardId),
+      id: cardId,
     },
     select: {
       privileged: true,

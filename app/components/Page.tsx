@@ -1,4 +1,4 @@
-import {Box, Heading, SimpleGrid} from '@chakra-ui/react';
+import {Flex, Box, Heading, SimpleGrid} from '@chakra-ui/react';
 import MarkdownText from './MarkdownText';
 import {Markdown} from '../utils/markdownText';
 import {Prisma} from '@prisma/client';
@@ -14,7 +14,7 @@ export const pageSelect: Prisma.PageSelect = {
 
 export default function Page(
   props: {
-    title: string;
+    title?: string;
     left?: Markdown;
     right?: Markdown;
     content?: Markdown;
@@ -23,22 +23,23 @@ export default function Page(
 ) {
   const {title, left, right, content, bottom, headingLevel = 1} = props;
   return (
-    <Box as="article" mb="10" w="100%">
-      <Heading
-        mb={5}
-        size="3xl"
-        as={`h${headingLevel}`}
-        textAlign={props.centered ? 'center' : undefined}
-      >
-        {title}
-      </Heading>
+    <Flex as="article" w="100%" gap="4" flexDirection="column">
+      {title && (
+        <Heading
+          size="3xl"
+          as={`h${headingLevel}`}
+          textAlign={props.centered ? 'center' : undefined}
+        >
+          {title}
+        </Heading>
+      )}
       {content && (
-        <Box mt="3" textAlign={props.centered ? 'center' : undefined}>
+        <Box textAlign={props.centered ? 'center' : undefined}>
           <MarkdownText {...content} />
         </Box>
       )}
       {left && right && (
-        <SimpleGrid columns={[1, 2]} gap="5" mt="3">
+        <SimpleGrid columns={[1, 2]} gap={['2', '5']}>
           <Box>
             <MarkdownText {...left} />
           </Box>
@@ -48,10 +49,10 @@ export default function Page(
         </SimpleGrid>
       )}
       {bottom && (
-        <Box mt="3" textAlign={props.centered ? 'center' : undefined}>
+        <Box textAlign={props.centered ? 'center' : undefined}>
           <MarkdownText {...bottom} />
         </Box>
       )}
-    </Box>
+    </Flex>
   );
 }

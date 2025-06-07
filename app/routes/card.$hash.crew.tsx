@@ -16,6 +16,7 @@ import {
   byteArrayToString,
   orderToCardActivity,
   queryCrewCard,
+  stringToByteArray,
 } from '../utils/cardUtils';
 import {CardDetails} from '../components/kultcard/CardDetails';
 import {HighscoreEntry} from '../components/kultcard/Highscore';
@@ -25,7 +26,7 @@ const loader = createServerFn()
   .validator((data: {hash: string; event: {start: Date; end: Date}}) => data)
   .handler(async ({data: {hash, event}}) => {
     const {cardId, validUntil} = decodePayload('crewcard', hash);
-    const _crewCard = await queryCrewCard(cardId, event);
+    const _crewCard = await queryCrewCard(stringToByteArray(cardId), event);
 
     if (!_crewCard) {
       throw notFound();

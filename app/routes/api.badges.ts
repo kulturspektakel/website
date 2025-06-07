@@ -7,6 +7,7 @@ import {getCurrentEvent} from '../utils/getCurrentEvent';
 import {BadgeSVG} from '../components/kultcard/Badges';
 import {renderToString} from 'react-dom/server';
 import React from 'react';
+import {prismaClient} from '../utils/prismaClient';
 
 // This is stupid. This is an API called by the API to figure out
 // if a new badge was awarded with an order. This shouldn't exist
@@ -14,15 +15,23 @@ import React from 'react';
 // api.kulturspektakel.de
 export const APIRoute = createAPIFileRoute('/api/badges')({
   POST: async ({request}) => {
-    const {cardId, orderId} = (await request.json()) as {
-      cardId: string;
-      orderId: number;
+    const {orderId} = (await request.json()) as {
+      orderId?: number;
     };
-    if (!cardId || !orderId) {
+    if (!orderId) {
       throw new Error('invalid input');
     }
+
+    const {crewCardId} = await prismaClient.order.findUniqueOrThrow({
+      where: {
+        id: orderId,
+      },
+    });
+    if (!crewCardId) {
+      throw new Error('no crew card id');
+    }
     const event = await getCurrentEvent();
-    const _crewCard = await queryCrewCard(cardId, event);
+    const _crewCard = await queryCrewCard(crewCardId, event);
     if (!_crewCard) {
       throw new Error('crew card does not exists');
     }

@@ -1,4 +1,4 @@
-import {useMemo, useState} from 'react';
+import {Suspense, useMemo, useState} from 'react';
 import Day from '../components/lineup/Day';
 import {isSameDay, timeZone} from '../utils/dateUtils';
 import {SegmentedControlOrSelect} from '../components/SegmentedControlOrSelect';
@@ -6,6 +6,8 @@ import {prismaClient} from '../utils/prismaClient';
 import {createFileRoute} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
 import {seo} from '../utils/seo';
+import {StageInfo} from '../components/lineup/StageInfo';
+import {Center, Spinner} from '@chakra-ui/react';
 
 const loader = createServerFn()
   .validator((data: {year: string}) => data)
@@ -32,6 +34,7 @@ const loader = createServerFn()
         id: true,
         displayName: true,
         themeColor: true,
+        order: true,
       },
     });
 
@@ -73,7 +76,10 @@ function LineupYear() {
   }, []);
 
   const activeAreas = useMemo(
-    () => areas.filter((a) => bands.some((e) => e.areaId === a.id)),
+    () =>
+      areas
+        .filter((a) => bands.some((e) => e.areaId === a.id))
+        .sort((a, b) => a.order - b.order),
     [areas, bands],
   );
 
@@ -90,6 +96,15 @@ function LineupYear() {
           ...activeAreas.map((a) => ({label: a.displayName, value: a.id})),
         ]}
       />
+      <Suspense
+        fallback={
+          <Center py="10">
+            <Spinner />
+          </Center>
+        }
+      >
+        {stageFilter && <StageInfo id={stageFilter} />}
+      </Suspense>
       {days.map((day) => (
         <Day
           key={day.toISOString()}
