@@ -34,7 +34,7 @@ export default function Band({
       <Image
         width="100%"
         height="100%"
-        src={imageUrl(band.photo, {width: 250}) ?? '/fallback.svg'}
+        src={imageUrl(band.photo, {width: 464}) ?? '/fallback.svg'}
         loading="lazy"
         objectFit="cover"
       />

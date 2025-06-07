@@ -194,7 +194,7 @@ function BandPhoto({
   return (
     <Gallery withCaption>
       <Image
-        src={imageUrl(photo.id)}
+        src={imageUrl(photo.id, {width: 800})}
         alt={name}
         m="auto"
         caption={photo.copyright ? `Foto: ${photo.copyright}` : undefined}
