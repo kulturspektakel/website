@@ -5,7 +5,7 @@ import ConfettiClient from '../booking/Confetti.client';
 import {badgeConfig} from '../../utils/badgeConfig';
 import {useSearch} from '@tanstack/react-router';
 
-export function useNewlyAwardedBadge(
+function useNewlyAwardedBadge(
   cardId: string,
   awarded: Array<{badgeKey: keyof typeof badgeConfig}>,
 ) {
@@ -29,19 +29,29 @@ export function useNewlyAwardedBadge(
   }
 
   try {
-    const oldBadges = JSON.parse(oldData) as {
-      awarded: Array<keyof typeof badgeConfig>;
-    };
-    return awarded.find(({badgeKey}) => !oldBadges.awarded.includes(badgeKey))
+    const oldBadges = JSON.parse(oldData) as Array<keyof typeof badgeConfig>;
+    return awarded.find(({badgeKey}) => !oldBadges.includes(badgeKey))
       ?.badgeKey;
   } catch (e) {
     console.error(e);
   }
 }
 
-export function NewBadge({type}: {type: keyof typeof badgeConfig}) {
-  const badge = badgeConfig[type];
+export function NewBadge({
+  cardId,
+  awarded,
+}: {
+  cardId: string;
+  awarded: Array<{badgeKey: keyof typeof badgeConfig}>;
+}) {
   const [open, setOpen] = useState(true);
+  const newlyAwarded = useNewlyAwardedBadge(cardId, awarded);
+
+  if (!newlyAwarded) {
+    return null;
+  }
+
+  const badge = badgeConfig[newlyAwarded];
 
   return (
     <>
@@ -55,7 +65,7 @@ export function NewBadge({type}: {type: keyof typeof badgeConfig}) {
         <Dialog.Positioner>
           <Dialog.Content textAlign="center">
             <Box mt="-20" w="40%" mx="auto">
-              <Badge type={type} />
+              <Badge type={newlyAwarded} />
             </Box>
             <Dialog.CloseTrigger />
             <Dialog.Header pb="0">

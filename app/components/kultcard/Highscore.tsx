@@ -18,7 +18,7 @@ export function Highscore({data}: {data: HighscoreProps}) {
       {Object.values(data).map((values) => (
         <>
           <Heading textAlign="center" mt="3">
-            {values[0].emoji} {values[0].name}
+            {values[0].emoji} {values[0].productList}
           </Heading>
           <ListRoot as="ol" m="0">
             {values.map((value) => (

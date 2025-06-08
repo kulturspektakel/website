@@ -1,6 +1,6 @@
 import {useMemo, useState} from 'react';
 import {NewBadge, useNewlyAwardedBadge} from './NewBadge';
-import {StackProps, VStack} from '@chakra-ui/react';
+import {ClientOnly, StackProps, VStack} from '@chakra-ui/react';
 import {SegmentedControl} from '../chakra-snippets/segmented-control';
 import {BadgeActivity} from './Badges';
 import {CardActivities, CardActivity} from './CardActivities';
@@ -39,11 +39,11 @@ export function CardDetails({
     event,
     true,
   );
-  const newlyAwarded = useNewlyAwardedBadge(cardId, awardedBadges);
-
   return (
     <VStack mr="auto" ml="auto" align="stretch" {...stackProps}>
-      {newlyAwarded && <NewBadge type={newlyAwarded} />}
+      <ClientOnly>
+        <NewBadge cardId={cardId} awarded={awardedBadges} />
+      </ClientOnly>
       {children}
       <SegmentedControl
         mt="5"

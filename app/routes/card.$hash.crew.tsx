@@ -214,6 +214,7 @@ function CrewCard() {
           <Flex direction="row" w="full" mb="3">
             {Object.keys(totals).map((t) => (
               <Flex
+                key={t}
                 gap="3"
                 flexDirection="column"
                 textAlign="center"
