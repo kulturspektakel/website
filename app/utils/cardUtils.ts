@@ -150,7 +150,7 @@ export function transformCardAvtivities(
   }
   // remove everything before last cashout
   const cashout = transactions.findIndex(
-    (t) => t.transactionType === 'Cashout',
+    (t) => t.transactionType === 'Cashout' || t.transactionType === 'Donation',
   );
   if (cashout > -1) {
     transactions.length = cashout;

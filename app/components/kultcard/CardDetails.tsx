@@ -1,5 +1,5 @@
 import {useMemo, useState} from 'react';
-import {NewBadge, useNewlyAwardedBadge} from './NewBadge';
+import {NewBadge} from './NewBadge';
 import {ClientOnly, StackProps, VStack} from '@chakra-ui/react';
 import {SegmentedControl} from '../chakra-snippets/segmented-control';
 import {BadgeActivity} from './Badges';

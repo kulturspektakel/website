@@ -148,6 +148,7 @@ model CrewCard {
   privileged Boolean?
   viewerId   String?
   validUntil DateTime
+  enrolledAt DateTime
   Viewer     Viewer?  @relation(fields: [viewerId], references: [id])
   Order      Order[]
 }
@@ -280,13 +281,13 @@ model Product {
   productListId    Int
   requiresDeposit  Boolean            @default(false)
   ProductList      ProductList        @relation(fields: [productListId], references: [id])
-  ProductAdditives ProductAdditives[]
+  ProductAdditives ProductAdditives[] @relation("ProductToProductAdditives")
 }
 
 model ProductAdditives {
   id          String    @id
   displayName String
-  Product     Product[]
+  Product     Product[] @relation("ProductToProductAdditives")
 }
 
 model ProductList {
@@ -354,6 +355,7 @@ enum CardTransactionType {
   Charge
   Cashout
   Repair
+  Donation
 }
 
 enum DemoEmbedType {

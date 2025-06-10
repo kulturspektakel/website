@@ -214,4 +214,32 @@ describe('transformCardAvtivities', () => {
       type: 'order',
     });
   });
+
+  test('Donations are cut off', () => {
+    const activites = transformCardAvtivities(
+      [
+        order({counter: 3}),
+        {
+          balanceAfter: 0,
+          balanceBefore: 1000,
+          depositAfter: 0,
+          depositBefore: 0,
+          counter: 1,
+          cardId: 'cardid',
+          transactionType: 'Donation',
+          DeviceLog: {
+            deviceTime: new Date('2000-01-01'),
+          },
+          Order: null,
+        },
+      ],
+      3,
+      1000,
+      2,
+    );
+    expect(activites.length).toBe(1);
+    expect(activites[0]).toMatchObject({
+      type: 'order',
+    });
+  });
 });
