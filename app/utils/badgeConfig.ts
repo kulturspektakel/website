@@ -160,6 +160,7 @@ export const badgeConfig = createBadgeDefinitions({
         'Pizza',
         'Grill',
         'Empanadas',
+        'Schokofrüchte',
       ]);
       const allListsLength = allProductLists.size;
 
