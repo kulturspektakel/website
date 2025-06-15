@@ -212,6 +212,10 @@ describe('bucketList', () => {
       productList: 'Waffel',
       time: new Date('2025-07-27 15:00:00+02:00'),
     }),
+    order({
+      productList: 'Schokofrüchte',
+      time: new Date('2025-07-27 15:20:00+02:00'),
+    }),
   ];
 
   test('awards if has activities from all productLists', () => {
@@ -236,15 +240,15 @@ describe('bucketList', () => {
     expect(badgeConfig.bucketlist.compute(orders, event)).toEqual({
       status: 'not awarded',
       progress: {
-        target: 8,
-        current: 7,
+        target: 9,
+        current: 8,
       },
     });
 
     expect(badgeConfig.bucketlist.compute(orders.slice(0, 6), event)).toEqual({
       status: 'not awarded',
       progress: {
-        target: 8,
+        target: 9,
         current: 6,
       },
     });
@@ -268,7 +272,7 @@ describe('bucketList', () => {
     ).toEqual({
       status: 'not awarded',
       progress: {
-        target: 8,
+        target: 9,
         current: 0,
       },
     });
