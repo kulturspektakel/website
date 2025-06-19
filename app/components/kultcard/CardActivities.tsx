@@ -165,7 +165,7 @@ function CellDateTime(props: {time: Date}) {
 function CellTotal(props: {total: number}) {
   return (
     <Text fontWeight="bold">
-      {props.total < 0 ? '+' : ''}
+      {props.total < 0 ? '' : '+'}
       {currencyFormatter.format(Math.abs(props.total) / 100)}
     </Text>
   );
