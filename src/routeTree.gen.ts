@@ -8,6 +8,8 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
+import { createServerRootRoute } from '@tanstack/react-start/server'
+
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SpeisekarteRouteImport } from './routes/speisekarte'
 import { Route as PlakateRouteImport } from './routes/plakate'
@@ -36,6 +38,9 @@ import { Route as LineupYearSlugRouteImport } from './routes/lineup.$year_.$slug
 import { Route as CardHashKultRouteImport } from './routes/card.$hash.kult'
 import { Route as CardHashCrewRouteImport } from './routes/card.$hash.crew'
 import { Route as BookingApplicationTypeDankeRouteImport } from './routes/booking_.$applicationType_.danke'
+import { ServerRoute as ApiBadgesServerRouteImport } from './routes/api/badges'
+
+const rootServerRouteImport = createServerRootRoute()
 
 const SpeisekarteRoute = SpeisekarteRouteImport.update({
   id: '/speisekarte',
@@ -173,6 +178,11 @@ const BookingApplicationTypeDankeRoute =
     path: '/booking/$applicationType/danke',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiBadgesServerRoute = ApiBadgesServerRouteImport.update({
+  id: '/api/badges',
+  path: '/api/badges',
+  getParentRoute: () => rootServerRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -373,6 +383,27 @@ export interface RootRouteChildren {
   NewsArchivRoute: typeof NewsArchivRoute
   BookingApplicationTypeDankeRoute: typeof BookingApplicationTypeDankeRoute
 }
+export interface FileServerRoutesByFullPath {
+  '/api/badges': typeof ApiBadgesServerRoute
+}
+export interface FileServerRoutesByTo {
+  '/api/badges': typeof ApiBadgesServerRoute
+}
+export interface FileServerRoutesById {
+  __root__: typeof rootServerRouteImport
+  '/api/badges': typeof ApiBadgesServerRoute
+}
+export interface FileServerRouteTypes {
+  fileServerRoutesByFullPath: FileServerRoutesByFullPath
+  fullPaths: '/api/badges'
+  fileServerRoutesByTo: FileServerRoutesByTo
+  to: '/api/badges'
+  id: '__root__' | '/api/badges'
+  fileServerRoutesById: FileServerRoutesById
+}
+export interface RootServerRouteChildren {
+  ApiBadgesServerRoute: typeof ApiBadgesServerRoute
+}
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
@@ -567,6 +598,17 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+declare module '@tanstack/react-start/server' {
+  interface ServerFileRoutesByPath {
+    '/api/badges': {
+      id: '/api/badges'
+      path: '/api/badges'
+      fullPath: '/api/badges'
+      preLoaderRoute: typeof ApiBadgesServerRouteImport
+      parentRoute: typeof rootServerRouteImport
+    }
+  }
+}
 
 interface LineupRouteChildren {
   LineupYearRoute: typeof LineupYearRoute
@@ -635,3 +677,9 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+const rootServerRouteChildren: RootServerRouteChildren = {
+  ApiBadgesServerRoute: ApiBadgesServerRoute,
+}
+export const serverRouteTree = rootServerRouteImport
+  ._addFileChildren(rootServerRouteChildren)
+  ._addFileTypes<FileServerRouteTypes>()

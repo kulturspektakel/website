@@ -13,7 +13,7 @@ import {createServerFileRoute} from '@tanstack/react-start/server';
 // if a new badge was awarded with an order. This shouldn't exist
 // but would require the badges implementation to be available in
 // api.kulturspektakel.de
-export const Route = createServerFileRoute('/api/badges').methods({
+export const ServerRoute = createServerFileRoute('/api/badges').methods({
   POST: async ({request}) => {
     const {orderId} = (await request.json()) as {
       orderId?: number;

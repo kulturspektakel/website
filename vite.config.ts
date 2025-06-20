@@ -6,9 +6,7 @@ import {sentryVitePlugin} from '@sentry/vite-plugin';
 
 const config = defineConfig({
   plugins: [
-    tsConfigPaths({
-      projects: ['./tsconfig.json'],
-    }),
+    tsConfigPaths(),
     sentryVitePlugin({
       authToken: process.env.SENTRY_AUTH_TOKEN,
       org: 'kulturspektakel',
@@ -29,6 +27,9 @@ const config = defineConfig({
   },
   build: {
     sourcemap: true,
+  },
+  server: {
+    port: 3000,
   },
 });
 

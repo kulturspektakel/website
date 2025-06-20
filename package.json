@@ -5,9 +5,9 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "dev": "vinxi dev",
-    "build": "yarn generate:prisma && vinxi build",
-    "start": "vinxi start",
+    "dev": "vite dev",
+    "build": "yarn generate:prisma && vite build",
+    "start": "vite start",
     "generate:prisma": "prisma generate",
     "generate:theme": "chakra typegen app/theme.ts --strict",
     "generate:graphql": "graphql-codegen --config ./.graphqlrc.yml",
