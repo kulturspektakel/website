@@ -1,19 +1,19 @@
 import {json} from '@tanstack/react-start';
-import {createAPIFileRoute} from '@tanstack/react-start/api';
-import {computeBadges} from '../utils/useBadges';
-import {orderToCardActivity, queryCrewCard} from '../utils/cardUtils';
-import {badgeConfig} from '../utils/badgeConfig';
-import {getCurrentEvent} from '../utils/getCurrentEvent';
-import {BadgeSVG} from '../components/kultcard/Badges';
+import {computeBadges} from '../../utils/useBadges';
+import {orderToCardActivity, queryCrewCard} from '../../utils/cardUtils';
+import {badgeConfig} from '../../utils/badgeConfig';
+import {getCurrentEvent} from '../../utils/getCurrentEvent';
+import {BadgeSVG} from '../../components/kultcard/Badges';
 import {renderToString} from 'react-dom/server';
 import React from 'react';
-import {prismaClient} from '../utils/prismaClient';
+import {prismaClient} from '../../utils/prismaClient';
+import {createServerFileRoute} from '@tanstack/react-start/server';
 
 // This is stupid. This is an API called by the API to figure out
 // if a new badge was awarded with an order. This shouldn't exist
 // but would require the badges implementation to be available in
 // api.kulturspektakel.de
-export const APIRoute = createAPIFileRoute('/api/badges')({
+export const Route = createServerFileRoute('/api/badges').methods({
   POST: async ({request}) => {
     const {orderId} = (await request.json()) as {
       orderId?: number;

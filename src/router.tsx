@@ -13,6 +13,7 @@ export function createRouter() {
     context: {} as any,
     defaultNotFoundComponent: NotFound,
     defaultErrorComponent: Error,
+    defaultPendingMinMs: 0,
   });
 
   return routerWithApolloClient(router, apolloClient);
