@@ -3,7 +3,7 @@
   "orgId": "team_MwjWrAIqXKQWYngPaFz7XKMG",
   "settings": {
     "createdAt": 1693664888979,
-    "framework": "vite",
+    "framework": "nitro",
     "devCommand": null,
     "installCommand": null,
     "buildCommand": null,
