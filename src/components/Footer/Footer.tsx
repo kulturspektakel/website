@@ -39,7 +39,10 @@ export default function Footer() {
               anderweitig helfen kannst.
             </Text>
           </div>
-          <LinkButton variant="solid" href="/spenden">
+          <LinkButton
+            variant="solid"
+            linkOptions={{to: '/$slug', params: {slug: 'spenden'}}}
+          >
             Mehr Erfahren
           </LinkButton>
         </Stack>

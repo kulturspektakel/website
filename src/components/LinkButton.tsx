@@ -1,60 +1,31 @@
-import type {ButtonProps, LinkProps} from '@chakra-ui/react';
-import {Button, Link} from '@chakra-ui/react';
+import type {ButtonProps} from '@chakra-ui/react';
+import {Button} from '@chakra-ui/react';
 import {
   RegisteredRouter,
-  useNavigate,
   ValidateLinkOptions,
+  Link,
 } from '@tanstack/react-router';
 
-type BaseLinkButtonProps = Omit<ButtonProps & LinkProps, 'href'> & {
+type Props<
+  TRouter extends RegisteredRouter = RegisteredRouter,
+  TOptions = unknown,
+> = {
+  linkOptions: ValidateLinkOptions<TRouter, TOptions>;
+  download?: string;
   target?: string;
-  children: React.ReactNode;
-  download?: boolean;
-};
+} & ButtonProps;
 
-type HrefProps = BaseLinkButtonProps & {
-  href: string;
-  linkProps?: never;
-};
-
-type LinkPropsVariant<
-  TRouter extends RegisteredRouter = RegisteredRouter,
-  TOptions = unknown,
-> = BaseLinkButtonProps & {
-  href?: never;
-  linkProps: ValidateLinkOptions<TRouter, TOptions>;
-};
-
-export default function LinkButton<
-  TRouter extends RegisteredRouter = RegisteredRouter,
-  TOptions = unknown,
->({
-  target,
+export default function LinkButton<TRouter extends RegisteredRouter, TOptions>({
+  linkOptions,
   children,
-  href,
-  download,
-  linkProps,
   ...props
-}: HrefProps | LinkPropsVariant<TRouter, TOptions>) {
-  const navigate = useNavigate();
-
+}: Props<TRouter, TOptions>) {
   return (
-    <Button role="link" variant="subtle" asChild {...props}>
+    <Button role="link" variant="subtle" {...props}>
       <Link
+        href={linkOptions?.href}
         _hover={{textDecoration: 'none'}}
-        href={props.disabled ? undefined : href}
-        download={download}
-        onClick={(e) => {
-          if (!linkProps) {
-            return
-          }
-          if (props.disabled) {
-            return e.preventDefault();
-          }
-          e.preventDefault();
-          navigate(linkProps);
-        }}
-        target={href ? '_blank' : undefined}
+        {...linkOptions}
       >
         {children}
       </Link>

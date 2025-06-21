@@ -6,15 +6,15 @@ import {
   createRootRouteWithContext,
   useRouter,
   redirect,
+  useNavigate,
 } from '@tanstack/react-router';
-import {Box, ChakraProvider, Flex} from '@chakra-ui/react';
+import {Box, ChakraProvider, Flex, Spinner} from '@chakra-ui/react';
 import theme from '../theme';
 import {type ApolloClientRouterContext} from '@apollo/client-integration-tanstack-start';
 import Footer from '../components/Footer/Footer';
 import Header from '../components/Header/Header';
 import photoswipeCSS from 'photoswipe/dist/photoswipe.css?url';
 import {dateStringComponents} from '../components/DateString';
-import {prismaClient} from '../utils/prismaClient';
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 import {createServerFn} from '@tanstack/react-start';
 import {wrapCreateRootRouteWithSentry} from '@sentry/tanstackstart-react';
@@ -22,7 +22,7 @@ import {seo} from '../utils/seo';
 import ProgressBar from '@badrap/bar-of-progress';
 import {getCurrentEvent} from '../utils/getCurrentEvent';
 
-const beforeLoad = createServerFn().handler(async () => ({
+const beforeLoad = createServerFn({type: 'static'}).handler(async () => ({
   event: await getCurrentEvent(),
 }));
 

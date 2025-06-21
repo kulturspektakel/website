@@ -7,9 +7,9 @@ import {
   Image,
   Flex,
 } from '@chakra-ui/react';
-import LinkButton from '../components/LinkButton';
 import {createFileRoute} from '@tanstack/react-router';
 import {seo} from '../utils/seo';
+import {LinkButton} from '../components/chakra-snippets/link-button';
 
 export const Route = createFileRoute('/logo')({
   component: Logo,

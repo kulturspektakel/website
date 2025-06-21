@@ -47,8 +47,8 @@ export async function directusImageConnection(
   const [{count}] = await prismaClient.$queryRawUnsafe<[{count: BigInt}]>(
     `SELECT COUNT(*) FROM ${from};`,
   );
-  const files = await prismaClient.$queryRawUnsafe<[DirectusImage]>(
-    `SELECT * FROM ${from} ORDER BY "filename_download" LIMIT ${limit} OFFSET ${offset};`,
+  const files = await prismaClient.$queryRawUnsafe<DirectusImage[]>(
+    `SELECT directus_files_id AS id, width, height, copyright, title FROM ${from} ORDER BY "filename_download" LIMIT ${limit} OFFSET ${offset};`,
   );
 
   return {
