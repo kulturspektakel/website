@@ -7,6 +7,7 @@ import plane from '@twemoji/svg/2708.svg';
 import moneyBag from '@twemoji/svg/1f4b0.svg';
 import broccoli from '@twemoji/svg/1f966.svg';
 import signOfHorns from '@twemoji/svg/1f918.svg';
+import tropicalDrink from '@twemoji/svg/1f379.svg';
 import zap from '@twemoji/svg/26a1.svg';
 import jeans from '@twemoji/svg/1F456.svg';
 
@@ -385,6 +386,47 @@ export const badgeConfig = createBadgeDefinitions({
       }
       return {
         status: 'not awarded',
+      };
+    },
+  },
+  rothy: {
+    name: 'Rothy',
+    description: 'Ein Rothy in Einzelteilen',
+    bgStart: '#FF3437',
+    bgEnd: '#FFAE00',
+    crewOnly: true,
+    emoji: tropicalDrink,
+    compute: (activities) => {
+      let hasLimo = false;
+      let hasSpezi = false;
+      let hasHelles = false;
+      for (const activity of activities) {
+        if (activity.type === 'order' && activity.productList === 'Ausschank') {
+          for (const item of activity.items) {
+            if (item.name === 'Helles') {
+              hasHelles = true;
+            } else if (item.name === 'Spezi') {
+              hasSpezi = true;
+            } else if (item.name === 'Limo') {
+              hasLimo = true;
+            }
+
+            if (hasLimo && hasSpezi && hasHelles) {
+              return {
+                status: 'awarded',
+                awardedAt: activity.time,
+              };
+            }
+          }
+        }
+      }
+
+      return {
+        status: 'not awarded',
+        progress: {
+          target: 3,
+          current: Number(hasLimo) + Number(hasSpezi) + Number(hasHelles),
+        },
       };
     },
   },
