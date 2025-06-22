@@ -280,6 +280,31 @@ describe('bucketList', () => {
   });
 });
 
+describe('tierfreundin', () => {
+  test('awarded', () => {
+    expect(
+      badgeConfig.tierfreundin.compute(
+        [
+          order({
+            productList: 'Hot Dog',
+            items: [
+              {
+                name: 'Hot Dog (vegetarisch)',
+                amount: 1,
+              },
+            ],
+            time: new Date('2025-07-27 18:00:00+02:00'),
+          }),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'awarded',
+      awardedAt: new Date('2025-07-27 18:00:00+02:00'),
+    });
+  });
+});
+
 describe('kalle', () => {
   test('awards if purchased "Weißbier" and "Vodka Bull" in sixty minutes or less', () => {
     expect(

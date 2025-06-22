@@ -5,8 +5,9 @@ import pretzel from '@twemoji/svg/1f968.svg';
 import bucket from '@twemoji/svg/1faa3.svg';
 import plane from '@twemoji/svg/2708.svg';
 import moneyBag from '@twemoji/svg/1f4b0.svg';
-import zap from '@twemoji/svg/26a1.svg';
+import broccoli from '@twemoji/svg/1f966.svg';
 import signOfHorns from '@twemoji/svg/1f918.svg';
+import zap from '@twemoji/svg/26a1.svg';
 
 import {
   addDays,
@@ -199,6 +200,39 @@ export const badgeConfig = createBadgeDefinitions({
           target: allListsLength,
           current: allListsLength - allProductLists.size,
         },
+      };
+    },
+  },
+  tierfreundin: {
+    name: 'Tierfreund:in',
+    description: 'Du hast die vegetarische Alternative gewählt',
+    bgStart: '#34C9FF',
+    bgEnd: '#64E43D',
+    crewOnly: false,
+    emoji: broccoli,
+    compute: (activities) => {
+      const veggieAlternatives = new Set<string>([
+        'Hot Dog (vegetarisch)',
+        'Gemüsesemmel',
+        'Grillkäsesemmel',
+        'Käse-Gemüse-Semmel',
+        'Vegetarisch', // Pizza
+        'Waffel Vegan',
+      ]);
+      for (const activity of activities) {
+        if (
+          activity.type === 'order' &&
+          activity.items.some((item) => veggieAlternatives.has(item.name))
+        ) {
+          return {
+            status: 'awarded',
+            awardedAt: activity.time,
+          };
+        }
+      }
+
+      return {
+        status: 'not awarded',
       };
     },
   },
