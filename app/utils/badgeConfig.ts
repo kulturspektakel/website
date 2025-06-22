@@ -413,7 +413,7 @@ export const badgeConfig = createBadgeDefinitions({
   },
   spendierhosen: {
     name: 'Spendierhosen',
-    description: 'Du gibts deinen Freunden eine Runde Bier aus',
+    description: 'Du gibts deinen Freund:innen eine Runde Bier aus',
     bgStart: '#F7DECE',
     bgEnd: '#F4ABBA',
     crewOnly: false,
