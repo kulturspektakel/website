@@ -211,21 +211,12 @@ export const badgeConfig = createBadgeDefinitions({
                   awardedAt: max([activity.time, activity2.time])
                 };
               }
-              if (differenceInMinutes(new Date(), activity.time) < 60 || differenceInMinutes(new Date(), activity2.time) < 60) {
-                return {
-                  status: 'not awarded',
-                  progress: {
-                    target: 2,
-                    current: 1,
-                  },
-                };
-              }
             }
         }
       }
     }
     for (const activity of activities) {      
-      if (activity.type === 'order' && activity.items.some(i => i.name === 'Weißbier') && differenceInMinutes(new Date(), activity.time) < 60) {
+      if (activity.type === 'order' && activity.items.some(i => (i.name === 'Weißbier' || i.name === 'Vodka Bull')) && differenceInMinutes(new Date(), activity.time) < 60) {
         return {
           status: 'not awarded',
           progress: {

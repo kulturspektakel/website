@@ -302,6 +302,32 @@ describe('Kalle', () => {
       status: 'awarded',
       awardedAt: new Date('2025-07-27 11:30:00+02:00'),
     });
+
+    expect(
+      badgeConfig.kalle.compute(
+        [
+          order({
+            productList: 'Cocktail',
+            time: new Date('2025-07-27 10:00:00+02:00'),
+            items: [{name: 'Vodka Bull', amount: 1}],
+          }),
+          order({
+            productList: 'Weißbiergarten',
+            time: new Date('2025-07-27 11:05:00+02:00'),
+            items: [{name: 'Weißbier', amount: 1}],
+          }),
+          order({
+            productList: 'Cocktail',
+            time: new Date('2025-07-27 11:30:00+02:00'),
+            items: [{name: 'Vodka Bull', amount: 1}],
+          }),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'awarded',
+      awardedAt: new Date('2025-07-27 11:30:00+02:00'),
+    });
   });
 
   test('does not award for if none of the two products have been purchased', () => {
