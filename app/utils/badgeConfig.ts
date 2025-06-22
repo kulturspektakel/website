@@ -7,6 +7,7 @@ import plane from '@twemoji/svg/2708.svg';
 import moneyBag from '@twemoji/svg/1f4b0.svg';
 import signOfHorns from '@twemoji/svg/1f918.svg';
 import {addDays, differenceInMinutes, isAfter, isEqual, max} from 'date-fns';
+import {aC} from 'vitest/dist/chunks/reporters.d.BFLkQcL6.js';
 
 export type BadgeStatus =
   | {
@@ -242,6 +243,47 @@ export const badgeConfig = createBadgeDefinitions({
         status: 'not awarded',
         progress: {
           target: 2,
+          current: 0,
+        },
+      };
+    },
+  },
+  rothy: {
+    name: 'Rothy',
+    description: 'Ein Rothy in Einzelteilen',
+    bgStart: '#6b6b6b',
+    bgEnd: '#090909',
+    crewOnly: true,
+    emoji: signOfHorns,
+    compute: (activities) => {
+      let hasLimo = false;
+      let hasSpezi = false;
+      let hasHelles = false;
+      for (const activity of activities) {
+        if (activity.type === 'order' && activity.productList === 'Ausschank') {
+          for (const item of activity.items) {
+            if (item.name === 'Helles') {
+              hasHelles = true;
+            } else if (item.name === 'Spezi') {
+              hasSpezi = true;
+            } else if (item.name === 'Limo') {
+              hasLimo = true;
+            }
+
+            if (hasLimo && hasSpezi && hasHelles) {
+              return {
+                status: 'awarded',
+                awardedAt: activity.time,
+              };
+            }
+          }
+        }
+      }
+
+      return {
+        status: 'not awarded',
+        progress: {
+          target: 3,
           current: 0,
         },
       };
