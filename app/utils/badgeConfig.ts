@@ -201,14 +201,9 @@ export const badgeConfig = createBadgeDefinitions({
     crewOnly: true,
     emoji: signOfHorns,
     compute: (activities) => {
-      for (let a = 0; a<activities.length; a++) {
-        const activity = activities[a];
-        console.log('activity', activity);
+      for (const activity of activities) {
         if (activity.type === 'order' && activity.items.some(i => i.name === 'Vodka Bull')){
-          for (let b = 0; b<activities.length; b++) {
-            const activity2 = activities[b];
-
-            console.log('activity2', activity2, 'activity', activity);
+          for (const activity2 of activities) {
             if (activity2.type === 'order' && activity2.items.some(i => i.name === 'Weißbier')) {
               if (Math.abs(differenceInMinutes(activity.time, activity2.time)) <= 60) {
                 return {
@@ -229,9 +224,7 @@ export const badgeConfig = createBadgeDefinitions({
         }
       }
     }
-    for (let a = 0; a<activities.length; a++) {
-      const activity = activities[a]; 
-      
+    for (const activity of activities) {      
       if (activity.type === 'order' && activity.items.some(i => i.name === 'Weißbier') && differenceInMinutes(new Date(), activity.time) < 60) {
         return {
           status: 'not awarded',
