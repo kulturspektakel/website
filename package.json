@@ -37,6 +37,7 @@
     "@apollo/client-integration-tanstack-start": "^0.12.3-alpha.5",
     "@badrap/bar-of-progress": "^0.2.2",
     "@chakra-ui/react": "^3.19.1",
+    "@date-fns/tz": "^1.2.0",
     "@emotion/react": "^11.14.0",
     "@googlemaps/react-wrapper": "^1.2.0",
     "@prisma/client": "6.8.2",

@@ -3,7 +3,7 @@ import bird from '@twemoji/svg/1f426.svg';
 import camping from '@twemoji/svg/1f3d5.svg';
 import pretzel from '@twemoji/svg/1f968.svg';
 import bucket from '@twemoji/svg/1faa3.svg';
-import plane from '@twemoji/svg/2708.svg';
+// import plane from '@twemoji/svg/2708.svg';
 import moneyBag from '@twemoji/svg/1f4b0.svg';
 import broccoli from '@twemoji/svg/1f966.svg';
 import signOfHorns from '@twemoji/svg/1f918.svg';
@@ -11,13 +11,19 @@ import tropicalDrink from '@twemoji/svg/1f379.svg';
 import zap from '@twemoji/svg/26a1.svg';
 import jeans from '@twemoji/svg/1f456.svg';
 
+import {tz} from '@date-fns/tz';
+
 import {
   addDays,
+  differenceInCalendarDays,
   differenceInMinutes,
   differenceInSeconds,
+  format,
   isAfter,
   isEqual,
   max,
+  set,
+  sub,
 } from 'date-fns';
 
 export type BadgeStatus =
@@ -62,8 +68,28 @@ export const badgeConfig = createBadgeDefinitions({
     emoji: bird,
     compute: (activities, event) => {
       const friday = event.start;
-      const saturday = addDays(friday, 1).setUTCHours(13);
-      const sunday = addDays(friday, 2).setUTCHours(8);
+      const saturday = set(
+        addDays(friday, 1),
+        {
+          hours: 15,
+          minutes: 0,
+          seconds: 0,
+        },
+        {
+          in: tz('Europe/Berlin'),
+        },
+      );
+      const sunday = set(
+        addDays(friday, 2),
+        {
+          hours: 10,
+          minutes: 0,
+          seconds: 0,
+        },
+        {
+          in: tz('Europe/Berlin'),
+        },
+      );
       const startOfDays = [friday, saturday, sunday];
 
       for (const activity of activities) {
@@ -85,7 +111,7 @@ export const badgeConfig = createBadgeDefinitions({
     },
   },
   lokalPatriot: {
-    name: 'Lokalpatriot',
+    name: 'Lokalpatriot:in',
     description: 'Frühschoppen und Weißbiergarten sind deine Heimat',
     bgStart: '#AA8DD8',
     bgEnd: '#7450A8',
@@ -119,43 +145,81 @@ export const badgeConfig = createBadgeDefinitions({
     },
   },
   dauercamper: {
-    name: 'Dauercamper',
-    description: 'Mehr als fünf Stunden auf dem Kult und immer noch hier?',
+    name: 'Dauercamper:in',
+    description: 'Du bist jeden Tag auf dem Kult',
     bgStart: '#C6E5B3',
     bgEnd: '#5C913B',
     crewOnly: false,
     emoji: camping,
-    compute: () => {
-      // TODO: not implemented yet
-      return {status: 'not awarded'};
+    compute: (activities, event) => {
+      const noEventDays =
+        differenceInCalendarDays(event.end, event.start, {
+          in: tz('Europe/Berlin'),
+        }) + 1;
+      const activityDays = new Set<string>();
+      for (const activity of activities) {
+        if (activity.type === 'missing') {
+          continue;
+        }
+        activityDays.add(
+          format(sub(activity.time, {hours: 6}), 'yyyy-MM-dd', {
+            in: tz('Europe/Berlin'),
+          }),
+        );
+        if (activityDays.size === noEventDays) {
+          return {
+            status: 'awarded',
+            awardedAt: activity.time,
+          };
+        }
+      }
+
+      return {
+        status: 'not awarded',
+        progress: {
+          target: noEventDays,
+          current: activityDays.size,
+        },
+      };
     },
   },
-  richKid: {
-    name: 'Rich Kid',
-    description:
-      'Kult ist nur einmal im Jahr, da kann man auch mal Geld ausgeben',
+  investor: {
+    name: 'Investor:in',
+    description: 'Du hast 50 Euro (oder mehr) auf deine Karte aufgeladen',
     bgStart: '#F7DECE',
     bgEnd: '#F4ABBA',
     crewOnly: false,
     emoji: moneyBag,
-    compute: () => {
-      // TODO: not implemented yet
+    compute: (activities) => {
+      for (const activity of activities) {
+        if (
+          activity.type === 'generic' &&
+          activity.transactionType === 'TopUp' &&
+          activity.balanceAfter >= 5000
+        ) {
+          return {
+            status: 'awarded',
+            awardedAt: activity.time,
+          };
+        }
+      }
+
       return {status: 'not awarded'};
     },
   },
-  globetrotter: {
-    name: 'Globetrotter',
-    description:
-      'Große Bühne, Kultbühne, Rondell und Waldbühne heute. New York, Rio und Hong Kong morgen',
-    bgStart: '#C6E5B3',
-    bgEnd: '#5C913B',
-    crewOnly: false,
-    emoji: plane,
-    compute: () => {
-      // TODO: not implemented yet
-      return {status: 'not awarded'};
-    },
-  },
+  // globetrotter: {
+  //   name: 'Globetrotter',
+  //   description:
+  //     'Große Bühne, Kultbühne, Rondell und Waldbühne heute. New York, Rio und Hong Kong morgen',
+  //   bgStart: '#C6E5B3',
+  //   bgEnd: '#5C913B',
+  //   crewOnly: false,
+  //   emoji: plane,
+  //   compute: () => {
+  //     // TODO: not implemented yet
+  //     return {status: 'not awarded'};
+  //   },
+  // },
   bucketlist: {
     name: 'Bucketlist',
     description: 'Keine Essensbude, die du nicht besucht hast',

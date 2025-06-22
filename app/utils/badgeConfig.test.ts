@@ -676,6 +676,103 @@ describe('flash', () => {
   });
 });
 
+describe('dauercamper', () => {
+  test('one day event', () => {
+    expect(
+      badgeConfig.dauercamper.compute(
+        [
+          order({
+            productList: 'Italien',
+            time: new Date('2025-07-26 23:56:00+02:00'),
+          }),
+        ],
+        {
+          start: new Date('2025-07-26 23:55:00+02:00'),
+          end: new Date('2025-07-26 23:57:00+02:00'),
+        },
+      ),
+    ).toEqual({
+      status: 'awarded',
+      awardedAt: new Date('2025-07-26 23:56:00+02:00'),
+    });
+  });
+
+  test('one of three day event', () => {
+    expect(
+      badgeConfig.dauercamper.compute(
+        [
+          order({
+            productList: 'Italien',
+            time: new Date('2025-07-26 23:56:00+02:00'),
+          }),
+        ],
+        {
+          start: new Date('2025-07-25 23:55:00+02:00'),
+          end: new Date('2025-07-27 00:00:01+02:00'),
+        },
+      ),
+    ).toEqual({
+      status: 'not awarded',
+      progress: {
+        target: 3,
+        current: 1,
+      },
+    });
+  });
+
+  test('three of three day event', () => {
+    expect(
+      badgeConfig.dauercamper.compute(
+        [
+          order({
+            productList: 'Italien',
+            time: new Date('2025-07-25 23:56:00+02:00'),
+          }),
+          order({
+            productList: 'Italien',
+            time: new Date('2025-07-26 23:56:00+02:00'),
+          }),
+          order({
+            productList: 'Italien',
+            time: new Date('2025-07-27 06:00:01+02:00'),
+          }),
+        ],
+        {
+          start: new Date('2025-07-25 23:55:00+02:00'),
+          end: new Date('2025-07-27 06:00:02+02:00'),
+        },
+      ),
+    ).toEqual({
+      status: 'awarded',
+      awardedAt: new Date('2025-07-27 06:00:01+02:00'),
+    });
+  });
+});
+
+describe('investor', () => {
+  test('50 euro top up', () => {
+    expect(
+      badgeConfig.investor.compute(
+        [
+          {
+            type: 'generic',
+            transactionType: 'TopUp',
+            balanceAfter: 5000,
+            balanceBefore: 0,
+            depositBefore: 0,
+            depositAfter: 0,
+            time: new Date('2025-07-27 06:00:01+02:00'),
+          },
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'awarded',
+      awardedAt: new Date('2025-07-27 06:00:01+02:00'),
+    });
+  });
+});
+
 describe('spendierhosen', () => {
   test('awards if bought >= 3 beers in one order', () => {
     expect(
