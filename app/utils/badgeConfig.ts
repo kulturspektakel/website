@@ -198,8 +198,8 @@ export const badgeConfig = createBadgeDefinitions({
   tierfreundin: {
     name: 'Tierfreund:in',
     description: 'Du hast die vegetarische Alternative gewählt',
-    bgStart: '#28C6FF',
-    bgEnd: '#1F8600',
+    bgStart: '#34C9FF',
+    bgEnd: '#64E43D',
     crewOnly: false,
     emoji: broccoli,
     compute: (activities) => {
