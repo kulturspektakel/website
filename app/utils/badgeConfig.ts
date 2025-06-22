@@ -5,7 +5,10 @@ import pretzel from '@twemoji/svg/1f968.svg';
 import bucket from '@twemoji/svg/1faa3.svg';
 import plane from '@twemoji/svg/2708.svg';
 import moneyBag from '@twemoji/svg/1f4b0.svg';
+import broccoli from '@twemoji/svg/1f966.svg';
+
 import {addDays, differenceInMinutes, isAfter, isEqual, max} from 'date-fns';
+import {aC} from 'vitest/dist/chunks/reporters.d.BFLkQcL6.js';
 
 export type BadgeStatus =
   | {
@@ -189,6 +192,39 @@ export const badgeConfig = createBadgeDefinitions({
           target: allListsLength,
           current: allListsLength - allProductLists.size,
         },
+      };
+    },
+  },
+  tierfreundin: {
+    name: 'Tierfreund:in',
+    description: 'Du hast die vegetarische Alternative gewählt',
+    bgStart: '#28C6FF',
+    bgEnd: '#1F8600',
+    crewOnly: false,
+    emoji: broccoli,
+    compute: (activities) => {
+      const veggieAlternatives = new Set<string>([
+        'Hot Dog (vegetarisch)',
+        'Gemüsesemmel',
+        'Grillkäsesemmel',
+        'Käse-Gemüse-Semmel',
+        'Vegetarisch', // Pizza
+        'Waffel Vegan',
+      ]);
+      for (const activity of activities) {
+        if (
+          activity.type === 'order' &&
+          activity.items.some((item) => veggieAlternatives.has(item.name))
+        ) {
+          return {
+            status: 'awarded',
+            awardedAt: activity.time,
+          };
+        }
+      }
+
+      return {
+        status: 'not awarded',
       };
     },
   },
