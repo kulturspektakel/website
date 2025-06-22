@@ -2,7 +2,7 @@ import {describe, expect, test} from 'vitest';
 import {badgeConfig} from './badgeConfig';
 import {CardTransactionType} from '@prisma/client';
 import {CardActivity} from '../components/kultcard/CardActivities';
-import { sub } from 'date-fns';
+import {sub} from 'date-fns';
 
 const event = Object.freeze({
   start: new Date('2025-07-25 16:00:00+02:00'),
@@ -344,6 +344,10 @@ describe('Kalle', () => {
       ),
     ).toEqual({
       status: 'not awarded',
+      progress: {
+        target: 2,
+        current: 0,
+      },
     });
   });
 
@@ -406,6 +410,10 @@ describe('Kalle', () => {
       ),
     ).toEqual({
       status: 'not awarded',
+      progress: {
+        target: 2,
+        current: 0,
+      },
     });
   });
 });

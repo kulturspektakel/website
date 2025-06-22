@@ -202,32 +202,49 @@ export const badgeConfig = createBadgeDefinitions({
     emoji: signOfHorns,
     compute: (activities) => {
       for (const activity of activities) {
-        if (activity.type === 'order' && activity.items.some(i => i.name === 'Vodka Bull')){
+        if (
+          activity.type === 'order' &&
+          activity.items.some((i) => i.name === 'Vodka Bull')
+        ) {
           for (const activity2 of activities) {
-            if (activity2.type === 'order' && activity2.items.some(i => i.name === 'Weißbier')) {
-              if (Math.abs(differenceInMinutes(activity.time, activity2.time)) <= 60) {
-                return {
-                  status: 'awarded',
-                  awardedAt: max([activity.time, activity2.time])
-                };
-              }
+            if (
+              activity2.type === 'order' &&
+              activity2.items.some((i) => i.name === 'Weißbier') &&
+              Math.abs(differenceInMinutes(activity.time, activity2.time)) <= 60
+            ) {
+              return {
+                status: 'awarded',
+                awardedAt: max([activity.time, activity2.time]),
+              };
             }
+          }
         }
       }
-    }
-    for (const activity of activities) {      
-      if (activity.type === 'order' && activity.items.some(i => (i.name === 'Weißbier' || i.name === 'Vodka Bull')) && differenceInMinutes(new Date(), activity.time) < 60) {
-        return {
-          status: 'not awarded',
-          progress: {
-            target: 2,
-            current: 1,
-          },
-        };
+      for (const activity of activities) {
+        if (
+          activity.type === 'order' &&
+          activity.items.some(
+            (i) => i.name === 'Weißbier' || i.name === 'Vodka Bull',
+          ) &&
+          differenceInMinutes(new Date(), activity.time) < 60
+        ) {
+          return {
+            status: 'not awarded',
+            progress: {
+              target: 2,
+              current: 1,
+            },
+          };
+        }
       }
-    }
 
-      return {status: 'not awarded'};
+      return {
+        status: 'not awarded',
+        progress: {
+          target: 2,
+          current: 0,
+        },
+      };
     },
   },
 });
