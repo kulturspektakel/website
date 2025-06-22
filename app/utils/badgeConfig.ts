@@ -9,6 +9,7 @@ import broccoli from '@twemoji/svg/1f966.svg';
 import signOfHorns from '@twemoji/svg/1f918.svg';
 import tropicalDrink from '@twemoji/svg/1f379.svg';
 import zap from '@twemoji/svg/26a1.svg';
+import jeans from '@twemoji/svg/1f456.svg';
 
 import {
   addDays,
@@ -343,6 +344,48 @@ export const badgeConfig = createBadgeDefinitions({
           target: 2,
           current: hasOne ? 1 : 0,
         },
+      };
+    },
+  },
+  spendierhosen: {
+    name: 'Spendierhosen',
+    description: 'Du gibts deinen Freunden eine Runde Bier aus',
+    bgStart: '#F7DECE',
+    bgEnd: '#F4ABBA',
+    crewOnly: false,
+    emoji: jeans,
+    compute: (activities) => {
+      const includedItems = new Set([
+        'Weißbier',
+        'Weißbier alkoholfrei',
+        'Russ',
+        'Helles',
+        'Radler',
+        'Helles alkoholfrei',
+        'Bottle 0.5',
+        'Bottle 0.3',
+        'Tap 0.5',
+        'Tap 0.3',
+        'Tastingbrett',
+        'Desperados 0.3',
+        'Corona 0.3',
+      ]);
+
+      for (const activity of activities) {
+        if (
+          activity.type === 'order' &&
+          activity.items.reduce((acc, item) => {
+            return acc + (includedItems.has(item.name) ? item.amount : 0);
+          }, 0) >= 3
+        ) {
+          return {
+            status: 'awarded',
+            awardedAt: activity.time,
+          };
+        }
+      }
+      return {
+        status: 'not awarded',
       };
     },
   },
