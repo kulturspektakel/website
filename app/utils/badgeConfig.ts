@@ -9,7 +9,7 @@ import broccoli from '@twemoji/svg/1f966.svg';
 import signOfHorns from '@twemoji/svg/1f918.svg';
 import tropicalDrink from '@twemoji/svg/1f379.svg';
 import zap from '@twemoji/svg/26a1.svg';
-import jeans from '@twemoji/svg/1F456.svg';
+import jeans from '@twemoji/svg/1f456.svg';
 
 import {
   addDays,
