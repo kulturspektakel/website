@@ -5,7 +5,16 @@ import pretzel from '@twemoji/svg/1f968.svg';
 import bucket from '@twemoji/svg/1faa3.svg';
 import plane from '@twemoji/svg/2708.svg';
 import moneyBag from '@twemoji/svg/1f4b0.svg';
-import {addDays, differenceInMinutes, isAfter, isEqual, max} from 'date-fns';
+import zap from '@twemoji/svg/26a1.svg';
+
+import {
+  addDays,
+  differenceInMinutes,
+  differenceInSeconds,
+  isAfter,
+  isEqual,
+  max,
+} from 'date-fns';
 
 export type BadgeStatus =
   | {
@@ -188,6 +197,64 @@ export const badgeConfig = createBadgeDefinitions({
         progress: {
           target: allListsLength,
           current: allListsLength - allProductLists.size,
+        },
+      };
+    },
+  },
+  flash: {
+    name: 'Flash',
+    description: 'Waldbühne zu Große Bühne in unter 5 Minuten',
+    bgStart: '#6F62D7',
+    bgEnd: '#D201EA',
+    crewOnly: true,
+    emoji: zap,
+    compute: (activities) => {
+      const maxSeconds = 5 * 60;
+      const gb = ['Hot Dog', 'Cocktail', 'Schokofrüchte'];
+      const wb = ['Italien', 'Kinder'];
+
+      let hasOne = false;
+
+      for (const activity of activities) {
+        if (activity.type !== 'order') {
+          continue;
+        }
+        if (wb.includes(activity.productList)) {
+          for (const activity2 of activities) {
+            if (
+              activity2.type === 'order' &&
+              Math.abs(differenceInSeconds(activity2.time, activity.time)) <=
+                maxSeconds &&
+              gb.includes(activity2.productList)
+            ) {
+              return {
+                status: 'awarded',
+                awardedAt: max([activity.time, activity2.time]),
+              };
+            }
+          }
+
+          if (differenceInSeconds(new Date(), activity.time) <= maxSeconds) {
+            hasOne = true;
+          }
+        }
+      }
+
+      for (const activity of activities) {
+        if (
+          activity.type === 'order' &&
+          differenceInSeconds(new Date(), activity.time) <= maxSeconds &&
+          gb.includes(activity.productList)
+        ) {
+          hasOne = true;
+        }
+      }
+
+      return {
+        status: 'not awarded',
+        progress: {
+          target: 2,
+          current: hasOne ? 1 : 0,
         },
       };
     },

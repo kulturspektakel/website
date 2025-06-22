@@ -1,4 +1,4 @@
-import {describe, expect, test} from 'vitest';
+import {beforeAll, describe, expect, test, vi} from 'vitest';
 import {badgeConfig} from './badgeConfig';
 import {CardTransactionType} from '@prisma/client';
 import {CardActivity} from '../components/kultcard/CardActivities';
@@ -273,6 +273,138 @@ describe('bucketList', () => {
       status: 'not awarded',
       progress: {
         target: 9,
+        current: 0,
+      },
+    });
+  });
+});
+
+describe('flash', () => {
+  beforeAll(() => {
+    vi.setSystemTime(new Date('2025-07-26 19:00:00+02:00'));
+  });
+
+  test('none', () => {
+    expect(
+      badgeConfig.flash.compute(
+        [
+          order({
+            productList: 'Italien',
+            time: new Date('2025-07-26 18:00:00+02:00'),
+          }),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'not awarded',
+      progress: {
+        target: 2,
+        current: 0,
+      },
+    });
+  });
+
+  test('one at WB', () => {
+    expect(
+      badgeConfig.flash.compute(
+        [
+          order({
+            productList: 'Italien',
+            time: new Date('2025-07-26 18:58:00+02:00'),
+          }),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'not awarded',
+      progress: {
+        target: 2,
+        current: 1,
+      },
+    });
+  });
+
+  test('one at GB', () => {
+    expect(
+      badgeConfig.flash.compute(
+        [
+          order({
+            productList: 'Hot Dog',
+            time: new Date('2025-07-26 18:58:00+02:00'),
+          }),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'not awarded',
+      progress: {
+        target: 2,
+        current: 1,
+      },
+    });
+  });
+
+  test('both: GB first', () => {
+    expect(
+      badgeConfig.flash.compute(
+        [
+          order({
+            productList: 'Italien',
+            time: new Date('2025-07-26 10:58:00+02:00'),
+          }),
+          order({
+            productList: 'Hot Dog',
+            time: new Date('2025-07-26 10:57:00+02:00'),
+          }),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'awarded',
+      awardedAt: new Date('2025-07-26 10:58:00+02:00'),
+    });
+  });
+
+  test('both: WB first', () => {
+    expect(
+      badgeConfig.flash.compute(
+        [
+          order({
+            productList: 'Italien',
+            time: new Date('2025-07-26 10:55:00+02:00'),
+          }),
+          order({
+            productList: 'Hot Dog',
+            time: new Date('2025-07-26 10:57:00+02:00'),
+          }),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'awarded',
+      awardedAt: new Date('2025-07-26 10:57:00+02:00'),
+    });
+  });
+
+  test('Too much time between', () => {
+    expect(
+      badgeConfig.flash.compute(
+        [
+          order({
+            productList: 'Italien',
+            time: new Date('2025-07-26 10:55:00+02:00'),
+          }),
+          order({
+            productList: 'Hot Dog',
+            time: new Date('2025-07-26 11:00:01+02:00'),
+          }),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'not awarded',
+      progress: {
+        target: 2,
         current: 0,
       },
     });
