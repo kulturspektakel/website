@@ -8,7 +8,6 @@ import moneyBag from '@twemoji/svg/1f4b0.svg';
 import broccoli from '@twemoji/svg/1f966.svg';
 
 import {addDays, differenceInMinutes, isAfter, isEqual, max} from 'date-fns';
-import {aC} from 'vitest/dist/chunks/reporters.d.BFLkQcL6.js';
 
 export type BadgeStatus =
   | {
