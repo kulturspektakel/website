@@ -216,10 +216,7 @@ export const badgeConfig = createBadgeDefinitions({
       let hasOne = false;
 
       for (const activity of activities) {
-        if (activity.type !== 'order') {
-          continue;
-        }
-        if (wb.includes(activity.productList)) {
+        if (activity.type === 'order' && wb.includes(activity.productList)) {
           for (const activity2 of activities) {
             if (
               activity2.type === 'order' &&
