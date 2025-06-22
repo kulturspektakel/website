@@ -2,6 +2,7 @@ import {describe, expect, test} from 'vitest';
 import {badgeConfig} from './badgeConfig';
 import {CardTransactionType} from '@prisma/client';
 import {CardActivity} from '../components/kultcard/CardActivities';
+import {sub} from 'date-fns';
 
 const event = Object.freeze({
   start: new Date('2025-07-25 16:00:00+02:00'),
@@ -300,6 +301,144 @@ describe('tierfreundin', () => {
     ).toEqual({
       status: 'awarded',
       awardedAt: new Date('2025-07-27 18:00:00+02:00'),
+    });
+  });
+});
+
+describe('Kalle', () => {
+  test('awards if purchased "Weißbier" and "Vodka Bull" in sixty minutes or less', () => {
+    expect(
+      badgeConfig.kalle.compute(
+        [
+          order({
+            productList: 'Weißbiergarten',
+            time: new Date('2025-07-27 11:00:00+02:00'),
+            items: [{name: 'Weißbier', amount: 1}],
+          }),
+          order({
+            productList: 'Cocktail',
+            time: new Date('2025-07-27 11:30:00+02:00'),
+            items: [{name: 'Vodka Bull', amount: 1}],
+          }),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'awarded',
+      awardedAt: new Date('2025-07-27 11:30:00+02:00'),
+    });
+
+    expect(
+      badgeConfig.kalle.compute(
+        [
+          order({
+            productList: 'Cocktail',
+            time: new Date('2025-07-27 10:00:00+02:00'),
+            items: [{name: 'Vodka Bull', amount: 1}],
+          }),
+          order({
+            productList: 'Weißbiergarten',
+            time: new Date('2025-07-27 11:05:00+02:00'),
+            items: [{name: 'Weißbier', amount: 1}],
+          }),
+          order({
+            productList: 'Cocktail',
+            time: new Date('2025-07-27 11:30:00+02:00'),
+            items: [{name: 'Vodka Bull', amount: 1}],
+          }),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'awarded',
+      awardedAt: new Date('2025-07-27 11:30:00+02:00'),
+    });
+  });
+
+  test('does not award for if none of the two products have been purchased', () => {
+    expect(
+      badgeConfig.kalle.compute(
+        [
+          order({
+            productList: 'Weißbiergarten',
+            time: new Date('2025-07-27 11:00:00+02:00'),
+            items: [{name: 'Obstler', amount: 1}],
+          }),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'not awarded',
+      progress: {
+        target: 2,
+        current: 0,
+      },
+    });
+  });
+
+  test('correctly shows progress if one has been purchased in the last 60mins', () => {
+    expect(
+      badgeConfig.kalle.compute(
+        [
+          order({
+            productList: 'Weißbiergarten',
+            time: sub(new Date(), {minutes: 30}),
+            items: [{name: 'Weißbier', amount: 1}],
+          }),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'not awarded',
+      progress: {
+        target: 2,
+        current: 1,
+      },
+    });
+
+    expect(
+      badgeConfig.kalle.compute(
+        [
+          order({
+            productList: 'Cocktail',
+            time: sub(new Date(), {minutes: 20}),
+            items: [{name: 'Vodka Bull', amount: 1}],
+          }),
+          order({
+            productList: 'Weißbiergarten',
+            time: sub(new Date(), {hours: 3}),
+            items: [{name: 'Weißbier', amount: 1}],
+          }),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'not awarded',
+      progress: {
+        target: 2,
+        current: 1,
+      },
+    });
+  });
+
+  test('does not show progress if one has been purchased, but not in the last 60 minutes', () => {
+    expect(
+      badgeConfig.kalle.compute(
+        [
+          order({
+            productList: 'Weißbiergarten',
+            time: sub(new Date(), {hours: 3}),
+            items: [{name: 'Weißbier', amount: 1}],
+          }),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'not awarded',
+      progress: {
+        target: 2,
+        current: 0,
+      },
     });
   });
 });
