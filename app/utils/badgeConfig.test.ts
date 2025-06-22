@@ -1,4 +1,4 @@
-import {beforeAll, describe, expect, test, vi} from 'vitest';
+import {afterAll, beforeAll, describe, expect, test, vi} from 'vitest';
 import {badgeConfig} from './badgeConfig';
 import {CardTransactionType} from '@prisma/client';
 import {CardActivity} from '../components/kultcard/CardActivities';
@@ -421,6 +421,11 @@ describe('kalle', () => {
 describe('flash', () => {
   beforeAll(() => {
     vi.setSystemTime(new Date('2025-07-26 19:00:00+02:00'));
+  });
+
+  afterAll(() => {
+    // reset mocked time
+    vi.useRealTimers();
   });
 
   test('none', () => {
