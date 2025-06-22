@@ -417,3 +417,99 @@ describe('Kalle', () => {
     });
   });
 });
+
+describe('rothy', () => {
+  test('none', () => {
+    expect(
+      badgeConfig.rothy.compute(
+        [
+          order({
+            productList: 'Ausschank',
+            time: new Date(),
+            items: [{name: 'Wasser', amount: 1}],
+          }),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'not awarded',
+      progress: {
+        target: 3,
+        current: 0,
+      },
+    });
+  });
+
+  test('one', () => {
+    expect(
+      badgeConfig.rothy.compute(
+        [
+          order({
+            productList: 'Ausschank',
+            time: new Date(),
+            items: [{name: 'Helles', amount: 1}],
+          }),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'not awarded',
+      progress: {
+        target: 3,
+        current: 1,
+      },
+    });
+  });
+
+  test('two', () => {
+    expect(
+      badgeConfig.rothy.compute(
+        [
+          order({
+            productList: 'Ausschank',
+            time: new Date(),
+            items: [{name: 'Helles', amount: 1}],
+          }),
+          order({
+            productList: 'Ausschank',
+            time: new Date(),
+            items: [{name: 'Spezi', amount: 1}],
+          }),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'not awarded',
+      progress: {
+        target: 3,
+        current: 2,
+      },
+    });
+  });
+
+  test('awarded', () => {
+    expect(
+      badgeConfig.rothy.compute(
+        [
+          order({
+            productList: 'Ausschank',
+            time: new Date('2000-01-01 00:00:00'),
+            items: [{name: 'Helles', amount: 1}],
+          }),
+          order({
+            productList: 'Ausschank',
+            time: new Date('2000-01-01 00:00:01'),
+            items: [
+              {name: 'Spezi', amount: 1},
+              {name: 'Limo', amount: 1},
+            ],
+          }),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'awarded',
+      awardedAt: new Date('2000-01-01 00:00:01'),
+    });
+  });
+});

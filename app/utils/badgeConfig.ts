@@ -6,8 +6,9 @@ import bucket from '@twemoji/svg/1faa3.svg';
 import plane from '@twemoji/svg/2708.svg';
 import moneyBag from '@twemoji/svg/1f4b0.svg';
 import signOfHorns from '@twemoji/svg/1f918.svg';
+import tropicalDrink from '@twemoji/svg/1f379.svg';
+
 import {addDays, differenceInMinutes, isAfter, isEqual, max} from 'date-fns';
-import {aC} from 'vitest/dist/chunks/reporters.d.BFLkQcL6.js';
 
 export type BadgeStatus =
   | {
@@ -251,10 +252,10 @@ export const badgeConfig = createBadgeDefinitions({
   rothy: {
     name: 'Rothy',
     description: 'Ein Rothy in Einzelteilen',
-    bgStart: '#6b6b6b',
-    bgEnd: '#090909',
+    bgStart: '#FF3437',
+    bgEnd: '#FFAE00',
     crewOnly: true,
-    emoji: signOfHorns,
+    emoji: tropicalDrink,
     compute: (activities) => {
       let hasLimo = false;
       let hasSpezi = false;
@@ -284,7 +285,7 @@ export const badgeConfig = createBadgeDefinitions({
         status: 'not awarded',
         progress: {
           target: 3,
-          current: 0,
+          current: Number(hasLimo) + Number(hasSpezi) + Number(hasHelles),
         },
       };
     },
