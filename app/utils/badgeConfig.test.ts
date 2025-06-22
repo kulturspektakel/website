@@ -579,3 +579,48 @@ describe('flash', () => {
     });
   });
 });
+
+describe('spendierhosen', () => {
+  test('awards if bought >= 3 beers in one order', () => {
+    expect(
+      badgeConfig.spendierhosen.compute(
+        [
+          order({
+            productList: 'Weißbiergarten',
+            time: new Date('2025-07-27 11:00:00+02:00'),
+            items: [
+              {name: 'Helles', amount: 3},
+              {name: 'Weißbier', amount: 1},
+            ],
+          }),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'awarded',
+      awardedAt: new Date('2025-07-27 11:00:00+02:00'),
+    });
+  });
+
+  test('does not award if less than 3 beers in one order', () => {
+    expect(
+      badgeConfig.spendierhosen.compute(
+        [
+          order({
+            productList: 'Ausschank',
+            time: new Date('2025-07-27 11:00:00+02:00'),
+            items: [{name: 'Helles', amount: 2}],
+          }),
+          order({
+            productList: 'Weißbiergarten',
+            time: new Date('2025-07-27 11:00:00+02:00'),
+            items: [{name: 'Weißbier', amount: 2}],
+          }),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'not awarded',
+    });
+  });
+});
