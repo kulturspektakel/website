@@ -5,6 +5,7 @@ import pretzel from '@twemoji/svg/1f968.svg';
 import bucket from '@twemoji/svg/1faa3.svg';
 import plane from '@twemoji/svg/2708.svg';
 import moneyBag from '@twemoji/svg/1f4b0.svg';
+import signOfHorns from '@twemoji/svg/1f918.svg';
 import {addDays, differenceInMinutes, isAfter, isEqual, max} from 'date-fns';
 
 export type BadgeStatus =
@@ -190,6 +191,59 @@ export const badgeConfig = createBadgeDefinitions({
           current: allListsLength - allProductLists.size,
         },
       };
+    },
+  },
+  kalle: {
+    name: 'Kalle',
+    description: 'Herrengedeck Kalle spezial',
+    bgStart: '#6b6b6b',
+    bgEnd: '#090909',
+    crewOnly: true,
+    emoji: signOfHorns,
+    compute: (activities) => {
+      for (let a = 0; a<activities.length; a++) {
+        const activity = activities[a];
+        console.log('activity', activity);
+        if (activity.type === 'order' && activity.items.some(i => i.name === 'Vodka Bull')){
+          for (let b = 0; b<activities.length; b++) {
+            const activity2 = activities[b];
+
+            console.log('activity2', activity2, 'activity', activity);
+            if (activity2.type === 'order' && activity2.items.some(i => i.name === 'Weißbier')) {
+              if (Math.abs(differenceInMinutes(activity.time, activity2.time)) <= 60) {
+                return {
+                  status: 'awarded',
+                  awardedAt: max([activity.time, activity2.time])
+                };
+              }
+              if (differenceInMinutes(new Date(), activity.time) < 60 || differenceInMinutes(new Date(), activity2.time) < 60) {
+                return {
+                  status: 'not awarded',
+                  progress: {
+                    target: 2,
+                    current: 1,
+                  },
+                };
+              }
+            }
+        }
+      }
+    }
+    for (let a = 0; a<activities.length; a++) {
+      const activity = activities[a]; 
+      
+      if (activity.type === 'order' && activity.items.some(i => i.name === 'Weißbier') && differenceInMinutes(new Date(), activity.time) < 60) {
+        return {
+          status: 'not awarded',
+          progress: {
+            target: 2,
+            current: 1,
+          },
+        };
+      }
+    }
+
+      return {status: 'not awarded'};
     },
   },
 });
