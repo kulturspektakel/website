@@ -10,6 +10,9 @@ import signOfHorns from '@twemoji/svg/1f918.svg';
 import tropicalDrink from '@twemoji/svg/1f379.svg';
 import zap from '@twemoji/svg/26a1.svg';
 import jeans from '@twemoji/svg/1f456.svg';
+import droplet from '@twemoji/svg/1f4a7.svg';
+import cupWithStraw from '@twemoji/svg/1f964.svg';
+import fox from '@twemoji/svg/1f98a.svg';
 
 import {tz} from '@date-fns/tz';
 
@@ -25,6 +28,7 @@ import {
   set,
   sub,
 } from 'date-fns';
+import {aC} from 'vitest/dist/chunks/reporters.d.C-cu31ET.js';
 
 export type BadgeStatus =
   | {
@@ -304,7 +308,7 @@ export const badgeConfig = createBadgeDefinitions({
   },
   kalle: {
     name: 'Kalle',
-    description: 'Herrengedeck Kalle spezial',
+    description: 'Herrengedeck nach Kalle Art',
     bgStart: '#6b6b6b',
     bgEnd: '#090909',
     crewOnly: true,
@@ -413,7 +417,7 @@ export const badgeConfig = createBadgeDefinitions({
   },
   spendierhosen: {
     name: 'Spendierhosen',
-    description: 'Du gibts deinen Freund:innen eine Runde Bier aus',
+    description: 'Eine Runde Bier für dich und mindestens zwei Freunde',
     bgStart: '#F7DECE',
     bgEnd: '#F4ABBA',
     crewOnly: false,
@@ -455,17 +459,17 @@ export const badgeConfig = createBadgeDefinitions({
   },
   rothy: {
     name: 'Rothy',
-    description: 'Ein Rothy in Einzelteilen',
+    description: 'Muss man sich den Rothy hier wirklich selbst mischen?',
     bgStart: '#FF3437',
     bgEnd: '#FFAE00',
     crewOnly: true,
     emoji: tropicalDrink,
     compute: (activities) => {
-      let hasLimo = false;
-      let hasSpezi = false;
-      let hasHelles = false;
       for (const activity of activities) {
         if (activity.type === 'order' && activity.productList === 'Ausschank') {
+          let hasLimo = false;
+          let hasSpezi = false;
+          let hasHelles = false;
           for (const item of activity.items) {
             if (item.name === 'Helles') {
               hasHelles = true;
@@ -487,11 +491,110 @@ export const badgeConfig = createBadgeDefinitions({
 
       return {
         status: 'not awarded',
+      };
+    },
+  },
+  hydrationHomie: {
+    name: 'Hydration Homie',
+    description: 'Expert:innen empfehlen 2,5 Liter Wasser',
+    bgStart: '#CEF4FF',
+    bgEnd: '#ABE1FF',
+    crewOnly: false,
+    emoji: droplet,
+    compute: (activities) => {
+      const target = 5;
+      let count = 0;
+      for (const activity of activities) {
+        if (activity.type === 'order') {
+          count += activity.items.reduce(
+            (acc, item) => acc + (item.name === 'Wasser' ? item.amount : 0),
+            0,
+          );
+          if (count >= target) {
+            return {
+              status: 'awarded',
+              awardedAt: activity.time,
+            };
+          }
+        }
+      }
+
+      return {
+        status: 'not awarded',
         progress: {
-          target: 3,
-          current: Number(hasLimo) + Number(hasSpezi) + Number(hasHelles),
+          target,
+          current: count,
         },
       };
     },
   },
+  pfandsammlerin: {
+    name: 'Pfandsammler:in',
+    description: 'Mehr als 4 Becher? Was hast du vor?',
+    bgStart: '#9FACFF',
+    bgEnd: '#6500C9',
+    crewOnly: false,
+    emoji: cupWithStraw,
+    compute: (activities) => {
+      const target = 5;
+      for (const activity of activities) {
+        if (
+          (activity.type === 'generic' && activity.depositAfter >= target) ||
+          (activity.type === 'order' &&
+            (activity.cardChange?.depositAfter ?? 0) >= target)
+        ) {
+          return {
+            status: 'awarded',
+            awardedAt: activity.time,
+          };
+        }
+      }
+
+      return {
+        status: 'not awarded',
+      };
+    },
+  },
+  sparfuchs: {
+    name: 'Sparfuchs',
+    description: 'Radler selbst gemischt und 50 Cent gespart',
+    bgStart: '#FFF9C5',
+    bgEnd: '#FFE9B1',
+    crewOnly: false,
+    emoji: fox,
+    compute: (activities) => {
+      for (const activity of activities) {
+        if (
+          activity.type === 'order' &&
+          activity.productList === 'Ausschank' &&
+          activity.items.some((i) => i.name === 'Helles') &&
+          activity.items.some((i) => i.name === 'Limo') &&
+          activity.items.every((i) => i.name !== 'Radler')
+        ) {
+          return {
+            status: 'awarded',
+            awardedAt: activity.time,
+          };
+        }
+      }
+
+      return {
+        status: 'not awarded',
+      };
+    },
+  },
+  // keineTermine: {
+  //   name: 'Stammplatz',
+  //   description: 'Muss man sich den Rothy hier wirklich selbst mischen?',
+  //   bgStart: '#FF3437',
+  //   bgEnd: '#FFAE00',
+  //   crewOnly: true,
+  //   emoji: cupWithStraw,
+  //   compute: (activities) => {
+
+  //     return {
+  //       status: 'not awarded',
+  //     };
+  //   },
+  // },
 });

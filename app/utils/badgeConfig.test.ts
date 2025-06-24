@@ -458,57 +458,6 @@ describe('rothy', () => {
       ),
     ).toEqual({
       status: 'not awarded',
-      progress: {
-        target: 3,
-        current: 0,
-      },
-    });
-  });
-
-  test('one', () => {
-    expect(
-      badgeConfig.rothy.compute(
-        [
-          order({
-            productList: 'Ausschank',
-            time: new Date(),
-            items: [{name: 'Helles', amount: 1}],
-          }),
-        ],
-        event,
-      ),
-    ).toEqual({
-      status: 'not awarded',
-      progress: {
-        target: 3,
-        current: 1,
-      },
-    });
-  });
-
-  test('two', () => {
-    expect(
-      badgeConfig.rothy.compute(
-        [
-          order({
-            productList: 'Ausschank',
-            time: new Date(),
-            items: [{name: 'Helles', amount: 1}],
-          }),
-          order({
-            productList: 'Ausschank',
-            time: new Date(),
-            items: [{name: 'Spezi', amount: 1}],
-          }),
-        ],
-        event,
-      ),
-    ).toEqual({
-      status: 'not awarded',
-      progress: {
-        target: 3,
-        current: 2,
-      },
     });
   });
 
@@ -518,15 +467,11 @@ describe('rothy', () => {
         [
           order({
             productList: 'Ausschank',
-            time: new Date('2000-01-01 00:00:00'),
-            items: [{name: 'Helles', amount: 1}],
-          }),
-          order({
-            productList: 'Ausschank',
             time: new Date('2000-01-01 00:00:01'),
             items: [
               {name: 'Spezi', amount: 1},
               {name: 'Limo', amount: 1},
+              {name: 'Helles', amount: 1},
             ],
           }),
         ],
@@ -814,6 +759,57 @@ describe('spendierhosen', () => {
       ),
     ).toEqual({
       status: 'not awarded',
+    });
+  });
+});
+
+describe('hydradtionHomie', () => {
+  test('progress', () => {
+    expect(
+      badgeConfig.hydrationHomie.compute(
+        [
+          order({
+            productList: 'Ausschank',
+            time: new Date('2025-07-27 11:00:00+02:00'),
+            items: [{name: 'Wasser', amount: 2}],
+          }),
+          order({
+            productList: 'Weißbiergarten',
+            time: new Date('2025-07-27 11:00:00+02:00'),
+            items: [{name: 'Wasser', amount: 1}],
+          }),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'not awarded',
+      progress: {
+        target: 5,
+        current: 3,
+      },
+    });
+  });
+
+  test('awarded', () => {
+    expect(
+      badgeConfig.hydrationHomie.compute(
+        [
+          order({
+            productList: 'Ausschank',
+            time: new Date('2025-07-27 11:00:00+02:00'),
+            items: [{name: 'Wasser', amount: 2}],
+          }),
+          order({
+            productList: 'Weißbiergarten',
+            time: new Date('2025-07-27 11:00:01+02:00'),
+            items: [{name: 'Wasser', amount: 3}],
+          }),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'awarded',
+      awardedAt: new Date('2025-07-27 11:00:01+02:00'),
     });
   });
 });
