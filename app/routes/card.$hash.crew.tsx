@@ -144,6 +144,7 @@ function CrewCard() {
       cardActivities={cardActivities}
       cardId={cardId}
       highscores={highscores}
+      cardType="crew"
     >
       <Flex
         direction="column"

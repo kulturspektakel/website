@@ -15,12 +15,14 @@ export function CardDetails({
   cardActivities,
   highscores,
   cardId,
+  cardType,
   ...stackProps
 }: {
   cardId: string;
   infoText: string;
   children: React.ReactNode;
   cardActivities: Array<CardActivity>;
+  cardType: 'crew' | 'regular';
   highscores?: HighscoreProps;
 } & StackProps) {
   const {event} = useRouteContext({
@@ -37,7 +39,7 @@ export function CardDetails({
   const {awardedBadges, unawardedBadges} = useBadges(
     cardActivities,
     event,
-    true,
+    cardType === 'crew',
   );
   return (
     <VStack mr="auto" ml="auto" align="stretch" {...stackProps}>

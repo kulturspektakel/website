@@ -61,6 +61,7 @@ function KultCard() {
       cardId={cardId}
       maxW="450px"
       minH="70dvh"
+      cardType="regular"
     >
       {hasNewerTransactions && (
         <Alert title="Neue Buchungen">
