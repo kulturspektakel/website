@@ -624,7 +624,7 @@ export const badgeConfig = createBadgeDefinitions({
     description: 'Dann kann man auch mal 6 Stunden auf dem Kult verbringen',
     bgStart: '#EEFFC5',
     bgEnd: '#B1EBFF',
-    crewOnly: true,
+    crewOnly: false,
     emoji: beachWithUmbrella,
     compute: (activities) => {
       const targetMinutes = 6 * 60;
@@ -673,7 +673,7 @@ export const badgeConfig = createBadgeDefinitions({
     description: "…das rat' ich dir",
     bgStart: '#FFB4EF',
     bgEnd: '#71007B',
-    crewOnly: true,
+    crewOnly: false,
     emoji: wineGlass,
     compute: (activities) => {
       const wineList = new Set([
@@ -738,7 +738,7 @@ export const badgeConfig = createBadgeDefinitions({
     description: 'Wenn du weißt was du magst, warum dann was Neues probieren?',
     bgStart: '#FFF4BE',
     bgEnd: '#F6D600',
-    crewOnly: true,
+    crewOnly: false,
     emoji: universalRecyclingSymbol,
     compute: (activities) => {
       const orders = new Map<string, number>();
