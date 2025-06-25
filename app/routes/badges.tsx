@@ -3,9 +3,15 @@ import {Heading, VStack, Text, SimpleGrid, Box, Flex} from '@chakra-ui/react';
 import {createFileRoute} from '@tanstack/react-router';
 import {Badge} from '../components/kultcard/Badges';
 import {badgeConfig} from '../utils/badgeConfig';
+import {seo} from '../utils/seo';
 
 export const Route = createFileRoute('/badges')({
   component: Badges,
+  head: () =>
+    seo({
+      title: 'Badges',
+      description: 'Übersicht über alle Badges',
+    }),
 });
 
 export function Badges() {
@@ -40,7 +46,9 @@ export function Badges() {
                 </Text>
               ) : null}
             </Flex>
-            <Heading mt="5">{badgeConfig[badgeKey].name}</Heading>
+            <Heading mt="5" textAlign="center">
+              {badgeConfig[badgeKey].name}
+            </Heading>
             <Text textAlign="center" fontSize="sm" color="offwhite.500">
               {badgeConfig[badgeKey].description}
             </Text>
