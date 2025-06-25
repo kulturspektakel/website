@@ -3,7 +3,7 @@ import bird from '@twemoji/svg/1f426.svg';
 import camping from '@twemoji/svg/1f3d5.svg';
 import pretzel from '@twemoji/svg/1f968.svg';
 import bucket from '@twemoji/svg/1faa3.svg';
-// import plane from '@twemoji/svg/2708.svg';
+import plane from '@twemoji/svg/2708.svg';
 import moneyBag from '@twemoji/svg/1f4b0.svg';
 import broccoli from '@twemoji/svg/1f966.svg';
 import signOfHorns from '@twemoji/svg/1f918.svg';
@@ -13,6 +13,9 @@ import jeans from '@twemoji/svg/1f456.svg';
 import droplet from '@twemoji/svg/1f4a7.svg';
 import cupWithStraw from '@twemoji/svg/1f964.svg';
 import fox from '@twemoji/svg/1f98a.svg';
+import beachWithUmbrella from '@twemoji/svg/1f3d6.svg';
+import wineGlass from '@twemoji/svg/1f377.svg';
+import universalRecyclingSymbol from '@twemoji/svg/267b.svg';
 
 import {tz} from '@date-fns/tz';
 
@@ -24,11 +27,11 @@ import {
   format,
   isAfter,
   isEqual,
+  isSameDay,
   max,
   set,
   sub,
 } from 'date-fns';
-import {aC} from 'vitest/dist/chunks/reporters.d.C-cu31ET.js';
 
 export type BadgeStatus =
   | {
@@ -61,6 +64,22 @@ function createBadgeDefinitions<K extends string>(obj: {
 }): {[P in K]: BadgeDefinition} {
   return obj;
 }
+
+const beerList = new Set([
+  'Weißbier',
+  'Weißbier alkoholfrei',
+  'Russ',
+  'Helles',
+  'Radler',
+  'Helles alkoholfrei',
+  'Bottle 0.5',
+  'Bottle 0.3',
+  'Tap 0.5',
+  'Tap 0.3',
+  'Tastingbrett',
+  'Desperados 0.3',
+  'Corona 0.3',
+]);
 
 export const badgeConfig = createBadgeDefinitions({
   earlyBird: {
@@ -211,19 +230,52 @@ export const badgeConfig = createBadgeDefinitions({
       return {status: 'not awarded'};
     },
   },
-  // globetrotter: {
-  //   name: 'Globetrotter',
-  //   description:
-  //     'Große Bühne, Kultbühne, Rondell und Waldbühne heute. New York, Rio und Hong Kong morgen',
-  //   bgStart: '#C6E5B3',
-  //   bgEnd: '#5C913B',
-  //   crewOnly: false,
-  //   emoji: plane,
-  //   compute: () => {
-  //     // TODO: not implemented yet
-  //     return {status: 'not awarded'};
-  //   },
-  // },
+  globetrotter: {
+    name: 'Globetrotter',
+    description:
+      'Große Bühne, Kultbühne, Rondell und Waldbühne heute. New York, Rio und Hong Kong morgen',
+    bgStart: '#C6E5B3',
+    bgEnd: '#5C913B',
+    crewOnly: false,
+    emoji: plane,
+    compute: (activities) => {
+      const wb = new Set(['Kinderbude', 'Italien', 'EKP']);
+      let hasWb = false;
+      const rondell = new Set(['Pizza', 'Frittiererei', 'Grill', 'Craft Beer']);
+      let hasRondell = false;
+      const kb = new Set(['Waffel', 'Empanadas']);
+      let hasKb = false;
+      const gb = new Set(['Hot Dog', 'Schokofrüchte', 'Cocktail']);
+      let hasGb = false;
+
+      for (const activity of activities) {
+        if (activity.type !== 'order') {
+          continue;
+        }
+
+        hasWb = hasWb || wb.has(activity.productList);
+        hasRondell = hasRondell || rondell.has(activity.productList);
+        hasKb = hasKb || kb.has(activity.productList);
+        hasGb = hasGb || gb.has(activity.productList);
+
+        if (hasWb && hasRondell && hasKb && hasGb) {
+          return {
+            status: 'awarded',
+            awardedAt: activity.time,
+          };
+        }
+      }
+
+      return {
+        status: 'not awarded',
+        progress: {
+          target: 4,
+          current:
+            Number(hasWb) + Number(hasRondell) + Number(hasKb) + Number(hasGb),
+        },
+      };
+    },
+  },
   bucketlist: {
     name: 'Bucketlist',
     description: 'Keine Essensbude, die du nicht besucht hast',
@@ -423,27 +475,11 @@ export const badgeConfig = createBadgeDefinitions({
     crewOnly: false,
     emoji: jeans,
     compute: (activities) => {
-      const includedItems = new Set([
-        'Weißbier',
-        'Weißbier alkoholfrei',
-        'Russ',
-        'Helles',
-        'Radler',
-        'Helles alkoholfrei',
-        'Bottle 0.5',
-        'Bottle 0.3',
-        'Tap 0.5',
-        'Tap 0.3',
-        'Tastingbrett',
-        'Desperados 0.3',
-        'Corona 0.3',
-      ]);
-
       for (const activity of activities) {
         if (
           activity.type === 'order' &&
           activity.items.reduce((acc, item) => {
-            return acc + (includedItems.has(item.name) ? item.amount : 0);
+            return acc + (beerList.has(item.name) ? item.amount : 0);
           }, 0) >= 3
         ) {
           return {
@@ -530,7 +566,7 @@ export const badgeConfig = createBadgeDefinitions({
   },
   pfandsammlerin: {
     name: 'Pfandsammler:in',
-    description: 'Mehr als 4 Becher? Was hast du vor?',
+    description: 'Mehr als 4 Becher? Ist das deine Altersvorsorge?',
     bgStart: '#9FACFF',
     bgEnd: '#6500C9',
     crewOnly: false,
@@ -583,18 +619,159 @@ export const badgeConfig = createBadgeDefinitions({
       };
     },
   },
-  // keineTermine: {
-  //   name: 'Stammplatz',
-  //   description: 'Muss man sich den Rothy hier wirklich selbst mischen?',
-  //   bgStart: '#FF3437',
-  //   bgEnd: '#FFAE00',
-  //   crewOnly: true,
-  //   emoji: cupWithStraw,
-  //   compute: (activities) => {
+  keineTermine: {
+    name: 'Keine Termine',
+    description: 'Dann kann man auch mal 6 Stunden auf dem Kult verbringen',
+    bgStart: '#EEFFC5',
+    bgEnd: '#B1EBFF',
+    crewOnly: true,
+    emoji: beachWithUmbrella,
+    compute: (activities) => {
+      const targetMinutes = 6 * 60;
+      for (let i = 0; i < activities.length; i++) {
+        const activity = activities[i];
 
-  //     return {
-  //       status: 'not awarded',
-  //     };
-  //   },
-  // },
+        if (activity.type === 'missing') {
+          continue;
+        }
+
+        for (let j = i + 1; j < activities.length; j++) {
+          const activity2 = activities[j];
+
+          if (activity2.type === 'missing') {
+            continue;
+          }
+          if (
+            differenceInMinutes(activity2.time, activity.time) > targetMinutes
+          ) {
+            if (
+              isSameDay(
+                sub(activity2.time, {hours: 6}),
+                sub(activity.time, {hours: 6}),
+                {
+                  in: tz('Europe/Berlin'),
+                },
+              )
+            ) {
+              return {
+                status: 'awarded',
+                awardedAt: activity2.time,
+              };
+            }
+            break;
+          }
+        }
+      }
+
+      return {
+        status: 'not awarded',
+      };
+    },
+  },
+  weinAufBier: {
+    name: 'Wein auf Bier',
+    description: "…das rat' ich dir",
+    bgStart: '#FFB4EF',
+    bgEnd: '#71007B',
+    crewOnly: true,
+    emoji: wineGlass,
+    compute: (activities) => {
+      const wineList = new Set([
+        'Weinschorle Sauer 0,5l',
+        'Weißwein 0,2l',
+        'Rosewein 0,2l',
+        'Rotwein 0,2l',
+        'Lugana',
+      ]);
+
+      let activity1: CardActivity | undefined;
+      for (let i = 0; i < activities.length; i++) {
+        const activity = activities[i];
+
+        if (
+          activity.type !== 'order' ||
+          activity.items.every((i) => !beerList.has(i.name))
+        ) {
+          continue;
+        }
+
+        activity1 = activity;
+
+        for (let j = i + 1; j < activities.length; j++) {
+          const activity2 = activities[j];
+          if (
+            activity2.type === 'order' &&
+            activity2.items.some((i) => wineList.has(i.name)) &&
+            isSameDay(
+              sub(activity2.time, {hours: 6}),
+              sub(activity.time, {hours: 6}),
+              {
+                in: tz('Europe/Berlin'),
+              },
+            )
+          ) {
+            return {
+              status: 'awarded',
+              awardedAt: activity2.time,
+            };
+          }
+        }
+      }
+
+      return {
+        status: 'not awarded',
+        progress:
+          activity1?.type === 'order' &&
+          isSameDay(activity1.time, sub(new Date(), {hours: 6}), {
+            in: tz('Europe/Berlin'),
+          })
+            ? {
+                target: 2,
+                current: 1,
+              }
+            : undefined,
+      };
+    },
+  },
+  wieImmer: {
+    name: 'Wie immer?',
+    description: 'Wenn du weißt was du magst, warum dann was Neues probieren?',
+    bgStart: '#FFF4BE',
+    bgEnd: '#F6D600',
+    crewOnly: true,
+    emoji: universalRecyclingSymbol,
+    compute: (activities) => {
+      const orders = new Map<string, number>();
+      let max = 0;
+      const target = 3;
+      for (const activity of activities) {
+        if (activity.type === 'order') {
+          const order =
+            activity.productList +
+            activity.items
+              .sort((a, b) => (a.name > b.name ? 1 : -1))
+              .map((item) => item.name)
+              .join('#');
+
+          const count = (orders.get(order) ?? 0) + 1;
+          if (count === target) {
+            return {
+              status: 'awarded',
+              awardedAt: activity.time,
+            };
+          }
+          orders.set(order, count);
+          max = Math.max(max, count);
+        }
+      }
+
+      return {
+        status: 'not awarded',
+        progress: {
+          target,
+          current: max,
+        },
+      };
+    },
+  },
 });

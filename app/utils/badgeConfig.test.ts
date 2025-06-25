@@ -813,3 +813,269 @@ describe('hydradtionHomie', () => {
     });
   });
 });
+
+describe('keineTermine', () => {
+  test('less than 6 hours', () => {
+    expect(
+      badgeConfig.keineTermine.compute(
+        [
+          order({
+            productList: 'Ausschank',
+            time: new Date('2025-07-25 16:00:00+02:00'),
+          }),
+          order({
+            productList: 'Weißbiergarten',
+            time: new Date('2025-07-25 21:59:59+02:00'),
+          }),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'not awarded',
+    });
+  });
+
+  test('more than 6 hours, but different days', () => {
+    expect(
+      badgeConfig.keineTermine.compute(
+        [
+          order({
+            productList: 'Ausschank',
+            time: new Date('2025-07-25 16:00:00+02:00'),
+          }),
+          order({
+            productList: 'Weißbiergarten',
+            time: new Date('2025-07-26 21:59:59+02:00'),
+          }),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'not awarded',
+    });
+  });
+
+  test('more than 6 hours', () => {
+    expect(
+      badgeConfig.keineTermine.compute(
+        [
+          order({
+            productList: 'Ausschank',
+            time: new Date('2025-07-25 16:00:00+02:00'),
+          }),
+          order({
+            productList: 'Weißbiergarten',
+            time: new Date('2025-07-25 22:01:00+02:00'),
+          }),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'awarded',
+      awardedAt: new Date('2025-07-25 22:01:00+02:00'),
+    });
+  });
+});
+
+describe('weinAufBier', () => {
+  test('still possible', () => {
+    vi.setSystemTime(new Date('2025-07-26 19:00:00+02:00'));
+
+    expect(
+      badgeConfig.weinAufBier.compute(
+        [
+          order({
+            productList: 'Ausschank',
+            time: new Date('2025-07-26 16:00:00+02:00'),
+            items: [
+              {
+                name: 'Helles',
+                amount: 1,
+              },
+            ],
+          }),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'not awarded',
+      progress: {
+        target: 2,
+        current: 1,
+      },
+    });
+
+    // reset mocked time
+    vi.useRealTimers();
+  });
+
+  test('awarded', () => {
+    expect(
+      badgeConfig.weinAufBier.compute(
+        [
+          order({
+            productList: 'Ausschank',
+            time: new Date('2025-07-25 16:00:00+02:00'),
+            items: [
+              {
+                name: 'Helles',
+                amount: 1,
+              },
+            ],
+          }),
+          order({
+            productList: 'Italien',
+            time: new Date('2025-07-25 21:59:59+02:00'),
+            items: [
+              {
+                name: 'Weißwein 0,2l',
+                amount: 1,
+              },
+            ],
+          }),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'awarded',
+      awardedAt: new Date('2025-07-25 21:59:59+02:00'),
+    });
+  });
+});
+
+describe('wieImmer', () => {
+  test('progress', () => {
+    expect(
+      badgeConfig.wieImmer.compute(
+        [
+          order({
+            productList: 'Ausschank',
+            time: new Date('2025-07-25 16:00:00+02:00'),
+            items: [
+              {
+                name: 'Helles',
+                amount: 1,
+              },
+            ],
+          }),
+          order({
+            productList: 'Ausschank',
+            time: new Date('2025-07-25 21:59:59+02:00'),
+            items: [
+              {
+                name: 'Helles',
+                amount: 2,
+              },
+            ],
+          }),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'not awarded',
+      progress: {
+        target: 3,
+        current: 2,
+      },
+    });
+  });
+
+  test('awarded', () => {
+    expect(
+      badgeConfig.wieImmer.compute(
+        [
+          order({
+            productList: 'Ausschank',
+            time: new Date('2025-07-25 16:00:00+02:00'),
+            items: [
+              {
+                name: 'Helles',
+                amount: 1,
+              },
+            ],
+          }),
+          order({
+            productList: 'Ausschank',
+            time: new Date('2025-07-25 21:59:59+02:00'),
+            items: [
+              {
+                name: 'Helles',
+                amount: 2,
+              },
+            ],
+          }),
+          order({
+            productList: 'Ausschank',
+            time: new Date('2025-07-25 23:59:59+02:00'),
+            items: [
+              {
+                name: 'Helles',
+                amount: 2,
+              },
+            ],
+          }),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'awarded',
+      awardedAt: new Date('2025-07-25 23:59:59+02:00'),
+    });
+  });
+});
+
+describe('globetrotter', () => {
+  test('progress', () => {
+    expect(
+      badgeConfig.globetrotter.compute(
+        [
+          order({
+            productList: 'Grill',
+          }),
+          order({
+            productList: 'Grill',
+          }),
+          order({
+            productList: 'Waffel',
+          }),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'not awarded',
+      progress: {
+        target: 4,
+        current: 2,
+      },
+    });
+  });
+
+  test('awarded', () => {
+    expect(
+      badgeConfig.globetrotter.compute(
+        [
+          order({
+            productList: 'Grill',
+            time: new Date('2025-07-25 23:59:59+02:00'),
+          }),
+          order({
+            productList: 'Italien',
+            time: new Date('2025-07-25 23:59:59+02:00'),
+          }),
+          order({
+            productList: 'Cocktail',
+            time: new Date('2025-07-25 23:59:59+02:00'),
+          }),
+          order({
+            productList: 'Waffel',
+            time: new Date('2025-07-26 23:59:59+02:00'),
+          }),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'awarded',
+      awardedAt: new Date('2025-07-26 23:59:59+02:00'),
+    });
+  });
+});
