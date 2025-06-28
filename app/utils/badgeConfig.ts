@@ -593,7 +593,7 @@ export const badgeConfig = createBadgeDefinitions({
   },
   sparfuchs: {
     name: 'Sparfuchs',
-    description: 'Radler selbst gemischt und 50 Cent gespart',
+    description: 'Zwei Radler selbst gemischt und 50 Cent gespart',
     bgStart: '#FFF9C5',
     bgEnd: '#FFE9B1',
     crewOnly: false,
