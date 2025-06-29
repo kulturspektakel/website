@@ -16,6 +16,7 @@ import fox from '@twemoji/svg/1f98a.svg';
 import beachWithUmbrella from '@twemoji/svg/1f3d6.svg';
 import wineGlass from '@twemoji/svg/1f377.svg';
 import universalRecyclingSymbol from '@twemoji/svg/267b.svg';
+import fuelPump from '@twemoji/svg/26fd.svg';
 
 import {tz} from '@date-fns/tz';
 
@@ -340,6 +341,7 @@ export const badgeConfig = createBadgeDefinitions({
         'Käse-Gemüse-Semmel',
         'Vegetarisch', // Pizza
         'Waffel Vegan',
+        'Antipasti Teller vegetarisch',
       ]);
       for (const activity of activities) {
         if (
@@ -735,7 +737,7 @@ export const badgeConfig = createBadgeDefinitions({
   },
   wieImmer: {
     name: 'Wie immer?',
-    description: 'Wenn du weißt was du magst, warum dann was Neues probieren?',
+    description: 'Wenn du weißt was du magst, warum dann was Neues riskieren?',
     bgStart: '#FFF4BE',
     bgEnd: '#F6D600',
     crewOnly: false,
@@ -771,6 +773,36 @@ export const badgeConfig = createBadgeDefinitions({
           target,
           current: max,
         },
+      };
+    },
+  },
+  bleifrei: {
+    name: 'Bleifrei',
+    description: 'Irgendjemand muss ja noch farhren können',
+    bgStart: '#F55200',
+    bgEnd: '#D92400',
+    crewOnly: false,
+    emoji: fuelPump,
+    compute: (activities) => {
+      const alcoholFree = new Set<string>([
+        'Helles alkoholfrei',
+        'Weißbier alkoholfrei',
+        'Alkoholfreier Cocktail',
+      ]);
+      for (const activity of activities) {
+        if (
+          activity.type === 'order' &&
+          activity.items.some((item) => alcoholFree.has(item.name))
+        ) {
+          return {
+            status: 'awarded',
+            awardedAt: activity.time,
+          };
+        }
+      }
+
+      return {
+        status: 'not awarded',
       };
     },
   },
