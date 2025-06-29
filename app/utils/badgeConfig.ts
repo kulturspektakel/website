@@ -778,7 +778,7 @@ export const badgeConfig = createBadgeDefinitions({
   },
   bleifrei: {
     name: 'Bleifrei',
-    description: 'Irgendjemand muss ja noch farhren können',
+    description: 'Irgendjemand muss ja noch fahren können',
     bgStart: '#F55200',
     bgEnd: '#D92400',
     crewOnly: false,
