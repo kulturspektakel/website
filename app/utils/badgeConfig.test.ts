@@ -1079,3 +1079,21 @@ describe('globetrotter', () => {
     });
   });
 });
+
+test('bleifrei', () => {
+  expect(
+    badgeConfig.bleifrei.compute(
+      [
+        order({
+          productList: 'Cocktail',
+          time: new Date('2025-07-25 23:59:59+02:00'),
+          items: [{name: 'Alkoholfreier Cocktail', amount: 1}],
+        }),
+      ],
+      event,
+    ),
+  ).toEqual({
+    status: 'awarded',
+    awardedAt: new Date('2025-07-25 23:59:59+02:00'),
+  });
+});

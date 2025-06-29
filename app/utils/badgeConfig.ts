@@ -784,15 +784,10 @@ export const badgeConfig = createBadgeDefinitions({
     crewOnly: false,
     emoji: fuelPump,
     compute: (activities) => {
-      const alcoholFree = new Set<string>([
-        'Helles alkoholfrei',
-        'Weißbier alkoholfrei',
-        'Alkoholfreier Cocktail',
-      ]);
       for (const activity of activities) {
         if (
           activity.type === 'order' &&
-          activity.items.some((item) => alcoholFree.has(item.name))
+          activity.items.some((item) => /alkoholfrei/i.test(item.name))
         ) {
           return {
             status: 'awarded',
