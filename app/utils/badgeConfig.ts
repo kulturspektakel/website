@@ -16,7 +16,9 @@ import fox from '@twemoji/svg/1f98a.svg';
 import beachWithUmbrella from '@twemoji/svg/1f3d6.svg';
 import wineGlass from '@twemoji/svg/1f377.svg';
 import universalRecyclingSymbol from '@twemoji/svg/267b.svg';
+import owl from '@twemoji/svg/1f989.svg';
 import fuelPump from '@twemoji/svg/26fd.svg';
+import lowBattery from '@twemoji/svg/1faab.svg';
 
 import {tz} from '@date-fns/tz';
 
@@ -788,6 +790,60 @@ export const badgeConfig = createBadgeDefinitions({
         if (
           activity.type === 'order' &&
           activity.items.some((item) => /alkoholfrei/i.test(item.name))
+        ) {
+          return {
+            status: 'awarded',
+            awardedAt: activity.time,
+          };
+        }
+      }
+
+      return {
+        status: 'not awarded',
+      };
+    },
+  },
+  nachteule: {
+    name: 'Nachteule',
+    description: 'Ich brauche keinen Schlaf',
+    bgStart: '#3B1288',
+    bgEnd: '#CEB788',
+    crewOnly: true,
+    emoji: owl,
+    compute: (activities) => {
+      for (const activity of activities) {
+        if (activity.type === 'order' && activity.time.getUTCHours() < 8) {
+          return {
+            status: 'awarded',
+            awardedAt: activity.time,
+          };
+        }
+      }
+
+      return {
+        status: 'not awarded',
+      };
+    },
+  },
+  uebermuedet: {
+    name: 'Übermüdet',
+    description: 'Es hilft nur noch Koffein',
+    bgStart: '#FFCED7',
+    bgEnd: '#D36B72',
+    crewOnly: true,
+    emoji: lowBattery,
+    compute: (activities) => {
+      const caffeinatedItems = new Set([
+        'Red Bull',
+        'Espresso',
+        'Cappuccino',
+        'Kaffee',
+      ]);
+
+      for (const activity of activities) {
+        if (
+          activity.type === 'order' &&
+          activity.items.some((i) => caffeinatedItems.has(i.name))
         ) {
           return {
             status: 'awarded',
