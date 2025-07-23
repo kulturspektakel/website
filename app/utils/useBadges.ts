@@ -5,10 +5,10 @@ import {badgeConfig, BadgeDefinition} from './badgeConfig';
 export function computeBadges(
   cardActivities: CardActivity[],
   event: {start: Date; end: Date},
-  crewOnly: boolean,
+  isCrew: boolean,
 ) {
   return Object.entries(badgeConfig)
-    .filter(([_, v]) => (crewOnly ? true : !v.crewOnly))
+    .filter(([_, v]) => (isCrew ? v.availableForCrew : v.availableForRegular))
     .map(
       ([badgeKey, {compute}]: [keyof typeof badgeConfig, BadgeDefinition]) => ({
         badgeKey,
@@ -20,10 +20,10 @@ export function computeBadges(
 export function useBadges(
   cardActivities: CardActivity[],
   event: {start: Date; end: Date},
-  crewOnly: boolean,
+  isCrew: boolean,
 ) {
   return useMemo(() => {
-    const badgeStatus = computeBadges(cardActivities, event, crewOnly);
+    const badgeStatus = computeBadges(cardActivities, event, isCrew);
     const awardedBadges = badgeStatus.filter((b) => b.status === 'awarded');
     const unawardedBadges = badgeStatus.filter(
       (b) => b.status === 'not awarded',

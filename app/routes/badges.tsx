@@ -28,7 +28,8 @@ export function Badges() {
               justifyContent="center"
             >
               <Badge type={badgeKey} width="50%" />
-              {badgeConfig[badgeKey].crewOnly ? (
+              {badgeConfig[badgeKey].availableForCrew &&
+              !badgeConfig[badgeKey].availableForRegular ? (
                 <Text
                   position="absolute"
                   bottom="1"

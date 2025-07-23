@@ -54,7 +54,8 @@ export type BadgeDefinition = {
   description: string;
   bgStart: string;
   bgEnd: string;
-  crewOnly: boolean;
+  availableForCrew: boolean;
+  availableForRegular: boolean;
   emoji: string;
   compute: (
     cardActivities: Array<CardActivity>,
@@ -90,7 +91,8 @@ export const badgeConfig = createBadgeDefinitions({
     description: 'Das Kult hat kaum aufgemacht und du bist schon da?',
     bgStart: '#ABDFFF',
     bgEnd: '#3B88C3',
-    crewOnly: false,
+    availableForCrew: true,
+    availableForRegular: true,
     emoji: bird,
     compute: (activities, event) => {
       const friday = event.start;
@@ -141,7 +143,8 @@ export const badgeConfig = createBadgeDefinitions({
     description: 'Frühschoppen und Weißbiergarten sind deine Heimat',
     bgStart: '#AA8DD8',
     bgEnd: '#7450A8',
-    crewOnly: false,
+    availableForCrew: true,
+    availableForRegular: true,
     emoji: pretzel,
     compute: (activity) => {
       const fruehshoppen = activity.find(
@@ -175,7 +178,8 @@ export const badgeConfig = createBadgeDefinitions({
     description: 'Du bist jeden Tag auf dem Kult',
     bgStart: '#C6E5B3',
     bgEnd: '#5C913B',
-    crewOnly: false,
+    availableForCrew: true,
+    availableForRegular: true,
     emoji: camping,
     compute: (activities, event) => {
       const noEventDays =
@@ -214,7 +218,8 @@ export const badgeConfig = createBadgeDefinitions({
     description: 'Du hast 50 Euro (oder mehr) auf deine Karte aufgeladen',
     bgStart: '#F7DECE',
     bgEnd: '#F4ABBA',
-    crewOnly: false,
+    availableForCrew: false,
+    availableForRegular: true,
     emoji: moneyBag,
     compute: (activities) => {
       for (const activity of activities) {
@@ -239,7 +244,8 @@ export const badgeConfig = createBadgeDefinitions({
       'Große Bühne, Kultbühne, Rondell und Waldbühne heute. New York, Rio und Hong Kong morgen',
     bgStart: '#C6E5B3',
     bgEnd: '#5C913B',
-    crewOnly: false,
+    availableForCrew: true,
+    availableForRegular: true,
     emoji: plane,
     compute: (activities) => {
       const wb = new Set(['Kinderbude', 'Italien', 'EKP']);
@@ -284,7 +290,8 @@ export const badgeConfig = createBadgeDefinitions({
     description: 'Keine Essensbude, die du nicht besucht hast',
     bgStart: '#FFE8B6',
     bgEnd: '#FFCC4D',
-    crewOnly: false,
+    availableForCrew: true,
+    availableForRegular: true,
     emoji: bucket,
     compute: (activities) => {
       const allProductLists = new Set<string>([
@@ -333,7 +340,8 @@ export const badgeConfig = createBadgeDefinitions({
     description: 'Du hast die vegetarische Alternative gewählt',
     bgStart: '#34C9FF',
     bgEnd: '#64E43D',
-    crewOnly: false,
+    availableForCrew: true,
+    availableForRegular: true,
     emoji: broccoli,
     compute: (activities) => {
       const veggieAlternatives = new Set<string>([
@@ -367,7 +375,8 @@ export const badgeConfig = createBadgeDefinitions({
     description: 'Herrengedeck nach Kalle Art',
     bgStart: '#6b6b6b',
     bgEnd: '#090909',
-    crewOnly: true,
+    availableForCrew: true,
+    availableForRegular: false,
     emoji: signOfHorns,
     compute: (activities) => {
       for (const activity of activities) {
@@ -421,7 +430,8 @@ export const badgeConfig = createBadgeDefinitions({
     description: 'Waldbühne zu Große Bühne in unter 5 Minuten',
     bgStart: '#6F62D7',
     bgEnd: '#D201EA',
-    crewOnly: true,
+    availableForCrew: true,
+    availableForRegular: false,
     emoji: zap,
     compute: (activities) => {
       const maxSeconds = 5 * 60;
@@ -476,7 +486,8 @@ export const badgeConfig = createBadgeDefinitions({
     description: 'Eine Runde Bier für dich und mindestens zwei Freunde',
     bgStart: '#F7DECE',
     bgEnd: '#F4ABBA',
-    crewOnly: false,
+    availableForCrew: false,
+    availableForRegular: true,
     emoji: jeans,
     compute: (activities) => {
       for (const activity of activities) {
@@ -502,7 +513,8 @@ export const badgeConfig = createBadgeDefinitions({
     description: 'Muss man sich den Rothy hier wirklich selbst mischen?',
     bgStart: '#FF3437',
     bgEnd: '#FFAE00',
-    crewOnly: true,
+    availableForCrew: true,
+    availableForRegular: false,
     emoji: tropicalDrink,
     compute: (activities) => {
       for (const activity of activities) {
@@ -539,7 +551,8 @@ export const badgeConfig = createBadgeDefinitions({
     description: 'Expert:innen empfehlen 2,5 Liter Wasser',
     bgStart: '#CEF4FF',
     bgEnd: '#ABE1FF',
-    crewOnly: false,
+    availableForCrew: true,
+    availableForRegular: true,
     emoji: droplet,
     compute: (activities) => {
       const target = 5;
@@ -573,7 +586,8 @@ export const badgeConfig = createBadgeDefinitions({
     description: 'Mehr als 4 Becher? Ist das deine Altersvorsorge?',
     bgStart: '#9FACFF',
     bgEnd: '#6500C9',
-    crewOnly: false,
+    availableForCrew: false,
+    availableForRegular: true,
     emoji: cupWithStraw,
     compute: (activities) => {
       const target = 5;
@@ -600,7 +614,8 @@ export const badgeConfig = createBadgeDefinitions({
     description: 'Zwei Radler selbst gemischt und 50 Cent gespart',
     bgStart: '#FFF9C5',
     bgEnd: '#FFE9B1',
-    crewOnly: false,
+    availableForCrew: true,
+    availableForRegular: true,
     emoji: fox,
     compute: (activities) => {
       for (const activity of activities) {
@@ -628,7 +643,8 @@ export const badgeConfig = createBadgeDefinitions({
     description: 'Dann kann man auch mal 6 Stunden auf dem Kult verbringen',
     bgStart: '#EEFFC5',
     bgEnd: '#B1EBFF',
-    crewOnly: false,
+    availableForCrew: true,
+    availableForRegular: true,
     emoji: beachWithUmbrella,
     compute: (activities) => {
       const targetMinutes = 6 * 60;
@@ -677,7 +693,8 @@ export const badgeConfig = createBadgeDefinitions({
     description: "…das rat' ich dir",
     bgStart: '#FFB4EF',
     bgEnd: '#71007B',
-    crewOnly: false,
+    availableForCrew: true,
+    availableForRegular: true,
     emoji: wineGlass,
     compute: (activities) => {
       const wineList = new Set([
@@ -742,7 +759,8 @@ export const badgeConfig = createBadgeDefinitions({
     description: 'Wenn du weißt was du magst, warum dann was Neues riskieren?',
     bgStart: '#FFF4BE',
     bgEnd: '#F6D600',
-    crewOnly: false,
+    availableForCrew: true,
+    availableForRegular: true,
     emoji: universalRecyclingSymbol,
     compute: (activities) => {
       const orders = new Map<string, number>();
@@ -783,7 +801,8 @@ export const badgeConfig = createBadgeDefinitions({
     description: 'Irgendjemand muss ja noch fahren können',
     bgStart: '#F55200',
     bgEnd: '#D92400',
-    crewOnly: false,
+    availableForCrew: true,
+    availableForRegular: true,
     emoji: fuelPump,
     compute: (activities) => {
       for (const activity of activities) {
@@ -808,7 +827,8 @@ export const badgeConfig = createBadgeDefinitions({
     description: 'Ich brauche keinen Schlaf',
     bgStart: '#3B1288',
     bgEnd: '#CEB788',
-    crewOnly: true,
+    availableForCrew: true,
+    availableForRegular: false,
     emoji: owl,
     compute: (activities) => {
       for (const activity of activities) {
@@ -830,7 +850,8 @@ export const badgeConfig = createBadgeDefinitions({
     description: 'Es hilft nur noch Koffein',
     bgStart: '#FFCED7',
     bgEnd: '#D36B72',
-    crewOnly: true,
+    availableForCrew: true,
+    availableForRegular: false,
     emoji: lowBattery,
     compute: (activities) => {
       const caffeinatedItems = new Set([
