@@ -527,7 +527,7 @@ export const badgeConfig = createBadgeDefinitions({
               hasHelles = true;
             } else if (item.name === 'Spezi') {
               hasSpezi = true;
-            } else if (item.name === 'Limo') {
+            } else if (item.name === 'Zitronenlimo') {
               hasLimo = true;
             }
 
