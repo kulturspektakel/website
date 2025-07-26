@@ -623,7 +623,7 @@ export const badgeConfig = createBadgeDefinitions({
           activity.type === 'order' &&
           activity.productList === 'Ausschank' &&
           activity.items.some((i) => i.name === 'Helles') &&
-          activity.items.some((i) => i.name === 'Limo') &&
+          activity.items.some((i) => i.name === 'Zitronenlimo') &&
           activity.items.every((i) => i.name !== 'Radler')
         ) {
           return {
