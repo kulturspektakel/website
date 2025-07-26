@@ -435,7 +435,7 @@ export const badgeConfig = createBadgeDefinitions({
     emoji: zap,
     compute: (activities) => {
       const maxSeconds = 5 * 60;
-      const gb = ['Hot Dog', 'Cocktail', 'Schokofrüchte'];
+      const gb = ['Hot Dog', 'Cocktail', 'Schokofrüchte', 'Ausschank'];
       const wb = ['Italien', 'Kinder'];
 
       let hasOne = false;
