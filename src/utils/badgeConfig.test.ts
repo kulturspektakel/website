@@ -470,7 +470,7 @@ describe('rothy', () => {
             time: new Date('2000-01-01 00:00:01'),
             items: [
               {name: 'Spezi', amount: 1},
-              {name: 'Limo', amount: 1},
+              {name: 'Zitronenlimo', amount: 1},
               {name: 'Helles', amount: 1},
             ],
           }),
