@@ -1,15 +1,1 @@
-{
-  "projectId": "prj_vog6I18SbbtjfOCdaQTzeCWglaq3",
-  "orgId": "team_MwjWrAIqXKQWYngPaFz7XKMG",
-  "settings": {
-    "createdAt": 1693664888979,
-    "framework": "vite",
-    "devCommand": null,
-    "installCommand": null,
-    "buildCommand": null,
-    "outputDirectory": null,
-    "rootDirectory": null,
-    "directoryListing": false,
-    "nodeVersion": "22.x"
-  }
-}
+{"projectId":"prj_vog6I18SbbtjfOCdaQTzeCWglaq3","orgId":"team_MwjWrAIqXKQWYngPaFz7XKMG","projectName":"kulturspektakel"}

@@ -7,6 +7,7 @@ import {
   useRouter,
   redirect,
   useNavigate,
+  createRootRoute,
 } from '@tanstack/react-router';
 import {Box, ChakraProvider, Flex, Spinner} from '@chakra-ui/react';
 import theme from '../theme';
@@ -17,7 +18,6 @@ import photoswipeCSS from 'photoswipe/dist/photoswipe.css?url';
 import {dateStringComponents} from '../components/DateString';
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 import {createServerFn} from '@tanstack/react-start';
-import {wrapCreateRootRouteWithSentry} from '@sentry/tanstackstart-react';
 import {seo} from '../utils/seo';
 import ProgressBar from '@badrap/bar-of-progress';
 import {getCurrentEvent} from '../utils/getCurrentEvent';
@@ -26,11 +26,9 @@ const beforeLoad = createServerFn().handler(async () => ({
   event: await getCurrentEvent(),
 }));
 
-export const Route = wrapCreateRootRouteWithSentry(
-  createRootRouteWithContext<
-    ApolloClientRouterContext & Awaited<ReturnType<typeof beforeLoad>>
-  >,
-)()({
+export const Route = createRootRouteWithContext<
+  ApolloClientRouterContext & Awaited<ReturnType<typeof beforeLoad>>
+>()({
   head: ({match: {context}}) => {
     let title = 'Kulturspektakel Gauting';
     let description =
