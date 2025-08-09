@@ -41,7 +41,13 @@ export function Index() {
         </React.Fragment>
       ))}
       <Center>
-        <LinkButton href="/news/archiv">Ältere Beträge</LinkButton>
+        <LinkButton
+          linkOptions={{
+            to: '/news/archiv',
+          }}
+        >
+          Ältere Beträge
+        </LinkButton>
       </Center>
     </>
   );

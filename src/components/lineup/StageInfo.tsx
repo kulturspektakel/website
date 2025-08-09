@@ -14,7 +14,7 @@ export function StageInfo(props: {id: string}) {
   }
   return (
     <Box
-      borderRadius="md"
+      borderRadius="2xl"
       borderColor="offshite.200"
       borderStyle="solid"
       borderWidth={[undefined, 1]}

@@ -12,7 +12,8 @@ yarn-error.log
 
 # Sentry Config File
 .sentryclirc
-
+.nitro
+.tanstack
 .env*
 .flaskenv*
 !.env.project

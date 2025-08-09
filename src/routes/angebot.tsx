@@ -71,7 +71,9 @@ export default function Angebot() {
           </List.Item>
         ))}
       </List.Root>
-      <LinkButton href="/speisekarte">vollständige Speisekarte</LinkButton>
+      <LinkButton linkOptions={{to: '/speisekarte'}}>
+        vollständige Speisekarte
+      </LinkButton>
       {data.workshops && <Page headingLevel={2} {...data.workshops} centered />}
       {data.sport && <Page headingLevel={2} {...data.sport} centered />}
       {data.kinderkult && (
