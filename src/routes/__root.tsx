@@ -22,7 +22,7 @@ import {seo} from '../utils/seo';
 import ProgressBar from '@badrap/bar-of-progress';
 import {getCurrentEvent} from '../utils/getCurrentEvent';
 
-const beforeLoad = createServerFn({type: 'static'}).handler(async () => ({
+const beforeLoad = createServerFn().handler(async () => ({
   event: await getCurrentEvent(),
 }));
 
