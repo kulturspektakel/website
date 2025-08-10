@@ -164,10 +164,6 @@ function MenuItems() {
 }
 
 function BookingAlert(props: AlertProps) {
-  const [visisble, setVisisble] = useState(true);
-  if (!visisble) {
-    return null;
-  }
   return (
     <Alert title="Jetzt bewerben" status="info" {...props}>
       Die Bewerbungsphase für das nächste Kulturspektakel läuft aktuell und ihr
