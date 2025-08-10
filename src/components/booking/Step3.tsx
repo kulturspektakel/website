@@ -7,11 +7,11 @@ import {useSearch} from '@tanstack/react-router';
 
 export const schema = z.object({
   contactName: z.string().min(1),
-  email: z.string().email(),
+  email: z.email(),
   contactPhone: z.string().min(1),
   knowsKultFrom: z.string(),
-  hasPreviouslyPlayed: z.nativeEnum(PreviouslyPlayed),
-  heardAboutBookingFrom: z.nativeEnum(HeardAboutBookingFrom),
+  hasPreviouslyPlayed: z.enum(PreviouslyPlayed),
+  heardAboutBookingFrom: z.enum(HeardAboutBookingFrom),
 });
 
 const HEARD_ABOUT: Map<HeardAboutBookingFrom, string> = new Map([

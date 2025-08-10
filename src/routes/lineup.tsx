@@ -4,7 +4,6 @@ import {
   Heading,
   IconButton,
   Flex,
-  Text,
   Link as ChakraLink,
   Spinner,
   Center,

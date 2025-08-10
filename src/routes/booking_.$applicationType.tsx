@@ -121,7 +121,7 @@ function BookingForm() {
                 ...values,
                 spotifyArtist: values.spotifyArtist?.id,
               } as CreateBandApplicationInput,
-              eventId: event.id,
+              eventId: `Event:${event.id}`,
             },
             errorPolicy: 'all',
           });

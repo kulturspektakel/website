@@ -6,10 +6,8 @@ import {
   createRootRouteWithContext,
   useRouter,
   redirect,
-  useNavigate,
-  createRootRoute,
 } from '@tanstack/react-router';
-import {Box, ChakraProvider, Flex, Spinner} from '@chakra-ui/react';
+import {Box, ChakraProvider, Flex} from '@chakra-ui/react';
 import theme from '../theme';
 import {type ApolloClientRouterContext} from '@apollo/client-integration-tanstack-start';
 import Footer from '../components/Footer/Footer';

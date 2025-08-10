@@ -1,11 +1,28 @@
 import {createFileRoute, redirect} from '@tanstack/react-router';
+import {prismaClient} from '../utils/prismaClient';
 
 export const Route = createFileRoute('/lineup/')({
-  loader: async ({context}) => {
+  loader: async () => {
+    const firstEventWithBands = await prismaClient.event.findFirstOrThrow({
+      where: {
+        eventType: 'Kulturspektakel',
+        BandPlaying: {
+          some: {},
+        },
+      },
+      select: {
+        id: true,
+        start: true,
+      },
+      orderBy: {
+        start: 'desc',
+      },
+    });
+
     throw redirect({
       to: '/lineup/$year',
       params: {
-        year: context.event.start.getFullYear().toString(),
+        year: firstEventWithBands.start.getFullYear().toString(),
       },
     });
   },

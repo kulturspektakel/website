@@ -17,7 +17,7 @@ import {FormikContextT} from '../../routes/booking_.$applicationType';
 
 export const schema = z.object({
   bandname: z.string().min(1),
-  genreCategory: z.nativeEnum(GenreCategory),
+  genreCategory: z.enum(GenreCategory),
   genre: z.string(),
   description: z.string().min(1),
   city: z.string().min(1),
@@ -25,7 +25,7 @@ export const schema = z.object({
   // Bands only
   numberOfArtists: z.number(),
   numberOfNonMaleArtists: z.number(),
-  repertoire: z.nativeEnum(BandRepertoireType),
+  repertoire: z.enum(BandRepertoireType),
 });
 
 const GENRE_CATEGORIES: Map<GenreCategory, string> = new Map([
