@@ -15,7 +15,7 @@ import {
 import {Link, useLocation, useNavigate} from '@tanstack/react-router';
 import {useEffect, useState} from 'react';
 import logo from './logo.svg';
-import videoSrc from './Header.mov';
+import videoSrc from './Header.mp4';
 import DateString from '../DateString';
 import {FaXmark, FaBars} from 'react-icons/fa6';
 
