@@ -10,7 +10,7 @@ export const Route = createFileRoute('/booking')({
     seo({
       title: 'Band- und DJ-Bewerbungen',
       description: context.event.bandApplicationEnd
-        ? `Die Bewerbungspahse für das ${context.event.name} läuft bis zum ${
+        ? `Die Bewerbungsphase für das ${context.event.name} läuft bis zum ${
             dateStringComponents({
               date: new Date(context.event.bandApplicationEnd),
             }).date
