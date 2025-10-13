@@ -174,7 +174,7 @@ function RouteComponent() {
         }
       />
 
-      <SimpleGrid columns={[1, 2, 3]} gap="5" mt="8">
+      <SimpleGrid columns={[2, 2, 3]} gap="5" mt="8">
         {(showAll ? donations : donations.slice(0, previewLength)).map(
           (item, index) => (
             <Flex flexDirection="column" textAlign="center" key={index}>

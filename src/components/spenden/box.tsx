@@ -55,7 +55,7 @@ export function SpendenBox({
   return (
     <Card.Root variant="elevated" borderRadius="2xl" px={['2', '6']}>
       <Card.Header>
-        <Heading textAlign="center" size={['2xl', '3xl']} mt={['2', '5']}>
+        <Heading textAlign="center" size={['xl', '3xl']} mt={['2', '5']}>
           <Text lineHeight="1.2">
             <Mark>
               <Text
@@ -103,7 +103,7 @@ export function SpendenBox({
         </Progress.Root>
 
         <Flex flexDirection="column" alignItems="center" gap="2">
-          <Stack direction="row">
+          <Stack direction={['column', 'row']} alignItems="center">
             <ChakraLink href="https://donate.stripe.com/dR68z1cend47cBW000">
               <Button borderRadius="full" px={['4', '10']} color="white">
                 Jetzt Spenden
