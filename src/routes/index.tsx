@@ -60,13 +60,10 @@ export function Index() {
         <SpendenBox
           donors={count}
           total={total}
-          secondaryButton={
-            <Link to="/spenden">
-              <Button variant="subtle" borderRadius="full" px={['4', '10']}>
-                Mehr erfahren
-              </Button>
-            </Link>
-          }
+          secondaryLabel="Mehr erfahren"
+          secondaryLinkProps={{
+            to: '/spenden',
+          }}
         />
       </Box>
       {news.map((item, i) => (

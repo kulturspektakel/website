@@ -160,18 +160,13 @@ function RouteComponent() {
       <SpendenBox
         total={totalAmount}
         donors={donations.length}
-        secondaryButton={
-          <Link
-            to="/mitgliedsantrag"
-            search={{
-              membership: Membership.Foerderverein,
-            }}
-          >
-            <Button variant="subtle" borderRadius="full" px={['4', '10']}>
-              Fördermitglied werden
-            </Button>
-          </Link>
-        }
+        secondaryLabel="Fördermitglied werden"
+        secondaryLinkProps={{
+          to: '/mitgliedsantrag',
+          search: {
+            membership: Membership.Foerderverein,
+          },
+        }}
       />
 
       <SimpleGrid columns={[2, 2, 3]} gap="5" mt="8">

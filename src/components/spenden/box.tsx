@@ -1,4 +1,9 @@
-import {Link, useLayoutEffect} from '@tanstack/react-router';
+import {
+  Link,
+  linkOptions,
+  LinkProps,
+  useLayoutEffect,
+} from '@tanstack/react-router';
 
 import {
   Image,
@@ -21,11 +26,13 @@ const GOAL = 1600000;
 export function SpendenBox({
   total,
   donors,
-  secondaryButton,
+  secondaryLabel,
+  secondaryLinkProps,
 }: {
   total: number;
   donors: number;
-  secondaryButton?: React.ReactNode;
+  secondaryLabel: React.ReactNode;
+  secondaryLinkProps: LinkProps;
 }) {
   const currency = useMemo(() => {
     return new Intl.NumberFormat('de-DE', {
@@ -103,19 +110,27 @@ export function SpendenBox({
         </Progress.Root>
 
         <Flex flexDirection="column" alignItems="center" gap="2">
-          <Stack direction={['column', 'row']} alignItems="center">
+          <Stack
+            direction={['column', 'row']}
+            justifyContent="center"
+            alignItems="center"
+          >
             <ChakraLink href="https://donate.stripe.com/dR68z1cend47cBW000">
-              <Button borderRadius="full" px={['4', '10']} color="white">
+              <Button borderRadius="full" px="10" color="white">
                 Jetzt Spenden
               </Button>
             </ChakraLink>
-            {secondaryButton}
+            <Link {...secondaryLinkProps}>
+              <Button variant="subtle" borderRadius="full" px="10">
+                {secondaryLabel}
+              </Button>
+            </Link>
           </Stack>
           <Image
             w="320px"
             src="https://files.kulturspektakel.de/ed5b4a69-5ad5-454a-9b8d-134d88ed6a15?width=640"
           />
-          <Text>
+          <Text textAlign="center">
             oder&nbsp;
             <ChakraLink asChild>
               <Link to="/spenden" hash="spenden-per-uberweisung">
