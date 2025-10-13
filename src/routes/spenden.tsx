@@ -33,7 +33,6 @@ const SearchSchema = z
 const loader = createServerFn()
   .inputValidator(SearchSchema)
   .handler(async ({data: input}) => {
-    console.log(input);
     const checkoutId = input?.checkout;
 
     const data = await prismaClient.donation.findMany({
@@ -116,6 +115,7 @@ export const Route = createFileRoute('/spenden')({
     seo({
       title: 'Spenden',
       description: 'Das Kulturspektakel braucht deine Unterstützung',
+      imageId: '734c6dad-0201-4bea-b3ad-cf63741de28d',
     }),
 
   component: RouteComponent,
