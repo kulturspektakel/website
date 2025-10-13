@@ -51,16 +51,16 @@ describe('transformCardAvtivities', () => {
       counter: 3,
       cardId: 'cardid',
       transactionType: 'Charge',
-      DeviceLog: {
+      deviceLog: {
         deviceTime: new Date('2000-01-01'),
       },
       Order: {
         createdAt: new Date('2000-01-01'),
-        OrderItem: [
+        items: [
           {
             amount: 1,
             name: 'Helles',
-            ProductList: {
+            productList: {
               name: 'Ausschank',
               emoji: '🍺',
             },
@@ -155,7 +155,7 @@ describe('transformCardAvtivities', () => {
           counter: 1,
           cardId: 'cardid',
           transactionType: 'TopUp',
-          DeviceLog: {
+          deviceLog: {
             deviceTime: new Date('2000-01-01'),
           },
           Order: null,
@@ -199,7 +199,7 @@ describe('transformCardAvtivities', () => {
           counter: 1,
           cardId: 'cardid',
           transactionType: 'Cashout',
-          DeviceLog: {
+          deviceLog: {
             deviceTime: new Date('2000-01-01'),
           },
           Order: null,
@@ -227,7 +227,7 @@ describe('transformCardAvtivities', () => {
           counter: 1,
           cardId: 'cardid',
           transactionType: 'Donation',
-          DeviceLog: {
+          deviceLog: {
             deviceTime: new Date('2000-01-01'),
           },
           Order: null,
