@@ -14,13 +14,20 @@ export const Route = createFileRoute('/')({
 });
 
 const newsLoader = createServerFn().handler(async () => {
-  const [donations, news] = await Promise.all([
+  const [sum, count, news] = await Promise.all([
     prismaClient.donation.aggregate({
       _sum: {
         amount: true,
       },
+    }),
+    prismaClient.donation.aggregate({
       _count: {
         id: true,
+      },
+      where: {
+        source: {
+          not: 'Other',
+        },
       },
     }),
     prismaClient.news.findMany({
@@ -39,8 +46,8 @@ const newsLoader = createServerFn().handler(async () => {
 
   return {
     news: await markdownPages(news),
-    total: donations._sum.amount ?? 0,
-    count: donations._count.id ?? 0,
+    total: sum._sum.amount ?? 0,
+    count: count._count.id ?? 0,
   };
 });
 
