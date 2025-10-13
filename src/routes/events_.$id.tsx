@@ -39,7 +39,7 @@ export const Route = createFileRoute('/events_/$id')({
 });
 
 const loader = createServerFn()
-  .validator((eventId: string) => eventId)
+  .inputValidator((eventId: string) => eventId)
   .handler(async ({data: eventId}) => {
     const data = await prismaClient.event.findUnique({
       where: {

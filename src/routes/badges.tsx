@@ -1,4 +1,4 @@
-import {Heading, VStack, Text, SimpleGrid, Box, Flex} from '@chakra-ui/react';
+import {Heading, VStack, Text, SimpleGrid, Flex} from '@chakra-ui/react';
 
 import {createFileRoute} from '@tanstack/react-router';
 import {Badge} from '../components/kultcard/Badges';

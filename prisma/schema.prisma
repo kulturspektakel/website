@@ -9,6 +9,24 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Viewer {
+  id                     String                   @id @default(uuid())
+  displayName            String
+  email                  String
+  profilePicture         String?
+  slackToken             String?
+  slackScopes            String[]
+  updatedAt              DateTime                 @default(now()) @updatedAt
+  BandApplication        BandApplication[]
+  BandApplicationComment BandApplicationComment[]
+  BandApplicationRating  BandApplicationRating[]
+  Nonce                  Nonce[]
+  ViewerLocation         ViewerLocation[]
+  NonceRequest           NonceRequest[]
+  BandApplicationTag     BandApplicationTag[]
+  CrewCard               CrewCard[]
+}
+
 model Area {
   id              String            @id
   displayName     String
@@ -16,7 +34,7 @@ model Area {
   themeColor      String
   latitude        Float
   longitude       Float
-  AreaOpeningHour AreaOpeningHour[]
+  areaOpeningHour AreaOpeningHour[]
   BandPlaying     BandPlaying[]
 }
 
@@ -25,7 +43,120 @@ model AreaOpeningHour {
   startTime DateTime
   endTime   DateTime
   areaId    String
-  Area      Area     @relation(fields: [areaId], references: [id])
+  area      Area     @relation(fields: [areaId], references: [id])
+}
+
+model Page {
+  slug    String  @id
+  title   String
+  content String?
+  left    String?
+  right   String?
+  bottom  String?
+}
+
+model ProductList {
+  id          Int         @id @default(autoincrement())
+  name        String      @db.VarChar(20)
+  emoji       String?
+  active      Boolean     @default(true)
+  updatedAt   DateTime?
+  Device      Device[]
+  OrderItem   OrderItem[]
+  product     Product[]
+  description String?
+}
+
+model Product {
+  id              Int                @id @default(autoincrement())
+  name            String             @db.VarChar(30)
+  price           Int
+  order           Int
+  productListId   Int
+  requiresDeposit Boolean            @default(false)
+  productList     ProductList        @relation(fields: [productListId], references: [id])
+  additives       ProductAdditives[]
+}
+
+model ProductAdditives {
+  id          String    @id
+  displayName String
+  Product     Product[]
+}
+
+model Device {
+  id              String       @id
+  lastSeen        DateTime?
+  productListId   Int?
+  softwareVersion String?
+  type            DeviceType
+  productList     ProductList? @relation(fields: [productListId], references: [id])
+  Order           Order[]
+  DeviceLog       DeviceLog[]
+}
+
+model Order {
+  id              Int               @id @default(autoincrement())
+  createdAt       DateTime          @default(now())
+  payment         OrderPayment
+  deposit         Int               @default(0)
+  deviceId        String?
+  device          Device?           @relation(fields: [deviceId], references: [id])
+  items           OrderItem[]
+  CardTransaction CardTransaction[]
+
+  crewCardId Bytes?
+  crewCard   CrewCard? @relation(fields: [crewCardId], references: [id])
+}
+
+model OrderItem {
+  id            Int          @id @default(autoincrement())
+  orderId       Int
+  amount        Int
+  note          String?
+  name          String
+  perUnitPrice  Int
+  productListId Int?
+  order         Order        @relation(fields: [orderId], references: [id])
+  productList   ProductList? @relation(fields: [productListId], references: [id])
+}
+
+model CardTransaction {
+  clientId        String              @id
+  cardId          String
+  depositBefore   Int
+  depositAfter    Int
+  balanceBefore   Int
+  balanceAfter    Int
+  transactionType CardTransactionType
+
+  counter   Int?
+  deviceLog DeviceLog @relation(fields: [clientId], references: [clientId])
+  Order     Order?    @relation(fields: [orderId], references: [id])
+  orderId   Int?
+}
+
+model CrewCard {
+  id         Bytes    @id
+  validUntil DateTime
+  nickname   String?
+  suspended  Boolean?
+  privileged Boolean?
+  viewerId   String?
+  viewer     Viewer?  @relation(fields: [viewerId], references: [id])
+  Order      Order[]
+  enrolledAt DateTime
+}
+
+model DeviceLog {
+  clientId        String            @id
+  batteryVoltage  Int?
+  usbVoltage      Int?
+  deviceId        String
+  createdAt       DateTime          @default(now())
+  deviceTime      DateTime
+  device          Device            @relation(fields: [deviceId], references: [id])
+  CardTransaction CardTransaction[]
 }
 
 model BandApplication {
@@ -59,14 +190,37 @@ model BandApplication {
   demoEmbedUrl            String?
   demoEmbed               String?
   demoEmbedType           DemoEmbedType?
-  repertoire              BandRepertoire?
+  contactedByViewer       Viewer?                  @relation(fields: [contactedByViewerId], references: [id])
+  event                   Event                    @relation(fields: [eventId], references: [id])
+  bandApplicationComment  BandApplicationComment[]
+  bandApplicationRating   BandApplicationRating[]
   spotifyArtist           String?
   spotifyMonthlyListeners Int?
-  Viewer                  Viewer?                  @relation(fields: [contactedByViewerId], references: [id])
-  Event                   Event                    @relation(fields: [eventId], references: [id])
-  BandApplicationComment  BandApplicationComment[]
-  BandApplicationRating   BandApplicationRating[]
+  repertoire              BandRepertoire?
   BandApplicationTag      BandApplicationTag[]
+}
+
+model BandApplicationTag {
+  bandApplicationId String   @db.Uuid
+  tag               String   @db.Citext
+  createdAt         DateTime @default(now())
+  createdByViewerId String
+
+  bandApplication BandApplication @relation(fields: [bandApplicationId], references: [id])
+  createdByViewer Viewer          @relation(fields: [createdByViewerId], references: [id])
+
+  @@unique([bandApplicationId, tag])
+}
+
+model BandApplicationRating {
+  viewerId          String
+  rating            Int
+  bandApplicationId String          @db.Uuid
+  bandApplication   BandApplication @relation(fields: [bandApplicationId], references: [id])
+  viewer            Viewer          @relation(fields: [viewerId], references: [id])
+
+  @@id([viewerId, bandApplicationId])
+  @@index([bandApplicationId])
 }
 
 model BandApplicationComment {
@@ -75,33 +229,31 @@ model BandApplicationComment {
   viewerId          String
   comment           String
   bandApplicationId String          @db.Uuid
-  BandApplication   BandApplication @relation(fields: [bandApplicationId], references: [id])
-  Viewer            Viewer          @relation(fields: [viewerId], references: [id])
+  bandApplication   BandApplication @relation(fields: [bandApplicationId], references: [id])
+  viewer            Viewer          @relation(fields: [viewerId], references: [id])
 }
 
-model BandApplicationRating {
-  viewerId          String
-  rating            Int
-  bandApplicationId String          @db.Uuid
-  BandApplication   BandApplication @relation(fields: [bandApplicationId], references: [id])
-  Viewer            Viewer          @relation(fields: [viewerId], references: [id])
-
-  @@id([viewerId, bandApplicationId])
-  @@index([bandApplicationId])
-}
-
-model BandApplicationTag {
-  bandApplicationId String          @db.Uuid
-  tag               String          @db.Citext
-  createdAt         DateTime        @default(now())
-  createdByViewerId String
-  BandApplication   BandApplication @relation(fields: [bandApplicationId], references: [id])
-  Viewer            Viewer          @relation(fields: [createdByViewerId], references: [id])
-
-  @@unique([bandApplicationId, tag])
+model Event {
+  id                   String            @id
+  name                 String
+  start                DateTime
+  end                  DateTime
+  eventType            EventType
+  bandApplicationStart DateTime?
+  djApplicationStart   DateTime?
+  bandApplicationEnd   DateTime?
+  djApplicationEnd     DateTime?
+  poster               String?           @db.Uuid
+  description          String?
+  bandApplication      BandApplication[]
+  BandPlaying          BandPlaying[]
+  location             String?
+  latitude             Float?
+  longitude            Float?
 }
 
 model BandPlaying {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name             String
   startTime        DateTime
   endTime          DateTime
@@ -118,50 +270,37 @@ model BandPlaying {
   eventId          String
   slug             String
   photo            String?   @db.Uuid
+  area             Area      @relation(fields: [areaId], references: [id])
+  event            Event     @relation(fields: [eventId], references: [id])
   announcementTime DateTime?
-  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  Area             Area      @relation(fields: [areaId], references: [id])
-  Event            Event     @relation(fields: [eventId], references: [id])
 
   @@unique([areaId, startTime])
   @@unique([eventId, slug])
 }
 
-model CardTransaction {
-  clientId        String              @id
-  cardId          String
-  depositBefore   Int
-  depositAfter    Int
-  balanceBefore   Int
-  balanceAfter    Int
-  transactionType CardTransactionType
-  counter         Int?
-  orderId         Int?
-  DeviceLog       DeviceLog           @relation(fields: [clientId], references: [clientId])
-  Order           Order?              @relation(fields: [orderId], references: [id])
+model Nonce {
+  nonce        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  expiresAt    DateTime
+  createdForId String?
+  createdFor   Viewer?  @relation(fields: [createdForId], references: [id])
 }
 
-model CrewCard {
-  id         Bytes    @id
-  nickname   String?
-  suspended  Boolean?
-  privileged Boolean?
-  viewerId   String?
-  validUntil DateTime
-  enrolledAt DateTime
-  Viewer     Viewer?  @relation(fields: [viewerId], references: [id])
-  Order      Order[]
+model NonceRequest {
+  id           String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  expiresAt    DateTime
+  createdForId String?
+  createdFor   Viewer?            @relation(fields: [createdForId], references: [id])
+  status       NonceRequestStatus @default(Pending)
 }
 
-model Device {
-  id              String       @id
-  lastSeen        DateTime?
-  productListId   Int?
-  softwareVersion String?
-  type            DeviceType
-  ProductList     ProductList? @relation(fields: [productListId], references: [id])
-  DeviceLog       DeviceLog[]
-  Order           Order[]
+model GmailReminders {
+  messageId String @id
+  account   String
+}
+
+model DevicePrivilegeToken {
+  id    Bytes   @id
+  label String?
 }
 
 model DeviceConfigVersion {
@@ -170,51 +309,10 @@ model DeviceConfigVersion {
   createdAt DateTime @default(now())
 }
 
-model DeviceLog {
-  clientId        String           @id
-  batteryVoltage  Int?
-  usbVoltage      Int?
-  deviceId        String
-  createdAt       DateTime         @default(now())
-  deviceTime      DateTime
-  CardTransaction CardTransaction?
-  Device          Device           @relation(fields: [deviceId], references: [id])
-}
-
-model DevicePrivilegeToken {
-  id    Bytes   @id
-  label String?
-}
-
-model Event {
-  id                   String            @id
-  name                 String
-  start                DateTime
-  end                  DateTime
-  eventType            EventType
-  bandApplicationStart DateTime?
-  bandApplicationEnd   DateTime?
-  djApplicationEnd     DateTime?
-  poster               String?           @db.Uuid
-  description          String?
-  djApplicationStart   DateTime?
-  latitude             Float?
-  location             String?
-  longitude            Float?
-  BandApplication      BandApplication[]
-  BandPlaying          BandPlaying[]
-}
-
-model GmailReminders {
-  messageId String @id
-  account   String
-}
-
-model ItemLocation {
-  timeStamp DateTime @id
-  latitude  Float
-  longitude Float
-  payload   Json
+enum NonceRequestStatus {
+  Pending
+  Approved
+  Rejected
 }
 
 model News {
@@ -222,89 +320,6 @@ model News {
   title     String
   content   String
   createdAt DateTime @default(now())
-}
-
-model Nonce {
-  nonce        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  expiresAt    DateTime
-  createdForId String?
-  Viewer       Viewer?  @relation(fields: [createdForId], references: [id])
-}
-
-model NonceRequest {
-  expiresAt    DateTime
-  createdForId String?
-  status       NonceRequestStatus @default(Pending)
-  id           String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  Viewer       Viewer?            @relation(fields: [createdForId], references: [id])
-}
-
-model Order {
-  id              Int               @id @default(autoincrement())
-  createdAt       DateTime          @default(now())
-  payment         OrderPayment
-  deposit         Int               @default(0)
-  deviceId        String?
-  crewCardId      Bytes?
-  CardTransaction CardTransaction[]
-  CrewCard        CrewCard?         @relation(fields: [crewCardId], references: [id])
-  Device          Device?           @relation(fields: [deviceId], references: [id])
-  OrderItem       OrderItem[]
-}
-
-model OrderItem {
-  id            Int          @id @default(autoincrement())
-  orderId       Int
-  amount        Int
-  note          String?
-  name          String
-  perUnitPrice  Int
-  productListId Int?
-  Order         Order        @relation(fields: [orderId], references: [id])
-  ProductList   ProductList? @relation(fields: [productListId], references: [id])
-}
-
-model Page {
-  slug    String  @id
-  content String?
-  left    String?
-  right   String?
-  bottom  String?
-  title   String
-}
-
-model Product {
-  id               Int                @id @default(autoincrement())
-  name             String             @db.VarChar(30)
-  price            Int
-  order            Int
-  productListId    Int
-  requiresDeposit  Boolean            @default(false)
-  ProductList      ProductList        @relation(fields: [productListId], references: [id])
-  ProductAdditives ProductAdditives[] @relation("ProductToProductAdditives")
-}
-
-model ProductAdditives {
-  id          String    @id
-  displayName String
-  Product     Product[] @relation("ProductToProductAdditives")
-}
-
-model ProductList {
-  id          Int         @id @default(autoincrement())
-  name        String      @db.VarChar(20)
-  emoji       String?
-  active      Boolean     @default(true)
-  updatedAt   DateTime?
-  description String?
-  Device      Device[]
-  OrderItem   OrderItem[]
-  Product     Product[]
-}
-
-model ShortDomainRedirect {
-  slug      String @id
-  targetUrl String
 }
 
 model TwoFactor {
@@ -315,39 +330,59 @@ model TwoFactor {
   @@unique([account, service])
 }
 
-model Viewer {
-  id                     String                   @id
-  displayName            String
-  email                  String
-  profilePicture         String?
-  slackToken             String?
-  slackScopes            String[]
-  updatedAt              DateTime                 @default(now())
-  BandApplication        BandApplication[]
-  BandApplicationComment BandApplicationComment[]
-  BandApplicationRating  BandApplicationRating[]
-  BandApplicationTag     BandApplicationTag[]
-  CrewCard               CrewCard[]
-  Nonce                  Nonce[]
-  NonceRequest           NonceRequest[]
-  ViewerLocation         ViewerLocation[]
+model ItemLocation {
+  timeStamp DateTime @id
+  latitude  Float
+  longitude Float
+  payload   Json
 }
 
 model ViewerLocation {
-  id        String   @id
+  id        String   @id @default(cuid())
   viewerId  String
+  viewer    Viewer   @relation(fields: [viewerId], references: [id])
   createdAt DateTime
   latitude  Float
   longitude Float
   payload   Json
-  Viewer    Viewer   @relation(fields: [viewerId], references: [id])
 }
 
-enum BandRepertoire {
-  ExclusivelyOwnSongs
-  MostlyOwnSongs
-  MostlyCoverSongs
-  ExclusivelyCoverSongs
+model ShortDomainRedirect {
+  slug      String @id
+  targetUrl String
+}
+
+model Donation {
+  id        String         @id @default(cuid())
+  amount    Int
+  createdAt DateTime       @default(now())
+  email     String?
+  name      String?
+  message   String?
+  reference String?
+  source    DonationSource
+}
+
+enum DonationSource {
+  Stripe
+  Manual
+  Membership
+  Other
+}
+
+enum OrderPayment {
+  CASH
+  BON
+  SUM_UP
+  VOUCHER
+  FREE_CREW
+  FREE_BAND
+  KULT_CARD
+}
+
+enum DeviceType {
+  CONTACTLESS_TERMINAL
+  IPAD
 }
 
 enum CardTransactionType {
@@ -370,15 +405,10 @@ enum DemoEmbedType {
   SpotifyAlbum
 }
 
-enum DeviceType {
-  CONTACTLESS_TERMINAL
-  IPAD
-}
-
-enum EventType {
-  Kulturspektakel
-  Other
-  Locker
+enum PreviouslyPlayed {
+  Yes
+  OtherFormation
+  No
 }
 
 enum GenreCategory {
@@ -403,24 +433,15 @@ enum HeardAboutBookingFrom {
   Instagram
 }
 
-enum NonceRequestStatus {
-  Pending
-  Approved
-  Rejected
+enum EventType {
+  Kulturspektakel
+  Other
+  Locker
 }
 
-enum OrderPayment {
-  CASH
-  BON
-  SUM_UP
-  VOUCHER
-  FREE_CREW
-  FREE_BAND
-  KULT_CARD
-}
-
-enum PreviouslyPlayed {
-  Yes
-  OtherFormation
-  No
+enum BandRepertoire {
+  ExclusivelyOwnSongs
+  MostlyOwnSongs
+  MostlyCoverSongs
+  ExclusivelyCoverSongs
 }

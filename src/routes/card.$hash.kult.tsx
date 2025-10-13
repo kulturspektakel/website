@@ -11,7 +11,9 @@ import {CardDetails} from '../components/kultcard/CardDetails';
 import {decodePayload} from '../utils/decodePayload';
 
 const loader = createServerFn()
-  .validator((data: {hash: string; event: {start: Date; end: Date}}) => data)
+  .inputValidator(
+    (data: {hash: string; event: {start: Date; end: Date}}) => data,
+  )
   .handler(async ({data: {event, hash}}) => {
     const {cardId, counter, balance, deposit} = decodePayload('kultcard', hash);
 

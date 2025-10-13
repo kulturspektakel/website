@@ -23,7 +23,9 @@ import {HighscoreEntry} from '../components/kultcard/Highscore';
 import {decodePayload} from '../utils/decodePayload';
 
 const loader = createServerFn()
-  .validator((data: {hash: string; event: {start: Date; end: Date}}) => data)
+  .inputValidator(
+    (data: {hash: string; event: {start: Date; end: Date}}) => data,
+  )
   .handler(async ({data: {hash, event}}) => {
     const {cardId, validUntil} = decodePayload('crewcard', hash);
     const _crewCard = await queryCrewCard(stringToByteArray(cardId), event);

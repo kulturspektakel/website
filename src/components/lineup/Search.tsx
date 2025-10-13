@@ -11,7 +11,7 @@ import {prismaClient} from '../../utils/prismaClient';
 import {useNavigate} from '@tanstack/react-router';
 
 const serverFn = createServerFn()
-  .validator((query: string) => query)
+  .inputValidator((query: string) => query)
   .handler(({data: query}) => {
     let q = query
       // sanitize tsquery: Only Letters, spaces, dash

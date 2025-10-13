@@ -3,7 +3,7 @@ import Confetti from '../components/booking/Confetti.client';
 import {createFileRoute} from '@tanstack/react-router';
 import {seo} from '../utils/seo';
 
-export const Route = createFileRoute('/mitgliedsantrag/danke')({
+export const Route = createFileRoute('/mitgliedsantrag_/danke')({
   component: MitgliedsantragDanke,
   head: () =>
     seo({

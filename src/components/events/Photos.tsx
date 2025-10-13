@@ -15,7 +15,7 @@ import {DataSourceArray} from 'photoswipe';
 const SIZE = 70;
 
 const loadMoreImages = createServerFn()
-  .validator(
+  .inputValidator(
     (params: {limit: number; offset: number; eventId: string}) => params,
   )
   .handler(async ({data: {eventId, offset, limit}}) => {

@@ -1,5 +1,5 @@
 import Article from '../components/news/Article';
-import {AnyRouteMatch, createFileRoute, notFound} from '@tanstack/react-router';
+import {createFileRoute, notFound} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
 import {prismaClient} from '../utils/prismaClient';
 import {markdownText} from '../utils/markdownText';
@@ -20,7 +20,7 @@ export const Route = createFileRoute('/news/$slug')({
 });
 
 const loader = createServerFn()
-  .validator((slug: string) => slug)
+  .inputValidator((slug: string) => slug)
   .handler(async ({data: slug}) => {
     const data = await prismaClient.news.findUnique({
       where: {

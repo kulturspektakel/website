@@ -8,9 +8,8 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { createServerRootRoute } from '@tanstack/react-start/server'
-
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SpendenRouteImport } from './routes/spenden'
 import { Route as SpeisekarteRouteImport } from './routes/speisekarte'
 import { Route as PlakateRouteImport } from './routes/plakate'
 import { Route as NuclinoSsoRouteImport } from './routes/nuclino-sso'
@@ -29,7 +28,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as LineupIndexRouteImport } from './routes/lineup.index'
 import { Route as NewsArchivRouteImport } from './routes/news.archiv'
 import { Route as NewsSlugRouteImport } from './routes/news.$slug'
-import { Route as MitgliedsantragDankeRouteImport } from './routes/mitgliedsantrag.danke'
+import { Route as MitgliedsantragDankeRouteImport } from './routes/mitgliedsantrag_.danke'
 import { Route as LineupYearRouteImport } from './routes/lineup.$year'
 import { Route as EventsIdRouteImport } from './routes/events_.$id'
 import { Route as CardHashRouteImport } from './routes/card.$hash'
@@ -38,10 +37,12 @@ import { Route as LineupYearSlugRouteImport } from './routes/lineup.$year_.$slug
 import { Route as CardHashKultRouteImport } from './routes/card.$hash.kult'
 import { Route as CardHashCrewRouteImport } from './routes/card.$hash.crew'
 import { Route as BookingApplicationTypeDankeRouteImport } from './routes/booking_.$applicationType_.danke'
-import { ServerRoute as ApiBadgesServerRouteImport } from './routes/api/badges'
 
-const rootServerRouteImport = createServerRootRoute()
-
+const SpendenRoute = SpendenRouteImport.update({
+  id: '/spenden',
+  path: '/spenden',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SpeisekarteRoute = SpeisekarteRouteImport.update({
   id: '/speisekarte',
   path: '/speisekarte',
@@ -133,9 +134,9 @@ const NewsSlugRoute = NewsSlugRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const MitgliedsantragDankeRoute = MitgliedsantragDankeRouteImport.update({
-  id: '/danke',
-  path: '/danke',
-  getParentRoute: () => MitgliedsantragRoute,
+  id: '/mitgliedsantrag_/danke',
+  path: '/mitgliedsantrag/danke',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const LineupYearRoute = LineupYearRouteImport.update({
   id: '/$year',
@@ -178,11 +179,6 @@ const BookingApplicationTypeDankeRoute =
     path: '/booking/$applicationType/danke',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiBadgesServerRoute = ApiBadgesServerRouteImport.update({
-  id: '/api/badges',
-  path: '/api/badges',
-  getParentRoute: () => rootServerRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -196,10 +192,11 @@ export interface FileRoutesByFullPath {
   '/learn': typeof LearnRoute
   '/lineup': typeof LineupRouteWithChildren
   '/logo': typeof LogoRoute
-  '/mitgliedsantrag': typeof MitgliedsantragRouteWithChildren
+  '/mitgliedsantrag': typeof MitgliedsantragRoute
   '/nuclino-sso': typeof NuclinoSsoRoute
   '/plakate': typeof PlakateRoute
   '/speisekarte': typeof SpeisekarteRoute
+  '/spenden': typeof SpendenRoute
   '/booking/$applicationType': typeof BookingApplicationTypeRoute
   '/card/$hash': typeof CardHashRouteWithChildren
   '/events/$id': typeof EventsIdRoute
@@ -224,10 +221,11 @@ export interface FileRoutesByTo {
   '/infos': typeof InfosRoute
   '/learn': typeof LearnRoute
   '/logo': typeof LogoRoute
-  '/mitgliedsantrag': typeof MitgliedsantragRouteWithChildren
+  '/mitgliedsantrag': typeof MitgliedsantragRoute
   '/nuclino-sso': typeof NuclinoSsoRoute
   '/plakate': typeof PlakateRoute
   '/speisekarte': typeof SpeisekarteRoute
+  '/spenden': typeof SpendenRoute
   '/booking/$applicationType': typeof BookingApplicationTypeRoute
   '/card/$hash': typeof CardHashRouteWithChildren
   '/events/$id': typeof EventsIdRoute
@@ -254,15 +252,16 @@ export interface FileRoutesById {
   '/learn': typeof LearnRoute
   '/lineup': typeof LineupRouteWithChildren
   '/logo': typeof LogoRoute
-  '/mitgliedsantrag': typeof MitgliedsantragRouteWithChildren
+  '/mitgliedsantrag': typeof MitgliedsantragRoute
   '/nuclino-sso': typeof NuclinoSsoRoute
   '/plakate': typeof PlakateRoute
   '/speisekarte': typeof SpeisekarteRoute
+  '/spenden': typeof SpendenRoute
   '/booking_/$applicationType': typeof BookingApplicationTypeRoute
   '/card/$hash': typeof CardHashRouteWithChildren
   '/events_/$id': typeof EventsIdRoute
   '/lineup/$year': typeof LineupYearRoute
-  '/mitgliedsantrag/danke': typeof MitgliedsantragDankeRoute
+  '/mitgliedsantrag_/danke': typeof MitgliedsantragDankeRoute
   '/news/$slug': typeof NewsSlugRoute
   '/news/archiv': typeof NewsArchivRoute
   '/lineup/': typeof LineupIndexRoute
@@ -289,6 +288,7 @@ export interface FileRouteTypes {
     | '/nuclino-sso'
     | '/plakate'
     | '/speisekarte'
+    | '/spenden'
     | '/booking/$applicationType'
     | '/card/$hash'
     | '/events/$id'
@@ -317,6 +317,7 @@ export interface FileRouteTypes {
     | '/nuclino-sso'
     | '/plakate'
     | '/speisekarte'
+    | '/spenden'
     | '/booking/$applicationType'
     | '/card/$hash'
     | '/events/$id'
@@ -346,11 +347,12 @@ export interface FileRouteTypes {
     | '/nuclino-sso'
     | '/plakate'
     | '/speisekarte'
+    | '/spenden'
     | '/booking_/$applicationType'
     | '/card/$hash'
     | '/events_/$id'
     | '/lineup/$year'
-    | '/mitgliedsantrag/danke'
+    | '/mitgliedsantrag_/danke'
     | '/news/$slug'
     | '/news/archiv'
     | '/lineup/'
@@ -372,41 +374,29 @@ export interface RootRouteChildren {
   LearnRoute: typeof LearnRoute
   LineupRoute: typeof LineupRouteWithChildren
   LogoRoute: typeof LogoRoute
-  MitgliedsantragRoute: typeof MitgliedsantragRouteWithChildren
+  MitgliedsantragRoute: typeof MitgliedsantragRoute
   NuclinoSsoRoute: typeof NuclinoSsoRoute
   PlakateRoute: typeof PlakateRoute
   SpeisekarteRoute: typeof SpeisekarteRoute
+  SpendenRoute: typeof SpendenRoute
   BookingApplicationTypeRoute: typeof BookingApplicationTypeRoute
   CardHashRoute: typeof CardHashRouteWithChildren
   EventsIdRoute: typeof EventsIdRoute
+  MitgliedsantragDankeRoute: typeof MitgliedsantragDankeRoute
   NewsSlugRoute: typeof NewsSlugRoute
   NewsArchivRoute: typeof NewsArchivRoute
   BookingApplicationTypeDankeRoute: typeof BookingApplicationTypeDankeRoute
 }
-export interface FileServerRoutesByFullPath {
-  '/api/badges': typeof ApiBadgesServerRoute
-}
-export interface FileServerRoutesByTo {
-  '/api/badges': typeof ApiBadgesServerRoute
-}
-export interface FileServerRoutesById {
-  __root__: typeof rootServerRouteImport
-  '/api/badges': typeof ApiBadgesServerRoute
-}
-export interface FileServerRouteTypes {
-  fileServerRoutesByFullPath: FileServerRoutesByFullPath
-  fullPaths: '/api/badges'
-  fileServerRoutesByTo: FileServerRoutesByTo
-  to: '/api/badges'
-  id: '__root__' | '/api/badges'
-  fileServerRoutesById: FileServerRoutesById
-}
-export interface RootServerRouteChildren {
-  ApiBadgesServerRoute: typeof ApiBadgesServerRoute
-}
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/spenden': {
+      id: '/spenden'
+      path: '/spenden'
+      fullPath: '/spenden'
+      preLoaderRoute: typeof SpendenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/speisekarte': {
       id: '/speisekarte'
       path: '/speisekarte'
@@ -533,12 +523,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NewsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/mitgliedsantrag/danke': {
-      id: '/mitgliedsantrag/danke'
-      path: '/danke'
+    '/mitgliedsantrag_/danke': {
+      id: '/mitgliedsantrag_/danke'
+      path: '/mitgliedsantrag/danke'
       fullPath: '/mitgliedsantrag/danke'
       preLoaderRoute: typeof MitgliedsantragDankeRouteImport
-      parentRoute: typeof MitgliedsantragRoute
+      parentRoute: typeof rootRouteImport
     }
     '/lineup/$year': {
       id: '/lineup/$year'
@@ -598,17 +588,6 @@ declare module '@tanstack/react-router' {
     }
   }
 }
-declare module '@tanstack/react-start/server' {
-  interface ServerFileRoutesByPath {
-    '/api/badges': {
-      id: '/api/badges'
-      path: '/api/badges'
-      fullPath: '/api/badges'
-      preLoaderRoute: typeof ApiBadgesServerRouteImport
-      parentRoute: typeof rootServerRouteImport
-    }
-  }
-}
 
 interface LineupRouteChildren {
   LineupYearRoute: typeof LineupYearRoute
@@ -624,18 +603,6 @@ const LineupRouteChildren: LineupRouteChildren = {
 
 const LineupRouteWithChildren =
   LineupRoute._addFileChildren(LineupRouteChildren)
-
-interface MitgliedsantragRouteChildren {
-  MitgliedsantragDankeRoute: typeof MitgliedsantragDankeRoute
-}
-
-const MitgliedsantragRouteChildren: MitgliedsantragRouteChildren = {
-  MitgliedsantragDankeRoute: MitgliedsantragDankeRoute,
-}
-
-const MitgliedsantragRouteWithChildren = MitgliedsantragRoute._addFileChildren(
-  MitgliedsantragRouteChildren,
-)
 
 interface CardHashRouteChildren {
   CardHashCrewRoute: typeof CardHashCrewRoute
@@ -663,13 +630,15 @@ const rootRouteChildren: RootRouteChildren = {
   LearnRoute: LearnRoute,
   LineupRoute: LineupRouteWithChildren,
   LogoRoute: LogoRoute,
-  MitgliedsantragRoute: MitgliedsantragRouteWithChildren,
+  MitgliedsantragRoute: MitgliedsantragRoute,
   NuclinoSsoRoute: NuclinoSsoRoute,
   PlakateRoute: PlakateRoute,
   SpeisekarteRoute: SpeisekarteRoute,
+  SpendenRoute: SpendenRoute,
   BookingApplicationTypeRoute: BookingApplicationTypeRoute,
   CardHashRoute: CardHashRouteWithChildren,
   EventsIdRoute: EventsIdRoute,
+  MitgliedsantragDankeRoute: MitgliedsantragDankeRoute,
   NewsSlugRoute: NewsSlugRoute,
   NewsArchivRoute: NewsArchivRoute,
   BookingApplicationTypeDankeRoute: BookingApplicationTypeDankeRoute,
@@ -677,9 +646,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-const rootServerRouteChildren: RootServerRouteChildren = {
-  ApiBadgesServerRoute: ApiBadgesServerRoute,
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
 }
-export const serverRouteTree = rootServerRouteImport
-  ._addFileChildren(rootServerRouteChildren)
-  ._addFileTypes<FileServerRouteTypes>()

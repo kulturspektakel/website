@@ -1,13 +1,17 @@
 import {defineConfig} from 'vite';
 import tsConfigPaths from 'vite-tsconfig-paths';
 import {tanstackStart} from '@tanstack/react-start/plugin/vite';
+import {nitroV2Plugin} from '@tanstack/nitro-v2-vite-plugin';
+import viteReact from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [
     tsConfigPaths(),
-    tanstackStart({
-      target: 'vercel',
+    tanstackStart(),
+    nitroV2Plugin({
+      preset: 'vercel',
     }),
+    viteReact(),
   ],
   resolve: {
     alias: {

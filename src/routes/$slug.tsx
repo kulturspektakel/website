@@ -25,7 +25,7 @@ export const Route = createFileRoute('/$slug')({
 });
 
 export const pageLoader = createServerFn()
-  .validator((slug: string) => slug)
+  .inputValidator((slug: string) => slug)
   .handler(async ({data: slug}) => {
     const data = await prismaClient.page.findUnique({
       where: {

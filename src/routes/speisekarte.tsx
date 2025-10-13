@@ -15,7 +15,7 @@ export const Route = createFileRoute('/speisekarte')({
     }),
 });
 
-const loader = createServerFn().handler(async ({data: slug}) => {
+const loader = createServerFn().handler(async () => {
   const data = await prismaClient.productList.findMany({
     where: {
       active: true,
@@ -28,13 +28,13 @@ const loader = createServerFn().handler(async ({data: slug}) => {
       name: true,
       emoji: true,
       description: true,
-      Product: {
+      product: {
         select: {
           id: true,
           name: true,
           price: true,
           requiresDeposit: true,
-          ProductAdditives: {
+          additives: {
             select: {
               id: true,
               displayName: true,

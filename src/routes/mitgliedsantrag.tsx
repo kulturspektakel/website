@@ -24,18 +24,20 @@ import ReloadWarning from '../components/ReloadWarning';
 import {createFileRoute, useNavigate} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
 import {seo} from '../utils/seo';
+import {ConnectedCheckbox} from '../components/ConnectedCheckbox';
 
 const schemaStep1 = z.object({
-  membership: z.nativeEnum(MembershipEnum),
+  membership: z.enum(MembershipEnum),
   name: z.string().min(1),
   address: z.string().min(1),
   city: z.string().min(1),
-  email: z.string().email(),
+  email: z.email(),
+  showNameOnDonationsPage: z.boolean().default(false),
 });
 
 const feeSchema = schemaStep1.extend({
   membershipFee: z.coerce.number(),
-  membershipType: z.nativeEnum(MembershipType),
+  membershipType: z.enum(MembershipType),
   iban: z
     .string()
     .refine((iban: string) => isValid(iban), 'IBAN hat kein gültiges Format'),
@@ -74,6 +76,9 @@ const loader = createServerFn().handler(async () => {
 export const Route = createFileRoute('/mitgliedsantrag')({
   component: Mitgliedsantrag,
   loader: async () => await loader(),
+  validateSearch: (search): {membership?: MembershipEnum} => ({
+    membership: z.enum(MembershipEnum).safeParse(search.membership)?.data,
+  }),
   head: () =>
     seo({
       title: 'Mitgliedsantrag',
@@ -115,6 +120,8 @@ function Mitgliedsantrag() {
     style: 'currency',
     currency: 'EUR',
   });
+  const {membership} = Route.useSearch();
+  const [hasSubmitted, setHasSubmitted] = useState(false);
 
   return (
     <div>
@@ -129,20 +136,20 @@ function Mitgliedsantrag() {
       />
 
       <Formik<Partial<Membership>>
-        initialValues={{}}
+        initialValues={{membership}}
         validateOnChange={false}
         validationSchema={toFormikValidationSchema(STEPS[step])}
         onSubmit={async (values) => {
           if (step < STEPS.length - 1) {
             setStep(step + 1);
           } else {
-            const data = schemaStep2.parse(values);
-            delete data.accountHolder;
+            const {accountHolder, ...data} = schemaStep2.parse(values);
             await create({
               variables: {
                 data: data,
               },
             });
+            setHasSubmitted(true);
             navigate({
               to: '/mitgliedsantrag/danke',
             });
@@ -179,6 +186,12 @@ function Mitgliedsantrag() {
                     label="Vor- und Nachname"
                     required
                   />
+
+                  <ConnectedCheckbox
+                    name="showNameOnDonationPage"
+                    label="Meinen Namen auf der Spendenseite anzeigen"
+                  />
+
                   <ConnectedField name="address" label="Anschrift" required />
 
                   <ConnectedField name="city" label="PLZ, Ort" required />
@@ -357,12 +370,12 @@ function Mitgliedsantrag() {
                 </React.Fragment>
               )}
               <Flex justifyContent="space-between" flexDirection="row-reverse">
-                <Button type="submit" loading={loading}>
+                <Button type="submit" loading={loading || hasSubmitted}>
                   {step === STEPS.length - 1 ? 'Mitglied werden' : 'Weiter'}
                 </Button>
                 {step > 0 && (
                   <Button
-                    disabled={loading}
+                    disabled={loading || hasSubmitted}
                     variant="subtle"
                     onClick={() => setStep(step - 1)}
                   >

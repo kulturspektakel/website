@@ -5,7 +5,7 @@ import {createRouter as createTanStackRouter} from '@tanstack/react-router';
 import {NotFound} from './components/NotFound/NotFound';
 import {Error} from './components/Error';
 
-export function createRouter() {
+export function getRouter() {
   const router = createTanStackRouter({
     routeTree,
     scrollRestoration: true,
@@ -16,10 +16,4 @@ export function createRouter() {
   });
 
   return routerWithApolloClient(router, apolloClient);
-}
-
-declare module '@tanstack/react-router' {
-  interface Register {
-    router: ReturnType<typeof createRouter>;
-  }
 }

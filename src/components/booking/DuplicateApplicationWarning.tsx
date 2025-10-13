@@ -5,7 +5,7 @@ import {prismaClient} from '../../utils/prismaClient';
 import {useQuery} from '@tanstack/react-query';
 
 const getDuplicateApplication = createServerFn()
-  .validator((data: {bandname: string; eventId: string}) => data)
+  .inputValidator((data: {bandname: string; eventId: string}) => data)
   .handler(async ({data}) => {
     const application = await prismaClient.bandApplication.findFirst({
       where: {

@@ -41,7 +41,7 @@ export const Route = createFileRoute('/events')({
 });
 
 const loader = createServerFn()
-  .validator(
+  .inputValidator(
     (cursor: {cursor?: string; eventType: EventType | 'ALL'}) => cursor,
   )
   .handler(async ({data}) => {

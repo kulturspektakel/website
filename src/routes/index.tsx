@@ -1,11 +1,12 @@
-import {Center, Separator} from '@chakra-ui/react';
+import {Box, Center, Separator, Button} from '@chakra-ui/react';
 import React from 'react';
 import Article from '../components/news/Article';
 import LinkButton from '../components/LinkButton';
-import {createFileRoute} from '@tanstack/react-router';
+import {createFileRoute, Link} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
 import {prismaClient} from '../utils/prismaClient';
 import {markdownPages} from '../utils/markdownText';
+import {SpendenBox} from '../components/spenden/box';
 
 export const Route = createFileRoute('/')({
   component: Index,
@@ -13,27 +14,54 @@ export const Route = createFileRoute('/')({
 });
 
 const newsLoader = createServerFn().handler(async () => {
-  const news = await prismaClient.news.findMany({
-    take: 10,
-    orderBy: {
-      createdAt: 'desc',
-    },
-    select: {
-      title: true,
-      slug: true,
-      createdAt: true,
-      content: true,
-    },
-  });
+  const [donations, news] = await Promise.all([
+    prismaClient.donation.aggregate({
+      _sum: {
+        amount: true,
+      },
+      _count: {
+        id: true,
+      },
+    }),
+    prismaClient.news.findMany({
+      take: 10,
+      orderBy: {
+        createdAt: 'desc',
+      },
+      select: {
+        title: true,
+        slug: true,
+        createdAt: true,
+        content: true,
+      },
+    }),
+  ]);
 
-  return markdownPages(news);
+  return {
+    news: await markdownPages(news),
+    total: donations._sum.amount ?? 0,
+    count: donations._count.id ?? 0,
+  };
 });
 
 export function Index() {
-  const news = Route.useLoaderData();
+  const {news, total, count} = Route.useLoaderData();
 
   return (
     <>
+      <Box mb="12" mt="-32">
+        <SpendenBox
+          donors={count}
+          total={total}
+          secondaryButton={
+            <Link to="/spenden">
+              <Button variant="subtle" borderRadius="full" px={['4', '10']}>
+                Mehr erfahren
+              </Button>
+            </Link>
+          }
+        />
+      </Box>
       {news.map((item, i) => (
         <React.Fragment key={i}>
           {i > 0 && <Separator width="60%" m="auto" mb="16" />}

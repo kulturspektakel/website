@@ -13,7 +13,7 @@ import {useRef, useState, useEffect, useCallback, useMemo} from 'react';
 
 import {FaSlack} from 'react-icons/fa6';
 import {createFileRoute, redirect} from '@tanstack/react-router';
-import {getCookie, getWebRequest} from '@tanstack/react-start/server';
+import {getCookie} from '@tanstack/react-start/server';
 import {
   CheckNonceRequestDocument,
   useCreateNonceRequestMutation,
@@ -32,11 +32,10 @@ gql`
 `;
 
 const beforeLoad = createServerFn()
-  .validator((query: Record<string, any>) => query)
+  .inputValidator((query: Record<string, any>) => query)
   .handler(({data}) => {
-    const request = getWebRequest();
     const nonce = getCookie('nonce');
-    if (request && nonce) {
+    if (nonce) {
       const url = new URL(LOGIN_URL);
       Object.entries(data).forEach(([key, value]) =>
         url.searchParams.set(key, value),

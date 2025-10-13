@@ -18,7 +18,7 @@ import {createServerFn} from '@tanstack/react-start';
 import {seo} from '../utils/seo';
 
 const loader = createServerFn()
-  .validator((data: {year: string; slug: string}) => data)
+  .inputValidator((data: {year: string; slug: string}) => data)
   .handler(async ({data}) => {
     const band = await prismaClient.bandPlaying.findUnique({
       where: {
@@ -40,7 +40,7 @@ const loader = createServerFn()
         website: true,
         shortDescription: true,
         description: true,
-        Area: {
+        area: {
           select: {
             id: true,
             displayName: true,
@@ -78,7 +78,7 @@ export const Route = createFileRoute('/lineup/$year_/$slug')({
                 minute: '2-digit',
               },
             }).date
-          } Uhr, ${loaderData.Area.displayName}`,
+          } Uhr, ${loaderData.area.displayName}`,
         })
       : {},
 });
@@ -100,10 +100,10 @@ function LineupBand() {
       )}
       <Text>
         <Mark
-          bgColor={band.Area.themeColor}
-          color={band.Area.id === 'dj' ? 'white' : undefined}
+          bgColor={band.area.themeColor}
+          color={band.area.id === 'dj' ? 'white' : undefined}
         >
-          {band.Area.displayName}
+          {band.area.displayName}
         </Mark>
       </Text>
       <Heading as="h2" size="2xl">

@@ -30,7 +30,7 @@ export const Route = createFileRoute('/news/archiv')({
 });
 
 const loader = createServerFn()
-  .validator((cursor: string | undefined) => cursor)
+  .inputValidator((cursor: string | undefined) => cursor)
   .handler(async ({data: cursor}) => {
     const data = await prismaClient.news.findMany({
       select: {

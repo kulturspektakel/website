@@ -10,7 +10,7 @@ import {StageInfo} from '../components/lineup/StageInfo';
 import {Center, Spinner} from '@chakra-ui/react';
 
 const loader = createServerFn()
-  .validator((data: {year: string}) => data)
+  .inputValidator((data: {year: string}) => data)
   .handler(async ({data}) => {
     const bands = await prismaClient.bandPlaying.findMany({
       where: {

@@ -36,11 +36,11 @@ export async function queryCardTransactions(
       Order: {
         select: {
           createdAt: true,
-          OrderItem: {
+          items: {
             select: {
               amount: true,
               name: true,
-              ProductList: {
+              productList: {
                 select: {
                   name: true,
                   emoji: true,
@@ -50,7 +50,7 @@ export async function queryCardTransactions(
           },
         },
       },
-      DeviceLog: {
+      deviceLog: {
         select: {
           deviceTime: true,
         },
@@ -58,7 +58,7 @@ export async function queryCardTransactions(
     },
     where: {
       cardId,
-      DeviceLog: {
+      deviceLog: {
         deviceTime: {
           gte: isPast(event.end) ? event.start : sub(new Date(), {days: 7}),
         },
@@ -85,7 +85,7 @@ export function queryCrewCard(
       privileged: true,
       suspended: true,
       nickname: true,
-      Viewer: {
+      viewer: {
         select: {
           displayName: true,
           profilePicture: true,
@@ -101,11 +101,11 @@ export function queryCrewCard(
         select: {
           id: true,
           createdAt: true,
-          OrderItem: {
+          items: {
             select: {
               name: true,
               amount: true,
-              ProductList: {
+              productList: {
                 select: {
                   id: true,
                   name: true,
@@ -128,9 +128,9 @@ export function orderToCardActivity(
 ): Array<CardActivity> {
   return order.map((o) => ({
     type: 'order' as const,
-    productList: o.OrderItem[0].ProductList?.name!,
-    emoji: o.OrderItem[0].ProductList?.emoji ?? null,
-    items: o.OrderItem,
+    productList: o.items[0].productList?.name!,
+    emoji: o.items[0].productList?.emoji ?? null,
+    items: o.items,
     time: o.createdAt,
   }));
 }
@@ -197,10 +197,10 @@ export function transformCardAvtivities(
       cardActivities.push({
         type: 'order',
         productList:
-          transaction.Order.OrderItem?.[0].ProductList?.name ?? 'Unbekannt',
-        emoji: transaction.Order.OrderItem?.[0].ProductList?.emoji ?? null,
+          transaction.Order.items?.[0].productList?.name ?? 'Unbekannt',
+        emoji: transaction.Order.items?.[0].productList?.emoji ?? null,
         time: transaction.Order.createdAt,
-        items: transaction.Order.OrderItem.map((oi) => ({
+        items: transaction.Order.items.map((oi) => ({
           amount: oi.amount,
           name: oi.name,
         })),
@@ -222,7 +222,7 @@ export function transformCardAvtivities(
         depositAfter: transaction.depositAfter,
         depositBefore: transaction.depositBefore,
         transactionType: transaction.transactionType,
-        time: transaction.DeviceLog.deviceTime,
+        time: transaction.deviceLog.deviceTime,
       });
     }
   }
