@@ -32,7 +32,7 @@ const schemaStep1 = z.object({
   address: z.string().min(1),
   city: z.string().min(1),
   email: z.email(),
-  showNameOnDonationsPage: z.boolean().default(false),
+  showNameOnDonationsPage: z.boolean().optional(),
 });
 
 const feeSchema = schemaStep1.extend({
@@ -143,7 +143,9 @@ function Mitgliedsantrag() {
           if (step < STEPS.length - 1) {
             setStep(step + 1);
           } else {
-            const {accountHolder, ...data} = schemaStep2.parse(values);
+            const {accountHolder, ...data} = z
+              .intersection(...STEPS)
+              .parse(values);
             await create({
               variables: {
                 data: data,
@@ -188,7 +190,7 @@ function Mitgliedsantrag() {
                   />
 
                   <ConnectedCheckbox
-                    name="showNameOnDonationPage"
+                    name="showNameOnDonationsPage"
                     label="Meinen Namen auf der Spendenseite anzeigen"
                   />
 
