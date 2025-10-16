@@ -15,6 +15,7 @@ import {
   Link as ChakraLink,
   Card,
   Stack,
+  ClientOnly,
 } from '@chakra-ui/react';
 import CountUp from 'react-countup';
 import Mark from '../Mark';
@@ -65,25 +66,28 @@ export function SpendenBox({
         <Heading textAlign="center" size={['xl', '3xl']} mt={['2', '5']}>
           <Text lineHeight="1.2">
             <Mark>
-              <Text
-                textAlign="right"
-                w={
-                  12 / 30 + //euro sign
-                  (currencyFormat.replace(/[^0-9]/g, '').length * 18) / 30 +
-                  4 / 30 +
-                  (currencyFormat.length > 6 ? 4 / 30 : 0) +
-                  'em'
-                }
-                display="inline-block"
-              >
-                <CountUp
-                  useEasing
-                  start={0}
-                  end={total}
-                  duration={1.5}
-                  formattingFn={(n) => currency.format(n / 100)}
-                />
-              </Text>
+              <ClientOnly fallback="0,00">
+                <Text
+                  as="span"
+                  textAlign="right"
+                  w={
+                    12 / 30 + //euro sign
+                    (currencyFormat.replace(/[^0-9]/g, '').length * 18) / 30 +
+                    4 / 30 +
+                    (currencyFormat.length > 6 ? 4 / 30 : 0) +
+                    'em'
+                  }
+                  display="inline-block"
+                >
+                  <CountUp
+                    useEasing
+                    start={0}
+                    end={total}
+                    duration={1.5}
+                    formattingFn={(n) => currency.format(n / 100)}
+                  />
+                </Text>
+              </ClientOnly>
               <EuroSign />
             </Mark>{' '}
             von {donors + 52}&nbsp;Unterstützer:innen
