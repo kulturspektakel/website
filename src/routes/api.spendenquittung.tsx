@@ -90,25 +90,27 @@ export const Route = createFileRoute('/api/spendenquittung')({
     handlers: {
       POST: async ({request}) => {
         console.log(process.env.NODE_ENV, request.headers);
-        const host =
-          (process.env.NODE_ENV === 'development' ? 'http://' : 'https://') +
-          request.headers.get('host');
+
+        const origin = new URL(
+          request.headers.get('referer') ?? 'http://localhost:3000',
+        ).origin;
+
         const formData = await request.formData();
 
         Font.register({
           family: 'Shrimp',
-          src: `${host}/styles/shrimp-webfont.woff`,
+          src: `${origin}/styles/shrimp-webfont.woff`,
         });
 
         Font.register({
           family: 'Space Grotesk',
-          src: `${host}/styles/space-grotesk-latin-400-normal.woff`,
+          src: `${origin}/styles/space-grotesk-latin-400-normal.woff`,
         });
 
         Font.register({
           family: 'Space Grotesk',
           fontWeight: 'bold',
-          src: `${host}/styles/space-grotesk-latin-600-normal.woff`,
+          src: `${origin}/styles/space-grotesk-latin-600-normal.woff`,
         });
 
         const id = formData.get('id')?.toString() ?? '';
@@ -130,7 +132,10 @@ export const Route = createFileRoute('/api/spendenquittung')({
         const stream = await renderToStream(
           <Document language="de">
             <Page size="A4" style={styles.page}>
-              <Image src={`${host}/logos/logo-wide.png`} style={styles.logo} />
+              <Image
+                src={`${origin}/logos/logo-wide.png`}
+                style={styles.logo}
+              />
               <Text style={styles.date}>
                 Gauting,{' '}
                 {new Date().toLocaleDateString('de-DE', {
