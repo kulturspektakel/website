@@ -33,13 +33,13 @@ import { Route as LineupYearRouteImport } from './routes/lineup.$year'
 import { Route as EventsIdRouteImport } from './routes/events_.$id'
 import { Route as CardHashRouteImport } from './routes/card.$hash'
 import { Route as BookingApplicationTypeRouteImport } from './routes/booking_.$applicationType'
-import { Route as ApiSpendenquittungRouteImport } from './routes/api.spendenquittung'
 import { Route as ApiBadgesRouteImport } from './routes/api.badges'
 import { Route as SpendenQuittungIdRouteImport } from './routes/spenden_.quittung.$id'
 import { Route as LineupYearSlugRouteImport } from './routes/lineup.$year_.$slug'
 import { Route as CardHashKultRouteImport } from './routes/card.$hash.kult'
 import { Route as CardHashCrewRouteImport } from './routes/card.$hash.crew'
 import { Route as BookingApplicationTypeDankeRouteImport } from './routes/booking_.$applicationType_.danke'
+import { Route as ApiSpendenQuittungIdRouteImport } from './routes/api.spenden.quittung.$id'
 
 const SpendenRoute = SpendenRouteImport.update({
   id: '/spenden',
@@ -161,11 +161,6 @@ const BookingApplicationTypeRoute = BookingApplicationTypeRouteImport.update({
   path: '/booking/$applicationType',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiSpendenquittungRoute = ApiSpendenquittungRouteImport.update({
-  id: '/api/spendenquittung',
-  path: '/api/spendenquittung',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiBadgesRoute = ApiBadgesRouteImport.update({
   id: '/api/badges',
   path: '/api/badges',
@@ -197,6 +192,11 @@ const BookingApplicationTypeDankeRoute =
     path: '/booking/$applicationType/danke',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiSpendenQuittungIdRoute = ApiSpendenQuittungIdRouteImport.update({
+  id: '/api/spenden/quittung/$id',
+  path: '/api/spenden/quittung/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -216,7 +216,6 @@ export interface FileRoutesByFullPath {
   '/speisekarte': typeof SpeisekarteRoute
   '/spenden': typeof SpendenRoute
   '/api/badges': typeof ApiBadgesRoute
-  '/api/spendenquittung': typeof ApiSpendenquittungRoute
   '/booking/$applicationType': typeof BookingApplicationTypeRoute
   '/card/$hash': typeof CardHashRouteWithChildren
   '/events/$id': typeof EventsIdRoute
@@ -230,6 +229,7 @@ export interface FileRoutesByFullPath {
   '/card/$hash/kult': typeof CardHashKultRoute
   '/lineup/$year/$slug': typeof LineupYearSlugRoute
   '/spenden/quittung/$id': typeof SpendenQuittungIdRoute
+  '/api/spenden/quittung/$id': typeof ApiSpendenQuittungIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -248,7 +248,6 @@ export interface FileRoutesByTo {
   '/speisekarte': typeof SpeisekarteRoute
   '/spenden': typeof SpendenRoute
   '/api/badges': typeof ApiBadgesRoute
-  '/api/spendenquittung': typeof ApiSpendenquittungRoute
   '/booking/$applicationType': typeof BookingApplicationTypeRoute
   '/card/$hash': typeof CardHashRouteWithChildren
   '/events/$id': typeof EventsIdRoute
@@ -262,6 +261,7 @@ export interface FileRoutesByTo {
   '/card/$hash/kult': typeof CardHashKultRoute
   '/lineup/$year/$slug': typeof LineupYearSlugRoute
   '/spenden/quittung/$id': typeof SpendenQuittungIdRoute
+  '/api/spenden/quittung/$id': typeof ApiSpendenQuittungIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -282,7 +282,6 @@ export interface FileRoutesById {
   '/speisekarte': typeof SpeisekarteRoute
   '/spenden': typeof SpendenRoute
   '/api/badges': typeof ApiBadgesRoute
-  '/api/spendenquittung': typeof ApiSpendenquittungRoute
   '/booking_/$applicationType': typeof BookingApplicationTypeRoute
   '/card/$hash': typeof CardHashRouteWithChildren
   '/events_/$id': typeof EventsIdRoute
@@ -296,6 +295,7 @@ export interface FileRoutesById {
   '/card/$hash/kult': typeof CardHashKultRoute
   '/lineup/$year_/$slug': typeof LineupYearSlugRoute
   '/spenden_/quittung/$id': typeof SpendenQuittungIdRoute
+  '/api/spenden/quittung/$id': typeof ApiSpendenQuittungIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -317,7 +317,6 @@ export interface FileRouteTypes {
     | '/speisekarte'
     | '/spenden'
     | '/api/badges'
-    | '/api/spendenquittung'
     | '/booking/$applicationType'
     | '/card/$hash'
     | '/events/$id'
@@ -331,6 +330,7 @@ export interface FileRouteTypes {
     | '/card/$hash/kult'
     | '/lineup/$year/$slug'
     | '/spenden/quittung/$id'
+    | '/api/spenden/quittung/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -349,7 +349,6 @@ export interface FileRouteTypes {
     | '/speisekarte'
     | '/spenden'
     | '/api/badges'
-    | '/api/spendenquittung'
     | '/booking/$applicationType'
     | '/card/$hash'
     | '/events/$id'
@@ -363,6 +362,7 @@ export interface FileRouteTypes {
     | '/card/$hash/kult'
     | '/lineup/$year/$slug'
     | '/spenden/quittung/$id'
+    | '/api/spenden/quittung/$id'
   id:
     | '__root__'
     | '/'
@@ -382,7 +382,6 @@ export interface FileRouteTypes {
     | '/speisekarte'
     | '/spenden'
     | '/api/badges'
-    | '/api/spendenquittung'
     | '/booking_/$applicationType'
     | '/card/$hash'
     | '/events_/$id'
@@ -396,6 +395,7 @@ export interface FileRouteTypes {
     | '/card/$hash/kult'
     | '/lineup/$year_/$slug'
     | '/spenden_/quittung/$id'
+    | '/api/spenden/quittung/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -416,7 +416,6 @@ export interface RootRouteChildren {
   SpeisekarteRoute: typeof SpeisekarteRoute
   SpendenRoute: typeof SpendenRoute
   ApiBadgesRoute: typeof ApiBadgesRoute
-  ApiSpendenquittungRoute: typeof ApiSpendenquittungRoute
   BookingApplicationTypeRoute: typeof BookingApplicationTypeRoute
   CardHashRoute: typeof CardHashRouteWithChildren
   EventsIdRoute: typeof EventsIdRoute
@@ -425,6 +424,7 @@ export interface RootRouteChildren {
   NewsArchivRoute: typeof NewsArchivRoute
   BookingApplicationTypeDankeRoute: typeof BookingApplicationTypeDankeRoute
   SpendenQuittungIdRoute: typeof SpendenQuittungIdRoute
+  ApiSpendenQuittungIdRoute: typeof ApiSpendenQuittungIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -597,13 +597,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BookingApplicationTypeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/spendenquittung': {
-      id: '/api/spendenquittung'
-      path: '/api/spendenquittung'
-      fullPath: '/api/spendenquittung'
-      preLoaderRoute: typeof ApiSpendenquittungRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/badges': {
       id: '/api/badges'
       path: '/api/badges'
@@ -644,6 +637,13 @@ declare module '@tanstack/react-router' {
       path: '/booking/$applicationType/danke'
       fullPath: '/booking/$applicationType/danke'
       preLoaderRoute: typeof BookingApplicationTypeDankeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/spenden/quittung/$id': {
+      id: '/api/spenden/quittung/$id'
+      path: '/api/spenden/quittung/$id'
+      fullPath: '/api/spenden/quittung/$id'
+      preLoaderRoute: typeof ApiSpendenQuittungIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -696,7 +696,6 @@ const rootRouteChildren: RootRouteChildren = {
   SpeisekarteRoute: SpeisekarteRoute,
   SpendenRoute: SpendenRoute,
   ApiBadgesRoute: ApiBadgesRoute,
-  ApiSpendenquittungRoute: ApiSpendenquittungRoute,
   BookingApplicationTypeRoute: BookingApplicationTypeRoute,
   CardHashRoute: CardHashRouteWithChildren,
   EventsIdRoute: EventsIdRoute,
@@ -705,6 +704,7 @@ const rootRouteChildren: RootRouteChildren = {
   NewsArchivRoute: NewsArchivRoute,
   BookingApplicationTypeDankeRoute: BookingApplicationTypeDankeRoute,
   SpendenQuittungIdRoute: SpendenQuittungIdRoute,
+  ApiSpendenQuittungIdRoute: ApiSpendenQuittungIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

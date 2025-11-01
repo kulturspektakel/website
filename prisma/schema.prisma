@@ -364,6 +364,9 @@ model Donation {
   message            String?
   reference          String? // stripe ID
   source             DonationSource
+  quittungName       String?
+  quittungStreet     String?
+  quittungCity       String?
 
   @@index([reference])
 }

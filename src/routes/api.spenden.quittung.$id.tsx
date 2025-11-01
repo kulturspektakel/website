@@ -85,15 +85,13 @@ const styles = StyleSheet.create({
   },
 });
 
-export const Route = createFileRoute('/api/spendenquittung')({
+export const Route = createFileRoute('/api/spenden/quittung/$id')({
   server: {
     handlers: {
-      POST: async ({request}) => {
+      GET: async ({request, params}) => {
         const origin = new URL(
           request.headers.get('referer') ?? 'http://localhost:3000',
         ).origin;
-
-        const formData = await request.formData();
 
         Font.register({
           family: 'Shrimp',
@@ -111,26 +109,22 @@ export const Route = createFileRoute('/api/spendenquittung')({
           src: `${origin}/styles/space-grotesk-latin-600-normal.woff`,
         });
 
-        const id = formData.get('id')?.toString() ?? '';
-        const name = formData.get('name')?.toString() ?? '';
-        const street = formData.get('street')?.toString() ?? '';
-        const city = formData.get('city')?.toString() ?? '';
-
         const donation = await prismaClient.donation.findFirstOrThrow({
           select: {
             id: true,
             amount: true,
             createdAt: true,
+            quittungName: true,
+            quittungStreet: true,
+            quittungCity: true,
+            spendenQuittungAt: true,
           },
           where: {
-            id,
-            spendenQuittungAt: null,
+            id: params.id,
+            spendenQuittungAt: {
+              not: null,
+            },
           },
-        });
-
-        await prismaClient.donation.update({
-          where: {id: donation.id},
-          data: {spendenQuittungAt: new Date()},
         });
 
         const stream = await renderToStream(
@@ -142,7 +136,7 @@ export const Route = createFileRoute('/api/spendenquittung')({
               />
               <Text style={styles.date}>
                 Gauting,{' '}
-                {new Date().toLocaleDateString('de-DE', {
+                {donation.spendenQuittungAt!.toLocaleDateString('de-DE', {
                   month: 'long',
                   timeZone: 'Europe/Berlin',
                   year: 'numeric',
@@ -156,9 +150,9 @@ export const Route = createFileRoute('/api/spendenquittung')({
                 Körperschaften, Personenvereinigungen oder Vermögensmassen
               </Text>
               <Section label="Name und Anschrift des/der Zuwendenden:">
-                <Text>{name}</Text>
-                <Text>{street}</Text>
-                <Text>{city}</Text>
+                <Text>{donation.quittungName ?? ''}</Text>
+                <Text>{donation.quittungStreet ?? ''}</Text>
+                <Text>{donation.quittungCity ?? ''}</Text>
               </Section>
               <Section label="Zuwendung:">
                 <Text>
