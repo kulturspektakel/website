@@ -89,8 +89,6 @@ export const Route = createFileRoute('/api/spendenquittung')({
   server: {
     handlers: {
       POST: async ({request}) => {
-        console.log(process.env.NODE_ENV, request.headers);
-
         const origin = new URL(
           request.headers.get('referer') ?? 'http://localhost:3000',
         ).origin;
