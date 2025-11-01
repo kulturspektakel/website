@@ -46,11 +46,13 @@ const loader = createServerFn()
         createdAt: true,
         source: true,
       },
-      where: {
-        id: {
-          not: checkoutId,
-        },
-      },
+      where: checkoutId
+        ? {
+            reference: {
+              not: checkoutId,
+            },
+          }
+        : undefined,
     });
 
     let checkout: Stripe.Checkout.Session | null = null;
@@ -150,7 +152,7 @@ function RouteComponent() {
           </Heading>
           <Text>
             Wir wissen es sehr zu schätzen, dass du das Kulturspektakel
-            unterstützt, wir hoffen dich auch 2026 wieder bei uns zu sehen!
+            unterstützt und hoffen dich auch beim nächsten Kult wieder zu sehen!
           </Text>
         </VStack>
       )}
