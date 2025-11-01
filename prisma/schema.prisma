@@ -360,6 +360,7 @@ model Donation {
   name               String? // publicily visisble name
   namePrivate        String?
   sentConfirmationAt DateTime?
+  spendenQuittungAt  DateTime?
   message            String?
   reference          String? // stripe ID
   source             DonationSource

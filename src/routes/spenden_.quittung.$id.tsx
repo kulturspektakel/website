@@ -11,6 +11,7 @@ import {
   Button,
   Field,
   Flex,
+  Link,
 } from '@chakra-ui/react';
 import {useMemo} from 'react';
 import DateString from '../components/DateString';
@@ -25,6 +26,7 @@ const loader = createServerFn()
         amount: true,
         createdAt: true,
         source: true,
+        spendenQuittungAt: true,
       },
       where: {
         id,
@@ -56,48 +58,72 @@ function RouteComponent() {
     <VStack align="stretch" gap="3">
       <Heading size="3xl">Spendenquittung</Heading>
 
-      <Text>
-        Vielen Dank für deine Spende vom{' '}
-        <strong>
-          <DateString date={data.createdAt} />
-        </strong>{' '}
-        über <strong>{currency.format(data.amount / 100)}</strong>. Für deine
-        Spendenquittung brauchen wir noch deinen vollständigen Namen und
-        Anschrift:
-      </Text>
+      {data.spendenQuittungAt ? (
+        <>
+          <Text>
+            Deine Spendenquittung für die Spende vom{' '}
+            <strong>
+              <DateString date={data.createdAt} />
+            </strong>{' '}
+            über <strong>{currency.format(data.amount / 100)}</strong> wurde
+            bereits erstellt. Falls du sie erneut benötigst, melde dich bitte
+            bei uns unter{' '}
+            <Link href="mailto:kasse@kulturspektakel.de">
+              kasse@kulturspektakel.de
+            </Link>
+            .
+          </Text>
+        </>
+      ) : (
+        <>
+          <Text>
+            Vielen Dank für deine Spende vom{' '}
+            <strong>
+              <DateString date={data.createdAt} />
+            </strong>{' '}
+            über <strong>{currency.format(data.amount / 100)}</strong>. Für
+            deine Spendenquittung brauchen wir noch deinen vollständigen Namen
+            und Anschrift:
+          </Text>
 
-      <VStack gap="3" asChild>
-        <form action="/api/spendenquittung" method="POST">
-          <input type="hidden" name="id" value={data.id} />
-          <Field.Root required>
-            <Field.Label>
-              Vor- und Nachname
-              <Field.RequiredIndicator />
-            </Field.Label>
-            <Input defaultValue={data.namePrivate ?? ''} name="name" required />
-          </Field.Root>
+          <VStack gap="3" asChild>
+            <form action="/api/spendenquittung" method="POST">
+              <input type="hidden" name="id" value={data.id} />
+              <Field.Root required>
+                <Field.Label>
+                  Vor- und Nachname
+                  <Field.RequiredIndicator />
+                </Field.Label>
+                <Input
+                  defaultValue={data.namePrivate ?? ''}
+                  name="name"
+                  required
+                />
+              </Field.Root>
 
-          <Field.Root required>
-            <Field.Label>
-              Straße, Hausnummer
-              <Field.RequiredIndicator />
-            </Field.Label>
-            <Input name="street" required />
-          </Field.Root>
+              <Field.Root required>
+                <Field.Label>
+                  Straße, Hausnummer
+                  <Field.RequiredIndicator />
+                </Field.Label>
+                <Input name="street" required />
+              </Field.Root>
 
-          <Field.Root required>
-            <Field.Label>
-              PLZ, Ort
-              <Field.RequiredIndicator />
-            </Field.Label>
-            <Input name="city" required />
-          </Field.Root>
+              <Field.Root required>
+                <Field.Label>
+                  PLZ, Ort
+                  <Field.RequiredIndicator />
+                </Field.Label>
+                <Input name="city" required />
+              </Field.Root>
 
-          <Flex mt="2" justifyContent="flex-end">
-            <Button type="submit">Spendenquittung erstellen</Button>
-          </Flex>
-        </form>
-      </VStack>
+              <Flex mt="2" justifyContent="flex-end">
+                <Button type="submit">Spendenquittung erstellen</Button>
+              </Flex>
+            </form>
+          </VStack>
+        </>
+      )}
     </VStack>
   );
 }

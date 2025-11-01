@@ -124,7 +124,13 @@ export const Route = createFileRoute('/api/spendenquittung')({
           },
           where: {
             id,
+            spendenQuittungAt: null,
           },
+        });
+
+        await prismaClient.donation.update({
+          where: {id: donation.id},
+          data: {spendenQuittungAt: new Date()},
         });
 
         const stream = await renderToStream(
