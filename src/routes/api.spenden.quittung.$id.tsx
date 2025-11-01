@@ -89,9 +89,10 @@ export const Route = createFileRoute('/api/spenden/quittung/$id')({
   server: {
     handlers: {
       GET: async ({request, params}) => {
-        const origin = new URL(
-          request.headers.get('referer') ?? 'http://localhost:3000',
-        ).origin;
+        const origin =
+          process.env.NODE_ENV === 'development'
+            ? 'http://localhost:3000'
+            : 'https://www.kulturspektakel.de';
 
         Font.register({
           family: 'Shrimp',
