@@ -161,8 +161,14 @@ export const Route = createFileRoute('/api/spendenquittung')({
                     style: 'currency',
                     currency: 'EUR',
                   }).format(donation.amount / 100)}{' '}
-                  (in Worten: {n2words(Math.floor(donation.amount / 100), {})}{' '}
-                  Euro und {n2words(donation.amount % 100, {})} Cent)
+                  (in Worten:{' '}
+                  {n2words(Math.floor(donation.amount / 100), {}).replace(
+                    /eins$/,
+                    'ein',
+                  )}{' '}
+                  Euro und{' '}
+                  {n2words(donation.amount % 100, {}).replace(/eins$/, 'ein')}{' '}
+                  Cent)
                 </Text>
                 <Text>
                   Tag der Zuwendung:{' '}
