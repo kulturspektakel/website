@@ -26,6 +26,7 @@ import { Route as RouteRouteImport } from './routes/Route'
 import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LineupIndexRouteImport } from './routes/lineup.index'
+import { Route as SpendenQuittungRouteImport } from './routes/spenden_.quittung'
 import { Route as NewsArchivRouteImport } from './routes/news.archiv'
 import { Route as NewsSlugRouteImport } from './routes/news.$slug'
 import { Route as MitgliedsantragDankeRouteImport } from './routes/mitgliedsantrag_.danke'
@@ -33,6 +34,8 @@ import { Route as LineupYearRouteImport } from './routes/lineup.$year'
 import { Route as EventsIdRouteImport } from './routes/events_.$id'
 import { Route as CardHashRouteImport } from './routes/card.$hash'
 import { Route as BookingApplicationTypeRouteImport } from './routes/booking_.$applicationType'
+import { Route as ApiSpendenquittungRouteImport } from './routes/api.spendenquittung'
+import { Route as ApiBadgesRouteImport } from './routes/api.badges'
 import { Route as LineupYearSlugRouteImport } from './routes/lineup.$year_.$slug'
 import { Route as CardHashKultRouteImport } from './routes/card.$hash.kult'
 import { Route as CardHashCrewRouteImport } from './routes/card.$hash.crew'
@@ -123,6 +126,11 @@ const LineupIndexRoute = LineupIndexRouteImport.update({
   path: '/',
   getParentRoute: () => LineupRoute,
 } as any)
+const SpendenQuittungRoute = SpendenQuittungRouteImport.update({
+  id: '/spenden_/quittung',
+  path: '/spenden/quittung',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NewsArchivRoute = NewsArchivRouteImport.update({
   id: '/news/archiv',
   path: '/news/archiv',
@@ -156,6 +164,16 @@ const CardHashRoute = CardHashRouteImport.update({
 const BookingApplicationTypeRoute = BookingApplicationTypeRouteImport.update({
   id: '/booking_/$applicationType',
   path: '/booking/$applicationType',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSpendenquittungRoute = ApiSpendenquittungRouteImport.update({
+  id: '/api/spendenquittung',
+  path: '/api/spendenquittung',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiBadgesRoute = ApiBadgesRouteImport.update({
+  id: '/api/badges',
+  path: '/api/badges',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LineupYearSlugRoute = LineupYearSlugRouteImport.update({
@@ -197,6 +215,8 @@ export interface FileRoutesByFullPath {
   '/plakate': typeof PlakateRoute
   '/speisekarte': typeof SpeisekarteRoute
   '/spenden': typeof SpendenRoute
+  '/api/badges': typeof ApiBadgesRoute
+  '/api/spendenquittung': typeof ApiSpendenquittungRoute
   '/booking/$applicationType': typeof BookingApplicationTypeRoute
   '/card/$hash': typeof CardHashRouteWithChildren
   '/events/$id': typeof EventsIdRoute
@@ -204,6 +224,7 @@ export interface FileRoutesByFullPath {
   '/mitgliedsantrag/danke': typeof MitgliedsantragDankeRoute
   '/news/$slug': typeof NewsSlugRoute
   '/news/archiv': typeof NewsArchivRoute
+  '/spenden/quittung': typeof SpendenQuittungRoute
   '/lineup/': typeof LineupIndexRoute
   '/booking/$applicationType/danke': typeof BookingApplicationTypeDankeRoute
   '/card/$hash/crew': typeof CardHashCrewRoute
@@ -226,6 +247,8 @@ export interface FileRoutesByTo {
   '/plakate': typeof PlakateRoute
   '/speisekarte': typeof SpeisekarteRoute
   '/spenden': typeof SpendenRoute
+  '/api/badges': typeof ApiBadgesRoute
+  '/api/spendenquittung': typeof ApiSpendenquittungRoute
   '/booking/$applicationType': typeof BookingApplicationTypeRoute
   '/card/$hash': typeof CardHashRouteWithChildren
   '/events/$id': typeof EventsIdRoute
@@ -233,6 +256,7 @@ export interface FileRoutesByTo {
   '/mitgliedsantrag/danke': typeof MitgliedsantragDankeRoute
   '/news/$slug': typeof NewsSlugRoute
   '/news/archiv': typeof NewsArchivRoute
+  '/spenden/quittung': typeof SpendenQuittungRoute
   '/lineup': typeof LineupIndexRoute
   '/booking/$applicationType/danke': typeof BookingApplicationTypeDankeRoute
   '/card/$hash/crew': typeof CardHashCrewRoute
@@ -257,6 +281,8 @@ export interface FileRoutesById {
   '/plakate': typeof PlakateRoute
   '/speisekarte': typeof SpeisekarteRoute
   '/spenden': typeof SpendenRoute
+  '/api/badges': typeof ApiBadgesRoute
+  '/api/spendenquittung': typeof ApiSpendenquittungRoute
   '/booking_/$applicationType': typeof BookingApplicationTypeRoute
   '/card/$hash': typeof CardHashRouteWithChildren
   '/events_/$id': typeof EventsIdRoute
@@ -264,6 +290,7 @@ export interface FileRoutesById {
   '/mitgliedsantrag_/danke': typeof MitgliedsantragDankeRoute
   '/news/$slug': typeof NewsSlugRoute
   '/news/archiv': typeof NewsArchivRoute
+  '/spenden_/quittung': typeof SpendenQuittungRoute
   '/lineup/': typeof LineupIndexRoute
   '/booking_/$applicationType_/danke': typeof BookingApplicationTypeDankeRoute
   '/card/$hash/crew': typeof CardHashCrewRoute
@@ -289,6 +316,8 @@ export interface FileRouteTypes {
     | '/plakate'
     | '/speisekarte'
     | '/spenden'
+    | '/api/badges'
+    | '/api/spendenquittung'
     | '/booking/$applicationType'
     | '/card/$hash'
     | '/events/$id'
@@ -296,6 +325,7 @@ export interface FileRouteTypes {
     | '/mitgliedsantrag/danke'
     | '/news/$slug'
     | '/news/archiv'
+    | '/spenden/quittung'
     | '/lineup/'
     | '/booking/$applicationType/danke'
     | '/card/$hash/crew'
@@ -318,6 +348,8 @@ export interface FileRouteTypes {
     | '/plakate'
     | '/speisekarte'
     | '/spenden'
+    | '/api/badges'
+    | '/api/spendenquittung'
     | '/booking/$applicationType'
     | '/card/$hash'
     | '/events/$id'
@@ -325,6 +357,7 @@ export interface FileRouteTypes {
     | '/mitgliedsantrag/danke'
     | '/news/$slug'
     | '/news/archiv'
+    | '/spenden/quittung'
     | '/lineup'
     | '/booking/$applicationType/danke'
     | '/card/$hash/crew'
@@ -348,6 +381,8 @@ export interface FileRouteTypes {
     | '/plakate'
     | '/speisekarte'
     | '/spenden'
+    | '/api/badges'
+    | '/api/spendenquittung'
     | '/booking_/$applicationType'
     | '/card/$hash'
     | '/events_/$id'
@@ -355,6 +390,7 @@ export interface FileRouteTypes {
     | '/mitgliedsantrag_/danke'
     | '/news/$slug'
     | '/news/archiv'
+    | '/spenden_/quittung'
     | '/lineup/'
     | '/booking_/$applicationType_/danke'
     | '/card/$hash/crew'
@@ -379,12 +415,15 @@ export interface RootRouteChildren {
   PlakateRoute: typeof PlakateRoute
   SpeisekarteRoute: typeof SpeisekarteRoute
   SpendenRoute: typeof SpendenRoute
+  ApiBadgesRoute: typeof ApiBadgesRoute
+  ApiSpendenquittungRoute: typeof ApiSpendenquittungRoute
   BookingApplicationTypeRoute: typeof BookingApplicationTypeRoute
   CardHashRoute: typeof CardHashRouteWithChildren
   EventsIdRoute: typeof EventsIdRoute
   MitgliedsantragDankeRoute: typeof MitgliedsantragDankeRoute
   NewsSlugRoute: typeof NewsSlugRoute
   NewsArchivRoute: typeof NewsArchivRoute
+  SpendenQuittungRoute: typeof SpendenQuittungRoute
   BookingApplicationTypeDankeRoute: typeof BookingApplicationTypeDankeRoute
 }
 
@@ -509,6 +548,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LineupIndexRouteImport
       parentRoute: typeof LineupRoute
     }
+    '/spenden_/quittung': {
+      id: '/spenden_/quittung'
+      path: '/spenden/quittung'
+      fullPath: '/spenden/quittung'
+      preLoaderRoute: typeof SpendenQuittungRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/news/archiv': {
       id: '/news/archiv'
       path: '/news/archiv'
@@ -556,6 +602,20 @@ declare module '@tanstack/react-router' {
       path: '/booking/$applicationType'
       fullPath: '/booking/$applicationType'
       preLoaderRoute: typeof BookingApplicationTypeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/spendenquittung': {
+      id: '/api/spendenquittung'
+      path: '/api/spendenquittung'
+      fullPath: '/api/spendenquittung'
+      preLoaderRoute: typeof ApiSpendenquittungRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/badges': {
+      id: '/api/badges'
+      path: '/api/badges'
+      fullPath: '/api/badges'
+      preLoaderRoute: typeof ApiBadgesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lineup/$year_/$slug': {
@@ -635,12 +695,15 @@ const rootRouteChildren: RootRouteChildren = {
   PlakateRoute: PlakateRoute,
   SpeisekarteRoute: SpeisekarteRoute,
   SpendenRoute: SpendenRoute,
+  ApiBadgesRoute: ApiBadgesRoute,
+  ApiSpendenquittungRoute: ApiSpendenquittungRoute,
   BookingApplicationTypeRoute: BookingApplicationTypeRoute,
   CardHashRoute: CardHashRouteWithChildren,
   EventsIdRoute: EventsIdRoute,
   MitgliedsantragDankeRoute: MitgliedsantragDankeRoute,
   NewsSlugRoute: NewsSlugRoute,
   NewsArchivRoute: NewsArchivRoute,
+  SpendenQuittungRoute: SpendenQuittungRoute,
   BookingApplicationTypeDankeRoute: BookingApplicationTypeDankeRoute,
 }
 export const routeTree = rootRouteImport

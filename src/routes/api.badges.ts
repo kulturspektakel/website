@@ -1,19 +1,19 @@
 import {json} from '@tanstack/react-start';
-import {computeBadges} from '../../utils/useBadges';
-import {orderToCardActivity, queryCrewCard} from '../../utils/cardUtils';
-import {badgeConfig} from '../../utils/badgeConfig';
-import {getCurrentEvent} from '../../utils/getCurrentEvent';
-import {BadgeSVG} from '../../components/kultcard/Badges';
+import {computeBadges} from '../utils/useBadges';
+import {orderToCardActivity, queryCrewCard} from '../utils/cardUtils';
+import {badgeConfig} from '../utils/badgeConfig';
+import {getCurrentEvent} from '../utils/getCurrentEvent';
+import {BadgeSVG} from '../components/kultcard/Badges';
 import {renderToString} from 'react-dom/server';
 import React from 'react';
-import {prismaClient} from '../../utils/prismaClient';
+import {prismaClient} from '../utils/prismaClient';
 import {createFileRoute} from '@tanstack/react-router';
 
 // This is stupid. This is an API called by the API to figure out
 // if a new badge was awarded with an order. This shouldn't exist
 // but would require the badges implementation to be available in
 // api.kulturspektakel.de
-export const ServerRoute = createFileRoute('/api/badges')({
+export const Route = createFileRoute('/api/badges')({
   server: {
     handlers: {
       POST: async ({request}) => {
