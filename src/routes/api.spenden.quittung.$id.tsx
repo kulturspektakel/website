@@ -147,7 +147,7 @@ export const Route = createFileRoute('/api/spenden/quittung/$id')({
               <Text style={styles.heading}>Bestätigung über Geldzuwendung</Text>
               <Text>
                 im Sinne des § 10b des Einkommensteuergesetzes an eine der in §
-                5 Abs. 1 Nr. 9 des Körperschaftsteuergesetzes bezeichneten
+                5 Abs. 1 Nr. 9 des Körperschaft- steuergesetzes bezeichneten
                 Körperschaften, Personenvereinigungen oder Vermögensmassen
               </Text>
               <Section label="Name und Anschrift des/der Zuwendenden:">
