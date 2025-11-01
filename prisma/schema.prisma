@@ -353,14 +353,18 @@ model ShortDomainRedirect {
 }
 
 model Donation {
-  id        String         @id @default(cuid())
-  amount    Int
-  createdAt DateTime       @default(now())
-  email     String?
-  name      String?
-  message   String?
-  reference String?
-  source    DonationSource
+  id                 String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  amount             Int
+  createdAt          DateTime       @default(now())
+  email              String?
+  name               String? // publicily visisble name
+  namePrivate        String?
+  sentConfirmationAt DateTime?
+  message            String?
+  reference          String? // stripe ID
+  source             DonationSource
+
+  @@index([reference])
 }
 
 enum DonationSource {

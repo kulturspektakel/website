@@ -12,6 +12,7 @@ import {
 import {Readable} from 'node:stream';
 import {prismaClient} from '../utils/prismaClient';
 import React from 'react';
+import n2words from 'n2words/i18n/de.js';
 
 const styles = StyleSheet.create({
   page: {
@@ -19,7 +20,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     fontSize: 10,
     paddingHorizontal: '2cm',
-    paddingVertical: '2cm',
+    paddingVertical: '1.4cm',
     lineHeight: 1.4,
     gap: '0.3cm',
   },
@@ -31,12 +32,20 @@ const styles = StyleSheet.create({
     fontFamily: 'Shrimp',
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 10,
+    marginBottom: '2mm',
     textTransform: 'uppercase',
+    marginTop: '3mm',
+  },
+  label: {
+    fontSize: 8,
+    fontWeight: 'bold',
+    marginTop: -8,
+    marginLeft: -6,
   },
   section: {
     border: '1px solid black',
     padding: 10,
+    paddingBottom: 5,
   },
   bold: {
     fontWeight: 'bold',
@@ -45,22 +54,46 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     gap: '0.1cm',
     lineHeight: 1.35,
-    fontSize: 9,
+    fontSize: 8,
+  },
+  spacer: {
+    flexGrow: 1,
+  },
+  date: {
+    textAlign: 'right',
+    marginTop: '2cm',
   },
   footer: {
+    fontSize: 8,
     lineHeight: 1.35,
-    fontSize: 9,
+    marginTop: '0.5cm',
     gap: '0.5cm',
     flexDirection: 'row',
     justifyContent: 'space-between',
+  },
+  footerCol: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1mm',
+    justifyContent: 'flex-end',
+  },
+  footerTitle: {
+    fontFamily: 'Shrimp',
+    fontSize: 8,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
   },
 });
 
 export const Route = createFileRoute('/api/spendenquittung')({
   server: {
     handlers: {
-      GET: async ({request}) => {
-        const host = 'http://' + request.headers.get('host');
+      POST: async ({request}) => {
+        console.log(process.env.NODE_ENV, request.headers);
+        const host =
+          (process.env.NODE_ENV === 'development' ? 'http://' : 'https://') +
+          request.headers.get('host');
+        const formData = await request.formData();
 
         Font.register({
           family: 'Shrimp',
@@ -78,38 +111,63 @@ export const Route = createFileRoute('/api/spendenquittung')({
           src: `${host}/styles/space-grotesk-latin-600-normal.woff`,
         });
 
+        const id = formData.get('id')?.toString() ?? '';
+        const name = formData.get('name')?.toString() ?? '';
+        const street = formData.get('street')?.toString() ?? '';
+        const city = formData.get('city')?.toString() ?? '';
+
         const donation = await prismaClient.donation.findFirstOrThrow({
           select: {
-            name: true,
+            id: true,
             amount: true,
             createdAt: true,
-            source: true,
           },
           where: {
-            id: '1',
+            id,
           },
         });
 
         const stream = await renderToStream(
-          <Document>
+          <Document language="de">
             <Page size="A4" style={styles.page}>
               <Image src={`${host}/logos/logo-wide.png`} style={styles.logo} />
-              <Section label="Aussteller (Bezeichnung und Anschrift der steuerbegünstigten Einrichtung)">
-                Kulturspektakel Gauting e.V.
-                <br />
-                Bahnhofstr. 6<br />
-                82131 Gauting
-              </Section>
-              <Text style={styles.heading}>
-                Bestätigung über Geldzuwendungen
+              <Text style={styles.date}>
+                Gauting,{' '}
+                {new Date().toLocaleDateString('de-DE', {
+                  month: 'long',
+                  timeZone: 'Europe/Berlin',
+                  year: 'numeric',
+                  day: 'numeric',
+                })}
               </Text>
+              <Text style={styles.heading}>Bestätigung über Geldzuwendung</Text>
               <Text>
                 im Sinne des § 10b des Einkommensteuergesetzes an eine der in §
                 5 Abs. 1 Nr. 9 des Körperschaftsteuergesetzes bezeichneten
                 Körperschaften, Personenvereinigungen oder Vermögensmassen
               </Text>
-              <Section label="Name und Anschrift des Zuwendenden:">
-                {donation.name}
+              <Section label="Name und Anschrift des/der Zuwendenden:">
+                <Text>{name}</Text>
+                <Text>{street}</Text>
+                <Text>{city}</Text>
+              </Section>
+              <Section label="Zuwendung:">
+                <Text>
+                  Betrag:{' '}
+                  {new Intl.NumberFormat('de-DE', {
+                    style: 'currency',
+                    currency: 'EUR',
+                  }).format(donation.amount / 100)}{' '}
+                  (in Worten: {n2words(Math.floor(donation.amount / 100), {})}{' '}
+                  Euro und {n2words(donation.amount % 100, {})} Cent)
+                </Text>
+                <Text>
+                  Tag der Zuwendung:{' '}
+                  {donation.createdAt.toLocaleDateString('de-DE', {
+                    timeZone: 'Europe/Berlin',
+                  })}
+                </Text>
+                <Text>Referenz: {donation.id}</Text>
               </Section>
               <View>
                 <Text>
@@ -129,15 +187,10 @@ export const Route = createFileRoute('/api/spendenquittung')({
                 Es wird bestätigt, dass die Zuwendung nur zur Förderung der
                 Kunst und Kultur verwendet wird.
               </Text>
-              <Text>
-                Gauting,{' '}
-                {new Date().toLocaleDateString('de-DE', {
-                  month: 'long',
-                  timeZone: 'Europe/Berlin',
-                  year: 'numeric',
-                  day: 'numeric',
-                })}
-              </Text>
+
+              <Text>Valentin Langer, Kassenwart</Text>
+
+              <View style={styles.spacer} />
               <View style={styles.small}>
                 <Text style={styles.bold}>Hinweis:</Text>
                 <Text>
@@ -151,27 +204,48 @@ export const Route = createFileRoute('/api/spendenquittung')({
                 <Text>
                   Diese Bestätigung wird nicht als Nachweis für die steuerliche
                   Berücksichtigung der Zuwendung anerkannt, wenn das Datum des
-                  Freistellungs- bescheides länger als 5 Jahre bzw. das Datum
-                  der Feststellung der Einhaltung der satzungsmäßigen
+                  Freistellungsbescheides länger als 5 Jahre bzw. das Datum der
+                  Feststellung der Einhaltung der satzungsmäßigen
                   Voraussetzungen nach § 60a Abs. 1 AO länger als 3 Jahre seit
                   Ausstellung des Bescheides zurückliegt (§ 63 Abs. 5 AO).
                 </Text>
               </View>
               <View style={styles.footer}>
-                <View>
-                  <Text>Kulturspektakel Gauting</Text>
-                  Bahnhofstraße 6<br />
-                  82131 Gauting
+                <View style={styles.footerCol}>
+                  <Text style={styles.footerTitle}>
+                    Kulturspektakel Gauting e.V.
+                  </Text>
+                  <View>
+                    <Text>Bahnhofstraße 6</Text>
+                    <Text>82131 Gauting</Text>
+                  </View>
+                  <View>
+                    <Text>info@kulturspektakel.de</Text>
+                    <Text>www.kulturspektakel.de</Text>
+                    <Text>@kulturspektakel</Text>
+                  </View>
                 </View>
-                <View>
-                  <Text>Kulturspektakel Gauting</Text>
-                  Bahnhofstraße 6<br />
-                  82131 Gauting
+                <View style={styles.footerCol}>
+                  <View>
+                    <Text>Vertreten durch: Maximilian Schrake,</Text>
+                    <Text>Gabriel Knoll und Tristan Häuser</Text>
+                  </View>
+                  <View>
+                    <Text>Schriftführer: Anton Sanktjohanser</Text>
+                    <Text>Kassenwart: Valentin Langer</Text>
+                    <Text>Beisitzer: Simon zur Weihen, Kristian Aumayer</Text>
+                  </View>
                 </View>
-                <View>
-                  <Text>Kulturspektakel Gauting</Text>
-                  Bahnhofstraße 6<br />
-                  82131 Gauting
+                <View style={styles.footerCol}>
+                  <View>
+                    <Text>Registergericht: Amtsgericht München</Text>
+                    <Text>Registernummer: VR 70819</Text>
+                  </View>
+                  <View>
+                    <Text>Kreissparkasse Starnberg</Text>
+                    <Text>IBAN: DE71 7025 0150 0620 0007 52</Text>
+                    <Text>BIC: BYLADEM1KMS</Text>
+                  </View>
                 </View>
               </View>
             </Page>
@@ -194,7 +268,7 @@ const Section = ({
   children: React.ReactNode;
 }) => (
   <View style={styles.section}>
-    <Text>{label}</Text>
+    <Text style={styles.label}>{label}</Text>
     {React.Children.map(children, (child) =>
       typeof child === 'string' ? <Text>{child}</Text> : child,
     )}
