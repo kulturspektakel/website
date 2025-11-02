@@ -10,7 +10,6 @@ import {
   Button,
   Field,
   Flex,
-  Link,
   NativeSelect,
 } from '@chakra-ui/react';
 import {useMemo, useState} from 'react';
@@ -122,7 +121,7 @@ function RouteComponent() {
 
   return (
     <VStack align="stretch" gap="3">
-      <Heading size="3xl">Spendenquittung</Heading>
+      <Heading size="3xl">Spendenquittung & Ansteckpin</Heading>
 
       <Text>
         Vielen Dank für deine Spende vom{' '}
@@ -131,7 +130,8 @@ function RouteComponent() {
         </strong>{' '}
         über <strong>{currency.format(data.amount / 100)}</strong>. Für die
         Spendenquittung und den Ansteckpin brauchen wir noch deinen
-        vollständigen Namen und Anschrift:
+        vollständigen Namen und Anschrift. Den Ansteckpin werfen wir in den
+        nächsten Wochen bei dir ein:
       </Text>
 
       <VStack gap="3" asChild>
