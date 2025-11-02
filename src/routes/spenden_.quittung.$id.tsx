@@ -11,6 +11,7 @@ import {
   Field,
   Flex,
   Link,
+  NativeSelect,
 } from '@chakra-ui/react';
 import {useMemo, useState} from 'react';
 import DateString from '../components/DateString';
@@ -45,7 +46,13 @@ const loader = createServerFn()
 
 const setData = createServerFn()
   .inputValidator(
-    (input: {id: string; name: string; street: string; city: string}) => input,
+    (input: {
+      id: string;
+      name: string;
+      street: string;
+      city: string;
+      amountPins: number;
+    }) => input,
   )
   .handler(async ({data}) => {
     const result = await prismaClient.donation.update({
@@ -59,6 +66,7 @@ const setData = createServerFn()
         quittungName: data.name,
         quittungStreet: data.street,
         quittungCity: data.city,
+        amountPins: data.amountPins,
         spendenQuittungAt: new Date(),
       },
     });
@@ -79,6 +87,7 @@ function RouteComponent() {
   const [name, setName] = useState(data.namePrivate ?? '');
   const [street, setStreet] = useState('');
   const [city, setCity] = useState('');
+  const [amountPins, setAmountPins] = useState<number>(0);
   const navigate = useNavigate();
 
   const {isPending, isSuccess, isError, mutate} = useMutation<
@@ -89,6 +98,7 @@ function RouteComponent() {
       name: string;
       street: string;
       city: string;
+      amountPins: number;
     }
   >({
     onSuccess: () =>
@@ -119,9 +129,9 @@ function RouteComponent() {
         <strong>
           <DateString date={data.createdAt} />
         </strong>{' '}
-        über <strong>{currency.format(data.amount / 100)}</strong>. Für deine
-        Spendenquittung brauchen wir noch deinen vollständigen Namen und
-        Anschrift:
+        über <strong>{currency.format(data.amount / 100)}</strong>. Für die
+        Spendenquittung und den Ansteckpin brauchen wir noch deinen
+        vollständigen Namen und Anschrift:
       </Text>
 
       <VStack gap="3" asChild>
@@ -165,6 +175,29 @@ function RouteComponent() {
             />
           </Field.Root>
 
+          <Field.Root required>
+            <Field.Label>
+              Anzahl Ansteckpins
+              <Field.RequiredIndicator />
+            </Field.Label>
+            <NativeSelect.Root>
+              <NativeSelect.Field
+                value={String(amountPins)}
+                onChange={(e) => setAmountPins(Number(e.target.value))}
+              >
+                <option value="0">ich möchte keinen Pin</option>
+                <option value="1">1 Pin</option>
+                <option value="2" disabled={data.amount < 5000}>
+                  2 Pins
+                </option>
+                <option value="3" disabled={data.amount < 7500}>
+                  3 Pins
+                </option>
+              </NativeSelect.Field>
+              <NativeSelect.Indicator />
+            </NativeSelect.Root>
+          </Field.Root>
+
           <Flex mt="2" justifyContent="flex-end">
             <Button
               onClick={() =>
@@ -173,6 +206,7 @@ function RouteComponent() {
                   name,
                   street,
                   city,
+                  amountPins,
                 })
               }
               loading={isPending || isSuccess || isError}
