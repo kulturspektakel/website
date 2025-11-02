@@ -135,7 +135,18 @@ function RouteComponent() {
       </Text>
 
       <VStack gap="3" asChild>
-        <form action={`/api/spenden/quittung/${data.id}`} method="POST">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            mutate({
+              id: data.id,
+              name,
+              street,
+              city,
+              amountPins,
+            });
+          }}
+        >
           <Field.Root required>
             <Field.Label>
               Vor- und Nachname
@@ -199,18 +210,7 @@ function RouteComponent() {
           </Field.Root>
 
           <Flex mt="2" justifyContent="flex-end">
-            <Button
-              onClick={() =>
-                mutate({
-                  id: data.id,
-                  name,
-                  street,
-                  city,
-                  amountPins,
-                })
-              }
-              loading={isPending || isSuccess || isError}
-            >
+            <Button type="submit" loading={isPending || isSuccess || isError}>
               Spendenquittung erstellen
             </Button>
           </Flex>
