@@ -24,7 +24,6 @@ import ReloadWarning from '../components/ReloadWarning';
 import {createFileRoute, useNavigate} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
 import {seo} from '../utils/seo';
-import {ConnectedCheckbox} from '../components/ConnectedCheckbox';
 
 const schemaStep1 = z.object({
   membership: z.enum(MembershipEnum),
@@ -32,7 +31,6 @@ const schemaStep1 = z.object({
   address: z.string().min(1),
   city: z.string().min(1),
   email: z.email(),
-  showNameOnDonationsPage: z.boolean().optional(),
 });
 
 const feeSchema = schemaStep1.extend({
@@ -187,11 +185,6 @@ function Mitgliedsantrag() {
                     name="name"
                     label="Vor- und Nachname"
                     required
-                  />
-
-                  <ConnectedCheckbox
-                    name="showNameOnDonationsPage"
-                    label="Meinen Namen auf der Spendenseite anzeigen"
                   />
 
                   <ConnectedField name="address" label="Anschrift" required />
