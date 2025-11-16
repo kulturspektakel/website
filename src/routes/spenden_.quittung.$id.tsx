@@ -2,32 +2,40 @@ import {createFileRoute, redirect, useNavigate} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
 import {prismaClient} from '../utils/prismaClient';
 import {seo} from '../utils/seo';
-import {
-  Heading,
-  Text,
-  VStack,
-  Input,
-  Button,
-  Field,
-  Flex,
-  NativeSelect,
-} from '@chakra-ui/react';
-import {useMemo, useState} from 'react';
+import {Heading, Text, VStack, Button, Flex} from '@chakra-ui/react';
+import {useMemo} from 'react';
 import DateString from '../components/DateString';
 import {useMutation} from '@tanstack/react-query';
+import z from 'zod';
+import {FormikProvider, useFormik} from 'formik';
+import {toFormikValidationSchema} from 'zod-formik-adapter';
+import {ConnectedField} from '../components/ConnectedField';
+
+const FormSchema = z.object({
+  quittungStreet: z.string().min(1),
+  quittungCity: z.string().min(1),
+  quittungName: z.string().min(1),
+});
+
+const FormSchemaWithId = FormSchema.extend({
+  id: z.uuid(),
+});
+
+const select = {
+  id: true,
+  name: true,
+  namePrivate: true,
+  amount: true,
+  createdAt: true,
+  source: true,
+  spendenQuittungAt: true,
+} as const;
 
 const loader = createServerFn()
   .inputValidator((id: string) => id)
   .handler(async ({data: id}) => {
     const data = await prismaClient.donation.findFirstOrThrow({
-      select: {
-        id: true,
-        namePrivate: true,
-        amount: true,
-        createdAt: true,
-        source: true,
-        spendenQuittungAt: true,
-      },
+      select,
       where: {
         id,
       },
@@ -44,30 +52,20 @@ const loader = createServerFn()
   });
 
 const setData = createServerFn()
-  .inputValidator(
-    (input: {
-      id: string;
-      name: string;
-      street: string;
-      city: string;
-      amountPins: number;
-    }) => input,
-  )
-  .handler(async ({data}) => {
-    const result = await prismaClient.donation.update({
+  .inputValidator(FormSchemaWithId)
+  .handler(async ({data: {id, ...data}}) => {
+    return prismaClient.donation.update({
       where: {
-        id: data.id,
+        id,
         spendenQuittungAt: {
           equals: null,
         },
       },
       data: {
-        quittungName: data.name,
-        quittungStreet: data.street,
-        quittungCity: data.city,
-        amountPins: data.amountPins,
+        ...data,
         spendenQuittungAt: new Date(),
       },
+      select,
     });
   });
 
@@ -81,34 +79,37 @@ export const Route = createFileRoute('/spenden_/quittung/$id')({
   component: RouteComponent,
 });
 
+type LoaderData = Awaited<ReturnType<typeof loader>>;
+
 function RouteComponent() {
-  const data = Route.useLoaderData();
-  const [name, setName] = useState(data.namePrivate ?? '');
-  const [street, setStreet] = useState('');
-  const [city, setCity] = useState('');
-  const [amountPins, setAmountPins] = useState<number>(0);
+  const initialData = Route.useLoaderData();
   const navigate = useNavigate();
 
   const {isPending, isSuccess, isError, mutate} = useMutation<
-    void,
+    LoaderData,
     Error,
-    {
-      id: string;
-      name: string;
-      street: string;
-      city: string;
-      amountPins: number;
-    }
+    z.infer<typeof FormSchemaWithId>
   >({
     onSuccess: () =>
       navigate({
         to: '/api/spenden/quittung/$id',
-        params: {id: data.id},
+        params: {id: initialData.id},
         reloadDocument: true,
       }),
-    mutationFn: (data) =>
-      setData({
-        data,
+    mutationFn: (data) => setData({data}),
+  });
+
+  const formik = useFormik<z.infer<typeof FormSchema>>({
+    initialValues: {
+      quittungName: initialData.namePrivate ?? initialData.name ?? '',
+      quittungStreet: '',
+      quittungCity: '',
+    },
+    validationSchema: toFormikValidationSchema(FormSchema),
+    onSubmit: (values) =>
+      mutate({
+        id: initialData.id,
+        ...values,
       }),
   });
 
@@ -121,101 +122,54 @@ function RouteComponent() {
 
   return (
     <VStack align="stretch" gap="3">
-      <Heading size="3xl">Spendenquittung & Ansteckpin</Heading>
+      <Heading size="3xl">Spendenquittung</Heading>
 
       <Text>
         Vielen Dank für deine Spende vom{' '}
         <strong>
-          <DateString date={data.createdAt} />
+          <DateString date={initialData.createdAt} />
         </strong>{' '}
-        über <strong>{currency.format(data.amount / 100)}</strong>. Für die
-        Spendenquittung und den Ansteckpin brauchen wir noch deinen
-        vollständigen Namen und Anschrift. Den Ansteckpin werfen wir in den
-        nächsten Wochen bei dir ein:
+        über <strong>{currency.format(initialData.amount / 100)}</strong>. Für
+        deine Spendenquittung brauchen wir noch deinen vollständigen Namen und
+        Anschrift.
       </Text>
 
-      <VStack gap="3" asChild>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            mutate({
-              id: data.id,
-              name,
-              street,
-              city,
-              amountPins,
-            });
-          }}
-        >
-          <Field.Root required>
-            <Field.Label>
-              Vor- und Nachname
-              <Field.RequiredIndicator />
-            </Field.Label>
-            <Input
-              value={name}
-              name="name"
+      <FormikProvider value={formik}>
+        <VStack gap="3" asChild>
+          <form onSubmit={formik.handleSubmit}>
+            <ConnectedField
+              name="quittungName"
+              autoComplete="name"
+              label="Vor- und Nachname"
               required
-              onChange={(e) => setName(e.target.value)}
             />
-          </Field.Root>
 
-          <Field.Root required>
-            <Field.Label>
-              Straße, Hausnummer
-              <Field.RequiredIndicator />
-            </Field.Label>
-            <Input
-              name="street"
+            <ConnectedField
+              name="quittungStreet"
+              autoComplete="address-line1"
+              label="Straße und Hausnummer"
               required
-              value={street}
-              onChange={(e) => setStreet(e.target.value)}
             />
-          </Field.Root>
 
-          <Field.Root required>
-            <Field.Label>
-              PLZ, Ort
-              <Field.RequiredIndicator />
-            </Field.Label>
-            <Input
-              name="city"
+            <ConnectedField
+              name="quittungCity"
+              autoComplete="address-level2"
+              label="PLZ und Ort"
               required
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
             />
-          </Field.Root>
 
-          <Field.Root required>
-            <Field.Label>
-              Anzahl Ansteckpins
-              <Field.RequiredIndicator />
-            </Field.Label>
-            <NativeSelect.Root>
-              <NativeSelect.Field
-                value={String(amountPins)}
-                onChange={(e) => setAmountPins(Number(e.target.value))}
+            <Flex mt="2" justifyContent="flex-end">
+              <Button
+                type="submit"
+                loading={isPending || isSuccess || isError}
+                disabled={!formik.isValid || formik.isSubmitting}
               >
-                <option value="0">ich möchte keinen Pin</option>
-                <option value="1">1 Pin</option>
-                <option value="2" disabled={data.amount < 5000}>
-                  2 Pins
-                </option>
-                <option value="3" disabled={data.amount < 7500}>
-                  3 Pins
-                </option>
-              </NativeSelect.Field>
-              <NativeSelect.Indicator />
-            </NativeSelect.Root>
-          </Field.Root>
-
-          <Flex mt="2" justifyContent="flex-end">
-            <Button type="submit" loading={isPending || isSuccess || isError}>
-              Spendenquittung erstellen
-            </Button>
-          </Flex>
-        </form>
-      </VStack>
+                Spendenquittung erstellen
+              </Button>
+            </Flex>
+          </form>
+        </VStack>
+      </FormikProvider>
     </VStack>
   );
 }

@@ -9,7 +9,6 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SpendenRouteImport } from './routes/spenden'
 import { Route as SpeisekarteRouteImport } from './routes/speisekarte'
 import { Route as PlakateRouteImport } from './routes/plakate'
 import { Route as NuclinoSsoRouteImport } from './routes/nuclino-sso'
@@ -41,11 +40,6 @@ import { Route as CardHashCrewRouteImport } from './routes/card.$hash.crew'
 import { Route as BookingApplicationTypeDankeRouteImport } from './routes/booking_.$applicationType_.danke'
 import { Route as ApiSpendenQuittungIdRouteImport } from './routes/api.spenden.quittung.$id'
 
-const SpendenRoute = SpendenRouteImport.update({
-  id: '/spenden',
-  path: '/spenden',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const SpeisekarteRoute = SpeisekarteRouteImport.update({
   id: '/speisekarte',
   path: '/speisekarte',
@@ -214,7 +208,6 @@ export interface FileRoutesByFullPath {
   '/nuclino-sso': typeof NuclinoSsoRoute
   '/plakate': typeof PlakateRoute
   '/speisekarte': typeof SpeisekarteRoute
-  '/spenden': typeof SpendenRoute
   '/api/badges': typeof ApiBadgesRoute
   '/booking/$applicationType': typeof BookingApplicationTypeRoute
   '/card/$hash': typeof CardHashRouteWithChildren
@@ -246,7 +239,6 @@ export interface FileRoutesByTo {
   '/nuclino-sso': typeof NuclinoSsoRoute
   '/plakate': typeof PlakateRoute
   '/speisekarte': typeof SpeisekarteRoute
-  '/spenden': typeof SpendenRoute
   '/api/badges': typeof ApiBadgesRoute
   '/booking/$applicationType': typeof BookingApplicationTypeRoute
   '/card/$hash': typeof CardHashRouteWithChildren
@@ -280,7 +272,6 @@ export interface FileRoutesById {
   '/nuclino-sso': typeof NuclinoSsoRoute
   '/plakate': typeof PlakateRoute
   '/speisekarte': typeof SpeisekarteRoute
-  '/spenden': typeof SpendenRoute
   '/api/badges': typeof ApiBadgesRoute
   '/booking_/$applicationType': typeof BookingApplicationTypeRoute
   '/card/$hash': typeof CardHashRouteWithChildren
@@ -315,7 +306,6 @@ export interface FileRouteTypes {
     | '/nuclino-sso'
     | '/plakate'
     | '/speisekarte'
-    | '/spenden'
     | '/api/badges'
     | '/booking/$applicationType'
     | '/card/$hash'
@@ -347,7 +337,6 @@ export interface FileRouteTypes {
     | '/nuclino-sso'
     | '/plakate'
     | '/speisekarte'
-    | '/spenden'
     | '/api/badges'
     | '/booking/$applicationType'
     | '/card/$hash'
@@ -380,7 +369,6 @@ export interface FileRouteTypes {
     | '/nuclino-sso'
     | '/plakate'
     | '/speisekarte'
-    | '/spenden'
     | '/api/badges'
     | '/booking_/$applicationType'
     | '/card/$hash'
@@ -414,7 +402,6 @@ export interface RootRouteChildren {
   NuclinoSsoRoute: typeof NuclinoSsoRoute
   PlakateRoute: typeof PlakateRoute
   SpeisekarteRoute: typeof SpeisekarteRoute
-  SpendenRoute: typeof SpendenRoute
   ApiBadgesRoute: typeof ApiBadgesRoute
   BookingApplicationTypeRoute: typeof BookingApplicationTypeRoute
   CardHashRoute: typeof CardHashRouteWithChildren
@@ -429,13 +416,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/spenden': {
-      id: '/spenden'
-      path: '/spenden'
-      fullPath: '/spenden'
-      preLoaderRoute: typeof SpendenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/speisekarte': {
       id: '/speisekarte'
       path: '/speisekarte'
@@ -694,7 +674,6 @@ const rootRouteChildren: RootRouteChildren = {
   NuclinoSsoRoute: NuclinoSsoRoute,
   PlakateRoute: PlakateRoute,
   SpeisekarteRoute: SpeisekarteRoute,
-  SpendenRoute: SpendenRoute,
   ApiBadgesRoute: ApiBadgesRoute,
   BookingApplicationTypeRoute: BookingApplicationTypeRoute,
   CardHashRoute: CardHashRouteWithChildren,
