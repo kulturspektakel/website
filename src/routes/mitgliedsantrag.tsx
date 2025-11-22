@@ -3,15 +3,6 @@ import {Form, Formik} from 'formik';
 import {z} from 'zod';
 import {toFormikValidationSchema} from 'zod-formik-adapter';
 import {isValid, printFormat} from 'iban-ts';
-import {gql} from '@apollo/client';
-import apolloClient from '../utils/apolloClient';
-import {
-  MembershipQuery,
-  MembershipDocument,
-  useCreateMembershipMutation,
-  MembershipType,
-  Membership as MembershipEnum,
-} from '../types/graphql';
 import Steps from '../components/Steps';
 import {useState} from 'react';
 import {Field} from '../components/chakra-snippets/field';
@@ -24,58 +15,95 @@ import ReloadWarning from '../components/ReloadWarning';
 import {createFileRoute, useNavigate} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
 import {seo} from '../utils/seo';
+import {useMutation} from '@tanstack/react-query';
+import {scheduleTask} from '../utils/scheduleTask';
+
+const MEMBERSHIP_FEES = {
+  kult: {
+    reduced: 1500,
+    regular: 3000,
+  },
+  foerderverein: {
+    reduced: 1500,
+    regular: 3000,
+  },
+} as const;
+
+const membershipEnum = z.enum(['kult', 'foerderverein']);
 
 const schemaStep1 = z.object({
-  membership: z.enum(MembershipEnum),
+  membership: membershipEnum,
   name: z.string().min(1),
   address: z.string().min(1),
   city: z.string().min(1),
   email: z.email(),
 });
 
-const feeSchema = schemaStep1.extend({
-  membershipFee: z.coerce.number(),
-  membershipType: z.enum(MembershipType),
+const baseFieldsSchema = schemaStep1.extend({
   iban: z
     .string()
     .refine((iban: string) => isValid(iban), 'IBAN hat kein gültiges Format'),
 });
 
-const schemaStep2 = z
-  .discriminatedUnion('accountHolder', [
-    feeSchema.extend({
-      accountHolder: z.literal('different'),
-      accountHolderName: z.string().min(1),
-      accountHolderAddress: z.string().min(1),
-      accountHolderCity: z.string().min(1),
-    }),
-    feeSchema.extend({
-      accountHolder: z.literal('same'),
-    }),
-  ])
-  .refine(
-    ({membership, membershipType}) =>
-      !(membership !== 'foerderverein' && membershipType === 'supporter'),
-    {
-      path: ['membershipType'],
-      message: 'Unterstützer:innen können nur im Förderverein Mitglied werden',
-    },
-  );
+// Shared account holder fields
+const accountHolderDifferentFields = {
+  accountHolder: z.literal('different' as const),
+  accountHolderName: z.string().min(1),
+  accountHolderAddress: z.string().min(1),
+  accountHolderCity: z.string().min(1),
+};
+
+const accountHolderSameFields = {
+  accountHolder: z.literal('same' as const),
+};
+
+// Base schemas for each membership type
+const kultBaseSchema = baseFieldsSchema.extend({
+  membership: z.literal('kult'),
+  membershipType: z.enum(['regular', 'reduced']),
+});
+
+const foerdervereinRegularReducedSchema = baseFieldsSchema.extend({
+  membership: z.literal('foerderverein'),
+  membershipType: z.enum(['regular', 'reduced']),
+});
+
+const foerdervereinSupporterSchema = baseFieldsSchema.extend({
+  membership: z.literal('foerderverein'),
+  membershipType: z.literal('supporter'),
+  membershipFee: z.coerce.number().min(MEMBERSHIP_FEES.foerderverein.regular),
+});
+
+// Schema for kult membership (only regular/reduced allowed)
+const kultMembershipSchema = z.discriminatedUnion('accountHolder', [
+  kultBaseSchema.extend(accountHolderDifferentFields),
+  kultBaseSchema.extend(accountHolderSameFields),
+]);
+
+// Schema for foerderverein membership (regular/reduced/supporter allowed)
+const foerdervereinMembershipSchema = z.discriminatedUnion('accountHolder', [
+  z.discriminatedUnion('membershipType', [
+    foerdervereinRegularReducedSchema.extend(accountHolderDifferentFields),
+    foerdervereinSupporterSchema.extend(accountHolderDifferentFields),
+  ]),
+  z.discriminatedUnion('membershipType', [
+    foerdervereinRegularReducedSchema.extend(accountHolderSameFields),
+    foerdervereinSupporterSchema.extend(accountHolderSameFields),
+  ]),
+]);
+
+const schemaStep2 = z.discriminatedUnion('membership', [
+  kultMembershipSchema,
+  foerdervereinMembershipSchema,
+]);
 
 const STEPS = [schemaStep1, schemaStep2] as const;
-
-const loader = createServerFn().handler(async () => {
-  const {data} = await apolloClient.query<MembershipQuery>({
-    query: MembershipDocument,
-  });
-  return data;
-});
+export const schema = schemaStep2;
 
 export const Route = createFileRoute('/mitgliedsantrag')({
   component: Mitgliedsantrag,
-  loader: async () => await loader(),
-  validateSearch: (search): {membership?: MembershipEnum} => ({
-    membership: z.enum(MembershipEnum).safeParse(search.membership)?.data,
+  validateSearch: (search): {membership?: z.infer<typeof membershipEnum>} => ({
+    membership: membershipEnum.safeParse(search.membership)?.data,
   }),
   head: () =>
     seo({
@@ -86,40 +114,32 @@ export const Route = createFileRoute('/mitgliedsantrag')({
 
 type Membership = z.infer<typeof schemaStep2>;
 
-gql`
-  query Membership {
-    config {
-      membershipFees {
-        kult {
-          regular
-          reduced
-        }
-        foerderverein {
-          regular
-          reduced
-        }
-      }
-    }
-  }
-`;
-
-gql`
-  mutation CreateMembership($data: MembershipApplication!) {
-    createMembershipApplication(data: $data)
-  }
-`;
+const createMembership = createServerFn()
+  .inputValidator(schema)
+  .handler(async ({data}) => {
+    await scheduleTask('createMembershipApplication', data);
+  });
 
 function Mitgliedsantrag() {
-  const data = Route.useLoaderData();
   const navigate = useNavigate();
-  const [create, {loading}] = useCreateMembershipMutation();
+  const {isPending, isSuccess, mutate} = useMutation<
+    void,
+    Error,
+    z.infer<typeof schema>
+  >({
+    onSuccess: () =>
+      navigate({
+        to: '/mitgliedsantrag/danke',
+      }),
+    mutationFn: (data) => createMembership({data}),
+  });
+
   const [step, setStep] = useState(0);
   const currencyFormatter = new Intl.NumberFormat('de-DE', {
     style: 'currency',
     currency: 'EUR',
   });
   const {membership} = Route.useSearch();
-  const [hasSubmitted, setHasSubmitted] = useState(false);
 
   return (
     <div>
@@ -141,18 +161,7 @@ function Mitgliedsantrag() {
           if (step < STEPS.length - 1) {
             setStep(step + 1);
           } else {
-            const {accountHolder, ...data} = z
-              .intersection(...STEPS)
-              .parse(values);
-            await create({
-              variables: {
-                data: data,
-              },
-            });
-            setHasSubmitted(true);
-            navigate({
-              to: '/mitgliedsantrag/danke',
-            });
+            mutate(schema.parse(values));
           }
         }}
       >
@@ -170,12 +179,12 @@ function Mitgliedsantrag() {
                     }}
                   >
                     <RadioCardItem
-                      label={getLegalName(MembershipEnum.Kult)}
+                      label={getLegalName('kult')}
                       description="Für aktive Mitgestalter:innen des Kulturspektakels"
                       value="kult"
                     />
                     <RadioCardItem
-                      label={getLegalName(MembershipEnum.Foerderverein)}
+                      label={getLegalName('foerderverein')}
                       description="Für Unterstützer:innen des Kulturspektakels"
                       value="foerderverein"
                     />
@@ -211,45 +220,41 @@ function Mitgliedsantrag() {
                     onValueChange={(v) => {
                       setFieldValue(
                         'membershipFee',
-                        v === MembershipType.Reduced
-                          ? data.config.membershipFees[values.membership!]
-                              .reduced
-                          : data.config.membershipFees[values.membership!]
-                              .regular,
+                        v === 'reduced'
+                          ? MEMBERSHIP_FEES[values.membership!].reduced
+                          : MEMBERSHIP_FEES[values.membership!].regular,
                       );
                     }}
                   >
                     <RadioCardItem
                       label={currencyFormatter.format(
-                        data.config.membershipFees[values.membership!].regular /
-                          100,
+                        MEMBERSHIP_FEES[values.membership!].regular / 100,
                       )}
                       description="Regulärer Jahresbeitrag"
-                      value={MembershipType.Regular}
+                      value="regular"
                     />
                     <RadioCardItem
                       label={currencyFormatter.format(
-                        data.config.membershipFees[values.membership!].reduced /
-                          100,
+                        MEMBERSHIP_FEES[values.membership!].reduced / 100,
                       )}
                       description="Für Personen ohne/mit vermindertem Einkommen (z.B. Schüler:innen, Studierende)"
-                      value={MembershipType.Reduced}
+                      value="reduced"
                     />
-                    {values.membership === MembershipEnum.Foerderverein && (
+                    {values.membership === 'foerderverein' && (
                       <RadioCardItem
                         label="Freier Beitrag"
                         description="Für unsere großzügigen Unterstützer:innen"
-                        value={MembershipType.Supporter}
+                        value="supporter"
                       />
                     )}
                   </ConnectedRadioCard>
 
-                  {values.membershipType === MembershipType.Supporter && (
+                  {values.membershipType === 'supporter' && (
                     <Field
                       required
                       label="Mitgliedsbeitrag"
-                      invalid={Boolean(errors.membershipFee)}
-                      errorText={errors.membershipFee}
+                      invalid={Boolean(errors['membershipFee'])}
+                      errorText={errors['membershipFee']}
                     >
                       <Flex
                         direction="row"
@@ -266,10 +271,7 @@ function Mitgliedsantrag() {
                       >
                         <Slider
                           value={[values.membershipFee!]}
-                          min={
-                            data.config.membershipFees[values.membership!]
-                              .regular
-                          }
+                          min={MEMBERSHIP_FEES[values.membership!].regular}
                           max={20000}
                           mt="0.5"
                           w="full"
@@ -365,12 +367,15 @@ function Mitgliedsantrag() {
                 </React.Fragment>
               )}
               <Flex justifyContent="space-between" flexDirection="row-reverse">
-                <Button type="submit" loading={loading || hasSubmitted}>
+                <Button
+                  type="submit"
+                  loading={isPending || isSubmitting || isSuccess}
+                >
                   {step === STEPS.length - 1 ? 'Mitglied werden' : 'Weiter'}
                 </Button>
                 {step > 0 && (
                   <Button
-                    disabled={loading || hasSubmitted}
+                    disabled={isPending || isSubmitting || isSuccess}
                     variant="subtle"
                     onClick={() => setStep(step - 1)}
                   >
@@ -386,7 +391,7 @@ function Mitgliedsantrag() {
   );
 }
 
-function getLegalName(name: MembershipEnum) {
+function getLegalName(name: z.infer<typeof membershipEnum>) {
   switch (name) {
     case 'foerderverein':
       return 'Förderverein Kulturspektakel Gauting e.V.';
@@ -395,7 +400,7 @@ function getLegalName(name: MembershipEnum) {
   }
 }
 
-function getCreditorIdentifier(name: MembershipEnum) {
+function getCreditorIdentifier(name: z.infer<typeof membershipEnum>) {
   switch (name) {
     case 'kult':
       return 'DE33ZZZ00000119946';
