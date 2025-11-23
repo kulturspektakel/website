@@ -19,10 +19,13 @@ import {createServerFn} from '@tanstack/react-start';
 import {seo} from '../utils/seo';
 import ProgressBar from '@badrap/bar-of-progress';
 import {getCurrentEvent} from '../utils/getCurrentEvent';
+import {staticFunctionMiddleware} from '@tanstack/start-static-server-functions';
 
-const beforeLoad = createServerFn().handler(async () => ({
-  event: await getCurrentEvent(),
-}));
+const beforeLoad = createServerFn()
+  .middleware([staticFunctionMiddleware])
+  .handler(async () => ({
+    event: await getCurrentEvent(),
+  }));
 
 export const Route = createRootRouteWithContext<
   ApolloClientRouterContext & Awaited<ReturnType<typeof beforeLoad>>

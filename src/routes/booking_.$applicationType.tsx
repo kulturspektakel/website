@@ -10,10 +10,10 @@ import {
   Button,
 } from '@chakra-ui/react';
 import {Formik, Form} from 'formik';
-import Step1, {djSchema as step1DjSchema, bandSchema as step1BandSchema} from '../components/booking/Step1';
-import Step3, {schema as step3Schema, djSchema as step3DjSchema, bandSchema as step3BandSchema} from '../components/booking/Step3';
-import Step2, {djSchema as step2DjSchema, bandSchema as step2BandSchema} from '../components/booking/Step2';
-import {createElement, useState, useMemo} from 'react';
+import Step1, {schema as step1Schema} from '../components/booking/Step1';
+import Step2, {schema as step2Schema} from '../components/booking/Step2';
+import Step3, {schema as step3Schema} from '../components/booking/Step3';
+import {createElement, useState} from 'react';
 
 import ReloadWarning from '../components/ReloadWarning';
 import Steps from '../components/Steps';
@@ -56,18 +56,18 @@ export const Route = createFileRoute('/booking_/$applicationType')({
 });
 
 const STEPS = [Step1, Step2, Step3] as const;
+const STEP_SCHEMAS = [step1Schema, step2Schema, step3Schema] as const;
 
-const serverSchema = z.discriminatedUnion('genreCategory', [
-  step3DjSchema.extend({
+// Server schema validates step3 + eventId and transforms spotifyArtist
+const serverSchema = z
+  .object({
     eventId: z.string(),
-  }),
-  step3BandSchema.extend({
-    eventId: z.string(),
-  }),
-]).transform(({spotifyArtist, ...data}) => ({
-  ...data,
-  spotifyArtist: spotifyArtist ? spotifyArtist.id : null,
-}));
+  })
+  .and(step3Schema)
+  .transform(({spotifyArtist, ...data}) => ({
+    ...data,
+    spotifyArtist: spotifyArtist ? spotifyArtist.id : null,
+  }));
 
 const createMembership = createServerFn()
   .inputValidator(serverSchema)
@@ -96,19 +96,11 @@ function BookingForm() {
           applicationType,
         },
       }),
-    mutationFn: (data) => createMembership({data: data as any}),
+    mutationFn: (data) => createMembership({data}),
   });
   const isLastStep = currentStep === STEPS.length - 1;
   const navigate = useNavigate();
   const utmSource = Route.useSearch();
-
-  // Build step-specific schemas based on application type (similar to mitgliedsantrag)
-  const stepSchemas = useMemo(() => {
-    const step1Schema = (isDJ ? step1DjSchema : step1BandSchema) as z.ZodTypeAny;
-    const step2Schema = (isDJ ? step2DjSchema : step2BandSchema) as z.ZodTypeAny;
-    const step3Schema = (isDJ ? step3DjSchema : step3BandSchema) as z.ZodTypeAny;
-    return [step1Schema, step2Schema, step3Schema] as const;
-  }, [isDJ]);
 
   return (
     <VStack gap="5">
@@ -139,8 +131,9 @@ function BookingForm() {
             setCurrentStep(currentStep + 1);
           }
         }}
-        validationSchema={toFormikValidationSchema(stepSchemas[currentStep])}
+        validationSchema={toFormikValidationSchema(STEP_SCHEMAS[currentStep])}
         validateOnChange={false}
+        validateOnBlur={false}
       >
         {(props) => (
           <Form style={{width: '100%'}}>
@@ -156,15 +149,9 @@ function BookingForm() {
                 </Button>
               )}
               <Spacer />
-              {isLastStep ? (
-                <Button type="submit" loading={isPending || isSuccess}>
-                  Absenden
-                </Button>
-              ) : (
-                <Button onClick={() => setCurrentStep(currentStep + 1)}>
-                  Weiter
-                </Button>
-              )}
+              <Button type="submit" loading={isPending || isSuccess}>
+                {isLastStep ? 'Absenden' : 'Weiter'}
+              </Button>
             </HStack>
             <ReloadWarning dirty={props.dirty && !(isPending || isSuccess)} />
           </Form>

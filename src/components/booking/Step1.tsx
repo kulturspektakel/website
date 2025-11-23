@@ -16,21 +16,26 @@ import {BandRepertoire, GenreCategory} from '@prisma/client';
 
 const baseSchema = z.object({
   bandname: z.string().trim().min(1),
-  genre: z.string(),
+  genre: z.string().optional(),
   description: z.string().min(1),
   city: z.string().trim().min(1),
 });
 
-export const djSchema = baseSchema.extend({
+const djBaseSchema = baseSchema.extend({
   genreCategory: z.literal(GenreCategory.DJ),
 });
 
-export const bandSchema = baseSchema.extend({
-  genreCategory: z.enum(Object.values(GenreCategory)),
+const bandBaseSchema = baseSchema.extend({
+  genreCategory: z.enum(
+    Object.values(GenreCategory).filter((v) => v !== GenreCategory.DJ),
+  ),
   numberOfArtists: z.number(),
   numberOfNonMaleArtists: z.number(),
   repertoire: z.enum(Object.values(BandRepertoire)),
 });
+
+export const djSchema = djBaseSchema;
+export const bandSchema = bandBaseSchema;
 
 export const schema = z.discriminatedUnion('genreCategory', [
   djSchema,

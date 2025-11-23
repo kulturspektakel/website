@@ -3603,6 +3603,19 @@
     tiny-invariant "^1.3.3"
     tiny-warning "^1.0.3"
 
+"@tanstack/router-core@1.139.3":
+  version "1.139.3"
+  resolved "https://registry.yarnpkg.com/@tanstack/router-core/-/router-core-1.139.3.tgz#12a9e0a80012a496073d59a1b6b4990ac495f054"
+  integrity sha512-j3v1e739jmozBdtnmA45xHQHjCC2aKqBtfkMT3t2ZPijVrueaVP6qNRIAWmDK4ZSqd67TF5wP8vyqeTShJsEQQ==
+  dependencies:
+    "@tanstack/history" "1.139.0"
+    "@tanstack/store" "^0.8.0"
+    cookie-es "^2.0.0"
+    seroval "^1.4.0"
+    seroval-plugins "^1.4.0"
+    tiny-invariant "^1.3.3"
+    tiny-warning "^1.0.3"
+
 "@tanstack/router-generator@1.139.1":
   version "1.139.1"
   resolved "https://registry.yarnpkg.com/@tanstack/router-generator/-/router-generator-1.139.1.tgz#bd9af1b5e6b6525f8d72e4bc792e859be979a81e"
@@ -3678,6 +3691,17 @@
     tiny-invariant "^1.3.3"
     tiny-warning "^1.0.3"
 
+"@tanstack/start-client-core@1.139.3":
+  version "1.139.3"
+  resolved "https://registry.yarnpkg.com/@tanstack/start-client-core/-/start-client-core-1.139.3.tgz#78ce2657e2572b625d4abdc1031385f063d142bd"
+  integrity sha512-wz+uhEBobqHB1nXefuT2Hjc6uvzWIJNr4BMY7m+hUBmlIY0Bv1hH2SrvxaQ5Tlg1Grf2G5GJTRZHe4vf3Luzbg==
+  dependencies:
+    "@tanstack/router-core" "1.139.3"
+    "@tanstack/start-storage-context" "1.139.3"
+    seroval "^1.4.0"
+    tiny-invariant "^1.3.3"
+    tiny-warning "^1.0.3"
+
 "@tanstack/start-plugin-core@1.139.2":
   version "1.139.2"
   resolved "https://registry.yarnpkg.com/@tanstack/start-plugin-core/-/start-plugin-core-1.139.2.tgz#97ec9dac41a428fb4e78387c7b2c07ce73312ada"
@@ -3718,12 +3742,27 @@
     seroval "^1.4.0"
     tiny-invariant "^1.3.3"
 
+"@tanstack/start-static-server-functions@^1.139.3":
+  version "1.139.3"
+  resolved "https://registry.yarnpkg.com/@tanstack/start-static-server-functions/-/start-static-server-functions-1.139.3.tgz#36a112f7dd567d95cb2bcc57cc87a932f0d9b3f8"
+  integrity sha512-UdgNktHSJnXNoGQ/pnAk3t5b1navMDUN5ulb03Sd847bgUQboft02TfKdTV56xdBK3YRxIcnF99bcrYpRe9/vg==
+  dependencies:
+    "@tanstack/start-client-core" "1.139.3"
+    seroval "^1.4.0"
+
 "@tanstack/start-storage-context@1.139.1":
   version "1.139.1"
   resolved "https://registry.yarnpkg.com/@tanstack/start-storage-context/-/start-storage-context-1.139.1.tgz#7f533dd91259ab8ef348f9fbb2c6a5e0c506d4ea"
   integrity sha512-vqv6WtAQKTNdr2YQVftPuVSWRiK07Uh/sliqq64m+wBjtwWQ54P9rUJR0AzH8PyjLi/AumV3sGkfmlDuz1c9sg==
   dependencies:
     "@tanstack/router-core" "1.139.1"
+
+"@tanstack/start-storage-context@1.139.3":
+  version "1.139.3"
+  resolved "https://registry.yarnpkg.com/@tanstack/start-storage-context/-/start-storage-context-1.139.3.tgz#4f380c9fadd8a1e8d22cbb0b8f0fac7bcd1f47c3"
+  integrity sha512-lMAc5jUjkcE9CuiHkkcQSjZt8AYBJhPXgOV7eHNcn5FqXVdGdq2NLwyPp1bVWvox0PnA++vayeog6c7yTmrxAQ==
+  dependencies:
+    "@tanstack/router-core" "1.139.3"
 
 "@tanstack/store@0.8.0", "@tanstack/store@^0.8.0":
   version "0.8.0"

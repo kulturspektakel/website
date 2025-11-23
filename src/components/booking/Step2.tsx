@@ -14,7 +14,7 @@ import useIsDJ from './useIsDJ';
 import {useFormikContext} from 'formik';
 import {useTypeahead} from 'tomo-typeahead/react';
 import type {SpotifyArtistSearchQuery} from '../../types/graphql';
-import {GenreCategory, SpotifyArtistSearchDocument} from '../../types/graphql';
+import {SpotifyArtistSearchDocument} from '../../types/graphql';
 import apolloClient from '../../utils/apolloClient';
 import {gql} from '@apollo/client';
 import {useCombobox} from 'downshift';
@@ -27,7 +27,10 @@ import {Field} from '../chakra-snippets/field';
 import {ConnectedField} from '../ConnectedField';
 import {z} from 'zod';
 import normalizeUrl from 'normalize-url';
-import {djSchema as step1DjSchema, bandSchema as step1BandSchema} from './Step1';
+import {
+  djSchema as step1DjSchema,
+  bandSchema as step1BandSchema,
+} from './Step1';
 
 const urlNormalizer = z.transform((url: string) => {
   if (url == null) {
@@ -40,7 +43,7 @@ const urlNormalizer = z.transform((url: string) => {
   }
 });
 
-const step2Fields = {
+const commonStep2 = z.object({
   spotifyArtist: z
     .object({
       id: z.string(),
@@ -48,7 +51,7 @@ const step2Fields = {
       genre: z.string(),
       image: z.string().nullable(),
     })
-    .nullable(),
+    .optional(),
   instagram: z
     .string()
     .trim()
@@ -58,22 +61,26 @@ const step2Fields = {
         val = igUrl[1];
       }
       return val?.replace(/\s|@|\//g, '');
-    }),
-  facebook: z.string().trim().pipe(urlNormalizer),
-  website: z.string().trim().pipe(urlNormalizer),
-};
+    })
+    .optional(),
+  facebook: z.string().trim().pipe(urlNormalizer).optional(),
+  website: z.string().trim().pipe(urlNormalizer).optional(),
+});
 
-export const djSchema = step1DjSchema
-  .extend(step2Fields)
-  .extend({
-    demo: z.string().trim().optional(),
-  });
+// DJ schema - demo is optional
+const djStep2Schema = step1DjSchema.extend({
+  ...commonStep2.shape,
+  demo: z.string().trim().optional(),
+});
 
-export const bandSchema = step1BandSchema
-  .extend(step2Fields)
-  .extend({
-    demo: z.string().trim().min(1),
-  });
+// Band schema - demo is required
+const bandStep2Schema = step1BandSchema.extend({
+  ...commonStep2.shape,
+  demo: z.string().trim().min(1),
+});
+
+export const djSchema = djStep2Schema;
+export const bandSchema = bandStep2Schema;
 
 export const schema = z.discriminatedUnion('genreCategory', [
   djSchema,

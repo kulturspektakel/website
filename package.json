@@ -45,6 +45,7 @@
     "@tanstack/react-query": "^5.90.10",
     "@tanstack/react-router": "^1.139.1",
     "@tanstack/react-start": "^1.139.2",
+    "@tanstack/start-static-server-functions": "^1.139.3",
     "@twemoji/svg": "^15.0.0",
     "apollo-link-scalars": "^4.0.3",
     "date-fns": "^4.1.0",

@@ -5,19 +5,24 @@ import {z} from 'zod';
 import {useSearch} from '@tanstack/react-router';
 import {HeardAboutBookingFrom, PreviouslyPlayed} from '@prisma/client';
 
-import {djSchema as step2DjSchema, bandSchema as step2BandSchema} from './Step2';
+import {
+  djSchema as step2DjSchema,
+  bandSchema as step2BandSchema,
+} from './Step2';
 
-const contactFields = {
+const commonStep3 = z.object({
   contactName: z.string().min(1),
   email: z.email(),
   contactPhone: z.string().min(1),
-  knowsKultFrom: z.string(),
-  hasPreviouslyPlayed: z.enum(Object.values(PreviouslyPlayed)),
-  heardAboutBookingFrom: z.enum(Object.values(HeardAboutBookingFrom)),
-};
+  knowsKultFrom: z.string().optional(),
+  hasPreviouslyPlayed: z.enum(Object.values(PreviouslyPlayed)).optional(),
+  heardAboutBookingFrom: z
+    .enum(Object.values(HeardAboutBookingFrom))
+    .optional(),
+});
 
-export const djSchema = step2DjSchema.extend(contactFields);
-export const bandSchema = step2BandSchema.extend(contactFields);
+const djSchema = step2DjSchema.extend(commonStep3.shape);
+const bandSchema = step2BandSchema.extend(commonStep3.shape);
 
 export const schema = z.discriminatedUnion('genreCategory', [
   djSchema,

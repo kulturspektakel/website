@@ -37,14 +37,14 @@ export const ConnectedField = React.forwardRef<
     ...rest
   } = props;
 
-  const [{}, {error, touched}] = useField(name);
+  const [{}, {error}] = useField(name);
 
   return (
     <ChakraField
       required={required}
       label={label}
       helperText={helperText}
-      invalid={touched && Boolean(error)}
+      invalid={Boolean(error)}
       errorText={error || errorText}
       optionalText={optionalText}
       ref={ref}
