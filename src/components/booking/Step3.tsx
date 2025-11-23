@@ -1,18 +1,28 @@
 import {Textarea} from '@chakra-ui/react';
 import useIsDJ from './useIsDJ';
-import {HeardAboutBookingFrom, PreviouslyPlayed} from '../../types/graphql';
 import {ConnectedField} from '../ConnectedField';
 import {z} from 'zod';
 import {useSearch} from '@tanstack/react-router';
+import {HeardAboutBookingFrom, PreviouslyPlayed} from '@prisma/client';
 
-export const schema = z.object({
+import {djSchema as step2DjSchema, bandSchema as step2BandSchema} from './Step2';
+
+const contactFields = {
   contactName: z.string().min(1),
   email: z.email(),
   contactPhone: z.string().min(1),
   knowsKultFrom: z.string(),
-  hasPreviouslyPlayed: z.enum(PreviouslyPlayed),
-  heardAboutBookingFrom: z.enum(HeardAboutBookingFrom),
-});
+  hasPreviouslyPlayed: z.enum(Object.values(PreviouslyPlayed)),
+  heardAboutBookingFrom: z.enum(Object.values(HeardAboutBookingFrom)),
+};
+
+export const djSchema = step2DjSchema.extend(contactFields);
+export const bandSchema = step2BandSchema.extend(contactFields);
+
+export const schema = z.discriminatedUnion('genreCategory', [
+  djSchema,
+  bandSchema,
+]);
 
 const HEARD_ABOUT: Map<HeardAboutBookingFrom, string> = new Map([
   [HeardAboutBookingFrom.BYon, 'BY-on'],

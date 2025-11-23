@@ -10,23 +10,24 @@ import {
   Button,
 } from '@chakra-ui/react';
 import {Formik, Form} from 'formik';
-import Step1 from '../components/booking/Step1';
-import Step3 from '../components/booking/Step3';
-import Step2 from '../components/booking/Step2';
-import {createElement, useState} from 'react';
-import type {CreateBandApplicationInput, SpotifyArtist} from '../types/graphql';
-import {
-  GenreCategory,
-  HeardAboutBookingFrom,
-  useCreateBandApplicationMutation,
-} from '../types/graphql';
-import {gql} from '@apollo/client';
+import Step1, {djSchema as step1DjSchema, bandSchema as step1BandSchema} from '../components/booking/Step1';
+import Step3, {schema as step3Schema, djSchema as step3DjSchema, bandSchema as step3BandSchema} from '../components/booking/Step3';
+import Step2, {djSchema as step2DjSchema, bandSchema as step2BandSchema} from '../components/booking/Step2';
+import {createElement, useState, useMemo} from 'react';
+
 import ReloadWarning from '../components/ReloadWarning';
 import Steps from '../components/Steps';
 import {FaTriangleExclamation} from 'react-icons/fa6';
 import {Alert} from '../components/chakra-snippets/alert';
 import {createFileRoute, notFound, useNavigate} from '@tanstack/react-router';
-import {useRouterState} from '@tanstack/react-router';
+import useIsDJ from '../components/booking/useIsDJ';
+import {useMutation} from '@tanstack/react-query';
+import {prismaClient} from '../utils/prismaClient';
+import {scheduleTask} from '../utils/scheduleTask';
+import {createServerFn} from '@tanstack/react-start';
+import z from 'zod';
+import {toFormikValidationSchema} from 'zod-formik-adapter';
+import {GenreCategory, HeardAboutBookingFrom} from '@prisma/client';
 
 export function parseBookingParams(params: {applicationType: string}) {
   switch (params.applicationType) {
@@ -55,36 +56,64 @@ export const Route = createFileRoute('/booking_/$applicationType')({
 });
 
 const STEPS = [Step1, Step2, Step3] as const;
-export type FormikContextT = Partial<CreateBandApplicationInput> & {
-  spotifyArtist?: SpotifyArtist;
-};
 
-gql`
-  mutation CreateBandApplication(
-    $eventId: ID!
-    $data: CreateBandApplicationInput!
-  ) {
-    createBandApplication(eventId: $eventId, data: $data) {
-      id
-    }
-  }
-`;
+const serverSchema = z.discriminatedUnion('genreCategory', [
+  step3DjSchema.extend({
+    eventId: z.string(),
+  }),
+  step3BandSchema.extend({
+    eventId: z.string(),
+  }),
+]).transform(({spotifyArtist, ...data}) => ({
+  ...data,
+  spotifyArtist: spotifyArtist ? spotifyArtist.id : null,
+}));
+
+const createMembership = createServerFn()
+  .inputValidator(serverSchema)
+  .handler(async ({data}) => {
+    const application = await prismaClient.bandApplication.create({
+      data,
+      select: {id: true},
+    });
+    await scheduleTask('createBandApplication', application);
+  });
 
 function BookingForm() {
   const [currentStep, setCurrentStep] = useState(0);
   const {applicationType} = Route.useParams();
+  const isDJ = useIsDJ();
   const {event} = Route.useRouteContext();
-  const [create, {error}] = useCreateBandApplicationMutation();
+  const {isPending, isSuccess, mutate, error, isError} = useMutation<
+    void,
+    Error,
+    z.input<typeof serverSchema>
+  >({
+    onSuccess: () =>
+      navigate({
+        to: '/booking/$applicationType/danke',
+        params: {
+          applicationType,
+        },
+      }),
+    mutationFn: (data) => createMembership({data: data as any}),
+  });
   const isLastStep = currentStep === STEPS.length - 1;
   const navigate = useNavigate();
   const utmSource = Route.useSearch();
-  const routerState = useRouterState();
-  const isNavigating = routerState.isLoading || routerState.isTransitioning;
+
+  // Build step-specific schemas based on application type (similar to mitgliedsantrag)
+  const stepSchemas = useMemo(() => {
+    const step1Schema = (isDJ ? step1DjSchema : step1BandSchema) as z.ZodTypeAny;
+    const step2Schema = (isDJ ? step2DjSchema : step2BandSchema) as z.ZodTypeAny;
+    const step3Schema = (isDJ ? step3DjSchema : step3BandSchema) as z.ZodTypeAny;
+    return [step1Schema, step2Schema, step3Schema] as const;
+  }, [isDJ]);
 
   return (
     <VStack gap="5">
       <Heading size="3xl" mt="2">
-        {applicationType === 'dj' ? 'DJ Bewerbung' : 'Bandbewerbung'}
+        {isDJ ? 'DJ Bewerbung' : 'Bandbewerbung'}
       </Heading>
 
       <Steps
@@ -95,45 +124,22 @@ function BookingForm() {
         steps={['Infos', 'Musik', 'Kontakt']}
       />
 
-      <Formik<FormikContextT>
+      <Formik<Partial<z.infer<typeof step3Schema>>>
         initialValues={{
           heardAboutBookingFrom: utmSource?.utm_source,
-          genreCategory:
-            applicationType === 'dj' ? GenreCategory.Dj : undefined,
+          genreCategory: isDJ ? GenreCategory.DJ : undefined,
         }}
         onSubmit={async (values) => {
-          if (!isLastStep) {
+          if (isLastStep) {
+            mutate({
+              ...values,
+              eventId: event.id,
+            } as z.input<typeof serverSchema>);
+          } else {
             setCurrentStep(currentStep + 1);
-            return;
-          }
-
-          let k: keyof CreateBandApplicationInput;
-          for (k in values) {
-            if (typeof values[k] === 'string') {
-              // @ts-ignore
-              values[k] = (values[k] as string).trim();
-            }
-          }
-
-          const {data: res} = await create({
-            variables: {
-              data: {
-                ...values,
-                spotifyArtist: values.spotifyArtist?.id,
-              } as CreateBandApplicationInput,
-              eventId: `Event:${event.id}`,
-            },
-            errorPolicy: 'all',
-          });
-          if (res?.createBandApplication?.id && applicationType) {
-            navigate({
-              to: '/booking/$applicationType/danke',
-              params: {
-                applicationType,
-              },
-            });
           }
         }}
+        validationSchema={toFormikValidationSchema(stepSchemas[currentStep])}
         validateOnChange={false}
       >
         {(props) => (
@@ -142,7 +148,7 @@ function BookingForm() {
             <HStack w="100%" mt="4">
               {currentStep > 0 && (
                 <Button
-                  disabled={props.isSubmitting || isNavigating}
+                  disabled={isPending || isSuccess}
                   onClick={() => setCurrentStep(currentStep - 1)}
                   variant="subtle"
                 >
@@ -150,18 +156,21 @@ function BookingForm() {
                 </Button>
               )}
               <Spacer />
-              <Button
-                type="submit"
-                loading={props.isSubmitting || isNavigating}
-              >
-                {isLastStep ? 'Absenden' : 'Weiter'}
-              </Button>
+              {isLastStep ? (
+                <Button type="submit" loading={isPending || isSuccess}>
+                  Absenden
+                </Button>
+              ) : (
+                <Button onClick={() => setCurrentStep(currentStep + 1)}>
+                  Weiter
+                </Button>
+              )}
             </HStack>
-            <ReloadWarning dirty={props.dirty && !props.isSubmitting} />
+            <ReloadWarning dirty={props.dirty && !(isPending || isSuccess)} />
           </Form>
         )}
       </Formik>
-      {error && isLastStep && (
+      {isError && isLastStep && (
         <Alert status="error" borderRadius="md">
           <FaTriangleExclamation />
           <Box flex="1">
@@ -173,7 +182,7 @@ function BookingForm() {
                 Bitte versuche es nochmals, falls es immer noch nicht klappt,
                 schreibe bitte eine Mail an{' '}
                 <strong>
-                  {applicationType === 'dj' ? 'info' : 'booking'}
+                  {isDJ ? 'info' : 'booking'}
                   @kulturspektakel.de
                 </strong>
                 .

@@ -14,7 +14,7 @@ import useIsDJ from './useIsDJ';
 import {useFormikContext} from 'formik';
 import {useTypeahead} from 'tomo-typeahead/react';
 import type {SpotifyArtistSearchQuery} from '../../types/graphql';
-import {SpotifyArtistSearchDocument} from '../../types/graphql';
+import {GenreCategory, SpotifyArtistSearchDocument} from '../../types/graphql';
 import apolloClient from '../../utils/apolloClient';
 import {gql} from '@apollo/client';
 import {useCombobox} from 'downshift';
@@ -26,10 +26,21 @@ import {InputGroup} from '../chakra-snippets/input-group';
 import {Field} from '../chakra-snippets/field';
 import {ConnectedField} from '../ConnectedField';
 import {z} from 'zod';
-import {FormikContextT} from '../../routes/booking_.$applicationType';
+import normalizeUrl from 'normalize-url';
+import {djSchema as step1DjSchema, bandSchema as step1BandSchema} from './Step1';
 
-export const schema = z.object({
-  demo: z.string().min(1),
+const urlNormalizer = z.transform((url: string) => {
+  if (url == null) {
+    return null;
+  }
+  try {
+    return normalizeUrl(url.trim());
+  } catch (e) {
+    return url;
+  }
+});
+
+const step2Fields = {
   spotifyArtist: z
     .object({
       id: z.string(),
@@ -38,10 +49,36 @@ export const schema = z.object({
       image: z.string().nullable(),
     })
     .nullable(),
-  instagram: z.string(),
-  facebook: z.string(),
-  website: z.string(),
-});
+  instagram: z
+    .string()
+    .trim()
+    .transform((val) => {
+      const igUrl = val?.match(/instagram\.com\/([^\/?]+)/);
+      if (igUrl?.[1]) {
+        val = igUrl[1];
+      }
+      return val?.replace(/\s|@|\//g, '');
+    }),
+  facebook: z.string().trim().pipe(urlNormalizer),
+  website: z.string().trim().pipe(urlNormalizer),
+};
+
+export const djSchema = step1DjSchema
+  .extend(step2Fields)
+  .extend({
+    demo: z.string().trim().optional(),
+  });
+
+export const bandSchema = step1BandSchema
+  .extend(step2Fields)
+  .extend({
+    demo: z.string().trim().min(1),
+  });
+
+export const schema = z.discriminatedUnion('genreCategory', [
+  djSchema,
+  bandSchema,
+]);
 
 gql`
   query SpotifyArtistSearch($query: String!, $limit: Int = 5) {
@@ -56,7 +93,7 @@ gql`
 
 export default function Step2() {
   const isDJ = useIsDJ();
-  const {values, setFieldValue} = useFormikContext<FormikContextT>();
+  const {values, setFieldValue} = useFormikContext<z.infer<typeof schema>>();
 
   const {loading, data, setQuery} = useTypeahead<
     SpotifyArtistSearchQuery['spotifyArtist'][number]

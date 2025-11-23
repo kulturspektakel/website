@@ -8,51 +8,60 @@ import {
 import DistanceWarning from './DistanceWarning';
 import DuplicateApplicationWarning from './DuplicateApplicationWarning';
 import useIsDJ from './useIsDJ';
-import {BandRepertoireType, GenreCategory} from '../../types/graphql';
 import {useFormikContext} from 'formik';
 import {Alert} from '../chakra-snippets/alert';
 import {ConnectedField} from '../ConnectedField';
 import {z} from 'zod';
-import {FormikContextT} from '../../routes/booking_.$applicationType';
+import {BandRepertoire, GenreCategory} from '@prisma/client';
 
-export const schema = z.object({
-  bandname: z.string().min(1),
-  genreCategory: z.enum(GenreCategory),
+const baseSchema = z.object({
+  bandname: z.string().trim().min(1),
   genre: z.string(),
   description: z.string().min(1),
-  city: z.string().min(1),
+  city: z.string().trim().min(1),
+});
 
-  // Bands only
+export const djSchema = baseSchema.extend({
+  genreCategory: z.literal(GenreCategory.DJ),
+});
+
+export const bandSchema = baseSchema.extend({
+  genreCategory: z.enum(Object.values(GenreCategory)),
   numberOfArtists: z.number(),
   numberOfNonMaleArtists: z.number(),
-  repertoire: z.enum(BandRepertoireType),
+  repertoire: z.enum(Object.values(BandRepertoire)),
 });
+
+export const schema = z.discriminatedUnion('genreCategory', [
+  djSchema,
+  bandSchema,
+]);
 
 const GENRE_CATEGORIES: Map<GenreCategory, string> = new Map([
   [GenreCategory.Pop, 'Pop'],
   [GenreCategory.Rock, 'Rock'],
   [GenreCategory.Indie, 'Indie'],
-  [GenreCategory.HardrockMetalPunk, 'Hardrock / Metal / Punk'],
+  [GenreCategory.Hardrock_Metal_Punk, 'Hardrock / Metal / Punk'],
   [
-    GenreCategory.FolkSingerSongwriterCountry,
+    GenreCategory.Folk_SingerSongwriter_Country,
     'Folk / Singer/Songwriter / Country',
   ],
-  [GenreCategory.ElektroHipHop, 'Elektro / Hip-Hop'],
-  [GenreCategory.BluesFunkJazzSoul, 'Blues / Funk / Jazz / Soul'],
-  [GenreCategory.ReggaeSka, 'Reggae / Ska'],
+  [GenreCategory.Elektro_HipHop, 'Elektro / Hip-Hop'],
+  [GenreCategory.Blues_Funk_Jazz_Soul, 'Blues / Funk / Jazz / Soul'],
+  [GenreCategory.Reggae_Ska, 'Reggae / Ska'],
   [GenreCategory.Other, 'andere Musikrichtung'],
 ]);
 
-const REPERTOIRE: Map<BandRepertoireType, string> = new Map([
-  [BandRepertoireType.ExclusivelyOwnSongs, 'ausschließlich eigene Songs'],
-  [BandRepertoireType.MostlyOwnSongs, 'hauptächlich eigene Songs'],
-  [BandRepertoireType.MostlyCoverSongs, 'haupstsächlich Cover-Songs'],
-  [BandRepertoireType.ExclusivelyCoverSongs, 'ausschließlich Cover-Songs'],
+const REPERTOIRE: Map<BandRepertoire, string> = new Map([
+  [BandRepertoire.ExclusivelyOwnSongs, 'ausschließlich eigene Songs'],
+  [BandRepertoire.MostlyOwnSongs, 'hauptächlich eigene Songs'],
+  [BandRepertoire.MostlyCoverSongs, 'haupstsächlich Cover-Songs'],
+  [BandRepertoire.ExclusivelyCoverSongs, 'ausschließlich Cover-Songs'],
 ]);
 
 export default function Step1() {
   const isDJ = useIsDJ();
-  const {values} = useFormikContext<FormikContextT>();
+  const {values} = useFormikContext<z.infer<typeof schema>>();
 
   return (
     <>
@@ -80,11 +89,11 @@ export default function Step1() {
                 )
           }
         />
-        {!isDJ && (
+        {values.genreCategory !== 'DJ' && (
           <ConnectedField name="genre" placeholder="genaues Genre (optional)" />
         )}
       </HStack>
-      {!isDJ && (
+      {values.genreCategory !== 'DJ' && (
         <>
           <ConnectedField
             name="repertoire"
@@ -95,8 +104,8 @@ export default function Step1() {
               label,
             }))}
           />
-          {(values.repertoire === BandRepertoireType.MostlyCoverSongs ||
-            values.repertoire === BandRepertoireType.ExclusivelyCoverSongs) && (
+          {(values.repertoire === BandRepertoire.MostlyCoverSongs ||
+            values.repertoire === BandRepertoire.ExclusivelyCoverSongs) && (
             <Alert
               status="warning"
               borderRadius="md"
@@ -136,7 +145,7 @@ export default function Step1() {
 
       <DistanceWarning origin={values.city} />
 
-      {!isDJ && (
+      {values.genreCategory !== 'DJ' && (
         <>
           <HStack w="100%" align="top">
             <ConnectedField
