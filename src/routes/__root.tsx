@@ -19,10 +19,10 @@ import {createServerFn} from '@tanstack/react-start';
 import {seo} from '../utils/seo';
 import ProgressBar from '@badrap/bar-of-progress';
 import {getCurrentEvent} from '../utils/getCurrentEvent';
-import {staticFunctionMiddleware} from '@tanstack/start-static-server-functions';
+// import {staticFunctionMiddleware} from '@tanstack/start-static-server-functions';
 
 const beforeLoad = createServerFn()
-  .middleware([staticFunctionMiddleware])
+  // .middleware([staticFunctionMiddleware])
   .handler(async () => ({
     event: await getCurrentEvent(),
   }));
