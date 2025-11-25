@@ -153,7 +153,7 @@ export default function Step2() {
           break;
         case useCombobox.stateChangeTypes.FunctionSetInputValue:
         case useCombobox.stateChangeTypes.InputChange:
-          setFieldValue('spotifyArtist', null);
+          setFieldValue('spotifyArtist', undefined);
           setSpotifyInvalid(changes.inputValue !== '');
           break;
       }
