@@ -205,7 +205,7 @@ export default function SpotifyDropdown({
           })}
         />
       </InputGroup>
-      <Box position="relative" w="full" mt="-4">
+      <Box position="relative" w="full" mt="-2">
         <DropdownMenu
           getMenuProps={getMenuProps}
           getItemProps={getItemProps}
