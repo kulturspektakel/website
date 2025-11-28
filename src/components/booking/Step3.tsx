@@ -56,6 +56,7 @@ export default function Step3() {
         label={isDJ ? `Vollständiger Name` : `Ansprechpartner*in`}
         required
         name="contactName"
+        autoFocus
       />
 
       <ConnectedField
