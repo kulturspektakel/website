@@ -74,6 +74,7 @@
     "react-icons": "^5.5.0",
     "react-photoswipe-gallery": "^4.0.0",
     "react-use": "^17.6.0",
+    "react-use-facebook-pixel": "^1.0.7",
     "stripe": "^19.3.1",
     "tomo-typeahead": "^0.0.6",
     "ts-ics": "^2.4.0",

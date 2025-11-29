@@ -3,6 +3,7 @@ import DateString, {dateStringComponents} from '../components/DateString';
 import ApplicationPhase from '../components/booking/ApplicationPhase';
 import {createFileRoute} from '@tanstack/react-router';
 import {seo} from '../utils/seo';
+import useFacebookPixel from '../utils/useFacebookPixel';
 
 export const Route = createFileRoute('/booking')({
   component: Booking,
@@ -22,6 +23,7 @@ export const Route = createFileRoute('/booking')({
 function Booking() {
   const {event} = Route.useRouteContext();
   const search = Route.useSearch();
+  useFacebookPixel();
 
   return (
     <Box>

@@ -3,6 +3,8 @@ import Confetti from '../components/booking/Confetti.client';
 import DateString from '../components/DateString';
 import {createFileRoute} from '@tanstack/react-router';
 import {parseBookingParams} from './booking_.$applicationType';
+import useFacebookPixel from '../utils/useFacebookPixel';
+import {useEffect} from 'react';
 
 export const Route = createFileRoute('/booking_/$applicationType_/danke')({
   component: Thanks,
@@ -16,6 +18,11 @@ function Thanks() {
     applicationType === 'dj'
       ? event.djApplicationEnd
       : event.bandApplicationEnd;
+
+  const pixel = useFacebookPixel();
+  useEffect(() => {
+    pixel?.trackEvent('SubmitApplication');
+  }, [pixel]);
 
   return (
     <>
