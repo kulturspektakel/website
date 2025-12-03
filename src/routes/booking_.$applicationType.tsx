@@ -69,7 +69,7 @@ const serverSchema = z
     spotifyArtist: spotifyArtist ? spotifyArtist.id : null,
   }));
 
-const createMembership = createServerFn()
+const createBandApplication = createServerFn()
   .inputValidator(serverSchema)
   .handler(async ({data}) => {
     const application = await prismaClient.bandApplication.create({
@@ -96,7 +96,7 @@ function BookingForm() {
           applicationType,
         },
       }),
-    mutationFn: (data) => createMembership({data}),
+    mutationFn: (data) => createBandApplication({data}),
   });
   const isLastStep = currentStep === STEPS.length - 1;
   const navigate = useNavigate();

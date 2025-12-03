@@ -50,13 +50,13 @@ const commonStep2 = z.object({
 // DJ schema - demo is optional
 const djStep2Schema = step1DjSchema.extend({
   ...commonStep2.shape,
-  demo: z.string().trim().optional(),
+  demo: z.string().pipe(urlNormalizer).optional(),
 });
 
 // Band schema - demo is required
 const bandStep2Schema = step1BandSchema.extend({
   ...commonStep2.shape,
-  demo: z.string().trim().min(1),
+  demo: z.string().pipe(urlNormalizer),
 });
 
 export const djSchema = djStep2Schema;
