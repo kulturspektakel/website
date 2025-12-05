@@ -226,9 +226,11 @@ export default function SpotifyDropdown({
               <SpotifyCover image={artist.image} width="46px" />
               <VStack alignItems="flex-start" gap="0">
                 <Text fontWeight="bold">{artist.name}</Text>
-                <Text mt="-1" textTransform="capitalize">
-                  {artist.genre}
-                </Text>
+                {artist.genre && (
+                  <Text mt="-1" textTransform="capitalize">
+                    {artist.genre}
+                  </Text>
+                )}
               </VStack>
             </HStack>
           )}

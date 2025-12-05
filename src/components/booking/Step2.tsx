@@ -28,7 +28,7 @@ const commonStep2 = z.object({
     .object({
       id: z.string(),
       name: z.string(),
-      genre: z.string(),
+      genre: z.string().nullable(),
       image: z.string().nullable(),
     })
     .optional()
