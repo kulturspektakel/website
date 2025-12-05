@@ -1,4 +1,12 @@
-import {Text, HStack, VStack, IconButton, Input, Box} from '@chakra-ui/react';
+import {
+  Text,
+  HStack,
+  VStack,
+  IconButton,
+  Input,
+  Box,
+  useFieldContext,
+} from '@chakra-ui/react';
 import {Field as FormikField} from 'formik';
 import {useFormikContext} from 'formik';
 import {useCombobox} from 'downshift';

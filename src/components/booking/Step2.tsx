@@ -31,7 +31,8 @@ const commonStep2 = z.object({
       genre: z.string(),
       image: z.string().nullable(),
     })
-    .optional(),
+    .optional()
+    .nullable(),
   instagram: z
     .string()
     .trim()
