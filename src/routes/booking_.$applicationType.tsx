@@ -136,7 +136,7 @@ function BookingForm() {
         validateOnBlur={false}
       >
         {(props) => (
-          <Form style={{width: '100%'}}>
+          <Form style={{width: '100%'}} noValidate>
             <VStack gap="4">{createElement(STEPS[currentStep])}</VStack>
             <HStack w="100%" mt="4">
               {currentStep > 0 && (

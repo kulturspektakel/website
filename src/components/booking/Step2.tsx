@@ -13,8 +13,8 @@ import {
 import SpotifyDropdown from './SpotifyDropdown';
 
 const urlNormalizer = z.transform((url: string) => {
-  if (url == null) {
-    return null;
+  if (!url) {
+    return undefined;
   }
   try {
     return normalizeUrl(url.trim());

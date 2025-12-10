@@ -15,10 +15,14 @@ const commonStep3 = z.object({
   email: z.email(),
   contactPhone: z.string().min(1),
   knowsKultFrom: z.string().optional(),
-  hasPreviouslyPlayed: z.enum(Object.values(PreviouslyPlayed)).optional(),
+  hasPreviouslyPlayed: z
+    .enum(Object.values(PreviouslyPlayed))
+    .optional()
+    .catch(undefined),
   heardAboutBookingFrom: z
     .enum(Object.values(HeardAboutBookingFrom))
-    .optional(),
+    .optional()
+    .catch(undefined),
 });
 
 const djSchema = step2DjSchema.extend(commonStep3.shape);
