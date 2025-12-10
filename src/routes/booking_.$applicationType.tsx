@@ -135,52 +135,59 @@ function BookingForm() {
         validateOnChange={false}
         validateOnBlur={false}
       >
-        {(props) => (
-          <Form style={{width: '100%'}} noValidate>
-            <VStack gap="4">{createElement(STEPS[currentStep])}</VStack>
-            <HStack w="100%" mt="4">
-              {currentStep > 0 && (
-                <Button
-                  disabled={isPending || isSuccess}
-                  onClick={() => setCurrentStep(currentStep - 1)}
-                  variant="subtle"
-                >
-                  Zurück
+        {({dirty, errors}) => (
+          <>
+            <Form style={{width: '100%'}}>
+              <VStack gap="4">{createElement(STEPS[currentStep])}</VStack>
+              <HStack w="100%" mt="4">
+                {currentStep > 0 && (
+                  <Button
+                    disabled={isPending || isSuccess}
+                    onClick={() => setCurrentStep(currentStep - 1)}
+                    variant="subtle"
+                  >
+                    Zurück
+                  </Button>
+                )}
+                <Spacer />
+                <Button type="submit" loading={isPending || isSuccess}>
+                  {isLastStep ? 'Absenden' : 'Weiter'}
                 </Button>
-              )}
-              <Spacer />
-              <Button type="submit" loading={isPending || isSuccess}>
-                {isLastStep ? 'Absenden' : 'Weiter'}
-              </Button>
-            </HStack>
-            <ReloadWarning dirty={props.dirty && !(isPending || isSuccess)} />
-          </Form>
+              </HStack>
+              <ReloadWarning dirty={dirty && !(isPending || isSuccess)} />
+            </Form>
+            {(Object.keys(errors).length > 0 || isError) && isLastStep && (
+              <Alert status="error" borderRadius="md">
+                <FaTriangleExclamation />
+                <Box flex="1">
+                  <AlertTitle mr={2}>
+                    Die Bewerbung konnte nicht abgeschickt werden.
+                  </AlertTitle>
+                  <AlertDescription>
+                    <p>
+                      Bitte versuche es nochmals, falls es immer noch nicht
+                      klappt, schreibe bitte eine Mail an{' '}
+                      <strong>
+                        {isDJ ? 'info' : 'booking'}
+                        @kulturspektakel.de
+                      </strong>
+                      .
+                    </p>
+                    {error && (
+                      <Code borderRadius="md">
+                        {error.name}: {error.message}
+                      </Code>
+                    )}
+                    {errors && (
+                      <Code borderRadius="md">{JSON.stringify(errors)}</Code>
+                    )}
+                  </AlertDescription>
+                </Box>
+              </Alert>
+            )}
+          </>
         )}
       </Formik>
-      {isError && isLastStep && (
-        <Alert status="error" borderRadius="md">
-          <FaTriangleExclamation />
-          <Box flex="1">
-            <AlertTitle mr={2}>
-              Die Bewerbung konnte nicht abgeschickt werden.
-            </AlertTitle>
-            <AlertDescription>
-              <p>
-                Bitte versuche es nochmals, falls es immer noch nicht klappt,
-                schreibe bitte eine Mail an{' '}
-                <strong>
-                  {isDJ ? 'info' : 'booking'}
-                  @kulturspektakel.de
-                </strong>
-                .
-              </p>
-              <Code borderRadius="md">
-                {error.name}: {error.message}
-              </Code>
-            </AlertDescription>
-          </Box>
-        </Alert>
-      )}
     </VStack>
   );
 }
