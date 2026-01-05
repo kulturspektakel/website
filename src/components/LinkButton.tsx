@@ -18,17 +18,22 @@ type Props<
 export default function LinkButton<TRouter extends RegisteredRouter, TOptions>({
   linkOptions,
   children,
+  disabled,
   ...props
 }: Props<TRouter, TOptions>) {
   return (
-    <Button role="link" variant="subtle" {...props}>
-      <Link
-        href={linkOptions?.href}
-        _hover={{textDecoration: 'none'}}
-        {...linkOptions}
-      >
-        {children}
-      </Link>
+    <Button role="link" variant="subtle" disabled={disabled} {...props}>
+      {disabled ? (
+        children
+      ) : (
+        <Link
+          href={linkOptions?.href}
+          _hover={{textDecoration: 'none'}}
+          {...linkOptions}
+        >
+          {children}
+        </Link>
+      )}
     </Button>
   );
 }
