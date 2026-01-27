@@ -187,6 +187,18 @@ describe('transformCardAvtivities', () => {
     expect(activites.length).toBe(0);
   });
 
+  test('transaction with current counter value is included', () => {
+    const activites = transformCardAvtivities(
+      [order({counter: 5}), order({counter: 4}), order({counter: 3})],
+      4,
+      1000,
+      2,
+    );
+    expect(activites.length).toBe(2);
+    expect(activites[0].type).toBe('order');
+    expect(activites[1].type).toBe('order');
+  });
+
   test('Cashouts are cut off', () => {
     const activites = transformCardAvtivities(
       [

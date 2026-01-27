@@ -60,7 +60,7 @@ export async function queryCardTransactions(
       cardId,
       deviceLog: {
         deviceTime: {
-          gte: isPast(event.end) ? event.start : sub(new Date(), {days: 7}),
+          gte: new Date('2025-07-20'), //isPast(event.end) ? event.start : sub(new Date(), {days: 7}),
         },
       },
       counter: {
@@ -146,7 +146,7 @@ export function transformCardAvtivities(
     (t) => t.counter! <= counter,
   );
   if (firstTransactionIndex > 0) {
-    transactions.splice(0, firstTransactionIndex + 1);
+    transactions.splice(0, firstTransactionIndex);
   }
   // remove everything before last cashout
   const cashout = transactions.findIndex(
