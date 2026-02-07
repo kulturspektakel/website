@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "yarn generate:prisma && vite build",
+    "build": "vite build",
     "start": "vite start",
     "generate:prisma": "prisma generate",
     "generate:theme": "chakra typegen app/theme.ts --strict",
