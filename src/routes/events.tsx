@@ -14,7 +14,7 @@ import Headline from '../components/Headline';
 import {SegmentedControlOrSelect} from '../components/SegmentedControlOrSelect';
 import {createFileRoute} from '@tanstack/react-router';
 import {createServerFn, useServerFn} from '@tanstack/react-start';
-import {EventType} from '@prisma/client';
+import {EventType} from '../generated/prisma/browser';
 import {prismaClient} from '../utils/prismaClient';
 import {directusImage, directusImageConnection} from '../utils/directusImage';
 import {useInfiniteQuery} from '@tanstack/react-query';

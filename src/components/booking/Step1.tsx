@@ -12,7 +12,7 @@ import {useFormikContext} from 'formik';
 import {Alert} from '../chakra-snippets/alert';
 import {ConnectedField} from '../ConnectedField';
 import {z} from 'zod';
-import {BandRepertoire, GenreCategory} from '@prisma/client';
+import {BandRepertoire, GenreCategory} from '../../generated/prisma/browser';
 
 const baseSchema = z.object({
   bandname: z.string().trim().min(1, 'Bitte Name eingeben'),

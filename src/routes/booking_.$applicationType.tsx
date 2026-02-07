@@ -27,7 +27,10 @@ import {scheduleTask} from '../utils/scheduleTask';
 import {createServerFn} from '@tanstack/react-start';
 import z from 'zod';
 import {toFormikValidationSchema} from 'zod-formik-adapter';
-import {GenreCategory, HeardAboutBookingFrom} from '@prisma/client';
+import {
+  GenreCategory,
+  HeardAboutBookingFrom,
+} from '../generated/prisma/browser';
 
 export function parseBookingParams(params: {applicationType: string}) {
   switch (params.applicationType) {

@@ -1,7 +1,7 @@
 import {Flex, Box, Heading, SimpleGrid} from '@chakra-ui/react';
 import MarkdownText from './MarkdownText';
 import {Markdown} from '../utils/markdownText';
-import {Prisma} from '@prisma/client';
+import {Prisma} from '../generated/prisma/browser';
 
 export const pageSelect: Prisma.PageSelect = {
   slug: true,

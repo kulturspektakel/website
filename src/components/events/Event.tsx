@@ -12,7 +12,7 @@ import Photos from './Photos';
 import Countdown from 'react-countdown';
 import {Link} from '@tanstack/react-router';
 import {DirectusImage, imageUrl} from '../../utils/directusImage';
-import {Prisma} from '@prisma/client';
+import {Prisma} from '../../generated/prisma/browser';
 
 export const eventSelect: Prisma.EventSelect = {
   id: true,

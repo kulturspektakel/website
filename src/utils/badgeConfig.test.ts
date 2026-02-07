@@ -1,6 +1,6 @@
 import {afterAll, beforeAll, describe, expect, test, vi} from 'vitest';
 import {badgeConfig} from './badgeConfig';
-import {CardTransactionType} from '@prisma/client';
+import {CardTransactionType} from '../generated/prisma/browser';
 import {CardActivity} from '../components/kultcard/CardActivities';
 import {sub} from 'date-fns';
 

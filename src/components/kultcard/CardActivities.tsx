@@ -1,7 +1,7 @@
 import {currencyFormatter} from './Card';
 import {Box, Flex, Heading, ListItem, ListRoot, Text} from '@chakra-ui/react';
 import InfoText from './InfoText';
-import {CardTransactionType} from '@prisma/client';
+import {CardTransactionType} from '../../generated/prisma/browser';
 import {FaBan} from 'react-icons/fa6';
 
 const DEPOSIT_VALUE = 200;
@@ -56,7 +56,9 @@ export function CardActivities({
   }
   return (
     <ListRoot as="ol" m="0">
-      {data?.map((t, i) => <ActivityItem key={i} data={t} />)}
+      {data?.map((t, i) => (
+        <ActivityItem key={i} data={t} />
+      ))}
     </ListRoot>
   );
 }
