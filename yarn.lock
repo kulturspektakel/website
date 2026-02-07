@@ -10066,7 +10066,7 @@ pretty-ms@7.0.1:
   dependencies:
     parse-ms "^2.1.0"
 
-prisma@7:
+prisma@^7.3.0:
   version "7.3.0"
   resolved "https://registry.yarnpkg.com/prisma/-/prisma-7.3.0.tgz#61c5c3377455e308406d57187497053dd8dfd440"
   integrity sha512-ApYSOLHfMN8WftJA+vL6XwAPOh/aZ0BgUyyKPwUFgjARmG6EBI9LzDPf6SWULQMSAxydV9qn5gLj037nPNlg2w==

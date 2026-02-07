@@ -25,17 +25,19 @@ export const Route = createRootRouteWithContext<
     let title = 'Kulturspektakel Gauting';
     let description =
       'Open-Air-Musikfestival mit freiem Eintritt, Workshops, Kinderprogramm und mehr';
-    const {
-      date,
-      connector = '',
-      to = '',
-    } = dateStringComponents({
-      date: context.event.start,
-      to: context.event.end,
-      until: '-',
-    });
-    title = `Kulturspektakel Gauting ${date}${connector}${to}`;
-    description = `Open-Air-Musikfestival vom ${date} bis ${to} mit freiem Eintritt, Workshops, Kinderprogramm und mehr`;
+    if (context.event) {
+      const {
+        date,
+        connector = '',
+        to = '',
+      } = dateStringComponents({
+        date: context.event.start,
+        to: context.event.end,
+        until: '-',
+      });
+      title = `${title} ${date}${connector}${to}`;
+      description = `Open-Air-Musikfestival vom ${date} bis ${to} mit freiem Eintritt, Workshops, Kinderprogramm und mehr`;
+    }
 
     const {meta} = seo({title, description});
 
