@@ -7,19 +7,18 @@ import {
   ListRoot,
   Button,
 } from '@chakra-ui/react';
-import Event, {eventSelect} from '../components/events/Event';
+import Event from '../components/events/Event';
 import {Gallery} from 'react-photoswipe-gallery';
 import DateString from '../components/DateString';
 import Headline from '../components/Headline';
 import {SegmentedControlOrSelect} from '../components/SegmentedControlOrSelect';
 import {createFileRoute} from '@tanstack/react-router';
-import {createServerFn, useServerFn} from '@tanstack/react-start';
+import {useServerFn} from '@tanstack/react-start';
 import {EventType} from '../generated/prisma/browser';
-import {prismaClient} from '../utils/prismaClient';
-import {directusImage, directusImageConnection} from '../utils/directusImage';
 import {useInfiniteQuery} from '@tanstack/react-query';
 import {useState} from 'react';
 import {seo} from '../utils/seo';
+import {loader} from '../server/routes/events';
 
 const PAGE_SIZE = 10;
 
@@ -39,34 +38,6 @@ export const Route = createFileRoute('/events')({
       description: 'Alle Veranstaltungen des Kulturspektakel Gauting e.V.',
     }),
 });
-
-const loader = createServerFn()
-  .inputValidator(
-    (cursor: {cursor?: string; eventType: EventType | 'ALL'}) => cursor,
-  )
-  .handler(async ({data}) => {
-    const res = await prismaClient.event.findMany({
-      select: eventSelect,
-      orderBy: {
-        start: 'desc',
-      },
-      where: {
-        eventType:
-          data && data.eventType !== 'ALL' ? data.eventType : undefined,
-      },
-      take: PAGE_SIZE,
-      skip: data?.cursor ? 1 : 0,
-      cursor: data?.cursor ? {id: data.cursor} : undefined,
-    });
-
-    return Promise.all(
-      res.map(async (e) => ({
-        ...e,
-        poster: await directusImage(e.poster),
-        media: await directusImageConnection('Event', e.id),
-      })),
-    );
-  });
 
 export default function Events() {
   const initialData = Route.useLoaderData();

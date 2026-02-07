@@ -5,7 +5,6 @@ import {
   Scripts,
   createRootRouteWithContext,
   useRouter,
-  redirect,
 } from '@tanstack/react-router';
 import {Box, ChakraProvider, Flex} from '@chakra-ui/react';
 import theme from '../theme';
@@ -15,17 +14,9 @@ import Header from '../components/Header/Header';
 import photoswipeCSS from 'photoswipe/dist/photoswipe.css?url';
 import {dateStringComponents} from '../components/DateString';
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
-import {createServerFn} from '@tanstack/react-start';
 import {seo} from '../utils/seo';
 import ProgressBar from '@badrap/bar-of-progress';
-import {getCurrentEvent} from '../utils/getCurrentEvent';
-// import {staticFunctionMiddleware} from '@tanstack/start-static-server-functions';
-
-const beforeLoad = createServerFn()
-  // .middleware([staticFunctionMiddleware])
-  .handler(async () => ({
-    event: await getCurrentEvent(),
-  }));
+import {beforeLoad} from '../server/routes/__root';
 
 export const Route = createRootRouteWithContext<
   ApolloClientRouterContext & Awaited<ReturnType<typeof beforeLoad>>

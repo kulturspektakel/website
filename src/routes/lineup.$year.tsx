@@ -2,47 +2,11 @@ import {Suspense, useMemo, useState} from 'react';
 import Day from '../components/lineup/Day';
 import {isSameDay, timeZone} from '../utils/dateUtils';
 import {SegmentedControlOrSelect} from '../components/SegmentedControlOrSelect';
-import {prismaClient} from '../utils/prismaClient';
 import {createFileRoute} from '@tanstack/react-router';
-import {createServerFn} from '@tanstack/react-start';
+import {loader} from '../server/routes/lineup.$year';
 import {seo} from '../utils/seo';
 import {StageInfo} from '../components/lineup/StageInfo';
 import {Center, Spinner} from '@chakra-ui/react';
-
-const loader = createServerFn()
-  .inputValidator((data: {year: string}) => data)
-  .handler(async ({data}) => {
-    const bands = await prismaClient.bandPlaying.findMany({
-      where: {
-        eventId: `kult${data.year}`,
-      },
-      select: {
-        name: true,
-        slug: true,
-        photo: true,
-        startTime: true,
-        genre: true,
-        areaId: true,
-      },
-      orderBy: {
-        startTime: 'asc',
-      },
-    });
-
-    const areas = await prismaClient.area.findMany({
-      select: {
-        id: true,
-        displayName: true,
-        themeColor: true,
-        order: true,
-      },
-    });
-
-    return {
-      bands,
-      areas,
-    };
-  });
 
 export const Route = createFileRoute('/lineup/$year')({
   component: LineupYear,

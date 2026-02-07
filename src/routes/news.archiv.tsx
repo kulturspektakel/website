@@ -11,9 +11,8 @@ import React, {useMemo} from 'react';
 import Card from '../components/Card';
 import DateString from '../components/DateString';
 import Mark from '../components/Mark';
-import {createServerFn, useServerFn} from '@tanstack/react-start';
-import {prismaClient} from '../utils/prismaClient';
-import {markdownPages} from '../utils/markdownText';
+import {useServerFn} from '@tanstack/react-start';
+import {loader} from '../server/routes/news.archiv';
 import {imageUrl} from '../utils/directusImage';
 import {useInfiniteQuery} from '@tanstack/react-query';
 import {seo} from '../utils/seo';
@@ -28,27 +27,6 @@ export const Route = createFileRoute('/news/archiv')({
       title: 'Newsarchiv',
     }),
 });
-
-const loader = createServerFn()
-  .inputValidator((cursor: string | undefined) => cursor)
-  .handler(async ({data: cursor}) => {
-    const data = await prismaClient.news.findMany({
-      select: {
-        title: true,
-        content: true,
-        slug: true,
-        createdAt: true,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: PAGE_SIZE,
-      skip: cursor ? 1 : 0,
-      cursor: cursor ? {slug: cursor} : undefined,
-    });
-
-    return await markdownPages(data);
-  });
 
 function NewsArchive() {
   const initialData = Route.useLoaderData();
@@ -102,8 +80,8 @@ function NewsArchive() {
                   },
                 }}
                 aspectRatio={1}
-                bgSize="cover"
-                bgPosition="center"
+                backgroundSize="cover"
+                backgroundPosition="center"
               >
                 <Box
                   position="absolute"

@@ -12,14 +12,13 @@ import {
 import {useRef, useState, useEffect, useCallback, useMemo} from 'react';
 
 import {FaSlack} from 'react-icons/fa6';
-import {createFileRoute, redirect} from '@tanstack/react-router';
-import {getCookie} from '@tanstack/react-start/server';
+import {createFileRoute} from '@tanstack/react-router';
 import {
   CheckNonceRequestDocument,
   useCreateNonceRequestMutation,
 } from '../types/graphql';
-import {createServerFn} from '@tanstack/react-start';
 import {seo} from '../utils/seo';
+import {beforeLoad} from '../server/routes/nuclino-sso';
 
 gql`
   mutation CreateNonceRequest($email: String!) {
@@ -30,27 +29,6 @@ gql`
     nonceFromRequest(nonceRequestId: $nonceRequestId)
   }
 `;
-
-const beforeLoad = createServerFn()
-  .inputValidator((query: Record<string, any>) => query)
-  .handler(({data}) => {
-    const nonce = getCookie('nonce');
-    if (nonce) {
-      const url = new URL(LOGIN_URL);
-      Object.entries(data).forEach(([key, value]) =>
-        url.searchParams.set(key, value),
-      );
-      url.searchParams.set('nonce', nonce);
-      throw redirect({
-        href: url.toString(),
-      });
-    }
-    if (!data['SAMLRequest']) {
-      throw redirect({
-        href: 'https://app.nuclino.com/Kulturspektakel/login',
-      });
-    }
-  });
 
 export const Route = createFileRoute('/nuclino-sso')({
   component: Sso,

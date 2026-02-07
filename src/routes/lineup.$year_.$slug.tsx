@@ -11,54 +11,10 @@ import {
 import Image from '../components/Image';
 import {Gallery} from 'react-photoswipe-gallery';
 import {Tooltip} from '../components/chakra-snippets/tooltip';
-import {prismaClient} from '../utils/prismaClient';
-import {createFileRoute, notFound} from '@tanstack/react-router';
-import {directusImage, DirectusImage, imageUrl} from '../utils/directusImage';
-import {createServerFn} from '@tanstack/react-start';
+import {createFileRoute} from '@tanstack/react-router';
+import {DirectusImage, imageUrl} from '../utils/directusImage';
+import {loader} from '../server/routes/lineup.$year_.$slug';
 import {seo} from '../utils/seo';
-
-const loader = createServerFn()
-  .inputValidator((data: {year: string; slug: string}) => data)
-  .handler(async ({data}) => {
-    const band = await prismaClient.bandPlaying.findUnique({
-      where: {
-        eventId_slug: {
-          eventId: `kult${data.year}`,
-          slug: data.slug,
-        },
-      },
-      select: {
-        name: true,
-        slug: true,
-        photo: true,
-        startTime: true,
-        genre: true,
-        spotify: true,
-        youtube: true,
-        instagram: true,
-        facebook: true,
-        website: true,
-        shortDescription: true,
-        description: true,
-        area: {
-          select: {
-            id: true,
-            displayName: true,
-            themeColor: true,
-          },
-        },
-      },
-    });
-
-    if (!band) {
-      throw notFound();
-    }
-
-    return {
-      ...band,
-      photo: await directusImage(band.photo),
-    };
-  });
 
 export const Route = createFileRoute('/lineup/$year_/$slug')({
   component: LineupBand,

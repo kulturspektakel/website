@@ -3,12 +3,10 @@ import Card from '../components/Card';
 import DateString, {dateStringComponents} from '../components/DateString';
 import GoogleMaps from '../components/GoogleMaps';
 import Headline from '../components/Headline';
-import Event, {eventSelect} from '../components/events/Event';
-import {prismaClient} from '../utils/prismaClient';
-import {createServerFn} from '@tanstack/react-start';
-import {createFileRoute, notFound} from '@tanstack/react-router';
-import {directusImage, directusImageConnection} from '../utils/directusImage';
+import Event from '../components/events/Event';
+import {createFileRoute} from '@tanstack/react-router';
 import {seo} from '../utils/seo';
+import {loader} from '../server/routes/events_.$id';
 
 export const Route = createFileRoute('/events_/$id')({
   component: EventComponent,
@@ -37,34 +35,6 @@ export const Route = createFileRoute('/events_/$id')({
         })
       : {},
 });
-
-const loader = createServerFn()
-  .inputValidator((eventId: string) => eventId)
-  .handler(async ({data: eventId}) => {
-    const data = await prismaClient.event.findUnique({
-      where: {
-        id: eventId,
-      },
-      select: {
-        ...eventSelect,
-        latitude: true,
-        longitude: true,
-      },
-    });
-
-    if (!data) {
-      throw notFound();
-    }
-
-    return {
-      event: {
-        ...data,
-        poster: await directusImage(data.poster),
-        media: await directusImageConnection('Event', eventId, 100),
-      },
-      apiKey: process.env.GOOGLE_MAPS_API_KEY,
-    };
-  });
 
 export default function EventComponent() {
   const {event, apiKey} = Route.useLoaderData();

@@ -1,6 +1,6 @@
 import z from 'zod';
-import {schema} from '../routes/mitgliedsantrag';
-import {prismaClient} from './prismaClient';
+import type {schema} from '../routes/mitgliedsantrag';
+import {prismaClient} from './prismaClient.server';
 
 export async function scheduleTask(
   task: 'createBandApplication',

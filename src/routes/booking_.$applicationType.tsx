@@ -22,9 +22,10 @@ import {Alert} from '../components/chakra-snippets/alert';
 import {createFileRoute, notFound, useNavigate} from '@tanstack/react-router';
 import useIsDJ from '../components/booking/useIsDJ';
 import {useMutation} from '@tanstack/react-query';
-import {prismaClient} from '../utils/prismaClient';
-import {scheduleTask} from '../utils/scheduleTask';
-import {createServerFn} from '@tanstack/react-start';
+import {
+  createBandApplication,
+  type ServerSchemaInput,
+} from '../server/routes/booking_.$applicationType';
 import z from 'zod';
 import {toFormikValidationSchema} from 'zod-formik-adapter';
 import {
@@ -61,27 +62,6 @@ export const Route = createFileRoute('/booking_/$applicationType')({
 const STEPS = [Step1, Step2, Step3] as const;
 const STEP_SCHEMAS = [step1Schema, step2Schema, step3Schema] as const;
 
-// Server schema validates step3 + eventId and transforms spotifyArtist
-const serverSchema = z
-  .object({
-    eventId: z.string(),
-  })
-  .and(step3Schema)
-  .transform(({spotifyArtist, ...data}) => ({
-    ...data,
-    spotifyArtist: spotifyArtist ? spotifyArtist.id : null,
-  }));
-
-const createBandApplication = createServerFn()
-  .inputValidator(serverSchema)
-  .handler(async ({data}) => {
-    const application = await prismaClient.bandApplication.create({
-      data,
-      select: {id: true},
-    });
-    await scheduleTask('createBandApplication', application);
-  });
-
 function BookingForm() {
   const [currentStep, setCurrentStep] = useState(0);
   const {applicationType} = Route.useParams();
@@ -90,7 +70,7 @@ function BookingForm() {
   const {isPending, isSuccess, mutate, error, isError} = useMutation<
     void,
     Error,
-    z.input<typeof serverSchema>
+    ServerSchemaInput
   >({
     onSuccess: () =>
       navigate({
@@ -129,7 +109,7 @@ function BookingForm() {
             mutate({
               ...values,
               eventId: event.id,
-            } as z.input<typeof serverSchema>);
+            } as ServerSchemaInput);
           } else {
             setCurrentStep(currentStep + 1);
           }

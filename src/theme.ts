@@ -18,6 +18,7 @@ const overrides: SystemConfig = {
           },
         },
         defaultVariants: {
+          // @ts-ignore
           variant: 'subtle',
         },
       }),
@@ -213,6 +214,7 @@ const overrides: SystemConfig = {
   globalCss: {
     '*': {
       fontSmooth: 'auto',
+      // @ts-ignore
       WebkitFontSmoothing: 'auto',
       fontSynthesis: 'none',
     },

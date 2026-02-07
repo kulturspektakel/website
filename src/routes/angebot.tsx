@@ -2,9 +2,7 @@ import {Text, Heading, List, VStack} from '@chakra-ui/react';
 import Page from '../components/Page';
 import LinkButton from '../components/LinkButton';
 import {createFileRoute} from '@tanstack/react-router';
-import {createServerFn} from '@tanstack/react-start';
-import {prismaClient} from '../utils/prismaClient';
-import {multiPage} from '../utils/markdownText';
+import {loader} from '../server/routes/angebot';
 import {seo} from '../utils/seo';
 
 export const Route = createFileRoute('/angebot')({
@@ -16,32 +14,6 @@ export const Route = createFileRoute('/angebot')({
       description:
         'Essens- und Getränkeangebot, Workshops, Sportturniere und Kinderprogramm',
     }),
-});
-
-const loader = createServerFn().handler(async () => {
-  const pages = await multiPage([
-    'speisen-getraenke',
-    'sport',
-    'kinderkult',
-    'workshops',
-  ] as const);
-
-  const productLists = await prismaClient.productList.findMany({
-    where: {
-      active: true,
-    },
-    select: {
-      id: true,
-      name: true,
-      emoji: true,
-      description: true,
-    },
-  });
-
-  return {
-    ...pages,
-    productLists,
-  };
 });
 
 export default function Angebot() {

@@ -1,7 +1,6 @@
-import {createFileRoute, redirect, useNavigate} from '@tanstack/react-router';
-import {createServerFn} from '@tanstack/react-start';
-import {prismaClient} from '../utils/prismaClient';
+import {createFileRoute, useNavigate} from '@tanstack/react-router';
 import {seo} from '../utils/seo';
+import {loader, setData} from '../server/routes/spenden_.quittung.$id';
 import {Heading, Text, VStack, Button, Flex} from '@chakra-ui/react';
 import {useMemo} from 'react';
 import DateString from '../components/DateString';
@@ -16,58 +15,6 @@ const FormSchema = z.object({
   quittungCity: z.string().min(1),
   quittungName: z.string().min(1),
 });
-
-const FormSchemaWithId = FormSchema.extend({
-  id: z.uuid(),
-});
-
-const select = {
-  id: true,
-  name: true,
-  namePrivate: true,
-  amount: true,
-  createdAt: true,
-  source: true,
-  spendenQuittungAt: true,
-} as const;
-
-const loader = createServerFn()
-  .inputValidator((id: string) => id)
-  .handler(async ({data: id}) => {
-    const data = await prismaClient.donation.findFirstOrThrow({
-      select,
-      where: {
-        id,
-      },
-    });
-
-    if (data.spendenQuittungAt) {
-      throw redirect({
-        to: '/api/spenden/quittung/$id',
-        params: {id: data.id},
-      });
-    }
-
-    return data;
-  });
-
-const setData = createServerFn()
-  .inputValidator(FormSchemaWithId)
-  .handler(async ({data: {id, ...data}}) => {
-    return prismaClient.donation.update({
-      where: {
-        id,
-        spendenQuittungAt: {
-          equals: null,
-        },
-      },
-      data: {
-        ...data,
-        spendenQuittungAt: new Date(),
-      },
-      select,
-    });
-  });
 
 export const Route = createFileRoute('/spenden_/quittung/$id')({
   loaderDeps: ({search}) => ({search}),
@@ -88,7 +35,7 @@ function RouteComponent() {
   const {isPending, mutate} = useMutation<
     LoaderData,
     Error,
-    z.infer<typeof FormSchemaWithId>
+    z.infer<typeof FormSchema> & {id: string}
   >({
     onSuccess: () =>
       navigate({

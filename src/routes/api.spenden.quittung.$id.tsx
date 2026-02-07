@@ -10,7 +10,7 @@ import {
   Font,
 } from '@react-pdf/renderer';
 import {Readable} from 'node:stream';
-import {prismaClient} from '../utils/prismaClient';
+import {prismaClient} from '../utils/prismaClient.server';
 import React from 'react';
 import {de} from 'n2words';
 

@@ -15,35 +15,12 @@ import {Tooltip} from '../components/chakra-snippets/tooltip';
 
 import {Alert, AlertProps} from '../components/chakra-snippets/alert';
 import {createFileRoute, Link, Outlet, useMatch} from '@tanstack/react-router';
-import {prismaClient} from '../utils/prismaClient';
 import {useSuspenseQuery} from '@tanstack/react-query';
-import {createServerFn, useServerFn} from '@tanstack/react-start';
+import {useServerFn} from '@tanstack/react-start';
+import {lineups} from '../server/routes/lineup';
 
 export const Route = createFileRoute('/lineup')({
   component: Lineup,
-});
-
-const lineups = createServerFn().handler(async () => {
-  const lineups = await prismaClient.event.findMany({
-    where: {
-      eventType: 'Kulturspektakel',
-      BandPlaying: {
-        some: {},
-      },
-    },
-    select: {
-      id: true,
-      name: true,
-      start: true,
-    },
-    orderBy: {
-      start: 'desc',
-    },
-  });
-
-  return {
-    lineups,
-  };
 });
 
 function Lineup() {

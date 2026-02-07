@@ -6,35 +6,9 @@ import {useRef} from 'react';
 import {useCombobox} from 'downshift';
 import DropdownMenu from '../DropdownMenu';
 import {InputGroup} from '../chakra-snippets/input-group';
-import {createServerFn, useServerFn} from '@tanstack/react-start';
-import {prismaClient} from '../../utils/prismaClient';
+import {useServerFn} from '@tanstack/react-start';
+import {serverFn} from '../../server/components/Search';
 import {useNavigate} from '@tanstack/react-router';
-
-const serverFn = createServerFn()
-  .inputValidator((query: string) => query)
-  .handler(({data: query}) => {
-    let q = query
-      // sanitize tsquery: Only Letters, spaces, dash
-      .replace(/[^\p{L}0-9- ]/gu, ' ')
-      // remove spaces in front and beginning
-      .trim()
-      // sanitize tsquery: Only Letters, spaces, dash
-      .replace(/\s\s*/g, '<->');
-    // prefix matching
-    q += ':*';
-
-    return prismaClient.bandPlaying.findMany({
-      where: {
-        name: {
-          search: q,
-        },
-      },
-      orderBy: {
-        startTime: 'desc',
-      },
-      take: 10,
-    });
-  });
 
 export default function Search(props: BoxProps) {
   const queryBands = useServerFn(serverFn);

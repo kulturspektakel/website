@@ -1,4 +1,4 @@
-import {prismaClient} from './prismaClient';
+import {prismaClient} from './prismaClient.server';
 
 export async function getCurrentEvent() {
   const event = await prismaClient.event.findFirstOrThrow({

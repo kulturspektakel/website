@@ -1,39 +1,9 @@
 import {Alert} from '../components/chakra-snippets/alert';
 import Card from '../components/kultcard/Card';
 import {createFileRoute} from '@tanstack/react-router';
-import {createServerFn} from '@tanstack/react-start';
 import {seo} from '../utils/seo';
-import {
-  queryCardTransactions,
-  transformCardAvtivities,
-} from '../utils/cardUtils';
 import {CardDetails} from '../components/kultcard/CardDetails';
-import {decodePayload} from '../utils/decodePayload';
-
-const loader = createServerFn()
-  .inputValidator(
-    (data: {hash: string; event: {start: Date; end: Date}}) => data,
-  )
-  .handler(async ({data: {event, hash}}) => {
-    const {cardId, counter, balance, deposit} = decodePayload('kultcard', hash);
-
-    const transactions = await queryCardTransactions(cardId, event);
-
-    const cardActivities = transformCardAvtivities(
-      transactions,
-      counter,
-      balance,
-      deposit,
-    );
-    return {
-      cardActivities,
-      balance,
-      deposit,
-      cardId,
-      hasNewerTransactions:
-        transactions.length > 0 && transactions[0].counter! > counter,
-    };
-  });
+import {loader} from '../server/routes/card.$hash.kult';
 
 export const currencyFormatter = new Intl.NumberFormat('de-DE', {
   style: 'currency',

@@ -1,12 +1,12 @@
 import {json} from '@tanstack/react-start';
 import {computeBadges} from '../utils/useBadges';
-import {orderToCardActivity, queryCrewCard} from '../utils/cardUtils';
+import {orderToCardActivity, queryCrewCard} from '../utils/cardUtils.server';
 import {badgeConfig} from '../utils/badgeConfig';
-import {getCurrentEvent} from '../utils/getCurrentEvent';
+import {getCurrentEvent} from '../utils/getCurrentEvent.server';
 import {BadgeSVG} from '../components/kultcard/Badges';
 import {renderToString} from 'react-dom/server';
 import React from 'react';
-import {prismaClient} from '../utils/prismaClient';
+import {prismaClient} from '../utils/prismaClient.server';
 import {createFileRoute} from '@tanstack/react-router';
 
 // This is stupid. This is an API called by the API to figure out

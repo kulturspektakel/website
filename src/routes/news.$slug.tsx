@@ -1,10 +1,8 @@
 import Article from '../components/news/Article';
-import {createFileRoute, notFound} from '@tanstack/react-router';
-import {createServerFn} from '@tanstack/react-start';
-import {prismaClient} from '../utils/prismaClient';
-import {markdownText} from '../utils/markdownText';
+import {createFileRoute} from '@tanstack/react-router';
 import {markdownToTxt} from 'markdown-to-txt';
 import {seo} from '../utils/seo';
+import {loader} from '../server/routes/news.$slug';
 
 export const Route = createFileRoute('/news/$slug')({
   component: News,
@@ -18,31 +16,6 @@ export const Route = createFileRoute('/news/$slug')({
         })
       : {},
 });
-
-const loader = createServerFn()
-  .inputValidator((slug: string) => slug)
-  .handler(async ({data: slug}) => {
-    const data = await prismaClient.news.findUnique({
-      where: {
-        slug,
-      },
-      select: {
-        title: true,
-        content: true,
-        slug: true,
-        createdAt: true,
-      },
-    });
-
-    if (!data) {
-      throw notFound();
-    }
-
-    return {
-      ...data,
-      content: await markdownText(data.content),
-    };
-  });
 
 export default function News() {
   const data = Route.useLoaderData();

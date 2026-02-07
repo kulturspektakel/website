@@ -13,10 +13,9 @@ import React from 'react';
 import {ConnectedRadioCard} from '../components/ConnectedRadioCard';
 import ReloadWarning from '../components/ReloadWarning';
 import {createFileRoute, useNavigate} from '@tanstack/react-router';
-import {createServerFn} from '@tanstack/react-start';
 import {seo} from '../utils/seo';
 import {useMutation} from '@tanstack/react-query';
-import {scheduleTask} from '../utils/scheduleTask';
+import {createMembership} from '../server/routes/mitgliedsantrag';
 
 const MEMBERSHIP_FEES = {
   kult: {
@@ -124,12 +123,6 @@ export const Route = createFileRoute('/mitgliedsantrag')({
 });
 
 type Membership = z.infer<typeof schemaStep2>;
-
-const createMembership = createServerFn()
-  .inputValidator(schema)
-  .handler(async ({data}) => {
-    await scheduleTask('createMembershipApplication', data);
-  });
 
 function Mitgliedsantrag() {
   const navigate = useNavigate();

@@ -1,8 +1,7 @@
 import {Heading, ListItem, ListRoot} from '@chakra-ui/react';
 import ProductList from '../components/speisekarte/ProductList';
 import {createFileRoute} from '@tanstack/react-router';
-import {createServerFn} from '@tanstack/react-start';
-import {prismaClient} from '../utils/prismaClient';
+import {loader} from '../server/routes/speisekarte';
 import {seo} from '../utils/seo';
 
 export const Route = createFileRoute('/speisekarte')({
@@ -13,39 +12,6 @@ export const Route = createFileRoute('/speisekarte')({
       title: 'Speisen & Getränke',
       description: 'Unser kulinarisches Angebot auf dem Kulturspektakel',
     }),
-});
-
-const loader = createServerFn().handler(async () => {
-  const data = await prismaClient.productList.findMany({
-    where: {
-      active: true,
-    },
-    orderBy: {
-      name: 'asc',
-    },
-    select: {
-      id: true,
-      name: true,
-      emoji: true,
-      description: true,
-      product: {
-        select: {
-          id: true,
-          name: true,
-          price: true,
-          requiresDeposit: true,
-          additives: {
-            select: {
-              id: true,
-              displayName: true,
-            },
-          },
-        },
-      },
-    },
-  });
-
-  return data;
 });
 
 export default function Speisekarte() {

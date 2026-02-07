@@ -3,9 +3,8 @@ import {createFileRoute} from '@tanstack/react-router';
 import {Gallery} from 'react-photoswipe-gallery';
 import {Alert} from '../components/chakra-snippets/alert';
 import Image from '../components/Image';
-import {createServerFn} from '@tanstack/react-start';
-import {prismaClient} from '../utils/prismaClient';
-import {directusImages, imageUrl} from '../utils/directusImage';
+import {imageUrl} from '../utils/directusImage';
+import {loader} from '../server/routes/plakate';
 import {seo} from '../utils/seo';
 
 export const Route = createFileRoute('/plakate')({
@@ -16,29 +15,6 @@ export const Route = createFileRoute('/plakate')({
       title: 'Plakate',
       description: 'Übersicht aller Kulturspektakel Plakate',
     }),
-});
-
-const loader = createServerFn().handler(async ({data: slug}) => {
-  const data = await prismaClient.event.findMany({
-    where: {
-      eventType: 'Kulturspektakel',
-    },
-    orderBy: {
-      start: 'desc',
-    },
-    select: {
-      id: true,
-      name: true,
-      start: true,
-      poster: true,
-    },
-  });
-
-  const images = await directusImages(data.map((event) => event.poster));
-  return data.map(({poster, ...data}) => ({
-    ...data,
-    poster: poster ? images[poster] : null,
-  }));
 });
 
 export default function Plakate() {
