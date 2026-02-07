@@ -12,7 +12,7 @@ import {
 import {Readable} from 'node:stream';
 import {prismaClient} from '../utils/prismaClient';
 import React from 'react';
-import n2words from 'n2words/i18n/de.js';
+import {de} from 'n2words';
 
 const styles = StyleSheet.create({
   page: {
@@ -170,12 +170,11 @@ export const Route = createFileRoute('/api/spenden/quittung/$id')({
                     currency: 'EUR',
                   }).format(donation.amount / 100)}{' '}
                   (in Worten:{' '}
-                  {n2words(Math.floor(donation.amount / 100), {}).replace(
+                  {de(Math.floor(donation.amount / 100)).replace(
                     /eins$/,
                     'ein',
                   )}{' '}
-                  Euro und{' '}
-                  {n2words(donation.amount % 100, {}).replace(/eins$/, 'ein')}{' '}
+                  Euro und {de(donation.amount % 100).replace(/eins$/, 'ein')}{' '}
                   Cent)
                 </Text>
                 <Text>

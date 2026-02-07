@@ -75,7 +75,9 @@ export async function markdownPages<
   >
 > {
   const imageMap = await directusImages(
-    imageIDsFromMarkdown(...pages.map((n) => n.content)),
+    imageIDsFromMarkdown(
+      ...pages.flatMap((n) => [n.content, n.left, n.right, n.bottom]),
+    ),
   );
 
   return Promise.all(

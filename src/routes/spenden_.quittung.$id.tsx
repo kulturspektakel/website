@@ -85,7 +85,7 @@ function RouteComponent() {
   const initialData = Route.useLoaderData();
   const navigate = useNavigate();
 
-  const {isPending, isSuccess, isError, mutate} = useMutation<
+  const {isPending, mutate} = useMutation<
     LoaderData,
     Error,
     z.infer<typeof FormSchemaWithId>
@@ -161,7 +161,7 @@ function RouteComponent() {
             <Flex mt="2" justifyContent="flex-end">
               <Button
                 type="submit"
-                loading={isPending || isSuccess || isError}
+                loading={isPending}
                 disabled={!formik.isValid || formik.isSubmitting}
               >
                 Spendenquittung erstellen

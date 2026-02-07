@@ -1,9 +1,4 @@
-import {
-  Link,
-  linkOptions,
-  LinkProps,
-  useLayoutEffect,
-} from '@tanstack/react-router';
+import {Link, LinkProps, useLayoutEffect} from '@tanstack/react-router';
 
 import {
   Image,
@@ -137,7 +132,13 @@ export function SpendenBox({
           <Text textAlign="center">
             oder&nbsp;
             <ChakraLink asChild>
-              <Link to="/spenden" hash="spenden-per-uberweisung">
+              <Link
+                to="/$slug"
+                params={{
+                  slug: 'spenden',
+                }}
+                hash="spenden-per-uberweisung"
+              >
                 per Überweisung spenden
               </Link>
             </ChakraLink>

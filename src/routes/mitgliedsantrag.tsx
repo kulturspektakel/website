@@ -253,8 +253,12 @@ function Mitgliedsantrag() {
                     <Field
                       required
                       label="Mitgliedsbeitrag"
-                      invalid={Boolean(errors['membershipFee'])}
-                      errorText={errors['membershipFee']}
+                      invalid={Boolean(
+                        // @ts-expect-error membershipFee only exists on supporter variant
+                        errors.membershipFee,
+                      )}
+                      // @ts-expect-error membershipFee only exists on supporter variant
+                      errorText={errors.membershipFee}
                     >
                       <Flex
                         direction="row"

@@ -1,17 +1,19 @@
-import {Field} from './chakra-snippets/field';
+import {Field, FieldProps} from './chakra-snippets/field';
 import {Checkbox, Flex} from '@chakra-ui/react';
-import {FieldConfig, GenericFieldHTMLAttributes, useField} from 'formik';
+import {FieldConfig, useField} from 'formik';
 
 export function ConnectedCheckbox({
   label,
-  ...props
+  name,
+  validate,
+  ...rest
 }: {
   label: React.ReactNode;
-} & GenericFieldHTMLAttributes &
-  FieldConfig) {
-  const [_, {value}, {setValue}] = useField(props.name);
+} & Pick<FieldConfig, 'name' | 'validate'> &
+  Omit<FieldProps, 'children'>) {
+  const [_, {value}, {setValue}] = useField({name, validate});
   return (
-    <Field type="checkbox" {...props}>
+    <Field {...rest}>
       <Checkbox.Root>
         <Checkbox.HiddenInput
           value={value}
