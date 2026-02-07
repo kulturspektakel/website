@@ -12,5 +12,9 @@ jobs:
           node-version: 22
       - name: install
         run: yarn
+      - name: generate prisma client
+        run: yarn generate:prisma
+      - name: typecheck
+        run: yarn typecheck
       - name: run tests
         run: yarn test
