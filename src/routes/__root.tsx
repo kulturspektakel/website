@@ -76,31 +76,7 @@ export const Route = createRootRouteWithContext<
     };
   },
   component: RootComponent,
-  beforeLoad: async ({location}) => {
-    const match = location.pathname.match(
-      /^\/\$([\$c])\/([A-Za-z0-9\-_]+)\/?$/,
-    );
-
-    if (match && match.length == 3) {
-      throw redirect(
-        match[1] === 'c'
-          ? {
-              to: '/card/$hash/crew',
-              params: {
-                hash: match[2],
-              },
-            }
-          : {
-              to: '/card/$hash/kult',
-              params: {
-                hash: match[2],
-              },
-            },
-      );
-    }
-
-    return await beforeLoad();
-  },
+  beforeLoad: () => beforeLoad(),
 });
 
 const queryClient = new QueryClient({
