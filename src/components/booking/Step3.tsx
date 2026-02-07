@@ -11,9 +11,9 @@ import {
 } from './Step2';
 
 const commonStep3 = z.object({
-  contactName: z.string().min(1),
-  email: z.email(),
-  contactPhone: z.string().min(1),
+  contactName: z.string().min(1, 'Bitte Name eingeben'),
+  email: z.email('Bitte gültige E-Mail-Adresse eingeben'),
+  contactPhone: z.string().min(1, 'Bitte Handynummer eingeben'),
   knowsKultFrom: z.string().optional(),
   hasPreviouslyPlayed: z
     .enum(Object.values(PreviouslyPlayed))

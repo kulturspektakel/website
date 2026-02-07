@@ -57,7 +57,9 @@ const djStep2Schema = step1DjSchema.extend({
 // Band schema - demo is required
 const bandStep2Schema = step1BandSchema.extend({
   ...commonStep2.shape,
-  demo: z.string().pipe(urlNormalizer),
+  demo: z
+    .string({message: 'Bitte Demomaterial-Link eingeben'})
+    .pipe(urlNormalizer),
 });
 
 export const djSchema = djStep2Schema;

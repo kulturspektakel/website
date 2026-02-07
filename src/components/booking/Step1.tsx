@@ -15,10 +15,10 @@ import {z} from 'zod';
 import {BandRepertoire, GenreCategory} from '@prisma/client';
 
 const baseSchema = z.object({
-  bandname: z.string().trim().min(1),
+  bandname: z.string().trim().min(1, 'Bitte Name eingeben'),
   genre: z.string().optional(),
-  description: z.string().min(1),
-  city: z.string().trim().min(1),
+  description: z.string().min(1, 'Bitte Beschreibung eingeben'),
+  city: z.string().trim().min(1, 'Bitte Ort eingeben'),
 });
 
 const djBaseSchema = baseSchema.extend({
@@ -28,10 +28,13 @@ const djBaseSchema = baseSchema.extend({
 const bandBaseSchema = baseSchema.extend({
   genreCategory: z.enum(
     Object.values(GenreCategory).filter((v) => v !== GenreCategory.DJ),
+    {message: 'Bitte Musikrichtung wählen'},
   ),
-  numberOfArtists: z.number(),
-  numberOfNonMaleArtists: z.number(),
-  repertoire: z.enum(Object.values(BandRepertoire)),
+  numberOfArtists: z.number({message: 'Bitte Anzahl eingeben'}),
+  numberOfNonMaleArtists: z.number({message: 'Bitte Anzahl eingeben'}),
+  repertoire: z.enum(Object.values(BandRepertoire), {
+    message: 'Bitte Repertoire wählen',
+  }),
 });
 
 export const djSchema = djBaseSchema;

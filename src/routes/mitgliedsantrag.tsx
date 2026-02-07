@@ -29,14 +29,16 @@ const MEMBERSHIP_FEES = {
   },
 } as const;
 
-const membershipEnum = z.enum(['kult', 'foerderverein']);
+const membershipEnum = z.enum(['kult', 'foerderverein'], {
+  message: 'Bitte Verein wählen',
+});
 
 const schemaStep1 = z.object({
   membership: membershipEnum,
-  name: z.string().min(1),
-  address: z.string().min(1),
-  city: z.string().min(1),
-  email: z.email(),
+  name: z.string().min(1, 'Bitte Name eingeben'),
+  address: z.string().min(1, 'Bitte Anschrift eingeben'),
+  city: z.string().min(1, 'Bitte PLZ und Ort eingeben'),
+  email: z.email('Bitte gültige E-Mail-Adresse eingeben'),
 });
 
 const baseFieldsSchema = schemaStep1.extend({
@@ -48,9 +50,9 @@ const baseFieldsSchema = schemaStep1.extend({
 // Shared account holder fields
 const accountHolderDifferentFields = {
   accountHolder: z.literal('different' as const),
-  accountHolderName: z.string().min(1),
-  accountHolderAddress: z.string().min(1),
-  accountHolderCity: z.string().min(1),
+  accountHolderName: z.string().min(1, 'Bitte Name eingeben'),
+  accountHolderAddress: z.string().min(1, 'Bitte Anschrift eingeben'),
+  accountHolderCity: z.string().min(1, 'Bitte PLZ und Ort eingeben'),
 };
 
 const accountHolderSameFields = {
@@ -60,18 +62,27 @@ const accountHolderSameFields = {
 // Base schemas for each membership type
 const kultBaseSchema = baseFieldsSchema.extend({
   membership: z.literal('kult'),
-  membershipType: z.enum(['regular', 'reduced']),
+  membershipType: z.enum(['regular', 'reduced'], {
+    message: 'Bitte Beitragsart wählen',
+  }),
 });
 
 const foerdervereinRegularReducedSchema = baseFieldsSchema.extend({
   membership: z.literal('foerderverein'),
-  membershipType: z.enum(['regular', 'reduced']),
+  membershipType: z.enum(['regular', 'reduced'], {
+    message: 'Bitte Beitragsart wählen',
+  }),
 });
 
 const foerdervereinSupporterSchema = baseFieldsSchema.extend({
   membership: z.literal('foerderverein'),
   membershipType: z.literal('supporter'),
-  membershipFee: z.coerce.number().min(MEMBERSHIP_FEES.foerderverein.regular),
+  membershipFee: z.coerce
+    .number()
+    .min(
+      MEMBERSHIP_FEES.foerderverein.regular,
+      'Bitte einen gültigen Beitrag wählen',
+    ),
 });
 
 // Schema for kult membership (only regular/reduced allowed)
@@ -156,6 +167,7 @@ function Mitgliedsantrag() {
       <Formik<Partial<Membership>>
         initialValues={{membership}}
         validateOnChange={false}
+        validateOnBlur={false}
         validationSchema={toFormikValidationSchema(STEPS[step])}
         onSubmit={async (values) => {
           if (step < STEPS.length - 1) {
@@ -173,6 +185,7 @@ function Mitgliedsantrag() {
                 <React.Fragment key="step1">
                   <ConnectedRadioCard
                     name="membership"
+                    required
                     onValueChange={() => {
                       setFieldValue('membershipType', undefined);
                       setFieldValue('membershipFee', undefined);
@@ -308,7 +321,7 @@ function Mitgliedsantrag() {
                     }}
                   />
 
-                  <ConnectedRadioCard name="accountHolder">
+                  <ConnectedRadioCard name="accountHolder" required>
                     <RadioCardItem
                       label="Mitglied ist Kontoinhaber:in"
                       description="Das Mitglied ist gleichzeitig Kontoinhaber:in"
