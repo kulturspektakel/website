@@ -6,7 +6,8 @@ import {
 const handler = createStartHandler(defaultStreamHandler);
 
 export default {
-  fetch: (request: Request, requestContext?: {context?: unknown}) => {
+  fetch: (...args: Parameters<typeof handler>) => {
+    const [request] = args;
     const url = new URL(request.url);
     const match = url.pathname.match(/^\/\$([\$c])\/([A-Za-z0-9\-_]+)\/?$/);
 
@@ -20,6 +21,6 @@ export default {
       });
     }
 
-    return handler(request, requestContext);
+    return handler(...args);
   },
 };
