@@ -1,19 +1,14 @@
 import {routeTree} from './routeTree.gen';
-import apolloClient from './utils/apolloClient';
-import {routerWithApolloClient} from '@apollo/client-integration-tanstack-start';
 import {createRouter as createTanStackRouter} from '@tanstack/react-router';
 import {NotFound} from './components/NotFound/NotFound';
 import {Error} from './components/Error';
 
 export function getRouter() {
-  const router = createTanStackRouter({
+  return createTanStackRouter({
     routeTree,
     scrollRestoration: true,
-    context: {} as any,
     defaultNotFoundComponent: NotFound,
     defaultErrorComponent: Error,
     defaultPendingMinMs: 0,
   });
-
-  return routerWithApolloClient(router, apolloClient);
 }

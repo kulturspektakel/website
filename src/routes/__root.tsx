@@ -3,12 +3,12 @@ import {
   Outlet,
   HeadContent,
   Scripts,
-  createRootRouteWithContext,
+  createRootRoute,
   useRouter,
 } from '@tanstack/react-router';
 import {Box, ChakraProvider, Flex} from '@chakra-ui/react';
 import theme from '../theme';
-import {type ApolloClientRouterContext} from '@apollo/client-integration-tanstack-start';
+
 import Footer from '../components/Footer/Footer';
 import Header from '../components/Header/Header';
 import photoswipeCSS from 'photoswipe/dist/photoswipe.css?url';
@@ -18,9 +18,7 @@ import {seo} from '../utils/seo';
 import ProgressBar from '@badrap/bar-of-progress';
 import {beforeLoad} from '../server/routes/__root';
 
-export const Route = createRootRouteWithContext<
-  ApolloClientRouterContext & Awaited<ReturnType<typeof beforeLoad>>
->()({
+export const Route = createRootRoute({
   head: ({match: {context}}) => {
     let title = 'Kulturspektakel Gauting';
     let description =
