@@ -3,6 +3,10 @@ import type {schema} from '../routes/mitgliedsantrag';
 import {prismaClient} from './prismaClient.server';
 
 export async function scheduleTask(
+  task: 'createNonceRequest',
+  data: {id: string; email: string},
+): Promise<void>;
+export async function scheduleTask(
   task: 'createBandApplication',
   data: {id: string},
 ): Promise<void>;

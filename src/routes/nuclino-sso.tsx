@@ -1,4 +1,3 @@
-import {gql, useApolloClient} from '@apollo/client';
 import {
   Heading,
   Box,
@@ -9,26 +8,16 @@ import {
   Separator,
   Button,
 } from '@chakra-ui/react';
-import {useRef, useState, useEffect, useCallback, useMemo} from 'react';
-
+import {useState, useMemo} from 'react';
 import {FaSlack} from 'react-icons/fa6';
 import {createFileRoute} from '@tanstack/react-router';
-import {
-  CheckNonceRequestDocument,
-  useCreateNonceRequestMutation,
-} from '../types/graphql';
+import {useMutation, useQuery} from '@tanstack/react-query';
 import {seo} from '../utils/seo';
-import {beforeLoad} from '../server/routes/nuclino-sso';
-
-gql`
-  mutation CreateNonceRequest($email: String!) {
-    createNonceRequest(email: $email)
-  }
-
-  mutation CheckNonceRequest($nonceRequestId: String!) {
-    nonceFromRequest(nonceRequestId: $nonceRequestId)
-  }
-`;
+import {
+  beforeLoad,
+  createNonceRequest,
+  checkNonceRequest,
+} from '../server/routes/nuclino-sso';
 
 export const Route = createFileRoute('/nuclino-sso')({
   component: Sso,
@@ -40,70 +29,55 @@ export const Route = createFileRoute('/nuclino-sso')({
     }),
 });
 
-const LOGIN_URL = 'https://api.kulturspektakel.de/saml/login';
-
-function usePolling(asyncFn: () => Promise<boolean>, delay: number) {
-  const isPolling = useRef(false);
-
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout | null = null;
-
-    const executePolling = async () => {
-      if (isPolling.current) return;
-
-      isPolling.current = true;
-      try {
-        const result = await asyncFn();
-        if (!result) {
-          timeoutId = setTimeout(executePolling, delay);
-        }
-      } finally {
-        isPolling.current = false;
-      }
-    };
-
-    executePolling();
-
-    return () => {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-    };
-  }, [asyncFn, delay, isPolling]);
-}
+export const LOGIN_URL = 'https://api.kulturspektakel.de/saml/login';
 
 function NonceChecker({requestId}: {requestId: string}) {
-  const apolloClient = useApolloClient();
   const search = Route.useSearch()!;
-  const checkNonceRequest = useCallback(async () => {
-    const {data: d} = await apolloClient.mutate({
-      mutation: CheckNonceRequestDocument,
-      variables: {
-        nonceRequestId: requestId,
-      },
-    });
-    if (!d?.nonceFromRequest) {
-      return false;
-    }
-    const url = new URL(LOGIN_URL);
-    Object.entries(search).forEach(([key, value]) =>
-      url.searchParams.set(key, value),
-    );
-    url.searchParams.set('nonce', d.nonceFromRequest);
-    window.location.href = url.toString();
-    return true;
-  }, [requestId, search]);
 
-  usePolling(checkNonceRequest, 500);
+  useQuery({
+    queryKey: ['nonceRequest', requestId],
+    queryFn: async () => {
+      const nonce = await checkNonceRequest({
+        data: {nonceRequestId: requestId},
+      });
+      if (!nonce) {
+        return null;
+      }
+      const url = new URL(LOGIN_URL);
+      Object.entries(search).forEach(([key, value]) =>
+        url.searchParams.set(key, value),
+      );
+      url.searchParams.set('nonce', nonce);
+      window.location.href = url.toString();
+      return nonce;
+    },
+    refetchInterval: 500,
+  });
+
   return (
     <Box mt="2">
-      <Button onClick={checkNonceRequest}>Einloggen</Button>
+      <Button
+        onClick={async () => {
+          const nonce = await checkNonceRequest({
+            data: {nonceRequestId: requestId},
+          });
+          if (nonce) {
+            const url = new URL(LOGIN_URL);
+            Object.entries(search).forEach(([key, value]) =>
+              url.searchParams.set(key, value),
+            );
+            url.searchParams.set('nonce', nonce);
+            window.location.href = url.toString();
+          }
+        }}
+      >
+        Einloggen
+      </Button>
     </Box>
   );
 }
 
 function Sso() {
-  const [requestNonce, {loading, data}] = useCreateNonceRequestMutation();
   const [email, setEmail] = useState('');
   const search = Route.useSearch();
   const searchParams = useMemo(() => {
@@ -116,7 +90,13 @@ function Sso() {
     return searchParams;
   }, [search]);
 
-  const nonceRequestId = data?.createNonceRequest;
+  const {
+    isPending,
+    data: nonceRequestId,
+    mutate,
+  } = useMutation({
+    mutationFn: (email: string) => createNonceRequest({data: {email}}),
+  });
 
   return (
     <VStack gap="10">
@@ -139,11 +119,7 @@ function Sso() {
               gap="2"
               onSubmit={(e) => {
                 e.preventDefault();
-                return requestNonce({
-                  variables: {
-                    email,
-                  },
-                });
+                mutate(email);
               }}
             >
               <Heading as="h2" size="xl">
@@ -166,8 +142,8 @@ function Sso() {
               <Button
                 w="full"
                 type="submit"
-                loading={loading}
-                disabled={Boolean(data?.createNonceRequest)}
+                loading={isPending}
+                disabled={Boolean(nonceRequestId)}
               >
                 Einloggen
               </Button>
