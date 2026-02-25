@@ -17,6 +17,7 @@ export default function MarkdownText(props: MarkdownT) {
   return (
     <Markdown
       options={{
+        tagfilter: false,
         overrides: {
           h1: (props: HeadingProps) => (
             <Heading {...props} size="2xl" as="h2" mb={3} mt={5} />
