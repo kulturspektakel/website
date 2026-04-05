@@ -159,7 +159,7 @@ function Logo() {
       <SimpleGrid columns={[2, 4]} gap="5">
         <Box>
           <Box
-            bg="brand.500"
+            bg="red.500"
             h="100px"
             borderRadius="md"
             mb="2"
@@ -204,7 +204,7 @@ function Logo() {
         </Box>
         <Box>
           <Box
-            bg="brand.900"
+            bg="purple.900"
             h="100px"
             borderRadius="md"
             mb="2"

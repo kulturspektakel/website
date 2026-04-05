@@ -14,7 +14,7 @@ import {
 } from '@chakra-ui/react';
 import {Link, useLocation, useNavigate} from '@tanstack/react-router';
 import {useEffect, useState} from 'react';
-import logo from './logo.svg';
+import logo from './logo2026.svg' /* './logo.svg' */;
 import videoSrc from './Header.mp4';
 import DateString from '../DateString';
 import {FaXmark, FaBars} from 'react-icons/fa6';
@@ -106,7 +106,8 @@ export default function Header({
             src={logo}
             alt="Kulturspektakel Gauting Logo"
             zIndex={2}
-            w={['80%', '60%', '40%']}
+            // w={['80%', '60%', '40%']}
+            w={['80%', '80%', '60%']}
             objectFit="contain"
             maxH="50%"
             onContextMenu={(e) => {

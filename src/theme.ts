@@ -124,17 +124,22 @@ const overrides: SystemConfig = {
     tokens: {
       colors: {
         brand: {
-          500: {value: '#E12E2E'},
+          500: {
+            value: '#459388' /*'#E12E2E'*/,
+          },
+          900: {value: '#003638' /*'#100A28'*/},
+        },
+        purple: {
           900: {value: '#100A28'},
         },
         red: {
           500: {value: '#E12E2E'},
         },
         offwhite: {
-          100: {value: '#f6f5f0'},
-          200: {value: '#dbd8d3'},
-          300: {value: '#d0cabc'},
-          400: {value: '#b6b39f'},
+          100: {value: '#CDE8EB' /*'#f6f5f0'*/},
+          200: {value: '#AECECD' /*'#dbd8d3'*/},
+          300: {value: '#90B5AF' /*'#d0cabc'*/},
+          400: {value: '#459388' /*'#b6b39f'*/},
           500: {value: '#9c9686'},
           600: {value: '#5a574e'},
         },
