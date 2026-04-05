@@ -85,6 +85,8 @@ const beerList = new Set([
   'Corona 0.3',
 ]);
 
+export type BadgeKey = keyof typeof badgeConfig;
+
 export const badgeConfig = createBadgeDefinitions({
   earlyBird: {
     name: 'Early Bird',

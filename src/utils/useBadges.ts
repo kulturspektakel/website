@@ -1,16 +1,16 @@
 import {useMemo} from 'react';
 import {CardActivity} from '../components/kultcard/CardActivities';
-import {badgeConfig, BadgeDefinition} from './badgeConfig';
+import {badgeConfig, type BadgeDefinition, type BadgeKey} from './badgeConfig';
 
 export function computeBadges(
   cardActivities: CardActivity[],
   event: {start: Date; end: Date},
   isCrew: boolean,
 ) {
-  return Object.entries(badgeConfig)
+  return (Object.entries(badgeConfig) as [BadgeKey, BadgeDefinition][])
     .filter(([_, v]) => (isCrew ? v.availableForCrew : v.availableForRegular))
     .map(
-      ([badgeKey, {compute}]: [keyof typeof badgeConfig, BadgeDefinition]) => ({
+      ([badgeKey, {compute}]) => ({
         badgeKey,
         ...compute([...cardActivities].reverse(), event),
       }),

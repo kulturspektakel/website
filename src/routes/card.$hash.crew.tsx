@@ -121,7 +121,7 @@ function CrewCard() {
         )}
         <VStack gap="2" w="full">
           <Flex direction="row" w="full" mb="3">
-            {Object.keys(totals).map((t) => (
+            {(Object.keys(totals) as (keyof typeof totals)[]).map((t) => (
               <Flex
                 key={t}
                 gap="3"

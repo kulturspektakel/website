@@ -36,7 +36,7 @@ function NewsArchive() {
     queryFn: ({pageParam}) => queryFn({data: pageParam}),
     getNextPageParam: (lastPage) =>
       lastPage.length ? lastPage[lastPage.length - 1].slug : undefined,
-    initialPageParam: undefined,
+    initialPageParam: undefined as string | undefined,
     initialData: {
       pages: [initialData],
       pageParams: [undefined],

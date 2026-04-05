@@ -1,4 +1,5 @@
-import {Link, LinkProps, useLayoutEffect} from '@tanstack/react-router';
+import {Link, LinkProps} from '@tanstack/react-router';
+import {useLayoutEffect} from 'react';
 
 import {
   Image,

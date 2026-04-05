@@ -47,7 +47,7 @@ export function Badge(props: {
       previousX = clientX;
     };
 
-    const onEnd = (e: MouseEvent | TouchEvent) => {
+    const onEnd = (e: Event) => {
       isDragging.current = false;
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('mouseup', onEnd);
@@ -55,7 +55,11 @@ export function Badge(props: {
       window.removeEventListener('touchend', onEnd);
       window.removeEventListener('blur', onEnd);
       const clientX =
-        e instanceof MouseEvent ? e.clientX : e.changedTouches[0].clientX;
+        e instanceof MouseEvent
+          ? e.clientX
+          : e instanceof TouchEvent
+            ? e.changedTouches[0].clientX
+            : startX;
       const elapsedTime = Date.now() - startTime;
       if (elapsedTime === 0) {
         velocity.current = 20;

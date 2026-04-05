@@ -2,7 +2,7 @@ import {Heading, VStack, Text, SimpleGrid, Flex} from '@chakra-ui/react';
 
 import {createFileRoute} from '@tanstack/react-router';
 import {Badge} from '../components/kultcard/Badges';
-import {badgeConfig} from '../utils/badgeConfig';
+import {badgeConfig, type BadgeKey} from '../utils/badgeConfig';
 import {seo} from '../utils/seo';
 
 export const Route = createFileRoute('/badges')({
@@ -17,9 +17,9 @@ export const Route = createFileRoute('/badges')({
 export function Badges() {
   return (
     <SimpleGrid columns={[2, null, 3]} gap="10">
-      {Object.keys(badgeConfig)
+      {(Object.keys(badgeConfig) as BadgeKey[])
         .sort((a, b) => a.localeCompare(b))
-        .map((badgeKey: keyof typeof badgeConfig) => (
+        .map((badgeKey) => (
           <VStack alignItems="center" w="100%">
             <Flex
               position="relative"

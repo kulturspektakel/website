@@ -50,7 +50,7 @@ export default function Events() {
       queryFn: ({pageParam}) => queryFn({data: {eventType, cursor: pageParam}}),
       getNextPageParam: (lastPage) =>
         lastPage.length ? lastPage[lastPage.length - 1].id : undefined,
-      initialPageParam: undefined,
+      initialPageParam: undefined as string | undefined,
       initialData: {
         pages: [
           initialData.filter(
@@ -71,7 +71,7 @@ export default function Events() {
       <SegmentedControlOrSelect
         mt="5"
         value={eventType}
-        onValueChange={(e) => setEventType(e.value)}
+        onValueChange={(e) => setEventType(e.value as EventType | 'ALL')}
         items={EVENT_TYPE}
       />
       <ListRoot as="ol" listStyleType="none" m="0" mt="12">

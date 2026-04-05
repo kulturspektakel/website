@@ -93,7 +93,7 @@ export async function multiPage<T extends string>(pages: T[]) {
 
   return mdPages.reduce(
     (acc, page) => {
-      acc[page.slug] = page;
+      acc[page.slug as T] = page;
       return acc;
     },
     {} as Record<T, (typeof mdPages)[number]>,

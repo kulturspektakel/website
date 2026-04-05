@@ -42,7 +42,7 @@ describe('decodePayload', () => {
 });
 
 describe('transformCardAvtivities', () => {
-  function order(order) {
+  function order(order: Record<string, any>) {
     return {
       balanceAfter: 0,
       balanceBefore: 600,

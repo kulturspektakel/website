@@ -1,5 +1,5 @@
 import {afterAll, beforeAll, describe, expect, test, vi} from 'vitest';
-import {badgeConfig} from './badgeConfig';
+import {badgeConfig, type BadgeKey} from './badgeConfig';
 import {CardTransactionType} from '../generated/prisma/browser';
 import {CardActivity} from '../components/kultcard/CardActivities';
 import {sub} from 'date-fns';
@@ -36,7 +36,7 @@ function order(
 
 test('no badge is awarded by default', () => {
   Object.keys(badgeConfig).forEach((key) => {
-    expect(badgeConfig[key].compute([], event).status).toBe('not awarded');
+    expect(badgeConfig[key as BadgeKey].compute([], event).status).toBe('not awarded');
   });
 });
 
