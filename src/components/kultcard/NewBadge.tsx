@@ -1,7 +1,7 @@
 import {Box, Button, Dialog, Text} from '@chakra-ui/react';
 import {useState} from 'react';
 import {Badge} from './Badges';
-import ConfettiClient from '../booking/Confetti.client';
+import ConfettiClient from '../booking/Confetti';
 import {badgeConfig} from '../../utils/badgeConfig';
 import {useSearch} from '@tanstack/react-router';
 

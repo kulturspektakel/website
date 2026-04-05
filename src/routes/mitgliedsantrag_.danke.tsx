@@ -1,8 +1,8 @@
 import {VStack, Heading, Text} from '@chakra-ui/react';
-import {lazy} from 'react';
+import {lazy, Suspense} from 'react';
 import {createFileRoute} from '@tanstack/react-router';
 
-const Confetti = lazy(() => import('../components/booking/Confetti.client'));
+const Confetti = lazy(() => import('../components/booking/Confetti'));
 import {seo} from '../utils/seo';
 
 export const Route = createFileRoute('/mitgliedsantrag_/danke')({
@@ -17,7 +17,9 @@ export const Route = createFileRoute('/mitgliedsantrag_/danke')({
 function MitgliedsantragDanke() {
   return (
     <>
-      <Confetti />
+      <Suspense>
+        <Confetti />
+      </Suspense>
       <VStack gap="5" textAlign="center">
         <Heading size="3xl">Willkommen im Verein!</Heading>
         <Text>
