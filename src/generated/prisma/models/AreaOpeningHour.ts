@@ -185,7 +185,7 @@ export type AreaOpeningHourGroupByOutputType = {
   _max: AreaOpeningHourMaxAggregateOutputType | null
 }
 
-type GetAreaOpeningHourGroupByPayload<T extends AreaOpeningHourGroupByArgs> = Prisma.PrismaPromise<
+export type GetAreaOpeningHourGroupByPayload<T extends AreaOpeningHourGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<AreaOpeningHourGroupByOutputType, T['by']> &
       {
@@ -1133,6 +1133,11 @@ export type AreaOpeningHourFindManyArgs<ExtArgs extends runtime.Types.Extensions
    * Skip the first `n` AreaOpeningHours.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of AreaOpeningHours.
+   */
   distinct?: Prisma.AreaOpeningHourScalarFieldEnum | Prisma.AreaOpeningHourScalarFieldEnum[]
 }
 

@@ -144,7 +144,7 @@ export type NonceGroupByOutputType = {
   _max: NonceMaxAggregateOutputType | null
 }
 
-type GetNonceGroupByPayload<T extends NonceGroupByArgs> = Prisma.PrismaPromise<
+export type GetNonceGroupByPayload<T extends NonceGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<NonceGroupByOutputType, T['by']> &
       {
@@ -1059,6 +1059,11 @@ export type NonceFindManyArgs<ExtArgs extends runtime.Types.Extensions.InternalA
    * Skip the first `n` Nonces.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of Nonces.
+   */
   distinct?: Prisma.NonceScalarFieldEnum | Prisma.NonceScalarFieldEnum[]
 }
 

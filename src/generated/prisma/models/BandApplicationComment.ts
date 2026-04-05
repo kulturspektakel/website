@@ -158,7 +158,7 @@ export type BandApplicationCommentGroupByOutputType = {
   _max: BandApplicationCommentMaxAggregateOutputType | null
 }
 
-type GetBandApplicationCommentGroupByPayload<T extends BandApplicationCommentGroupByArgs> = Prisma.PrismaPromise<
+export type GetBandApplicationCommentGroupByPayload<T extends BandApplicationCommentGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<BandApplicationCommentGroupByOutputType, T['by']> &
       {
@@ -1249,6 +1249,11 @@ export type BandApplicationCommentFindManyArgs<ExtArgs extends runtime.Types.Ext
    * Skip the first `n` BandApplicationComments.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of BandApplicationComments.
+   */
   distinct?: Prisma.BandApplicationCommentScalarFieldEnum | Prisma.BandApplicationCommentScalarFieldEnum[]
 }
 

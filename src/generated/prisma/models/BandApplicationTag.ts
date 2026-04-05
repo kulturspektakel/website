@@ -151,7 +151,7 @@ export type BandApplicationTagGroupByOutputType = {
   _max: BandApplicationTagMaxAggregateOutputType | null
 }
 
-type GetBandApplicationTagGroupByPayload<T extends BandApplicationTagGroupByArgs> = Prisma.PrismaPromise<
+export type GetBandApplicationTagGroupByPayload<T extends BandApplicationTagGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<BandApplicationTagGroupByOutputType, T['by']> &
       {
@@ -1214,6 +1214,11 @@ export type BandApplicationTagFindManyArgs<ExtArgs extends runtime.Types.Extensi
    * Skip the first `n` BandApplicationTags.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of BandApplicationTags.
+   */
   distinct?: Prisma.BandApplicationTagScalarFieldEnum | Prisma.BandApplicationTagScalarFieldEnum[]
 }
 

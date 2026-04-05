@@ -178,7 +178,7 @@ export type BandApplicationRatingGroupByOutputType = {
   _max: BandApplicationRatingMaxAggregateOutputType | null
 }
 
-type GetBandApplicationRatingGroupByPayload<T extends BandApplicationRatingGroupByArgs> = Prisma.PrismaPromise<
+export type GetBandApplicationRatingGroupByPayload<T extends BandApplicationRatingGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<BandApplicationRatingGroupByOutputType, T['by']> &
       {
@@ -1217,6 +1217,11 @@ export type BandApplicationRatingFindManyArgs<ExtArgs extends runtime.Types.Exte
    * Skip the first `n` BandApplicationRatings.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of BandApplicationRatings.
+   */
   distinct?: Prisma.BandApplicationRatingScalarFieldEnum | Prisma.BandApplicationRatingScalarFieldEnum[]
 }
 

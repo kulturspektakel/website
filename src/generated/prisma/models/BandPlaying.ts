@@ -249,7 +249,7 @@ export type BandPlayingGroupByOutputType = {
   _max: BandPlayingMaxAggregateOutputType | null
 }
 
-type GetBandPlayingGroupByPayload<T extends BandPlayingGroupByArgs> = Prisma.PrismaPromise<
+export type GetBandPlayingGroupByPayload<T extends BandPlayingGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<BandPlayingGroupByOutputType, T['by']> &
       {
@@ -1794,6 +1794,11 @@ export type BandPlayingFindManyArgs<ExtArgs extends runtime.Types.Extensions.Int
    * Skip the first `n` BandPlayings.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of BandPlayings.
+   */
   distinct?: Prisma.BandPlayingScalarFieldEnum | Prisma.BandPlayingScalarFieldEnum[]
 }
 

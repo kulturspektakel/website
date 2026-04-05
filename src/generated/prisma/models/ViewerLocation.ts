@@ -199,7 +199,7 @@ export type ViewerLocationGroupByOutputType = {
   _max: ViewerLocationMaxAggregateOutputType | null
 }
 
-type GetViewerLocationGroupByPayload<T extends ViewerLocationGroupByArgs> = Prisma.PrismaPromise<
+export type GetViewerLocationGroupByPayload<T extends ViewerLocationGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<ViewerLocationGroupByOutputType, T['by']> &
       {
@@ -1208,6 +1208,11 @@ export type ViewerLocationFindManyArgs<ExtArgs extends runtime.Types.Extensions.
    * Skip the first `n` ViewerLocations.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of ViewerLocations.
+   */
   distinct?: Prisma.ViewerLocationScalarFieldEnum | Prisma.ViewerLocationScalarFieldEnum[]
 }
 

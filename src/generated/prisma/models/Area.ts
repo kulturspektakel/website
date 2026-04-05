@@ -207,7 +207,7 @@ export type AreaGroupByOutputType = {
   _max: AreaMaxAggregateOutputType | null
 }
 
-type GetAreaGroupByPayload<T extends AreaGroupByArgs> = Prisma.PrismaPromise<
+export type GetAreaGroupByPayload<T extends AreaGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<AreaGroupByOutputType, T['by']> &
       {
@@ -1293,6 +1293,11 @@ export type AreaFindManyArgs<ExtArgs extends runtime.Types.Extensions.InternalAr
    * Skip the first `n` Areas.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of Areas.
+   */
   distinct?: Prisma.AreaScalarFieldEnum | Prisma.AreaScalarFieldEnum[]
 }
 

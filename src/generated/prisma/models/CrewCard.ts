@@ -172,7 +172,7 @@ export type CrewCardGroupByOutputType = {
   _max: CrewCardMaxAggregateOutputType | null
 }
 
-type GetCrewCardGroupByPayload<T extends CrewCardGroupByArgs> = Prisma.PrismaPromise<
+export type GetCrewCardGroupByPayload<T extends CrewCardGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<CrewCardGroupByOutputType, T['by']> &
       {
@@ -1330,6 +1330,11 @@ export type CrewCardFindManyArgs<ExtArgs extends runtime.Types.Extensions.Intern
    * Skip the first `n` CrewCards.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of CrewCards.
+   */
   distinct?: Prisma.CrewCardScalarFieldEnum | Prisma.CrewCardScalarFieldEnum[]
 }
 

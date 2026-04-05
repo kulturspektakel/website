@@ -137,7 +137,7 @@ export type ShortDomainRedirectGroupByOutputType = {
   _max: ShortDomainRedirectMaxAggregateOutputType | null
 }
 
-type GetShortDomainRedirectGroupByPayload<T extends ShortDomainRedirectGroupByArgs> = Prisma.PrismaPromise<
+export type GetShortDomainRedirectGroupByPayload<T extends ShortDomainRedirectGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<ShortDomainRedirectGroupByOutputType, T['by']> &
       {
@@ -877,6 +877,11 @@ export type ShortDomainRedirectFindManyArgs<ExtArgs extends runtime.Types.Extens
    * Skip the first `n` ShortDomainRedirects.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of ShortDomainRedirects.
+   */
   distinct?: Prisma.ShortDomainRedirectScalarFieldEnum | Prisma.ShortDomainRedirectScalarFieldEnum[]
 }
 

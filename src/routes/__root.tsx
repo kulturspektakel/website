@@ -16,7 +16,7 @@ import {dateStringComponents} from '../components/DateString';
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 import {seo} from '../utils/seo';
 import ProgressBar from '@badrap/bar-of-progress';
-import {beforeLoad} from '../server/routes/__root';
+import {loadEvent} from '../server/routes/__root';
 
 export const Route = createRootRoute({
   head: ({match: {context}}) => {
@@ -67,7 +67,7 @@ export const Route = createRootRoute({
     };
   },
   component: RootComponent,
-  beforeLoad: () => beforeLoad(),
+  beforeLoad: () => loadEvent(),
 });
 
 const queryClient = new QueryClient({

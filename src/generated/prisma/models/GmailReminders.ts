@@ -137,7 +137,7 @@ export type GmailRemindersGroupByOutputType = {
   _max: GmailRemindersMaxAggregateOutputType | null
 }
 
-type GetGmailRemindersGroupByPayload<T extends GmailRemindersGroupByArgs> = Prisma.PrismaPromise<
+export type GetGmailRemindersGroupByPayload<T extends GmailRemindersGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<GmailRemindersGroupByOutputType, T['by']> &
       {
@@ -877,6 +877,11 @@ export type GmailRemindersFindManyArgs<ExtArgs extends runtime.Types.Extensions.
    * Skip the first `n` GmailReminders.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of GmailReminders.
+   */
   distinct?: Prisma.GmailRemindersScalarFieldEnum | Prisma.GmailRemindersScalarFieldEnum[]
 }
 

@@ -137,7 +137,7 @@ export type DevicePrivilegeTokenGroupByOutputType = {
   _max: DevicePrivilegeTokenMaxAggregateOutputType | null
 }
 
-type GetDevicePrivilegeTokenGroupByPayload<T extends DevicePrivilegeTokenGroupByArgs> = Prisma.PrismaPromise<
+export type GetDevicePrivilegeTokenGroupByPayload<T extends DevicePrivilegeTokenGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<DevicePrivilegeTokenGroupByOutputType, T['by']> &
       {
@@ -877,6 +877,11 @@ export type DevicePrivilegeTokenFindManyArgs<ExtArgs extends runtime.Types.Exten
    * Skip the first `n` DevicePrivilegeTokens.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of DevicePrivilegeTokens.
+   */
   distinct?: Prisma.DevicePrivilegeTokenScalarFieldEnum | Prisma.DevicePrivilegeTokenScalarFieldEnum[]
 }
 

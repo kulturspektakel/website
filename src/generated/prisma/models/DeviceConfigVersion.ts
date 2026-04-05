@@ -182,7 +182,7 @@ export type DeviceConfigVersionGroupByOutputType = {
   _max: DeviceConfigVersionMaxAggregateOutputType | null
 }
 
-type GetDeviceConfigVersionGroupByPayload<T extends DeviceConfigVersionGroupByArgs> = Prisma.PrismaPromise<
+export type GetDeviceConfigVersionGroupByPayload<T extends DeviceConfigVersionGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<DeviceConfigVersionGroupByOutputType, T['by']> &
       {
@@ -945,6 +945,11 @@ export type DeviceConfigVersionFindManyArgs<ExtArgs extends runtime.Types.Extens
    * Skip the first `n` DeviceConfigVersions.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of DeviceConfigVersions.
+   */
   distinct?: Prisma.DeviceConfigVersionScalarFieldEnum | Prisma.DeviceConfigVersionScalarFieldEnum[]
 }
 

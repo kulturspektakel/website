@@ -168,7 +168,7 @@ export type ViewerGroupByOutputType = {
   _max: ViewerMaxAggregateOutputType | null
 }
 
-type GetViewerGroupByPayload<T extends ViewerGroupByArgs> = Prisma.PrismaPromise<
+export type GetViewerGroupByPayload<T extends ViewerGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<ViewerGroupByOutputType, T['by']> &
       {
@@ -2049,6 +2049,11 @@ export type ViewerFindManyArgs<ExtArgs extends runtime.Types.Extensions.Internal
    * Skip the first `n` Viewers.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of Viewers.
+   */
   distinct?: Prisma.ViewerScalarFieldEnum | Prisma.ViewerScalarFieldEnum[]
 }
 
