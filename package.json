@@ -30,6 +30,7 @@
     "vitest": "^4.1.2"
   },
   "dependencies": {
+    "@badrap/bar-of-progress": "^0.3.0",
     "@chakra-ui/react": "^3.34.0",
     "@date-fns/tz": "^1.4.1",
     "@emotion/react": "^11.14.0",

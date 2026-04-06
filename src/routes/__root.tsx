@@ -1,4 +1,4 @@
-import {useEffect, type ReactNode} from 'react';
+import {useEffect, useRef, type ReactNode} from 'react';
 import {
   Outlet,
   HeadContent,
@@ -7,6 +7,7 @@ import {
   useRouter,
 } from '@tanstack/react-router';
 import {Box, ChakraProvider, Flex} from '@chakra-ui/react';
+import ProgressBar from '@badrap/bar-of-progress';
 import theme from '../theme';
 
 import Footer from '../components/Footer/Footer';
@@ -91,22 +92,48 @@ function RootDoc({children}: Readonly<{children: ReactNode}>) {
   const context = Route.useRouteContext();
   const router = useRouter();
 
+  const progressBar = useRef<ProgressBar | null>(null);
+
   useEffect(() => {
-    if (typeof window === 'undefined' || !('navigation' in window)) return;
-    const handler = (event: NavigateEvent) => {
-      if (!event.canIntercept) return;
-      event.intercept({
-        handler: () =>
-          new Promise<void>((resolve) => {
-            const unsub = router.subscribe('onResolved', () => {
-              unsub();
-              resolve();
-            });
-          }),
-      });
+    // Native Navigation API for browser tab spinner (Chromium)
+    if (typeof window !== 'undefined' && 'navigation' in window) {
+      const handler = (event: NavigateEvent) => {
+        if (!event.canIntercept) return;
+        event.intercept({
+          handler: () =>
+            new Promise<void>((resolve) => {
+              const unsub = router.subscribe('onResolved', () => {
+                unsub();
+                resolve();
+              });
+            }),
+        });
+      };
+      navigation.addEventListener('navigate', handler);
+      return () => navigation.removeEventListener('navigate', handler);
+    }
+  }, [router]);
+
+  useEffect(() => {
+    const unsubBefore = router.subscribe('onBeforeNavigate', () => {
+      if (typeof window !== 'undefined') {
+        progressBar.current?.finish();
+        progressBar.current = new ProgressBar();
+        progressBar.current.start();
+      }
+    });
+
+    const unsubRendered = router.subscribe('onRendered', () => {
+      if (typeof window !== 'undefined') {
+        progressBar.current?.finish();
+        progressBar.current = null;
+      }
+    });
+
+    return () => {
+      unsubBefore();
+      unsubRendered();
     };
-    navigation.addEventListener('navigate', handler);
-    return () => navigation.removeEventListener('navigate', handler);
   }, [router]);
 
   return (
@@ -137,3 +164,4 @@ function RootDoc({children}: Readonly<{children: ReactNode}>) {
     </html>
   );
 }
+

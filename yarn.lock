@@ -676,6 +676,11 @@
     "@babel/helper-string-parser" "^7.27.1"
     "@babel/helper-validator-identifier" "^7.28.5"
 
+"@badrap/bar-of-progress@^0.3.0":
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/@badrap/bar-of-progress/-/bar-of-progress-0.3.0.tgz#21b9d7e8fa4e07dfc75e4d0de4004dc08eafcf28"
+  integrity sha512-GI/jkqtGO7Gv4YGXxGF8NgNOP9we+RhmPhe3fswKmzYB1+T2H1+04dZl33vgQjIuAzgiJuXZ+dPlP8HAX8dpFA==
+
 "@bytecodealliance/preview2-shim@0.17.6":
   version "0.17.6"
   resolved "https://registry.yarnpkg.com/@bytecodealliance/preview2-shim/-/preview2-shim-0.17.6.tgz#3d60f3fde44582b022643fafcee38077594069e5"
