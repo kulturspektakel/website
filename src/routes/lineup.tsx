@@ -77,7 +77,7 @@ function Lineup() {
           {slug == null && (
             <Menu.Root
               positioning={{placement: 'bottom-end'}}
-              highlightedValue={year}
+              defaultHighlightedValue={year}
             >
               <Menu.Trigger asChild>
                 <IconButton
