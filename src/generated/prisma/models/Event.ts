@@ -49,6 +49,7 @@ export type EventMinAggregateOutputType = {
   poster: string | null
   description: string | null
   location: string | null
+  lineupAnnouncementTime: Date | null
   latitude: number | null
   longitude: number | null
 }
@@ -66,6 +67,7 @@ export type EventMaxAggregateOutputType = {
   poster: string | null
   description: string | null
   location: string | null
+  lineupAnnouncementTime: Date | null
   latitude: number | null
   longitude: number | null
 }
@@ -83,6 +85,7 @@ export type EventCountAggregateOutputType = {
   poster: number
   description: number
   location: number
+  lineupAnnouncementTime: number
   latitude: number
   longitude: number
   _all: number
@@ -112,6 +115,7 @@ export type EventMinAggregateInputType = {
   poster?: true
   description?: true
   location?: true
+  lineupAnnouncementTime?: true
   latitude?: true
   longitude?: true
 }
@@ -129,6 +133,7 @@ export type EventMaxAggregateInputType = {
   poster?: true
   description?: true
   location?: true
+  lineupAnnouncementTime?: true
   latitude?: true
   longitude?: true
 }
@@ -146,6 +151,7 @@ export type EventCountAggregateInputType = {
   poster?: true
   description?: true
   location?: true
+  lineupAnnouncementTime?: true
   latitude?: true
   longitude?: true
   _all?: true
@@ -250,6 +256,7 @@ export type EventGroupByOutputType = {
   poster: string | null
   description: string | null
   location: string | null
+  lineupAnnouncementTime: Date | null
   latitude: number | null
   longitude: number | null
   _count: EventCountAggregateOutputType | null
@@ -290,6 +297,7 @@ export type EventWhereInput = {
   poster?: Prisma.UuidNullableFilter<"Event"> | string | null
   description?: Prisma.StringNullableFilter<"Event"> | string | null
   location?: Prisma.StringNullableFilter<"Event"> | string | null
+  lineupAnnouncementTime?: Prisma.DateTimeNullableFilter<"Event"> | Date | string | null
   latitude?: Prisma.FloatNullableFilter<"Event"> | number | null
   longitude?: Prisma.FloatNullableFilter<"Event"> | number | null
   bandApplication?: Prisma.BandApplicationListRelationFilter
@@ -309,6 +317,7 @@ export type EventOrderByWithRelationInput = {
   poster?: Prisma.SortOrderInput | Prisma.SortOrder
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   location?: Prisma.SortOrderInput | Prisma.SortOrder
+  lineupAnnouncementTime?: Prisma.SortOrderInput | Prisma.SortOrder
   latitude?: Prisma.SortOrderInput | Prisma.SortOrder
   longitude?: Prisma.SortOrderInput | Prisma.SortOrder
   bandApplication?: Prisma.BandApplicationOrderByRelationAggregateInput
@@ -332,6 +341,7 @@ export type EventWhereUniqueInput = Prisma.AtLeast<{
   poster?: Prisma.UuidNullableFilter<"Event"> | string | null
   description?: Prisma.StringNullableFilter<"Event"> | string | null
   location?: Prisma.StringNullableFilter<"Event"> | string | null
+  lineupAnnouncementTime?: Prisma.DateTimeNullableFilter<"Event"> | Date | string | null
   latitude?: Prisma.FloatNullableFilter<"Event"> | number | null
   longitude?: Prisma.FloatNullableFilter<"Event"> | number | null
   bandApplication?: Prisma.BandApplicationListRelationFilter
@@ -351,6 +361,7 @@ export type EventOrderByWithAggregationInput = {
   poster?: Prisma.SortOrderInput | Prisma.SortOrder
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   location?: Prisma.SortOrderInput | Prisma.SortOrder
+  lineupAnnouncementTime?: Prisma.SortOrderInput | Prisma.SortOrder
   latitude?: Prisma.SortOrderInput | Prisma.SortOrder
   longitude?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.EventCountOrderByAggregateInput
@@ -376,6 +387,7 @@ export type EventScalarWhereWithAggregatesInput = {
   poster?: Prisma.UuidNullableWithAggregatesFilter<"Event"> | string | null
   description?: Prisma.StringNullableWithAggregatesFilter<"Event"> | string | null
   location?: Prisma.StringNullableWithAggregatesFilter<"Event"> | string | null
+  lineupAnnouncementTime?: Prisma.DateTimeNullableWithAggregatesFilter<"Event"> | Date | string | null
   latitude?: Prisma.FloatNullableWithAggregatesFilter<"Event"> | number | null
   longitude?: Prisma.FloatNullableWithAggregatesFilter<"Event"> | number | null
 }
@@ -393,6 +405,7 @@ export type EventCreateInput = {
   poster?: string | null
   description?: string | null
   location?: string | null
+  lineupAnnouncementTime?: Date | string | null
   latitude?: number | null
   longitude?: number | null
   bandApplication?: Prisma.BandApplicationCreateNestedManyWithoutEventInput
@@ -412,6 +425,7 @@ export type EventUncheckedCreateInput = {
   poster?: string | null
   description?: string | null
   location?: string | null
+  lineupAnnouncementTime?: Date | string | null
   latitude?: number | null
   longitude?: number | null
   bandApplication?: Prisma.BandApplicationUncheckedCreateNestedManyWithoutEventInput
@@ -431,6 +445,7 @@ export type EventUpdateInput = {
   poster?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lineupAnnouncementTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bandApplication?: Prisma.BandApplicationUpdateManyWithoutEventNestedInput
@@ -450,6 +465,7 @@ export type EventUncheckedUpdateInput = {
   poster?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lineupAnnouncementTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bandApplication?: Prisma.BandApplicationUncheckedUpdateManyWithoutEventNestedInput
@@ -469,6 +485,7 @@ export type EventCreateManyInput = {
   poster?: string | null
   description?: string | null
   location?: string | null
+  lineupAnnouncementTime?: Date | string | null
   latitude?: number | null
   longitude?: number | null
 }
@@ -486,6 +503,7 @@ export type EventUpdateManyMutationInput = {
   poster?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lineupAnnouncementTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
 }
@@ -503,6 +521,7 @@ export type EventUncheckedUpdateManyInput = {
   poster?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lineupAnnouncementTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
 }
@@ -531,6 +550,7 @@ export type EventCountOrderByAggregateInput = {
   poster?: Prisma.SortOrder
   description?: Prisma.SortOrder
   location?: Prisma.SortOrder
+  lineupAnnouncementTime?: Prisma.SortOrder
   latitude?: Prisma.SortOrder
   longitude?: Prisma.SortOrder
 }
@@ -553,6 +573,7 @@ export type EventMaxOrderByAggregateInput = {
   poster?: Prisma.SortOrder
   description?: Prisma.SortOrder
   location?: Prisma.SortOrder
+  lineupAnnouncementTime?: Prisma.SortOrder
   latitude?: Prisma.SortOrder
   longitude?: Prisma.SortOrder
 }
@@ -570,6 +591,7 @@ export type EventMinOrderByAggregateInput = {
   poster?: Prisma.SortOrder
   description?: Prisma.SortOrder
   location?: Prisma.SortOrder
+  lineupAnnouncementTime?: Prisma.SortOrder
   latitude?: Prisma.SortOrder
   longitude?: Prisma.SortOrder
 }
@@ -624,6 +646,7 @@ export type EventCreateWithoutBandApplicationInput = {
   poster?: string | null
   description?: string | null
   location?: string | null
+  lineupAnnouncementTime?: Date | string | null
   latitude?: number | null
   longitude?: number | null
   BandPlaying?: Prisma.BandPlayingCreateNestedManyWithoutEventInput
@@ -642,6 +665,7 @@ export type EventUncheckedCreateWithoutBandApplicationInput = {
   poster?: string | null
   description?: string | null
   location?: string | null
+  lineupAnnouncementTime?: Date | string | null
   latitude?: number | null
   longitude?: number | null
   BandPlaying?: Prisma.BandPlayingUncheckedCreateNestedManyWithoutEventInput
@@ -676,6 +700,7 @@ export type EventUpdateWithoutBandApplicationInput = {
   poster?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lineupAnnouncementTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   BandPlaying?: Prisma.BandPlayingUpdateManyWithoutEventNestedInput
@@ -694,6 +719,7 @@ export type EventUncheckedUpdateWithoutBandApplicationInput = {
   poster?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lineupAnnouncementTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   BandPlaying?: Prisma.BandPlayingUncheckedUpdateManyWithoutEventNestedInput
@@ -712,6 +738,7 @@ export type EventCreateWithoutBandPlayingInput = {
   poster?: string | null
   description?: string | null
   location?: string | null
+  lineupAnnouncementTime?: Date | string | null
   latitude?: number | null
   longitude?: number | null
   bandApplication?: Prisma.BandApplicationCreateNestedManyWithoutEventInput
@@ -730,6 +757,7 @@ export type EventUncheckedCreateWithoutBandPlayingInput = {
   poster?: string | null
   description?: string | null
   location?: string | null
+  lineupAnnouncementTime?: Date | string | null
   latitude?: number | null
   longitude?: number | null
   bandApplication?: Prisma.BandApplicationUncheckedCreateNestedManyWithoutEventInput
@@ -764,6 +792,7 @@ export type EventUpdateWithoutBandPlayingInput = {
   poster?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lineupAnnouncementTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bandApplication?: Prisma.BandApplicationUpdateManyWithoutEventNestedInput
@@ -782,6 +811,7 @@ export type EventUncheckedUpdateWithoutBandPlayingInput = {
   poster?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lineupAnnouncementTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bandApplication?: Prisma.BandApplicationUncheckedUpdateManyWithoutEventNestedInput
@@ -840,6 +870,7 @@ export type EventSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   poster?: boolean
   description?: boolean
   location?: boolean
+  lineupAnnouncementTime?: boolean
   latitude?: boolean
   longitude?: boolean
   bandApplication?: boolean | Prisma.Event$bandApplicationArgs<ExtArgs>
@@ -860,6 +891,7 @@ export type EventSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   poster?: boolean
   description?: boolean
   location?: boolean
+  lineupAnnouncementTime?: boolean
   latitude?: boolean
   longitude?: boolean
 }, ExtArgs["result"]["event"]>
@@ -877,6 +909,7 @@ export type EventSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   poster?: boolean
   description?: boolean
   location?: boolean
+  lineupAnnouncementTime?: boolean
   latitude?: boolean
   longitude?: boolean
 }, ExtArgs["result"]["event"]>
@@ -894,11 +927,12 @@ export type EventSelectScalar = {
   poster?: boolean
   description?: boolean
   location?: boolean
+  lineupAnnouncementTime?: boolean
   latitude?: boolean
   longitude?: boolean
 }
 
-export type EventOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "start" | "end" | "eventType" | "bandApplicationStart" | "djApplicationStart" | "bandApplicationEnd" | "djApplicationEnd" | "poster" | "description" | "location" | "latitude" | "longitude", ExtArgs["result"]["event"]>
+export type EventOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "start" | "end" | "eventType" | "bandApplicationStart" | "djApplicationStart" | "bandApplicationEnd" | "djApplicationEnd" | "poster" | "description" | "location" | "lineupAnnouncementTime" | "latitude" | "longitude", ExtArgs["result"]["event"]>
 export type EventInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   bandApplication?: boolean | Prisma.Event$bandApplicationArgs<ExtArgs>
   BandPlaying?: boolean | Prisma.Event$BandPlayingArgs<ExtArgs>
@@ -926,6 +960,7 @@ export type $EventPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     poster: string | null
     description: string | null
     location: string | null
+    lineupAnnouncementTime: Date | null
     latitude: number | null
     longitude: number | null
   }, ExtArgs["result"]["event"]>
@@ -1365,6 +1400,7 @@ export interface EventFieldRefs {
   readonly poster: Prisma.FieldRef<"Event", 'String'>
   readonly description: Prisma.FieldRef<"Event", 'String'>
   readonly location: Prisma.FieldRef<"Event", 'String'>
+  readonly lineupAnnouncementTime: Prisma.FieldRef<"Event", 'DateTime'>
   readonly latitude: Prisma.FieldRef<"Event", 'Float'>
   readonly longitude: Prisma.FieldRef<"Event", 'Float'>
 }

@@ -42,7 +42,6 @@ export type BandPlayingMinAggregateOutputType = {
   eventId: string | null
   slug: string | null
   photo: string | null
-  announcementTime: Date | null
 }
 
 export type BandPlayingMaxAggregateOutputType = {
@@ -63,7 +62,6 @@ export type BandPlayingMaxAggregateOutputType = {
   eventId: string | null
   slug: string | null
   photo: string | null
-  announcementTime: Date | null
 }
 
 export type BandPlayingCountAggregateOutputType = {
@@ -84,7 +82,6 @@ export type BandPlayingCountAggregateOutputType = {
   eventId: number
   slug: number
   photo: number
-  announcementTime: number
   _all: number
 }
 
@@ -107,7 +104,6 @@ export type BandPlayingMinAggregateInputType = {
   eventId?: true
   slug?: true
   photo?: true
-  announcementTime?: true
 }
 
 export type BandPlayingMaxAggregateInputType = {
@@ -128,7 +124,6 @@ export type BandPlayingMaxAggregateInputType = {
   eventId?: true
   slug?: true
   photo?: true
-  announcementTime?: true
 }
 
 export type BandPlayingCountAggregateInputType = {
@@ -149,7 +144,6 @@ export type BandPlayingCountAggregateInputType = {
   eventId?: true
   slug?: true
   photo?: true
-  announcementTime?: true
   _all?: true
 }
 
@@ -243,7 +237,6 @@ export type BandPlayingGroupByOutputType = {
   eventId: string
   slug: string
   photo: string | null
-  announcementTime: Date | null
   _count: BandPlayingCountAggregateOutputType | null
   _min: BandPlayingMinAggregateOutputType | null
   _max: BandPlayingMaxAggregateOutputType | null
@@ -285,7 +278,6 @@ export type BandPlayingWhereInput = {
   eventId?: Prisma.StringFilter<"BandPlaying"> | string
   slug?: Prisma.StringFilter<"BandPlaying"> | string
   photo?: Prisma.UuidNullableFilter<"BandPlaying"> | string | null
-  announcementTime?: Prisma.DateTimeNullableFilter<"BandPlaying"> | Date | string | null
   area?: Prisma.XOR<Prisma.AreaScalarRelationFilter, Prisma.AreaWhereInput>
   event?: Prisma.XOR<Prisma.EventScalarRelationFilter, Prisma.EventWhereInput>
 }
@@ -308,7 +300,6 @@ export type BandPlayingOrderByWithRelationInput = {
   eventId?: Prisma.SortOrder
   slug?: Prisma.SortOrder
   photo?: Prisma.SortOrderInput | Prisma.SortOrder
-  announcementTime?: Prisma.SortOrderInput | Prisma.SortOrder
   area?: Prisma.AreaOrderByWithRelationInput
   event?: Prisma.EventOrderByWithRelationInput
   _relevance?: Prisma.BandPlayingOrderByRelevanceInput
@@ -337,7 +328,6 @@ export type BandPlayingWhereUniqueInput = Prisma.AtLeast<{
   eventId?: Prisma.StringFilter<"BandPlaying"> | string
   slug?: Prisma.StringFilter<"BandPlaying"> | string
   photo?: Prisma.UuidNullableFilter<"BandPlaying"> | string | null
-  announcementTime?: Prisma.DateTimeNullableFilter<"BandPlaying"> | Date | string | null
   area?: Prisma.XOR<Prisma.AreaScalarRelationFilter, Prisma.AreaWhereInput>
   event?: Prisma.XOR<Prisma.EventScalarRelationFilter, Prisma.EventWhereInput>
 }, "id" | "areaId_startTime" | "eventId_slug">
@@ -360,7 +350,6 @@ export type BandPlayingOrderByWithAggregationInput = {
   eventId?: Prisma.SortOrder
   slug?: Prisma.SortOrder
   photo?: Prisma.SortOrderInput | Prisma.SortOrder
-  announcementTime?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.BandPlayingCountOrderByAggregateInput
   _max?: Prisma.BandPlayingMaxOrderByAggregateInput
   _min?: Prisma.BandPlayingMinOrderByAggregateInput
@@ -387,7 +376,6 @@ export type BandPlayingScalarWhereWithAggregatesInput = {
   eventId?: Prisma.StringWithAggregatesFilter<"BandPlaying"> | string
   slug?: Prisma.StringWithAggregatesFilter<"BandPlaying"> | string
   photo?: Prisma.UuidNullableWithAggregatesFilter<"BandPlaying"> | string | null
-  announcementTime?: Prisma.DateTimeNullableWithAggregatesFilter<"BandPlaying"> | Date | string | null
 }
 
 export type BandPlayingCreateInput = {
@@ -406,7 +394,6 @@ export type BandPlayingCreateInput = {
   soundcloud?: string | null
   slug: string
   photo?: string | null
-  announcementTime?: Date | string | null
   area: Prisma.AreaCreateNestedOneWithoutBandPlayingInput
   event: Prisma.EventCreateNestedOneWithoutBandPlayingInput
 }
@@ -429,7 +416,6 @@ export type BandPlayingUncheckedCreateInput = {
   eventId: string
   slug: string
   photo?: string | null
-  announcementTime?: Date | string | null
 }
 
 export type BandPlayingUpdateInput = {
@@ -448,7 +434,6 @@ export type BandPlayingUpdateInput = {
   soundcloud?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   photo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  announcementTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   area?: Prisma.AreaUpdateOneRequiredWithoutBandPlayingNestedInput
   event?: Prisma.EventUpdateOneRequiredWithoutBandPlayingNestedInput
 }
@@ -471,7 +456,6 @@ export type BandPlayingUncheckedUpdateInput = {
   eventId?: Prisma.StringFieldUpdateOperationsInput | string
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   photo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  announcementTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type BandPlayingCreateManyInput = {
@@ -492,7 +476,6 @@ export type BandPlayingCreateManyInput = {
   eventId: string
   slug: string
   photo?: string | null
-  announcementTime?: Date | string | null
 }
 
 export type BandPlayingUpdateManyMutationInput = {
@@ -511,7 +494,6 @@ export type BandPlayingUpdateManyMutationInput = {
   soundcloud?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   photo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  announcementTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type BandPlayingUncheckedUpdateManyInput = {
@@ -532,7 +514,6 @@ export type BandPlayingUncheckedUpdateManyInput = {
   eventId?: Prisma.StringFieldUpdateOperationsInput | string
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   photo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  announcementTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type BandPlayingListRelationFilter = {
@@ -579,7 +560,6 @@ export type BandPlayingCountOrderByAggregateInput = {
   eventId?: Prisma.SortOrder
   slug?: Prisma.SortOrder
   photo?: Prisma.SortOrder
-  announcementTime?: Prisma.SortOrder
 }
 
 export type BandPlayingMaxOrderByAggregateInput = {
@@ -600,7 +580,6 @@ export type BandPlayingMaxOrderByAggregateInput = {
   eventId?: Prisma.SortOrder
   slug?: Prisma.SortOrder
   photo?: Prisma.SortOrder
-  announcementTime?: Prisma.SortOrder
 }
 
 export type BandPlayingMinOrderByAggregateInput = {
@@ -621,7 +600,6 @@ export type BandPlayingMinOrderByAggregateInput = {
   eventId?: Prisma.SortOrder
   slug?: Prisma.SortOrder
   photo?: Prisma.SortOrder
-  announcementTime?: Prisma.SortOrder
 }
 
 export type BandPlayingCreateNestedManyWithoutAreaInput = {
@@ -724,7 +702,6 @@ export type BandPlayingCreateWithoutAreaInput = {
   soundcloud?: string | null
   slug: string
   photo?: string | null
-  announcementTime?: Date | string | null
   event: Prisma.EventCreateNestedOneWithoutBandPlayingInput
 }
 
@@ -745,7 +722,6 @@ export type BandPlayingUncheckedCreateWithoutAreaInput = {
   eventId: string
   slug: string
   photo?: string | null
-  announcementTime?: Date | string | null
 }
 
 export type BandPlayingCreateOrConnectWithoutAreaInput = {
@@ -795,7 +771,6 @@ export type BandPlayingScalarWhereInput = {
   eventId?: Prisma.StringFilter<"BandPlaying"> | string
   slug?: Prisma.StringFilter<"BandPlaying"> | string
   photo?: Prisma.UuidNullableFilter<"BandPlaying"> | string | null
-  announcementTime?: Prisma.DateTimeNullableFilter<"BandPlaying"> | Date | string | null
 }
 
 export type BandPlayingCreateWithoutEventInput = {
@@ -814,7 +789,6 @@ export type BandPlayingCreateWithoutEventInput = {
   soundcloud?: string | null
   slug: string
   photo?: string | null
-  announcementTime?: Date | string | null
   area: Prisma.AreaCreateNestedOneWithoutBandPlayingInput
 }
 
@@ -835,7 +809,6 @@ export type BandPlayingUncheckedCreateWithoutEventInput = {
   areaId: string
   slug: string
   photo?: string | null
-  announcementTime?: Date | string | null
 }
 
 export type BandPlayingCreateOrConnectWithoutEventInput = {
@@ -881,7 +854,6 @@ export type BandPlayingCreateManyAreaInput = {
   eventId: string
   slug: string
   photo?: string | null
-  announcementTime?: Date | string | null
 }
 
 export type BandPlayingUpdateWithoutAreaInput = {
@@ -900,7 +872,6 @@ export type BandPlayingUpdateWithoutAreaInput = {
   soundcloud?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   photo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  announcementTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   event?: Prisma.EventUpdateOneRequiredWithoutBandPlayingNestedInput
 }
 
@@ -921,7 +892,6 @@ export type BandPlayingUncheckedUpdateWithoutAreaInput = {
   eventId?: Prisma.StringFieldUpdateOperationsInput | string
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   photo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  announcementTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type BandPlayingUncheckedUpdateManyWithoutAreaInput = {
@@ -941,7 +911,6 @@ export type BandPlayingUncheckedUpdateManyWithoutAreaInput = {
   eventId?: Prisma.StringFieldUpdateOperationsInput | string
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   photo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  announcementTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type BandPlayingCreateManyEventInput = {
@@ -961,7 +930,6 @@ export type BandPlayingCreateManyEventInput = {
   areaId: string
   slug: string
   photo?: string | null
-  announcementTime?: Date | string | null
 }
 
 export type BandPlayingUpdateWithoutEventInput = {
@@ -980,7 +948,6 @@ export type BandPlayingUpdateWithoutEventInput = {
   soundcloud?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   photo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  announcementTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   area?: Prisma.AreaUpdateOneRequiredWithoutBandPlayingNestedInput
 }
 
@@ -1001,7 +968,6 @@ export type BandPlayingUncheckedUpdateWithoutEventInput = {
   areaId?: Prisma.StringFieldUpdateOperationsInput | string
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   photo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  announcementTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type BandPlayingUncheckedUpdateManyWithoutEventInput = {
@@ -1021,7 +987,6 @@ export type BandPlayingUncheckedUpdateManyWithoutEventInput = {
   areaId?: Prisma.StringFieldUpdateOperationsInput | string
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   photo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  announcementTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 
@@ -1044,7 +1009,6 @@ export type BandPlayingSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   eventId?: boolean
   slug?: boolean
   photo?: boolean
-  announcementTime?: boolean
   area?: boolean | Prisma.AreaDefaultArgs<ExtArgs>
   event?: boolean | Prisma.EventDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["bandPlaying"]>
@@ -1067,7 +1031,6 @@ export type BandPlayingSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   eventId?: boolean
   slug?: boolean
   photo?: boolean
-  announcementTime?: boolean
   area?: boolean | Prisma.AreaDefaultArgs<ExtArgs>
   event?: boolean | Prisma.EventDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["bandPlaying"]>
@@ -1090,7 +1053,6 @@ export type BandPlayingSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   eventId?: boolean
   slug?: boolean
   photo?: boolean
-  announcementTime?: boolean
   area?: boolean | Prisma.AreaDefaultArgs<ExtArgs>
   event?: boolean | Prisma.EventDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["bandPlaying"]>
@@ -1113,10 +1075,9 @@ export type BandPlayingSelectScalar = {
   eventId?: boolean
   slug?: boolean
   photo?: boolean
-  announcementTime?: boolean
 }
 
-export type BandPlayingOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "startTime" | "endTime" | "description" | "shortDescription" | "genre" | "instagram" | "spotify" | "facebook" | "website" | "youtube" | "soundcloud" | "areaId" | "eventId" | "slug" | "photo" | "announcementTime", ExtArgs["result"]["bandPlaying"]>
+export type BandPlayingOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "startTime" | "endTime" | "description" | "shortDescription" | "genre" | "instagram" | "spotify" | "facebook" | "website" | "youtube" | "soundcloud" | "areaId" | "eventId" | "slug" | "photo", ExtArgs["result"]["bandPlaying"]>
 export type BandPlayingInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   area?: boolean | Prisma.AreaDefaultArgs<ExtArgs>
   event?: boolean | Prisma.EventDefaultArgs<ExtArgs>
@@ -1154,7 +1115,6 @@ export type $BandPlayingPayload<ExtArgs extends runtime.Types.Extensions.Interna
     eventId: string
     slug: string
     photo: string | null
-    announcementTime: Date | null
   }, ExtArgs["result"]["bandPlaying"]>
   composites: {}
 }
@@ -1597,7 +1557,6 @@ export interface BandPlayingFieldRefs {
   readonly eventId: Prisma.FieldRef<"BandPlaying", 'String'>
   readonly slug: Prisma.FieldRef<"BandPlaying", 'String'>
   readonly photo: Prisma.FieldRef<"BandPlaying", 'String'>
-  readonly announcementTime: Prisma.FieldRef<"BandPlaying", 'DateTime'>
 }
     
 

@@ -27,9 +27,6 @@ export const eventSelect: Prisma.EventSelect = {
     select: {
       name: true,
     },
-    where: {
-      OR: [{announcementTime: {lte: new Date()}}, {announcementTime: null}],
-    },
   },
 };
 

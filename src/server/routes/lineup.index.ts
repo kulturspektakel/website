@@ -8,6 +8,10 @@ export const firstEventWithBands = createServerFn().handler(async () => {
       BandPlaying: {
         some: {},
       },
+      OR: [
+        {lineupAnnouncementTime: {lte: new Date()}},
+        {lineupAnnouncementTime: null},
+      ],
     },
     select: {
       id: true,

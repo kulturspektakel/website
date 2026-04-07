@@ -336,6 +336,7 @@ export const EventScalarFieldEnum = {
   poster: 'poster',
   description: 'description',
   location: 'location',
+  lineupAnnouncementTime: 'lineupAnnouncementTime',
   latitude: 'latitude',
   longitude: 'longitude'
 } as const
@@ -360,8 +361,7 @@ export const BandPlayingScalarFieldEnum = {
   areaId: 'areaId',
   eventId: 'eventId',
   slug: 'slug',
-  photo: 'photo',
-  announcementTime: 'announcementTime'
+  photo: 'photo'
 } as const
 
 export type BandPlayingScalarFieldEnum = (typeof BandPlayingScalarFieldEnum)[keyof typeof BandPlayingScalarFieldEnum]

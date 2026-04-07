@@ -245,8 +245,9 @@ model Event {
   poster               String?           @db.Uuid
   description          String?
   bandApplication      BandApplication[]
-  BandPlaying          BandPlaying[]
-  location             String?
+  BandPlaying              BandPlaying[]
+  location                 String?
+  lineupAnnouncementTime   DateTime?
   latitude             Float?
   longitude            Float?
 }
@@ -271,8 +272,6 @@ model BandPlaying {
   photo            String?   @db.Uuid
   area             Area      @relation(fields: [areaId], references: [id])
   event            Event     @relation(fields: [eventId], references: [id])
-  announcementTime DateTime?
-
   @@unique([areaId, startTime])
   @@unique([eventId, slug])
 }
