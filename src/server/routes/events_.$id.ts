@@ -22,9 +22,14 @@ export const loader = createServerFn()
       throw notFound();
     }
 
+    const lineupAnnounced =
+      !data.lineupAnnouncementTime ||
+      data.lineupAnnouncementTime <= new Date();
+
     return {
       event: {
         ...data,
+        BandPlaying: lineupAnnounced ? data.BandPlaying : [],
         poster: await directusImage(data.poster),
         media: await directusImageConnection('Event', eventId, 100),
       },

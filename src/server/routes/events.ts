@@ -24,10 +24,16 @@ export const loader = createServerFn()
     });
 
     return Promise.all(
-      res.map(async (e) => ({
-        ...e,
-        poster: await directusImage(e.poster),
-        media: await directusImageConnection('Event', e.id),
-      })),
+      res.map(async (e) => {
+        const lineupAnnounced =
+          !e.lineupAnnouncementTime ||
+          e.lineupAnnouncementTime <= new Date();
+        return {
+          ...e,
+          BandPlaying: lineupAnnounced ? e.BandPlaying : [],
+          poster: await directusImage(e.poster),
+          media: await directusImageConnection('Event', e.id),
+        };
+      }),
     );
   });

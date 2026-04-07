@@ -23,6 +23,7 @@ export const eventSelect: Prisma.EventSelect = {
   end: true,
   poster: true,
   eventType: true,
+  lineupAnnouncementTime: true,
   BandPlaying: {
     select: {
       name: true,
