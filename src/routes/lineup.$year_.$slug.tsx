@@ -7,6 +7,7 @@ import {
   FaInstagram,
   FaFacebook,
   FaGlobe,
+  FaSoundcloud,
 } from 'react-icons/fa6';
 import Image from '../components/Image';
 import {Gallery} from 'react-photoswipe-gallery';
@@ -92,7 +93,8 @@ function LineupBand() {
         band.youtube ||
         band.instagram ||
         band.facebook ||
-        band.website) && (
+        band.website ||
+        band.soundcloud) && (
         <HStack fontSize="28px" gap="6" mt="2">
           {band.spotify && (
             <Tooltip content="Spotify">
@@ -119,6 +121,13 @@ function LineupBand() {
             <Tooltip content="Facebook">
               <Link target="_blank" href={band.facebook} color="inherit">
                 <FaFacebook />
+              </Link>
+            </Tooltip>
+          )}
+          {band.soundcloud && (
+            <Tooltip content="SoundCloud">
+              <Link target="_blank" href={band.soundcloud} color="inherit">
+                <FaSoundcloud />
               </Link>
             </Tooltip>
           )}

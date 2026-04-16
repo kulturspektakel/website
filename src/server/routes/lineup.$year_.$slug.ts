@@ -24,6 +24,7 @@ export const loader = createServerFn()
         instagram: true,
         facebook: true,
         website: true,
+        soundcloud: true,
         shortDescription: true,
         description: true,
         area: {
