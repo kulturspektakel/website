@@ -1,10 +1,11 @@
 @font-face {
   font-family: 'Shrimp';
   src:
-    url('shrimp-webfont.woff2') format('woff2'),
-    url('shrimp-webfont.woff') format('woff');
+    url('ẞHRIMP.woff2') format('woff2'),
+    url('ẞHRIMP.woff') format('woff');
   font-weight: normal;
   font-style: normal;
+  font-feature-settings: 'ss01' on;
 }
 
 @font-face {

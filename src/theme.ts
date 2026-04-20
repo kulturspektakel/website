@@ -225,7 +225,7 @@ const overrides: SystemConfig = {
     },
     'h1,h2,h3': {
       fontFamily: 'Shrimp !important',
-      textTransform: 'uppercase',
+      fontFeatureSettings: '"ss01"',
       lineHeight: '0.95 !important',
     },
   },

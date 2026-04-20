@@ -126,7 +126,7 @@ export default function Header({
               color="black"
               transform="rotate(-2deg)"
               fontSize={[30, 35, 40]}
-              textTransform="uppercase"
+              fontFeatureSettings='"ss01"'
               bg="white"
               whiteSpace="nowrap"
               mt="2"
@@ -178,7 +178,7 @@ export default function Header({
           h="14"
           fontFamily="Shrimp"
           fontSize={['sm', 'lg', 'xl']}
-          textTransform="uppercase"
+          fontFeatureSettings='"ss01"'
           color={isHome ? 'white' : 'brand.900'}
           display={['none', 'flex']}
         >
@@ -202,7 +202,7 @@ export default function Header({
             color="white"
             fontSize="xl"
             fontFamily="Shrimp"
-            textTransform="uppercase"
+            fontFeatureSettings='"ss01"'
             justify="center"
             height="100%"
             gap="8"

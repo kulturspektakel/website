@@ -30,7 +30,7 @@ function LogoCol({filename}: {filename: string}) {
         fontFamily="Shrimp"
         bg="white"
         fontSize="lg"
-        textTransform="uppercase"
+        fontFeatureSettings='"ss01"'
         boxShadow="base"
         h="200px"
         alignItems="center"
@@ -93,7 +93,7 @@ function Logo() {
             fontFamily="Shrimp"
             bg="white"
             fontSize="lg"
-            textTransform="uppercase"
+            fontFeatureSettings='"ss01"'
             boxShadow="base"
           >
             The{' '}

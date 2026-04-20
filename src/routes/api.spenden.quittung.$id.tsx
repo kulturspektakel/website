@@ -103,7 +103,7 @@ export const Route = createFileRoute('/api/spenden/quittung/$id')({
 
         Font.register({
           family: 'Shrimp',
-          src: `${origin}/styles/shrimp-webfont.woff`,
+          src: `${origin}/styles/ẞHRIMP.woff`,
         });
 
         Font.register({
