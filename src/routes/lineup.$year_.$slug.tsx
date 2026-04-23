@@ -1,4 +1,4 @@
-import {HStack, Heading, Text, Link, Box} from '@chakra-ui/react';
+import {HStack, Heading, Text, Link, Box, Separator} from '@chakra-ui/react';
 import DateString, {dateStringComponents} from '../components/DateString';
 import Mark from '../components/Mark';
 import {
@@ -12,7 +12,7 @@ import {
 import Image from '../components/Image';
 import {Gallery} from 'react-photoswipe-gallery';
 import {Tooltip} from '../components/chakra-snippets/tooltip';
-import {createFileRoute} from '@tanstack/react-router';
+import {createFileRoute, Link as RouterLink} from '@tanstack/react-router';
 import {DirectusImage, imageUrl} from '../utils/directusImage';
 import {loader} from '../server/routes/lineup.$year_.$slug';
 import {seo} from '../utils/seo';
@@ -42,6 +42,7 @@ export const Route = createFileRoute('/lineup/$year_/$slug')({
 
 function LineupBand() {
   const band = Route.useLoaderData();
+  const {year} = Route.useParams();
   return (
     <Box mt="6">
       {band.photo && (
@@ -141,7 +142,55 @@ function LineupBand() {
         </HStack>
       )}
       <Text mt="4">{band.shortDescription || band.description}</Text>
+      {(band.previous || band.next) && (
+        <Box clear="both">
+          <Separator mt="8" />
+          <HStack mt="4" justify="space-between" align="stretch" gap="4">
+            <NeighborLink year={year} label="Davor ab" band={band.previous} />
+            <NeighborLink
+              year={year}
+              label="Danach ab"
+              band={band.next}
+              align="right"
+            />
+          </HStack>
+        </Box>
+      )}
     </Box>
+  );
+}
+
+function NeighborLink({
+  year,
+  label,
+  band,
+  align,
+}: {
+  year: string;
+  label: string;
+  band: {name: string; slug: string; startTime: Date} | null;
+  align?: 'right';
+}) {
+  if (!band) {
+    return <Box />;
+  }
+  return (
+    <Link asChild color="inherit" textAlign={align}>
+      <RouterLink to="/lineup/$year/$slug" params={{year, slug: band.slug}}>
+        <Box>
+          <Text fontSize="sm" color="brand.500">
+            {label}{' '}
+            <DateString
+              timeOnly
+              date={band.startTime}
+              options={{hour: '2-digit', minute: '2-digit'}}
+            />
+            &nbsp;Uhr
+          </Text>
+          <Text fontWeight="bold">{band.name}</Text>
+        </Box>
+      </RouterLink>
+    </Link>
   );
 }
 

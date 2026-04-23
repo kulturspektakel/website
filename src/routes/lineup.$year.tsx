@@ -1,8 +1,8 @@
-import {Suspense, useMemo, useState} from 'react';
+import {Suspense, useMemo} from 'react';
 import Day from '../components/lineup/Day';
 import {isSameDay, timeZone} from '../utils/dateUtils';
 import {SegmentedControlOrSelect} from '../components/SegmentedControlOrSelect';
-import {createFileRoute} from '@tanstack/react-router';
+import {createFileRoute, useNavigate} from '@tanstack/react-router';
 import {loader} from '../server/routes/lineup.$year';
 import {seo} from '../utils/seo';
 import {StageInfo} from '../components/lineup/StageInfo';
@@ -11,6 +11,9 @@ import {Center, Spinner} from '@chakra-ui/react';
 export const Route = createFileRoute('/lineup/$year')({
   component: LineupYear,
   loader: async ({params}) => await loader({data: {year: params.year}}),
+  validateSearch: (search: Record<string, unknown>): {stage?: string} => ({
+    stage: typeof search.stage === 'string' ? search.stage : undefined,
+  }),
   head: ({params, loaderData}) =>
     loaderData
       ? seo({
@@ -24,7 +27,8 @@ export const Route = createFileRoute('/lineup/$year')({
 
 function LineupYear() {
   const {areas, bands} = Route.useLoaderData();
-  const [stageFilter, setStageFilter] = useState<string | null>(null);
+  const {stage: stageFilter} = Route.useSearch();
+  const navigate = useNavigate({from: Route.fullPath});
 
   const dateStrings = new Set<string>();
   const days = bands.reduce<Date[]>((acc, band) => {
@@ -52,7 +56,10 @@ function LineupYear() {
       <SegmentedControlOrSelect
         mt={['3', '5']}
         onValueChange={({value}) =>
-          setStageFilter(value === 'ALL' ? null : value)
+          navigate({
+            search: {stage: value && value !== 'ALL' ? value : undefined},
+            replace: true,
+          })
         }
         value={stageFilter ?? 'ALL'}
         items={[
