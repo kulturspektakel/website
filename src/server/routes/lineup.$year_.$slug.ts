@@ -2,6 +2,7 @@ import {createServerFn} from '@tanstack/react-start';
 import {prismaClient} from '../../utils/prismaClient.server';
 import {directusImage} from '../../utils/directusImage.server';
 import {notFound} from '@tanstack/react-router';
+import {isSameDay} from '../../utils/dateUtils';
 
 export const loader = createServerFn()
   .inputValidator((data: {year: string; slug: string}) => data)
@@ -71,7 +72,10 @@ export const loader = createServerFn()
     return {
       ...band,
       photo: await directusImage(band.photo),
-      previous,
-      next,
+      previous:
+        previous && isSameDay(previous.startTime, band.startTime)
+          ? previous
+          : null,
+      next: next && isSameDay(next.startTime, band.startTime) ? next : null,
     };
   });
