@@ -61,6 +61,7 @@ function Lineup() {
                 size="2xs"
                 rounded="full"
                 me="1.5"
+                mt="-1.5"
                 left="0"
                 asChild
               >
@@ -84,6 +85,7 @@ function Lineup() {
                   aria-label="Jahr auswählen"
                   size="2xs"
                   ml="1.5"
+                  mt="-1.5"
                   rounded="full"
                 >
                   <FaChevronDown />
