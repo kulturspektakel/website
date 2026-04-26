@@ -134,6 +134,9 @@ export function useSpotifyPlayer(): SpotifyPlayerState & {
         playOnReadyRef.current = true;
         setActiveTrackId(trackId);
         setLoadingTrackId(trackId);
+        // Sync play() inside the gesture so iOS Safari treats the iframe as
+        // user-activated; the deferred play on `ready` then isn't blocked.
+        controller?.play();
         return;
       }
 
@@ -153,6 +156,9 @@ export function useSpotifyPlayer(): SpotifyPlayerState & {
       isReadyRef.current = false;
       playOnReadyRef.current = true;
       controller.loadUri(`spotify:track:${trackId}`);
+      // Sync play() inside the gesture so iOS Safari treats the iframe as
+      // user-activated; the deferred play on `ready` then isn't blocked.
+      controller.play();
     },
     [activeTrackId, isPlaying, loadingTrackId],
   );
