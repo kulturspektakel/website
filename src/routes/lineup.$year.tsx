@@ -7,6 +7,7 @@ import {loader} from '../server/routes/lineup.$year';
 import {seo} from '../utils/seo';
 import {StageInfo} from '../components/lineup/StageInfo';
 import {Center, Spinner} from '@chakra-ui/react';
+import {useSpotifyPlayer, SpotifyPlayerHost} from '../components/SpotifyPlayer';
 
 export const Route = createFileRoute('/lineup/$year')({
   component: LineupYear,
@@ -51,6 +52,8 @@ function LineupYear() {
     [areas, bands],
   );
 
+  const {hostRef, ...player} = useSpotifyPlayer();
+
   return (
     <>
       <SegmentedControlOrSelect
@@ -80,6 +83,7 @@ function LineupYear() {
         <Day
           key={day.toISOString()}
           day={day}
+          player={player}
           bandsPlaying={bands
             .filter((band) => {
               if (!isSameDay(day, band.startTime)) {
@@ -96,6 +100,7 @@ function LineupYear() {
             }))}
         />
       ))}
+      <SpotifyPlayerHost hostRef={hostRef} />
     </>
   );
 }

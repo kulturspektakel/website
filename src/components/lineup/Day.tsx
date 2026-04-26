@@ -1,13 +1,16 @@
 import {Heading, SimpleGrid} from '@chakra-ui/react';
 import DateString from '../DateString';
 import Band from './Band';
+import type {SpotifyPlayerState} from '../SpotifyPlayer';
 
 export default function Day({
   day,
   bandsPlaying,
+  player,
 }: {
   day: Date;
-  bandsPlaying: Array<React.ComponentProps<typeof Band>>;
+  bandsPlaying: Array<Omit<React.ComponentProps<typeof Band>, 'player'>>;
+  player: SpotifyPlayerState;
 }) {
   return (
     <>
@@ -19,7 +22,7 @@ export default function Day({
       </Heading>
       <SimpleGrid columns={[2, 3]} gap="3">
         {bandsPlaying.map(({band, area}) => (
-          <Band key={band.slug} band={band} area={area} />
+          <Band key={band.slug} band={band} area={area} player={player} />
         ))}
       </SimpleGrid>
     </>

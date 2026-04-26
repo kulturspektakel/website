@@ -262,6 +262,7 @@ model BandPlaying {
   genre            String?
   instagram        String?
   spotify          String?
+  spotifyTrackId   String?
   facebook         String?
   website          String?
   youtube          String?
