@@ -21,15 +21,15 @@ export default function Band({
     slug: string;
     genre: string | null;
     photo: string | null;
-    spotifyTrackId?: string | null;
+    spotifyPreviewUrl?: string | null;
   };
   player: SpotifyPlayerState;
 }) {
-  const trackId = band.spotifyTrackId ?? null;
-  const {activeTrackId, isPlaying, loadingTrackId, toggle} = player;
-  const isLoading = trackId != null && loadingTrackId === trackId;
-  const showPause =
-    trackId != null && activeTrackId === trackId && isPlaying && !isLoading;
+  const previewUrl = band.spotifyPreviewUrl;
+  const {activeUrl, status, toggle} = player;
+  const isCurrent = !!previewUrl && activeUrl === previewUrl;
+  const isLoading = isCurrent && status === 'loading';
+  const showPause = isCurrent && status === 'playing';
 
   return (
     <Card
@@ -49,7 +49,7 @@ export default function Band({
         loading="lazy"
         objectFit="cover"
       />
-      {trackId && (
+      {previewUrl && (
         <Box
           asChild
           position="absolute"
@@ -81,7 +81,7 @@ export default function Band({
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              toggle(trackId);
+              toggle(previewUrl);
             }}
           >
             {isLoading ? (

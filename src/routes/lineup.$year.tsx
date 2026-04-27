@@ -7,7 +7,7 @@ import {loader} from '../server/routes/lineup.$year';
 import {seo} from '../utils/seo';
 import {StageInfo} from '../components/lineup/StageInfo';
 import {Center, Spinner} from '@chakra-ui/react';
-import {useSpotifyPlayer, SpotifyPlayerHost} from '../components/SpotifyPlayer';
+import {useSpotifyPlayer} from '../components/SpotifyPlayer';
 
 export const Route = createFileRoute('/lineup/$year')({
   component: LineupYear,
@@ -52,7 +52,7 @@ function LineupYear() {
     [areas, bands],
   );
 
-  const {hostRef, ...player} = useSpotifyPlayer();
+  const player = useSpotifyPlayer();
 
   return (
     <>
@@ -100,7 +100,6 @@ function LineupYear() {
             }))}
         />
       ))}
-      <SpotifyPlayerHost hostRef={hostRef} />
     </>
   );
 }

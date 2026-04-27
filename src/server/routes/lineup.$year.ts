@@ -15,7 +15,7 @@ export const loader = createServerFn()
         startTime: true,
         genre: true,
         areaId: true,
-        spotifyTrackId: true,
+        spotifyPreviewUrl: true,
       },
       orderBy: {
         startTime: 'asc',

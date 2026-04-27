@@ -261,9 +261,10 @@ model BandPlaying {
   shortDescription String?
   genre            String?
   instagram        String?
-  spotify          String?
-  spotifyTrackId   String?
-  facebook         String?
+  spotify           String?
+  spotifyTrackId    String?
+  spotifyPreviewUrl String?
+  facebook          String?
   website          String?
   youtube          String?
   soundcloud       String?
