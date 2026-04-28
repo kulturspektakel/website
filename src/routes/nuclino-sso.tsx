@@ -8,7 +8,7 @@ import {
   Separator,
   Button,
 } from '@chakra-ui/react';
-import {useState, useMemo} from 'react';
+import {useState, useMemo, useRef, useEffect} from 'react';
 import {FaSlack} from 'react-icons/fa6';
 import {createFileRoute} from '@tanstack/react-router';
 import {useMutation, useQuery} from '@tanstack/react-query';
@@ -33,41 +33,44 @@ export const LOGIN_URL = 'https://api.kulturspektakel.de/saml/login';
 
 function NonceChecker({requestId}: {requestId: string}) {
   const search = Route.useSearch()!;
+  const formRef = useRef<HTMLFormElement>(null);
+  const [nonce, setNonce] = useState<string | null>(null);
 
   useQuery({
     queryKey: ['nonceRequest', requestId],
     queryFn: async () => {
-      const nonce = await checkNonceRequest({
+      const result = await checkNonceRequest({
         data: {nonceRequestId: requestId},
       });
-      if (!nonce) {
-        return null;
+      if (result) {
+        setNonce(result);
       }
-      const url = new URL(LOGIN_URL);
-      Object.entries(search).forEach(([key, value]) =>
-        url.searchParams.set(key, value),
-      );
-      url.searchParams.set('nonce', nonce);
-      window.location.href = url.toString();
-      return nonce;
+      return result ?? null;
     },
     refetchInterval: (query) => (query.state.data ? false : 500),
   });
 
+  useEffect(() => {
+    if (nonce) {
+      formRef.current?.submit();
+    }
+  }, [nonce]);
+
   return (
     <Box mt="2">
+      <form ref={formRef} action={LOGIN_URL} method="get">
+        {Object.entries(search).map(([key, value]) => (
+          <input key={key} type="hidden" name={key} value={String(value)} />
+        ))}
+        {nonce && <input type="hidden" name="nonce" value={nonce} />}
+      </form>
       <Button
         onClick={async () => {
-          const nonce = await checkNonceRequest({
+          const result = await checkNonceRequest({
             data: {nonceRequestId: requestId},
           });
-          if (nonce) {
-            const url = new URL(LOGIN_URL);
-            Object.entries(search).forEach(([key, value]) =>
-              url.searchParams.set(key, value),
-            );
-            url.searchParams.set('nonce', nonce);
-            window.location.href = url.toString();
+          if (result) {
+            setNonce(result);
           }
         }}
       >
