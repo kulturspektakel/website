@@ -51,7 +51,7 @@ function NonceChecker({requestId}: {requestId: string}) {
       window.location.href = url.toString();
       return nonce;
     },
-    refetchInterval: 500,
+    refetchInterval: (query) => (query.state.data ? false : 500),
   });
 
   return (
