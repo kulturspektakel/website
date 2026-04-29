@@ -99,6 +99,20 @@ function RootDoc({children}: Readonly<{children: ReactNode}>) {
     if (typeof window !== 'undefined' && 'navigation' in window) {
       const handler = (event: NavigateEvent) => {
         if (!event.canIntercept) return;
+        // Only intercept same-origin navigations the router can resolve.
+        // Without this, a cross-origin navigation (e.g. form GET to another
+        // host) gets intercepted, the URL bar updates, but the promise below
+        // never resolves because router.onResolved is never fired — leaving
+        // Safari stuck on the old page with the new URL.
+        try {
+          if (
+            new URL(event.destination.url).origin !== window.location.origin
+          ) {
+            return;
+          }
+        } catch {
+          return;
+        }
         event.intercept({
           handler: () =>
             new Promise<void>((resolve) => {
