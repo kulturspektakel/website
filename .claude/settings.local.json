@@ -7,7 +7,9 @@
       "mcp__acp__Write",
       "WebFetch(domain:www.prisma.io)",
       "WebFetch(domain:neon.com)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(ls /Users/dbuchele/website/.env*)",
+      "Bash(ls /Users/dbuchele/website/*.config.*)"
     ]
   }
 }
