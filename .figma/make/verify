@@ -1,0 +1,21 @@
+#!/bin/bash
+set -euo pipefail
+
+TIMEOUT=120
+INTERVAL=2
+ELAPSED=0
+URL="http://localhost:3000"
+
+echo "Waiting for dev server at $URL..."
+
+while [ $ELAPSED -lt $TIMEOUT ]; do
+  if curl -sf "$URL" > /dev/null 2>&1; then
+    echo "Dev server is ready."
+    exit 0
+  fi
+  sleep $INTERVAL
+  ELAPSED=$((ELAPSED + INTERVAL))
+done
+
+echo "Dev server did not start within ${TIMEOUT}s."
+exit 1

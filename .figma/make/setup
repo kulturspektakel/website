@@ -1,0 +1,16 @@
+#!/bin/bash
+set -euo pipefail
+
+# Check for Node.js
+if ! command -v node &> /dev/null; then
+  echo "Node.js is not installed. Please install Node.js 20+ first."
+  exit 1
+fi
+
+# Check for yarn
+if ! command -v yarn &> /dev/null; then
+  echo "Yarn is not installed. Installing via npm..."
+  npm install -g yarn
+fi
+
+echo "System dependencies OK."
