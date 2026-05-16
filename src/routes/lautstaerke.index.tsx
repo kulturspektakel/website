@@ -6,6 +6,7 @@ import {
   decodeDb,
   useLautstaerkeCtx,
 } from '../lautstaerke/context';
+import {BatteryChip} from '../lautstaerke/BatteryChip';
 
 export const Route = createFileRoute('/lautstaerke/')({
   component: DeviceList,
@@ -46,6 +47,7 @@ function DeviceListItems({
         const state = ctx.devices[name];
         const active = ctx.now - state.lastSeen < ACTIVE_WINDOW_MS;
         const laeq = decodeDb(state.latest.laeq1s).toFixed(1);
+        const laeq15m = decodeDb(state.laeq15m).toFixed(1);
         return (
           <Box
             key={name}
@@ -66,8 +68,20 @@ function DeviceListItems({
                 <Text fontFamily="mono" flex="1">
                   {name}
                 </Text>
+                {state.batteryMv != null && (
+                  <BatteryChip mv={state.batteryMv} />
+                )}
                 <Text fontFamily="mono" fontWeight="bold">
                   {laeq} dB
+                </Text>
+                <Text
+                  fontFamily="mono"
+                  fontSize="xs"
+                  color="gray.500"
+                  minW="14"
+                  textAlign="right"
+                >
+                  15 m: {laeq15m}
                 </Text>
               </HStack>
             </Link>

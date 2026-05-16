@@ -2,7 +2,10 @@ import {createFileRoute, Outlet} from '@tanstack/react-router';
 import {useEffect, useRef, useState} from 'react';
 import mqtt from 'mqtt';
 import 'uplot/dist/uPlot.min.css';
-import {NoiseRecording, type Record as NoiseRecord} from '../proto/noise';
+import {
+  NoiseRecording,
+  type NoiseRecording_Record as NoiseRecord,
+} from '../proto/noise';
 import {seo} from '../utils/seo';
 import {
   LautstaerkeContext,
@@ -66,13 +69,14 @@ function LautstaerkeLayout() {
       const receiveTime = Date.now();
       const deviceName = topic.split('/')[1];
       if (!deviceName) return;
-      let record: NoiseRecord | undefined;
+      let decoded: NoiseRecording;
       try {
-        record = NoiseRecording.decode(payload).records[0];
+        decoded = NoiseRecording.decode(payload);
       } catch (e) {
         console.error('[lautstärke] decode error', e);
         return;
       }
+      const record = decoded.records[0];
       if (!record) return;
 
       let data = deviceDataRef.current[deviceName];
@@ -81,11 +85,17 @@ function LautstaerkeLayout() {
         deviceDataRef.current[deviceName] = data;
       }
       data[0].push(receiveTime / 1000);
-      SERIES.forEach((s, j) => data[j + 1].push(decodeDb(record![s.key])));
+      SERIES.forEach((s, j) => data[j + 1].push(decodeDb(record[s.key])));
 
       setDevices((prev) => ({
         ...prev,
-        [deviceName]: {lastSeen: receiveTime, latest: record!},
+        [deviceName]: {
+          lastSeen: receiveTime,
+          latest: record,
+          laeq15m: decoded.laeq15m,
+          lceq15m: decoded.lceq15m,
+          batteryMv: decoded.batteryMv,
+        },
       }));
       bus.dispatchEvent(
         new CustomEvent(`record:${deviceName}`, {

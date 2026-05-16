@@ -11,7 +11,8 @@ import {
   decodeDb,
   useLautstaerkeCtx,
 } from '../lautstaerke/context';
-import {type Record as NoiseRecord} from '../proto/noise';
+import {BatteryChip} from '../lautstaerke/BatteryChip';
+import {type NoiseRecording_Record as NoiseRecord} from '../proto/noise';
 import {seo} from '../utils/seo';
 
 export const Route = createFileRoute('/lautstaerke/$device')({
@@ -129,6 +130,14 @@ function BandChart({record}: {record: NoiseRecord | null}) {
 
 function DeviceDetail() {
   const {device} = Route.useParams();
+  return (
+    <MqttGate>
+      <DeviceDetailContent device={device} />
+    </MqttGate>
+  );
+}
+
+function DeviceDetailContent({device}: {device: string}) {
   const ctx = useLautstaerkeCtx();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const plotRef = useRef<uPlot | null>(null);
@@ -214,13 +223,19 @@ function DeviceDetail() {
     return () => ctx.bus.removeEventListener(`record:${device}`, handler);
   }, [device, ctx.bus, ctx.deviceData]);
 
+  const deviceState = ctx.devices[device];
+
   return (
-    <MqttGate>
-      <Box>
-        <Heading as="h1" size="2xl" mb="4" fontFamily="mono">
+    <Box>
+      <HStack mb="4" align="center">
+        <Heading as="h1" size="2xl" fontFamily="mono">
           {device}
         </Heading>
-      <HStack gap="2" mb="3" align="flex-start" w="full">
+        {deviceState?.batteryMv != null && (
+          <BatteryChip mv={deviceState.batteryMv} />
+        )}
+      </HStack>
+      <HStack gap="2" mb="2" align="flex-start" w="full">
         {SERIES.map((s) => (
           <VStack key={s.key} gap="0" align="center" flex="1">
             <Text
@@ -237,12 +252,22 @@ function DeviceDetail() {
           </VStack>
         ))}
       </HStack>
+      {deviceState && (
+        <HStack
+          gap="4"
+          mb="3"
+          fontSize="xs"
+          fontFamily="mono"
+          color="gray.500"
+        >
+          <Text>LAeq 15 m: {decodeDb(deviceState.laeq15m).toFixed(1)} dB</Text>
+          <Text>LCeq 15 m: {decodeDb(deviceState.lceq15m).toFixed(1)} dB</Text>
+        </HStack>
+      )}
       <Box ref={containerRef} w="full" />
-
-        <Box mt="6">
-          <BandChart record={bandRecord} />
-        </Box>
+      <Box mt="6">
+        <BandChart record={bandRecord} />
       </Box>
-    </MqttGate>
+    </Box>
   );
 }

@@ -5,7 +5,7 @@ import {
   type ReactNode,
 } from 'react';
 import {Text} from '@chakra-ui/react';
-import {type Record as NoiseRecord} from '../proto/noise';
+import {type NoiseRecording_Record as NoiseRecord} from '../proto/noise';
 
 export const TOPIC = 'noise/+/record';
 export const ACTIVE_WINDOW_MS = 10_000;
@@ -27,9 +27,15 @@ export const SERIES = [
   stroke: string;
 }>;
 
-export const decodeDb = (v: number) => v / 2 + 20;
+export const decodeDb = (byte: number) => 20 + byte / 2;
 
-export type DeviceState = {lastSeen: number; latest: NoiseRecord};
+export type DeviceState = {
+  lastSeen: number;
+  latest: NoiseRecord;
+  laeq15m: number;
+  lceq15m: number;
+  batteryMv?: number;
+};
 export type DeviceBuffer = number[][];
 
 export type LautstaerkeCtx = {

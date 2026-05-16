@@ -9,7 +9,18 @@ import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 
 export const protobufPackage = "";
 
-export interface Record {
+export interface NoiseRecording {
+  /** 1 (MQTT/BLE live) or up to 300 (file) */
+  records: NoiseRecording_Record[];
+  /** sliding-window LAeq over last 15 min, */
+  laeq15m: number;
+  /** same encoding as Record.laeq_1s (= (dB - 20) * 2) */
+  lceq15m: number;
+  /** battery voltage in millivolts; only set for */
+  batteryMv?: number | undefined;
+}
+
+export interface NoiseRecording_Record {
   /** monotonic; gap detection */
   seqNo: number;
   /** 31 bytes; (dB - 20) * 2 per band */
@@ -22,19 +33,134 @@ export interface Record {
   lcpeak1s: number;
 }
 
-export interface NoiseRecording {
-  /** ZigZag-encoded for compact negative values */
-  calibrationOffsetDbX100: number;
-  /** 1 (MQTT live) or up to 300 (file) */
-  records: Record[];
+function createBaseNoiseRecording(): NoiseRecording {
+  return { records: [], laeq15m: 0, lceq15m: 0, batteryMv: undefined };
 }
 
-function createBaseRecord(): Record {
+export const NoiseRecording: MessageFns<NoiseRecording> = {
+  encode(message: NoiseRecording, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    for (const v of message.records) {
+      NoiseRecording_Record.encode(v!, writer.uint32(18).fork()).join();
+    }
+    if (message.laeq15m !== 0) {
+      writer.uint32(24).uint32(message.laeq15m);
+    }
+    if (message.lceq15m !== 0) {
+      writer.uint32(32).uint32(message.lceq15m);
+    }
+    if (message.batteryMv !== undefined) {
+      writer.uint32(40).uint32(message.batteryMv);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): NoiseRecording {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseNoiseRecording();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.records.push(NoiseRecording_Record.decode(reader, reader.uint32()));
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.laeq15m = reader.uint32();
+          continue;
+        }
+        case 4: {
+          if (tag !== 32) {
+            break;
+          }
+
+          message.lceq15m = reader.uint32();
+          continue;
+        }
+        case 5: {
+          if (tag !== 40) {
+            break;
+          }
+
+          message.batteryMv = reader.uint32();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): NoiseRecording {
+    return {
+      records: globalThis.Array.isArray(object?.records)
+        ? object.records.map((e: any) => NoiseRecording_Record.fromJSON(e))
+        : [],
+      laeq15m: isSet(object.laeq15m)
+        ? globalThis.Number(object.laeq15m)
+        : isSet(object.laeq_15m)
+        ? globalThis.Number(object.laeq_15m)
+        : 0,
+      lceq15m: isSet(object.lceq15m)
+        ? globalThis.Number(object.lceq15m)
+        : isSet(object.lceq_15m)
+        ? globalThis.Number(object.lceq_15m)
+        : 0,
+      batteryMv: isSet(object.batteryMv)
+        ? globalThis.Number(object.batteryMv)
+        : isSet(object.battery_mv)
+        ? globalThis.Number(object.battery_mv)
+        : undefined,
+    };
+  },
+
+  toJSON(message: NoiseRecording): unknown {
+    const obj: any = {};
+    if (message.records?.length) {
+      obj.records = message.records.map((e) => NoiseRecording_Record.toJSON(e));
+    }
+    if (message.laeq15m !== 0) {
+      obj.laeq15m = Math.round(message.laeq15m);
+    }
+    if (message.lceq15m !== 0) {
+      obj.lceq15m = Math.round(message.lceq15m);
+    }
+    if (message.batteryMv !== undefined) {
+      obj.batteryMv = Math.round(message.batteryMv);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<NoiseRecording>, I>>(base?: I): NoiseRecording {
+    return NoiseRecording.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<NoiseRecording>, I>>(object: I): NoiseRecording {
+    const message = createBaseNoiseRecording();
+    message.records = object.records?.map((e) => NoiseRecording_Record.fromPartial(e)) || [];
+    message.laeq15m = object.laeq15m ?? 0;
+    message.lceq15m = object.lceq15m ?? 0;
+    message.batteryMv = object.batteryMv ?? undefined;
+    return message;
+  },
+};
+
+function createBaseNoiseRecording_Record(): NoiseRecording_Record {
   return { seqNo: 0, bands: new Uint8Array(0), laeq1s: 0, lceq1s: 0, lafmax1s: 0, lcfmax1s: 0, lcpeak1s: 0 };
 }
 
-export const Record: MessageFns<Record> = {
-  encode(message: Record, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export const NoiseRecording_Record: MessageFns<NoiseRecording_Record> = {
+  encode(message: NoiseRecording_Record, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.seqNo !== 0) {
       writer.uint32(8).uint32(message.seqNo);
     }
@@ -59,10 +185,10 @@ export const Record: MessageFns<Record> = {
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): Record {
+  decode(input: BinaryReader | Uint8Array, length?: number): NoiseRecording_Record {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseRecord();
+    const message = createBaseNoiseRecording_Record();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -131,7 +257,7 @@ export const Record: MessageFns<Record> = {
     return message;
   },
 
-  fromJSON(object: any): Record {
+  fromJSON(object: any): NoiseRecording_Record {
     return {
       seqNo: isSet(object.seqNo)
         ? globalThis.Number(object.seqNo)
@@ -167,7 +293,7 @@ export const Record: MessageFns<Record> = {
     };
   },
 
-  toJSON(message: Record): unknown {
+  toJSON(message: NoiseRecording_Record): unknown {
     const obj: any = {};
     if (message.seqNo !== 0) {
       obj.seqNo = Math.round(message.seqNo);
@@ -193,11 +319,11 @@ export const Record: MessageFns<Record> = {
     return obj;
   },
 
-  create<I extends Exact<DeepPartial<Record>, I>>(base?: I): Record {
-    return Record.fromPartial(base ?? ({} as any));
+  create<I extends Exact<DeepPartial<NoiseRecording_Record>, I>>(base?: I): NoiseRecording_Record {
+    return NoiseRecording_Record.fromPartial(base ?? ({} as any));
   },
-  fromPartial<I extends Exact<DeepPartial<Record>, I>>(object: I): Record {
-    const message = createBaseRecord();
+  fromPartial<I extends Exact<DeepPartial<NoiseRecording_Record>, I>>(object: I): NoiseRecording_Record {
+    const message = createBaseNoiseRecording_Record();
     message.seqNo = object.seqNo ?? 0;
     message.bands = object.bands ?? new Uint8Array(0);
     message.laeq1s = object.laeq1s ?? 0;
@@ -205,86 +331,6 @@ export const Record: MessageFns<Record> = {
     message.lafmax1s = object.lafmax1s ?? 0;
     message.lcfmax1s = object.lcfmax1s ?? 0;
     message.lcpeak1s = object.lcpeak1s ?? 0;
-    return message;
-  },
-};
-
-function createBaseNoiseRecording(): NoiseRecording {
-  return { calibrationOffsetDbX100: 0, records: [] };
-}
-
-export const NoiseRecording: MessageFns<NoiseRecording> = {
-  encode(message: NoiseRecording, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.calibrationOffsetDbX100 !== 0) {
-      writer.uint32(8).sint32(message.calibrationOffsetDbX100);
-    }
-    for (const v of message.records) {
-      Record.encode(v!, writer.uint32(18).fork()).join();
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): NoiseRecording {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseNoiseRecording();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 8) {
-            break;
-          }
-
-          message.calibrationOffsetDbX100 = reader.sint32();
-          continue;
-        }
-        case 2: {
-          if (tag !== 18) {
-            break;
-          }
-
-          message.records.push(Record.decode(reader, reader.uint32()));
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-
-  fromJSON(object: any): NoiseRecording {
-    return {
-      calibrationOffsetDbX100: isSet(object.calibrationOffsetDbX100)
-        ? globalThis.Number(object.calibrationOffsetDbX100)
-        : isSet(object.calibration_offset_db_x100)
-        ? globalThis.Number(object.calibration_offset_db_x100)
-        : 0,
-      records: globalThis.Array.isArray(object?.records) ? object.records.map((e: any) => Record.fromJSON(e)) : [],
-    };
-  },
-
-  toJSON(message: NoiseRecording): unknown {
-    const obj: any = {};
-    if (message.calibrationOffsetDbX100 !== 0) {
-      obj.calibrationOffsetDbX100 = Math.round(message.calibrationOffsetDbX100);
-    }
-    if (message.records?.length) {
-      obj.records = message.records.map((e) => Record.toJSON(e));
-    }
-    return obj;
-  },
-
-  create<I extends Exact<DeepPartial<NoiseRecording>, I>>(base?: I): NoiseRecording {
-    return NoiseRecording.fromPartial(base ?? ({} as any));
-  },
-  fromPartial<I extends Exact<DeepPartial<NoiseRecording>, I>>(object: I): NoiseRecording {
-    const message = createBaseNoiseRecording();
-    message.calibrationOffsetDbX100 = object.calibrationOffsetDbX100 ?? 0;
-    message.records = object.records?.map((e) => Record.fromPartial(e)) || [];
     return message;
   },
 };
