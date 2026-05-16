@@ -219,6 +219,7 @@ export type DeviceWhereInput = {
   productList?: Prisma.XOR<Prisma.ProductListNullableScalarRelationFilter, Prisma.ProductListWhereInput> | null
   Order?: Prisma.OrderListRelationFilter
   DeviceLog?: Prisma.DeviceLogListRelationFilter
+  deviceLocations?: Prisma.DeviceLocationListRelationFilter
 }
 
 export type DeviceOrderByWithRelationInput = {
@@ -230,6 +231,7 @@ export type DeviceOrderByWithRelationInput = {
   productList?: Prisma.ProductListOrderByWithRelationInput
   Order?: Prisma.OrderOrderByRelationAggregateInput
   DeviceLog?: Prisma.DeviceLogOrderByRelationAggregateInput
+  deviceLocations?: Prisma.DeviceLocationOrderByRelationAggregateInput
   _relevance?: Prisma.DeviceOrderByRelevanceInput
 }
 
@@ -245,6 +247,7 @@ export type DeviceWhereUniqueInput = Prisma.AtLeast<{
   productList?: Prisma.XOR<Prisma.ProductListNullableScalarRelationFilter, Prisma.ProductListWhereInput> | null
   Order?: Prisma.OrderListRelationFilter
   DeviceLog?: Prisma.DeviceLogListRelationFilter
+  deviceLocations?: Prisma.DeviceLocationListRelationFilter
 }, "id">
 
 export type DeviceOrderByWithAggregationInput = {
@@ -279,6 +282,7 @@ export type DeviceCreateInput = {
   productList?: Prisma.ProductListCreateNestedOneWithoutDeviceInput
   Order?: Prisma.OrderCreateNestedManyWithoutDeviceInput
   DeviceLog?: Prisma.DeviceLogCreateNestedManyWithoutDeviceInput
+  deviceLocations?: Prisma.DeviceLocationCreateNestedManyWithoutDeviceInput
 }
 
 export type DeviceUncheckedCreateInput = {
@@ -289,6 +293,7 @@ export type DeviceUncheckedCreateInput = {
   type: $Enums.DeviceType
   Order?: Prisma.OrderUncheckedCreateNestedManyWithoutDeviceInput
   DeviceLog?: Prisma.DeviceLogUncheckedCreateNestedManyWithoutDeviceInput
+  deviceLocations?: Prisma.DeviceLocationUncheckedCreateNestedManyWithoutDeviceInput
 }
 
 export type DeviceUpdateInput = {
@@ -299,6 +304,7 @@ export type DeviceUpdateInput = {
   productList?: Prisma.ProductListUpdateOneWithoutDeviceNestedInput
   Order?: Prisma.OrderUpdateManyWithoutDeviceNestedInput
   DeviceLog?: Prisma.DeviceLogUpdateManyWithoutDeviceNestedInput
+  deviceLocations?: Prisma.DeviceLocationUpdateManyWithoutDeviceNestedInput
 }
 
 export type DeviceUncheckedUpdateInput = {
@@ -309,6 +315,7 @@ export type DeviceUncheckedUpdateInput = {
   type?: Prisma.EnumDeviceTypeFieldUpdateOperationsInput | $Enums.DeviceType
   Order?: Prisma.OrderUncheckedUpdateManyWithoutDeviceNestedInput
   DeviceLog?: Prisma.DeviceLogUncheckedUpdateManyWithoutDeviceNestedInput
+  deviceLocations?: Prisma.DeviceLocationUncheckedUpdateManyWithoutDeviceNestedInput
 }
 
 export type DeviceCreateManyInput = {
@@ -476,6 +483,20 @@ export type DeviceUpdateOneRequiredWithoutDeviceLogNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.DeviceUpdateToOneWithWhereWithoutDeviceLogInput, Prisma.DeviceUpdateWithoutDeviceLogInput>, Prisma.DeviceUncheckedUpdateWithoutDeviceLogInput>
 }
 
+export type DeviceCreateNestedOneWithoutDeviceLocationsInput = {
+  create?: Prisma.XOR<Prisma.DeviceCreateWithoutDeviceLocationsInput, Prisma.DeviceUncheckedCreateWithoutDeviceLocationsInput>
+  connectOrCreate?: Prisma.DeviceCreateOrConnectWithoutDeviceLocationsInput
+  connect?: Prisma.DeviceWhereUniqueInput
+}
+
+export type DeviceUpdateOneRequiredWithoutDeviceLocationsNestedInput = {
+  create?: Prisma.XOR<Prisma.DeviceCreateWithoutDeviceLocationsInput, Prisma.DeviceUncheckedCreateWithoutDeviceLocationsInput>
+  connectOrCreate?: Prisma.DeviceCreateOrConnectWithoutDeviceLocationsInput
+  upsert?: Prisma.DeviceUpsertWithoutDeviceLocationsInput
+  connect?: Prisma.DeviceWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.DeviceUpdateToOneWithWhereWithoutDeviceLocationsInput, Prisma.DeviceUpdateWithoutDeviceLocationsInput>, Prisma.DeviceUncheckedUpdateWithoutDeviceLocationsInput>
+}
+
 export type DeviceCreateWithoutProductListInput = {
   id: string
   lastSeen?: Date | string | null
@@ -483,6 +504,7 @@ export type DeviceCreateWithoutProductListInput = {
   type: $Enums.DeviceType
   Order?: Prisma.OrderCreateNestedManyWithoutDeviceInput
   DeviceLog?: Prisma.DeviceLogCreateNestedManyWithoutDeviceInput
+  deviceLocations?: Prisma.DeviceLocationCreateNestedManyWithoutDeviceInput
 }
 
 export type DeviceUncheckedCreateWithoutProductListInput = {
@@ -492,6 +514,7 @@ export type DeviceUncheckedCreateWithoutProductListInput = {
   type: $Enums.DeviceType
   Order?: Prisma.OrderUncheckedCreateNestedManyWithoutDeviceInput
   DeviceLog?: Prisma.DeviceLogUncheckedCreateNestedManyWithoutDeviceInput
+  deviceLocations?: Prisma.DeviceLocationUncheckedCreateNestedManyWithoutDeviceInput
 }
 
 export type DeviceCreateOrConnectWithoutProductListInput = {
@@ -538,6 +561,7 @@ export type DeviceCreateWithoutOrderInput = {
   type: $Enums.DeviceType
   productList?: Prisma.ProductListCreateNestedOneWithoutDeviceInput
   DeviceLog?: Prisma.DeviceLogCreateNestedManyWithoutDeviceInput
+  deviceLocations?: Prisma.DeviceLocationCreateNestedManyWithoutDeviceInput
 }
 
 export type DeviceUncheckedCreateWithoutOrderInput = {
@@ -547,6 +571,7 @@ export type DeviceUncheckedCreateWithoutOrderInput = {
   softwareVersion?: string | null
   type: $Enums.DeviceType
   DeviceLog?: Prisma.DeviceLogUncheckedCreateNestedManyWithoutDeviceInput
+  deviceLocations?: Prisma.DeviceLocationUncheckedCreateNestedManyWithoutDeviceInput
 }
 
 export type DeviceCreateOrConnectWithoutOrderInput = {
@@ -572,6 +597,7 @@ export type DeviceUpdateWithoutOrderInput = {
   type?: Prisma.EnumDeviceTypeFieldUpdateOperationsInput | $Enums.DeviceType
   productList?: Prisma.ProductListUpdateOneWithoutDeviceNestedInput
   DeviceLog?: Prisma.DeviceLogUpdateManyWithoutDeviceNestedInput
+  deviceLocations?: Prisma.DeviceLocationUpdateManyWithoutDeviceNestedInput
 }
 
 export type DeviceUncheckedUpdateWithoutOrderInput = {
@@ -581,6 +607,7 @@ export type DeviceUncheckedUpdateWithoutOrderInput = {
   softwareVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumDeviceTypeFieldUpdateOperationsInput | $Enums.DeviceType
   DeviceLog?: Prisma.DeviceLogUncheckedUpdateManyWithoutDeviceNestedInput
+  deviceLocations?: Prisma.DeviceLocationUncheckedUpdateManyWithoutDeviceNestedInput
 }
 
 export type DeviceCreateWithoutDeviceLogInput = {
@@ -590,6 +617,7 @@ export type DeviceCreateWithoutDeviceLogInput = {
   type: $Enums.DeviceType
   productList?: Prisma.ProductListCreateNestedOneWithoutDeviceInput
   Order?: Prisma.OrderCreateNestedManyWithoutDeviceInput
+  deviceLocations?: Prisma.DeviceLocationCreateNestedManyWithoutDeviceInput
 }
 
 export type DeviceUncheckedCreateWithoutDeviceLogInput = {
@@ -599,6 +627,7 @@ export type DeviceUncheckedCreateWithoutDeviceLogInput = {
   softwareVersion?: string | null
   type: $Enums.DeviceType
   Order?: Prisma.OrderUncheckedCreateNestedManyWithoutDeviceInput
+  deviceLocations?: Prisma.DeviceLocationUncheckedCreateNestedManyWithoutDeviceInput
 }
 
 export type DeviceCreateOrConnectWithoutDeviceLogInput = {
@@ -624,6 +653,7 @@ export type DeviceUpdateWithoutDeviceLogInput = {
   type?: Prisma.EnumDeviceTypeFieldUpdateOperationsInput | $Enums.DeviceType
   productList?: Prisma.ProductListUpdateOneWithoutDeviceNestedInput
   Order?: Prisma.OrderUpdateManyWithoutDeviceNestedInput
+  deviceLocations?: Prisma.DeviceLocationUpdateManyWithoutDeviceNestedInput
 }
 
 export type DeviceUncheckedUpdateWithoutDeviceLogInput = {
@@ -633,6 +663,63 @@ export type DeviceUncheckedUpdateWithoutDeviceLogInput = {
   softwareVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumDeviceTypeFieldUpdateOperationsInput | $Enums.DeviceType
   Order?: Prisma.OrderUncheckedUpdateManyWithoutDeviceNestedInput
+  deviceLocations?: Prisma.DeviceLocationUncheckedUpdateManyWithoutDeviceNestedInput
+}
+
+export type DeviceCreateWithoutDeviceLocationsInput = {
+  id: string
+  lastSeen?: Date | string | null
+  softwareVersion?: string | null
+  type: $Enums.DeviceType
+  productList?: Prisma.ProductListCreateNestedOneWithoutDeviceInput
+  Order?: Prisma.OrderCreateNestedManyWithoutDeviceInput
+  DeviceLog?: Prisma.DeviceLogCreateNestedManyWithoutDeviceInput
+}
+
+export type DeviceUncheckedCreateWithoutDeviceLocationsInput = {
+  id: string
+  lastSeen?: Date | string | null
+  productListId?: number | null
+  softwareVersion?: string | null
+  type: $Enums.DeviceType
+  Order?: Prisma.OrderUncheckedCreateNestedManyWithoutDeviceInput
+  DeviceLog?: Prisma.DeviceLogUncheckedCreateNestedManyWithoutDeviceInput
+}
+
+export type DeviceCreateOrConnectWithoutDeviceLocationsInput = {
+  where: Prisma.DeviceWhereUniqueInput
+  create: Prisma.XOR<Prisma.DeviceCreateWithoutDeviceLocationsInput, Prisma.DeviceUncheckedCreateWithoutDeviceLocationsInput>
+}
+
+export type DeviceUpsertWithoutDeviceLocationsInput = {
+  update: Prisma.XOR<Prisma.DeviceUpdateWithoutDeviceLocationsInput, Prisma.DeviceUncheckedUpdateWithoutDeviceLocationsInput>
+  create: Prisma.XOR<Prisma.DeviceCreateWithoutDeviceLocationsInput, Prisma.DeviceUncheckedCreateWithoutDeviceLocationsInput>
+  where?: Prisma.DeviceWhereInput
+}
+
+export type DeviceUpdateToOneWithWhereWithoutDeviceLocationsInput = {
+  where?: Prisma.DeviceWhereInput
+  data: Prisma.XOR<Prisma.DeviceUpdateWithoutDeviceLocationsInput, Prisma.DeviceUncheckedUpdateWithoutDeviceLocationsInput>
+}
+
+export type DeviceUpdateWithoutDeviceLocationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  lastSeen?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  softwareVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.EnumDeviceTypeFieldUpdateOperationsInput | $Enums.DeviceType
+  productList?: Prisma.ProductListUpdateOneWithoutDeviceNestedInput
+  Order?: Prisma.OrderUpdateManyWithoutDeviceNestedInput
+  DeviceLog?: Prisma.DeviceLogUpdateManyWithoutDeviceNestedInput
+}
+
+export type DeviceUncheckedUpdateWithoutDeviceLocationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  lastSeen?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  productListId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  softwareVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.EnumDeviceTypeFieldUpdateOperationsInput | $Enums.DeviceType
+  Order?: Prisma.OrderUncheckedUpdateManyWithoutDeviceNestedInput
+  DeviceLog?: Prisma.DeviceLogUncheckedUpdateManyWithoutDeviceNestedInput
 }
 
 export type DeviceCreateManyProductListInput = {
@@ -649,6 +736,7 @@ export type DeviceUpdateWithoutProductListInput = {
   type?: Prisma.EnumDeviceTypeFieldUpdateOperationsInput | $Enums.DeviceType
   Order?: Prisma.OrderUpdateManyWithoutDeviceNestedInput
   DeviceLog?: Prisma.DeviceLogUpdateManyWithoutDeviceNestedInput
+  deviceLocations?: Prisma.DeviceLocationUpdateManyWithoutDeviceNestedInput
 }
 
 export type DeviceUncheckedUpdateWithoutProductListInput = {
@@ -658,6 +746,7 @@ export type DeviceUncheckedUpdateWithoutProductListInput = {
   type?: Prisma.EnumDeviceTypeFieldUpdateOperationsInput | $Enums.DeviceType
   Order?: Prisma.OrderUncheckedUpdateManyWithoutDeviceNestedInput
   DeviceLog?: Prisma.DeviceLogUncheckedUpdateManyWithoutDeviceNestedInput
+  deviceLocations?: Prisma.DeviceLocationUncheckedUpdateManyWithoutDeviceNestedInput
 }
 
 export type DeviceUncheckedUpdateManyWithoutProductListInput = {
@@ -675,11 +764,13 @@ export type DeviceUncheckedUpdateManyWithoutProductListInput = {
 export type DeviceCountOutputType = {
   Order: number
   DeviceLog: number
+  deviceLocations: number
 }
 
 export type DeviceCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   Order?: boolean | DeviceCountOutputTypeCountOrderArgs
   DeviceLog?: boolean | DeviceCountOutputTypeCountDeviceLogArgs
+  deviceLocations?: boolean | DeviceCountOutputTypeCountDeviceLocationsArgs
 }
 
 /**
@@ -706,6 +797,13 @@ export type DeviceCountOutputTypeCountDeviceLogArgs<ExtArgs extends runtime.Type
   where?: Prisma.DeviceLogWhereInput
 }
 
+/**
+ * DeviceCountOutputType without action
+ */
+export type DeviceCountOutputTypeCountDeviceLocationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.DeviceLocationWhereInput
+}
+
 
 export type DeviceSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -716,6 +814,7 @@ export type DeviceSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   productList?: boolean | Prisma.Device$productListArgs<ExtArgs>
   Order?: boolean | Prisma.Device$OrderArgs<ExtArgs>
   DeviceLog?: boolean | Prisma.Device$DeviceLogArgs<ExtArgs>
+  deviceLocations?: boolean | Prisma.Device$deviceLocationsArgs<ExtArgs>
   _count?: boolean | Prisma.DeviceCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["device"]>
 
@@ -750,6 +849,7 @@ export type DeviceInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   productList?: boolean | Prisma.Device$productListArgs<ExtArgs>
   Order?: boolean | Prisma.Device$OrderArgs<ExtArgs>
   DeviceLog?: boolean | Prisma.Device$DeviceLogArgs<ExtArgs>
+  deviceLocations?: boolean | Prisma.Device$deviceLocationsArgs<ExtArgs>
   _count?: boolean | Prisma.DeviceCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type DeviceIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -765,6 +865,7 @@ export type $DevicePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
     productList: Prisma.$ProductListPayload<ExtArgs> | null
     Order: Prisma.$OrderPayload<ExtArgs>[]
     DeviceLog: Prisma.$DeviceLogPayload<ExtArgs>[]
+    deviceLocations: Prisma.$DeviceLocationPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1169,6 +1270,7 @@ export interface Prisma__DeviceClient<T, Null = never, ExtArgs extends runtime.T
   productList<T extends Prisma.Device$productListArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Device$productListArgs<ExtArgs>>): Prisma.Prisma__ProductListClient<runtime.Types.Result.GetResult<Prisma.$ProductListPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   Order<T extends Prisma.Device$OrderArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Device$OrderArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$OrderPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   DeviceLog<T extends Prisma.Device$DeviceLogArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Device$DeviceLogArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DeviceLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  deviceLocations<T extends Prisma.Device$deviceLocationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Device$deviceLocationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DeviceLocationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1668,6 +1770,30 @@ export type Device$DeviceLogArgs<ExtArgs extends runtime.Types.Extensions.Intern
   take?: number
   skip?: number
   distinct?: Prisma.DeviceLogScalarFieldEnum | Prisma.DeviceLogScalarFieldEnum[]
+}
+
+/**
+ * Device.deviceLocations
+ */
+export type Device$deviceLocationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the DeviceLocation
+   */
+  select?: Prisma.DeviceLocationSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the DeviceLocation
+   */
+  omit?: Prisma.DeviceLocationOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.DeviceLocationInclude<ExtArgs> | null
+  where?: Prisma.DeviceLocationWhereInput
+  orderBy?: Prisma.DeviceLocationOrderByWithRelationInput | Prisma.DeviceLocationOrderByWithRelationInput[]
+  cursor?: Prisma.DeviceLocationWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.DeviceLocationScalarFieldEnum | Prisma.DeviceLocationScalarFieldEnum[]
 }
 
 /**

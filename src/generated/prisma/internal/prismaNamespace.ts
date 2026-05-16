@@ -413,7 +413,8 @@ export const ModelName = {
   ItemLocation: 'ItemLocation',
   ViewerLocation: 'ViewerLocation',
   ShortDomainRedirect: 'ShortDomainRedirect',
-  Donation: 'Donation'
+  Donation: 'Donation',
+  DeviceLocation: 'DeviceLocation'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -429,7 +430,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "viewer" | "area" | "areaOpeningHour" | "page" | "productList" | "product" | "productAdditives" | "device" | "order" | "orderItem" | "cardTransaction" | "crewCard" | "deviceLog" | "bandApplication" | "bandApplicationTag" | "bandApplicationRating" | "bandApplicationComment" | "event" | "bandPlaying" | "nonce" | "nonceRequest" | "gmailReminders" | "devicePrivilegeToken" | "deviceConfigVersion" | "news" | "twoFactor" | "itemLocation" | "viewerLocation" | "shortDomainRedirect" | "donation"
+    modelProps: "viewer" | "area" | "areaOpeningHour" | "page" | "productList" | "product" | "productAdditives" | "device" | "order" | "orderItem" | "cardTransaction" | "crewCard" | "deviceLog" | "bandApplication" | "bandApplicationTag" | "bandApplicationRating" | "bandApplicationComment" | "event" | "bandPlaying" | "nonce" | "nonceRequest" | "gmailReminders" | "devicePrivilegeToken" | "deviceConfigVersion" | "news" | "twoFactor" | "itemLocation" | "viewerLocation" | "shortDomainRedirect" | "donation" | "deviceLocation"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2653,6 +2654,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    DeviceLocation: {
+      payload: Prisma.$DeviceLocationPayload<ExtArgs>
+      fields: Prisma.DeviceLocationFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.DeviceLocationFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceLocationPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.DeviceLocationFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceLocationPayload>
+        }
+        findFirst: {
+          args: Prisma.DeviceLocationFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceLocationPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.DeviceLocationFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceLocationPayload>
+        }
+        findMany: {
+          args: Prisma.DeviceLocationFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceLocationPayload>[]
+        }
+        create: {
+          args: Prisma.DeviceLocationCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceLocationPayload>
+        }
+        createMany: {
+          args: Prisma.DeviceLocationCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.DeviceLocationCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceLocationPayload>[]
+        }
+        delete: {
+          args: Prisma.DeviceLocationDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceLocationPayload>
+        }
+        update: {
+          args: Prisma.DeviceLocationUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceLocationPayload>
+        }
+        deleteMany: {
+          args: Prisma.DeviceLocationDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.DeviceLocationUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.DeviceLocationUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceLocationPayload>[]
+        }
+        upsert: {
+          args: Prisma.DeviceLocationUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceLocationPayload>
+        }
+        aggregate: {
+          args: Prisma.DeviceLocationAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateDeviceLocation>
+        }
+        groupBy: {
+          args: Prisma.DeviceLocationGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DeviceLocationGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.DeviceLocationCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DeviceLocationCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -3076,6 +3151,18 @@ export const DonationScalarFieldEnum = {
 export type DonationScalarFieldEnum = (typeof DonationScalarFieldEnum)[keyof typeof DonationScalarFieldEnum]
 
 
+export const DeviceLocationScalarFieldEnum = {
+  id: 'id',
+  deviceId: 'deviceId',
+  createdAt: 'createdAt',
+  latitude: 'latitude',
+  longitude: 'longitude',
+  locationName: 'locationName'
+} as const
+
+export type DeviceLocationScalarFieldEnum = (typeof DeviceLocationScalarFieldEnum)[keyof typeof DeviceLocationScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -3390,6 +3477,15 @@ export const DonationOrderByRelevanceFieldEnum = {
 } as const
 
 export type DonationOrderByRelevanceFieldEnum = (typeof DonationOrderByRelevanceFieldEnum)[keyof typeof DonationOrderByRelevanceFieldEnum]
+
+
+export const DeviceLocationOrderByRelevanceFieldEnum = {
+  id: 'id',
+  deviceId: 'deviceId',
+  locationName: 'locationName'
+} as const
+
+export type DeviceLocationOrderByRelevanceFieldEnum = (typeof DeviceLocationOrderByRelevanceFieldEnum)[keyof typeof DeviceLocationOrderByRelevanceFieldEnum]
 
 
 
@@ -3767,6 +3863,7 @@ export type GlobalOmitConfig = {
   viewerLocation?: Prisma.ViewerLocationOmit
   shortDomainRedirect?: Prisma.ShortDomainRedirectOmit
   donation?: Prisma.DonationOmit
+  deviceLocation?: Prisma.DeviceLocationOmit
 }
 
 /* Types for Logging */

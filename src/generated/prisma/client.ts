@@ -191,3 +191,8 @@ export type ShortDomainRedirect = Prisma.ShortDomainRedirectModel
  * 
  */
 export type Donation = Prisma.DonationModel
+/**
+ * Model DeviceLocation
+ * 
+ */
+export type DeviceLocation = Prisma.DeviceLocationModel

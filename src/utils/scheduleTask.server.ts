@@ -1,5 +1,5 @@
 import z from 'zod';
-import type {schema} from '../routes/mitgliedsantrag';
+import type {schema} from '../routes/_main.mitgliedsantrag';
 import {prismaClient} from './prismaClient.server';
 
 export async function scheduleTask(

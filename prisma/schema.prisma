@@ -84,14 +84,15 @@ model ProductAdditives {
 }
 
 model Device {
-  id              String       @id
+  id              String           @id
   lastSeen        DateTime?
   productListId   Int?
   softwareVersion String?
   type            DeviceType
-  productList     ProductList? @relation(fields: [productListId], references: [id])
+  productList     ProductList?     @relation(fields: [productListId], references: [id])
   Order           Order[]
   DeviceLog       DeviceLog[]
+  deviceLocations DeviceLocation[]
 }
 
 model Order {
@@ -233,47 +234,49 @@ model BandApplicationComment {
 }
 
 model Event {
-  id                   String            @id
-  name                 String
-  start                DateTime
-  end                  DateTime
-  eventType            EventType
-  bandApplicationStart DateTime?
-  djApplicationStart   DateTime?
-  bandApplicationEnd   DateTime?
-  djApplicationEnd     DateTime?
-  poster               String?           @db.Uuid
-  description          String?
-  bandApplication      BandApplication[]
-  BandPlaying              BandPlaying[]
-  location                 String?
-  lineupAnnouncementTime   DateTime?
-  latitude             Float?
-  longitude            Float?
+  id                     String            @id
+  name                   String
+  start                  DateTime
+  end                    DateTime
+  eventType              EventType
+  bandApplicationStart   DateTime?
+  djApplicationStart     DateTime?
+  bandApplicationEnd     DateTime?
+  djApplicationEnd       DateTime?
+  poster                 String?           @db.Uuid
+  description            String?
+  bandApplication        BandApplication[]
+  BandPlaying            BandPlaying[]
+  location               String?
+  lineupAnnouncementTime DateTime?
+  latitude               Float?
+  longitude              Float?
 }
 
 model BandPlaying {
-  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name             String
-  startTime        DateTime
-  endTime          DateTime
-  description      String?
-  shortDescription String?
-  genre            String?
-  instagram        String?
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name              String
+  startTime         DateTime
+  endTime           DateTime
+  description       String?
+  shortDescription  String?
+  genre             String?
+  instagram         String?
   spotify           String?
   spotifyTrackId    String?
   spotifyPreviewUrl String?
   facebook          String?
-  website          String?
-  youtube          String?
-  soundcloud       String?
-  areaId           String
-  eventId          String
-  slug             String
-  photo            String?   @db.Uuid
-  area             Area      @relation(fields: [areaId], references: [id])
-  event            Event     @relation(fields: [eventId], references: [id])
+  website           String?
+  youtube           String?
+  soundcloud        String?
+  areaId            String
+  eventId           String
+  slug              String
+  photo             String?   @db.Uuid
+  area              Area      @relation(fields: [areaId], references: [id])
+  event             Event     @relation(fields: [eventId], references: [id])
+  announcementTime  DateTime?
+
   @@unique([areaId, startTime])
   @@unique([eventId, slug])
 }
@@ -392,6 +395,7 @@ enum OrderPayment {
 enum DeviceType {
   CONTACTLESS_TERMINAL
   IPAD
+  NOISE_MONITOR
 }
 
 enum CardTransactionType {
@@ -453,4 +457,14 @@ enum BandRepertoire {
   MostlyOwnSongs
   MostlyCoverSongs
   ExclusivelyCoverSongs
+}
+
+model DeviceLocation {
+  id           String   @id @default(cuid())
+  deviceId     String
+  device       Device   @relation(fields: [deviceId], references: [id])
+  createdAt    DateTime
+  latitude     Float?
+  longitude    Float?
+  locationName String
 }

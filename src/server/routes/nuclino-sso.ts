@@ -4,7 +4,7 @@ import {redirect} from '@tanstack/react-router';
 import {prismaClient} from '../../utils/prismaClient.server';
 import {scheduleTask} from '../../utils/scheduleTask.server';
 import {addMinutes} from 'date-fns';
-import {LOGIN_URL} from '../../routes/nuclino-sso';
+import {LOGIN_URL} from '../../routes/_main.nuclino-sso';
 
 export const beforeLoad = createServerFn()
   .inputValidator((query: Record<string, any>) => query)

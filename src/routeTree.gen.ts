@@ -9,324 +9,341 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SpeisekarteRouteImport } from './routes/speisekarte'
-import { Route as PlakateRouteImport } from './routes/plakate'
-import { Route as NuclinoSsoRouteImport } from './routes/nuclino-sso'
-import { Route as MitgliedsantragRouteImport } from './routes/mitgliedsantrag'
-import { Route as LogoRouteImport } from './routes/logo'
-import { Route as LineupRouteImport } from './routes/lineup'
-import { Route as LearnRouteImport } from './routes/learn'
-import { Route as LautstChar228rkeRouteImport } from './routes/lautstärke'
-import { Route as LautstaerkeRouteImport } from './routes/lautstaerke'
-import { Route as InfosRouteImport } from './routes/infos'
-import { Route as EventsRouteImport } from './routes/events'
-import { Route as BookingRouteImport } from './routes/booking'
-import { Route as BadgesRouteImport } from './routes/badges'
-import { Route as AngebotRouteImport } from './routes/angebot'
-import { Route as RouteRouteImport } from './routes/Route'
-import { Route as SlugRouteImport } from './routes/$slug'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as LineupIndexRouteImport } from './routes/lineup.index'
-import { Route as LautstaerkeIndexRouteImport } from './routes/lautstaerke.index'
-import { Route as NewsArchivRouteImport } from './routes/news.archiv'
-import { Route as NewsSlugRouteImport } from './routes/news.$slug'
-import { Route as MitgliedsantragDankeRouteImport } from './routes/mitgliedsantrag_.danke'
-import { Route as LineupYearRouteImport } from './routes/lineup.$year'
-import { Route as LautstaerkeDeviceRouteImport } from './routes/lautstaerke.$device'
-import { Route as EventsIdRouteImport } from './routes/events_.$id'
-import { Route as CardHashRouteImport } from './routes/card.$hash'
-import { Route as BookingApplicationTypeRouteImport } from './routes/booking_.$applicationType'
+import { Route as CrewRouteImport } from './routes/crew'
+import { Route as MainRouteImport } from './routes/_main'
+import { Route as CrewIndexRouteImport } from './routes/crew.index'
+import { Route as MainIndexRouteImport } from './routes/_main.index'
+import { Route as CrewLautstaerkeRouteImport } from './routes/crew.lautstaerke'
 import { Route as ApiBadgesRouteImport } from './routes/api.badges'
-import { Route as SpendenQuittungIdRouteImport } from './routes/spenden_.quittung.$id'
-import { Route as LineupYearSlugRouteImport } from './routes/lineup.$year_.$slug'
-import { Route as CardHashKultRouteImport } from './routes/card.$hash.kult'
-import { Route as CardHashCrewRouteImport } from './routes/card.$hash.crew'
-import { Route as BookingApplicationTypeDankeRouteImport } from './routes/booking_.$applicationType_.danke'
+import { Route as MainSpeisekarteRouteImport } from './routes/_main.speisekarte'
+import { Route as MainPlakateRouteImport } from './routes/_main.plakate'
+import { Route as MainNuclinoSsoRouteImport } from './routes/_main.nuclino-sso'
+import { Route as MainMitgliedsantragRouteImport } from './routes/_main.mitgliedsantrag'
+import { Route as MainLogoRouteImport } from './routes/_main.logo'
+import { Route as MainLineupRouteImport } from './routes/_main.lineup'
+import { Route as MainLearnRouteImport } from './routes/_main.learn'
+import { Route as MainInfosRouteImport } from './routes/_main.infos'
+import { Route as MainEventsRouteImport } from './routes/_main.events'
+import { Route as MainBookingRouteImport } from './routes/_main.booking'
+import { Route as MainBadgesRouteImport } from './routes/_main.badges'
+import { Route as MainAngebotRouteImport } from './routes/_main.angebot'
+import { Route as MainRouteRouteImport } from './routes/_main.Route'
+import { Route as MainSlugRouteImport } from './routes/_main.$slug'
+import { Route as CrewLautstaerkeIndexRouteImport } from './routes/crew.lautstaerke.index'
+import { Route as MainLineupIndexRouteImport } from './routes/_main.lineup.index'
+import { Route as CrewLautstaerkeDeviceRouteImport } from './routes/crew.lautstaerke.$device'
+import { Route as MainNewsArchivRouteImport } from './routes/_main.news.archiv'
+import { Route as MainNewsSlugRouteImport } from './routes/_main.news.$slug'
+import { Route as MainMitgliedsantragDankeRouteImport } from './routes/_main.mitgliedsantrag_.danke'
+import { Route as MainLineupYearRouteImport } from './routes/_main.lineup.$year'
+import { Route as MainEventsIdRouteImport } from './routes/_main.events_.$id'
+import { Route as MainCardHashRouteImport } from './routes/_main.card.$hash'
+import { Route as MainBookingApplicationTypeRouteImport } from './routes/_main.booking_.$applicationType'
 import { Route as ApiSpendenQuittungIdRouteImport } from './routes/api.spenden.quittung.$id'
+import { Route as MainSpendenQuittungIdRouteImport } from './routes/_main.spenden_.quittung.$id'
+import { Route as MainLineupYearSlugRouteImport } from './routes/_main.lineup.$year_.$slug'
+import { Route as MainCardHashKultRouteImport } from './routes/_main.card.$hash.kult'
+import { Route as MainCardHashCrewRouteImport } from './routes/_main.card.$hash.crew'
+import { Route as MainBookingApplicationTypeDankeRouteImport } from './routes/_main.booking_.$applicationType_.danke'
 
-const SpeisekarteRoute = SpeisekarteRouteImport.update({
-  id: '/speisekarte',
-  path: '/speisekarte',
+const CrewRoute = CrewRouteImport.update({
+  id: '/crew',
+  path: '/crew',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PlakateRoute = PlakateRouteImport.update({
-  id: '/plakate',
-  path: '/plakate',
+const MainRoute = MainRouteImport.update({
+  id: '/_main',
   getParentRoute: () => rootRouteImport,
 } as any)
-const NuclinoSsoRoute = NuclinoSsoRouteImport.update({
-  id: '/nuclino-sso',
-  path: '/nuclino-sso',
-  getParentRoute: () => rootRouteImport,
+const CrewIndexRoute = CrewIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CrewRoute,
 } as any)
-const MitgliedsantragRoute = MitgliedsantragRouteImport.update({
-  id: '/mitgliedsantrag',
-  path: '/mitgliedsantrag',
-  getParentRoute: () => rootRouteImport,
+const MainIndexRoute = MainIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MainRoute,
 } as any)
-const LogoRoute = LogoRouteImport.update({
-  id: '/logo',
-  path: '/logo',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LineupRoute = LineupRouteImport.update({
-  id: '/lineup',
-  path: '/lineup',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LearnRoute = LearnRouteImport.update({
-  id: '/learn',
-  path: '/learn',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LautstChar228rkeRoute = LautstChar228rkeRouteImport.update({
-  id: '/lautstärke',
-  path: '/lautstärke',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LautstaerkeRoute = LautstaerkeRouteImport.update({
+const CrewLautstaerkeRoute = CrewLautstaerkeRouteImport.update({
   id: '/lautstaerke',
   path: '/lautstaerke',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const InfosRoute = InfosRouteImport.update({
-  id: '/infos',
-  path: '/infos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EventsRoute = EventsRouteImport.update({
-  id: '/events',
-  path: '/events',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BookingRoute = BookingRouteImport.update({
-  id: '/booking',
-  path: '/booking',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BadgesRoute = BadgesRouteImport.update({
-  id: '/badges',
-  path: '/badges',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AngebotRoute = AngebotRouteImport.update({
-  id: '/angebot',
-  path: '/angebot',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RouteRoute = RouteRouteImport.update({
-  id: '/Route',
-  path: '/Route',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SlugRoute = SlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LineupIndexRoute = LineupIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => LineupRoute,
-} as any)
-const LautstaerkeIndexRoute = LautstaerkeIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => LautstaerkeRoute,
-} as any)
-const NewsArchivRoute = NewsArchivRouteImport.update({
-  id: '/news/archiv',
-  path: '/news/archiv',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const NewsSlugRoute = NewsSlugRouteImport.update({
-  id: '/news/$slug',
-  path: '/news/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MitgliedsantragDankeRoute = MitgliedsantragDankeRouteImport.update({
-  id: '/mitgliedsantrag_/danke',
-  path: '/mitgliedsantrag/danke',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LineupYearRoute = LineupYearRouteImport.update({
-  id: '/$year',
-  path: '/$year',
-  getParentRoute: () => LineupRoute,
-} as any)
-const LautstaerkeDeviceRoute = LautstaerkeDeviceRouteImport.update({
-  id: '/$device',
-  path: '/$device',
-  getParentRoute: () => LautstaerkeRoute,
-} as any)
-const EventsIdRoute = EventsIdRouteImport.update({
-  id: '/events_/$id',
-  path: '/events/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CardHashRoute = CardHashRouteImport.update({
-  id: '/card/$hash',
-  path: '/card/$hash',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BookingApplicationTypeRoute = BookingApplicationTypeRouteImport.update({
-  id: '/booking_/$applicationType',
-  path: '/booking/$applicationType',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => CrewRoute,
 } as any)
 const ApiBadgesRoute = ApiBadgesRouteImport.update({
   id: '/api/badges',
   path: '/api/badges',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SpendenQuittungIdRoute = SpendenQuittungIdRouteImport.update({
-  id: '/spenden_/quittung/$id',
-  path: '/spenden/quittung/$id',
-  getParentRoute: () => rootRouteImport,
+const MainSpeisekarteRoute = MainSpeisekarteRouteImport.update({
+  id: '/speisekarte',
+  path: '/speisekarte',
+  getParentRoute: () => MainRoute,
 } as any)
-const LineupYearSlugRoute = LineupYearSlugRouteImport.update({
-  id: '/$year_/$slug',
-  path: '/$year/$slug',
-  getParentRoute: () => LineupRoute,
+const MainPlakateRoute = MainPlakateRouteImport.update({
+  id: '/plakate',
+  path: '/plakate',
+  getParentRoute: () => MainRoute,
 } as any)
-const CardHashKultRoute = CardHashKultRouteImport.update({
-  id: '/kult',
-  path: '/kult',
-  getParentRoute: () => CardHashRoute,
+const MainNuclinoSsoRoute = MainNuclinoSsoRouteImport.update({
+  id: '/nuclino-sso',
+  path: '/nuclino-sso',
+  getParentRoute: () => MainRoute,
 } as any)
-const CardHashCrewRoute = CardHashCrewRouteImport.update({
-  id: '/crew',
-  path: '/crew',
-  getParentRoute: () => CardHashRoute,
+const MainMitgliedsantragRoute = MainMitgliedsantragRouteImport.update({
+  id: '/mitgliedsantrag',
+  path: '/mitgliedsantrag',
+  getParentRoute: () => MainRoute,
 } as any)
-const BookingApplicationTypeDankeRoute =
-  BookingApplicationTypeDankeRouteImport.update({
-    id: '/booking_/$applicationType_/danke',
-    path: '/booking/$applicationType/danke',
-    getParentRoute: () => rootRouteImport,
+const MainLogoRoute = MainLogoRouteImport.update({
+  id: '/logo',
+  path: '/logo',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLineupRoute = MainLineupRouteImport.update({
+  id: '/lineup',
+  path: '/lineup',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLearnRoute = MainLearnRouteImport.update({
+  id: '/learn',
+  path: '/learn',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainInfosRoute = MainInfosRouteImport.update({
+  id: '/infos',
+  path: '/infos',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainEventsRoute = MainEventsRouteImport.update({
+  id: '/events',
+  path: '/events',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainBookingRoute = MainBookingRouteImport.update({
+  id: '/booking',
+  path: '/booking',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainBadgesRoute = MainBadgesRouteImport.update({
+  id: '/badges',
+  path: '/badges',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainAngebotRoute = MainAngebotRouteImport.update({
+  id: '/angebot',
+  path: '/angebot',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainRouteRoute = MainRouteRouteImport.update({
+  id: '/Route',
+  path: '/Route',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainSlugRoute = MainSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => MainRoute,
+} as any)
+const CrewLautstaerkeIndexRoute = CrewLautstaerkeIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CrewLautstaerkeRoute,
+} as any)
+const MainLineupIndexRoute = MainLineupIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MainLineupRoute,
+} as any)
+const CrewLautstaerkeDeviceRoute = CrewLautstaerkeDeviceRouteImport.update({
+  id: '/$device',
+  path: '/$device',
+  getParentRoute: () => CrewLautstaerkeRoute,
+} as any)
+const MainNewsArchivRoute = MainNewsArchivRouteImport.update({
+  id: '/news/archiv',
+  path: '/news/archiv',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainNewsSlugRoute = MainNewsSlugRouteImport.update({
+  id: '/news/$slug',
+  path: '/news/$slug',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainMitgliedsantragDankeRoute =
+  MainMitgliedsantragDankeRouteImport.update({
+    id: '/mitgliedsantrag_/danke',
+    path: '/mitgliedsantrag/danke',
+    getParentRoute: () => MainRoute,
+  } as any)
+const MainLineupYearRoute = MainLineupYearRouteImport.update({
+  id: '/$year',
+  path: '/$year',
+  getParentRoute: () => MainLineupRoute,
+} as any)
+const MainEventsIdRoute = MainEventsIdRouteImport.update({
+  id: '/events_/$id',
+  path: '/events/$id',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainCardHashRoute = MainCardHashRouteImport.update({
+  id: '/card/$hash',
+  path: '/card/$hash',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainBookingApplicationTypeRoute =
+  MainBookingApplicationTypeRouteImport.update({
+    id: '/booking_/$applicationType',
+    path: '/booking/$applicationType',
+    getParentRoute: () => MainRoute,
   } as any)
 const ApiSpendenQuittungIdRoute = ApiSpendenQuittungIdRouteImport.update({
   id: '/api/spenden/quittung/$id',
   path: '/api/spenden/quittung/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MainSpendenQuittungIdRoute = MainSpendenQuittungIdRouteImport.update({
+  id: '/spenden_/quittung/$id',
+  path: '/spenden/quittung/$id',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLineupYearSlugRoute = MainLineupYearSlugRouteImport.update({
+  id: '/$year_/$slug',
+  path: '/$year/$slug',
+  getParentRoute: () => MainLineupRoute,
+} as any)
+const MainCardHashKultRoute = MainCardHashKultRouteImport.update({
+  id: '/kult',
+  path: '/kult',
+  getParentRoute: () => MainCardHashRoute,
+} as any)
+const MainCardHashCrewRoute = MainCardHashCrewRouteImport.update({
+  id: '/crew',
+  path: '/crew',
+  getParentRoute: () => MainCardHashRoute,
+} as any)
+const MainBookingApplicationTypeDankeRoute =
+  MainBookingApplicationTypeDankeRouteImport.update({
+    id: '/booking_/$applicationType_/danke',
+    path: '/booking/$applicationType/danke',
+    getParentRoute: () => MainRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/$slug': typeof SlugRoute
-  '/Route': typeof RouteRoute
-  '/angebot': typeof AngebotRoute
-  '/badges': typeof BadgesRoute
-  '/booking': typeof BookingRoute
-  '/events': typeof EventsRoute
-  '/infos': typeof InfosRoute
-  '/lautstaerke': typeof LautstaerkeRouteWithChildren
-  '/lautstärke': typeof LautstChar228rkeRoute
-  '/learn': typeof LearnRoute
-  '/lineup': typeof LineupRouteWithChildren
-  '/logo': typeof LogoRoute
-  '/mitgliedsantrag': typeof MitgliedsantragRoute
-  '/nuclino-sso': typeof NuclinoSsoRoute
-  '/plakate': typeof PlakateRoute
-  '/speisekarte': typeof SpeisekarteRoute
+  '/': typeof MainIndexRoute
+  '/crew': typeof CrewRouteWithChildren
+  '/$slug': typeof MainSlugRoute
+  '/Route': typeof MainRouteRoute
+  '/angebot': typeof MainAngebotRoute
+  '/badges': typeof MainBadgesRoute
+  '/booking': typeof MainBookingRoute
+  '/events': typeof MainEventsRoute
+  '/infos': typeof MainInfosRoute
+  '/learn': typeof MainLearnRoute
+  '/lineup': typeof MainLineupRouteWithChildren
+  '/logo': typeof MainLogoRoute
+  '/mitgliedsantrag': typeof MainMitgliedsantragRoute
+  '/nuclino-sso': typeof MainNuclinoSsoRoute
+  '/plakate': typeof MainPlakateRoute
+  '/speisekarte': typeof MainSpeisekarteRoute
   '/api/badges': typeof ApiBadgesRoute
-  '/booking/$applicationType': typeof BookingApplicationTypeRoute
-  '/card/$hash': typeof CardHashRouteWithChildren
-  '/events/$id': typeof EventsIdRoute
-  '/lautstaerke/$device': typeof LautstaerkeDeviceRoute
-  '/lineup/$year': typeof LineupYearRoute
-  '/mitgliedsantrag/danke': typeof MitgliedsantragDankeRoute
-  '/news/$slug': typeof NewsSlugRoute
-  '/news/archiv': typeof NewsArchivRoute
-  '/lautstaerke/': typeof LautstaerkeIndexRoute
-  '/lineup/': typeof LineupIndexRoute
-  '/booking/$applicationType/danke': typeof BookingApplicationTypeDankeRoute
-  '/card/$hash/crew': typeof CardHashCrewRoute
-  '/card/$hash/kult': typeof CardHashKultRoute
-  '/lineup/$year/$slug': typeof LineupYearSlugRoute
-  '/spenden/quittung/$id': typeof SpendenQuittungIdRoute
+  '/crew/lautstaerke': typeof CrewLautstaerkeRouteWithChildren
+  '/crew/': typeof CrewIndexRoute
+  '/booking/$applicationType': typeof MainBookingApplicationTypeRoute
+  '/card/$hash': typeof MainCardHashRouteWithChildren
+  '/events/$id': typeof MainEventsIdRoute
+  '/lineup/$year': typeof MainLineupYearRoute
+  '/mitgliedsantrag/danke': typeof MainMitgliedsantragDankeRoute
+  '/news/$slug': typeof MainNewsSlugRoute
+  '/news/archiv': typeof MainNewsArchivRoute
+  '/crew/lautstaerke/$device': typeof CrewLautstaerkeDeviceRoute
+  '/lineup/': typeof MainLineupIndexRoute
+  '/crew/lautstaerke/': typeof CrewLautstaerkeIndexRoute
+  '/booking/$applicationType/danke': typeof MainBookingApplicationTypeDankeRoute
+  '/card/$hash/crew': typeof MainCardHashCrewRoute
+  '/card/$hash/kult': typeof MainCardHashKultRoute
+  '/lineup/$year/$slug': typeof MainLineupYearSlugRoute
+  '/spenden/quittung/$id': typeof MainSpendenQuittungIdRoute
   '/api/spenden/quittung/$id': typeof ApiSpendenQuittungIdRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/$slug': typeof SlugRoute
-  '/Route': typeof RouteRoute
-  '/angebot': typeof AngebotRoute
-  '/badges': typeof BadgesRoute
-  '/booking': typeof BookingRoute
-  '/events': typeof EventsRoute
-  '/infos': typeof InfosRoute
-  '/lautstärke': typeof LautstChar228rkeRoute
-  '/learn': typeof LearnRoute
-  '/logo': typeof LogoRoute
-  '/mitgliedsantrag': typeof MitgliedsantragRoute
-  '/nuclino-sso': typeof NuclinoSsoRoute
-  '/plakate': typeof PlakateRoute
-  '/speisekarte': typeof SpeisekarteRoute
+  '/$slug': typeof MainSlugRoute
+  '/Route': typeof MainRouteRoute
+  '/angebot': typeof MainAngebotRoute
+  '/badges': typeof MainBadgesRoute
+  '/booking': typeof MainBookingRoute
+  '/events': typeof MainEventsRoute
+  '/infos': typeof MainInfosRoute
+  '/learn': typeof MainLearnRoute
+  '/logo': typeof MainLogoRoute
+  '/mitgliedsantrag': typeof MainMitgliedsantragRoute
+  '/nuclino-sso': typeof MainNuclinoSsoRoute
+  '/plakate': typeof MainPlakateRoute
+  '/speisekarte': typeof MainSpeisekarteRoute
   '/api/badges': typeof ApiBadgesRoute
-  '/booking/$applicationType': typeof BookingApplicationTypeRoute
-  '/card/$hash': typeof CardHashRouteWithChildren
-  '/events/$id': typeof EventsIdRoute
-  '/lautstaerke/$device': typeof LautstaerkeDeviceRoute
-  '/lineup/$year': typeof LineupYearRoute
-  '/mitgliedsantrag/danke': typeof MitgliedsantragDankeRoute
-  '/news/$slug': typeof NewsSlugRoute
-  '/news/archiv': typeof NewsArchivRoute
-  '/lautstaerke': typeof LautstaerkeIndexRoute
-  '/lineup': typeof LineupIndexRoute
-  '/booking/$applicationType/danke': typeof BookingApplicationTypeDankeRoute
-  '/card/$hash/crew': typeof CardHashCrewRoute
-  '/card/$hash/kult': typeof CardHashKultRoute
-  '/lineup/$year/$slug': typeof LineupYearSlugRoute
-  '/spenden/quittung/$id': typeof SpendenQuittungIdRoute
+  '/': typeof MainIndexRoute
+  '/crew': typeof CrewIndexRoute
+  '/booking/$applicationType': typeof MainBookingApplicationTypeRoute
+  '/card/$hash': typeof MainCardHashRouteWithChildren
+  '/events/$id': typeof MainEventsIdRoute
+  '/lineup/$year': typeof MainLineupYearRoute
+  '/mitgliedsantrag/danke': typeof MainMitgliedsantragDankeRoute
+  '/news/$slug': typeof MainNewsSlugRoute
+  '/news/archiv': typeof MainNewsArchivRoute
+  '/crew/lautstaerke/$device': typeof CrewLautstaerkeDeviceRoute
+  '/lineup': typeof MainLineupIndexRoute
+  '/crew/lautstaerke': typeof CrewLautstaerkeIndexRoute
+  '/booking/$applicationType/danke': typeof MainBookingApplicationTypeDankeRoute
+  '/card/$hash/crew': typeof MainCardHashCrewRoute
+  '/card/$hash/kult': typeof MainCardHashKultRoute
+  '/lineup/$year/$slug': typeof MainLineupYearSlugRoute
+  '/spenden/quittung/$id': typeof MainSpendenQuittungIdRoute
   '/api/spenden/quittung/$id': typeof ApiSpendenQuittungIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/$slug': typeof SlugRoute
-  '/Route': typeof RouteRoute
-  '/angebot': typeof AngebotRoute
-  '/badges': typeof BadgesRoute
-  '/booking': typeof BookingRoute
-  '/events': typeof EventsRoute
-  '/infos': typeof InfosRoute
-  '/lautstaerke': typeof LautstaerkeRouteWithChildren
-  '/lautstärke': typeof LautstChar228rkeRoute
-  '/learn': typeof LearnRoute
-  '/lineup': typeof LineupRouteWithChildren
-  '/logo': typeof LogoRoute
-  '/mitgliedsantrag': typeof MitgliedsantragRoute
-  '/nuclino-sso': typeof NuclinoSsoRoute
-  '/plakate': typeof PlakateRoute
-  '/speisekarte': typeof SpeisekarteRoute
+  '/_main': typeof MainRouteWithChildren
+  '/crew': typeof CrewRouteWithChildren
+  '/_main/$slug': typeof MainSlugRoute
+  '/_main/Route': typeof MainRouteRoute
+  '/_main/angebot': typeof MainAngebotRoute
+  '/_main/badges': typeof MainBadgesRoute
+  '/_main/booking': typeof MainBookingRoute
+  '/_main/events': typeof MainEventsRoute
+  '/_main/infos': typeof MainInfosRoute
+  '/_main/learn': typeof MainLearnRoute
+  '/_main/lineup': typeof MainLineupRouteWithChildren
+  '/_main/logo': typeof MainLogoRoute
+  '/_main/mitgliedsantrag': typeof MainMitgliedsantragRoute
+  '/_main/nuclino-sso': typeof MainNuclinoSsoRoute
+  '/_main/plakate': typeof MainPlakateRoute
+  '/_main/speisekarte': typeof MainSpeisekarteRoute
   '/api/badges': typeof ApiBadgesRoute
-  '/booking_/$applicationType': typeof BookingApplicationTypeRoute
-  '/card/$hash': typeof CardHashRouteWithChildren
-  '/events_/$id': typeof EventsIdRoute
-  '/lautstaerke/$device': typeof LautstaerkeDeviceRoute
-  '/lineup/$year': typeof LineupYearRoute
-  '/mitgliedsantrag_/danke': typeof MitgliedsantragDankeRoute
-  '/news/$slug': typeof NewsSlugRoute
-  '/news/archiv': typeof NewsArchivRoute
-  '/lautstaerke/': typeof LautstaerkeIndexRoute
-  '/lineup/': typeof LineupIndexRoute
-  '/booking_/$applicationType_/danke': typeof BookingApplicationTypeDankeRoute
-  '/card/$hash/crew': typeof CardHashCrewRoute
-  '/card/$hash/kult': typeof CardHashKultRoute
-  '/lineup/$year_/$slug': typeof LineupYearSlugRoute
-  '/spenden_/quittung/$id': typeof SpendenQuittungIdRoute
+  '/crew/lautstaerke': typeof CrewLautstaerkeRouteWithChildren
+  '/_main/': typeof MainIndexRoute
+  '/crew/': typeof CrewIndexRoute
+  '/_main/booking_/$applicationType': typeof MainBookingApplicationTypeRoute
+  '/_main/card/$hash': typeof MainCardHashRouteWithChildren
+  '/_main/events_/$id': typeof MainEventsIdRoute
+  '/_main/lineup/$year': typeof MainLineupYearRoute
+  '/_main/mitgliedsantrag_/danke': typeof MainMitgliedsantragDankeRoute
+  '/_main/news/$slug': typeof MainNewsSlugRoute
+  '/_main/news/archiv': typeof MainNewsArchivRoute
+  '/crew/lautstaerke/$device': typeof CrewLautstaerkeDeviceRoute
+  '/_main/lineup/': typeof MainLineupIndexRoute
+  '/crew/lautstaerke/': typeof CrewLautstaerkeIndexRoute
+  '/_main/booking_/$applicationType_/danke': typeof MainBookingApplicationTypeDankeRoute
+  '/_main/card/$hash/crew': typeof MainCardHashCrewRoute
+  '/_main/card/$hash/kult': typeof MainCardHashKultRoute
+  '/_main/lineup/$year_/$slug': typeof MainLineupYearSlugRoute
+  '/_main/spenden_/quittung/$id': typeof MainSpendenQuittungIdRoute
   '/api/spenden/quittung/$id': typeof ApiSpendenQuittungIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/crew'
     | '/$slug'
     | '/Route'
     | '/angebot'
@@ -334,8 +351,6 @@ export interface FileRouteTypes {
     | '/booking'
     | '/events'
     | '/infos'
-    | '/lautstaerke'
-    | '/lautstärke'
     | '/learn'
     | '/lineup'
     | '/logo'
@@ -344,16 +359,18 @@ export interface FileRouteTypes {
     | '/plakate'
     | '/speisekarte'
     | '/api/badges'
+    | '/crew/lautstaerke'
+    | '/crew/'
     | '/booking/$applicationType'
     | '/card/$hash'
     | '/events/$id'
-    | '/lautstaerke/$device'
     | '/lineup/$year'
     | '/mitgliedsantrag/danke'
     | '/news/$slug'
     | '/news/archiv'
-    | '/lautstaerke/'
+    | '/crew/lautstaerke/$device'
     | '/lineup/'
+    | '/crew/lautstaerke/'
     | '/booking/$applicationType/danke'
     | '/card/$hash/crew'
     | '/card/$hash/kult'
@@ -362,7 +379,6 @@ export interface FileRouteTypes {
     | '/api/spenden/quittung/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
     | '/$slug'
     | '/Route'
     | '/angebot'
@@ -370,7 +386,6 @@ export interface FileRouteTypes {
     | '/booking'
     | '/events'
     | '/infos'
-    | '/lautstärke'
     | '/learn'
     | '/logo'
     | '/mitgliedsantrag'
@@ -378,16 +393,18 @@ export interface FileRouteTypes {
     | '/plakate'
     | '/speisekarte'
     | '/api/badges'
+    | '/'
+    | '/crew'
     | '/booking/$applicationType'
     | '/card/$hash'
     | '/events/$id'
-    | '/lautstaerke/$device'
     | '/lineup/$year'
     | '/mitgliedsantrag/danke'
     | '/news/$slug'
     | '/news/archiv'
-    | '/lautstaerke'
+    | '/crew/lautstaerke/$device'
     | '/lineup'
+    | '/crew/lautstaerke'
     | '/booking/$applicationType/danke'
     | '/card/$hash/crew'
     | '/card/$hash/kult'
@@ -396,262 +413,87 @@ export interface FileRouteTypes {
     | '/api/spenden/quittung/$id'
   id:
     | '__root__'
-    | '/'
-    | '/$slug'
-    | '/Route'
-    | '/angebot'
-    | '/badges'
-    | '/booking'
-    | '/events'
-    | '/infos'
-    | '/lautstaerke'
-    | '/lautstärke'
-    | '/learn'
-    | '/lineup'
-    | '/logo'
-    | '/mitgliedsantrag'
-    | '/nuclino-sso'
-    | '/plakate'
-    | '/speisekarte'
+    | '/_main'
+    | '/crew'
+    | '/_main/$slug'
+    | '/_main/Route'
+    | '/_main/angebot'
+    | '/_main/badges'
+    | '/_main/booking'
+    | '/_main/events'
+    | '/_main/infos'
+    | '/_main/learn'
+    | '/_main/lineup'
+    | '/_main/logo'
+    | '/_main/mitgliedsantrag'
+    | '/_main/nuclino-sso'
+    | '/_main/plakate'
+    | '/_main/speisekarte'
     | '/api/badges'
-    | '/booking_/$applicationType'
-    | '/card/$hash'
-    | '/events_/$id'
-    | '/lautstaerke/$device'
-    | '/lineup/$year'
-    | '/mitgliedsantrag_/danke'
-    | '/news/$slug'
-    | '/news/archiv'
-    | '/lautstaerke/'
-    | '/lineup/'
-    | '/booking_/$applicationType_/danke'
-    | '/card/$hash/crew'
-    | '/card/$hash/kult'
-    | '/lineup/$year_/$slug'
-    | '/spenden_/quittung/$id'
+    | '/crew/lautstaerke'
+    | '/_main/'
+    | '/crew/'
+    | '/_main/booking_/$applicationType'
+    | '/_main/card/$hash'
+    | '/_main/events_/$id'
+    | '/_main/lineup/$year'
+    | '/_main/mitgliedsantrag_/danke'
+    | '/_main/news/$slug'
+    | '/_main/news/archiv'
+    | '/crew/lautstaerke/$device'
+    | '/_main/lineup/'
+    | '/crew/lautstaerke/'
+    | '/_main/booking_/$applicationType_/danke'
+    | '/_main/card/$hash/crew'
+    | '/_main/card/$hash/kult'
+    | '/_main/lineup/$year_/$slug'
+    | '/_main/spenden_/quittung/$id'
     | '/api/spenden/quittung/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  SlugRoute: typeof SlugRoute
-  RouteRoute: typeof RouteRoute
-  AngebotRoute: typeof AngebotRoute
-  BadgesRoute: typeof BadgesRoute
-  BookingRoute: typeof BookingRoute
-  EventsRoute: typeof EventsRoute
-  InfosRoute: typeof InfosRoute
-  LautstaerkeRoute: typeof LautstaerkeRouteWithChildren
-  LautstChar228rkeRoute: typeof LautstChar228rkeRoute
-  LearnRoute: typeof LearnRoute
-  LineupRoute: typeof LineupRouteWithChildren
-  LogoRoute: typeof LogoRoute
-  MitgliedsantragRoute: typeof MitgliedsantragRoute
-  NuclinoSsoRoute: typeof NuclinoSsoRoute
-  PlakateRoute: typeof PlakateRoute
-  SpeisekarteRoute: typeof SpeisekarteRoute
+  MainRoute: typeof MainRouteWithChildren
+  CrewRoute: typeof CrewRouteWithChildren
   ApiBadgesRoute: typeof ApiBadgesRoute
-  BookingApplicationTypeRoute: typeof BookingApplicationTypeRoute
-  CardHashRoute: typeof CardHashRouteWithChildren
-  EventsIdRoute: typeof EventsIdRoute
-  MitgliedsantragDankeRoute: typeof MitgliedsantragDankeRoute
-  NewsSlugRoute: typeof NewsSlugRoute
-  NewsArchivRoute: typeof NewsArchivRoute
-  BookingApplicationTypeDankeRoute: typeof BookingApplicationTypeDankeRoute
-  SpendenQuittungIdRoute: typeof SpendenQuittungIdRoute
   ApiSpendenQuittungIdRoute: typeof ApiSpendenQuittungIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/speisekarte': {
-      id: '/speisekarte'
-      path: '/speisekarte'
-      fullPath: '/speisekarte'
-      preLoaderRoute: typeof SpeisekarteRouteImport
+    '/crew': {
+      id: '/crew'
+      path: '/crew'
+      fullPath: '/crew'
+      preLoaderRoute: typeof CrewRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/plakate': {
-      id: '/plakate'
-      path: '/plakate'
-      fullPath: '/plakate'
-      preLoaderRoute: typeof PlakateRouteImport
+    '/_main': {
+      id: '/_main'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof MainRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/nuclino-sso': {
-      id: '/nuclino-sso'
-      path: '/nuclino-sso'
-      fullPath: '/nuclino-sso'
-      preLoaderRoute: typeof NuclinoSsoRouteImport
-      parentRoute: typeof rootRouteImport
+    '/crew/': {
+      id: '/crew/'
+      path: '/'
+      fullPath: '/crew/'
+      preLoaderRoute: typeof CrewIndexRouteImport
+      parentRoute: typeof CrewRoute
     }
-    '/mitgliedsantrag': {
-      id: '/mitgliedsantrag'
-      path: '/mitgliedsantrag'
-      fullPath: '/mitgliedsantrag'
-      preLoaderRoute: typeof MitgliedsantragRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/logo': {
-      id: '/logo'
-      path: '/logo'
-      fullPath: '/logo'
-      preLoaderRoute: typeof LogoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lineup': {
-      id: '/lineup'
-      path: '/lineup'
-      fullPath: '/lineup'
-      preLoaderRoute: typeof LineupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/learn': {
-      id: '/learn'
-      path: '/learn'
-      fullPath: '/learn'
-      preLoaderRoute: typeof LearnRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lautstärke': {
-      id: '/lautstärke'
-      path: '/lautstärke'
-      fullPath: '/lautstärke'
-      preLoaderRoute: typeof LautstChar228rkeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lautstaerke': {
-      id: '/lautstaerke'
-      path: '/lautstaerke'
-      fullPath: '/lautstaerke'
-      preLoaderRoute: typeof LautstaerkeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/infos': {
-      id: '/infos'
-      path: '/infos'
-      fullPath: '/infos'
-      preLoaderRoute: typeof InfosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/events': {
-      id: '/events'
-      path: '/events'
-      fullPath: '/events'
-      preLoaderRoute: typeof EventsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/booking': {
-      id: '/booking'
-      path: '/booking'
-      fullPath: '/booking'
-      preLoaderRoute: typeof BookingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/badges': {
-      id: '/badges'
-      path: '/badges'
-      fullPath: '/badges'
-      preLoaderRoute: typeof BadgesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/angebot': {
-      id: '/angebot'
-      path: '/angebot'
-      fullPath: '/angebot'
-      preLoaderRoute: typeof AngebotRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/Route': {
-      id: '/Route'
-      path: '/Route'
-      fullPath: '/Route'
-      preLoaderRoute: typeof RouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/$slug': {
-      id: '/$slug'
-      path: '/$slug'
-      fullPath: '/$slug'
-      preLoaderRoute: typeof SlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/': {
-      id: '/'
+    '/_main/': {
+      id: '/_main/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof MainIndexRouteImport
+      parentRoute: typeof MainRoute
     }
-    '/lineup/': {
-      id: '/lineup/'
-      path: '/'
-      fullPath: '/lineup/'
-      preLoaderRoute: typeof LineupIndexRouteImport
-      parentRoute: typeof LineupRoute
-    }
-    '/lautstaerke/': {
-      id: '/lautstaerke/'
-      path: '/'
-      fullPath: '/lautstaerke/'
-      preLoaderRoute: typeof LautstaerkeIndexRouteImport
-      parentRoute: typeof LautstaerkeRoute
-    }
-    '/news/archiv': {
-      id: '/news/archiv'
-      path: '/news/archiv'
-      fullPath: '/news/archiv'
-      preLoaderRoute: typeof NewsArchivRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/news/$slug': {
-      id: '/news/$slug'
-      path: '/news/$slug'
-      fullPath: '/news/$slug'
-      preLoaderRoute: typeof NewsSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mitgliedsantrag_/danke': {
-      id: '/mitgliedsantrag_/danke'
-      path: '/mitgliedsantrag/danke'
-      fullPath: '/mitgliedsantrag/danke'
-      preLoaderRoute: typeof MitgliedsantragDankeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lineup/$year': {
-      id: '/lineup/$year'
-      path: '/$year'
-      fullPath: '/lineup/$year'
-      preLoaderRoute: typeof LineupYearRouteImport
-      parentRoute: typeof LineupRoute
-    }
-    '/lautstaerke/$device': {
-      id: '/lautstaerke/$device'
-      path: '/$device'
-      fullPath: '/lautstaerke/$device'
-      preLoaderRoute: typeof LautstaerkeDeviceRouteImport
-      parentRoute: typeof LautstaerkeRoute
-    }
-    '/events_/$id': {
-      id: '/events_/$id'
-      path: '/events/$id'
-      fullPath: '/events/$id'
-      preLoaderRoute: typeof EventsIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/card/$hash': {
-      id: '/card/$hash'
-      path: '/card/$hash'
-      fullPath: '/card/$hash'
-      preLoaderRoute: typeof CardHashRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/booking_/$applicationType': {
-      id: '/booking_/$applicationType'
-      path: '/booking/$applicationType'
-      fullPath: '/booking/$applicationType'
-      preLoaderRoute: typeof BookingApplicationTypeRouteImport
-      parentRoute: typeof rootRouteImport
+    '/crew/lautstaerke': {
+      id: '/crew/lautstaerke'
+      path: '/lautstaerke'
+      fullPath: '/crew/lautstaerke'
+      preLoaderRoute: typeof CrewLautstaerkeRouteImport
+      parentRoute: typeof CrewRoute
     }
     '/api/badges': {
       id: '/api/badges'
@@ -660,40 +502,173 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiBadgesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/spenden_/quittung/$id': {
-      id: '/spenden_/quittung/$id'
-      path: '/spenden/quittung/$id'
-      fullPath: '/spenden/quittung/$id'
-      preLoaderRoute: typeof SpendenQuittungIdRouteImport
-      parentRoute: typeof rootRouteImport
+    '/_main/speisekarte': {
+      id: '/_main/speisekarte'
+      path: '/speisekarte'
+      fullPath: '/speisekarte'
+      preLoaderRoute: typeof MainSpeisekarteRouteImport
+      parentRoute: typeof MainRoute
     }
-    '/lineup/$year_/$slug': {
-      id: '/lineup/$year_/$slug'
-      path: '/$year/$slug'
-      fullPath: '/lineup/$year/$slug'
-      preLoaderRoute: typeof LineupYearSlugRouteImport
-      parentRoute: typeof LineupRoute
+    '/_main/plakate': {
+      id: '/_main/plakate'
+      path: '/plakate'
+      fullPath: '/plakate'
+      preLoaderRoute: typeof MainPlakateRouteImport
+      parentRoute: typeof MainRoute
     }
-    '/card/$hash/kult': {
-      id: '/card/$hash/kult'
-      path: '/kult'
-      fullPath: '/card/$hash/kult'
-      preLoaderRoute: typeof CardHashKultRouteImport
-      parentRoute: typeof CardHashRoute
+    '/_main/nuclino-sso': {
+      id: '/_main/nuclino-sso'
+      path: '/nuclino-sso'
+      fullPath: '/nuclino-sso'
+      preLoaderRoute: typeof MainNuclinoSsoRouteImport
+      parentRoute: typeof MainRoute
     }
-    '/card/$hash/crew': {
-      id: '/card/$hash/crew'
-      path: '/crew'
-      fullPath: '/card/$hash/crew'
-      preLoaderRoute: typeof CardHashCrewRouteImport
-      parentRoute: typeof CardHashRoute
+    '/_main/mitgliedsantrag': {
+      id: '/_main/mitgliedsantrag'
+      path: '/mitgliedsantrag'
+      fullPath: '/mitgliedsantrag'
+      preLoaderRoute: typeof MainMitgliedsantragRouteImport
+      parentRoute: typeof MainRoute
     }
-    '/booking_/$applicationType_/danke': {
-      id: '/booking_/$applicationType_/danke'
-      path: '/booking/$applicationType/danke'
-      fullPath: '/booking/$applicationType/danke'
-      preLoaderRoute: typeof BookingApplicationTypeDankeRouteImport
-      parentRoute: typeof rootRouteImport
+    '/_main/logo': {
+      id: '/_main/logo'
+      path: '/logo'
+      fullPath: '/logo'
+      preLoaderRoute: typeof MainLogoRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/lineup': {
+      id: '/_main/lineup'
+      path: '/lineup'
+      fullPath: '/lineup'
+      preLoaderRoute: typeof MainLineupRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/learn': {
+      id: '/_main/learn'
+      path: '/learn'
+      fullPath: '/learn'
+      preLoaderRoute: typeof MainLearnRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/infos': {
+      id: '/_main/infos'
+      path: '/infos'
+      fullPath: '/infos'
+      preLoaderRoute: typeof MainInfosRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/events': {
+      id: '/_main/events'
+      path: '/events'
+      fullPath: '/events'
+      preLoaderRoute: typeof MainEventsRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/booking': {
+      id: '/_main/booking'
+      path: '/booking'
+      fullPath: '/booking'
+      preLoaderRoute: typeof MainBookingRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/badges': {
+      id: '/_main/badges'
+      path: '/badges'
+      fullPath: '/badges'
+      preLoaderRoute: typeof MainBadgesRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/angebot': {
+      id: '/_main/angebot'
+      path: '/angebot'
+      fullPath: '/angebot'
+      preLoaderRoute: typeof MainAngebotRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/Route': {
+      id: '/_main/Route'
+      path: '/Route'
+      fullPath: '/Route'
+      preLoaderRoute: typeof MainRouteRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/$slug': {
+      id: '/_main/$slug'
+      path: '/$slug'
+      fullPath: '/$slug'
+      preLoaderRoute: typeof MainSlugRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/crew/lautstaerke/': {
+      id: '/crew/lautstaerke/'
+      path: '/'
+      fullPath: '/crew/lautstaerke/'
+      preLoaderRoute: typeof CrewLautstaerkeIndexRouteImport
+      parentRoute: typeof CrewLautstaerkeRoute
+    }
+    '/_main/lineup/': {
+      id: '/_main/lineup/'
+      path: '/'
+      fullPath: '/lineup/'
+      preLoaderRoute: typeof MainLineupIndexRouteImport
+      parentRoute: typeof MainLineupRoute
+    }
+    '/crew/lautstaerke/$device': {
+      id: '/crew/lautstaerke/$device'
+      path: '/$device'
+      fullPath: '/crew/lautstaerke/$device'
+      preLoaderRoute: typeof CrewLautstaerkeDeviceRouteImport
+      parentRoute: typeof CrewLautstaerkeRoute
+    }
+    '/_main/news/archiv': {
+      id: '/_main/news/archiv'
+      path: '/news/archiv'
+      fullPath: '/news/archiv'
+      preLoaderRoute: typeof MainNewsArchivRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/news/$slug': {
+      id: '/_main/news/$slug'
+      path: '/news/$slug'
+      fullPath: '/news/$slug'
+      preLoaderRoute: typeof MainNewsSlugRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/mitgliedsantrag_/danke': {
+      id: '/_main/mitgliedsantrag_/danke'
+      path: '/mitgliedsantrag/danke'
+      fullPath: '/mitgliedsantrag/danke'
+      preLoaderRoute: typeof MainMitgliedsantragDankeRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/lineup/$year': {
+      id: '/_main/lineup/$year'
+      path: '/$year'
+      fullPath: '/lineup/$year'
+      preLoaderRoute: typeof MainLineupYearRouteImport
+      parentRoute: typeof MainLineupRoute
+    }
+    '/_main/events_/$id': {
+      id: '/_main/events_/$id'
+      path: '/events/$id'
+      fullPath: '/events/$id'
+      preLoaderRoute: typeof MainEventsIdRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/card/$hash': {
+      id: '/_main/card/$hash'
+      path: '/card/$hash'
+      fullPath: '/card/$hash'
+      preLoaderRoute: typeof MainCardHashRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/booking_/$applicationType': {
+      id: '/_main/booking_/$applicationType'
+      path: '/booking/$applicationType'
+      fullPath: '/booking/$applicationType'
+      preLoaderRoute: typeof MainBookingApplicationTypeRouteImport
+      parentRoute: typeof MainRoute
     }
     '/api/spenden/quittung/$id': {
       id: '/api/spenden/quittung/$id'
@@ -702,79 +677,158 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiSpendenQuittungIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_main/spenden_/quittung/$id': {
+      id: '/_main/spenden_/quittung/$id'
+      path: '/spenden/quittung/$id'
+      fullPath: '/spenden/quittung/$id'
+      preLoaderRoute: typeof MainSpendenQuittungIdRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/lineup/$year_/$slug': {
+      id: '/_main/lineup/$year_/$slug'
+      path: '/$year/$slug'
+      fullPath: '/lineup/$year/$slug'
+      preLoaderRoute: typeof MainLineupYearSlugRouteImport
+      parentRoute: typeof MainLineupRoute
+    }
+    '/_main/card/$hash/kult': {
+      id: '/_main/card/$hash/kult'
+      path: '/kult'
+      fullPath: '/card/$hash/kult'
+      preLoaderRoute: typeof MainCardHashKultRouteImport
+      parentRoute: typeof MainCardHashRoute
+    }
+    '/_main/card/$hash/crew': {
+      id: '/_main/card/$hash/crew'
+      path: '/crew'
+      fullPath: '/card/$hash/crew'
+      preLoaderRoute: typeof MainCardHashCrewRouteImport
+      parentRoute: typeof MainCardHashRoute
+    }
+    '/_main/booking_/$applicationType_/danke': {
+      id: '/_main/booking_/$applicationType_/danke'
+      path: '/booking/$applicationType/danke'
+      fullPath: '/booking/$applicationType/danke'
+      preLoaderRoute: typeof MainBookingApplicationTypeDankeRouteImport
+      parentRoute: typeof MainRoute
+    }
   }
 }
 
-interface LautstaerkeRouteChildren {
-  LautstaerkeDeviceRoute: typeof LautstaerkeDeviceRoute
-  LautstaerkeIndexRoute: typeof LautstaerkeIndexRoute
+interface MainLineupRouteChildren {
+  MainLineupYearRoute: typeof MainLineupYearRoute
+  MainLineupIndexRoute: typeof MainLineupIndexRoute
+  MainLineupYearSlugRoute: typeof MainLineupYearSlugRoute
 }
 
-const LautstaerkeRouteChildren: LautstaerkeRouteChildren = {
-  LautstaerkeDeviceRoute: LautstaerkeDeviceRoute,
-  LautstaerkeIndexRoute: LautstaerkeIndexRoute,
+const MainLineupRouteChildren: MainLineupRouteChildren = {
+  MainLineupYearRoute: MainLineupYearRoute,
+  MainLineupIndexRoute: MainLineupIndexRoute,
+  MainLineupYearSlugRoute: MainLineupYearSlugRoute,
 }
 
-const LautstaerkeRouteWithChildren = LautstaerkeRoute._addFileChildren(
-  LautstaerkeRouteChildren,
+const MainLineupRouteWithChildren = MainLineupRoute._addFileChildren(
+  MainLineupRouteChildren,
 )
 
-interface LineupRouteChildren {
-  LineupYearRoute: typeof LineupYearRoute
-  LineupIndexRoute: typeof LineupIndexRoute
-  LineupYearSlugRoute: typeof LineupYearSlugRoute
+interface MainCardHashRouteChildren {
+  MainCardHashCrewRoute: typeof MainCardHashCrewRoute
+  MainCardHashKultRoute: typeof MainCardHashKultRoute
 }
 
-const LineupRouteChildren: LineupRouteChildren = {
-  LineupYearRoute: LineupYearRoute,
-  LineupIndexRoute: LineupIndexRoute,
-  LineupYearSlugRoute: LineupYearSlugRoute,
+const MainCardHashRouteChildren: MainCardHashRouteChildren = {
+  MainCardHashCrewRoute: MainCardHashCrewRoute,
+  MainCardHashKultRoute: MainCardHashKultRoute,
 }
 
-const LineupRouteWithChildren =
-  LineupRoute._addFileChildren(LineupRouteChildren)
-
-interface CardHashRouteChildren {
-  CardHashCrewRoute: typeof CardHashCrewRoute
-  CardHashKultRoute: typeof CardHashKultRoute
-}
-
-const CardHashRouteChildren: CardHashRouteChildren = {
-  CardHashCrewRoute: CardHashCrewRoute,
-  CardHashKultRoute: CardHashKultRoute,
-}
-
-const CardHashRouteWithChildren = CardHashRoute._addFileChildren(
-  CardHashRouteChildren,
+const MainCardHashRouteWithChildren = MainCardHashRoute._addFileChildren(
+  MainCardHashRouteChildren,
 )
+
+interface MainRouteChildren {
+  MainSlugRoute: typeof MainSlugRoute
+  MainRouteRoute: typeof MainRouteRoute
+  MainAngebotRoute: typeof MainAngebotRoute
+  MainBadgesRoute: typeof MainBadgesRoute
+  MainBookingRoute: typeof MainBookingRoute
+  MainEventsRoute: typeof MainEventsRoute
+  MainInfosRoute: typeof MainInfosRoute
+  MainLearnRoute: typeof MainLearnRoute
+  MainLineupRoute: typeof MainLineupRouteWithChildren
+  MainLogoRoute: typeof MainLogoRoute
+  MainMitgliedsantragRoute: typeof MainMitgliedsantragRoute
+  MainNuclinoSsoRoute: typeof MainNuclinoSsoRoute
+  MainPlakateRoute: typeof MainPlakateRoute
+  MainSpeisekarteRoute: typeof MainSpeisekarteRoute
+  MainIndexRoute: typeof MainIndexRoute
+  MainBookingApplicationTypeRoute: typeof MainBookingApplicationTypeRoute
+  MainCardHashRoute: typeof MainCardHashRouteWithChildren
+  MainEventsIdRoute: typeof MainEventsIdRoute
+  MainMitgliedsantragDankeRoute: typeof MainMitgliedsantragDankeRoute
+  MainNewsSlugRoute: typeof MainNewsSlugRoute
+  MainNewsArchivRoute: typeof MainNewsArchivRoute
+  MainBookingApplicationTypeDankeRoute: typeof MainBookingApplicationTypeDankeRoute
+  MainSpendenQuittungIdRoute: typeof MainSpendenQuittungIdRoute
+}
+
+const MainRouteChildren: MainRouteChildren = {
+  MainSlugRoute: MainSlugRoute,
+  MainRouteRoute: MainRouteRoute,
+  MainAngebotRoute: MainAngebotRoute,
+  MainBadgesRoute: MainBadgesRoute,
+  MainBookingRoute: MainBookingRoute,
+  MainEventsRoute: MainEventsRoute,
+  MainInfosRoute: MainInfosRoute,
+  MainLearnRoute: MainLearnRoute,
+  MainLineupRoute: MainLineupRouteWithChildren,
+  MainLogoRoute: MainLogoRoute,
+  MainMitgliedsantragRoute: MainMitgliedsantragRoute,
+  MainNuclinoSsoRoute: MainNuclinoSsoRoute,
+  MainPlakateRoute: MainPlakateRoute,
+  MainSpeisekarteRoute: MainSpeisekarteRoute,
+  MainIndexRoute: MainIndexRoute,
+  MainBookingApplicationTypeRoute: MainBookingApplicationTypeRoute,
+  MainCardHashRoute: MainCardHashRouteWithChildren,
+  MainEventsIdRoute: MainEventsIdRoute,
+  MainMitgliedsantragDankeRoute: MainMitgliedsantragDankeRoute,
+  MainNewsSlugRoute: MainNewsSlugRoute,
+  MainNewsArchivRoute: MainNewsArchivRoute,
+  MainBookingApplicationTypeDankeRoute: MainBookingApplicationTypeDankeRoute,
+  MainSpendenQuittungIdRoute: MainSpendenQuittungIdRoute,
+}
+
+const MainRouteWithChildren = MainRoute._addFileChildren(MainRouteChildren)
+
+interface CrewLautstaerkeRouteChildren {
+  CrewLautstaerkeDeviceRoute: typeof CrewLautstaerkeDeviceRoute
+  CrewLautstaerkeIndexRoute: typeof CrewLautstaerkeIndexRoute
+}
+
+const CrewLautstaerkeRouteChildren: CrewLautstaerkeRouteChildren = {
+  CrewLautstaerkeDeviceRoute: CrewLautstaerkeDeviceRoute,
+  CrewLautstaerkeIndexRoute: CrewLautstaerkeIndexRoute,
+}
+
+const CrewLautstaerkeRouteWithChildren = CrewLautstaerkeRoute._addFileChildren(
+  CrewLautstaerkeRouteChildren,
+)
+
+interface CrewRouteChildren {
+  CrewLautstaerkeRoute: typeof CrewLautstaerkeRouteWithChildren
+  CrewIndexRoute: typeof CrewIndexRoute
+}
+
+const CrewRouteChildren: CrewRouteChildren = {
+  CrewLautstaerkeRoute: CrewLautstaerkeRouteWithChildren,
+  CrewIndexRoute: CrewIndexRoute,
+}
+
+const CrewRouteWithChildren = CrewRoute._addFileChildren(CrewRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  SlugRoute: SlugRoute,
-  RouteRoute: RouteRoute,
-  AngebotRoute: AngebotRoute,
-  BadgesRoute: BadgesRoute,
-  BookingRoute: BookingRoute,
-  EventsRoute: EventsRoute,
-  InfosRoute: InfosRoute,
-  LautstaerkeRoute: LautstaerkeRouteWithChildren,
-  LautstChar228rkeRoute: LautstChar228rkeRoute,
-  LearnRoute: LearnRoute,
-  LineupRoute: LineupRouteWithChildren,
-  LogoRoute: LogoRoute,
-  MitgliedsantragRoute: MitgliedsantragRoute,
-  NuclinoSsoRoute: NuclinoSsoRoute,
-  PlakateRoute: PlakateRoute,
-  SpeisekarteRoute: SpeisekarteRoute,
+  MainRoute: MainRouteWithChildren,
+  CrewRoute: CrewRouteWithChildren,
   ApiBadgesRoute: ApiBadgesRoute,
-  BookingApplicationTypeRoute: BookingApplicationTypeRoute,
-  CardHashRoute: CardHashRouteWithChildren,
-  EventsIdRoute: EventsIdRoute,
-  MitgliedsantragDankeRoute: MitgliedsantragDankeRoute,
-  NewsSlugRoute: NewsSlugRoute,
-  NewsArchivRoute: NewsArchivRoute,
-  BookingApplicationTypeDankeRoute: BookingApplicationTypeDankeRoute,
-  SpendenQuittungIdRoute: SpendenQuittungIdRoute,
   ApiSpendenQuittungIdRoute: ApiSpendenQuittungIdRoute,
 }
 export const routeTree = rootRouteImport

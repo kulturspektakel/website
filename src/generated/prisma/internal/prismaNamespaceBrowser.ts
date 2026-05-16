@@ -80,7 +80,8 @@ export const ModelName = {
   ItemLocation: 'ItemLocation',
   ViewerLocation: 'ViewerLocation',
   ShortDomainRedirect: 'ShortDomainRedirect',
-  Donation: 'Donation'
+  Donation: 'Donation',
+  DeviceLocation: 'DeviceLocation'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -483,6 +484,18 @@ export const DonationScalarFieldEnum = {
 export type DonationScalarFieldEnum = (typeof DonationScalarFieldEnum)[keyof typeof DonationScalarFieldEnum]
 
 
+export const DeviceLocationScalarFieldEnum = {
+  id: 'id',
+  deviceId: 'deviceId',
+  createdAt: 'createdAt',
+  latitude: 'latitude',
+  longitude: 'longitude',
+  locationName: 'locationName'
+} as const
+
+export type DeviceLocationScalarFieldEnum = (typeof DeviceLocationScalarFieldEnum)[keyof typeof DeviceLocationScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -797,4 +810,13 @@ export const DonationOrderByRelevanceFieldEnum = {
 } as const
 
 export type DonationOrderByRelevanceFieldEnum = (typeof DonationOrderByRelevanceFieldEnum)[keyof typeof DonationOrderByRelevanceFieldEnum]
+
+
+export const DeviceLocationOrderByRelevanceFieldEnum = {
+  id: 'id',
+  deviceId: 'deviceId',
+  locationName: 'locationName'
+} as const
+
+export type DeviceLocationOrderByRelevanceFieldEnum = (typeof DeviceLocationOrderByRelevanceFieldEnum)[keyof typeof DeviceLocationOrderByRelevanceFieldEnum]
 

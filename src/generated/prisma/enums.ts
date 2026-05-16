@@ -43,7 +43,8 @@ export type OrderPayment = (typeof OrderPayment)[keyof typeof OrderPayment]
 
 export const DeviceType = {
   CONTACTLESS_TERMINAL: 'CONTACTLESS_TERMINAL',
-  IPAD: 'IPAD'
+  IPAD: 'IPAD',
+  NOISE_MONITOR: 'NOISE_MONITOR'
 } as const
 
 export type DeviceType = (typeof DeviceType)[keyof typeof DeviceType]

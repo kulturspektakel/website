@@ -1,0 +1,138 @@
+import {
+  Box,
+  Heading,
+  SimpleGrid,
+  Image,
+  Center,
+  Button,
+} from '@chakra-ui/react';
+import {createFileRoute} from '@tanstack/react-router';
+import React, {useMemo} from 'react';
+import Card from '../components/Card';
+import DateString from '../components/DateString';
+import Mark from '../components/Mark';
+import {useServerFn} from '@tanstack/react-start';
+import {loader} from '../server/routes/news.archiv';
+import {imageUrl} from '../utils/directusImage';
+import {useInfiniteQuery} from '@tanstack/react-query';
+import {seo} from '../utils/seo';
+
+const PAGE_SIZE = 30;
+
+export const Route = createFileRoute('/_main/news/archiv')({
+  component: NewsArchive,
+  loader: async () => await loader(),
+  head: () =>
+    seo({
+      title: 'Newsarchiv',
+    }),
+});
+
+function NewsArchive() {
+  const initialData = Route.useLoaderData();
+  const queryFn = useServerFn(loader);
+  const {data, isFetchingNextPage, fetchNextPage} = useInfiniteQuery({
+    queryKey: ['news'],
+    queryFn: ({pageParam}) => queryFn({data: pageParam}),
+    getNextPageParam: (lastPage) =>
+      lastPage.length ? lastPage[lastPage.length - 1].slug : undefined,
+    initialPageParam: undefined as string | undefined,
+    initialData: {
+      pages: [initialData],
+      pageParams: [undefined],
+    },
+  });
+
+  const hasNextPage = data?.pages[data.pages.length - 1].length === PAGE_SIZE;
+
+  const news = useMemo(() => {
+    const flatData = data?.pages.flat() ?? [];
+    const years =
+      // group data by year
+      flatData.reduce((acc, d) => {
+        const year = d.createdAt.getFullYear();
+        if (acc.has(year)) {
+          acc.get(year)?.push(d);
+        } else {
+          acc.set(year, [d]);
+        }
+        return acc;
+      }, new Map<number, typeof flatData>()) ?? [];
+
+    return Array.from(years.entries()).sort(([a], [b]) => b - a);
+  }, [data]);
+
+  return (
+    <>
+      {news.map(([year, news]) => (
+        <React.Fragment key={year}>
+          <Heading size="3xl" textAlign="center" mb="10">
+            {year}
+          </Heading>
+          <SimpleGrid columns={[2, 2, 3]} gap={4} key={year} mb="10">
+            {news.map((node) => (
+              <Card
+                key={node.slug}
+                link={{
+                  to: '/news/$slug',
+                  params: {
+                    slug: node.slug,
+                  },
+                }}
+                aspectRatio={1}
+                backgroundSize="cover"
+                backgroundPosition="center"
+              >
+                <Box
+                  position="absolute"
+                  top="0"
+                  left="0"
+                  right="0"
+                  bottom="0"
+                  p="4"
+                  bgImage={
+                    node.content?.images.length
+                      ? 'linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.3))'
+                      : undefined
+                  }
+                  zIndex={2}
+                >
+                  <Mark ml="0.5">
+                    <DateString date={node.createdAt} />
+                  </Mark>
+                  <Heading
+                    size={['lg', '2xl', '2xl']}
+                    hyphens="auto"
+                    color={node.content?.images.length ? 'white' : undefined}
+                    mt="1"
+                    lineClamp={5}
+                  >
+                    {node.title}
+                  </Heading>
+                </Box>
+                <Image
+                  position="absolute"
+                  width="100%"
+                  height="100%"
+                  src={
+                    imageUrl(node.content?.images[0]?.id, {width: 200}) ??
+                    '/fallback.svg'
+                  }
+                  loading="lazy"
+                  objectFit="cover"
+                />
+              </Card>
+            ))}
+          </SimpleGrid>
+        </React.Fragment>
+      ))}
+      {hasNextPage && (
+        <Center p="10">
+          <Button onClick={() => fetchNextPage()} loading={isFetchingNextPage}>
+            ältere Artikel
+          </Button>
+        </Center>
+      )}
+    </>
+  );
+}
