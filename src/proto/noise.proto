@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+message NoiseRecording {
+  message Record {
+    uint32 seq_no    = 1;   // monotonic; gap detection
+    bytes  bands     = 2;   // 31 bytes; (dB - 20) * 2 per band
+    uint32 laeq_1s   = 3;   // same encoding as bands
+    uint32 lceq_1s   = 4;
+    uint32 lafmax_1s = 5;
+    uint32 lcfmax_1s = 6;
+    uint32 lcpeak_1s = 7;
+  }
+  repeated Record records   = 2;   // 1 (MQTT/BLE live) or up to 300 (file)
+  uint32 laeq_15m           = 3;   // sliding-window LAeq over last 15 min,
+                                   // same encoding as Record.laeq_1s (= (dB - 20) * 2)
+  uint32 lceq_15m           = 4;   // sliding-window LCeq over last 15 min, same encoding
+  optional uint32 battery_mv = 5;  // battery voltage in millivolts; only set for
+                                   // live MQTT/BLE messages and only when running
+                                   // on battery (i.e. USB not connected)
+}

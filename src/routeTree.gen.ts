@@ -16,6 +16,8 @@ import { Route as MitgliedsantragRouteImport } from './routes/mitgliedsantrag'
 import { Route as LogoRouteImport } from './routes/logo'
 import { Route as LineupRouteImport } from './routes/lineup'
 import { Route as LearnRouteImport } from './routes/learn'
+import { Route as LautstChar228rkeRouteImport } from './routes/lautstärke'
+import { Route as LautstaerkeRouteImport } from './routes/lautstaerke'
 import { Route as InfosRouteImport } from './routes/infos'
 import { Route as EventsRouteImport } from './routes/events'
 import { Route as BookingRouteImport } from './routes/booking'
@@ -25,10 +27,12 @@ import { Route as RouteRouteImport } from './routes/Route'
 import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LineupIndexRouteImport } from './routes/lineup.index'
+import { Route as LautstaerkeIndexRouteImport } from './routes/lautstaerke.index'
 import { Route as NewsArchivRouteImport } from './routes/news.archiv'
 import { Route as NewsSlugRouteImport } from './routes/news.$slug'
 import { Route as MitgliedsantragDankeRouteImport } from './routes/mitgliedsantrag_.danke'
 import { Route as LineupYearRouteImport } from './routes/lineup.$year'
+import { Route as LautstaerkeDeviceRouteImport } from './routes/lautstaerke.$device'
 import { Route as EventsIdRouteImport } from './routes/events_.$id'
 import { Route as CardHashRouteImport } from './routes/card.$hash'
 import { Route as BookingApplicationTypeRouteImport } from './routes/booking_.$applicationType'
@@ -73,6 +77,16 @@ const LineupRoute = LineupRouteImport.update({
 const LearnRoute = LearnRouteImport.update({
   id: '/learn',
   path: '/learn',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LautstChar228rkeRoute = LautstChar228rkeRouteImport.update({
+  id: '/lautstärke',
+  path: '/lautstärke',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LautstaerkeRoute = LautstaerkeRouteImport.update({
+  id: '/lautstaerke',
+  path: '/lautstaerke',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InfosRoute = InfosRouteImport.update({
@@ -120,6 +134,11 @@ const LineupIndexRoute = LineupIndexRouteImport.update({
   path: '/',
   getParentRoute: () => LineupRoute,
 } as any)
+const LautstaerkeIndexRoute = LautstaerkeIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => LautstaerkeRoute,
+} as any)
 const NewsArchivRoute = NewsArchivRouteImport.update({
   id: '/news/archiv',
   path: '/news/archiv',
@@ -139,6 +158,11 @@ const LineupYearRoute = LineupYearRouteImport.update({
   id: '/$year',
   path: '/$year',
   getParentRoute: () => LineupRoute,
+} as any)
+const LautstaerkeDeviceRoute = LautstaerkeDeviceRouteImport.update({
+  id: '/$device',
+  path: '/$device',
+  getParentRoute: () => LautstaerkeRoute,
 } as any)
 const EventsIdRoute = EventsIdRouteImport.update({
   id: '/events_/$id',
@@ -201,6 +225,8 @@ export interface FileRoutesByFullPath {
   '/booking': typeof BookingRoute
   '/events': typeof EventsRoute
   '/infos': typeof InfosRoute
+  '/lautstaerke': typeof LautstaerkeRouteWithChildren
+  '/lautstärke': typeof LautstChar228rkeRoute
   '/learn': typeof LearnRoute
   '/lineup': typeof LineupRouteWithChildren
   '/logo': typeof LogoRoute
@@ -212,10 +238,12 @@ export interface FileRoutesByFullPath {
   '/booking/$applicationType': typeof BookingApplicationTypeRoute
   '/card/$hash': typeof CardHashRouteWithChildren
   '/events/$id': typeof EventsIdRoute
+  '/lautstaerke/$device': typeof LautstaerkeDeviceRoute
   '/lineup/$year': typeof LineupYearRoute
   '/mitgliedsantrag/danke': typeof MitgliedsantragDankeRoute
   '/news/$slug': typeof NewsSlugRoute
   '/news/archiv': typeof NewsArchivRoute
+  '/lautstaerke/': typeof LautstaerkeIndexRoute
   '/lineup/': typeof LineupIndexRoute
   '/booking/$applicationType/danke': typeof BookingApplicationTypeDankeRoute
   '/card/$hash/crew': typeof CardHashCrewRoute
@@ -233,6 +261,7 @@ export interface FileRoutesByTo {
   '/booking': typeof BookingRoute
   '/events': typeof EventsRoute
   '/infos': typeof InfosRoute
+  '/lautstärke': typeof LautstChar228rkeRoute
   '/learn': typeof LearnRoute
   '/logo': typeof LogoRoute
   '/mitgliedsantrag': typeof MitgliedsantragRoute
@@ -243,10 +272,12 @@ export interface FileRoutesByTo {
   '/booking/$applicationType': typeof BookingApplicationTypeRoute
   '/card/$hash': typeof CardHashRouteWithChildren
   '/events/$id': typeof EventsIdRoute
+  '/lautstaerke/$device': typeof LautstaerkeDeviceRoute
   '/lineup/$year': typeof LineupYearRoute
   '/mitgliedsantrag/danke': typeof MitgliedsantragDankeRoute
   '/news/$slug': typeof NewsSlugRoute
   '/news/archiv': typeof NewsArchivRoute
+  '/lautstaerke': typeof LautstaerkeIndexRoute
   '/lineup': typeof LineupIndexRoute
   '/booking/$applicationType/danke': typeof BookingApplicationTypeDankeRoute
   '/card/$hash/crew': typeof CardHashCrewRoute
@@ -265,6 +296,8 @@ export interface FileRoutesById {
   '/booking': typeof BookingRoute
   '/events': typeof EventsRoute
   '/infos': typeof InfosRoute
+  '/lautstaerke': typeof LautstaerkeRouteWithChildren
+  '/lautstärke': typeof LautstChar228rkeRoute
   '/learn': typeof LearnRoute
   '/lineup': typeof LineupRouteWithChildren
   '/logo': typeof LogoRoute
@@ -276,10 +309,12 @@ export interface FileRoutesById {
   '/booking_/$applicationType': typeof BookingApplicationTypeRoute
   '/card/$hash': typeof CardHashRouteWithChildren
   '/events_/$id': typeof EventsIdRoute
+  '/lautstaerke/$device': typeof LautstaerkeDeviceRoute
   '/lineup/$year': typeof LineupYearRoute
   '/mitgliedsantrag_/danke': typeof MitgliedsantragDankeRoute
   '/news/$slug': typeof NewsSlugRoute
   '/news/archiv': typeof NewsArchivRoute
+  '/lautstaerke/': typeof LautstaerkeIndexRoute
   '/lineup/': typeof LineupIndexRoute
   '/booking_/$applicationType_/danke': typeof BookingApplicationTypeDankeRoute
   '/card/$hash/crew': typeof CardHashCrewRoute
@@ -299,6 +334,8 @@ export interface FileRouteTypes {
     | '/booking'
     | '/events'
     | '/infos'
+    | '/lautstaerke'
+    | '/lautstärke'
     | '/learn'
     | '/lineup'
     | '/logo'
@@ -310,10 +347,12 @@ export interface FileRouteTypes {
     | '/booking/$applicationType'
     | '/card/$hash'
     | '/events/$id'
+    | '/lautstaerke/$device'
     | '/lineup/$year'
     | '/mitgliedsantrag/danke'
     | '/news/$slug'
     | '/news/archiv'
+    | '/lautstaerke/'
     | '/lineup/'
     | '/booking/$applicationType/danke'
     | '/card/$hash/crew'
@@ -331,6 +370,7 @@ export interface FileRouteTypes {
     | '/booking'
     | '/events'
     | '/infos'
+    | '/lautstärke'
     | '/learn'
     | '/logo'
     | '/mitgliedsantrag'
@@ -341,10 +381,12 @@ export interface FileRouteTypes {
     | '/booking/$applicationType'
     | '/card/$hash'
     | '/events/$id'
+    | '/lautstaerke/$device'
     | '/lineup/$year'
     | '/mitgliedsantrag/danke'
     | '/news/$slug'
     | '/news/archiv'
+    | '/lautstaerke'
     | '/lineup'
     | '/booking/$applicationType/danke'
     | '/card/$hash/crew'
@@ -362,6 +404,8 @@ export interface FileRouteTypes {
     | '/booking'
     | '/events'
     | '/infos'
+    | '/lautstaerke'
+    | '/lautstärke'
     | '/learn'
     | '/lineup'
     | '/logo'
@@ -373,10 +417,12 @@ export interface FileRouteTypes {
     | '/booking_/$applicationType'
     | '/card/$hash'
     | '/events_/$id'
+    | '/lautstaerke/$device'
     | '/lineup/$year'
     | '/mitgliedsantrag_/danke'
     | '/news/$slug'
     | '/news/archiv'
+    | '/lautstaerke/'
     | '/lineup/'
     | '/booking_/$applicationType_/danke'
     | '/card/$hash/crew'
@@ -395,6 +441,8 @@ export interface RootRouteChildren {
   BookingRoute: typeof BookingRoute
   EventsRoute: typeof EventsRoute
   InfosRoute: typeof InfosRoute
+  LautstaerkeRoute: typeof LautstaerkeRouteWithChildren
+  LautstChar228rkeRoute: typeof LautstChar228rkeRoute
   LearnRoute: typeof LearnRoute
   LineupRoute: typeof LineupRouteWithChildren
   LogoRoute: typeof LogoRoute
@@ -465,6 +513,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LearnRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lautstärke': {
+      id: '/lautstärke'
+      path: '/lautstärke'
+      fullPath: '/lautstärke'
+      preLoaderRoute: typeof LautstChar228rkeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lautstaerke': {
+      id: '/lautstaerke'
+      path: '/lautstaerke'
+      fullPath: '/lautstaerke'
+      preLoaderRoute: typeof LautstaerkeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/infos': {
       id: '/infos'
       path: '/infos'
@@ -528,6 +590,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LineupIndexRouteImport
       parentRoute: typeof LineupRoute
     }
+    '/lautstaerke/': {
+      id: '/lautstaerke/'
+      path: '/'
+      fullPath: '/lautstaerke/'
+      preLoaderRoute: typeof LautstaerkeIndexRouteImport
+      parentRoute: typeof LautstaerkeRoute
+    }
     '/news/archiv': {
       id: '/news/archiv'
       path: '/news/archiv'
@@ -555,6 +624,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/lineup/$year'
       preLoaderRoute: typeof LineupYearRouteImport
       parentRoute: typeof LineupRoute
+    }
+    '/lautstaerke/$device': {
+      id: '/lautstaerke/$device'
+      path: '/$device'
+      fullPath: '/lautstaerke/$device'
+      preLoaderRoute: typeof LautstaerkeDeviceRouteImport
+      parentRoute: typeof LautstaerkeRoute
     }
     '/events_/$id': {
       id: '/events_/$id'
@@ -629,6 +705,20 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface LautstaerkeRouteChildren {
+  LautstaerkeDeviceRoute: typeof LautstaerkeDeviceRoute
+  LautstaerkeIndexRoute: typeof LautstaerkeIndexRoute
+}
+
+const LautstaerkeRouteChildren: LautstaerkeRouteChildren = {
+  LautstaerkeDeviceRoute: LautstaerkeDeviceRoute,
+  LautstaerkeIndexRoute: LautstaerkeIndexRoute,
+}
+
+const LautstaerkeRouteWithChildren = LautstaerkeRoute._addFileChildren(
+  LautstaerkeRouteChildren,
+)
+
 interface LineupRouteChildren {
   LineupYearRoute: typeof LineupYearRoute
   LineupIndexRoute: typeof LineupIndexRoute
@@ -667,6 +757,8 @@ const rootRouteChildren: RootRouteChildren = {
   BookingRoute: BookingRoute,
   EventsRoute: EventsRoute,
   InfosRoute: InfosRoute,
+  LautstaerkeRoute: LautstaerkeRouteWithChildren,
+  LautstChar228rkeRoute: LautstChar228rkeRoute,
   LearnRoute: LearnRoute,
   LineupRoute: LineupRouteWithChildren,
   LogoRoute: LogoRoute,

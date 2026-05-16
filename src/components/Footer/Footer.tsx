@@ -11,6 +11,9 @@ import {
 } from '@chakra-ui/react';
 import {FaSpotify, FaYoutube, FaInstagram, FaFacebook} from 'react-icons/fa6';
 import vpby from './vpby.svg';
+import bkm from './bkm.svg';
+import initiativeMusik from './initiative-musik.svg';
+import stmwk from './stmwk.png';
 import LinkButton from '../LinkButton';
 import {Link as RouterLink, useLocation} from '@tanstack/react-router';
 
@@ -90,7 +93,7 @@ export default function Footer() {
             </HStack>
           </VStack>
         </HStack>
-        <VStack>
+        <VStack gap={4} align={{base: 'center', md: 'flex-end'}}>
           <HStack gap={{base: 6, md: 4}} fontSize={{base: 32, md: 24}}>
             <FooterIcon
               href="https://facebook.com/kulturspektakel"
@@ -113,12 +116,57 @@ export default function Footer() {
               icon={FaSpotify}
             />
           </HStack>
-          {/* <Box mt="2" color="whiteAlpha.600">
-          Gefördert von
-          <Link href="https://popkultur.bayern" target="_blank">
-            <Image src={vpby} alt="Verband für Popkultur" />
-          </Link>
-        </Box> */}
+          <HStack
+            gap={6}
+            mt={2}
+            flexWrap="wrap"
+            justify={{base: 'center', md: 'flex-end'}}
+          >
+            <Link
+              href="https://www.bundesregierung.de/breg-de/bundesregierung/staatsministerin-fuer-kultur-und-medien"
+              target="_blank"
+              title="Die Beauftragte der Bundesregierung für Kultur und Medien"
+            >
+              <Image
+                src={bkm}
+                alt="Die Beauftragte der Bundesregierung für Kultur und Medien"
+                height="40px"
+              />
+            </Link>
+            <Link
+              href="https://www.initiative-musik.de"
+              target="_blank"
+              title="Initiative Musik"
+            >
+              <Image
+                src={initiativeMusik}
+                alt="Initiative Musik"
+                height="40px"
+              />
+            </Link>
+            <Link
+              href="https://www.stmwk.bayern.de"
+              target="_blank"
+              title="Bayerisches Staatsministerium für Wissenschaft und Kunst"
+            >
+              <Image
+                src={stmwk}
+                alt="Bayerisches Staatsministerium für Wissenschaft und Kunst"
+                height="40px"
+              />
+            </Link>
+            <Link
+              href="https://popkultur.bayern"
+              target="_blank"
+              title="Verband für Popkultur in Bayern"
+            >
+              <Image
+                src={vpby}
+                alt="Verband für Popkultur in Bayern"
+                height="40px"
+              />
+            </Link>
+          </HStack>
         </VStack>
       </Flex>
     </>
