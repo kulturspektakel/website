@@ -88,7 +88,7 @@ function BigNumber({
   return (
     <VStack gap="1" align="center" flex="1">
       <Text
-        fontSize={{base: 'clamp(2rem, 14vw, 5rem)', lg: 'clamp(2rem, 6vw, 4rem)'}}
+        fontSize={{base: 'clamp(1rem, 7vw, 2rem)', lg: 'clamp(2rem, 6vw, 4rem)'}}
         fontFamily="mono"
         fontWeight="bold"
         lineHeight="1"
@@ -334,7 +334,7 @@ function DeviceDetail() {
         </VStack>
         {ctx.bluetooth.deviceName === device && <BluetoothChip />}
       </HStack>
-      <SimpleGrid columns={{base: 2, lg: 4}} gap="3" mb="3">
+      <SimpleGrid columns={4} gap="3" mb="3">
         <BigNumber
           value={latest ? decodeDb(latest.laeq1s) : null}
           label="LAeq,1s"
