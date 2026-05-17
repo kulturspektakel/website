@@ -35,8 +35,6 @@ export const Route = createFileRoute('/_main')({
     return {
       meta: [
         ...meta,
-        {charSet: 'utf-8'},
-        {name: 'viewport', content: 'width=device-width,initial-scale=1'},
         {property: 'og:locale', content: 'de_DE'},
         {name: 'og:type', content: 'website'},
       ],
