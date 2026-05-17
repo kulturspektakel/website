@@ -26,7 +26,7 @@ export function CardDetails({
   highscores?: HighscoreProps;
 } & StackProps) {
   const {event} = useRouteContext({
-    from: '/card/$hash',
+    from: '/_main/card/$hash',
   });
   const TABS = useMemo(() => {
     const t = ['Buchungen', 'Badges'];

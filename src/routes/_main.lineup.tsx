@@ -25,9 +25,9 @@ export const Route = createFileRoute('/_main/lineup')({
 
 function Lineup() {
   const event = Route.useRouteContext().event;
-  const matchYear = useMatch({from: '/lineup/$year', shouldThrow: false});
+  const matchYear = useMatch({from: '/_main/lineup/$year', shouldThrow: false});
   const matchSlug = useMatch({
-    from: '/lineup/$year_/$slug',
+    from: '/_main/lineup/$year_/$slug',
     shouldThrow: false,
   });
   const year = matchYear?.params.year ?? matchSlug?.params.year;

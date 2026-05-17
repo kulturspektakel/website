@@ -2,7 +2,7 @@ import {useParams} from '@tanstack/react-router';
 
 export default function useIsDJ() {
   const {applicationType} = useParams({
-    from: '/booking_/$applicationType',
+    from: '/_main/booking_/$applicationType',
   });
   return applicationType === 'dj';
 }

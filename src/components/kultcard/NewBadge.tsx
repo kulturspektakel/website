@@ -10,7 +10,7 @@ function useNewlyAwardedBadge(
   awarded: Array<{badgeKey: keyof typeof badgeConfig}>,
 ) {
   const search = useSearch({
-    from: '/card/$hash',
+    from: '/_main/card/$hash',
   });
   if (typeof window === 'undefined') {
     return;

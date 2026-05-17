@@ -4,7 +4,7 @@ import {getDuplicateApplication} from '../../server/components/DuplicateApplicat
 import {useQuery} from '@tanstack/react-query';
 
 export default function DuplicateWarning(props: {bandname?: string}) {
-  const {event} = useRouteContext({from: '/booking_/$applicationType'});
+  const {event} = useRouteContext({from: '/_main/booking_/$applicationType'});
 
   const {data} = useQuery({
     queryKey: ['duplicateApplication', props.bandname, event.id],

@@ -54,7 +54,7 @@ const PLAYED_PREVIOUSLY: Map<PreviouslyPlayed, string> = new Map([
 export default function Step3() {
   const isDJ = useIsDJ();
   const search = useSearch({
-    from: '/booking_/$applicationType',
+    from: '/_main/booking_/$applicationType',
   });
 
   return (
