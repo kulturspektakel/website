@@ -44,32 +44,56 @@ export const SERIES = [
     get: (r: NoiseRecord) => decodeDb(r.lcpeak1s),
   },
   {
-    label: 'LAeq,15m',
+    label: 'LAeq,5m',
     stroke: '#2b8cbe',
-    dash: [6, 4],
-    get: (_r: NoiseRecord, d: NoiseRecording) => decodeDb(d.laeq15m),
+    dash: [2, 3],
+    get: (_r: NoiseRecord, d: NoiseRecording) =>
+      d.laeq5m != null ? decodeDb(d.laeq5m) : null,
   },
   {
-    label: 'LCeq,15m',
+    label: 'LCeq,5m',
+    stroke: '#74a9cf',
+    dash: [2, 3],
+    get: (_r: NoiseRecord, d: NoiseRecording) =>
+      d.lceq5m != null ? decodeDb(d.lceq5m) : null,
+  },
+  {
+    label: 'LAeq,30m',
+    stroke: '#2b8cbe',
+    dash: [6, 4],
+    get: (_r: NoiseRecord, d: NoiseRecording) =>
+      d.laeq30m != null ? decodeDb(d.laeq30m) : null,
+  },
+  {
+    label: 'LCeq,30m',
     stroke: '#74a9cf',
     dash: [6, 4],
-    get: (_r: NoiseRecord, d: NoiseRecording) => decodeDb(d.lceq15m),
+    get: (_r: NoiseRecord, d: NoiseRecording) =>
+      d.lceq30m != null ? decodeDb(d.lceq30m) : null,
   },
 ] as const satisfies ReadonlyArray<{
   label: string;
   stroke: string;
   dash?: readonly number[];
-  get: (r: NoiseRecord, d: NoiseRecording) => number;
+  get: (r: NoiseRecord, d: NoiseRecording) => number | null;
 }>;
 
 export type DeviceState = {
   lastSeen: number;
   latest: NoiseRecord;
-  laeq15m: number;
-  lceq15m: number;
+  // Sliding averages are optional: the firmware only emits each one once its
+  // ring is fully populated, so they're undefined for the first 5/30 min
+  // after boot.
+  laeq5m?: number;
+  lceq5m?: number;
+  laeq30m?: number;
+  lceq30m?: number;
   batteryMv?: number;
 };
-export type DeviceBuffer = number[][];
+// Inner arrays hold timestamps + per-series values; series that come from
+// optional protobuf fields (e.g. laeq_30m) can be null until the device has
+// run long enough to populate them — uPlot renders nulls as gaps.
+export type DeviceBuffer = (number | null)[][];
 
 export type BluetoothSlice = {
   deviceName: string | null;
@@ -78,6 +102,9 @@ export type BluetoothSlice = {
   supported: boolean;
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
+  readCalibrationDb: () => Promise<number>;
+  writeCalibrationDb: (db: number) => Promise<void>;
+  writeWifiCredentials: (ssid: string, password: string) => Promise<void>;
 };
 
 export type LautstaerkeCtx = {

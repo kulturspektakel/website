@@ -10,11 +10,13 @@ message NoiseRecording {
     uint32 lcfmax_1s = 6;
     uint32 lcpeak_1s = 7;
   }
-  repeated Record records   = 2;   // 1 (MQTT/BLE live) or up to 300 (file)
-  uint32 laeq_15m           = 3;   // sliding-window LAeq over last 15 min,
-                                   // same encoding as Record.laeq_1s (= (dB - 20) * 2)
-  uint32 lceq_15m           = 4;   // sliding-window LCeq over last 15 min, same encoding
-  optional uint32 battery_mv = 5;  // battery voltage in millivolts; only set for
-                                   // live MQTT/BLE messages and only when running
-                                   // on battery (i.e. USB not connected)
+  reserved 3, 4;                      // previously laeq_15m / lceq_15m
+
+  repeated Record records       = 2;  // 1 (MQTT/BLE live) or up to 300 (file)
+  optional uint32 battery_mv    = 5;  // millivolts; only set on live messages when on battery
+  optional uint32 laeq_5m       = 6;  // last 5 min, same encoding as Record.laeq_1s
+                                      // ((dB - 20) * 2); only set once the ring is full
+  optional uint32 lceq_5m       = 7;  // last 5 min, same gate as laeq_5m
+  optional uint32 laeq_30m      = 8;  // last 30 min; only set once the ring is full
+  optional uint32 lceq_30m      = 9;  // last 30 min, same gate as laeq_30m
 }

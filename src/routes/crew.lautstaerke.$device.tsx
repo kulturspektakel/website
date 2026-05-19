@@ -334,15 +334,20 @@ function DeviceDetail() {
         </VStack>
         {ctx.bluetooth.deviceName === device && <BluetoothChip />}
       </HStack>
-      <SimpleGrid columns={4} gap="3" mb="3">
+      <SimpleGrid columns={6} gap="3" mb="3">
         <BigNumber
           value={latest ? decodeDb(latest.laeq1s) : null}
           label="LAeq,1s"
           color="#2b8cbe"
         />
         <BigNumber
-          value={deviceState ? decodeDb(deviceState.laeq15m) : null}
-          label="LAeq,15m"
+          value={deviceState?.laeq5m != null ? decodeDb(deviceState.laeq5m) : null}
+          label="LAeq,5m"
+          color="#2b8cbe"
+        />
+        <BigNumber
+          value={deviceState?.laeq30m != null ? decodeDb(deviceState.laeq30m) : null}
+          label="LAeq,30m"
           color="#2b8cbe"
         />
         <BigNumber
@@ -351,8 +356,13 @@ function DeviceDetail() {
           color="#74a9cf"
         />
         <BigNumber
-          value={deviceState ? decodeDb(deviceState.lceq15m) : null}
-          label="LCeq,15m"
+          value={deviceState?.lceq5m != null ? decodeDb(deviceState.lceq5m) : null}
+          label="LCeq,5m"
+          color="#74a9cf"
+        />
+        <BigNumber
+          value={deviceState?.lceq30m != null ? decodeDb(deviceState.lceq30m) : null}
+          label="LCeq,30m"
           color="#74a9cf"
         />
       </SimpleGrid>

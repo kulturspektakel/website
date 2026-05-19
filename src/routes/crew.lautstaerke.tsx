@@ -19,6 +19,9 @@ import {
 import {
   connectBleDevice,
   isWebBluetoothSupported,
+  readCalibrationDb,
+  writeCalibrationDb,
+  writeWifiCredentials,
   type BleConnection,
 } from '../lautstaerke/bluetooth';
 import {deviceLocations} from '../server/routes/crew.lautstaerke';
@@ -75,8 +78,10 @@ function LautstaerkeLayout() {
         [deviceName]: {
           lastSeen: receiveTime,
           latest: record,
-          laeq15m: decoded.laeq15m,
-          lceq15m: decoded.lceq15m,
+          laeq5m: decoded.laeq5m,
+          lceq5m: decoded.lceq5m,
+          laeq30m: decoded.laeq30m,
+          lceq30m: decoded.lceq30m,
           batteryMv: decoded.batteryMv,
         },
       }));
@@ -94,7 +99,7 @@ function LautstaerkeLayout() {
       const minTs = Date.now() / 1000 - WINDOW_S;
       for (const data of Object.values(deviceDataRef.current)) {
         let cutoff = 0;
-        while (cutoff < data[0].length && data[0][cutoff] < minTs) cutoff++;
+        while (cutoff < data[0].length && (data[0][cutoff] ?? Infinity) < minTs) cutoff++;
         if (cutoff > 0) for (const col of data) col.splice(0, cutoff);
       }
     }, 1000);
@@ -211,6 +216,16 @@ function LautstaerkeLayout() {
     return () => cleanupBle();
   }, [cleanupBle]);
 
+  const withConn = useCallback(
+    <T,>(fn: (conn: BleConnection) => Promise<T>) =>
+      async () => {
+        const conn = bleConnRef.current;
+        if (!conn) throw new Error('Keine Bluetooth-Verbindung.');
+        return fn(conn);
+      },
+    [],
+  );
+
   const ctx = useMemo<LautstaerkeCtx>(
     () => ({
       connected,
@@ -225,6 +240,11 @@ function LautstaerkeLayout() {
         supported: bleSupported,
         connect: connectBle,
         disconnect: disconnectBle,
+        readCalibrationDb: withConn((c) => readCalibrationDb(c)),
+        writeCalibrationDb: (db) =>
+          withConn((c) => writeCalibrationDb(c, db))(),
+        writeWifiCredentials: (ssid, password) =>
+          withConn((c) => writeWifiCredentials(c, ssid, password))(),
       },
     }),
     [
@@ -237,6 +257,7 @@ function LautstaerkeLayout() {
       bleSupported,
       connectBle,
       disconnectBle,
+      withConn,
     ],
   );
 

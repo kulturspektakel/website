@@ -1,11 +1,11 @@
 import {createFileRoute, Link} from '@tanstack/react-router';
 import {
   Box,
-  Button,
   Center,
   HStack,
   Heading,
   IconButton,
+  Menu,
   Spinner,
   Text,
   VStack,
@@ -16,6 +16,7 @@ import {
   isFresh,
   useLautstaerkeCtx,
   useTick,
+  type BluetoothSlice,
 } from '../lautstaerke/context';
 import {BatteryChip} from '../lautstaerke/BatteryChip';
 import {BluetoothChip} from '../lautstaerke/BluetoothChip';
@@ -92,7 +93,9 @@ function DeviceList() {
                         color="gray.500"
                         lineHeight="1"
                       >
-                        {decodeDb(state.laeq15m).toFixed(1)} dB(A) 15m
+                        {state.laeq30m != null
+                          ? `${decodeDb(state.laeq30m).toFixed(1)} dB(A) 30m`
+                          : '— 30m'}
                       </Text>
                     </VStack>
                   </HStack>
@@ -145,29 +148,55 @@ function BluetoothControl() {
   if (!bluetooth.supported) return null;
   if (bluetooth.deviceName) {
     return (
-      <HStack
-        gap="2"
-        px="2"
-        py="1"
-        rounded="md"
-        borderWidth="1px"
-        borderColor="blue.500"
-        bg="blue.950"
-      >
-        <Box w="2" h="2" rounded="full" bg="blue.500" />
-        <Text fontSize="sm" fontFamily="mono">
-          {bluetooth.deviceName}
-        </Text>
-        <Button
-          size="xs"
-          variant="outline"
-          onClick={() => {
-            void bluetooth.disconnect();
-          }}
-        >
-          Trennen
-        </Button>
-      </HStack>
+      <Menu.Root positioning={{placement: 'bottom-end'}}>
+        <Menu.Trigger asChild>
+          <HStack
+            as="button"
+            gap="2"
+            px="2"
+            py="1"
+            rounded="md"
+            borderWidth="1px"
+            borderColor="blue.500"
+            bg="blue.950"
+            cursor="pointer"
+            _hover={{bg: 'blue.900'}}
+          >
+            <Box w="2" h="2" rounded="full" bg="blue.500" />
+            <Text fontSize="sm" fontFamily="mono">
+              {bluetooth.deviceName}
+            </Text>
+          </HStack>
+        </Menu.Trigger>
+        <Menu.Positioner>
+          <Menu.Content>
+            <Menu.Item
+              value="calibrate"
+              onClick={() => {
+                void calibratePrompt(bluetooth);
+              }}
+            >
+              Kalibrierung…
+            </Menu.Item>
+            <Menu.Item
+              value="wifi"
+              onClick={() => {
+                void wifiPrompt(bluetooth);
+              }}
+            >
+              WLAN…
+            </Menu.Item>
+            <Menu.Item
+              value="disconnect"
+              onClick={() => {
+                void bluetooth.disconnect();
+              }}
+            >
+              Trennen
+            </Menu.Item>
+          </Menu.Content>
+        </Menu.Positioner>
+      </Menu.Root>
     );
   }
   return (
@@ -183,4 +212,58 @@ function BluetoothControl() {
       <LuBluetooth />
     </IconButton>
   );
+}
+
+async function calibratePrompt(bluetooth: BluetoothSlice) {
+  let current: number | null = null;
+  try {
+    current = await bluetooth.readCalibrationDb();
+  } catch (e) {
+    alert(`Kalibrierung lesen fehlgeschlagen: ${errorMessage(e)}`);
+    return;
+  }
+  const input = window.prompt(
+    `Kalibrierungs-Offset in dB (aktuell ${current.toFixed(2)}):`,
+    current.toFixed(2),
+  );
+  if (input == null) return;
+  const trimmed = input.trim().replace(',', '.');
+  const value = Number(trimmed);
+  if (!Number.isFinite(value)) {
+    alert(`Ungültiger Wert: "${input}"`);
+    return;
+  }
+  try {
+    await bluetooth.writeCalibrationDb(value);
+  } catch (e) {
+    alert(`Kalibrierung schreiben fehlgeschlagen: ${errorMessage(e)}`);
+  }
+}
+
+async function wifiPrompt(bluetooth: BluetoothSlice) {
+  const ssid = window.prompt('WLAN-Name (SSID):');
+  if (ssid == null) return;
+  if (ssid.length === 0) {
+    alert('SSID darf nicht leer sein.');
+    return;
+  }
+  const password = window.prompt(`Passwort für "${ssid}" (leer für offen):`);
+  if (password == null) return;
+  try {
+    await bluetooth.writeWifiCredentials(ssid, password);
+    alert('WLAN-Daten gespeichert. Gerät startet neu.');
+  } catch (e) {
+    // The device reboots almost immediately after acking the write, so a
+    // GATT disconnect surfacing here is the expected success path.
+    const msg = errorMessage(e);
+    if (/disconnected|gatt/i.test(msg)) {
+      alert('WLAN-Daten gespeichert. Gerät startet neu.');
+    } else {
+      alert(`WLAN schreiben fehlgeschlagen: ${msg}`);
+    }
+  }
+}
+
+function errorMessage(e: unknown): string {
+  return e instanceof Error ? e.message : String(e);
 }

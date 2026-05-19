@@ -12,12 +12,24 @@ export const protobufPackage = "";
 export interface NoiseRecording {
   /** 1 (MQTT/BLE live) or up to 300 (file) */
   records: NoiseRecording_Record[];
-  /** sliding-window LAeq over last 15 min, */
-  laeq15m: number;
-  /** same encoding as Record.laeq_1s (= (dB - 20) * 2) */
-  lceq15m: number;
-  /** battery voltage in millivolts; only set for */
-  batteryMv?: number | undefined;
+  /** millivolts; only set on live messages when on battery */
+  batteryMv?:
+    | number
+    | undefined;
+  /** last 5 min, same encoding as Record.laeq_1s */
+  laeq5m?:
+    | number
+    | undefined;
+  /** ((dB - 20) * 2); only set once the ring is full */
+  lceq5m?:
+    | number
+    | undefined;
+  /** last 30 min; only set once the ring is full */
+  laeq30m?:
+    | number
+    | undefined;
+  /** last 30 min, same gate as laeq_30m */
+  lceq30m?: number | undefined;
 }
 
 export interface NoiseRecording_Record {
@@ -34,7 +46,14 @@ export interface NoiseRecording_Record {
 }
 
 function createBaseNoiseRecording(): NoiseRecording {
-  return { records: [], laeq15m: 0, lceq15m: 0, batteryMv: undefined };
+  return {
+    records: [],
+    batteryMv: undefined,
+    laeq5m: undefined,
+    lceq5m: undefined,
+    laeq30m: undefined,
+    lceq30m: undefined,
+  };
 }
 
 export const NoiseRecording: MessageFns<NoiseRecording> = {
@@ -42,14 +61,20 @@ export const NoiseRecording: MessageFns<NoiseRecording> = {
     for (const v of message.records) {
       NoiseRecording_Record.encode(v!, writer.uint32(18).fork()).join();
     }
-    if (message.laeq15m !== 0) {
-      writer.uint32(24).uint32(message.laeq15m);
-    }
-    if (message.lceq15m !== 0) {
-      writer.uint32(32).uint32(message.lceq15m);
-    }
     if (message.batteryMv !== undefined) {
       writer.uint32(40).uint32(message.batteryMv);
+    }
+    if (message.laeq5m !== undefined) {
+      writer.uint32(48).uint32(message.laeq5m);
+    }
+    if (message.lceq5m !== undefined) {
+      writer.uint32(56).uint32(message.lceq5m);
+    }
+    if (message.laeq30m !== undefined) {
+      writer.uint32(64).uint32(message.laeq30m);
+    }
+    if (message.lceq30m !== undefined) {
+      writer.uint32(72).uint32(message.lceq30m);
     }
     return writer;
   },
@@ -69,28 +94,44 @@ export const NoiseRecording: MessageFns<NoiseRecording> = {
           message.records.push(NoiseRecording_Record.decode(reader, reader.uint32()));
           continue;
         }
-        case 3: {
-          if (tag !== 24) {
-            break;
-          }
-
-          message.laeq15m = reader.uint32();
-          continue;
-        }
-        case 4: {
-          if (tag !== 32) {
-            break;
-          }
-
-          message.lceq15m = reader.uint32();
-          continue;
-        }
         case 5: {
           if (tag !== 40) {
             break;
           }
 
           message.batteryMv = reader.uint32();
+          continue;
+        }
+        case 6: {
+          if (tag !== 48) {
+            break;
+          }
+
+          message.laeq5m = reader.uint32();
+          continue;
+        }
+        case 7: {
+          if (tag !== 56) {
+            break;
+          }
+
+          message.lceq5m = reader.uint32();
+          continue;
+        }
+        case 8: {
+          if (tag !== 64) {
+            break;
+          }
+
+          message.laeq30m = reader.uint32();
+          continue;
+        }
+        case 9: {
+          if (tag !== 72) {
+            break;
+          }
+
+          message.lceq30m = reader.uint32();
           continue;
         }
       }
@@ -107,20 +148,30 @@ export const NoiseRecording: MessageFns<NoiseRecording> = {
       records: globalThis.Array.isArray(object?.records)
         ? object.records.map((e: any) => NoiseRecording_Record.fromJSON(e))
         : [],
-      laeq15m: isSet(object.laeq15m)
-        ? globalThis.Number(object.laeq15m)
-        : isSet(object.laeq_15m)
-        ? globalThis.Number(object.laeq_15m)
-        : 0,
-      lceq15m: isSet(object.lceq15m)
-        ? globalThis.Number(object.lceq15m)
-        : isSet(object.lceq_15m)
-        ? globalThis.Number(object.lceq_15m)
-        : 0,
       batteryMv: isSet(object.batteryMv)
         ? globalThis.Number(object.batteryMv)
         : isSet(object.battery_mv)
         ? globalThis.Number(object.battery_mv)
+        : undefined,
+      laeq5m: isSet(object.laeq5m)
+        ? globalThis.Number(object.laeq5m)
+        : isSet(object.laeq_5m)
+        ? globalThis.Number(object.laeq_5m)
+        : undefined,
+      lceq5m: isSet(object.lceq5m)
+        ? globalThis.Number(object.lceq5m)
+        : isSet(object.lceq_5m)
+        ? globalThis.Number(object.lceq_5m)
+        : undefined,
+      laeq30m: isSet(object.laeq30m)
+        ? globalThis.Number(object.laeq30m)
+        : isSet(object.laeq_30m)
+        ? globalThis.Number(object.laeq_30m)
+        : undefined,
+      lceq30m: isSet(object.lceq30m)
+        ? globalThis.Number(object.lceq30m)
+        : isSet(object.lceq_30m)
+        ? globalThis.Number(object.lceq_30m)
         : undefined,
     };
   },
@@ -130,14 +181,20 @@ export const NoiseRecording: MessageFns<NoiseRecording> = {
     if (message.records?.length) {
       obj.records = message.records.map((e) => NoiseRecording_Record.toJSON(e));
     }
-    if (message.laeq15m !== 0) {
-      obj.laeq15m = Math.round(message.laeq15m);
-    }
-    if (message.lceq15m !== 0) {
-      obj.lceq15m = Math.round(message.lceq15m);
-    }
     if (message.batteryMv !== undefined) {
       obj.batteryMv = Math.round(message.batteryMv);
+    }
+    if (message.laeq5m !== undefined) {
+      obj.laeq5m = Math.round(message.laeq5m);
+    }
+    if (message.lceq5m !== undefined) {
+      obj.lceq5m = Math.round(message.lceq5m);
+    }
+    if (message.laeq30m !== undefined) {
+      obj.laeq30m = Math.round(message.laeq30m);
+    }
+    if (message.lceq30m !== undefined) {
+      obj.lceq30m = Math.round(message.lceq30m);
     }
     return obj;
   },
@@ -148,9 +205,11 @@ export const NoiseRecording: MessageFns<NoiseRecording> = {
   fromPartial<I extends Exact<DeepPartial<NoiseRecording>, I>>(object: I): NoiseRecording {
     const message = createBaseNoiseRecording();
     message.records = object.records?.map((e) => NoiseRecording_Record.fromPartial(e)) || [];
-    message.laeq15m = object.laeq15m ?? 0;
-    message.lceq15m = object.lceq15m ?? 0;
     message.batteryMv = object.batteryMv ?? undefined;
+    message.laeq5m = object.laeq5m ?? undefined;
+    message.lceq5m = object.lceq5m ?? undefined;
+    message.laeq30m = object.laeq30m ?? undefined;
+    message.lceq30m = object.lceq30m ?? undefined;
     return message;
   },
 };
