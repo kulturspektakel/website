@@ -58,6 +58,9 @@ function MainLayout() {
     if (typeof window !== 'undefined' && 'navigation' in window) {
       const handler = (event: NavigateEvent) => {
         if (!event.canIntercept) return;
+        // Don't intercept download-attribute clicks — intercepting would
+        // suppress the browser's native download behavior.
+        if (event.downloadRequest !== null) return;
         // Only intercept same-origin navigations the router can resolve.
         // Without this, a cross-origin navigation (e.g. form GET to another
         // host) gets intercepted, the URL bar updates, but the promise below
