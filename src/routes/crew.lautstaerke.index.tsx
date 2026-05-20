@@ -4,22 +4,19 @@ import {
   Center,
   HStack,
   Heading,
-  IconButton,
-  Menu,
   Spinner,
   Text,
   VStack,
 } from '@chakra-ui/react';
-import {LuBluetooth} from 'react-icons/lu';
 import {
   decodeDb,
   isFresh,
   useLautstaerkeCtx,
   useTick,
-  type BluetoothSlice,
 } from '../lautstaerke/context';
 import {BatteryChip} from '../lautstaerke/BatteryChip';
 import {BluetoothChip} from '../lautstaerke/BluetoothChip';
+import {BluetoothControl} from '../lautstaerke/BluetoothControl';
 
 export const Route = createFileRoute('/crew/lautstaerke/')({
   component: DeviceList,
@@ -38,11 +35,6 @@ function DeviceList() {
         </Heading>
         <BluetoothControl />
       </HStack>
-      {ctx.bluetooth.error && (
-        <Text color="red.500" mb="3" fontSize="sm">
-          {ctx.bluetooth.error}
-        </Text>
-      )}
       {names.length === 0 && !ctx.connected ? (
         <Center flex="1" py="10">
           <Spinner size="lg" />
@@ -143,127 +135,3 @@ function DeviceTitle({
   );
 }
 
-function BluetoothControl() {
-  const {bluetooth} = useLautstaerkeCtx();
-  if (!bluetooth.supported) return null;
-  if (bluetooth.deviceName) {
-    return (
-      <Menu.Root positioning={{placement: 'bottom-end'}}>
-        <Menu.Trigger asChild>
-          <HStack
-            as="button"
-            gap="2"
-            px="2"
-            py="1"
-            rounded="md"
-            borderWidth="1px"
-            borderColor="blue.500"
-            bg="blue.950"
-            cursor="pointer"
-            _hover={{bg: 'blue.900'}}
-          >
-            <Box w="2" h="2" rounded="full" bg="blue.500" />
-            <Text fontSize="sm" fontFamily="mono">
-              {bluetooth.deviceName}
-            </Text>
-          </HStack>
-        </Menu.Trigger>
-        <Menu.Positioner>
-          <Menu.Content>
-            <Menu.Item
-              value="calibrate"
-              onClick={() => {
-                void calibratePrompt(bluetooth);
-              }}
-            >
-              Kalibrierung…
-            </Menu.Item>
-            <Menu.Item
-              value="wifi"
-              onClick={() => {
-                void wifiPrompt(bluetooth);
-              }}
-            >
-              WLAN…
-            </Menu.Item>
-            <Menu.Item
-              value="disconnect"
-              onClick={() => {
-                void bluetooth.disconnect();
-              }}
-            >
-              Trennen
-            </Menu.Item>
-          </Menu.Content>
-        </Menu.Positioner>
-      </Menu.Root>
-    );
-  }
-  return (
-    <IconButton
-      aria-label="Bluetooth verbinden"
-      rounded="full"
-      size="sm"
-      onClick={() => {
-        void bluetooth.connect();
-      }}
-      loading={bluetooth.connecting}
-    >
-      <LuBluetooth />
-    </IconButton>
-  );
-}
-
-async function calibratePrompt(bluetooth: BluetoothSlice) {
-  let current: number | null = null;
-  try {
-    current = await bluetooth.readCalibrationDb();
-  } catch (e) {
-    alert(`Kalibrierung lesen fehlgeschlagen: ${errorMessage(e)}`);
-    return;
-  }
-  const input = window.prompt(
-    `Kalibrierungs-Offset in dB (aktuell ${current.toFixed(2)}):`,
-    current.toFixed(2),
-  );
-  if (input == null) return;
-  const trimmed = input.trim().replace(',', '.');
-  const value = Number(trimmed);
-  if (!Number.isFinite(value)) {
-    alert(`Ungültiger Wert: "${input}"`);
-    return;
-  }
-  try {
-    await bluetooth.writeCalibrationDb(value);
-  } catch (e) {
-    alert(`Kalibrierung schreiben fehlgeschlagen: ${errorMessage(e)}`);
-  }
-}
-
-async function wifiPrompt(bluetooth: BluetoothSlice) {
-  const ssid = window.prompt('WLAN-Name (SSID):');
-  if (ssid == null) return;
-  if (ssid.length === 0) {
-    alert('SSID darf nicht leer sein.');
-    return;
-  }
-  const password = window.prompt(`Passwort für "${ssid}" (leer für offen):`);
-  if (password == null) return;
-  try {
-    await bluetooth.writeWifiCredentials(ssid, password);
-    alert('WLAN-Daten gespeichert. Gerät startet neu.');
-  } catch (e) {
-    // The device reboots almost immediately after acking the write, so a
-    // GATT disconnect surfacing here is the expected success path.
-    const msg = errorMessage(e);
-    if (/disconnected|gatt/i.test(msg)) {
-      alert('WLAN-Daten gespeichert. Gerät startet neu.');
-    } else {
-      alert(`WLAN schreiben fehlgeschlagen: ${msg}`);
-    }
-  }
-}
-
-function errorMessage(e: unknown): string {
-  return e instanceof Error ? e.message : String(e);
-}

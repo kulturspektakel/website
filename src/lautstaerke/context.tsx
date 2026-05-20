@@ -98,7 +98,6 @@ export type DeviceBuffer = (number | null)[][];
 export type BluetoothSlice = {
   deviceName: string | null;
   connecting: boolean;
-  error: string | null;
   supported: boolean;
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;

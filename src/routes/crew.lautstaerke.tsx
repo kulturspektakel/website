@@ -24,6 +24,7 @@ import {
   writeWifiCredentials,
   type BleConnection,
 } from '../lautstaerke/bluetooth';
+import {Toaster, toaster} from '../components/chakra-snippets/toaster';
 import {deviceLocations} from '../server/routes/crew.lautstaerke';
 
 export const Route = createFileRoute('/crew/lautstaerke')({
@@ -41,7 +42,6 @@ function LautstaerkeLayout() {
 
   const [bleDeviceName, setBleDeviceName] = useState<string | null>(null);
   const [bleConnecting, setBleConnecting] = useState(false);
-  const [bleError, setBleError] = useState<string | null>(null);
   const [bleSupported, setBleSupported] = useState(false);
 
   useEffect(() => {
@@ -166,13 +166,11 @@ function LautstaerkeLayout() {
 
   const disconnectBle = useCallback(async () => {
     cleanupBle();
-    setBleError(null);
   }, [cleanupBle]);
 
   const connectBle = useCallback(async () => {
     if (bleConnecting) return;
     if (bleConnRef.current) cleanupBle();
-    setBleError(null);
     setBleConnecting(true);
     try {
       const conn = await connectBleDevice();
@@ -189,7 +187,10 @@ function LautstaerkeLayout() {
       };
       const onDisconnect = () => {
         cleanupBle();
-        setBleError('Bluetooth-Verbindung getrennt.');
+        toaster.create({
+          type: 'info',
+          title: 'Bluetooth-Verbindung getrennt',
+        });
       };
       conn.characteristic.addEventListener(
         'characteristicvaluechanged',
@@ -201,11 +202,16 @@ function LautstaerkeLayout() {
       setBleDeviceName(conn.deviceName);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
+      // Suppress the picker-closed errors; everything else is a real failure.
       if (
         !(e instanceof DOMException && e.name === 'NotFoundError') &&
         !/User cancelled/i.test(msg)
       ) {
-        setBleError(msg);
+        toaster.create({
+          type: 'error',
+          title: 'Bluetooth-Verbindung fehlgeschlagen',
+          description: msg,
+        });
       }
     } finally {
       setBleConnecting(false);
@@ -236,7 +242,6 @@ function LautstaerkeLayout() {
       bluetooth: {
         deviceName: bleDeviceName,
         connecting: bleConnecting,
-        error: bleError,
         supported: bleSupported,
         connect: connectBle,
         disconnect: disconnectBle,
@@ -253,7 +258,6 @@ function LautstaerkeLayout() {
       locations,
       bleDeviceName,
       bleConnecting,
-      bleError,
       bleSupported,
       connectBle,
       disconnectBle,
@@ -275,6 +279,7 @@ function LautstaerkeLayout() {
         >
           <Outlet />
         </Box>
+        <Toaster />
       </DarkMode>
     </LautstaerkeContext.Provider>
   );

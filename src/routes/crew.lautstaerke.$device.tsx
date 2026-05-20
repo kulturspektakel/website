@@ -22,7 +22,7 @@ import {
   useTick,
 } from '../lautstaerke/context';
 import {BatteryChip} from '../lautstaerke/BatteryChip';
-import {BluetoothChip} from '../lautstaerke/BluetoothChip';
+import {BluetoothControl} from '../lautstaerke/BluetoothControl';
 import {type NoiseRecording_Record as NoiseRecord} from '../proto/noise';
 import {seo} from '../utils/seo';
 
@@ -332,7 +332,10 @@ function DeviceDetail() {
             )}
           </HStack>
         </VStack>
-        {ctx.bluetooth.deviceName === device && <BluetoothChip />}
+        {/* Hide when connected to a different device — avoids the confusing
+            case of acting on B while viewing A's detail page. */}
+        {(!ctx.bluetooth.deviceName ||
+          ctx.bluetooth.deviceName === device) && <BluetoothControl />}
       </HStack>
       <SimpleGrid columns={6} gap="3" mb="3">
         <BigNumber
