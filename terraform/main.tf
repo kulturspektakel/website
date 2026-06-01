@@ -14,6 +14,10 @@ locals {
   site_url   = "https://www.kulturspektakel.de"
 }
 
+data "google_project" "this" {
+  project_id = local.project_id
+}
+
 provider "google" {
   project = local.project_id
   region  = local.region
@@ -33,6 +37,7 @@ resource "google_project_service" "apis" {
     "iam.googleapis.com",
     "iamcredentials.googleapis.com",
     "monitoring.googleapis.com",
+    "pubsub.googleapis.com",
     "secretmanager.googleapis.com",
   ])
   service            = each.key
@@ -67,6 +72,14 @@ resource "google_service_account_iam_member" "tasks_act_as_self" {
   member             = "serviceAccount:${google_service_account.tasks.email}"
 }
 
+# Let the Pub/Sub service agent mint OIDC tokens as `tasks-invoker` for push
+# subscriptions targeting Vercel (see `google_pubsub_subscription.gmail_notification`).
+resource "google_service_account_iam_member" "pubsub_oidc_token_creator" {
+  service_account_id = google_service_account.tasks.name
+  role               = "roles/iam.serviceAccountTokenCreator"
+  member             = "serviceAccount:service-${data.google_project.this.number}@gcp-sa-pubsub.iam.gserviceaccount.com"
+}
+
 # JSON key used by the Vercel deployment to authenticate as the SA. Copy the
 # `tasks_service_account_key_json` output into the
 # `GCP_TASKS_SERVICE_ACCOUNT_KEY_JSON` env var on Vercel.
@@ -77,6 +90,55 @@ resource "google_service_account_key" "tasks_key" {
 resource "google_cloud_tasks_queue" "default" {
   name       = "default"
   location   = local.region
+  depends_on = [google_project_service.apis]
+}
+
+# Pub/Sub push subscription for Gmail notifications: every new email in our
+# watched inboxes (booking/info/lager) → POST to /api/tasks/gmail-notification.
+# The topic itself (`mail-reminder`) and the publisher side (Gmail watch via
+# the legacy `gmail-reminder` SA) are pre-existing — we just add this consumer.
+#
+# Cutover: there's also a legacy pull subscription `api.kulturspektakel.de`
+# that delivers the same topic to the legacy api. Delete that one via gcloud
+# after this applies, otherwise both systems will react to each email.
+resource "google_pubsub_subscription" "gmail_notification" {
+  name  = "gmail-notification-vercel"
+  topic = "projects/${local.project_id}/topics/mail-reminder"
+
+  ack_deadline_seconds = 60
+
+  push_config {
+    push_endpoint = "${local.site_url}/api/tasks/gmail-notification"
+    oidc_token {
+      service_account_email = google_service_account.tasks.email
+      audience              = "gmail-notification"
+    }
+  }
+
+  depends_on = [
+    google_project_service.apis,
+    google_service_account_iam_member.pubsub_oidc_token_creator,
+  ]
+}
+
+# Daily Gmail watch renewal — Gmail watches expire after 7 days, so we ping
+# the watch refresh endpoint every 24h to keep them alive.
+resource "google_cloud_scheduler_job" "gmail_watch_refresh" {
+  name        = "gmail-watch-refresh"
+  description = "Renew Gmail Pub/Sub watch for booking/info/lager inboxes."
+  schedule    = "0 0 * * *"
+  time_zone   = "UTC"
+  region      = local.region
+
+  http_target {
+    uri         = "${local.site_url}/api/tasks/gmail-watch-refresh"
+    http_method = "POST"
+    oidc_token {
+      service_account_email = google_service_account.tasks.email
+      audience              = "gmail-watch-refresh"
+    }
+  }
+
   depends_on = [google_project_service.apis]
 }
 

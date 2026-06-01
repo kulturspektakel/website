@@ -35,6 +35,9 @@ import { Route as ApiTasksTriggerDemoRouteImport } from './routes/api.tasks.trig
 import { Route as ApiTasksNonceRequestInvalidateRouteImport } from './routes/api.tasks.nonce-request-invalidate'
 import { Route as ApiTasksNonceInvalidateRouteImport } from './routes/api.tasks.nonce-invalidate'
 import { Route as ApiTasksHeartbeatRouteImport } from './routes/api.tasks.heartbeat'
+import { Route as ApiTasksGmailWatchRefreshRouteImport } from './routes/api.tasks.gmail-watch-refresh'
+import { Route as ApiTasksGmailReminderRouteImport } from './routes/api.tasks.gmail-reminder'
+import { Route as ApiTasksGmailNotificationRouteImport } from './routes/api.tasks.gmail-notification'
 import { Route as ApiTasksDemoRouteImport } from './routes/api.tasks.demo'
 import { Route as ApiTasksCreateNonceRequestRouteImport } from './routes/api.tasks.create-nonce-request'
 import { Route as ApiTasksBadgeAwardedRouteImport } from './routes/api.tasks.badge-awarded'
@@ -186,6 +189,23 @@ const ApiTasksHeartbeatRoute = ApiTasksHeartbeatRouteImport.update({
   path: '/api/tasks/heartbeat',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiTasksGmailWatchRefreshRoute =
+  ApiTasksGmailWatchRefreshRouteImport.update({
+    id: '/api/tasks/gmail-watch-refresh',
+    path: '/api/tasks/gmail-watch-refresh',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiTasksGmailReminderRoute = ApiTasksGmailReminderRouteImport.update({
+  id: '/api/tasks/gmail-reminder',
+  path: '/api/tasks/gmail-reminder',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTasksGmailNotificationRoute =
+  ApiTasksGmailNotificationRouteImport.update({
+    id: '/api/tasks/gmail-notification',
+    path: '/api/tasks/gmail-notification',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiTasksDemoRoute = ApiTasksDemoRouteImport.update({
   id: '/api/tasks/demo',
   path: '/api/tasks/demo',
@@ -324,6 +344,9 @@ export interface FileRoutesByFullPath {
   '/api/tasks/badge-awarded': typeof ApiTasksBadgeAwardedRoute
   '/api/tasks/create-nonce-request': typeof ApiTasksCreateNonceRequestRoute
   '/api/tasks/demo': typeof ApiTasksDemoRoute
+  '/api/tasks/gmail-notification': typeof ApiTasksGmailNotificationRoute
+  '/api/tasks/gmail-reminder': typeof ApiTasksGmailReminderRoute
+  '/api/tasks/gmail-watch-refresh': typeof ApiTasksGmailWatchRefreshRoute
   '/api/tasks/heartbeat': typeof ApiTasksHeartbeatRoute
   '/api/tasks/nonce-invalidate': typeof ApiTasksNonceInvalidateRoute
   '/api/tasks/nonce-request-invalidate': typeof ApiTasksNonceRequestInvalidateRoute
@@ -368,6 +391,9 @@ export interface FileRoutesByTo {
   '/api/tasks/badge-awarded': typeof ApiTasksBadgeAwardedRoute
   '/api/tasks/create-nonce-request': typeof ApiTasksCreateNonceRequestRoute
   '/api/tasks/demo': typeof ApiTasksDemoRoute
+  '/api/tasks/gmail-notification': typeof ApiTasksGmailNotificationRoute
+  '/api/tasks/gmail-reminder': typeof ApiTasksGmailReminderRoute
+  '/api/tasks/gmail-watch-refresh': typeof ApiTasksGmailWatchRefreshRoute
   '/api/tasks/heartbeat': typeof ApiTasksHeartbeatRoute
   '/api/tasks/nonce-invalidate': typeof ApiTasksNonceInvalidateRoute
   '/api/tasks/nonce-request-invalidate': typeof ApiTasksNonceRequestInvalidateRoute
@@ -417,6 +443,9 @@ export interface FileRoutesById {
   '/api/tasks/badge-awarded': typeof ApiTasksBadgeAwardedRoute
   '/api/tasks/create-nonce-request': typeof ApiTasksCreateNonceRequestRoute
   '/api/tasks/demo': typeof ApiTasksDemoRoute
+  '/api/tasks/gmail-notification': typeof ApiTasksGmailNotificationRoute
+  '/api/tasks/gmail-reminder': typeof ApiTasksGmailReminderRoute
+  '/api/tasks/gmail-watch-refresh': typeof ApiTasksGmailWatchRefreshRoute
   '/api/tasks/heartbeat': typeof ApiTasksHeartbeatRoute
   '/api/tasks/nonce-invalidate': typeof ApiTasksNonceInvalidateRoute
   '/api/tasks/nonce-request-invalidate': typeof ApiTasksNonceRequestInvalidateRoute
@@ -466,6 +495,9 @@ export interface FileRouteTypes {
     | '/api/tasks/badge-awarded'
     | '/api/tasks/create-nonce-request'
     | '/api/tasks/demo'
+    | '/api/tasks/gmail-notification'
+    | '/api/tasks/gmail-reminder'
+    | '/api/tasks/gmail-watch-refresh'
     | '/api/tasks/heartbeat'
     | '/api/tasks/nonce-invalidate'
     | '/api/tasks/nonce-request-invalidate'
@@ -510,6 +542,9 @@ export interface FileRouteTypes {
     | '/api/tasks/badge-awarded'
     | '/api/tasks/create-nonce-request'
     | '/api/tasks/demo'
+    | '/api/tasks/gmail-notification'
+    | '/api/tasks/gmail-reminder'
+    | '/api/tasks/gmail-watch-refresh'
     | '/api/tasks/heartbeat'
     | '/api/tasks/nonce-invalidate'
     | '/api/tasks/nonce-request-invalidate'
@@ -558,6 +593,9 @@ export interface FileRouteTypes {
     | '/api/tasks/badge-awarded'
     | '/api/tasks/create-nonce-request'
     | '/api/tasks/demo'
+    | '/api/tasks/gmail-notification'
+    | '/api/tasks/gmail-reminder'
+    | '/api/tasks/gmail-watch-refresh'
     | '/api/tasks/heartbeat'
     | '/api/tasks/nonce-invalidate'
     | '/api/tasks/nonce-request-invalidate'
@@ -583,6 +621,9 @@ export interface RootRouteChildren {
   ApiTasksBadgeAwardedRoute: typeof ApiTasksBadgeAwardedRoute
   ApiTasksCreateNonceRequestRoute: typeof ApiTasksCreateNonceRequestRoute
   ApiTasksDemoRoute: typeof ApiTasksDemoRoute
+  ApiTasksGmailNotificationRoute: typeof ApiTasksGmailNotificationRoute
+  ApiTasksGmailReminderRoute: typeof ApiTasksGmailReminderRoute
+  ApiTasksGmailWatchRefreshRoute: typeof ApiTasksGmailWatchRefreshRoute
   ApiTasksHeartbeatRoute: typeof ApiTasksHeartbeatRoute
   ApiTasksNonceInvalidateRoute: typeof ApiTasksNonceInvalidateRoute
   ApiTasksNonceRequestInvalidateRoute: typeof ApiTasksNonceRequestInvalidateRoute
@@ -772,6 +813,27 @@ declare module '@tanstack/react-router' {
       path: '/api/tasks/heartbeat'
       fullPath: '/api/tasks/heartbeat'
       preLoaderRoute: typeof ApiTasksHeartbeatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tasks/gmail-watch-refresh': {
+      id: '/api/tasks/gmail-watch-refresh'
+      path: '/api/tasks/gmail-watch-refresh'
+      fullPath: '/api/tasks/gmail-watch-refresh'
+      preLoaderRoute: typeof ApiTasksGmailWatchRefreshRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tasks/gmail-reminder': {
+      id: '/api/tasks/gmail-reminder'
+      path: '/api/tasks/gmail-reminder'
+      fullPath: '/api/tasks/gmail-reminder'
+      preLoaderRoute: typeof ApiTasksGmailReminderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tasks/gmail-notification': {
+      id: '/api/tasks/gmail-notification'
+      path: '/api/tasks/gmail-notification'
+      fullPath: '/api/tasks/gmail-notification'
+      preLoaderRoute: typeof ApiTasksGmailNotificationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/tasks/demo': {
@@ -1037,6 +1099,9 @@ const rootRouteChildren: RootRouteChildren = {
   ApiTasksBadgeAwardedRoute: ApiTasksBadgeAwardedRoute,
   ApiTasksCreateNonceRequestRoute: ApiTasksCreateNonceRequestRoute,
   ApiTasksDemoRoute: ApiTasksDemoRoute,
+  ApiTasksGmailNotificationRoute: ApiTasksGmailNotificationRoute,
+  ApiTasksGmailReminderRoute: ApiTasksGmailReminderRoute,
+  ApiTasksGmailWatchRefreshRoute: ApiTasksGmailWatchRefreshRoute,
   ApiTasksHeartbeatRoute: ApiTasksHeartbeatRoute,
   ApiTasksNonceInvalidateRoute: ApiTasksNonceInvalidateRoute,
   ApiTasksNonceRequestInvalidateRoute: ApiTasksNonceRequestInvalidateRoute,

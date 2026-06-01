@@ -60,6 +60,11 @@ export async function enqueueGcpTask(
   options?: EnqueueOptions,
 ): Promise<void>;
 export async function enqueueGcpTask(
+  task: 'gmail-reminder',
+  payload: {account: string; messageId: string},
+  options?: EnqueueOptions,
+): Promise<void>;
+export async function enqueueGcpTask(
   task: string,
   payload: Record<string, unknown>,
   options?: EnqueueOptions,

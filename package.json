@@ -61,6 +61,7 @@
     "downshift": "^9.3.2",
     "formik": "^2.4.9",
     "google-auth-library": "^10.6.2",
+    "googleapis": "^173.0.0",
     "hex-rgb": "^5.0.0",
     "iban-ts": "^0.11.0",
     "markdown-to-jsx": "^9.7.13",
