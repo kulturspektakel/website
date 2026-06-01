@@ -33,8 +33,11 @@ import { Route as CrewLautstaerkeIndexRouteImport } from './routes/crew.lautstae
 import { Route as MainLineupIndexRouteImport } from './routes/_main.lineup.index'
 import { Route as CrewLautstaerkeDeviceRouteImport } from './routes/crew.lautstaerke.$device'
 import { Route as ApiTasksTriggerDemoRouteImport } from './routes/api.tasks.trigger-demo'
+import { Route as ApiTasksNonceRequestInvalidateRouteImport } from './routes/api.tasks.nonce-request-invalidate'
+import { Route as ApiTasksNonceInvalidateRouteImport } from './routes/api.tasks.nonce-invalidate'
 import { Route as ApiTasksHeartbeatRouteImport } from './routes/api.tasks.heartbeat'
 import { Route as ApiTasksDemoRouteImport } from './routes/api.tasks.demo'
+import { Route as ApiTasksCreateNonceRequestRouteImport } from './routes/api.tasks.create-nonce-request'
 import { Route as ApiNoiseLogRouteImport } from './routes/api.noise.log'
 import { Route as ApiKultcashLogRouteImport } from './routes/api.kultcash.log'
 import { Route as ApiKultcashListsRouteImport } from './routes/api.kultcash.lists'
@@ -172,6 +175,17 @@ const ApiTasksTriggerDemoRoute = ApiTasksTriggerDemoRouteImport.update({
   path: '/api/tasks/trigger-demo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiTasksNonceRequestInvalidateRoute =
+  ApiTasksNonceRequestInvalidateRouteImport.update({
+    id: '/api/tasks/nonce-request-invalidate',
+    path: '/api/tasks/nonce-request-invalidate',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiTasksNonceInvalidateRoute = ApiTasksNonceInvalidateRouteImport.update({
+  id: '/api/tasks/nonce-invalidate',
+  path: '/api/tasks/nonce-invalidate',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiTasksHeartbeatRoute = ApiTasksHeartbeatRouteImport.update({
   id: '/api/tasks/heartbeat',
   path: '/api/tasks/heartbeat',
@@ -182,6 +196,12 @@ const ApiTasksDemoRoute = ApiTasksDemoRouteImport.update({
   path: '/api/tasks/demo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiTasksCreateNonceRequestRoute =
+  ApiTasksCreateNonceRequestRouteImport.update({
+    id: '/api/tasks/create-nonce-request',
+    path: '/api/tasks/create-nonce-request',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiNoiseLogRoute = ApiNoiseLogRouteImport.update({
   id: '/api/noise/log',
   path: '/api/noise/log',
@@ -302,8 +322,11 @@ export interface FileRoutesByFullPath {
   '/api/kultcash/lists': typeof ApiKultcashListsRoute
   '/api/kultcash/log': typeof ApiKultcashLogRoute
   '/api/noise/log': typeof ApiNoiseLogRoute
+  '/api/tasks/create-nonce-request': typeof ApiTasksCreateNonceRequestRoute
   '/api/tasks/demo': typeof ApiTasksDemoRoute
   '/api/tasks/heartbeat': typeof ApiTasksHeartbeatRoute
+  '/api/tasks/nonce-invalidate': typeof ApiTasksNonceInvalidateRoute
+  '/api/tasks/nonce-request-invalidate': typeof ApiTasksNonceRequestInvalidateRoute
   '/api/tasks/trigger-demo': typeof ApiTasksTriggerDemoRoute
   '/crew/lautstaerke/$device': typeof CrewLautstaerkeDeviceRoute
   '/lineup/': typeof MainLineupIndexRoute
@@ -343,8 +366,11 @@ export interface FileRoutesByTo {
   '/api/kultcash/lists': typeof ApiKultcashListsRoute
   '/api/kultcash/log': typeof ApiKultcashLogRoute
   '/api/noise/log': typeof ApiNoiseLogRoute
+  '/api/tasks/create-nonce-request': typeof ApiTasksCreateNonceRequestRoute
   '/api/tasks/demo': typeof ApiTasksDemoRoute
   '/api/tasks/heartbeat': typeof ApiTasksHeartbeatRoute
+  '/api/tasks/nonce-invalidate': typeof ApiTasksNonceInvalidateRoute
+  '/api/tasks/nonce-request-invalidate': typeof ApiTasksNonceRequestInvalidateRoute
   '/api/tasks/trigger-demo': typeof ApiTasksTriggerDemoRoute
   '/crew/lautstaerke/$device': typeof CrewLautstaerkeDeviceRoute
   '/lineup': typeof MainLineupIndexRoute
@@ -389,8 +415,11 @@ export interface FileRoutesById {
   '/api/kultcash/lists': typeof ApiKultcashListsRoute
   '/api/kultcash/log': typeof ApiKultcashLogRoute
   '/api/noise/log': typeof ApiNoiseLogRoute
+  '/api/tasks/create-nonce-request': typeof ApiTasksCreateNonceRequestRoute
   '/api/tasks/demo': typeof ApiTasksDemoRoute
   '/api/tasks/heartbeat': typeof ApiTasksHeartbeatRoute
+  '/api/tasks/nonce-invalidate': typeof ApiTasksNonceInvalidateRoute
+  '/api/tasks/nonce-request-invalidate': typeof ApiTasksNonceRequestInvalidateRoute
   '/api/tasks/trigger-demo': typeof ApiTasksTriggerDemoRoute
   '/crew/lautstaerke/$device': typeof CrewLautstaerkeDeviceRoute
   '/_main/lineup/': typeof MainLineupIndexRoute
@@ -435,8 +464,11 @@ export interface FileRouteTypes {
     | '/api/kultcash/lists'
     | '/api/kultcash/log'
     | '/api/noise/log'
+    | '/api/tasks/create-nonce-request'
     | '/api/tasks/demo'
     | '/api/tasks/heartbeat'
+    | '/api/tasks/nonce-invalidate'
+    | '/api/tasks/nonce-request-invalidate'
     | '/api/tasks/trigger-demo'
     | '/crew/lautstaerke/$device'
     | '/lineup/'
@@ -476,8 +508,11 @@ export interface FileRouteTypes {
     | '/api/kultcash/lists'
     | '/api/kultcash/log'
     | '/api/noise/log'
+    | '/api/tasks/create-nonce-request'
     | '/api/tasks/demo'
     | '/api/tasks/heartbeat'
+    | '/api/tasks/nonce-invalidate'
+    | '/api/tasks/nonce-request-invalidate'
     | '/api/tasks/trigger-demo'
     | '/crew/lautstaerke/$device'
     | '/lineup'
@@ -521,8 +556,11 @@ export interface FileRouteTypes {
     | '/api/kultcash/lists'
     | '/api/kultcash/log'
     | '/api/noise/log'
+    | '/api/tasks/create-nonce-request'
     | '/api/tasks/demo'
     | '/api/tasks/heartbeat'
+    | '/api/tasks/nonce-invalidate'
+    | '/api/tasks/nonce-request-invalidate'
     | '/api/tasks/trigger-demo'
     | '/crew/lautstaerke/$device'
     | '/_main/lineup/'
@@ -543,8 +581,11 @@ export interface RootRouteChildren {
   ApiKultcashListsRoute: typeof ApiKultcashListsRoute
   ApiKultcashLogRoute: typeof ApiKultcashLogRoute
   ApiNoiseLogRoute: typeof ApiNoiseLogRoute
+  ApiTasksCreateNonceRequestRoute: typeof ApiTasksCreateNonceRequestRoute
   ApiTasksDemoRoute: typeof ApiTasksDemoRoute
   ApiTasksHeartbeatRoute: typeof ApiTasksHeartbeatRoute
+  ApiTasksNonceInvalidateRoute: typeof ApiTasksNonceInvalidateRoute
+  ApiTasksNonceRequestInvalidateRoute: typeof ApiTasksNonceRequestInvalidateRoute
   ApiTasksTriggerDemoRoute: typeof ApiTasksTriggerDemoRoute
   ApiSpendenQuittungIdRoute: typeof ApiSpendenQuittungIdRoute
 }
@@ -719,6 +760,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTasksTriggerDemoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/tasks/nonce-request-invalidate': {
+      id: '/api/tasks/nonce-request-invalidate'
+      path: '/api/tasks/nonce-request-invalidate'
+      fullPath: '/api/tasks/nonce-request-invalidate'
+      preLoaderRoute: typeof ApiTasksNonceRequestInvalidateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tasks/nonce-invalidate': {
+      id: '/api/tasks/nonce-invalidate'
+      path: '/api/tasks/nonce-invalidate'
+      fullPath: '/api/tasks/nonce-invalidate'
+      preLoaderRoute: typeof ApiTasksNonceInvalidateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/tasks/heartbeat': {
       id: '/api/tasks/heartbeat'
       path: '/api/tasks/heartbeat'
@@ -731,6 +786,13 @@ declare module '@tanstack/react-router' {
       path: '/api/tasks/demo'
       fullPath: '/api/tasks/demo'
       preLoaderRoute: typeof ApiTasksDemoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tasks/create-nonce-request': {
+      id: '/api/tasks/create-nonce-request'
+      path: '/api/tasks/create-nonce-request'
+      fullPath: '/api/tasks/create-nonce-request'
+      preLoaderRoute: typeof ApiTasksCreateNonceRequestRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/noise/log': {
@@ -973,8 +1035,11 @@ const rootRouteChildren: RootRouteChildren = {
   ApiKultcashListsRoute: ApiKultcashListsRoute,
   ApiKultcashLogRoute: ApiKultcashLogRoute,
   ApiNoiseLogRoute: ApiNoiseLogRoute,
+  ApiTasksCreateNonceRequestRoute: ApiTasksCreateNonceRequestRoute,
   ApiTasksDemoRoute: ApiTasksDemoRoute,
   ApiTasksHeartbeatRoute: ApiTasksHeartbeatRoute,
+  ApiTasksNonceInvalidateRoute: ApiTasksNonceInvalidateRoute,
+  ApiTasksNonceRequestInvalidateRoute: ApiTasksNonceRequestInvalidateRoute,
   ApiTasksTriggerDemoRoute: ApiTasksTriggerDemoRoute,
   ApiSpendenQuittungIdRoute: ApiSpendenQuittungIdRoute,
 }

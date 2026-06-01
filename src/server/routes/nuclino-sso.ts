@@ -1,10 +1,12 @@
 import {createServerFn} from '@tanstack/react-start';
 import {getCookie} from '@tanstack/react-start/server';
 import {redirect} from '@tanstack/react-router';
-import {prismaClient} from '../../utils/prismaClient.server';
-import {scheduleTask} from '../../utils/scheduleTask.server';
 import {addMinutes} from 'date-fns';
+import {prismaClient} from '../../utils/prismaClient.server';
+import {enqueueGcpTask} from '../../utils/enqueueGcpTask.server';
 import {LOGIN_URL} from '../../routes/_main.nuclino-sso';
+
+const NONCE_LIFETIME_MINUTES = 5;
 
 export const beforeLoad = createServerFn()
   .inputValidator((query: Record<string, any>) => query)
@@ -30,17 +32,25 @@ export const beforeLoad = createServerFn()
 export const createNonceRequest = createServerFn()
   .inputValidator((data: {email: string}) => data)
   .handler(async ({data}) => {
+    const expiresAt = addMinutes(new Date(), NONCE_LIFETIME_MINUTES);
     const nonceRequest = await prismaClient.nonceRequest.create({
       data: {
-        expiresAt: addMinutes(new Date(), 5),
+        expiresAt,
         createdForEmail: data.email,
       },
     });
 
-    await scheduleTask('createNonceRequest', {
+    // Sends the Slack DM with approve/reject buttons.
+    await enqueueGcpTask('create-nonce-request', {
       id: nonceRequest.id,
       email: data.email,
     });
+    // Cleans up the row if the user never approves it.
+    await enqueueGcpTask(
+      'nonce-request-invalidate',
+      {nonceRequestId: nonceRequest.id},
+      {scheduleAt: expiresAt},
+    );
 
     return nonceRequest.id;
   });
@@ -61,12 +71,18 @@ export const checkNonceRequest = createServerFn()
       return null;
     }
 
+    const expiresAt = addMinutes(new Date(), NONCE_LIFETIME_MINUTES);
     const {nonce} = await prismaClient.nonce.create({
       data: {
-        expiresAt: addMinutes(new Date(), 5),
+        expiresAt,
         createdForId: nonceRequest.createdForId,
       },
     });
+    await enqueueGcpTask(
+      'nonce-invalidate',
+      {nonce},
+      {scheduleAt: expiresAt},
+    );
 
     return nonce;
   });

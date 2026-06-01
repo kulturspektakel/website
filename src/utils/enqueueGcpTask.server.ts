@@ -40,6 +40,21 @@ export async function enqueueGcpTask(
   options?: EnqueueOptions,
 ): Promise<void>;
 export async function enqueueGcpTask(
+  task: 'create-nonce-request',
+  payload: {id: string; email: string},
+  options?: EnqueueOptions,
+): Promise<void>;
+export async function enqueueGcpTask(
+  task: 'nonce-request-invalidate',
+  payload: {nonceRequestId: string},
+  options?: EnqueueOptions,
+): Promise<void>;
+export async function enqueueGcpTask(
+  task: 'nonce-invalidate',
+  payload: {nonce: string},
+  options?: EnqueueOptions,
+): Promise<void>;
+export async function enqueueGcpTask(
   task: string,
   payload: Record<string, unknown>,
   options?: EnqueueOptions,
