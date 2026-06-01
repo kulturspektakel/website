@@ -1,0 +1,341 @@
+terraform {
+  required_version = ">= 1.6.0"
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = "~> 6.0"
+    }
+  }
+}
+
+locals {
+  project_id = "gmail-reminder-api"
+  region     = "europe-west1"
+  site_url   = "https://www.kulturspektakel.de"
+}
+
+provider "google" {
+  project = local.project_id
+  region  = local.region
+  # Required so the apikeys.googleapis.com API (which needs a quota project)
+  # accepts requests made via user ADC credentials. Harmless for other APIs.
+  user_project_override = true
+  billing_project       = local.project_id
+}
+
+# Enable the APIs we use. `disable_on_destroy = false` keeps a `terraform
+# destroy` from breaking other things in the same project that depend on them.
+resource "google_project_service" "apis" {
+  for_each = toset([
+    "apikeys.googleapis.com",
+    "cloudscheduler.googleapis.com",
+    "cloudtasks.googleapis.com",
+    "iam.googleapis.com",
+    "iamcredentials.googleapis.com",
+    "monitoring.googleapis.com",
+    "secretmanager.googleapis.com",
+  ])
+  service            = each.key
+  disable_on_destroy = false
+}
+
+# Single service account used for both sides of the auth:
+#   - Cloud Scheduler / Cloud Tasks sign OIDC tokens *as* this SA when they
+#     POST to Vercel; the Vercel `gcpAuth` middleware checks that the token's
+#     email matches this SA.
+#   - The Vercel app authenticates to the Cloud Tasks API as this SA (via the
+#     JSON key below) when it wants to enqueue a task.
+resource "google_service_account" "tasks" {
+  account_id   = "tasks-invoker"
+  display_name = "Tasks invoker (Vercel ↔ Cloud Tasks / Scheduler)"
+  depends_on   = [google_project_service.apis]
+}
+
+# Lets the SA enqueue tasks into queues in this project.
+resource "google_project_iam_member" "tasks_enqueuer" {
+  project = local.project_id
+  role    = "roles/cloudtasks.enqueuer"
+  member  = "serviceAccount:${google_service_account.tasks.email}"
+}
+
+# Required so that *this* SA can create tasks that attach OIDC tokens minted as
+# itself (Cloud Tasks does the minting at delivery time; it needs the creator
+# to have actAs on the OIDC SA, which here is the same SA).
+resource "google_service_account_iam_member" "tasks_act_as_self" {
+  service_account_id = google_service_account.tasks.name
+  role               = "roles/iam.serviceAccountUser"
+  member             = "serviceAccount:${google_service_account.tasks.email}"
+}
+
+# JSON key used by the Vercel deployment to authenticate as the SA. Copy the
+# `tasks_service_account_key_json` output into the
+# `GCP_TASKS_SERVICE_ACCOUNT_KEY_JSON` env var on Vercel.
+resource "google_service_account_key" "tasks_key" {
+  service_account_id = google_service_account.tasks.name
+}
+
+resource "google_cloud_tasks_queue" "default" {
+  name       = "default"
+  location   = local.region
+  depends_on = [google_project_service.apis]
+}
+
+# Cron-scheduled task: hits the heartbeat route every 5 minutes with an OIDC
+# token whose audience matches `gcpAuth('heartbeat')` on the route.
+resource "google_cloud_scheduler_job" "heartbeat" {
+  name        = "heartbeat"
+  description = "Demo: hits /api/tasks/heartbeat every 5 minutes."
+  schedule    = "*/5 * * * *"
+  time_zone   = "UTC"
+  region      = local.region
+
+  http_target {
+    uri         = "${local.site_url}/api/tasks/heartbeat"
+    http_method = "POST"
+    oidc_token {
+      service_account_email = google_service_account.tasks.email
+      audience              = "heartbeat"
+    }
+  }
+
+  depends_on = [google_project_service.apis]
+}
+
+output "project_id" {
+  description = "Set as GCP_PROJECT_ID on Vercel."
+  value       = local.project_id
+}
+
+output "site_url" {
+  description = "Set as SITE_URL on Vercel."
+  value       = local.site_url
+}
+
+output "tasks_service_account_email" {
+  description = "Set as GCP_TASKS_SERVICE_ACCOUNT_EMAIL on Vercel."
+  value       = google_service_account.tasks.email
+}
+
+output "tasks_service_account_key_json" {
+  description = "Set as GCP_TASKS_SERVICE_ACCOUNT_KEY_JSON on Vercel. Sensitive."
+  value       = base64decode(google_service_account_key.tasks_key.private_key)
+  sensitive   = true
+}
+
+output "tasks_queue_name" {
+  description = "Set as GCP_TASKS_QUEUE on Vercel."
+  value       = google_cloud_tasks_queue.default.name
+}
+
+output "tasks_queue_location" {
+  description = "Set as GCP_LOCATION on Vercel."
+  value       = google_cloud_tasks_queue.default.location
+}
+
+# ---- Google Maps API keys ------------------------------------------------
+
+# Server-side Maps key, shared with the legacy `~/api.kulturspektakel.de`
+# project (read from Secret Manager `GOOGLE_MAPS_KEY` there). When the legacy
+# project's remaining Maps usage is moved into this codebase, the
+# Geocoding/Static-Maps entries can probably be dropped.
+#
+# Usage on this side: `src/server/components/DistanceWarning.ts` → Distance
+# Matrix.
+# Usage on the legacy side:
+#   - geocoding (`distanceToKult.ts`, `slack/lagerschluessel.ts`)
+#   - static maps (`slack/lagerschluessel.ts`)
+#   (Sheets moved off this key to `google_apikeys_key.sheets`.)
+resource "google_apikeys_key" "maps_server" {
+  name         = "f8c81e08-d11f-44e9-b30d-0cffecea382e"
+  display_name = "Maps server (Distance Matrix, Geocoding, Static Maps)"
+
+  restrictions {
+    api_targets {
+      service = "distance-matrix-backend.googleapis.com"
+    }
+    api_targets {
+      service = "geocoding-backend.googleapis.com"
+    }
+    api_targets {
+      service = "static-maps-backend.googleapis.com"
+    }
+  }
+
+  depends_on = [google_project_service.apis]
+}
+
+# Public browser Maps key. Loaded by `@googlemaps/react-wrapper` in
+# `src/components/GoogleMaps.tsx` to render maps + markers. Referrer-locked to
+# our domain + local dev, and API-locked to just the Maps JS API.
+resource "google_apikeys_key" "maps_browser" {
+  name         = "27f7d335-7a21-4943-a64f-76dd03d8721b"
+  display_name = "Maps browser (JS API)"
+
+  restrictions {
+    browser_key_restrictions {
+      allowed_referrers = ["*.kulturspektakel.de", "localhost:3000"]
+    }
+    api_targets {
+      service = "maps-backend.googleapis.com"
+    }
+  }
+
+  depends_on = [google_project_service.apis]
+}
+
+output "maps_server_key_string" {
+  description = "Set as GOOGLE_MAPS_API_KEY_SERVER on Vercel. Sensitive."
+  value       = google_apikeys_key.maps_server.key_string
+  sensitive   = true
+}
+
+output "maps_browser_key_string" {
+  description = "Set as GOOGLE_MAPS_API (or GOOGLE_MAPS_API_KEY — see note in main.tf) on Vercel. Sensitive."
+  value       = google_apikeys_key.maps_browser.key_string
+  sensitive   = true
+}
+
+# Dedicated key for the Google Sheets API — separate concern from Maps, lives
+# on its own key so a Sheets leak doesn't expose Maps quota and vice versa.
+# Used today by the legacy `~/api.kulturspektakel.de` project's
+# `utils/readGoogleSheet.ts`. Migration steps after this resource is applied:
+#   1. `terraform output -raw sheets_key_string` and store as a new secret
+#      `GOOGLE_SHEETS_KEY` in Secret Manager.
+#   2. Update legacy code to read `GOOGLE_SHEETS_KEY` instead of
+#      `GOOGLE_MAPS_KEY` for Sheets calls, deploy.
+#   3. Remove `sheets.googleapis.com` from `google_apikeys_key.maps_server`'s
+#      `api_targets` (it'll only be carrying Maps APIs after that).
+resource "google_apikeys_key" "sheets" {
+  name         = "sheets-api"
+  display_name = "Sheets API"
+
+  restrictions {
+    api_targets {
+      service = "sheets.googleapis.com"
+    }
+  }
+
+  depends_on = [google_project_service.apis]
+}
+
+output "sheets_key_string" {
+  description = "Sheets API key. Sensitive."
+  value       = google_apikeys_key.sheets.key_string
+  sensitive   = true
+}
+
+# Mirror the Sheets API key into Secret Manager so the legacy
+# `~/api.kulturspektakel.de` project can read it the same way it already reads
+# `GOOGLE_MAPS_KEY` etc. The value rotates automatically if the key is ever
+# regenerated in `google_apikeys_key.sheets`.
+resource "google_secret_manager_secret" "sheets_key" {
+  secret_id = "GOOGLE_SHEETS_KEY"
+  replication {
+    auto {}
+  }
+  depends_on = [google_project_service.apis]
+}
+
+resource "google_secret_manager_secret_version" "sheets_key" {
+  secret      = google_secret_manager_secret.sheets_key.id
+  secret_data = google_apikeys_key.sheets.key_string
+}
+
+# ---- Monitoring ----------------------------------------------------------
+
+# Look up the existing "Monitoring" Slack channel — we don't manage it here
+# (the auth token can't be round-tripped through Terraform state) but we want
+# the new alerts to fire into the same channel as the other ones in the
+# console.
+data "google_monitoring_notification_channel" "slack" {
+  display_name = "Monitoring"
+  type         = "slack"
+}
+
+# Replaces the console-managed `www.kulturspektakel.de` uptime check; delete
+# the old one in the console after this applies so we don't double up.
+resource "google_monitoring_uptime_check_config" "www" {
+  display_name = "www.kulturspektakel.de"
+  timeout      = "20s"
+  period       = "300s"
+
+  http_check {
+    path           = "/"
+    port           = 443
+    use_ssl        = true
+    validate_ssl   = true
+    request_method = "GET"
+    accepted_response_status_codes {
+      status_class = "STATUS_CLASS_2XX"
+    }
+  }
+
+  monitored_resource {
+    type = "uptime_url"
+    labels = {
+      project_id = local.project_id
+      host       = "kulturspektakel.de"
+    }
+  }
+
+  depends_on = [google_project_service.apis]
+}
+
+# Replaces the console-managed `www.kulturspektakel.de uptime failure` alert.
+# Fires when more than one check fails within a 20-minute window for 60s.
+resource "google_monitoring_alert_policy" "www_uptime" {
+  display_name = "www.kulturspektakel.de uptime failure"
+  combiner     = "OR"
+
+  conditions {
+    display_name = "Failure of uptime check ${google_monitoring_uptime_check_config.www.uptime_check_id}"
+    condition_threshold {
+      filter          = <<-EOT
+        metric.type="monitoring.googleapis.com/uptime_check/check_passed"
+        AND metric.label.check_id="${google_monitoring_uptime_check_config.www.uptime_check_id}"
+        AND resource.type="uptime_url"
+      EOT
+      comparison      = "COMPARISON_GT"
+      threshold_value = 1
+      duration        = "60s"
+      trigger {
+        count = 1
+      }
+      aggregations {
+        alignment_period     = "1200s"
+        per_series_aligner   = "ALIGN_NEXT_OLDER"
+        cross_series_reducer = "REDUCE_COUNT_FALSE"
+        group_by_fields      = ["resource.label.*"]
+      }
+    }
+  }
+
+  notification_channels = [data.google_monitoring_notification_channel.slack.name]
+}
+
+# Fires when Cloud Tasks or Cloud Scheduler logs an error: retry exhaustion,
+# target unreachable, malformed task config, etc. Rate-limited so a runaway
+# task doesn't spam Slack — at most one notification every 5 minutes; the
+# incident auto-closes after 30 min of no further errors.
+resource "google_monitoring_alert_policy" "task_failures" {
+  display_name = "Task failures (Cloud Tasks / Scheduler)"
+  combiner     = "OR"
+
+  conditions {
+    display_name = "Cloud Tasks or Scheduler error log"
+    condition_matched_log {
+      # Log-matching alert policies can have only one condition (per the GCP
+      # API), so the OR is inside the Cloud Logging filter itself.
+      filter = "(resource.type=\"cloud_tasks_queue\" OR resource.type=\"cloud_scheduler_job\") AND severity>=ERROR"
+    }
+  }
+
+  alert_strategy {
+    notification_rate_limit {
+      period = "300s"
+    }
+    auto_close = "1800s"
+  }
+
+  notification_channels = [data.google_monitoring_notification_channel.slack.name]
+}

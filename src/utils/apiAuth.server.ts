@@ -12,12 +12,19 @@ import type {DeviceType} from '../generated/prisma/client';
  * token) can be added as additional members of this union and a corresponding
  * branch in `parseToken`.
  */
-export type ParsedToken = {
-  iss: 'device';
-  deviceId: string;
-};
+export type ParsedToken =
+  | {
+      iss: 'device';
+      deviceId: string;
+    }
+  | {
+      iss: 'gcp';
+      email: string;
+      audience: string;
+    };
 
 export type DeviceToken = Extract<ParsedToken, {iss: 'device'}>;
+export type GcpToken = Extract<ParsedToken, {iss: 'gcp'}>;
 
 const sha1 = (data: string) => createHash('sha1').update(data).digest('hex');
 

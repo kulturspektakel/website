@@ -32,6 +32,9 @@ import { Route as MainSlugRouteImport } from './routes/_main.$slug'
 import { Route as CrewLautstaerkeIndexRouteImport } from './routes/crew.lautstaerke.index'
 import { Route as MainLineupIndexRouteImport } from './routes/_main.lineup.index'
 import { Route as CrewLautstaerkeDeviceRouteImport } from './routes/crew.lautstaerke.$device'
+import { Route as ApiTasksTriggerDemoRouteImport } from './routes/api.tasks.trigger-demo'
+import { Route as ApiTasksHeartbeatRouteImport } from './routes/api.tasks.heartbeat'
+import { Route as ApiTasksDemoRouteImport } from './routes/api.tasks.demo'
 import { Route as ApiNoiseLogRouteImport } from './routes/api.noise.log'
 import { Route as ApiKultcashLogRouteImport } from './routes/api.kultcash.log'
 import { Route as ApiKultcashListsRouteImport } from './routes/api.kultcash.lists'
@@ -164,6 +167,21 @@ const CrewLautstaerkeDeviceRoute = CrewLautstaerkeDeviceRouteImport.update({
   path: '/$device',
   getParentRoute: () => CrewLautstaerkeRoute,
 } as any)
+const ApiTasksTriggerDemoRoute = ApiTasksTriggerDemoRouteImport.update({
+  id: '/api/tasks/trigger-demo',
+  path: '/api/tasks/trigger-demo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTasksHeartbeatRoute = ApiTasksHeartbeatRouteImport.update({
+  id: '/api/tasks/heartbeat',
+  path: '/api/tasks/heartbeat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTasksDemoRoute = ApiTasksDemoRouteImport.update({
+  id: '/api/tasks/demo',
+  path: '/api/tasks/demo',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiNoiseLogRoute = ApiNoiseLogRouteImport.update({
   id: '/api/noise/log',
   path: '/api/noise/log',
@@ -284,6 +302,9 @@ export interface FileRoutesByFullPath {
   '/api/kultcash/lists': typeof ApiKultcashListsRoute
   '/api/kultcash/log': typeof ApiKultcashLogRoute
   '/api/noise/log': typeof ApiNoiseLogRoute
+  '/api/tasks/demo': typeof ApiTasksDemoRoute
+  '/api/tasks/heartbeat': typeof ApiTasksHeartbeatRoute
+  '/api/tasks/trigger-demo': typeof ApiTasksTriggerDemoRoute
   '/crew/lautstaerke/$device': typeof CrewLautstaerkeDeviceRoute
   '/lineup/': typeof MainLineupIndexRoute
   '/crew/lautstaerke/': typeof CrewLautstaerkeIndexRoute
@@ -322,6 +343,9 @@ export interface FileRoutesByTo {
   '/api/kultcash/lists': typeof ApiKultcashListsRoute
   '/api/kultcash/log': typeof ApiKultcashLogRoute
   '/api/noise/log': typeof ApiNoiseLogRoute
+  '/api/tasks/demo': typeof ApiTasksDemoRoute
+  '/api/tasks/heartbeat': typeof ApiTasksHeartbeatRoute
+  '/api/tasks/trigger-demo': typeof ApiTasksTriggerDemoRoute
   '/crew/lautstaerke/$device': typeof CrewLautstaerkeDeviceRoute
   '/lineup': typeof MainLineupIndexRoute
   '/crew/lautstaerke': typeof CrewLautstaerkeIndexRoute
@@ -365,6 +389,9 @@ export interface FileRoutesById {
   '/api/kultcash/lists': typeof ApiKultcashListsRoute
   '/api/kultcash/log': typeof ApiKultcashLogRoute
   '/api/noise/log': typeof ApiNoiseLogRoute
+  '/api/tasks/demo': typeof ApiTasksDemoRoute
+  '/api/tasks/heartbeat': typeof ApiTasksHeartbeatRoute
+  '/api/tasks/trigger-demo': typeof ApiTasksTriggerDemoRoute
   '/crew/lautstaerke/$device': typeof CrewLautstaerkeDeviceRoute
   '/_main/lineup/': typeof MainLineupIndexRoute
   '/crew/lautstaerke/': typeof CrewLautstaerkeIndexRoute
@@ -408,6 +435,9 @@ export interface FileRouteTypes {
     | '/api/kultcash/lists'
     | '/api/kultcash/log'
     | '/api/noise/log'
+    | '/api/tasks/demo'
+    | '/api/tasks/heartbeat'
+    | '/api/tasks/trigger-demo'
     | '/crew/lautstaerke/$device'
     | '/lineup/'
     | '/crew/lautstaerke/'
@@ -446,6 +476,9 @@ export interface FileRouteTypes {
     | '/api/kultcash/lists'
     | '/api/kultcash/log'
     | '/api/noise/log'
+    | '/api/tasks/demo'
+    | '/api/tasks/heartbeat'
+    | '/api/tasks/trigger-demo'
     | '/crew/lautstaerke/$device'
     | '/lineup'
     | '/crew/lautstaerke'
@@ -488,6 +521,9 @@ export interface FileRouteTypes {
     | '/api/kultcash/lists'
     | '/api/kultcash/log'
     | '/api/noise/log'
+    | '/api/tasks/demo'
+    | '/api/tasks/heartbeat'
+    | '/api/tasks/trigger-demo'
     | '/crew/lautstaerke/$device'
     | '/_main/lineup/'
     | '/crew/lautstaerke/'
@@ -507,6 +543,9 @@ export interface RootRouteChildren {
   ApiKultcashListsRoute: typeof ApiKultcashListsRoute
   ApiKultcashLogRoute: typeof ApiKultcashLogRoute
   ApiNoiseLogRoute: typeof ApiNoiseLogRoute
+  ApiTasksDemoRoute: typeof ApiTasksDemoRoute
+  ApiTasksHeartbeatRoute: typeof ApiTasksHeartbeatRoute
+  ApiTasksTriggerDemoRoute: typeof ApiTasksTriggerDemoRoute
   ApiSpendenQuittungIdRoute: typeof ApiSpendenQuittungIdRoute
 }
 
@@ -672,6 +711,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/crew/lautstaerke/$device'
       preLoaderRoute: typeof CrewLautstaerkeDeviceRouteImport
       parentRoute: typeof CrewLautstaerkeRoute
+    }
+    '/api/tasks/trigger-demo': {
+      id: '/api/tasks/trigger-demo'
+      path: '/api/tasks/trigger-demo'
+      fullPath: '/api/tasks/trigger-demo'
+      preLoaderRoute: typeof ApiTasksTriggerDemoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tasks/heartbeat': {
+      id: '/api/tasks/heartbeat'
+      path: '/api/tasks/heartbeat'
+      fullPath: '/api/tasks/heartbeat'
+      preLoaderRoute: typeof ApiTasksHeartbeatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tasks/demo': {
+      id: '/api/tasks/demo'
+      path: '/api/tasks/demo'
+      fullPath: '/api/tasks/demo'
+      preLoaderRoute: typeof ApiTasksDemoRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/noise/log': {
       id: '/api/noise/log'
@@ -913,6 +973,9 @@ const rootRouteChildren: RootRouteChildren = {
   ApiKultcashListsRoute: ApiKultcashListsRoute,
   ApiKultcashLogRoute: ApiKultcashLogRoute,
   ApiNoiseLogRoute: ApiNoiseLogRoute,
+  ApiTasksDemoRoute: ApiTasksDemoRoute,
+  ApiTasksHeartbeatRoute: ApiTasksHeartbeatRoute,
+  ApiTasksTriggerDemoRoute: ApiTasksTriggerDemoRoute,
   ApiSpendenQuittungIdRoute: ApiSpendenQuittungIdRoute,
 }
 export const routeTree = rootRouteImport

@@ -12,6 +12,7 @@
     "generate:proto": "protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=./src/proto --ts_proto_opt=esModuleInterop=true,forceLong=number,useOptionals=messages -I ./src/proto ./src/proto/noise.proto ./src/proto/product.proto ./src/proto/config.proto ./src/proto/configs.proto ./src/proto/logmessage.proto",
     "generate:theme": "chakra typegen app/theme.ts --strict",
     "generate:env": "dotenv-vault pull",
+    "sync:gcp-env": "tools/sync-gcp-env.py",
     "test": "vitest",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "typecheck": "tsc --noEmit"
@@ -42,6 +43,7 @@
     "@chakra-ui/react": "^3.34.0",
     "@date-fns/tz": "^1.4.1",
     "@emotion/react": "^11.14.0",
+    "@google-cloud/tasks": "^6.2.2",
     "@googlemaps/react-wrapper": "^1.2.0",
     "@neondatabase/serverless": "^1.0.2",
     "@prisma/adapter-neon": "7.6.0",
@@ -58,6 +60,7 @@
     "dotenv": "^17.4.1",
     "downshift": "^9.3.2",
     "formik": "^2.4.9",
+    "google-auth-library": "^10.6.2",
     "hex-rgb": "^5.0.0",
     "iban-ts": "^0.11.0",
     "markdown-to-jsx": "^9.7.13",
