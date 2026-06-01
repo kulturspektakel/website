@@ -18,6 +18,18 @@ data "google_project" "this" {
   project_id = local.project_id
 }
 
+# Reference (don't manage) the Gmail Workspace service account secrets. The
+# secrets were created when the legacy api needed them; both projects read
+# them today via different env-var names. Reading via data source surfaces
+# them in our outputs/sync flow without taking ownership.
+data "google_secret_manager_secret_version" "gmail_sa_email" {
+  secret = "GOOGLE_SERVICE_ACCOUNT_EMAIL"
+}
+
+data "google_secret_manager_secret_version" "gmail_sa_private_key" {
+  secret = "GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY"
+}
+
 provider "google" {
   project = local.project_id
   region  = local.region
@@ -171,6 +183,18 @@ output "tasks_queue_name" {
 output "tasks_queue_location" {
   description = "Set as GCP_LOCATION on Vercel."
   value       = google_cloud_tasks_queue.default.location
+}
+
+output "gmail_sa_email" {
+  description = "Set as GMAIL_SA_EMAIL on Vercel. Sourced from existing Secret Manager."
+  value       = data.google_secret_manager_secret_version.gmail_sa_email.secret_data
+  sensitive   = true
+}
+
+output "gmail_sa_private_key" {
+  description = "Set as GMAIL_SA_PRIVATE_KEY on Vercel. Multi-line PEM."
+  value       = data.google_secret_manager_secret_version.gmail_sa_private_key.secret_data
+  sensitive   = true
 }
 
 # ---- Google Maps API keys ------------------------------------------------

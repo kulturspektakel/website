@@ -49,6 +49,9 @@ def main() -> int:
         "GCP_TASKS_SERVICE_ACCOUNT_KEY_JSON": f"'{sa_key_json}'",
         "GOOGLE_MAPS_API_KEY_SERVER": f'"{out("maps_server_key_string")}"',
         "GOOGLE_MAPS_API_KEY": f'"{out("maps_browser_key_string")}"',
+        "GMAIL_SA_EMAIL": f'"{out("gmail_sa_email")}"',
+        # Multi-line PEM; dotenv supports multi-line values inside double quotes.
+        "GMAIL_SA_PRIVATE_KEY": f'"{out("gmail_sa_private_key")}"',
     }
     new_block = (
         BLOCK_START
@@ -68,8 +71,10 @@ def main() -> int:
     had_block = re.search(block_pattern, content, re.DOTALL) is not None
     content = re.sub(block_pattern, "", content, count=1, flags=re.DOTALL)
     for name in managed:
+        # Handle both single-line and multi-line ("..." spanning newlines)
+        # entries when stripping stray duplicates outside the block.
         content = re.sub(
-            rf"^{re.escape(name)}=.*\n",
+            rf'^{re.escape(name)}=(?:"[^"]*"|\'[^\']*\'|[^\n]*)\n',
             "",
             content,
             flags=re.MULTILINE,
