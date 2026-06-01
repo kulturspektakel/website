@@ -33,6 +33,7 @@ export const createNonceRequest = createServerFn()
     const nonceRequest = await prismaClient.nonceRequest.create({
       data: {
         expiresAt: addMinutes(new Date(), 5),
+        createdForEmail: data.email,
       },
     });
 

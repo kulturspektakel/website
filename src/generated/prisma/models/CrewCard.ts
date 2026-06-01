@@ -26,31 +26,31 @@ export type AggregateCrewCard = {
 
 export type CrewCardMinAggregateOutputType = {
   id: runtime.Bytes | null
-  validUntil: Date | null
   nickname: string | null
   suspended: boolean | null
   privileged: boolean | null
   viewerId: string | null
+  validUntil: Date | null
   enrolledAt: Date | null
 }
 
 export type CrewCardMaxAggregateOutputType = {
   id: runtime.Bytes | null
-  validUntil: Date | null
   nickname: string | null
   suspended: boolean | null
   privileged: boolean | null
   viewerId: string | null
+  validUntil: Date | null
   enrolledAt: Date | null
 }
 
 export type CrewCardCountAggregateOutputType = {
   id: number
-  validUntil: number
   nickname: number
   suspended: number
   privileged: number
   viewerId: number
+  validUntil: number
   enrolledAt: number
   _all: number
 }
@@ -58,31 +58,31 @@ export type CrewCardCountAggregateOutputType = {
 
 export type CrewCardMinAggregateInputType = {
   id?: true
-  validUntil?: true
   nickname?: true
   suspended?: true
   privileged?: true
   viewerId?: true
+  validUntil?: true
   enrolledAt?: true
 }
 
 export type CrewCardMaxAggregateInputType = {
   id?: true
-  validUntil?: true
   nickname?: true
   suspended?: true
   privileged?: true
   viewerId?: true
+  validUntil?: true
   enrolledAt?: true
 }
 
 export type CrewCardCountAggregateInputType = {
   id?: true
-  validUntil?: true
   nickname?: true
   suspended?: true
   privileged?: true
   viewerId?: true
+  validUntil?: true
   enrolledAt?: true
   _all?: true
 }
@@ -161,11 +161,11 @@ export type CrewCardGroupByArgs<ExtArgs extends runtime.Types.Extensions.Interna
 
 export type CrewCardGroupByOutputType = {
   id: runtime.Bytes
-  validUntil: Date
   nickname: string | null
   suspended: boolean | null
   privileged: boolean | null
   viewerId: string | null
+  validUntil: Date
   enrolledAt: Date
   _count: CrewCardCountAggregateOutputType | null
   _min: CrewCardMinAggregateOutputType | null
@@ -192,11 +192,11 @@ export type CrewCardWhereInput = {
   OR?: Prisma.CrewCardWhereInput[]
   NOT?: Prisma.CrewCardWhereInput | Prisma.CrewCardWhereInput[]
   id?: Prisma.BytesFilter<"CrewCard"> | runtime.Bytes
-  validUntil?: Prisma.DateTimeFilter<"CrewCard"> | Date | string
   nickname?: Prisma.StringNullableFilter<"CrewCard"> | string | null
   suspended?: Prisma.BoolNullableFilter<"CrewCard"> | boolean | null
   privileged?: Prisma.BoolNullableFilter<"CrewCard"> | boolean | null
   viewerId?: Prisma.StringNullableFilter<"CrewCard"> | string | null
+  validUntil?: Prisma.DateTimeFilter<"CrewCard"> | Date | string
   enrolledAt?: Prisma.DateTimeFilter<"CrewCard"> | Date | string
   viewer?: Prisma.XOR<Prisma.ViewerNullableScalarRelationFilter, Prisma.ViewerWhereInput> | null
   Order?: Prisma.OrderListRelationFilter
@@ -204,11 +204,11 @@ export type CrewCardWhereInput = {
 
 export type CrewCardOrderByWithRelationInput = {
   id?: Prisma.SortOrder
-  validUntil?: Prisma.SortOrder
   nickname?: Prisma.SortOrderInput | Prisma.SortOrder
   suspended?: Prisma.SortOrderInput | Prisma.SortOrder
   privileged?: Prisma.SortOrderInput | Prisma.SortOrder
   viewerId?: Prisma.SortOrderInput | Prisma.SortOrder
+  validUntil?: Prisma.SortOrder
   enrolledAt?: Prisma.SortOrder
   viewer?: Prisma.ViewerOrderByWithRelationInput
   Order?: Prisma.OrderOrderByRelationAggregateInput
@@ -220,11 +220,11 @@ export type CrewCardWhereUniqueInput = Prisma.AtLeast<{
   AND?: Prisma.CrewCardWhereInput | Prisma.CrewCardWhereInput[]
   OR?: Prisma.CrewCardWhereInput[]
   NOT?: Prisma.CrewCardWhereInput | Prisma.CrewCardWhereInput[]
-  validUntil?: Prisma.DateTimeFilter<"CrewCard"> | Date | string
   nickname?: Prisma.StringNullableFilter<"CrewCard"> | string | null
   suspended?: Prisma.BoolNullableFilter<"CrewCard"> | boolean | null
   privileged?: Prisma.BoolNullableFilter<"CrewCard"> | boolean | null
   viewerId?: Prisma.StringNullableFilter<"CrewCard"> | string | null
+  validUntil?: Prisma.DateTimeFilter<"CrewCard"> | Date | string
   enrolledAt?: Prisma.DateTimeFilter<"CrewCard"> | Date | string
   viewer?: Prisma.XOR<Prisma.ViewerNullableScalarRelationFilter, Prisma.ViewerWhereInput> | null
   Order?: Prisma.OrderListRelationFilter
@@ -232,11 +232,11 @@ export type CrewCardWhereUniqueInput = Prisma.AtLeast<{
 
 export type CrewCardOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
-  validUntil?: Prisma.SortOrder
   nickname?: Prisma.SortOrderInput | Prisma.SortOrder
   suspended?: Prisma.SortOrderInput | Prisma.SortOrder
   privileged?: Prisma.SortOrderInput | Prisma.SortOrder
   viewerId?: Prisma.SortOrderInput | Prisma.SortOrder
+  validUntil?: Prisma.SortOrder
   enrolledAt?: Prisma.SortOrder
   _count?: Prisma.CrewCardCountOrderByAggregateInput
   _max?: Prisma.CrewCardMaxOrderByAggregateInput
@@ -248,20 +248,20 @@ export type CrewCardScalarWhereWithAggregatesInput = {
   OR?: Prisma.CrewCardScalarWhereWithAggregatesInput[]
   NOT?: Prisma.CrewCardScalarWhereWithAggregatesInput | Prisma.CrewCardScalarWhereWithAggregatesInput[]
   id?: Prisma.BytesWithAggregatesFilter<"CrewCard"> | runtime.Bytes
-  validUntil?: Prisma.DateTimeWithAggregatesFilter<"CrewCard"> | Date | string
   nickname?: Prisma.StringNullableWithAggregatesFilter<"CrewCard"> | string | null
   suspended?: Prisma.BoolNullableWithAggregatesFilter<"CrewCard"> | boolean | null
   privileged?: Prisma.BoolNullableWithAggregatesFilter<"CrewCard"> | boolean | null
   viewerId?: Prisma.StringNullableWithAggregatesFilter<"CrewCard"> | string | null
+  validUntil?: Prisma.DateTimeWithAggregatesFilter<"CrewCard"> | Date | string
   enrolledAt?: Prisma.DateTimeWithAggregatesFilter<"CrewCard"> | Date | string
 }
 
 export type CrewCardCreateInput = {
   id: runtime.Bytes
-  validUntil: Date | string
   nickname?: string | null
   suspended?: boolean | null
   privileged?: boolean | null
+  validUntil: Date | string
   enrolledAt: Date | string
   viewer?: Prisma.ViewerCreateNestedOneWithoutCrewCardInput
   Order?: Prisma.OrderCreateNestedManyWithoutCrewCardInput
@@ -269,21 +269,21 @@ export type CrewCardCreateInput = {
 
 export type CrewCardUncheckedCreateInput = {
   id: runtime.Bytes
-  validUntil: Date | string
   nickname?: string | null
   suspended?: boolean | null
   privileged?: boolean | null
   viewerId?: string | null
+  validUntil: Date | string
   enrolledAt: Date | string
   Order?: Prisma.OrderUncheckedCreateNestedManyWithoutCrewCardInput
 }
 
 export type CrewCardUpdateInput = {
   id?: Prisma.BytesFieldUpdateOperationsInput | runtime.Bytes
-  validUntil?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   suspended?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   privileged?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  validUntil?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   enrolledAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   viewer?: Prisma.ViewerUpdateOneWithoutCrewCardNestedInput
   Order?: Prisma.OrderUpdateManyWithoutCrewCardNestedInput
@@ -291,41 +291,41 @@ export type CrewCardUpdateInput = {
 
 export type CrewCardUncheckedUpdateInput = {
   id?: Prisma.BytesFieldUpdateOperationsInput | runtime.Bytes
-  validUntil?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   suspended?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   privileged?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   viewerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  validUntil?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   enrolledAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   Order?: Prisma.OrderUncheckedUpdateManyWithoutCrewCardNestedInput
 }
 
 export type CrewCardCreateManyInput = {
   id: runtime.Bytes
-  validUntil: Date | string
   nickname?: string | null
   suspended?: boolean | null
   privileged?: boolean | null
   viewerId?: string | null
+  validUntil: Date | string
   enrolledAt: Date | string
 }
 
 export type CrewCardUpdateManyMutationInput = {
   id?: Prisma.BytesFieldUpdateOperationsInput | runtime.Bytes
-  validUntil?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   suspended?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   privileged?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  validUntil?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   enrolledAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type CrewCardUncheckedUpdateManyInput = {
   id?: Prisma.BytesFieldUpdateOperationsInput | runtime.Bytes
-  validUntil?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   suspended?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   privileged?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   viewerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  validUntil?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   enrolledAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -352,31 +352,31 @@ export type CrewCardOrderByRelevanceInput = {
 
 export type CrewCardCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  validUntil?: Prisma.SortOrder
   nickname?: Prisma.SortOrder
   suspended?: Prisma.SortOrder
   privileged?: Prisma.SortOrder
   viewerId?: Prisma.SortOrder
+  validUntil?: Prisma.SortOrder
   enrolledAt?: Prisma.SortOrder
 }
 
 export type CrewCardMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  validUntil?: Prisma.SortOrder
   nickname?: Prisma.SortOrder
   suspended?: Prisma.SortOrder
   privileged?: Prisma.SortOrder
   viewerId?: Prisma.SortOrder
+  validUntil?: Prisma.SortOrder
   enrolledAt?: Prisma.SortOrder
 }
 
 export type CrewCardMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  validUntil?: Prisma.SortOrder
   nickname?: Prisma.SortOrder
   suspended?: Prisma.SortOrder
   privileged?: Prisma.SortOrder
   viewerId?: Prisma.SortOrder
+  validUntil?: Prisma.SortOrder
   enrolledAt?: Prisma.SortOrder
 }
 
@@ -448,20 +448,20 @@ export type NullableBoolFieldUpdateOperationsInput = {
 
 export type CrewCardCreateWithoutViewerInput = {
   id: runtime.Bytes
-  validUntil: Date | string
   nickname?: string | null
   suspended?: boolean | null
   privileged?: boolean | null
+  validUntil: Date | string
   enrolledAt: Date | string
   Order?: Prisma.OrderCreateNestedManyWithoutCrewCardInput
 }
 
 export type CrewCardUncheckedCreateWithoutViewerInput = {
   id: runtime.Bytes
-  validUntil: Date | string
   nickname?: string | null
   suspended?: boolean | null
   privileged?: boolean | null
+  validUntil: Date | string
   enrolledAt: Date | string
   Order?: Prisma.OrderUncheckedCreateNestedManyWithoutCrewCardInput
 }
@@ -497,31 +497,31 @@ export type CrewCardScalarWhereInput = {
   OR?: Prisma.CrewCardScalarWhereInput[]
   NOT?: Prisma.CrewCardScalarWhereInput | Prisma.CrewCardScalarWhereInput[]
   id?: Prisma.BytesFilter<"CrewCard"> | runtime.Bytes
-  validUntil?: Prisma.DateTimeFilter<"CrewCard"> | Date | string
   nickname?: Prisma.StringNullableFilter<"CrewCard"> | string | null
   suspended?: Prisma.BoolNullableFilter<"CrewCard"> | boolean | null
   privileged?: Prisma.BoolNullableFilter<"CrewCard"> | boolean | null
   viewerId?: Prisma.StringNullableFilter<"CrewCard"> | string | null
+  validUntil?: Prisma.DateTimeFilter<"CrewCard"> | Date | string
   enrolledAt?: Prisma.DateTimeFilter<"CrewCard"> | Date | string
 }
 
 export type CrewCardCreateWithoutOrderInput = {
   id: runtime.Bytes
-  validUntil: Date | string
   nickname?: string | null
   suspended?: boolean | null
   privileged?: boolean | null
+  validUntil: Date | string
   enrolledAt: Date | string
   viewer?: Prisma.ViewerCreateNestedOneWithoutCrewCardInput
 }
 
 export type CrewCardUncheckedCreateWithoutOrderInput = {
   id: runtime.Bytes
-  validUntil: Date | string
   nickname?: string | null
   suspended?: boolean | null
   privileged?: boolean | null
   viewerId?: string | null
+  validUntil: Date | string
   enrolledAt: Date | string
 }
 
@@ -543,59 +543,59 @@ export type CrewCardUpdateToOneWithWhereWithoutOrderInput = {
 
 export type CrewCardUpdateWithoutOrderInput = {
   id?: Prisma.BytesFieldUpdateOperationsInput | runtime.Bytes
-  validUntil?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   suspended?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   privileged?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  validUntil?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   enrolledAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   viewer?: Prisma.ViewerUpdateOneWithoutCrewCardNestedInput
 }
 
 export type CrewCardUncheckedUpdateWithoutOrderInput = {
   id?: Prisma.BytesFieldUpdateOperationsInput | runtime.Bytes
-  validUntil?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   suspended?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   privileged?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   viewerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  validUntil?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   enrolledAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type CrewCardCreateManyViewerInput = {
   id: runtime.Bytes
-  validUntil: Date | string
   nickname?: string | null
   suspended?: boolean | null
   privileged?: boolean | null
+  validUntil: Date | string
   enrolledAt: Date | string
 }
 
 export type CrewCardUpdateWithoutViewerInput = {
   id?: Prisma.BytesFieldUpdateOperationsInput | runtime.Bytes
-  validUntil?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   suspended?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   privileged?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  validUntil?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   enrolledAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   Order?: Prisma.OrderUpdateManyWithoutCrewCardNestedInput
 }
 
 export type CrewCardUncheckedUpdateWithoutViewerInput = {
   id?: Prisma.BytesFieldUpdateOperationsInput | runtime.Bytes
-  validUntil?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   suspended?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   privileged?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  validUntil?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   enrolledAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   Order?: Prisma.OrderUncheckedUpdateManyWithoutCrewCardNestedInput
 }
 
 export type CrewCardUncheckedUpdateManyWithoutViewerInput = {
   id?: Prisma.BytesFieldUpdateOperationsInput | runtime.Bytes
-  validUntil?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   suspended?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   privileged?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  validUntil?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   enrolledAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -632,11 +632,11 @@ export type CrewCardCountOutputTypeCountOrderArgs<ExtArgs extends runtime.Types.
 
 export type CrewCardSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  validUntil?: boolean
   nickname?: boolean
   suspended?: boolean
   privileged?: boolean
   viewerId?: boolean
+  validUntil?: boolean
   enrolledAt?: boolean
   viewer?: boolean | Prisma.CrewCard$viewerArgs<ExtArgs>
   Order?: boolean | Prisma.CrewCard$OrderArgs<ExtArgs>
@@ -645,37 +645,37 @@ export type CrewCardSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
 
 export type CrewCardSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  validUntil?: boolean
   nickname?: boolean
   suspended?: boolean
   privileged?: boolean
   viewerId?: boolean
+  validUntil?: boolean
   enrolledAt?: boolean
   viewer?: boolean | Prisma.CrewCard$viewerArgs<ExtArgs>
 }, ExtArgs["result"]["crewCard"]>
 
 export type CrewCardSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  validUntil?: boolean
   nickname?: boolean
   suspended?: boolean
   privileged?: boolean
   viewerId?: boolean
+  validUntil?: boolean
   enrolledAt?: boolean
   viewer?: boolean | Prisma.CrewCard$viewerArgs<ExtArgs>
 }, ExtArgs["result"]["crewCard"]>
 
 export type CrewCardSelectScalar = {
   id?: boolean
-  validUntil?: boolean
   nickname?: boolean
   suspended?: boolean
   privileged?: boolean
   viewerId?: boolean
+  validUntil?: boolean
   enrolledAt?: boolean
 }
 
-export type CrewCardOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "validUntil" | "nickname" | "suspended" | "privileged" | "viewerId" | "enrolledAt", ExtArgs["result"]["crewCard"]>
+export type CrewCardOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "nickname" | "suspended" | "privileged" | "viewerId" | "validUntil" | "enrolledAt", ExtArgs["result"]["crewCard"]>
 export type CrewCardInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   viewer?: boolean | Prisma.CrewCard$viewerArgs<ExtArgs>
   Order?: boolean | Prisma.CrewCard$OrderArgs<ExtArgs>
@@ -696,11 +696,11 @@ export type $CrewCardPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: runtime.Bytes
-    validUntil: Date
     nickname: string | null
     suspended: boolean | null
     privileged: boolean | null
     viewerId: string | null
+    validUntil: Date
     enrolledAt: Date
   }, ExtArgs["result"]["crewCard"]>
   composites: {}
@@ -1128,11 +1128,11 @@ export interface Prisma__CrewCardClient<T, Null = never, ExtArgs extends runtime
  */
 export interface CrewCardFieldRefs {
   readonly id: Prisma.FieldRef<"CrewCard", 'Bytes'>
-  readonly validUntil: Prisma.FieldRef<"CrewCard", 'DateTime'>
   readonly nickname: Prisma.FieldRef<"CrewCard", 'String'>
   readonly suspended: Prisma.FieldRef<"CrewCard", 'Boolean'>
   readonly privileged: Prisma.FieldRef<"CrewCard", 'Boolean'>
   readonly viewerId: Prisma.FieldRef<"CrewCard", 'String'>
+  readonly validUntil: Prisma.FieldRef<"CrewCard", 'DateTime'>
   readonly enrolledAt: Prisma.FieldRef<"CrewCard", 'DateTime'>
 }
     

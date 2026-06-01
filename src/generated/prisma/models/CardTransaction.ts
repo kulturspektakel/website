@@ -488,6 +488,11 @@ export type CardTransactionSumOrderByAggregateInput = {
   orderId?: Prisma.SortOrder
 }
 
+export type CardTransactionNullableScalarRelationFilter = {
+  is?: Prisma.CardTransactionWhereInput | null
+  isNot?: Prisma.CardTransactionWhereInput | null
+}
+
 export type CardTransactionCreateNestedManyWithoutOrderInput = {
   create?: Prisma.XOR<Prisma.CardTransactionCreateWithoutOrderInput, Prisma.CardTransactionUncheckedCreateWithoutOrderInput> | Prisma.CardTransactionCreateWithoutOrderInput[] | Prisma.CardTransactionUncheckedCreateWithoutOrderInput[]
   connectOrCreate?: Prisma.CardTransactionCreateOrConnectWithoutOrderInput | Prisma.CardTransactionCreateOrConnectWithoutOrderInput[]
@@ -534,46 +539,36 @@ export type EnumCardTransactionTypeFieldUpdateOperationsInput = {
   set?: $Enums.CardTransactionType
 }
 
-export type CardTransactionCreateNestedManyWithoutDeviceLogInput = {
-  create?: Prisma.XOR<Prisma.CardTransactionCreateWithoutDeviceLogInput, Prisma.CardTransactionUncheckedCreateWithoutDeviceLogInput> | Prisma.CardTransactionCreateWithoutDeviceLogInput[] | Prisma.CardTransactionUncheckedCreateWithoutDeviceLogInput[]
-  connectOrCreate?: Prisma.CardTransactionCreateOrConnectWithoutDeviceLogInput | Prisma.CardTransactionCreateOrConnectWithoutDeviceLogInput[]
-  createMany?: Prisma.CardTransactionCreateManyDeviceLogInputEnvelope
-  connect?: Prisma.CardTransactionWhereUniqueInput | Prisma.CardTransactionWhereUniqueInput[]
+export type CardTransactionCreateNestedOneWithoutDeviceLogInput = {
+  create?: Prisma.XOR<Prisma.CardTransactionCreateWithoutDeviceLogInput, Prisma.CardTransactionUncheckedCreateWithoutDeviceLogInput>
+  connectOrCreate?: Prisma.CardTransactionCreateOrConnectWithoutDeviceLogInput
+  connect?: Prisma.CardTransactionWhereUniqueInput
 }
 
-export type CardTransactionUncheckedCreateNestedManyWithoutDeviceLogInput = {
-  create?: Prisma.XOR<Prisma.CardTransactionCreateWithoutDeviceLogInput, Prisma.CardTransactionUncheckedCreateWithoutDeviceLogInput> | Prisma.CardTransactionCreateWithoutDeviceLogInput[] | Prisma.CardTransactionUncheckedCreateWithoutDeviceLogInput[]
-  connectOrCreate?: Prisma.CardTransactionCreateOrConnectWithoutDeviceLogInput | Prisma.CardTransactionCreateOrConnectWithoutDeviceLogInput[]
-  createMany?: Prisma.CardTransactionCreateManyDeviceLogInputEnvelope
-  connect?: Prisma.CardTransactionWhereUniqueInput | Prisma.CardTransactionWhereUniqueInput[]
+export type CardTransactionUncheckedCreateNestedOneWithoutDeviceLogInput = {
+  create?: Prisma.XOR<Prisma.CardTransactionCreateWithoutDeviceLogInput, Prisma.CardTransactionUncheckedCreateWithoutDeviceLogInput>
+  connectOrCreate?: Prisma.CardTransactionCreateOrConnectWithoutDeviceLogInput
+  connect?: Prisma.CardTransactionWhereUniqueInput
 }
 
-export type CardTransactionUpdateManyWithoutDeviceLogNestedInput = {
-  create?: Prisma.XOR<Prisma.CardTransactionCreateWithoutDeviceLogInput, Prisma.CardTransactionUncheckedCreateWithoutDeviceLogInput> | Prisma.CardTransactionCreateWithoutDeviceLogInput[] | Prisma.CardTransactionUncheckedCreateWithoutDeviceLogInput[]
-  connectOrCreate?: Prisma.CardTransactionCreateOrConnectWithoutDeviceLogInput | Prisma.CardTransactionCreateOrConnectWithoutDeviceLogInput[]
-  upsert?: Prisma.CardTransactionUpsertWithWhereUniqueWithoutDeviceLogInput | Prisma.CardTransactionUpsertWithWhereUniqueWithoutDeviceLogInput[]
-  createMany?: Prisma.CardTransactionCreateManyDeviceLogInputEnvelope
-  set?: Prisma.CardTransactionWhereUniqueInput | Prisma.CardTransactionWhereUniqueInput[]
-  disconnect?: Prisma.CardTransactionWhereUniqueInput | Prisma.CardTransactionWhereUniqueInput[]
-  delete?: Prisma.CardTransactionWhereUniqueInput | Prisma.CardTransactionWhereUniqueInput[]
-  connect?: Prisma.CardTransactionWhereUniqueInput | Prisma.CardTransactionWhereUniqueInput[]
-  update?: Prisma.CardTransactionUpdateWithWhereUniqueWithoutDeviceLogInput | Prisma.CardTransactionUpdateWithWhereUniqueWithoutDeviceLogInput[]
-  updateMany?: Prisma.CardTransactionUpdateManyWithWhereWithoutDeviceLogInput | Prisma.CardTransactionUpdateManyWithWhereWithoutDeviceLogInput[]
-  deleteMany?: Prisma.CardTransactionScalarWhereInput | Prisma.CardTransactionScalarWhereInput[]
+export type CardTransactionUpdateOneWithoutDeviceLogNestedInput = {
+  create?: Prisma.XOR<Prisma.CardTransactionCreateWithoutDeviceLogInput, Prisma.CardTransactionUncheckedCreateWithoutDeviceLogInput>
+  connectOrCreate?: Prisma.CardTransactionCreateOrConnectWithoutDeviceLogInput
+  upsert?: Prisma.CardTransactionUpsertWithoutDeviceLogInput
+  disconnect?: Prisma.CardTransactionWhereInput | boolean
+  delete?: Prisma.CardTransactionWhereInput | boolean
+  connect?: Prisma.CardTransactionWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.CardTransactionUpdateToOneWithWhereWithoutDeviceLogInput, Prisma.CardTransactionUpdateWithoutDeviceLogInput>, Prisma.CardTransactionUncheckedUpdateWithoutDeviceLogInput>
 }
 
-export type CardTransactionUncheckedUpdateManyWithoutDeviceLogNestedInput = {
-  create?: Prisma.XOR<Prisma.CardTransactionCreateWithoutDeviceLogInput, Prisma.CardTransactionUncheckedCreateWithoutDeviceLogInput> | Prisma.CardTransactionCreateWithoutDeviceLogInput[] | Prisma.CardTransactionUncheckedCreateWithoutDeviceLogInput[]
-  connectOrCreate?: Prisma.CardTransactionCreateOrConnectWithoutDeviceLogInput | Prisma.CardTransactionCreateOrConnectWithoutDeviceLogInput[]
-  upsert?: Prisma.CardTransactionUpsertWithWhereUniqueWithoutDeviceLogInput | Prisma.CardTransactionUpsertWithWhereUniqueWithoutDeviceLogInput[]
-  createMany?: Prisma.CardTransactionCreateManyDeviceLogInputEnvelope
-  set?: Prisma.CardTransactionWhereUniqueInput | Prisma.CardTransactionWhereUniqueInput[]
-  disconnect?: Prisma.CardTransactionWhereUniqueInput | Prisma.CardTransactionWhereUniqueInput[]
-  delete?: Prisma.CardTransactionWhereUniqueInput | Prisma.CardTransactionWhereUniqueInput[]
-  connect?: Prisma.CardTransactionWhereUniqueInput | Prisma.CardTransactionWhereUniqueInput[]
-  update?: Prisma.CardTransactionUpdateWithWhereUniqueWithoutDeviceLogInput | Prisma.CardTransactionUpdateWithWhereUniqueWithoutDeviceLogInput[]
-  updateMany?: Prisma.CardTransactionUpdateManyWithWhereWithoutDeviceLogInput | Prisma.CardTransactionUpdateManyWithWhereWithoutDeviceLogInput[]
-  deleteMany?: Prisma.CardTransactionScalarWhereInput | Prisma.CardTransactionScalarWhereInput[]
+export type CardTransactionUncheckedUpdateOneWithoutDeviceLogNestedInput = {
+  create?: Prisma.XOR<Prisma.CardTransactionCreateWithoutDeviceLogInput, Prisma.CardTransactionUncheckedCreateWithoutDeviceLogInput>
+  connectOrCreate?: Prisma.CardTransactionCreateOrConnectWithoutDeviceLogInput
+  upsert?: Prisma.CardTransactionUpsertWithoutDeviceLogInput
+  disconnect?: Prisma.CardTransactionWhereInput | boolean
+  delete?: Prisma.CardTransactionWhereInput | boolean
+  connect?: Prisma.CardTransactionWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.CardTransactionUpdateToOneWithWhereWithoutDeviceLogInput, Prisma.CardTransactionUpdateWithoutDeviceLogInput>, Prisma.CardTransactionUncheckedUpdateWithoutDeviceLogInput>
 }
 
 export type CardTransactionCreateWithoutOrderInput = {
@@ -666,25 +661,37 @@ export type CardTransactionCreateOrConnectWithoutDeviceLogInput = {
   create: Prisma.XOR<Prisma.CardTransactionCreateWithoutDeviceLogInput, Prisma.CardTransactionUncheckedCreateWithoutDeviceLogInput>
 }
 
-export type CardTransactionCreateManyDeviceLogInputEnvelope = {
-  data: Prisma.CardTransactionCreateManyDeviceLogInput | Prisma.CardTransactionCreateManyDeviceLogInput[]
-  skipDuplicates?: boolean
-}
-
-export type CardTransactionUpsertWithWhereUniqueWithoutDeviceLogInput = {
-  where: Prisma.CardTransactionWhereUniqueInput
+export type CardTransactionUpsertWithoutDeviceLogInput = {
   update: Prisma.XOR<Prisma.CardTransactionUpdateWithoutDeviceLogInput, Prisma.CardTransactionUncheckedUpdateWithoutDeviceLogInput>
   create: Prisma.XOR<Prisma.CardTransactionCreateWithoutDeviceLogInput, Prisma.CardTransactionUncheckedCreateWithoutDeviceLogInput>
+  where?: Prisma.CardTransactionWhereInput
 }
 
-export type CardTransactionUpdateWithWhereUniqueWithoutDeviceLogInput = {
-  where: Prisma.CardTransactionWhereUniqueInput
+export type CardTransactionUpdateToOneWithWhereWithoutDeviceLogInput = {
+  where?: Prisma.CardTransactionWhereInput
   data: Prisma.XOR<Prisma.CardTransactionUpdateWithoutDeviceLogInput, Prisma.CardTransactionUncheckedUpdateWithoutDeviceLogInput>
 }
 
-export type CardTransactionUpdateManyWithWhereWithoutDeviceLogInput = {
-  where: Prisma.CardTransactionScalarWhereInput
-  data: Prisma.XOR<Prisma.CardTransactionUpdateManyMutationInput, Prisma.CardTransactionUncheckedUpdateManyWithoutDeviceLogInput>
+export type CardTransactionUpdateWithoutDeviceLogInput = {
+  cardId?: Prisma.StringFieldUpdateOperationsInput | string
+  depositBefore?: Prisma.IntFieldUpdateOperationsInput | number
+  depositAfter?: Prisma.IntFieldUpdateOperationsInput | number
+  balanceBefore?: Prisma.IntFieldUpdateOperationsInput | number
+  balanceAfter?: Prisma.IntFieldUpdateOperationsInput | number
+  transactionType?: Prisma.EnumCardTransactionTypeFieldUpdateOperationsInput | $Enums.CardTransactionType
+  counter?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  Order?: Prisma.OrderUpdateOneWithoutCardTransactionNestedInput
+}
+
+export type CardTransactionUncheckedUpdateWithoutDeviceLogInput = {
+  cardId?: Prisma.StringFieldUpdateOperationsInput | string
+  depositBefore?: Prisma.IntFieldUpdateOperationsInput | number
+  depositAfter?: Prisma.IntFieldUpdateOperationsInput | number
+  balanceBefore?: Prisma.IntFieldUpdateOperationsInput | number
+  balanceAfter?: Prisma.IntFieldUpdateOperationsInput | number
+  transactionType?: Prisma.EnumCardTransactionTypeFieldUpdateOperationsInput | $Enums.CardTransactionType
+  counter?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  orderId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type CardTransactionCreateManyOrderInput = {
@@ -729,50 +736,6 @@ export type CardTransactionUncheckedUpdateManyWithoutOrderInput = {
   balanceAfter?: Prisma.IntFieldUpdateOperationsInput | number
   transactionType?: Prisma.EnumCardTransactionTypeFieldUpdateOperationsInput | $Enums.CardTransactionType
   counter?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-}
-
-export type CardTransactionCreateManyDeviceLogInput = {
-  cardId: string
-  depositBefore: number
-  depositAfter: number
-  balanceBefore: number
-  balanceAfter: number
-  transactionType: $Enums.CardTransactionType
-  counter?: number | null
-  orderId?: number | null
-}
-
-export type CardTransactionUpdateWithoutDeviceLogInput = {
-  cardId?: Prisma.StringFieldUpdateOperationsInput | string
-  depositBefore?: Prisma.IntFieldUpdateOperationsInput | number
-  depositAfter?: Prisma.IntFieldUpdateOperationsInput | number
-  balanceBefore?: Prisma.IntFieldUpdateOperationsInput | number
-  balanceAfter?: Prisma.IntFieldUpdateOperationsInput | number
-  transactionType?: Prisma.EnumCardTransactionTypeFieldUpdateOperationsInput | $Enums.CardTransactionType
-  counter?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  Order?: Prisma.OrderUpdateOneWithoutCardTransactionNestedInput
-}
-
-export type CardTransactionUncheckedUpdateWithoutDeviceLogInput = {
-  cardId?: Prisma.StringFieldUpdateOperationsInput | string
-  depositBefore?: Prisma.IntFieldUpdateOperationsInput | number
-  depositAfter?: Prisma.IntFieldUpdateOperationsInput | number
-  balanceBefore?: Prisma.IntFieldUpdateOperationsInput | number
-  balanceAfter?: Prisma.IntFieldUpdateOperationsInput | number
-  transactionType?: Prisma.EnumCardTransactionTypeFieldUpdateOperationsInput | $Enums.CardTransactionType
-  counter?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  orderId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-}
-
-export type CardTransactionUncheckedUpdateManyWithoutDeviceLogInput = {
-  cardId?: Prisma.StringFieldUpdateOperationsInput | string
-  depositBefore?: Prisma.IntFieldUpdateOperationsInput | number
-  depositAfter?: Prisma.IntFieldUpdateOperationsInput | number
-  balanceBefore?: Prisma.IntFieldUpdateOperationsInput | number
-  balanceAfter?: Prisma.IntFieldUpdateOperationsInput | number
-  transactionType?: Prisma.EnumCardTransactionTypeFieldUpdateOperationsInput | $Enums.CardTransactionType
-  counter?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  orderId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 

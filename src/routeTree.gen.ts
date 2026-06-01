@@ -32,6 +32,10 @@ import { Route as MainSlugRouteImport } from './routes/_main.$slug'
 import { Route as CrewLautstaerkeIndexRouteImport } from './routes/crew.lautstaerke.index'
 import { Route as MainLineupIndexRouteImport } from './routes/_main.lineup.index'
 import { Route as CrewLautstaerkeDeviceRouteImport } from './routes/crew.lautstaerke.$device'
+import { Route as ApiNoiseLogRouteImport } from './routes/api.noise.log'
+import { Route as ApiKultcashLogRouteImport } from './routes/api.kultcash.log'
+import { Route as ApiKultcashListsRouteImport } from './routes/api.kultcash.lists'
+import { Route as ApiKultcashConfigRouteImport } from './routes/api.kultcash.config'
 import { Route as MainNewsArchivRouteImport } from './routes/_main.news.archiv'
 import { Route as MainNewsSlugRouteImport } from './routes/_main.news.$slug'
 import { Route as MainMitgliedsantragDankeRouteImport } from './routes/_main.mitgliedsantrag_.danke'
@@ -160,6 +164,26 @@ const CrewLautstaerkeDeviceRoute = CrewLautstaerkeDeviceRouteImport.update({
   path: '/$device',
   getParentRoute: () => CrewLautstaerkeRoute,
 } as any)
+const ApiNoiseLogRoute = ApiNoiseLogRouteImport.update({
+  id: '/api/noise/log',
+  path: '/api/noise/log',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiKultcashLogRoute = ApiKultcashLogRouteImport.update({
+  id: '/api/kultcash/log',
+  path: '/api/kultcash/log',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiKultcashListsRoute = ApiKultcashListsRouteImport.update({
+  id: '/api/kultcash/lists',
+  path: '/api/kultcash/lists',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiKultcashConfigRoute = ApiKultcashConfigRouteImport.update({
+  id: '/api/kultcash/config',
+  path: '/api/kultcash/config',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MainNewsArchivRoute = MainNewsArchivRouteImport.update({
   id: '/news/archiv',
   path: '/news/archiv',
@@ -256,6 +280,10 @@ export interface FileRoutesByFullPath {
   '/mitgliedsantrag/danke': typeof MainMitgliedsantragDankeRoute
   '/news/$slug': typeof MainNewsSlugRoute
   '/news/archiv': typeof MainNewsArchivRoute
+  '/api/kultcash/config': typeof ApiKultcashConfigRoute
+  '/api/kultcash/lists': typeof ApiKultcashListsRoute
+  '/api/kultcash/log': typeof ApiKultcashLogRoute
+  '/api/noise/log': typeof ApiNoiseLogRoute
   '/crew/lautstaerke/$device': typeof CrewLautstaerkeDeviceRoute
   '/lineup/': typeof MainLineupIndexRoute
   '/crew/lautstaerke/': typeof CrewLautstaerkeIndexRoute
@@ -290,6 +318,10 @@ export interface FileRoutesByTo {
   '/mitgliedsantrag/danke': typeof MainMitgliedsantragDankeRoute
   '/news/$slug': typeof MainNewsSlugRoute
   '/news/archiv': typeof MainNewsArchivRoute
+  '/api/kultcash/config': typeof ApiKultcashConfigRoute
+  '/api/kultcash/lists': typeof ApiKultcashListsRoute
+  '/api/kultcash/log': typeof ApiKultcashLogRoute
+  '/api/noise/log': typeof ApiNoiseLogRoute
   '/crew/lautstaerke/$device': typeof CrewLautstaerkeDeviceRoute
   '/lineup': typeof MainLineupIndexRoute
   '/crew/lautstaerke': typeof CrewLautstaerkeIndexRoute
@@ -329,6 +361,10 @@ export interface FileRoutesById {
   '/_main/mitgliedsantrag_/danke': typeof MainMitgliedsantragDankeRoute
   '/_main/news/$slug': typeof MainNewsSlugRoute
   '/_main/news/archiv': typeof MainNewsArchivRoute
+  '/api/kultcash/config': typeof ApiKultcashConfigRoute
+  '/api/kultcash/lists': typeof ApiKultcashListsRoute
+  '/api/kultcash/log': typeof ApiKultcashLogRoute
+  '/api/noise/log': typeof ApiNoiseLogRoute
   '/crew/lautstaerke/$device': typeof CrewLautstaerkeDeviceRoute
   '/_main/lineup/': typeof MainLineupIndexRoute
   '/crew/lautstaerke/': typeof CrewLautstaerkeIndexRoute
@@ -368,6 +404,10 @@ export interface FileRouteTypes {
     | '/mitgliedsantrag/danke'
     | '/news/$slug'
     | '/news/archiv'
+    | '/api/kultcash/config'
+    | '/api/kultcash/lists'
+    | '/api/kultcash/log'
+    | '/api/noise/log'
     | '/crew/lautstaerke/$device'
     | '/lineup/'
     | '/crew/lautstaerke/'
@@ -402,6 +442,10 @@ export interface FileRouteTypes {
     | '/mitgliedsantrag/danke'
     | '/news/$slug'
     | '/news/archiv'
+    | '/api/kultcash/config'
+    | '/api/kultcash/lists'
+    | '/api/kultcash/log'
+    | '/api/noise/log'
     | '/crew/lautstaerke/$device'
     | '/lineup'
     | '/crew/lautstaerke'
@@ -440,6 +484,10 @@ export interface FileRouteTypes {
     | '/_main/mitgliedsantrag_/danke'
     | '/_main/news/$slug'
     | '/_main/news/archiv'
+    | '/api/kultcash/config'
+    | '/api/kultcash/lists'
+    | '/api/kultcash/log'
+    | '/api/noise/log'
     | '/crew/lautstaerke/$device'
     | '/_main/lineup/'
     | '/crew/lautstaerke/'
@@ -455,6 +503,10 @@ export interface RootRouteChildren {
   MainRoute: typeof MainRouteWithChildren
   CrewRoute: typeof CrewRouteWithChildren
   ApiBadgesRoute: typeof ApiBadgesRoute
+  ApiKultcashConfigRoute: typeof ApiKultcashConfigRoute
+  ApiKultcashListsRoute: typeof ApiKultcashListsRoute
+  ApiKultcashLogRoute: typeof ApiKultcashLogRoute
+  ApiNoiseLogRoute: typeof ApiNoiseLogRoute
   ApiSpendenQuittungIdRoute: typeof ApiSpendenQuittungIdRoute
 }
 
@@ -620,6 +672,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/crew/lautstaerke/$device'
       preLoaderRoute: typeof CrewLautstaerkeDeviceRouteImport
       parentRoute: typeof CrewLautstaerkeRoute
+    }
+    '/api/noise/log': {
+      id: '/api/noise/log'
+      path: '/api/noise/log'
+      fullPath: '/api/noise/log'
+      preLoaderRoute: typeof ApiNoiseLogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/kultcash/log': {
+      id: '/api/kultcash/log'
+      path: '/api/kultcash/log'
+      fullPath: '/api/kultcash/log'
+      preLoaderRoute: typeof ApiKultcashLogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/kultcash/lists': {
+      id: '/api/kultcash/lists'
+      path: '/api/kultcash/lists'
+      fullPath: '/api/kultcash/lists'
+      preLoaderRoute: typeof ApiKultcashListsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/kultcash/config': {
+      id: '/api/kultcash/config'
+      path: '/api/kultcash/config'
+      fullPath: '/api/kultcash/config'
+      preLoaderRoute: typeof ApiKultcashConfigRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_main/news/archiv': {
       id: '/_main/news/archiv'
@@ -829,6 +909,10 @@ const rootRouteChildren: RootRouteChildren = {
   MainRoute: MainRouteWithChildren,
   CrewRoute: CrewRouteWithChildren,
   ApiBadgesRoute: ApiBadgesRoute,
+  ApiKultcashConfigRoute: ApiKultcashConfigRoute,
+  ApiKultcashListsRoute: ApiKultcashListsRoute,
+  ApiKultcashLogRoute: ApiKultcashLogRoute,
+  ApiNoiseLogRoute: ApiNoiseLogRoute,
   ApiSpendenQuittungIdRoute: ApiSpendenQuittungIdRoute,
 }
 export const routeTree = rootRouteImport

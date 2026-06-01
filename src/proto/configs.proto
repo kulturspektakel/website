@@ -1,0 +1,11 @@
+syntax = "proto3";
+import "config.proto";
+
+message AllLists {
+  repeated DeviceConfig product_list = 1;
+  int32 checksum = 2;
+  int32 version_number = 3;
+  int32 timestamp = 4;
+  repeated bytes privilege_tokens = 5;
+  repeated bytes suspended_crew_cards = 6;
+}

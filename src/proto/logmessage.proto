@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+import "noise.proto";
+import "product.proto";
+
+message LogMessage {
+  string device_id = 1;
+  string client_id = 2;
+  int32 device_time = 3;
+  bool device_time_is_utc = 4;
+  optional Order order = 5;
+  optional CardTransaction card_transaction = 6;
+  optional int32 battery_voltage = 7;
+  optional int32 usb_voltage = 8;
+  optional CrewCardEnrollment crew_card_enrollment = 10;
+  optional NoiseRecording noise_recording = 11;
+
+  message CardTransaction {
+    TransactionType transaction_type = 1;
+    int32 balance_before = 2;
+    int32 balance_after = 3;
+    int32 deposit_before = 4;
+    int32 deposit_after = 5;
+    string card_id = 6;
+    optional int32 counter = 7;
+
+    enum TransactionType {
+      TOP_UP = 0;
+      CHARGE = 1;
+      CASHOUT = 2;
+      REPAIR = 3;
+      DONATION = 4;
+    }
+  }
+
+  message Order {
+    PaymentMethod payment_method = 1;
+    repeated CartItem cart_items = 2;
+    optional int32 list_id = 3;
+    optional bytes crew_card_id = 4;
+
+    enum PaymentMethod {
+      CASH = 0;
+      BON = 1;
+      SUM_UP = 2;
+      VOUCHER = 3;
+      FREE_CREW = 4;
+      FREE_BAND = 5;
+      KULT_CARD = 6;
+    }
+
+    message CartItem {
+      int32 amount = 1;
+      Product product = 2;
+    }
+  }
+
+  message CrewCardEnrollment {
+    bytes crew_card_id = 1;
+    int32 valid_until = 2;
+  }
+}

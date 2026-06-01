@@ -1,0 +1,9 @@
+syntax = "proto3";
+import "product.proto";
+
+message DeviceConfig {
+  string name = 1;
+  int32 list_id = 2;
+  repeated Product products = 3;
+  int32 checksum = 4;
+}

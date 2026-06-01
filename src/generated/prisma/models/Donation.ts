@@ -37,56 +37,56 @@ export type DonationSumAggregateOutputType = {
 }
 
 export type DonationMinAggregateOutputType = {
-  id: string | null
   amount: number | null
   createdAt: Date | null
   email: string | null
   name: string | null
-  namePrivate: string | null
-  sentConfirmationAt: Date | null
-  spendenQuittungAt: Date | null
-  message: string | null
   reference: string | null
   source: $Enums.DonationSource | null
+  message: string | null
+  namePrivate: string | null
+  sentConfirmationAt: Date | null
+  id: string | null
+  spendenQuittungAt: Date | null
+  quittungCity: string | null
   quittungName: string | null
   quittungStreet: string | null
-  quittungCity: string | null
   amountPins: number | null
 }
 
 export type DonationMaxAggregateOutputType = {
-  id: string | null
   amount: number | null
   createdAt: Date | null
   email: string | null
   name: string | null
-  namePrivate: string | null
-  sentConfirmationAt: Date | null
-  spendenQuittungAt: Date | null
-  message: string | null
   reference: string | null
   source: $Enums.DonationSource | null
+  message: string | null
+  namePrivate: string | null
+  sentConfirmationAt: Date | null
+  id: string | null
+  spendenQuittungAt: Date | null
+  quittungCity: string | null
   quittungName: string | null
   quittungStreet: string | null
-  quittungCity: string | null
   amountPins: number | null
 }
 
 export type DonationCountAggregateOutputType = {
-  id: number
   amount: number
   createdAt: number
   email: number
   name: number
-  namePrivate: number
-  sentConfirmationAt: number
-  spendenQuittungAt: number
-  message: number
   reference: number
   source: number
+  message: number
+  namePrivate: number
+  sentConfirmationAt: number
+  id: number
+  spendenQuittungAt: number
+  quittungCity: number
   quittungName: number
   quittungStreet: number
-  quittungCity: number
   amountPins: number
   _all: number
 }
@@ -103,56 +103,56 @@ export type DonationSumAggregateInputType = {
 }
 
 export type DonationMinAggregateInputType = {
-  id?: true
   amount?: true
   createdAt?: true
   email?: true
   name?: true
-  namePrivate?: true
-  sentConfirmationAt?: true
-  spendenQuittungAt?: true
-  message?: true
   reference?: true
   source?: true
+  message?: true
+  namePrivate?: true
+  sentConfirmationAt?: true
+  id?: true
+  spendenQuittungAt?: true
+  quittungCity?: true
   quittungName?: true
   quittungStreet?: true
-  quittungCity?: true
   amountPins?: true
 }
 
 export type DonationMaxAggregateInputType = {
-  id?: true
   amount?: true
   createdAt?: true
   email?: true
   name?: true
-  namePrivate?: true
-  sentConfirmationAt?: true
-  spendenQuittungAt?: true
-  message?: true
   reference?: true
   source?: true
+  message?: true
+  namePrivate?: true
+  sentConfirmationAt?: true
+  id?: true
+  spendenQuittungAt?: true
+  quittungCity?: true
   quittungName?: true
   quittungStreet?: true
-  quittungCity?: true
   amountPins?: true
 }
 
 export type DonationCountAggregateInputType = {
-  id?: true
   amount?: true
   createdAt?: true
   email?: true
   name?: true
-  namePrivate?: true
-  sentConfirmationAt?: true
-  spendenQuittungAt?: true
-  message?: true
   reference?: true
   source?: true
+  message?: true
+  namePrivate?: true
+  sentConfirmationAt?: true
+  id?: true
+  spendenQuittungAt?: true
+  quittungCity?: true
   quittungName?: true
   quittungStreet?: true
-  quittungCity?: true
   amountPins?: true
   _all?: true
 }
@@ -244,20 +244,20 @@ export type DonationGroupByArgs<ExtArgs extends runtime.Types.Extensions.Interna
 }
 
 export type DonationGroupByOutputType = {
-  id: string
   amount: number
   createdAt: Date
   email: string | null
   name: string | null
-  namePrivate: string | null
-  sentConfirmationAt: Date | null
-  spendenQuittungAt: Date | null
-  message: string | null
   reference: string | null
   source: $Enums.DonationSource
+  message: string | null
+  namePrivate: string | null
+  sentConfirmationAt: Date | null
+  id: string
+  spendenQuittungAt: Date | null
+  quittungCity: string | null
   quittungName: string | null
   quittungStreet: string | null
-  quittungCity: string | null
   amountPins: number | null
   _count: DonationCountAggregateOutputType | null
   _avg: DonationAvgAggregateOutputType | null
@@ -285,38 +285,38 @@ export type DonationWhereInput = {
   AND?: Prisma.DonationWhereInput | Prisma.DonationWhereInput[]
   OR?: Prisma.DonationWhereInput[]
   NOT?: Prisma.DonationWhereInput | Prisma.DonationWhereInput[]
-  id?: Prisma.UuidFilter<"Donation"> | string
   amount?: Prisma.IntFilter<"Donation"> | number
   createdAt?: Prisma.DateTimeFilter<"Donation"> | Date | string
   email?: Prisma.StringNullableFilter<"Donation"> | string | null
   name?: Prisma.StringNullableFilter<"Donation"> | string | null
-  namePrivate?: Prisma.StringNullableFilter<"Donation"> | string | null
-  sentConfirmationAt?: Prisma.DateTimeNullableFilter<"Donation"> | Date | string | null
-  spendenQuittungAt?: Prisma.DateTimeNullableFilter<"Donation"> | Date | string | null
-  message?: Prisma.StringNullableFilter<"Donation"> | string | null
   reference?: Prisma.StringNullableFilter<"Donation"> | string | null
   source?: Prisma.EnumDonationSourceFilter<"Donation"> | $Enums.DonationSource
+  message?: Prisma.StringNullableFilter<"Donation"> | string | null
+  namePrivate?: Prisma.StringNullableFilter<"Donation"> | string | null
+  sentConfirmationAt?: Prisma.DateTimeNullableFilter<"Donation"> | Date | string | null
+  id?: Prisma.UuidFilter<"Donation"> | string
+  spendenQuittungAt?: Prisma.DateTimeNullableFilter<"Donation"> | Date | string | null
+  quittungCity?: Prisma.StringNullableFilter<"Donation"> | string | null
   quittungName?: Prisma.StringNullableFilter<"Donation"> | string | null
   quittungStreet?: Prisma.StringNullableFilter<"Donation"> | string | null
-  quittungCity?: Prisma.StringNullableFilter<"Donation"> | string | null
   amountPins?: Prisma.IntNullableFilter<"Donation"> | number | null
 }
 
 export type DonationOrderByWithRelationInput = {
-  id?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   email?: Prisma.SortOrderInput | Prisma.SortOrder
   name?: Prisma.SortOrderInput | Prisma.SortOrder
-  namePrivate?: Prisma.SortOrderInput | Prisma.SortOrder
-  sentConfirmationAt?: Prisma.SortOrderInput | Prisma.SortOrder
-  spendenQuittungAt?: Prisma.SortOrderInput | Prisma.SortOrder
-  message?: Prisma.SortOrderInput | Prisma.SortOrder
   reference?: Prisma.SortOrderInput | Prisma.SortOrder
   source?: Prisma.SortOrder
+  message?: Prisma.SortOrderInput | Prisma.SortOrder
+  namePrivate?: Prisma.SortOrderInput | Prisma.SortOrder
+  sentConfirmationAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  id?: Prisma.SortOrder
+  spendenQuittungAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  quittungCity?: Prisma.SortOrderInput | Prisma.SortOrder
   quittungName?: Prisma.SortOrderInput | Prisma.SortOrder
   quittungStreet?: Prisma.SortOrderInput | Prisma.SortOrder
-  quittungCity?: Prisma.SortOrderInput | Prisma.SortOrder
   amountPins?: Prisma.SortOrderInput | Prisma.SortOrder
   _relevance?: Prisma.DonationOrderByRelevanceInput
 }
@@ -330,33 +330,33 @@ export type DonationWhereUniqueInput = Prisma.AtLeast<{
   createdAt?: Prisma.DateTimeFilter<"Donation"> | Date | string
   email?: Prisma.StringNullableFilter<"Donation"> | string | null
   name?: Prisma.StringNullableFilter<"Donation"> | string | null
+  reference?: Prisma.StringNullableFilter<"Donation"> | string | null
+  source?: Prisma.EnumDonationSourceFilter<"Donation"> | $Enums.DonationSource
+  message?: Prisma.StringNullableFilter<"Donation"> | string | null
   namePrivate?: Prisma.StringNullableFilter<"Donation"> | string | null
   sentConfirmationAt?: Prisma.DateTimeNullableFilter<"Donation"> | Date | string | null
   spendenQuittungAt?: Prisma.DateTimeNullableFilter<"Donation"> | Date | string | null
-  message?: Prisma.StringNullableFilter<"Donation"> | string | null
-  reference?: Prisma.StringNullableFilter<"Donation"> | string | null
-  source?: Prisma.EnumDonationSourceFilter<"Donation"> | $Enums.DonationSource
+  quittungCity?: Prisma.StringNullableFilter<"Donation"> | string | null
   quittungName?: Prisma.StringNullableFilter<"Donation"> | string | null
   quittungStreet?: Prisma.StringNullableFilter<"Donation"> | string | null
-  quittungCity?: Prisma.StringNullableFilter<"Donation"> | string | null
   amountPins?: Prisma.IntNullableFilter<"Donation"> | number | null
 }, "id">
 
 export type DonationOrderByWithAggregationInput = {
-  id?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   email?: Prisma.SortOrderInput | Prisma.SortOrder
   name?: Prisma.SortOrderInput | Prisma.SortOrder
-  namePrivate?: Prisma.SortOrderInput | Prisma.SortOrder
-  sentConfirmationAt?: Prisma.SortOrderInput | Prisma.SortOrder
-  spendenQuittungAt?: Prisma.SortOrderInput | Prisma.SortOrder
-  message?: Prisma.SortOrderInput | Prisma.SortOrder
   reference?: Prisma.SortOrderInput | Prisma.SortOrder
   source?: Prisma.SortOrder
+  message?: Prisma.SortOrderInput | Prisma.SortOrder
+  namePrivate?: Prisma.SortOrderInput | Prisma.SortOrder
+  sentConfirmationAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  id?: Prisma.SortOrder
+  spendenQuittungAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  quittungCity?: Prisma.SortOrderInput | Prisma.SortOrder
   quittungName?: Prisma.SortOrderInput | Prisma.SortOrder
   quittungStreet?: Prisma.SortOrderInput | Prisma.SortOrder
-  quittungCity?: Prisma.SortOrderInput | Prisma.SortOrder
   amountPins?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.DonationCountOrderByAggregateInput
   _avg?: Prisma.DonationAvgOrderByAggregateInput
@@ -369,146 +369,146 @@ export type DonationScalarWhereWithAggregatesInput = {
   AND?: Prisma.DonationScalarWhereWithAggregatesInput | Prisma.DonationScalarWhereWithAggregatesInput[]
   OR?: Prisma.DonationScalarWhereWithAggregatesInput[]
   NOT?: Prisma.DonationScalarWhereWithAggregatesInput | Prisma.DonationScalarWhereWithAggregatesInput[]
-  id?: Prisma.UuidWithAggregatesFilter<"Donation"> | string
   amount?: Prisma.IntWithAggregatesFilter<"Donation"> | number
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Donation"> | Date | string
   email?: Prisma.StringNullableWithAggregatesFilter<"Donation"> | string | null
   name?: Prisma.StringNullableWithAggregatesFilter<"Donation"> | string | null
-  namePrivate?: Prisma.StringNullableWithAggregatesFilter<"Donation"> | string | null
-  sentConfirmationAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Donation"> | Date | string | null
-  spendenQuittungAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Donation"> | Date | string | null
-  message?: Prisma.StringNullableWithAggregatesFilter<"Donation"> | string | null
   reference?: Prisma.StringNullableWithAggregatesFilter<"Donation"> | string | null
   source?: Prisma.EnumDonationSourceWithAggregatesFilter<"Donation"> | $Enums.DonationSource
+  message?: Prisma.StringNullableWithAggregatesFilter<"Donation"> | string | null
+  namePrivate?: Prisma.StringNullableWithAggregatesFilter<"Donation"> | string | null
+  sentConfirmationAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Donation"> | Date | string | null
+  id?: Prisma.UuidWithAggregatesFilter<"Donation"> | string
+  spendenQuittungAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Donation"> | Date | string | null
+  quittungCity?: Prisma.StringNullableWithAggregatesFilter<"Donation"> | string | null
   quittungName?: Prisma.StringNullableWithAggregatesFilter<"Donation"> | string | null
   quittungStreet?: Prisma.StringNullableWithAggregatesFilter<"Donation"> | string | null
-  quittungCity?: Prisma.StringNullableWithAggregatesFilter<"Donation"> | string | null
   amountPins?: Prisma.IntNullableWithAggregatesFilter<"Donation"> | number | null
 }
 
 export type DonationCreateInput = {
-  id?: string
   amount: number
   createdAt?: Date | string
   email?: string | null
   name?: string | null
-  namePrivate?: string | null
-  sentConfirmationAt?: Date | string | null
-  spendenQuittungAt?: Date | string | null
-  message?: string | null
   reference?: string | null
   source: $Enums.DonationSource
+  message?: string | null
+  namePrivate?: string | null
+  sentConfirmationAt?: Date | string | null
+  id?: string
+  spendenQuittungAt?: Date | string | null
+  quittungCity?: string | null
   quittungName?: string | null
   quittungStreet?: string | null
-  quittungCity?: string | null
   amountPins?: number | null
 }
 
 export type DonationUncheckedCreateInput = {
-  id?: string
   amount: number
   createdAt?: Date | string
   email?: string | null
   name?: string | null
-  namePrivate?: string | null
-  sentConfirmationAt?: Date | string | null
-  spendenQuittungAt?: Date | string | null
-  message?: string | null
   reference?: string | null
   source: $Enums.DonationSource
+  message?: string | null
+  namePrivate?: string | null
+  sentConfirmationAt?: Date | string | null
+  id?: string
+  spendenQuittungAt?: Date | string | null
+  quittungCity?: string | null
   quittungName?: string | null
   quittungStreet?: string | null
-  quittungCity?: string | null
   amountPins?: number | null
 }
 
 export type DonationUpdateInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  namePrivate?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sentConfirmationAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  spendenQuittungAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source?: Prisma.EnumDonationSourceFieldUpdateOperationsInput | $Enums.DonationSource
+  message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  namePrivate?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sentConfirmationAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  spendenQuittungAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  quittungCity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quittungName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quittungStreet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  quittungCity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   amountPins?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type DonationUncheckedUpdateInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  namePrivate?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sentConfirmationAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  spendenQuittungAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source?: Prisma.EnumDonationSourceFieldUpdateOperationsInput | $Enums.DonationSource
+  message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  namePrivate?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sentConfirmationAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  spendenQuittungAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  quittungCity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quittungName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quittungStreet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  quittungCity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   amountPins?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type DonationCreateManyInput = {
-  id?: string
   amount: number
   createdAt?: Date | string
   email?: string | null
   name?: string | null
-  namePrivate?: string | null
-  sentConfirmationAt?: Date | string | null
-  spendenQuittungAt?: Date | string | null
-  message?: string | null
   reference?: string | null
   source: $Enums.DonationSource
+  message?: string | null
+  namePrivate?: string | null
+  sentConfirmationAt?: Date | string | null
+  id?: string
+  spendenQuittungAt?: Date | string | null
+  quittungCity?: string | null
   quittungName?: string | null
   quittungStreet?: string | null
-  quittungCity?: string | null
   amountPins?: number | null
 }
 
 export type DonationUpdateManyMutationInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  namePrivate?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sentConfirmationAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  spendenQuittungAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source?: Prisma.EnumDonationSourceFieldUpdateOperationsInput | $Enums.DonationSource
+  message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  namePrivate?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sentConfirmationAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  spendenQuittungAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  quittungCity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quittungName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quittungStreet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  quittungCity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   amountPins?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type DonationUncheckedUpdateManyInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  namePrivate?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sentConfirmationAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  spendenQuittungAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source?: Prisma.EnumDonationSourceFieldUpdateOperationsInput | $Enums.DonationSource
+  message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  namePrivate?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sentConfirmationAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  spendenQuittungAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  quittungCity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quittungName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quittungStreet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  quittungCity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   amountPins?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
@@ -519,20 +519,20 @@ export type DonationOrderByRelevanceInput = {
 }
 
 export type DonationCountOrderByAggregateInput = {
-  id?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   email?: Prisma.SortOrder
   name?: Prisma.SortOrder
-  namePrivate?: Prisma.SortOrder
-  sentConfirmationAt?: Prisma.SortOrder
-  spendenQuittungAt?: Prisma.SortOrder
-  message?: Prisma.SortOrder
   reference?: Prisma.SortOrder
   source?: Prisma.SortOrder
+  message?: Prisma.SortOrder
+  namePrivate?: Prisma.SortOrder
+  sentConfirmationAt?: Prisma.SortOrder
+  id?: Prisma.SortOrder
+  spendenQuittungAt?: Prisma.SortOrder
+  quittungCity?: Prisma.SortOrder
   quittungName?: Prisma.SortOrder
   quittungStreet?: Prisma.SortOrder
-  quittungCity?: Prisma.SortOrder
   amountPins?: Prisma.SortOrder
 }
 
@@ -542,38 +542,38 @@ export type DonationAvgOrderByAggregateInput = {
 }
 
 export type DonationMaxOrderByAggregateInput = {
-  id?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   email?: Prisma.SortOrder
   name?: Prisma.SortOrder
-  namePrivate?: Prisma.SortOrder
-  sentConfirmationAt?: Prisma.SortOrder
-  spendenQuittungAt?: Prisma.SortOrder
-  message?: Prisma.SortOrder
   reference?: Prisma.SortOrder
   source?: Prisma.SortOrder
+  message?: Prisma.SortOrder
+  namePrivate?: Prisma.SortOrder
+  sentConfirmationAt?: Prisma.SortOrder
+  id?: Prisma.SortOrder
+  spendenQuittungAt?: Prisma.SortOrder
+  quittungCity?: Prisma.SortOrder
   quittungName?: Prisma.SortOrder
   quittungStreet?: Prisma.SortOrder
-  quittungCity?: Prisma.SortOrder
   amountPins?: Prisma.SortOrder
 }
 
 export type DonationMinOrderByAggregateInput = {
-  id?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   email?: Prisma.SortOrder
   name?: Prisma.SortOrder
-  namePrivate?: Prisma.SortOrder
-  sentConfirmationAt?: Prisma.SortOrder
-  spendenQuittungAt?: Prisma.SortOrder
-  message?: Prisma.SortOrder
   reference?: Prisma.SortOrder
   source?: Prisma.SortOrder
+  message?: Prisma.SortOrder
+  namePrivate?: Prisma.SortOrder
+  sentConfirmationAt?: Prisma.SortOrder
+  id?: Prisma.SortOrder
+  spendenQuittungAt?: Prisma.SortOrder
+  quittungCity?: Prisma.SortOrder
   quittungName?: Prisma.SortOrder
   quittungStreet?: Prisma.SortOrder
-  quittungCity?: Prisma.SortOrder
   amountPins?: Prisma.SortOrder
 }
 
@@ -589,97 +589,97 @@ export type EnumDonationSourceFieldUpdateOperationsInput = {
 
 
 export type DonationSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
-  id?: boolean
   amount?: boolean
   createdAt?: boolean
   email?: boolean
   name?: boolean
-  namePrivate?: boolean
-  sentConfirmationAt?: boolean
-  spendenQuittungAt?: boolean
-  message?: boolean
   reference?: boolean
   source?: boolean
+  message?: boolean
+  namePrivate?: boolean
+  sentConfirmationAt?: boolean
+  id?: boolean
+  spendenQuittungAt?: boolean
+  quittungCity?: boolean
   quittungName?: boolean
   quittungStreet?: boolean
-  quittungCity?: boolean
   amountPins?: boolean
 }, ExtArgs["result"]["donation"]>
 
 export type DonationSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
-  id?: boolean
   amount?: boolean
   createdAt?: boolean
   email?: boolean
   name?: boolean
-  namePrivate?: boolean
-  sentConfirmationAt?: boolean
-  spendenQuittungAt?: boolean
-  message?: boolean
   reference?: boolean
   source?: boolean
+  message?: boolean
+  namePrivate?: boolean
+  sentConfirmationAt?: boolean
+  id?: boolean
+  spendenQuittungAt?: boolean
+  quittungCity?: boolean
   quittungName?: boolean
   quittungStreet?: boolean
-  quittungCity?: boolean
   amountPins?: boolean
 }, ExtArgs["result"]["donation"]>
 
 export type DonationSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
-  id?: boolean
   amount?: boolean
   createdAt?: boolean
   email?: boolean
   name?: boolean
-  namePrivate?: boolean
-  sentConfirmationAt?: boolean
-  spendenQuittungAt?: boolean
-  message?: boolean
   reference?: boolean
   source?: boolean
+  message?: boolean
+  namePrivate?: boolean
+  sentConfirmationAt?: boolean
+  id?: boolean
+  spendenQuittungAt?: boolean
+  quittungCity?: boolean
   quittungName?: boolean
   quittungStreet?: boolean
-  quittungCity?: boolean
   amountPins?: boolean
 }, ExtArgs["result"]["donation"]>
 
 export type DonationSelectScalar = {
-  id?: boolean
   amount?: boolean
   createdAt?: boolean
   email?: boolean
   name?: boolean
-  namePrivate?: boolean
-  sentConfirmationAt?: boolean
-  spendenQuittungAt?: boolean
-  message?: boolean
   reference?: boolean
   source?: boolean
+  message?: boolean
+  namePrivate?: boolean
+  sentConfirmationAt?: boolean
+  id?: boolean
+  spendenQuittungAt?: boolean
+  quittungCity?: boolean
   quittungName?: boolean
   quittungStreet?: boolean
-  quittungCity?: boolean
   amountPins?: boolean
 }
 
-export type DonationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "amount" | "createdAt" | "email" | "name" | "namePrivate" | "sentConfirmationAt" | "spendenQuittungAt" | "message" | "reference" | "source" | "quittungName" | "quittungStreet" | "quittungCity" | "amountPins", ExtArgs["result"]["donation"]>
+export type DonationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"amount" | "createdAt" | "email" | "name" | "reference" | "source" | "message" | "namePrivate" | "sentConfirmationAt" | "id" | "spendenQuittungAt" | "quittungCity" | "quittungName" | "quittungStreet" | "amountPins", ExtArgs["result"]["donation"]>
 
 export type $DonationPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Donation"
   objects: {}
   scalars: runtime.Types.Extensions.GetPayloadResult<{
-    id: string
     amount: number
     createdAt: Date
     email: string | null
     name: string | null
-    namePrivate: string | null
-    sentConfirmationAt: Date | null
-    spendenQuittungAt: Date | null
-    message: string | null
     reference: string | null
     source: $Enums.DonationSource
+    message: string | null
+    namePrivate: string | null
+    sentConfirmationAt: Date | null
+    id: string
+    spendenQuittungAt: Date | null
+    quittungCity: string | null
     quittungName: string | null
     quittungStreet: string | null
-    quittungCity: string | null
     amountPins: number | null
   }, ExtArgs["result"]["donation"]>
   composites: {}
@@ -764,8 +764,8 @@ export interface DonationDelegate<ExtArgs extends runtime.Types.Extensions.Inter
    * // Get first 10 Donations
    * const donations = await prisma.donation.findMany({ take: 10 })
    * 
-   * // Only select the `id`
-   * const donationWithIdOnly = await prisma.donation.findMany({ select: { id: true } })
+   * // Only select the `amount`
+   * const donationWithAmountOnly = await prisma.donation.findMany({ select: { amount: true } })
    * 
    */
   findMany<T extends DonationFindManyArgs>(args?: Prisma.SelectSubset<T, DonationFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DonationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
@@ -809,9 +809,9 @@ export interface DonationDelegate<ExtArgs extends runtime.Types.Extensions.Inter
    *   ]
    * })
    * 
-   * // Create many Donations and only return the `id`
-   * const donationWithIdOnly = await prisma.donation.createManyAndReturn({
-   *   select: { id: true },
+   * // Create many Donations and only return the `amount`
+   * const donationWithAmountOnly = await prisma.donation.createManyAndReturn({
+   *   select: { amount: true },
    *   data: [
    *     // ... provide data here
    *   ]
@@ -900,9 +900,9 @@ export interface DonationDelegate<ExtArgs extends runtime.Types.Extensions.Inter
    *   ]
    * })
    * 
-   * // Update zero or more Donations and only return the `id`
-   * const donationWithIdOnly = await prisma.donation.updateManyAndReturn({
-   *   select: { id: true },
+   * // Update zero or more Donations and only return the `amount`
+   * const donationWithAmountOnly = await prisma.donation.updateManyAndReturn({
+   *   select: { amount: true },
    *   where: {
    *     // ... provide filter here
    *   },
@@ -1104,20 +1104,20 @@ export interface Prisma__DonationClient<T, Null = never, ExtArgs extends runtime
  * Fields of the Donation model
  */
 export interface DonationFieldRefs {
-  readonly id: Prisma.FieldRef<"Donation", 'String'>
   readonly amount: Prisma.FieldRef<"Donation", 'Int'>
   readonly createdAt: Prisma.FieldRef<"Donation", 'DateTime'>
   readonly email: Prisma.FieldRef<"Donation", 'String'>
   readonly name: Prisma.FieldRef<"Donation", 'String'>
-  readonly namePrivate: Prisma.FieldRef<"Donation", 'String'>
-  readonly sentConfirmationAt: Prisma.FieldRef<"Donation", 'DateTime'>
-  readonly spendenQuittungAt: Prisma.FieldRef<"Donation", 'DateTime'>
-  readonly message: Prisma.FieldRef<"Donation", 'String'>
   readonly reference: Prisma.FieldRef<"Donation", 'String'>
   readonly source: Prisma.FieldRef<"Donation", 'DonationSource'>
+  readonly message: Prisma.FieldRef<"Donation", 'String'>
+  readonly namePrivate: Prisma.FieldRef<"Donation", 'String'>
+  readonly sentConfirmationAt: Prisma.FieldRef<"Donation", 'DateTime'>
+  readonly id: Prisma.FieldRef<"Donation", 'String'>
+  readonly spendenQuittungAt: Prisma.FieldRef<"Donation", 'DateTime'>
+  readonly quittungCity: Prisma.FieldRef<"Donation", 'String'>
   readonly quittungName: Prisma.FieldRef<"Donation", 'String'>
   readonly quittungStreet: Prisma.FieldRef<"Donation", 'String'>
-  readonly quittungCity: Prisma.FieldRef<"Donation", 'String'>
   readonly amountPins: Prisma.FieldRef<"Donation", 'Int'>
 }
     

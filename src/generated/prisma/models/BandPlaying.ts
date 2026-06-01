@@ -25,7 +25,6 @@ export type AggregateBandPlaying = {
 }
 
 export type BandPlayingMinAggregateOutputType = {
-  id: string | null
   name: string | null
   startTime: Date | null
   endTime: Date | null
@@ -34,8 +33,6 @@ export type BandPlayingMinAggregateOutputType = {
   genre: string | null
   instagram: string | null
   spotify: string | null
-  spotifyTrackId: string | null
-  spotifyPreviewUrl: string | null
   facebook: string | null
   website: string | null
   youtube: string | null
@@ -44,10 +41,13 @@ export type BandPlayingMinAggregateOutputType = {
   eventId: string | null
   slug: string | null
   photo: string | null
+  announcementTime: Date | null
+  id: string | null
+  spotifyTrackId: string | null
+  spotifyPreviewUrl: string | null
 }
 
 export type BandPlayingMaxAggregateOutputType = {
-  id: string | null
   name: string | null
   startTime: Date | null
   endTime: Date | null
@@ -56,8 +56,6 @@ export type BandPlayingMaxAggregateOutputType = {
   genre: string | null
   instagram: string | null
   spotify: string | null
-  spotifyTrackId: string | null
-  spotifyPreviewUrl: string | null
   facebook: string | null
   website: string | null
   youtube: string | null
@@ -66,10 +64,13 @@ export type BandPlayingMaxAggregateOutputType = {
   eventId: string | null
   slug: string | null
   photo: string | null
+  announcementTime: Date | null
+  id: string | null
+  spotifyTrackId: string | null
+  spotifyPreviewUrl: string | null
 }
 
 export type BandPlayingCountAggregateOutputType = {
-  id: number
   name: number
   startTime: number
   endTime: number
@@ -78,8 +79,6 @@ export type BandPlayingCountAggregateOutputType = {
   genre: number
   instagram: number
   spotify: number
-  spotifyTrackId: number
-  spotifyPreviewUrl: number
   facebook: number
   website: number
   youtube: number
@@ -88,12 +87,15 @@ export type BandPlayingCountAggregateOutputType = {
   eventId: number
   slug: number
   photo: number
+  announcementTime: number
+  id: number
+  spotifyTrackId: number
+  spotifyPreviewUrl: number
   _all: number
 }
 
 
 export type BandPlayingMinAggregateInputType = {
-  id?: true
   name?: true
   startTime?: true
   endTime?: true
@@ -102,8 +104,6 @@ export type BandPlayingMinAggregateInputType = {
   genre?: true
   instagram?: true
   spotify?: true
-  spotifyTrackId?: true
-  spotifyPreviewUrl?: true
   facebook?: true
   website?: true
   youtube?: true
@@ -112,10 +112,13 @@ export type BandPlayingMinAggregateInputType = {
   eventId?: true
   slug?: true
   photo?: true
+  announcementTime?: true
+  id?: true
+  spotifyTrackId?: true
+  spotifyPreviewUrl?: true
 }
 
 export type BandPlayingMaxAggregateInputType = {
-  id?: true
   name?: true
   startTime?: true
   endTime?: true
@@ -124,8 +127,6 @@ export type BandPlayingMaxAggregateInputType = {
   genre?: true
   instagram?: true
   spotify?: true
-  spotifyTrackId?: true
-  spotifyPreviewUrl?: true
   facebook?: true
   website?: true
   youtube?: true
@@ -134,10 +135,13 @@ export type BandPlayingMaxAggregateInputType = {
   eventId?: true
   slug?: true
   photo?: true
+  announcementTime?: true
+  id?: true
+  spotifyTrackId?: true
+  spotifyPreviewUrl?: true
 }
 
 export type BandPlayingCountAggregateInputType = {
-  id?: true
   name?: true
   startTime?: true
   endTime?: true
@@ -146,8 +150,6 @@ export type BandPlayingCountAggregateInputType = {
   genre?: true
   instagram?: true
   spotify?: true
-  spotifyTrackId?: true
-  spotifyPreviewUrl?: true
   facebook?: true
   website?: true
   youtube?: true
@@ -156,6 +158,10 @@ export type BandPlayingCountAggregateInputType = {
   eventId?: true
   slug?: true
   photo?: true
+  announcementTime?: true
+  id?: true
+  spotifyTrackId?: true
+  spotifyPreviewUrl?: true
   _all?: true
 }
 
@@ -232,7 +238,6 @@ export type BandPlayingGroupByArgs<ExtArgs extends runtime.Types.Extensions.Inte
 }
 
 export type BandPlayingGroupByOutputType = {
-  id: string
   name: string
   startTime: Date
   endTime: Date
@@ -241,8 +246,6 @@ export type BandPlayingGroupByOutputType = {
   genre: string | null
   instagram: string | null
   spotify: string | null
-  spotifyTrackId: string | null
-  spotifyPreviewUrl: string | null
   facebook: string | null
   website: string | null
   youtube: string | null
@@ -251,6 +254,10 @@ export type BandPlayingGroupByOutputType = {
   eventId: string
   slug: string
   photo: string | null
+  announcementTime: Date | null
+  id: string
+  spotifyTrackId: string | null
+  spotifyPreviewUrl: string | null
   _count: BandPlayingCountAggregateOutputType | null
   _min: BandPlayingMinAggregateOutputType | null
   _max: BandPlayingMaxAggregateOutputType | null
@@ -275,7 +282,6 @@ export type BandPlayingWhereInput = {
   AND?: Prisma.BandPlayingWhereInput | Prisma.BandPlayingWhereInput[]
   OR?: Prisma.BandPlayingWhereInput[]
   NOT?: Prisma.BandPlayingWhereInput | Prisma.BandPlayingWhereInput[]
-  id?: Prisma.UuidFilter<"BandPlaying"> | string
   name?: Prisma.StringFilter<"BandPlaying"> | string
   startTime?: Prisma.DateTimeFilter<"BandPlaying"> | Date | string
   endTime?: Prisma.DateTimeFilter<"BandPlaying"> | Date | string
@@ -284,8 +290,6 @@ export type BandPlayingWhereInput = {
   genre?: Prisma.StringNullableFilter<"BandPlaying"> | string | null
   instagram?: Prisma.StringNullableFilter<"BandPlaying"> | string | null
   spotify?: Prisma.StringNullableFilter<"BandPlaying"> | string | null
-  spotifyTrackId?: Prisma.StringNullableFilter<"BandPlaying"> | string | null
-  spotifyPreviewUrl?: Prisma.StringNullableFilter<"BandPlaying"> | string | null
   facebook?: Prisma.StringNullableFilter<"BandPlaying"> | string | null
   website?: Prisma.StringNullableFilter<"BandPlaying"> | string | null
   youtube?: Prisma.StringNullableFilter<"BandPlaying"> | string | null
@@ -294,12 +298,15 @@ export type BandPlayingWhereInput = {
   eventId?: Prisma.StringFilter<"BandPlaying"> | string
   slug?: Prisma.StringFilter<"BandPlaying"> | string
   photo?: Prisma.UuidNullableFilter<"BandPlaying"> | string | null
+  announcementTime?: Prisma.DateTimeNullableFilter<"BandPlaying"> | Date | string | null
+  id?: Prisma.UuidFilter<"BandPlaying"> | string
+  spotifyTrackId?: Prisma.StringNullableFilter<"BandPlaying"> | string | null
+  spotifyPreviewUrl?: Prisma.StringNullableFilter<"BandPlaying"> | string | null
   area?: Prisma.XOR<Prisma.AreaScalarRelationFilter, Prisma.AreaWhereInput>
   event?: Prisma.XOR<Prisma.EventScalarRelationFilter, Prisma.EventWhereInput>
 }
 
 export type BandPlayingOrderByWithRelationInput = {
-  id?: Prisma.SortOrder
   name?: Prisma.SortOrder
   startTime?: Prisma.SortOrder
   endTime?: Prisma.SortOrder
@@ -308,8 +315,6 @@ export type BandPlayingOrderByWithRelationInput = {
   genre?: Prisma.SortOrderInput | Prisma.SortOrder
   instagram?: Prisma.SortOrderInput | Prisma.SortOrder
   spotify?: Prisma.SortOrderInput | Prisma.SortOrder
-  spotifyTrackId?: Prisma.SortOrderInput | Prisma.SortOrder
-  spotifyPreviewUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   facebook?: Prisma.SortOrderInput | Prisma.SortOrder
   website?: Prisma.SortOrderInput | Prisma.SortOrder
   youtube?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -318,6 +323,10 @@ export type BandPlayingOrderByWithRelationInput = {
   eventId?: Prisma.SortOrder
   slug?: Prisma.SortOrder
   photo?: Prisma.SortOrderInput | Prisma.SortOrder
+  announcementTime?: Prisma.SortOrderInput | Prisma.SortOrder
+  id?: Prisma.SortOrder
+  spotifyTrackId?: Prisma.SortOrderInput | Prisma.SortOrder
+  spotifyPreviewUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   area?: Prisma.AreaOrderByWithRelationInput
   event?: Prisma.EventOrderByWithRelationInput
   _relevance?: Prisma.BandPlayingOrderByRelevanceInput
@@ -338,8 +347,6 @@ export type BandPlayingWhereUniqueInput = Prisma.AtLeast<{
   genre?: Prisma.StringNullableFilter<"BandPlaying"> | string | null
   instagram?: Prisma.StringNullableFilter<"BandPlaying"> | string | null
   spotify?: Prisma.StringNullableFilter<"BandPlaying"> | string | null
-  spotifyTrackId?: Prisma.StringNullableFilter<"BandPlaying"> | string | null
-  spotifyPreviewUrl?: Prisma.StringNullableFilter<"BandPlaying"> | string | null
   facebook?: Prisma.StringNullableFilter<"BandPlaying"> | string | null
   website?: Prisma.StringNullableFilter<"BandPlaying"> | string | null
   youtube?: Prisma.StringNullableFilter<"BandPlaying"> | string | null
@@ -348,12 +355,14 @@ export type BandPlayingWhereUniqueInput = Prisma.AtLeast<{
   eventId?: Prisma.StringFilter<"BandPlaying"> | string
   slug?: Prisma.StringFilter<"BandPlaying"> | string
   photo?: Prisma.UuidNullableFilter<"BandPlaying"> | string | null
+  announcementTime?: Prisma.DateTimeNullableFilter<"BandPlaying"> | Date | string | null
+  spotifyTrackId?: Prisma.StringNullableFilter<"BandPlaying"> | string | null
+  spotifyPreviewUrl?: Prisma.StringNullableFilter<"BandPlaying"> | string | null
   area?: Prisma.XOR<Prisma.AreaScalarRelationFilter, Prisma.AreaWhereInput>
   event?: Prisma.XOR<Prisma.EventScalarRelationFilter, Prisma.EventWhereInput>
 }, "id" | "areaId_startTime" | "eventId_slug">
 
 export type BandPlayingOrderByWithAggregationInput = {
-  id?: Prisma.SortOrder
   name?: Prisma.SortOrder
   startTime?: Prisma.SortOrder
   endTime?: Prisma.SortOrder
@@ -362,8 +371,6 @@ export type BandPlayingOrderByWithAggregationInput = {
   genre?: Prisma.SortOrderInput | Prisma.SortOrder
   instagram?: Prisma.SortOrderInput | Prisma.SortOrder
   spotify?: Prisma.SortOrderInput | Prisma.SortOrder
-  spotifyTrackId?: Prisma.SortOrderInput | Prisma.SortOrder
-  spotifyPreviewUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   facebook?: Prisma.SortOrderInput | Prisma.SortOrder
   website?: Prisma.SortOrderInput | Prisma.SortOrder
   youtube?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -372,6 +379,10 @@ export type BandPlayingOrderByWithAggregationInput = {
   eventId?: Prisma.SortOrder
   slug?: Prisma.SortOrder
   photo?: Prisma.SortOrderInput | Prisma.SortOrder
+  announcementTime?: Prisma.SortOrderInput | Prisma.SortOrder
+  id?: Prisma.SortOrder
+  spotifyTrackId?: Prisma.SortOrderInput | Prisma.SortOrder
+  spotifyPreviewUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.BandPlayingCountOrderByAggregateInput
   _max?: Prisma.BandPlayingMaxOrderByAggregateInput
   _min?: Prisma.BandPlayingMinOrderByAggregateInput
@@ -381,7 +392,6 @@ export type BandPlayingScalarWhereWithAggregatesInput = {
   AND?: Prisma.BandPlayingScalarWhereWithAggregatesInput | Prisma.BandPlayingScalarWhereWithAggregatesInput[]
   OR?: Prisma.BandPlayingScalarWhereWithAggregatesInput[]
   NOT?: Prisma.BandPlayingScalarWhereWithAggregatesInput | Prisma.BandPlayingScalarWhereWithAggregatesInput[]
-  id?: Prisma.UuidWithAggregatesFilter<"BandPlaying"> | string
   name?: Prisma.StringWithAggregatesFilter<"BandPlaying"> | string
   startTime?: Prisma.DateTimeWithAggregatesFilter<"BandPlaying"> | Date | string
   endTime?: Prisma.DateTimeWithAggregatesFilter<"BandPlaying"> | Date | string
@@ -390,8 +400,6 @@ export type BandPlayingScalarWhereWithAggregatesInput = {
   genre?: Prisma.StringNullableWithAggregatesFilter<"BandPlaying"> | string | null
   instagram?: Prisma.StringNullableWithAggregatesFilter<"BandPlaying"> | string | null
   spotify?: Prisma.StringNullableWithAggregatesFilter<"BandPlaying"> | string | null
-  spotifyTrackId?: Prisma.StringNullableWithAggregatesFilter<"BandPlaying"> | string | null
-  spotifyPreviewUrl?: Prisma.StringNullableWithAggregatesFilter<"BandPlaying"> | string | null
   facebook?: Prisma.StringNullableWithAggregatesFilter<"BandPlaying"> | string | null
   website?: Prisma.StringNullableWithAggregatesFilter<"BandPlaying"> | string | null
   youtube?: Prisma.StringNullableWithAggregatesFilter<"BandPlaying"> | string | null
@@ -400,10 +408,13 @@ export type BandPlayingScalarWhereWithAggregatesInput = {
   eventId?: Prisma.StringWithAggregatesFilter<"BandPlaying"> | string
   slug?: Prisma.StringWithAggregatesFilter<"BandPlaying"> | string
   photo?: Prisma.UuidNullableWithAggregatesFilter<"BandPlaying"> | string | null
+  announcementTime?: Prisma.DateTimeNullableWithAggregatesFilter<"BandPlaying"> | Date | string | null
+  id?: Prisma.UuidWithAggregatesFilter<"BandPlaying"> | string
+  spotifyTrackId?: Prisma.StringNullableWithAggregatesFilter<"BandPlaying"> | string | null
+  spotifyPreviewUrl?: Prisma.StringNullableWithAggregatesFilter<"BandPlaying"> | string | null
 }
 
 export type BandPlayingCreateInput = {
-  id?: string
   name: string
   startTime: Date | string
   endTime: Date | string
@@ -412,20 +423,21 @@ export type BandPlayingCreateInput = {
   genre?: string | null
   instagram?: string | null
   spotify?: string | null
-  spotifyTrackId?: string | null
-  spotifyPreviewUrl?: string | null
   facebook?: string | null
   website?: string | null
   youtube?: string | null
   soundcloud?: string | null
   slug: string
   photo?: string | null
+  announcementTime?: Date | string | null
+  id?: string
+  spotifyTrackId?: string | null
+  spotifyPreviewUrl?: string | null
   area: Prisma.AreaCreateNestedOneWithoutBandPlayingInput
   event: Prisma.EventCreateNestedOneWithoutBandPlayingInput
 }
 
 export type BandPlayingUncheckedCreateInput = {
-  id?: string
   name: string
   startTime: Date | string
   endTime: Date | string
@@ -434,8 +446,6 @@ export type BandPlayingUncheckedCreateInput = {
   genre?: string | null
   instagram?: string | null
   spotify?: string | null
-  spotifyTrackId?: string | null
-  spotifyPreviewUrl?: string | null
   facebook?: string | null
   website?: string | null
   youtube?: string | null
@@ -444,10 +454,13 @@ export type BandPlayingUncheckedCreateInput = {
   eventId: string
   slug: string
   photo?: string | null
+  announcementTime?: Date | string | null
+  id?: string
+  spotifyTrackId?: string | null
+  spotifyPreviewUrl?: string | null
 }
 
 export type BandPlayingUpdateInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   startTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -456,20 +469,21 @@ export type BandPlayingUpdateInput = {
   genre?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   instagram?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   spotify?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  spotifyTrackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  spotifyPreviewUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   facebook?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   youtube?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   soundcloud?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   photo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  announcementTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  spotifyTrackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  spotifyPreviewUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   area?: Prisma.AreaUpdateOneRequiredWithoutBandPlayingNestedInput
   event?: Prisma.EventUpdateOneRequiredWithoutBandPlayingNestedInput
 }
 
 export type BandPlayingUncheckedUpdateInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   startTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -478,8 +492,6 @@ export type BandPlayingUncheckedUpdateInput = {
   genre?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   instagram?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   spotify?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  spotifyTrackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  spotifyPreviewUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   facebook?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   youtube?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -488,10 +500,13 @@ export type BandPlayingUncheckedUpdateInput = {
   eventId?: Prisma.StringFieldUpdateOperationsInput | string
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   photo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  announcementTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  spotifyTrackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  spotifyPreviewUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type BandPlayingCreateManyInput = {
-  id?: string
   name: string
   startTime: Date | string
   endTime: Date | string
@@ -500,8 +515,6 @@ export type BandPlayingCreateManyInput = {
   genre?: string | null
   instagram?: string | null
   spotify?: string | null
-  spotifyTrackId?: string | null
-  spotifyPreviewUrl?: string | null
   facebook?: string | null
   website?: string | null
   youtube?: string | null
@@ -510,10 +523,13 @@ export type BandPlayingCreateManyInput = {
   eventId: string
   slug: string
   photo?: string | null
+  announcementTime?: Date | string | null
+  id?: string
+  spotifyTrackId?: string | null
+  spotifyPreviewUrl?: string | null
 }
 
 export type BandPlayingUpdateManyMutationInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   startTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -522,18 +538,19 @@ export type BandPlayingUpdateManyMutationInput = {
   genre?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   instagram?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   spotify?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  spotifyTrackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  spotifyPreviewUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   facebook?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   youtube?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   soundcloud?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   photo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  announcementTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  spotifyTrackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  spotifyPreviewUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type BandPlayingUncheckedUpdateManyInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   startTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -542,8 +559,6 @@ export type BandPlayingUncheckedUpdateManyInput = {
   genre?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   instagram?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   spotify?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  spotifyTrackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  spotifyPreviewUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   facebook?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   youtube?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -552,6 +567,10 @@ export type BandPlayingUncheckedUpdateManyInput = {
   eventId?: Prisma.StringFieldUpdateOperationsInput | string
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   photo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  announcementTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  spotifyTrackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  spotifyPreviewUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type BandPlayingListRelationFilter = {
@@ -581,7 +600,6 @@ export type BandPlayingEventIdSlugCompoundUniqueInput = {
 }
 
 export type BandPlayingCountOrderByAggregateInput = {
-  id?: Prisma.SortOrder
   name?: Prisma.SortOrder
   startTime?: Prisma.SortOrder
   endTime?: Prisma.SortOrder
@@ -590,8 +608,6 @@ export type BandPlayingCountOrderByAggregateInput = {
   genre?: Prisma.SortOrder
   instagram?: Prisma.SortOrder
   spotify?: Prisma.SortOrder
-  spotifyTrackId?: Prisma.SortOrder
-  spotifyPreviewUrl?: Prisma.SortOrder
   facebook?: Prisma.SortOrder
   website?: Prisma.SortOrder
   youtube?: Prisma.SortOrder
@@ -600,10 +616,13 @@ export type BandPlayingCountOrderByAggregateInput = {
   eventId?: Prisma.SortOrder
   slug?: Prisma.SortOrder
   photo?: Prisma.SortOrder
+  announcementTime?: Prisma.SortOrder
+  id?: Prisma.SortOrder
+  spotifyTrackId?: Prisma.SortOrder
+  spotifyPreviewUrl?: Prisma.SortOrder
 }
 
 export type BandPlayingMaxOrderByAggregateInput = {
-  id?: Prisma.SortOrder
   name?: Prisma.SortOrder
   startTime?: Prisma.SortOrder
   endTime?: Prisma.SortOrder
@@ -612,8 +631,6 @@ export type BandPlayingMaxOrderByAggregateInput = {
   genre?: Prisma.SortOrder
   instagram?: Prisma.SortOrder
   spotify?: Prisma.SortOrder
-  spotifyTrackId?: Prisma.SortOrder
-  spotifyPreviewUrl?: Prisma.SortOrder
   facebook?: Prisma.SortOrder
   website?: Prisma.SortOrder
   youtube?: Prisma.SortOrder
@@ -622,10 +639,13 @@ export type BandPlayingMaxOrderByAggregateInput = {
   eventId?: Prisma.SortOrder
   slug?: Prisma.SortOrder
   photo?: Prisma.SortOrder
+  announcementTime?: Prisma.SortOrder
+  id?: Prisma.SortOrder
+  spotifyTrackId?: Prisma.SortOrder
+  spotifyPreviewUrl?: Prisma.SortOrder
 }
 
 export type BandPlayingMinOrderByAggregateInput = {
-  id?: Prisma.SortOrder
   name?: Prisma.SortOrder
   startTime?: Prisma.SortOrder
   endTime?: Prisma.SortOrder
@@ -634,8 +654,6 @@ export type BandPlayingMinOrderByAggregateInput = {
   genre?: Prisma.SortOrder
   instagram?: Prisma.SortOrder
   spotify?: Prisma.SortOrder
-  spotifyTrackId?: Prisma.SortOrder
-  spotifyPreviewUrl?: Prisma.SortOrder
   facebook?: Prisma.SortOrder
   website?: Prisma.SortOrder
   youtube?: Prisma.SortOrder
@@ -644,6 +662,10 @@ export type BandPlayingMinOrderByAggregateInput = {
   eventId?: Prisma.SortOrder
   slug?: Prisma.SortOrder
   photo?: Prisma.SortOrder
+  announcementTime?: Prisma.SortOrder
+  id?: Prisma.SortOrder
+  spotifyTrackId?: Prisma.SortOrder
+  spotifyPreviewUrl?: Prisma.SortOrder
 }
 
 export type BandPlayingCreateNestedManyWithoutAreaInput = {
@@ -731,7 +753,6 @@ export type BandPlayingUncheckedUpdateManyWithoutEventNestedInput = {
 }
 
 export type BandPlayingCreateWithoutAreaInput = {
-  id?: string
   name: string
   startTime: Date | string
   endTime: Date | string
@@ -740,19 +761,20 @@ export type BandPlayingCreateWithoutAreaInput = {
   genre?: string | null
   instagram?: string | null
   spotify?: string | null
-  spotifyTrackId?: string | null
-  spotifyPreviewUrl?: string | null
   facebook?: string | null
   website?: string | null
   youtube?: string | null
   soundcloud?: string | null
   slug: string
   photo?: string | null
+  announcementTime?: Date | string | null
+  id?: string
+  spotifyTrackId?: string | null
+  spotifyPreviewUrl?: string | null
   event: Prisma.EventCreateNestedOneWithoutBandPlayingInput
 }
 
 export type BandPlayingUncheckedCreateWithoutAreaInput = {
-  id?: string
   name: string
   startTime: Date | string
   endTime: Date | string
@@ -761,8 +783,6 @@ export type BandPlayingUncheckedCreateWithoutAreaInput = {
   genre?: string | null
   instagram?: string | null
   spotify?: string | null
-  spotifyTrackId?: string | null
-  spotifyPreviewUrl?: string | null
   facebook?: string | null
   website?: string | null
   youtube?: string | null
@@ -770,6 +790,10 @@ export type BandPlayingUncheckedCreateWithoutAreaInput = {
   eventId: string
   slug: string
   photo?: string | null
+  announcementTime?: Date | string | null
+  id?: string
+  spotifyTrackId?: string | null
+  spotifyPreviewUrl?: string | null
 }
 
 export type BandPlayingCreateOrConnectWithoutAreaInput = {
@@ -802,7 +826,6 @@ export type BandPlayingScalarWhereInput = {
   AND?: Prisma.BandPlayingScalarWhereInput | Prisma.BandPlayingScalarWhereInput[]
   OR?: Prisma.BandPlayingScalarWhereInput[]
   NOT?: Prisma.BandPlayingScalarWhereInput | Prisma.BandPlayingScalarWhereInput[]
-  id?: Prisma.UuidFilter<"BandPlaying"> | string
   name?: Prisma.StringFilter<"BandPlaying"> | string
   startTime?: Prisma.DateTimeFilter<"BandPlaying"> | Date | string
   endTime?: Prisma.DateTimeFilter<"BandPlaying"> | Date | string
@@ -811,8 +834,6 @@ export type BandPlayingScalarWhereInput = {
   genre?: Prisma.StringNullableFilter<"BandPlaying"> | string | null
   instagram?: Prisma.StringNullableFilter<"BandPlaying"> | string | null
   spotify?: Prisma.StringNullableFilter<"BandPlaying"> | string | null
-  spotifyTrackId?: Prisma.StringNullableFilter<"BandPlaying"> | string | null
-  spotifyPreviewUrl?: Prisma.StringNullableFilter<"BandPlaying"> | string | null
   facebook?: Prisma.StringNullableFilter<"BandPlaying"> | string | null
   website?: Prisma.StringNullableFilter<"BandPlaying"> | string | null
   youtube?: Prisma.StringNullableFilter<"BandPlaying"> | string | null
@@ -821,10 +842,13 @@ export type BandPlayingScalarWhereInput = {
   eventId?: Prisma.StringFilter<"BandPlaying"> | string
   slug?: Prisma.StringFilter<"BandPlaying"> | string
   photo?: Prisma.UuidNullableFilter<"BandPlaying"> | string | null
+  announcementTime?: Prisma.DateTimeNullableFilter<"BandPlaying"> | Date | string | null
+  id?: Prisma.UuidFilter<"BandPlaying"> | string
+  spotifyTrackId?: Prisma.StringNullableFilter<"BandPlaying"> | string | null
+  spotifyPreviewUrl?: Prisma.StringNullableFilter<"BandPlaying"> | string | null
 }
 
 export type BandPlayingCreateWithoutEventInput = {
-  id?: string
   name: string
   startTime: Date | string
   endTime: Date | string
@@ -833,19 +857,20 @@ export type BandPlayingCreateWithoutEventInput = {
   genre?: string | null
   instagram?: string | null
   spotify?: string | null
-  spotifyTrackId?: string | null
-  spotifyPreviewUrl?: string | null
   facebook?: string | null
   website?: string | null
   youtube?: string | null
   soundcloud?: string | null
   slug: string
   photo?: string | null
+  announcementTime?: Date | string | null
+  id?: string
+  spotifyTrackId?: string | null
+  spotifyPreviewUrl?: string | null
   area: Prisma.AreaCreateNestedOneWithoutBandPlayingInput
 }
 
 export type BandPlayingUncheckedCreateWithoutEventInput = {
-  id?: string
   name: string
   startTime: Date | string
   endTime: Date | string
@@ -854,8 +879,6 @@ export type BandPlayingUncheckedCreateWithoutEventInput = {
   genre?: string | null
   instagram?: string | null
   spotify?: string | null
-  spotifyTrackId?: string | null
-  spotifyPreviewUrl?: string | null
   facebook?: string | null
   website?: string | null
   youtube?: string | null
@@ -863,6 +886,10 @@ export type BandPlayingUncheckedCreateWithoutEventInput = {
   areaId: string
   slug: string
   photo?: string | null
+  announcementTime?: Date | string | null
+  id?: string
+  spotifyTrackId?: string | null
+  spotifyPreviewUrl?: string | null
 }
 
 export type BandPlayingCreateOrConnectWithoutEventInput = {
@@ -892,7 +919,6 @@ export type BandPlayingUpdateManyWithWhereWithoutEventInput = {
 }
 
 export type BandPlayingCreateManyAreaInput = {
-  id?: string
   name: string
   startTime: Date | string
   endTime: Date | string
@@ -901,8 +927,6 @@ export type BandPlayingCreateManyAreaInput = {
   genre?: string | null
   instagram?: string | null
   spotify?: string | null
-  spotifyTrackId?: string | null
-  spotifyPreviewUrl?: string | null
   facebook?: string | null
   website?: string | null
   youtube?: string | null
@@ -910,10 +934,13 @@ export type BandPlayingCreateManyAreaInput = {
   eventId: string
   slug: string
   photo?: string | null
+  announcementTime?: Date | string | null
+  id?: string
+  spotifyTrackId?: string | null
+  spotifyPreviewUrl?: string | null
 }
 
 export type BandPlayingUpdateWithoutAreaInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   startTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -922,19 +949,20 @@ export type BandPlayingUpdateWithoutAreaInput = {
   genre?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   instagram?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   spotify?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  spotifyTrackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  spotifyPreviewUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   facebook?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   youtube?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   soundcloud?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   photo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  announcementTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  spotifyTrackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  spotifyPreviewUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   event?: Prisma.EventUpdateOneRequiredWithoutBandPlayingNestedInput
 }
 
 export type BandPlayingUncheckedUpdateWithoutAreaInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   startTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -943,8 +971,6 @@ export type BandPlayingUncheckedUpdateWithoutAreaInput = {
   genre?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   instagram?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   spotify?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  spotifyTrackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  spotifyPreviewUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   facebook?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   youtube?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -952,10 +978,13 @@ export type BandPlayingUncheckedUpdateWithoutAreaInput = {
   eventId?: Prisma.StringFieldUpdateOperationsInput | string
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   photo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  announcementTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  spotifyTrackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  spotifyPreviewUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type BandPlayingUncheckedUpdateManyWithoutAreaInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   startTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -964,8 +993,6 @@ export type BandPlayingUncheckedUpdateManyWithoutAreaInput = {
   genre?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   instagram?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   spotify?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  spotifyTrackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  spotifyPreviewUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   facebook?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   youtube?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -973,10 +1000,13 @@ export type BandPlayingUncheckedUpdateManyWithoutAreaInput = {
   eventId?: Prisma.StringFieldUpdateOperationsInput | string
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   photo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  announcementTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  spotifyTrackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  spotifyPreviewUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type BandPlayingCreateManyEventInput = {
-  id?: string
   name: string
   startTime: Date | string
   endTime: Date | string
@@ -985,8 +1015,6 @@ export type BandPlayingCreateManyEventInput = {
   genre?: string | null
   instagram?: string | null
   spotify?: string | null
-  spotifyTrackId?: string | null
-  spotifyPreviewUrl?: string | null
   facebook?: string | null
   website?: string | null
   youtube?: string | null
@@ -994,10 +1022,13 @@ export type BandPlayingCreateManyEventInput = {
   areaId: string
   slug: string
   photo?: string | null
+  announcementTime?: Date | string | null
+  id?: string
+  spotifyTrackId?: string | null
+  spotifyPreviewUrl?: string | null
 }
 
 export type BandPlayingUpdateWithoutEventInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   startTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1006,19 +1037,20 @@ export type BandPlayingUpdateWithoutEventInput = {
   genre?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   instagram?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   spotify?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  spotifyTrackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  spotifyPreviewUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   facebook?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   youtube?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   soundcloud?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   photo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  announcementTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  spotifyTrackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  spotifyPreviewUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   area?: Prisma.AreaUpdateOneRequiredWithoutBandPlayingNestedInput
 }
 
 export type BandPlayingUncheckedUpdateWithoutEventInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   startTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1027,8 +1059,6 @@ export type BandPlayingUncheckedUpdateWithoutEventInput = {
   genre?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   instagram?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   spotify?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  spotifyTrackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  spotifyPreviewUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   facebook?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   youtube?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1036,10 +1066,13 @@ export type BandPlayingUncheckedUpdateWithoutEventInput = {
   areaId?: Prisma.StringFieldUpdateOperationsInput | string
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   photo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  announcementTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  spotifyTrackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  spotifyPreviewUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type BandPlayingUncheckedUpdateManyWithoutEventInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   startTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1048,8 +1081,6 @@ export type BandPlayingUncheckedUpdateManyWithoutEventInput = {
   genre?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   instagram?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   spotify?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  spotifyTrackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  spotifyPreviewUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   facebook?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   youtube?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1057,12 +1088,15 @@ export type BandPlayingUncheckedUpdateManyWithoutEventInput = {
   areaId?: Prisma.StringFieldUpdateOperationsInput | string
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   photo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  announcementTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  spotifyTrackId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  spotifyPreviewUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 
 
 export type BandPlayingSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
-  id?: boolean
   name?: boolean
   startTime?: boolean
   endTime?: boolean
@@ -1071,8 +1105,6 @@ export type BandPlayingSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   genre?: boolean
   instagram?: boolean
   spotify?: boolean
-  spotifyTrackId?: boolean
-  spotifyPreviewUrl?: boolean
   facebook?: boolean
   website?: boolean
   youtube?: boolean
@@ -1081,12 +1113,15 @@ export type BandPlayingSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   eventId?: boolean
   slug?: boolean
   photo?: boolean
+  announcementTime?: boolean
+  id?: boolean
+  spotifyTrackId?: boolean
+  spotifyPreviewUrl?: boolean
   area?: boolean | Prisma.AreaDefaultArgs<ExtArgs>
   event?: boolean | Prisma.EventDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["bandPlaying"]>
 
 export type BandPlayingSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
-  id?: boolean
   name?: boolean
   startTime?: boolean
   endTime?: boolean
@@ -1095,8 +1130,6 @@ export type BandPlayingSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   genre?: boolean
   instagram?: boolean
   spotify?: boolean
-  spotifyTrackId?: boolean
-  spotifyPreviewUrl?: boolean
   facebook?: boolean
   website?: boolean
   youtube?: boolean
@@ -1105,12 +1138,15 @@ export type BandPlayingSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   eventId?: boolean
   slug?: boolean
   photo?: boolean
+  announcementTime?: boolean
+  id?: boolean
+  spotifyTrackId?: boolean
+  spotifyPreviewUrl?: boolean
   area?: boolean | Prisma.AreaDefaultArgs<ExtArgs>
   event?: boolean | Prisma.EventDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["bandPlaying"]>
 
 export type BandPlayingSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
-  id?: boolean
   name?: boolean
   startTime?: boolean
   endTime?: boolean
@@ -1119,8 +1155,6 @@ export type BandPlayingSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   genre?: boolean
   instagram?: boolean
   spotify?: boolean
-  spotifyTrackId?: boolean
-  spotifyPreviewUrl?: boolean
   facebook?: boolean
   website?: boolean
   youtube?: boolean
@@ -1129,12 +1163,15 @@ export type BandPlayingSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   eventId?: boolean
   slug?: boolean
   photo?: boolean
+  announcementTime?: boolean
+  id?: boolean
+  spotifyTrackId?: boolean
+  spotifyPreviewUrl?: boolean
   area?: boolean | Prisma.AreaDefaultArgs<ExtArgs>
   event?: boolean | Prisma.EventDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["bandPlaying"]>
 
 export type BandPlayingSelectScalar = {
-  id?: boolean
   name?: boolean
   startTime?: boolean
   endTime?: boolean
@@ -1143,8 +1180,6 @@ export type BandPlayingSelectScalar = {
   genre?: boolean
   instagram?: boolean
   spotify?: boolean
-  spotifyTrackId?: boolean
-  spotifyPreviewUrl?: boolean
   facebook?: boolean
   website?: boolean
   youtube?: boolean
@@ -1153,9 +1188,13 @@ export type BandPlayingSelectScalar = {
   eventId?: boolean
   slug?: boolean
   photo?: boolean
+  announcementTime?: boolean
+  id?: boolean
+  spotifyTrackId?: boolean
+  spotifyPreviewUrl?: boolean
 }
 
-export type BandPlayingOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "startTime" | "endTime" | "description" | "shortDescription" | "genre" | "instagram" | "spotify" | "spotifyTrackId" | "spotifyPreviewUrl" | "facebook" | "website" | "youtube" | "soundcloud" | "areaId" | "eventId" | "slug" | "photo", ExtArgs["result"]["bandPlaying"]>
+export type BandPlayingOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"name" | "startTime" | "endTime" | "description" | "shortDescription" | "genre" | "instagram" | "spotify" | "facebook" | "website" | "youtube" | "soundcloud" | "areaId" | "eventId" | "slug" | "photo" | "announcementTime" | "id" | "spotifyTrackId" | "spotifyPreviewUrl", ExtArgs["result"]["bandPlaying"]>
 export type BandPlayingInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   area?: boolean | Prisma.AreaDefaultArgs<ExtArgs>
   event?: boolean | Prisma.EventDefaultArgs<ExtArgs>
@@ -1176,7 +1215,6 @@ export type $BandPlayingPayload<ExtArgs extends runtime.Types.Extensions.Interna
     event: Prisma.$EventPayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
-    id: string
     name: string
     startTime: Date
     endTime: Date
@@ -1185,8 +1223,6 @@ export type $BandPlayingPayload<ExtArgs extends runtime.Types.Extensions.Interna
     genre: string | null
     instagram: string | null
     spotify: string | null
-    spotifyTrackId: string | null
-    spotifyPreviewUrl: string | null
     facebook: string | null
     website: string | null
     youtube: string | null
@@ -1195,6 +1231,10 @@ export type $BandPlayingPayload<ExtArgs extends runtime.Types.Extensions.Interna
     eventId: string
     slug: string
     photo: string | null
+    announcementTime: Date | null
+    id: string
+    spotifyTrackId: string | null
+    spotifyPreviewUrl: string | null
   }, ExtArgs["result"]["bandPlaying"]>
   composites: {}
 }
@@ -1278,8 +1318,8 @@ export interface BandPlayingDelegate<ExtArgs extends runtime.Types.Extensions.In
    * // Get first 10 BandPlayings
    * const bandPlayings = await prisma.bandPlaying.findMany({ take: 10 })
    * 
-   * // Only select the `id`
-   * const bandPlayingWithIdOnly = await prisma.bandPlaying.findMany({ select: { id: true } })
+   * // Only select the `name`
+   * const bandPlayingWithNameOnly = await prisma.bandPlaying.findMany({ select: { name: true } })
    * 
    */
   findMany<T extends BandPlayingFindManyArgs>(args?: Prisma.SelectSubset<T, BandPlayingFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BandPlayingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
@@ -1323,9 +1363,9 @@ export interface BandPlayingDelegate<ExtArgs extends runtime.Types.Extensions.In
    *   ]
    * })
    * 
-   * // Create many BandPlayings and only return the `id`
-   * const bandPlayingWithIdOnly = await prisma.bandPlaying.createManyAndReturn({
-   *   select: { id: true },
+   * // Create many BandPlayings and only return the `name`
+   * const bandPlayingWithNameOnly = await prisma.bandPlaying.createManyAndReturn({
+   *   select: { name: true },
    *   data: [
    *     // ... provide data here
    *   ]
@@ -1414,9 +1454,9 @@ export interface BandPlayingDelegate<ExtArgs extends runtime.Types.Extensions.In
    *   ]
    * })
    * 
-   * // Update zero or more BandPlayings and only return the `id`
-   * const bandPlayingWithIdOnly = await prisma.bandPlaying.updateManyAndReturn({
-   *   select: { id: true },
+   * // Update zero or more BandPlayings and only return the `name`
+   * const bandPlayingWithNameOnly = await prisma.bandPlaying.updateManyAndReturn({
+   *   select: { name: true },
    *   where: {
    *     // ... provide filter here
    *   },
@@ -1620,7 +1660,6 @@ export interface Prisma__BandPlayingClient<T, Null = never, ExtArgs extends runt
  * Fields of the BandPlaying model
  */
 export interface BandPlayingFieldRefs {
-  readonly id: Prisma.FieldRef<"BandPlaying", 'String'>
   readonly name: Prisma.FieldRef<"BandPlaying", 'String'>
   readonly startTime: Prisma.FieldRef<"BandPlaying", 'DateTime'>
   readonly endTime: Prisma.FieldRef<"BandPlaying", 'DateTime'>
@@ -1629,8 +1668,6 @@ export interface BandPlayingFieldRefs {
   readonly genre: Prisma.FieldRef<"BandPlaying", 'String'>
   readonly instagram: Prisma.FieldRef<"BandPlaying", 'String'>
   readonly spotify: Prisma.FieldRef<"BandPlaying", 'String'>
-  readonly spotifyTrackId: Prisma.FieldRef<"BandPlaying", 'String'>
-  readonly spotifyPreviewUrl: Prisma.FieldRef<"BandPlaying", 'String'>
   readonly facebook: Prisma.FieldRef<"BandPlaying", 'String'>
   readonly website: Prisma.FieldRef<"BandPlaying", 'String'>
   readonly youtube: Prisma.FieldRef<"BandPlaying", 'String'>
@@ -1639,6 +1676,10 @@ export interface BandPlayingFieldRefs {
   readonly eventId: Prisma.FieldRef<"BandPlaying", 'String'>
   readonly slug: Prisma.FieldRef<"BandPlaying", 'String'>
   readonly photo: Prisma.FieldRef<"BandPlaying", 'String'>
+  readonly announcementTime: Prisma.FieldRef<"BandPlaying", 'DateTime'>
+  readonly id: Prisma.FieldRef<"BandPlaying", 'String'>
+  readonly spotifyTrackId: Prisma.FieldRef<"BandPlaying", 'String'>
+  readonly spotifyPreviewUrl: Prisma.FieldRef<"BandPlaying", 'String'>
 }
     
 

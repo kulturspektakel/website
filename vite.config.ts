@@ -8,7 +8,12 @@ export default defineConfig({
     tsconfigPaths: true,
   },
   plugins: [
-    tanstackStart(),
+    tanstackStart({
+      // Tests are colocated with route files; don't treat them as routes.
+      router: {
+        routeFileIgnorePattern: '\\.(test|spec)\\.',
+      },
+    }),
     nitroV2Plugin({
       preset: 'vercel',
     }),

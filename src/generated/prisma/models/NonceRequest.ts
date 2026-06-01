@@ -25,47 +25,53 @@ export type AggregateNonceRequest = {
 }
 
 export type NonceRequestMinAggregateOutputType = {
-  id: string | null
   expiresAt: Date | null
   createdForId: string | null
   status: $Enums.NonceRequestStatus | null
+  id: string | null
+  createdForEmail: string | null
 }
 
 export type NonceRequestMaxAggregateOutputType = {
-  id: string | null
   expiresAt: Date | null
   createdForId: string | null
   status: $Enums.NonceRequestStatus | null
+  id: string | null
+  createdForEmail: string | null
 }
 
 export type NonceRequestCountAggregateOutputType = {
-  id: number
   expiresAt: number
   createdForId: number
   status: number
+  id: number
+  createdForEmail: number
   _all: number
 }
 
 
 export type NonceRequestMinAggregateInputType = {
-  id?: true
   expiresAt?: true
   createdForId?: true
   status?: true
+  id?: true
+  createdForEmail?: true
 }
 
 export type NonceRequestMaxAggregateInputType = {
-  id?: true
   expiresAt?: true
   createdForId?: true
   status?: true
+  id?: true
+  createdForEmail?: true
 }
 
 export type NonceRequestCountAggregateInputType = {
-  id?: true
   expiresAt?: true
   createdForId?: true
   status?: true
+  id?: true
+  createdForEmail?: true
   _all?: true
 }
 
@@ -142,10 +148,11 @@ export type NonceRequestGroupByArgs<ExtArgs extends runtime.Types.Extensions.Int
 }
 
 export type NonceRequestGroupByOutputType = {
-  id: string
   expiresAt: Date
   createdForId: string | null
   status: $Enums.NonceRequestStatus
+  id: string
+  createdForEmail: string | null
   _count: NonceRequestCountAggregateOutputType | null
   _min: NonceRequestMinAggregateOutputType | null
   _max: NonceRequestMaxAggregateOutputType | null
@@ -170,18 +177,20 @@ export type NonceRequestWhereInput = {
   AND?: Prisma.NonceRequestWhereInput | Prisma.NonceRequestWhereInput[]
   OR?: Prisma.NonceRequestWhereInput[]
   NOT?: Prisma.NonceRequestWhereInput | Prisma.NonceRequestWhereInput[]
-  id?: Prisma.UuidFilter<"NonceRequest"> | string
   expiresAt?: Prisma.DateTimeFilter<"NonceRequest"> | Date | string
   createdForId?: Prisma.StringNullableFilter<"NonceRequest"> | string | null
   status?: Prisma.EnumNonceRequestStatusFilter<"NonceRequest"> | $Enums.NonceRequestStatus
+  id?: Prisma.UuidFilter<"NonceRequest"> | string
+  createdForEmail?: Prisma.StringNullableFilter<"NonceRequest"> | string | null
   createdFor?: Prisma.XOR<Prisma.ViewerNullableScalarRelationFilter, Prisma.ViewerWhereInput> | null
 }
 
 export type NonceRequestOrderByWithRelationInput = {
-  id?: Prisma.SortOrder
   expiresAt?: Prisma.SortOrder
   createdForId?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
+  id?: Prisma.SortOrder
+  createdForEmail?: Prisma.SortOrderInput | Prisma.SortOrder
   createdFor?: Prisma.ViewerOrderByWithRelationInput
   _relevance?: Prisma.NonceRequestOrderByRelevanceInput
 }
@@ -194,14 +203,16 @@ export type NonceRequestWhereUniqueInput = Prisma.AtLeast<{
   expiresAt?: Prisma.DateTimeFilter<"NonceRequest"> | Date | string
   createdForId?: Prisma.StringNullableFilter<"NonceRequest"> | string | null
   status?: Prisma.EnumNonceRequestStatusFilter<"NonceRequest"> | $Enums.NonceRequestStatus
+  createdForEmail?: Prisma.StringNullableFilter<"NonceRequest"> | string | null
   createdFor?: Prisma.XOR<Prisma.ViewerNullableScalarRelationFilter, Prisma.ViewerWhereInput> | null
 }, "id">
 
 export type NonceRequestOrderByWithAggregationInput = {
-  id?: Prisma.SortOrder
   expiresAt?: Prisma.SortOrder
   createdForId?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
+  id?: Prisma.SortOrder
+  createdForEmail?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.NonceRequestCountOrderByAggregateInput
   _max?: Prisma.NonceRequestMaxOrderByAggregateInput
   _min?: Prisma.NonceRequestMinOrderByAggregateInput
@@ -211,58 +222,66 @@ export type NonceRequestScalarWhereWithAggregatesInput = {
   AND?: Prisma.NonceRequestScalarWhereWithAggregatesInput | Prisma.NonceRequestScalarWhereWithAggregatesInput[]
   OR?: Prisma.NonceRequestScalarWhereWithAggregatesInput[]
   NOT?: Prisma.NonceRequestScalarWhereWithAggregatesInput | Prisma.NonceRequestScalarWhereWithAggregatesInput[]
-  id?: Prisma.UuidWithAggregatesFilter<"NonceRequest"> | string
   expiresAt?: Prisma.DateTimeWithAggregatesFilter<"NonceRequest"> | Date | string
   createdForId?: Prisma.StringNullableWithAggregatesFilter<"NonceRequest"> | string | null
   status?: Prisma.EnumNonceRequestStatusWithAggregatesFilter<"NonceRequest"> | $Enums.NonceRequestStatus
+  id?: Prisma.UuidWithAggregatesFilter<"NonceRequest"> | string
+  createdForEmail?: Prisma.StringNullableWithAggregatesFilter<"NonceRequest"> | string | null
 }
 
 export type NonceRequestCreateInput = {
-  id?: string
   expiresAt: Date | string
   status?: $Enums.NonceRequestStatus
+  id?: string
+  createdForEmail?: string | null
   createdFor?: Prisma.ViewerCreateNestedOneWithoutNonceRequestInput
 }
 
 export type NonceRequestUncheckedCreateInput = {
-  id?: string
   expiresAt: Date | string
   createdForId?: string | null
   status?: $Enums.NonceRequestStatus
+  id?: string
+  createdForEmail?: string | null
 }
 
 export type NonceRequestUpdateInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   status?: Prisma.EnumNonceRequestStatusFieldUpdateOperationsInput | $Enums.NonceRequestStatus
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  createdForEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdFor?: Prisma.ViewerUpdateOneWithoutNonceRequestNestedInput
 }
 
 export type NonceRequestUncheckedUpdateInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdForId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumNonceRequestStatusFieldUpdateOperationsInput | $Enums.NonceRequestStatus
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  createdForEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type NonceRequestCreateManyInput = {
-  id?: string
   expiresAt: Date | string
   createdForId?: string | null
   status?: $Enums.NonceRequestStatus
+  id?: string
+  createdForEmail?: string | null
 }
 
 export type NonceRequestUpdateManyMutationInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   status?: Prisma.EnumNonceRequestStatusFieldUpdateOperationsInput | $Enums.NonceRequestStatus
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  createdForEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type NonceRequestUncheckedUpdateManyInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdForId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumNonceRequestStatusFieldUpdateOperationsInput | $Enums.NonceRequestStatus
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  createdForEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type NonceRequestListRelationFilter = {
@@ -282,24 +301,27 @@ export type NonceRequestOrderByRelevanceInput = {
 }
 
 export type NonceRequestCountOrderByAggregateInput = {
-  id?: Prisma.SortOrder
   expiresAt?: Prisma.SortOrder
   createdForId?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  id?: Prisma.SortOrder
+  createdForEmail?: Prisma.SortOrder
 }
 
 export type NonceRequestMaxOrderByAggregateInput = {
-  id?: Prisma.SortOrder
   expiresAt?: Prisma.SortOrder
   createdForId?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  id?: Prisma.SortOrder
+  createdForEmail?: Prisma.SortOrder
 }
 
 export type NonceRequestMinOrderByAggregateInput = {
-  id?: Prisma.SortOrder
   expiresAt?: Prisma.SortOrder
   createdForId?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  id?: Prisma.SortOrder
+  createdForEmail?: Prisma.SortOrder
 }
 
 export type NonceRequestCreateNestedManyWithoutCreatedForInput = {
@@ -349,15 +371,17 @@ export type EnumNonceRequestStatusFieldUpdateOperationsInput = {
 }
 
 export type NonceRequestCreateWithoutCreatedForInput = {
-  id?: string
   expiresAt: Date | string
   status?: $Enums.NonceRequestStatus
+  id?: string
+  createdForEmail?: string | null
 }
 
 export type NonceRequestUncheckedCreateWithoutCreatedForInput = {
-  id?: string
   expiresAt: Date | string
   status?: $Enums.NonceRequestStatus
+  id?: string
+  createdForEmail?: string | null
 }
 
 export type NonceRequestCreateOrConnectWithoutCreatedForInput = {
@@ -390,70 +414,79 @@ export type NonceRequestScalarWhereInput = {
   AND?: Prisma.NonceRequestScalarWhereInput | Prisma.NonceRequestScalarWhereInput[]
   OR?: Prisma.NonceRequestScalarWhereInput[]
   NOT?: Prisma.NonceRequestScalarWhereInput | Prisma.NonceRequestScalarWhereInput[]
-  id?: Prisma.UuidFilter<"NonceRequest"> | string
   expiresAt?: Prisma.DateTimeFilter<"NonceRequest"> | Date | string
   createdForId?: Prisma.StringNullableFilter<"NonceRequest"> | string | null
   status?: Prisma.EnumNonceRequestStatusFilter<"NonceRequest"> | $Enums.NonceRequestStatus
+  id?: Prisma.UuidFilter<"NonceRequest"> | string
+  createdForEmail?: Prisma.StringNullableFilter<"NonceRequest"> | string | null
 }
 
 export type NonceRequestCreateManyCreatedForInput = {
-  id?: string
   expiresAt: Date | string
   status?: $Enums.NonceRequestStatus
+  id?: string
+  createdForEmail?: string | null
 }
 
 export type NonceRequestUpdateWithoutCreatedForInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   status?: Prisma.EnumNonceRequestStatusFieldUpdateOperationsInput | $Enums.NonceRequestStatus
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  createdForEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type NonceRequestUncheckedUpdateWithoutCreatedForInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   status?: Prisma.EnumNonceRequestStatusFieldUpdateOperationsInput | $Enums.NonceRequestStatus
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  createdForEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type NonceRequestUncheckedUpdateManyWithoutCreatedForInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   status?: Prisma.EnumNonceRequestStatusFieldUpdateOperationsInput | $Enums.NonceRequestStatus
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  createdForEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 
 
 export type NonceRequestSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
-  id?: boolean
   expiresAt?: boolean
   createdForId?: boolean
   status?: boolean
+  id?: boolean
+  createdForEmail?: boolean
   createdFor?: boolean | Prisma.NonceRequest$createdForArgs<ExtArgs>
 }, ExtArgs["result"]["nonceRequest"]>
 
 export type NonceRequestSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
-  id?: boolean
   expiresAt?: boolean
   createdForId?: boolean
   status?: boolean
+  id?: boolean
+  createdForEmail?: boolean
   createdFor?: boolean | Prisma.NonceRequest$createdForArgs<ExtArgs>
 }, ExtArgs["result"]["nonceRequest"]>
 
 export type NonceRequestSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
-  id?: boolean
   expiresAt?: boolean
   createdForId?: boolean
   status?: boolean
+  id?: boolean
+  createdForEmail?: boolean
   createdFor?: boolean | Prisma.NonceRequest$createdForArgs<ExtArgs>
 }, ExtArgs["result"]["nonceRequest"]>
 
 export type NonceRequestSelectScalar = {
-  id?: boolean
   expiresAt?: boolean
   createdForId?: boolean
   status?: boolean
+  id?: boolean
+  createdForEmail?: boolean
 }
 
-export type NonceRequestOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "expiresAt" | "createdForId" | "status", ExtArgs["result"]["nonceRequest"]>
+export type NonceRequestOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"expiresAt" | "createdForId" | "status" | "id" | "createdForEmail", ExtArgs["result"]["nonceRequest"]>
 export type NonceRequestInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   createdFor?: boolean | Prisma.NonceRequest$createdForArgs<ExtArgs>
 }
@@ -470,10 +503,11 @@ export type $NonceRequestPayload<ExtArgs extends runtime.Types.Extensions.Intern
     createdFor: Prisma.$ViewerPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
-    id: string
     expiresAt: Date
     createdForId: string | null
     status: $Enums.NonceRequestStatus
+    id: string
+    createdForEmail: string | null
   }, ExtArgs["result"]["nonceRequest"]>
   composites: {}
 }
@@ -557,8 +591,8 @@ export interface NonceRequestDelegate<ExtArgs extends runtime.Types.Extensions.I
    * // Get first 10 NonceRequests
    * const nonceRequests = await prisma.nonceRequest.findMany({ take: 10 })
    * 
-   * // Only select the `id`
-   * const nonceRequestWithIdOnly = await prisma.nonceRequest.findMany({ select: { id: true } })
+   * // Only select the `expiresAt`
+   * const nonceRequestWithExpiresAtOnly = await prisma.nonceRequest.findMany({ select: { expiresAt: true } })
    * 
    */
   findMany<T extends NonceRequestFindManyArgs>(args?: Prisma.SelectSubset<T, NonceRequestFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NonceRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
@@ -602,9 +636,9 @@ export interface NonceRequestDelegate<ExtArgs extends runtime.Types.Extensions.I
    *   ]
    * })
    * 
-   * // Create many NonceRequests and only return the `id`
-   * const nonceRequestWithIdOnly = await prisma.nonceRequest.createManyAndReturn({
-   *   select: { id: true },
+   * // Create many NonceRequests and only return the `expiresAt`
+   * const nonceRequestWithExpiresAtOnly = await prisma.nonceRequest.createManyAndReturn({
+   *   select: { expiresAt: true },
    *   data: [
    *     // ... provide data here
    *   ]
@@ -693,9 +727,9 @@ export interface NonceRequestDelegate<ExtArgs extends runtime.Types.Extensions.I
    *   ]
    * })
    * 
-   * // Update zero or more NonceRequests and only return the `id`
-   * const nonceRequestWithIdOnly = await prisma.nonceRequest.updateManyAndReturn({
-   *   select: { id: true },
+   * // Update zero or more NonceRequests and only return the `expiresAt`
+   * const nonceRequestWithExpiresAtOnly = await prisma.nonceRequest.updateManyAndReturn({
+   *   select: { expiresAt: true },
    *   where: {
    *     // ... provide filter here
    *   },
@@ -898,10 +932,11 @@ export interface Prisma__NonceRequestClient<T, Null = never, ExtArgs extends run
  * Fields of the NonceRequest model
  */
 export interface NonceRequestFieldRefs {
-  readonly id: Prisma.FieldRef<"NonceRequest", 'String'>
   readonly expiresAt: Prisma.FieldRef<"NonceRequest", 'DateTime'>
   readonly createdForId: Prisma.FieldRef<"NonceRequest", 'String'>
   readonly status: Prisma.FieldRef<"NonceRequest", 'NonceRequestStatus'>
+  readonly id: Prisma.FieldRef<"NonceRequest", 'String'>
+  readonly createdForEmail: Prisma.FieldRef<"NonceRequest", 'String'>
 }
     
 

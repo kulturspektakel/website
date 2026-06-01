@@ -1,11 +1,18 @@
 generator client {
   provider        = "prisma-client"
-  output          = "../src/generated/prisma"
-  previewFeatures = ["fullTextSearchPostgres"]
+  output          = "../types/prisma"
+  previewFeatures = ["fullTextSearchPostgres", "postgresqlExtensions"]
+}
+
+generator pothos {
+  provider     = "prisma-pothos-types"
+  output       = "../types/pothos.ts"
+  clientOutput = "./prisma"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider   = "postgresql"
+  extensions = [citext, pg_trgm, pgcrypto, unaccent, uuid_ossp(map: "uuid-ossp", schema: "public")]
 }
 
 model Viewer {
@@ -19,11 +26,11 @@ model Viewer {
   BandApplication        BandApplication[]
   BandApplicationComment BandApplicationComment[]
   BandApplicationRating  BandApplicationRating[]
-  Nonce                  Nonce[]
-  ViewerLocation         ViewerLocation[]
-  NonceRequest           NonceRequest[]
   BandApplicationTag     BandApplicationTag[]
   CrewCard               CrewCard[]
+  Nonce                  Nonce[]
+  NonceRequest           NonceRequest[]
+  ViewerLocation         ViewerLocation[]
 }
 
 model Area {
@@ -47,11 +54,11 @@ model AreaOpeningHour {
 
 model Page {
   slug    String  @id
-  title   String
   content String?
   left    String?
   right   String?
   bottom  String?
+  title   String
 }
 
 model ProductList {
@@ -60,10 +67,10 @@ model ProductList {
   emoji       String?
   active      Boolean     @default(true)
   updatedAt   DateTime?
+  description String?
   Device      Device[]
   OrderItem   OrderItem[]
   product     Product[]
-  description String?
 }
 
 model Product {
@@ -74,13 +81,13 @@ model Product {
   productListId   Int
   requiresDeposit Boolean            @default(false)
   productList     ProductList        @relation(fields: [productListId], references: [id])
-  additives       ProductAdditives[]
+  additives       ProductAdditives[] @relation("ProductToProductAdditives")
 }
 
 model ProductAdditives {
   id          String    @id
   displayName String
-  Product     Product[]
+  Product     Product[] @relation("ProductToProductAdditives")
 }
 
 model Device {
@@ -90,9 +97,10 @@ model Device {
   softwareVersion String?
   type            DeviceType
   productList     ProductList?     @relation(fields: [productListId], references: [id])
-  Order           Order[]
+  DeviceLocation  DeviceLocation[]
   DeviceLog       DeviceLog[]
-  deviceLocations DeviceLocation[]
+  Order           Order[]
+  noiseLogs       NoiseLog[]
 }
 
 model Order {
@@ -101,12 +109,11 @@ model Order {
   payment         OrderPayment
   deposit         Int               @default(0)
   deviceId        String?
+  crewCardId      Bytes?
+  CardTransaction CardTransaction[]
+  crewCard        CrewCard?         @relation(fields: [crewCardId], references: [id])
   device          Device?           @relation(fields: [deviceId], references: [id])
   items           OrderItem[]
-  CardTransaction CardTransaction[]
-
-  crewCardId Bytes?
-  crewCard   CrewCard? @relation(fields: [crewCardId], references: [id])
 }
 
 model OrderItem {
@@ -129,34 +136,33 @@ model CardTransaction {
   balanceBefore   Int
   balanceAfter    Int
   transactionType CardTransactionType
-
-  counter   Int?
-  deviceLog DeviceLog @relation(fields: [clientId], references: [clientId])
-  Order     Order?    @relation(fields: [orderId], references: [id])
-  orderId   Int?
+  counter         Int?
+  orderId         Int?
+  deviceLog       DeviceLog           @relation(fields: [clientId], references: [clientId])
+  Order           Order?              @relation(fields: [orderId], references: [id])
 }
 
 model CrewCard {
   id         Bytes    @id
-  validUntil DateTime
   nickname   String?
   suspended  Boolean?
   privileged Boolean?
   viewerId   String?
+  validUntil DateTime
+  enrolledAt DateTime
   viewer     Viewer?  @relation(fields: [viewerId], references: [id])
   Order      Order[]
-  enrolledAt DateTime
 }
 
 model DeviceLog {
-  clientId        String            @id
+  clientId        String           @id
   batteryVoltage  Int?
   usbVoltage      Int?
   deviceId        String
-  createdAt       DateTime          @default(now())
+  createdAt       DateTime         @default(now())
   deviceTime      DateTime
-  device          Device            @relation(fields: [deviceId], references: [id])
-  CardTransaction CardTransaction[]
+  CardTransaction CardTransaction?
+  device          Device           @relation(fields: [deviceId], references: [id])
 }
 
 model BandApplication {
@@ -190,24 +196,23 @@ model BandApplication {
   demoEmbedUrl            String?
   demoEmbed               String?
   demoEmbedType           DemoEmbedType?
+  repertoire              BandRepertoire?
+  spotifyArtist           String?
+  spotifyMonthlyListeners Int?
   contactedByViewer       Viewer?                  @relation(fields: [contactedByViewerId], references: [id])
   event                   Event                    @relation(fields: [eventId], references: [id])
   bandApplicationComment  BandApplicationComment[]
   bandApplicationRating   BandApplicationRating[]
-  spotifyArtist           String?
-  spotifyMonthlyListeners Int?
-  repertoire              BandRepertoire?
   BandApplicationTag      BandApplicationTag[]
 }
 
 model BandApplicationTag {
-  bandApplicationId String   @db.Uuid
-  tag               String   @db.Citext
-  createdAt         DateTime @default(now())
+  bandApplicationId String          @db.Uuid
+  tag               String          @db.Citext
+  createdAt         DateTime        @default(now())
   createdByViewerId String
-
-  bandApplication BandApplication @relation(fields: [bandApplicationId], references: [id])
-  createdByViewer Viewer          @relation(fields: [createdByViewerId], references: [id])
+  bandApplication   BandApplication @relation(fields: [bandApplicationId], references: [id])
+  createdByViewer   Viewer          @relation(fields: [createdByViewerId], references: [id])
 
   @@unique([bandApplicationId, tag])
 }
@@ -240,21 +245,20 @@ model Event {
   end                    DateTime
   eventType              EventType
   bandApplicationStart   DateTime?
-  djApplicationStart     DateTime?
   bandApplicationEnd     DateTime?
   djApplicationEnd       DateTime?
   poster                 String?           @db.Uuid
   description            String?
+  djApplicationStart     DateTime?
+  latitude               Float?
+  location               String?
+  longitude              Float?
+  lineupAnnouncementTime DateTime?
   bandApplication        BandApplication[]
   BandPlaying            BandPlaying[]
-  location               String?
-  lineupAnnouncementTime DateTime?
-  latitude               Float?
-  longitude              Float?
 }
 
 model BandPlaying {
-  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name              String
   startTime         DateTime
   endTime           DateTime
@@ -263,8 +267,6 @@ model BandPlaying {
   genre             String?
   instagram         String?
   spotify           String?
-  spotifyTrackId    String?
-  spotifyPreviewUrl String?
   facebook          String?
   website           String?
   youtube           String?
@@ -273,9 +275,12 @@ model BandPlaying {
   eventId           String
   slug              String
   photo             String?   @db.Uuid
+  announcementTime  DateTime?
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  spotifyTrackId    String?
+  spotifyPreviewUrl String?
   area              Area      @relation(fields: [areaId], references: [id])
   event             Event     @relation(fields: [eventId], references: [id])
-  announcementTime  DateTime?
 
   @@unique([areaId, startTime])
   @@unique([eventId, slug])
@@ -289,11 +294,12 @@ model Nonce {
 }
 
 model NonceRequest {
-  id           String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  expiresAt    DateTime
-  createdForId String?
-  createdFor   Viewer?            @relation(fields: [createdForId], references: [id])
-  status       NonceRequestStatus @default(Pending)
+  expiresAt       DateTime
+  createdForId    String?
+  status          NonceRequestStatus @default(Pending)
+  id              String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdForEmail String?
+  createdFor      Viewer?            @relation(fields: [createdForId], references: [id])
 }
 
 model GmailReminders {
@@ -310,12 +316,6 @@ model DeviceConfigVersion {
   crc32     Int      @unique
   version   Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
-}
-
-enum NonceRequestStatus {
-  Pending
-  Approved
-  Rejected
 }
 
 model News {
@@ -343,11 +343,11 @@ model ItemLocation {
 model ViewerLocation {
   id        String   @id @default(cuid())
   viewerId  String
-  viewer    Viewer   @relation(fields: [viewerId], references: [id])
   createdAt DateTime
   latitude  Float
   longitude Float
   payload   Json
+  viewer    Viewer   @relation(fields: [viewerId], references: [id])
 }
 
 model ShortDomainRedirect {
@@ -356,23 +356,57 @@ model ShortDomainRedirect {
 }
 
 model Donation {
-  id                 String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   amount             Int
   createdAt          DateTime       @default(now())
   email              String?
-  name               String? // publicily visisble name
+  name               String?
+  reference          String?
+  source             DonationSource
+  message            String?
   namePrivate        String?
   sentConfirmationAt DateTime?
+  id                 String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   spendenQuittungAt  DateTime?
-  message            String?
-  reference          String? // stripe ID
-  source             DonationSource
+  quittungCity       String?
   quittungName       String?
   quittungStreet     String?
-  quittungCity       String?
   amountPins         Int?
 
   @@index([reference])
+}
+
+model DeviceLocation {
+  id           String   @id
+  deviceId     String
+  createdAt    DateTime
+  latitude     Float?
+  longitude    Float?
+  locationName String
+  Device       Device   @relation(fields: [deviceId], references: [id])
+}
+
+// One row per protobuf `Record` (one measurement per second).
+model NoiseLog {
+  id         String   @id @default(cuid())
+  deviceId   String
+  device     Device   @relation(fields: [deviceId], references: [id])
+  measuredAt DateTime // derived per record from upload time + seqNo offset (gap-aware)
+
+  // 31 bands, one uint8 byte each; (dB - 20) * 2 per band
+  bands     Bytes
+  laeq_1s   Int   @db.SmallInt // same encoding as bands (uint8 on wire via int_size:IS_8)
+  lceq_1s   Int   @db.SmallInt // C-weighted, per-bin
+  lafmax_1s Int   @db.SmallInt // max A-weighted FFT energy in the second
+  lcfmax_1s Int   @db.SmallInt // max C-weighted FFT energy in the second
+  lcpeak_1s Int   @db.SmallInt // unweighted abs sample peak (v1 approximation)
+
+  @@unique([deviceId, measuredAt])
+}
+
+enum NonceRequestStatus {
+  Pending
+  Approved
+  Rejected
 }
 
 enum DonationSource {
@@ -457,14 +491,4 @@ enum BandRepertoire {
   MostlyOwnSongs
   MostlyCoverSongs
   ExclusivelyCoverSongs
-}
-
-model DeviceLocation {
-  id           String   @id @default(cuid())
-  deviceId     String
-  device       Device   @relation(fields: [deviceId], references: [id])
-  createdAt    DateTime
-  latitude     Float?
-  longitude    Float?
-  locationName String
 }

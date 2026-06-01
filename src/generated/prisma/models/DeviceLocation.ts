@@ -228,7 +228,7 @@ export type DeviceLocationWhereInput = {
   latitude?: Prisma.FloatNullableFilter<"DeviceLocation"> | number | null
   longitude?: Prisma.FloatNullableFilter<"DeviceLocation"> | number | null
   locationName?: Prisma.StringFilter<"DeviceLocation"> | string
-  device?: Prisma.XOR<Prisma.DeviceScalarRelationFilter, Prisma.DeviceWhereInput>
+  Device?: Prisma.XOR<Prisma.DeviceScalarRelationFilter, Prisma.DeviceWhereInput>
 }
 
 export type DeviceLocationOrderByWithRelationInput = {
@@ -238,7 +238,7 @@ export type DeviceLocationOrderByWithRelationInput = {
   latitude?: Prisma.SortOrderInput | Prisma.SortOrder
   longitude?: Prisma.SortOrderInput | Prisma.SortOrder
   locationName?: Prisma.SortOrder
-  device?: Prisma.DeviceOrderByWithRelationInput
+  Device?: Prisma.DeviceOrderByWithRelationInput
   _relevance?: Prisma.DeviceLocationOrderByRelevanceInput
 }
 
@@ -252,7 +252,7 @@ export type DeviceLocationWhereUniqueInput = Prisma.AtLeast<{
   latitude?: Prisma.FloatNullableFilter<"DeviceLocation"> | number | null
   longitude?: Prisma.FloatNullableFilter<"DeviceLocation"> | number | null
   locationName?: Prisma.StringFilter<"DeviceLocation"> | string
-  device?: Prisma.XOR<Prisma.DeviceScalarRelationFilter, Prisma.DeviceWhereInput>
+  Device?: Prisma.XOR<Prisma.DeviceScalarRelationFilter, Prisma.DeviceWhereInput>
 }, "id">
 
 export type DeviceLocationOrderByWithAggregationInput = {
@@ -282,16 +282,16 @@ export type DeviceLocationScalarWhereWithAggregatesInput = {
 }
 
 export type DeviceLocationCreateInput = {
-  id?: string
+  id: string
   createdAt: Date | string
   latitude?: number | null
   longitude?: number | null
   locationName: string
-  device: Prisma.DeviceCreateNestedOneWithoutDeviceLocationsInput
+  Device: Prisma.DeviceCreateNestedOneWithoutDeviceLocationInput
 }
 
 export type DeviceLocationUncheckedCreateInput = {
-  id?: string
+  id: string
   deviceId: string
   createdAt: Date | string
   latitude?: number | null
@@ -305,7 +305,7 @@ export type DeviceLocationUpdateInput = {
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   locationName?: Prisma.StringFieldUpdateOperationsInput | string
-  device?: Prisma.DeviceUpdateOneRequiredWithoutDeviceLocationsNestedInput
+  Device?: Prisma.DeviceUpdateOneRequiredWithoutDeviceLocationNestedInput
 }
 
 export type DeviceLocationUncheckedUpdateInput = {
@@ -318,7 +318,7 @@ export type DeviceLocationUncheckedUpdateInput = {
 }
 
 export type DeviceLocationCreateManyInput = {
-  id?: string
+  id: string
   deviceId: string
   createdAt: Date | string
   latitude?: number | null
@@ -439,7 +439,7 @@ export type DeviceLocationUncheckedUpdateManyWithoutDeviceNestedInput = {
 }
 
 export type DeviceLocationCreateWithoutDeviceInput = {
-  id?: string
+  id: string
   createdAt: Date | string
   latitude?: number | null
   longitude?: number | null
@@ -447,7 +447,7 @@ export type DeviceLocationCreateWithoutDeviceInput = {
 }
 
 export type DeviceLocationUncheckedCreateWithoutDeviceInput = {
-  id?: string
+  id: string
   createdAt: Date | string
   latitude?: number | null
   longitude?: number | null
@@ -493,7 +493,7 @@ export type DeviceLocationScalarWhereInput = {
 }
 
 export type DeviceLocationCreateManyDeviceInput = {
-  id?: string
+  id: string
   createdAt: Date | string
   latitude?: number | null
   longitude?: number | null
@@ -533,7 +533,7 @@ export type DeviceLocationSelect<ExtArgs extends runtime.Types.Extensions.Intern
   latitude?: boolean
   longitude?: boolean
   locationName?: boolean
-  device?: boolean | Prisma.DeviceDefaultArgs<ExtArgs>
+  Device?: boolean | Prisma.DeviceDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["deviceLocation"]>
 
 export type DeviceLocationSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -543,7 +543,7 @@ export type DeviceLocationSelectCreateManyAndReturn<ExtArgs extends runtime.Type
   latitude?: boolean
   longitude?: boolean
   locationName?: boolean
-  device?: boolean | Prisma.DeviceDefaultArgs<ExtArgs>
+  Device?: boolean | Prisma.DeviceDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["deviceLocation"]>
 
 export type DeviceLocationSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -553,7 +553,7 @@ export type DeviceLocationSelectUpdateManyAndReturn<ExtArgs extends runtime.Type
   latitude?: boolean
   longitude?: boolean
   locationName?: boolean
-  device?: boolean | Prisma.DeviceDefaultArgs<ExtArgs>
+  Device?: boolean | Prisma.DeviceDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["deviceLocation"]>
 
 export type DeviceLocationSelectScalar = {
@@ -567,19 +567,19 @@ export type DeviceLocationSelectScalar = {
 
 export type DeviceLocationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "deviceId" | "createdAt" | "latitude" | "longitude" | "locationName", ExtArgs["result"]["deviceLocation"]>
 export type DeviceLocationInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  device?: boolean | Prisma.DeviceDefaultArgs<ExtArgs>
+  Device?: boolean | Prisma.DeviceDefaultArgs<ExtArgs>
 }
 export type DeviceLocationIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  device?: boolean | Prisma.DeviceDefaultArgs<ExtArgs>
+  Device?: boolean | Prisma.DeviceDefaultArgs<ExtArgs>
 }
 export type DeviceLocationIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  device?: boolean | Prisma.DeviceDefaultArgs<ExtArgs>
+  Device?: boolean | Prisma.DeviceDefaultArgs<ExtArgs>
 }
 
 export type $DeviceLocationPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "DeviceLocation"
   objects: {
-    device: Prisma.$DevicePayload<ExtArgs>
+    Device: Prisma.$DevicePayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -982,7 +982,7 @@ readonly fields: DeviceLocationFieldRefs;
  */
 export interface Prisma__DeviceLocationClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  device<T extends Prisma.DeviceDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.DeviceDefaultArgs<ExtArgs>>): Prisma.Prisma__DeviceClient<runtime.Types.Result.GetResult<Prisma.$DevicePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  Device<T extends Prisma.DeviceDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.DeviceDefaultArgs<ExtArgs>>): Prisma.Prisma__DeviceClient<runtime.Types.Result.GetResult<Prisma.$DevicePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.

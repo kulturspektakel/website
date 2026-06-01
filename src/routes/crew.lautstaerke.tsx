@@ -75,8 +75,8 @@ function LautstaerkeLayout() {
         [deviceName]: {
           lastSeen: receiveTime,
           latest: record,
-          laeq15m: decoded.laeq15m,
-          lceq15m: decoded.lceq15m,
+          laeq5m: decoded.laeq5m ?? null,
+          lceq5m: decoded.lceq5m ?? null,
           batteryMv: decoded.batteryMv,
         },
       }));
@@ -94,7 +94,7 @@ function LautstaerkeLayout() {
       const minTs = Date.now() / 1000 - WINDOW_S;
       for (const data of Object.values(deviceDataRef.current)) {
         let cutoff = 0;
-        while (cutoff < data[0].length && data[0][cutoff] < minTs) cutoff++;
+        while (cutoff < data[0].length && data[0][cutoff]! < minTs) cutoff++;
         if (cutoff > 0) for (const col of data) col.splice(0, cutoff);
       }
     }, 1000);

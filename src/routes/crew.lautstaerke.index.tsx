@@ -92,7 +92,9 @@ function DeviceList() {
                         color="gray.500"
                         lineHeight="1"
                       >
-                        {decodeDb(state.laeq15m).toFixed(1)} dB(A) 15m
+                        {state.laeq5m == null
+                          ? '— dB(A) 5m'
+                          : `${decodeDb(state.laeq5m).toFixed(1)} dB(A) 5m`}
                       </Text>
                     </VStack>
                   </HStack>

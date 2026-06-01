@@ -81,7 +81,8 @@ export const ModelName = {
   ViewerLocation: 'ViewerLocation',
   ShortDomainRedirect: 'ShortDomainRedirect',
   Donation: 'Donation',
-  DeviceLocation: 'DeviceLocation'
+  DeviceLocation: 'DeviceLocation',
+  NoiseLog: 'NoiseLog'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -137,11 +138,11 @@ export type AreaOpeningHourScalarFieldEnum = (typeof AreaOpeningHourScalarFieldE
 
 export const PageScalarFieldEnum = {
   slug: 'slug',
-  title: 'title',
   content: 'content',
   left: 'left',
   right: 'right',
-  bottom: 'bottom'
+  bottom: 'bottom',
+  title: 'title'
 } as const
 
 export type PageScalarFieldEnum = (typeof PageScalarFieldEnum)[keyof typeof PageScalarFieldEnum]
@@ -232,11 +233,11 @@ export type CardTransactionScalarFieldEnum = (typeof CardTransactionScalarFieldE
 
 export const CrewCardScalarFieldEnum = {
   id: 'id',
-  validUntil: 'validUntil',
   nickname: 'nickname',
   suspended: 'suspended',
   privileged: 'privileged',
   viewerId: 'viewerId',
+  validUntil: 'validUntil',
   enrolledAt: 'enrolledAt'
 } as const
 
@@ -286,9 +287,9 @@ export const BandApplicationScalarFieldEnum = {
   demoEmbedUrl: 'demoEmbedUrl',
   demoEmbed: 'demoEmbed',
   demoEmbedType: 'demoEmbedType',
+  repertoire: 'repertoire',
   spotifyArtist: 'spotifyArtist',
-  spotifyMonthlyListeners: 'spotifyMonthlyListeners',
-  repertoire: 'repertoire'
+  spotifyMonthlyListeners: 'spotifyMonthlyListeners'
 } as const
 
 export type BandApplicationScalarFieldEnum = (typeof BandApplicationScalarFieldEnum)[keyof typeof BandApplicationScalarFieldEnum]
@@ -331,22 +332,21 @@ export const EventScalarFieldEnum = {
   end: 'end',
   eventType: 'eventType',
   bandApplicationStart: 'bandApplicationStart',
-  djApplicationStart: 'djApplicationStart',
   bandApplicationEnd: 'bandApplicationEnd',
   djApplicationEnd: 'djApplicationEnd',
   poster: 'poster',
   description: 'description',
-  location: 'location',
-  lineupAnnouncementTime: 'lineupAnnouncementTime',
+  djApplicationStart: 'djApplicationStart',
   latitude: 'latitude',
-  longitude: 'longitude'
+  location: 'location',
+  longitude: 'longitude',
+  lineupAnnouncementTime: 'lineupAnnouncementTime'
 } as const
 
 export type EventScalarFieldEnum = (typeof EventScalarFieldEnum)[keyof typeof EventScalarFieldEnum]
 
 
 export const BandPlayingScalarFieldEnum = {
-  id: 'id',
   name: 'name',
   startTime: 'startTime',
   endTime: 'endTime',
@@ -355,8 +355,6 @@ export const BandPlayingScalarFieldEnum = {
   genre: 'genre',
   instagram: 'instagram',
   spotify: 'spotify',
-  spotifyTrackId: 'spotifyTrackId',
-  spotifyPreviewUrl: 'spotifyPreviewUrl',
   facebook: 'facebook',
   website: 'website',
   youtube: 'youtube',
@@ -364,7 +362,11 @@ export const BandPlayingScalarFieldEnum = {
   areaId: 'areaId',
   eventId: 'eventId',
   slug: 'slug',
-  photo: 'photo'
+  photo: 'photo',
+  announcementTime: 'announcementTime',
+  id: 'id',
+  spotifyTrackId: 'spotifyTrackId',
+  spotifyPreviewUrl: 'spotifyPreviewUrl'
 } as const
 
 export type BandPlayingScalarFieldEnum = (typeof BandPlayingScalarFieldEnum)[keyof typeof BandPlayingScalarFieldEnum]
@@ -380,10 +382,11 @@ export type NonceScalarFieldEnum = (typeof NonceScalarFieldEnum)[keyof typeof No
 
 
 export const NonceRequestScalarFieldEnum = {
-  id: 'id',
   expiresAt: 'expiresAt',
   createdForId: 'createdForId',
-  status: 'status'
+  status: 'status',
+  id: 'id',
+  createdForEmail: 'createdForEmail'
 } as const
 
 export type NonceRequestScalarFieldEnum = (typeof NonceRequestScalarFieldEnum)[keyof typeof NonceRequestScalarFieldEnum]
@@ -464,20 +467,20 @@ export type ShortDomainRedirectScalarFieldEnum = (typeof ShortDomainRedirectScal
 
 
 export const DonationScalarFieldEnum = {
-  id: 'id',
   amount: 'amount',
   createdAt: 'createdAt',
   email: 'email',
   name: 'name',
-  namePrivate: 'namePrivate',
-  sentConfirmationAt: 'sentConfirmationAt',
-  spendenQuittungAt: 'spendenQuittungAt',
-  message: 'message',
   reference: 'reference',
   source: 'source',
+  message: 'message',
+  namePrivate: 'namePrivate',
+  sentConfirmationAt: 'sentConfirmationAt',
+  id: 'id',
+  spendenQuittungAt: 'spendenQuittungAt',
+  quittungCity: 'quittungCity',
   quittungName: 'quittungName',
   quittungStreet: 'quittungStreet',
-  quittungCity: 'quittungCity',
   amountPins: 'amountPins'
 } as const
 
@@ -494,6 +497,21 @@ export const DeviceLocationScalarFieldEnum = {
 } as const
 
 export type DeviceLocationScalarFieldEnum = (typeof DeviceLocationScalarFieldEnum)[keyof typeof DeviceLocationScalarFieldEnum]
+
+
+export const NoiseLogScalarFieldEnum = {
+  id: 'id',
+  deviceId: 'deviceId',
+  measuredAt: 'measuredAt',
+  bands: 'bands',
+  laeq_1s: 'laeq_1s',
+  lceq_1s: 'lceq_1s',
+  lafmax_1s: 'lafmax_1s',
+  lcfmax_1s: 'lcfmax_1s',
+  lcpeak_1s: 'lcpeak_1s'
+} as const
+
+export type NoiseLogScalarFieldEnum = (typeof NoiseLogScalarFieldEnum)[keyof typeof NoiseLogScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -557,11 +575,11 @@ export type AreaOpeningHourOrderByRelevanceFieldEnum = (typeof AreaOpeningHourOr
 
 export const PageOrderByRelevanceFieldEnum = {
   slug: 'slug',
-  title: 'title',
   content: 'content',
   left: 'left',
   right: 'right',
-  bottom: 'bottom'
+  bottom: 'bottom',
+  title: 'title'
 } as const
 
 export type PageOrderByRelevanceFieldEnum = (typeof PageOrderByRelevanceFieldEnum)[keyof typeof PageOrderByRelevanceFieldEnum]
@@ -701,15 +719,12 @@ export type EventOrderByRelevanceFieldEnum = (typeof EventOrderByRelevanceFieldE
 
 
 export const BandPlayingOrderByRelevanceFieldEnum = {
-  id: 'id',
   name: 'name',
   description: 'description',
   shortDescription: 'shortDescription',
   genre: 'genre',
   instagram: 'instagram',
   spotify: 'spotify',
-  spotifyTrackId: 'spotifyTrackId',
-  spotifyPreviewUrl: 'spotifyPreviewUrl',
   facebook: 'facebook',
   website: 'website',
   youtube: 'youtube',
@@ -717,7 +732,10 @@ export const BandPlayingOrderByRelevanceFieldEnum = {
   areaId: 'areaId',
   eventId: 'eventId',
   slug: 'slug',
-  photo: 'photo'
+  photo: 'photo',
+  id: 'id',
+  spotifyTrackId: 'spotifyTrackId',
+  spotifyPreviewUrl: 'spotifyPreviewUrl'
 } as const
 
 export type BandPlayingOrderByRelevanceFieldEnum = (typeof BandPlayingOrderByRelevanceFieldEnum)[keyof typeof BandPlayingOrderByRelevanceFieldEnum]
@@ -732,8 +750,9 @@ export type NonceOrderByRelevanceFieldEnum = (typeof NonceOrderByRelevanceFieldE
 
 
 export const NonceRequestOrderByRelevanceFieldEnum = {
+  createdForId: 'createdForId',
   id: 'id',
-  createdForId: 'createdForId'
+  createdForEmail: 'createdForEmail'
 } as const
 
 export type NonceRequestOrderByRelevanceFieldEnum = (typeof NonceRequestOrderByRelevanceFieldEnum)[keyof typeof NonceRequestOrderByRelevanceFieldEnum]
@@ -798,15 +817,15 @@ export type ShortDomainRedirectOrderByRelevanceFieldEnum = (typeof ShortDomainRe
 
 
 export const DonationOrderByRelevanceFieldEnum = {
-  id: 'id',
   email: 'email',
   name: 'name',
-  namePrivate: 'namePrivate',
-  message: 'message',
   reference: 'reference',
+  message: 'message',
+  namePrivate: 'namePrivate',
+  id: 'id',
+  quittungCity: 'quittungCity',
   quittungName: 'quittungName',
-  quittungStreet: 'quittungStreet',
-  quittungCity: 'quittungCity'
+  quittungStreet: 'quittungStreet'
 } as const
 
 export type DonationOrderByRelevanceFieldEnum = (typeof DonationOrderByRelevanceFieldEnum)[keyof typeof DonationOrderByRelevanceFieldEnum]
@@ -819,4 +838,12 @@ export const DeviceLocationOrderByRelevanceFieldEnum = {
 } as const
 
 export type DeviceLocationOrderByRelevanceFieldEnum = (typeof DeviceLocationOrderByRelevanceFieldEnum)[keyof typeof DeviceLocationOrderByRelevanceFieldEnum]
+
+
+export const NoiseLogOrderByRelevanceFieldEnum = {
+  id: 'id',
+  deviceId: 'deviceId'
+} as const
+
+export type NoiseLogOrderByRelevanceFieldEnum = (typeof NoiseLogOrderByRelevanceFieldEnum)[keyof typeof NoiseLogOrderByRelevanceFieldEnum]
 

@@ -1,0 +1,6 @@
+syntax = "proto3";
+
+message Product {
+  string name = 1;
+  int32 price = 2;
+}

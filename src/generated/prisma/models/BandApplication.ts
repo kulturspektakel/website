@@ -79,9 +79,9 @@ export type BandApplicationMinAggregateOutputType = {
   demoEmbedUrl: string | null
   demoEmbed: string | null
   demoEmbedType: $Enums.DemoEmbedType | null
+  repertoire: $Enums.BandRepertoire | null
   spotifyArtist: string | null
   spotifyMonthlyListeners: number | null
-  repertoire: $Enums.BandRepertoire | null
 }
 
 export type BandApplicationMaxAggregateOutputType = {
@@ -115,9 +115,9 @@ export type BandApplicationMaxAggregateOutputType = {
   demoEmbedUrl: string | null
   demoEmbed: string | null
   demoEmbedType: $Enums.DemoEmbedType | null
+  repertoire: $Enums.BandRepertoire | null
   spotifyArtist: string | null
   spotifyMonthlyListeners: number | null
-  repertoire: $Enums.BandRepertoire | null
 }
 
 export type BandApplicationCountAggregateOutputType = {
@@ -151,9 +151,9 @@ export type BandApplicationCountAggregateOutputType = {
   demoEmbedUrl: number
   demoEmbed: number
   demoEmbedType: number
+  repertoire: number
   spotifyArtist: number
   spotifyMonthlyListeners: number
-  repertoire: number
   _all: number
 }
 
@@ -211,9 +211,9 @@ export type BandApplicationMinAggregateInputType = {
   demoEmbedUrl?: true
   demoEmbed?: true
   demoEmbedType?: true
+  repertoire?: true
   spotifyArtist?: true
   spotifyMonthlyListeners?: true
-  repertoire?: true
 }
 
 export type BandApplicationMaxAggregateInputType = {
@@ -247,9 +247,9 @@ export type BandApplicationMaxAggregateInputType = {
   demoEmbedUrl?: true
   demoEmbed?: true
   demoEmbedType?: true
+  repertoire?: true
   spotifyArtist?: true
   spotifyMonthlyListeners?: true
-  repertoire?: true
 }
 
 export type BandApplicationCountAggregateInputType = {
@@ -283,9 +283,9 @@ export type BandApplicationCountAggregateInputType = {
   demoEmbedUrl?: true
   demoEmbed?: true
   demoEmbedType?: true
+  repertoire?: true
   spotifyArtist?: true
   spotifyMonthlyListeners?: true
-  repertoire?: true
   _all?: true
 }
 
@@ -406,9 +406,9 @@ export type BandApplicationGroupByOutputType = {
   demoEmbedUrl: string | null
   demoEmbed: string | null
   demoEmbedType: $Enums.DemoEmbedType | null
+  repertoire: $Enums.BandRepertoire | null
   spotifyArtist: string | null
   spotifyMonthlyListeners: number | null
-  repertoire: $Enums.BandRepertoire | null
   _count: BandApplicationCountAggregateOutputType | null
   _avg: BandApplicationAvgAggregateOutputType | null
   _sum: BandApplicationSumAggregateOutputType | null
@@ -465,9 +465,9 @@ export type BandApplicationWhereInput = {
   demoEmbedUrl?: Prisma.StringNullableFilter<"BandApplication"> | string | null
   demoEmbed?: Prisma.StringNullableFilter<"BandApplication"> | string | null
   demoEmbedType?: Prisma.EnumDemoEmbedTypeNullableFilter<"BandApplication"> | $Enums.DemoEmbedType | null
+  repertoire?: Prisma.EnumBandRepertoireNullableFilter<"BandApplication"> | $Enums.BandRepertoire | null
   spotifyArtist?: Prisma.StringNullableFilter<"BandApplication"> | string | null
   spotifyMonthlyListeners?: Prisma.IntNullableFilter<"BandApplication"> | number | null
-  repertoire?: Prisma.EnumBandRepertoireNullableFilter<"BandApplication"> | $Enums.BandRepertoire | null
   contactedByViewer?: Prisma.XOR<Prisma.ViewerNullableScalarRelationFilter, Prisma.ViewerWhereInput> | null
   event?: Prisma.XOR<Prisma.EventScalarRelationFilter, Prisma.EventWhereInput>
   bandApplicationComment?: Prisma.BandApplicationCommentListRelationFilter
@@ -506,9 +506,9 @@ export type BandApplicationOrderByWithRelationInput = {
   demoEmbedUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   demoEmbed?: Prisma.SortOrderInput | Prisma.SortOrder
   demoEmbedType?: Prisma.SortOrderInput | Prisma.SortOrder
+  repertoire?: Prisma.SortOrderInput | Prisma.SortOrder
   spotifyArtist?: Prisma.SortOrderInput | Prisma.SortOrder
   spotifyMonthlyListeners?: Prisma.SortOrderInput | Prisma.SortOrder
-  repertoire?: Prisma.SortOrderInput | Prisma.SortOrder
   contactedByViewer?: Prisma.ViewerOrderByWithRelationInput
   event?: Prisma.EventOrderByWithRelationInput
   bandApplicationComment?: Prisma.BandApplicationCommentOrderByRelationAggregateInput
@@ -551,9 +551,9 @@ export type BandApplicationWhereUniqueInput = Prisma.AtLeast<{
   demoEmbedUrl?: Prisma.StringNullableFilter<"BandApplication"> | string | null
   demoEmbed?: Prisma.StringNullableFilter<"BandApplication"> | string | null
   demoEmbedType?: Prisma.EnumDemoEmbedTypeNullableFilter<"BandApplication"> | $Enums.DemoEmbedType | null
+  repertoire?: Prisma.EnumBandRepertoireNullableFilter<"BandApplication"> | $Enums.BandRepertoire | null
   spotifyArtist?: Prisma.StringNullableFilter<"BandApplication"> | string | null
   spotifyMonthlyListeners?: Prisma.IntNullableFilter<"BandApplication"> | number | null
-  repertoire?: Prisma.EnumBandRepertoireNullableFilter<"BandApplication"> | $Enums.BandRepertoire | null
   contactedByViewer?: Prisma.XOR<Prisma.ViewerNullableScalarRelationFilter, Prisma.ViewerWhereInput> | null
   event?: Prisma.XOR<Prisma.EventScalarRelationFilter, Prisma.EventWhereInput>
   bandApplicationComment?: Prisma.BandApplicationCommentListRelationFilter
@@ -592,9 +592,9 @@ export type BandApplicationOrderByWithAggregationInput = {
   demoEmbedUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   demoEmbed?: Prisma.SortOrderInput | Prisma.SortOrder
   demoEmbedType?: Prisma.SortOrderInput | Prisma.SortOrder
+  repertoire?: Prisma.SortOrderInput | Prisma.SortOrder
   spotifyArtist?: Prisma.SortOrderInput | Prisma.SortOrder
   spotifyMonthlyListeners?: Prisma.SortOrderInput | Prisma.SortOrder
-  repertoire?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.BandApplicationCountOrderByAggregateInput
   _avg?: Prisma.BandApplicationAvgOrderByAggregateInput
   _max?: Prisma.BandApplicationMaxOrderByAggregateInput
@@ -636,9 +636,9 @@ export type BandApplicationScalarWhereWithAggregatesInput = {
   demoEmbedUrl?: Prisma.StringNullableWithAggregatesFilter<"BandApplication"> | string | null
   demoEmbed?: Prisma.StringNullableWithAggregatesFilter<"BandApplication"> | string | null
   demoEmbedType?: Prisma.EnumDemoEmbedTypeNullableWithAggregatesFilter<"BandApplication"> | $Enums.DemoEmbedType | null
+  repertoire?: Prisma.EnumBandRepertoireNullableWithAggregatesFilter<"BandApplication"> | $Enums.BandRepertoire | null
   spotifyArtist?: Prisma.StringNullableWithAggregatesFilter<"BandApplication"> | string | null
   spotifyMonthlyListeners?: Prisma.IntNullableWithAggregatesFilter<"BandApplication"> | number | null
-  repertoire?: Prisma.EnumBandRepertoireNullableWithAggregatesFilter<"BandApplication"> | $Enums.BandRepertoire | null
 }
 
 export type BandApplicationCreateInput = {
@@ -670,9 +670,9 @@ export type BandApplicationCreateInput = {
   demoEmbedUrl?: string | null
   demoEmbed?: string | null
   demoEmbedType?: $Enums.DemoEmbedType | null
+  repertoire?: $Enums.BandRepertoire | null
   spotifyArtist?: string | null
   spotifyMonthlyListeners?: number | null
-  repertoire?: $Enums.BandRepertoire | null
   contactedByViewer?: Prisma.ViewerCreateNestedOneWithoutBandApplicationInput
   event: Prisma.EventCreateNestedOneWithoutBandApplicationInput
   bandApplicationComment?: Prisma.BandApplicationCommentCreateNestedManyWithoutBandApplicationInput
@@ -711,9 +711,9 @@ export type BandApplicationUncheckedCreateInput = {
   demoEmbedUrl?: string | null
   demoEmbed?: string | null
   demoEmbedType?: $Enums.DemoEmbedType | null
+  repertoire?: $Enums.BandRepertoire | null
   spotifyArtist?: string | null
   spotifyMonthlyListeners?: number | null
-  repertoire?: $Enums.BandRepertoire | null
   bandApplicationComment?: Prisma.BandApplicationCommentUncheckedCreateNestedManyWithoutBandApplicationInput
   bandApplicationRating?: Prisma.BandApplicationRatingUncheckedCreateNestedManyWithoutBandApplicationInput
   BandApplicationTag?: Prisma.BandApplicationTagUncheckedCreateNestedManyWithoutBandApplicationInput
@@ -748,9 +748,9 @@ export type BandApplicationUpdateInput = {
   demoEmbedUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   demoEmbed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   demoEmbedType?: Prisma.NullableEnumDemoEmbedTypeFieldUpdateOperationsInput | $Enums.DemoEmbedType | null
+  repertoire?: Prisma.NullableEnumBandRepertoireFieldUpdateOperationsInput | $Enums.BandRepertoire | null
   spotifyArtist?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   spotifyMonthlyListeners?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  repertoire?: Prisma.NullableEnumBandRepertoireFieldUpdateOperationsInput | $Enums.BandRepertoire | null
   contactedByViewer?: Prisma.ViewerUpdateOneWithoutBandApplicationNestedInput
   event?: Prisma.EventUpdateOneRequiredWithoutBandApplicationNestedInput
   bandApplicationComment?: Prisma.BandApplicationCommentUpdateManyWithoutBandApplicationNestedInput
@@ -789,9 +789,9 @@ export type BandApplicationUncheckedUpdateInput = {
   demoEmbedUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   demoEmbed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   demoEmbedType?: Prisma.NullableEnumDemoEmbedTypeFieldUpdateOperationsInput | $Enums.DemoEmbedType | null
+  repertoire?: Prisma.NullableEnumBandRepertoireFieldUpdateOperationsInput | $Enums.BandRepertoire | null
   spotifyArtist?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   spotifyMonthlyListeners?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  repertoire?: Prisma.NullableEnumBandRepertoireFieldUpdateOperationsInput | $Enums.BandRepertoire | null
   bandApplicationComment?: Prisma.BandApplicationCommentUncheckedUpdateManyWithoutBandApplicationNestedInput
   bandApplicationRating?: Prisma.BandApplicationRatingUncheckedUpdateManyWithoutBandApplicationNestedInput
   BandApplicationTag?: Prisma.BandApplicationTagUncheckedUpdateManyWithoutBandApplicationNestedInput
@@ -828,9 +828,9 @@ export type BandApplicationCreateManyInput = {
   demoEmbedUrl?: string | null
   demoEmbed?: string | null
   demoEmbedType?: $Enums.DemoEmbedType | null
+  repertoire?: $Enums.BandRepertoire | null
   spotifyArtist?: string | null
   spotifyMonthlyListeners?: number | null
-  repertoire?: $Enums.BandRepertoire | null
 }
 
 export type BandApplicationUpdateManyMutationInput = {
@@ -862,9 +862,9 @@ export type BandApplicationUpdateManyMutationInput = {
   demoEmbedUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   demoEmbed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   demoEmbedType?: Prisma.NullableEnumDemoEmbedTypeFieldUpdateOperationsInput | $Enums.DemoEmbedType | null
+  repertoire?: Prisma.NullableEnumBandRepertoireFieldUpdateOperationsInput | $Enums.BandRepertoire | null
   spotifyArtist?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   spotifyMonthlyListeners?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  repertoire?: Prisma.NullableEnumBandRepertoireFieldUpdateOperationsInput | $Enums.BandRepertoire | null
 }
 
 export type BandApplicationUncheckedUpdateManyInput = {
@@ -898,9 +898,9 @@ export type BandApplicationUncheckedUpdateManyInput = {
   demoEmbedUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   demoEmbed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   demoEmbedType?: Prisma.NullableEnumDemoEmbedTypeFieldUpdateOperationsInput | $Enums.DemoEmbedType | null
+  repertoire?: Prisma.NullableEnumBandRepertoireFieldUpdateOperationsInput | $Enums.BandRepertoire | null
   spotifyArtist?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   spotifyMonthlyListeners?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  repertoire?: Prisma.NullableEnumBandRepertoireFieldUpdateOperationsInput | $Enums.BandRepertoire | null
 }
 
 export type BandApplicationListRelationFilter = {
@@ -950,9 +950,9 @@ export type BandApplicationCountOrderByAggregateInput = {
   demoEmbedUrl?: Prisma.SortOrder
   demoEmbed?: Prisma.SortOrder
   demoEmbedType?: Prisma.SortOrder
+  repertoire?: Prisma.SortOrder
   spotifyArtist?: Prisma.SortOrder
   spotifyMonthlyListeners?: Prisma.SortOrder
-  repertoire?: Prisma.SortOrder
 }
 
 export type BandApplicationAvgOrderByAggregateInput = {
@@ -997,9 +997,9 @@ export type BandApplicationMaxOrderByAggregateInput = {
   demoEmbedUrl?: Prisma.SortOrder
   demoEmbed?: Prisma.SortOrder
   demoEmbedType?: Prisma.SortOrder
+  repertoire?: Prisma.SortOrder
   spotifyArtist?: Prisma.SortOrder
   spotifyMonthlyListeners?: Prisma.SortOrder
-  repertoire?: Prisma.SortOrder
 }
 
 export type BandApplicationMinOrderByAggregateInput = {
@@ -1033,9 +1033,9 @@ export type BandApplicationMinOrderByAggregateInput = {
   demoEmbedUrl?: Prisma.SortOrder
   demoEmbed?: Prisma.SortOrder
   demoEmbedType?: Prisma.SortOrder
+  repertoire?: Prisma.SortOrder
   spotifyArtist?: Prisma.SortOrder
   spotifyMonthlyListeners?: Prisma.SortOrder
-  repertoire?: Prisma.SortOrder
 }
 
 export type BandApplicationSumOrderByAggregateInput = {
@@ -1237,9 +1237,9 @@ export type BandApplicationCreateWithoutContactedByViewerInput = {
   demoEmbedUrl?: string | null
   demoEmbed?: string | null
   demoEmbedType?: $Enums.DemoEmbedType | null
+  repertoire?: $Enums.BandRepertoire | null
   spotifyArtist?: string | null
   spotifyMonthlyListeners?: number | null
-  repertoire?: $Enums.BandRepertoire | null
   event: Prisma.EventCreateNestedOneWithoutBandApplicationInput
   bandApplicationComment?: Prisma.BandApplicationCommentCreateNestedManyWithoutBandApplicationInput
   bandApplicationRating?: Prisma.BandApplicationRatingCreateNestedManyWithoutBandApplicationInput
@@ -1276,9 +1276,9 @@ export type BandApplicationUncheckedCreateWithoutContactedByViewerInput = {
   demoEmbedUrl?: string | null
   demoEmbed?: string | null
   demoEmbedType?: $Enums.DemoEmbedType | null
+  repertoire?: $Enums.BandRepertoire | null
   spotifyArtist?: string | null
   spotifyMonthlyListeners?: number | null
-  repertoire?: $Enums.BandRepertoire | null
   bandApplicationComment?: Prisma.BandApplicationCommentUncheckedCreateNestedManyWithoutBandApplicationInput
   bandApplicationRating?: Prisma.BandApplicationRatingUncheckedCreateNestedManyWithoutBandApplicationInput
   BandApplicationTag?: Prisma.BandApplicationTagUncheckedCreateNestedManyWithoutBandApplicationInput
@@ -1344,9 +1344,9 @@ export type BandApplicationScalarWhereInput = {
   demoEmbedUrl?: Prisma.StringNullableFilter<"BandApplication"> | string | null
   demoEmbed?: Prisma.StringNullableFilter<"BandApplication"> | string | null
   demoEmbedType?: Prisma.EnumDemoEmbedTypeNullableFilter<"BandApplication"> | $Enums.DemoEmbedType | null
+  repertoire?: Prisma.EnumBandRepertoireNullableFilter<"BandApplication"> | $Enums.BandRepertoire | null
   spotifyArtist?: Prisma.StringNullableFilter<"BandApplication"> | string | null
   spotifyMonthlyListeners?: Prisma.IntNullableFilter<"BandApplication"> | number | null
-  repertoire?: Prisma.EnumBandRepertoireNullableFilter<"BandApplication"> | $Enums.BandRepertoire | null
 }
 
 export type BandApplicationCreateWithoutBandApplicationTagInput = {
@@ -1378,9 +1378,9 @@ export type BandApplicationCreateWithoutBandApplicationTagInput = {
   demoEmbedUrl?: string | null
   demoEmbed?: string | null
   demoEmbedType?: $Enums.DemoEmbedType | null
+  repertoire?: $Enums.BandRepertoire | null
   spotifyArtist?: string | null
   spotifyMonthlyListeners?: number | null
-  repertoire?: $Enums.BandRepertoire | null
   contactedByViewer?: Prisma.ViewerCreateNestedOneWithoutBandApplicationInput
   event: Prisma.EventCreateNestedOneWithoutBandApplicationInput
   bandApplicationComment?: Prisma.BandApplicationCommentCreateNestedManyWithoutBandApplicationInput
@@ -1418,9 +1418,9 @@ export type BandApplicationUncheckedCreateWithoutBandApplicationTagInput = {
   demoEmbedUrl?: string | null
   demoEmbed?: string | null
   demoEmbedType?: $Enums.DemoEmbedType | null
+  repertoire?: $Enums.BandRepertoire | null
   spotifyArtist?: string | null
   spotifyMonthlyListeners?: number | null
-  repertoire?: $Enums.BandRepertoire | null
   bandApplicationComment?: Prisma.BandApplicationCommentUncheckedCreateNestedManyWithoutBandApplicationInput
   bandApplicationRating?: Prisma.BandApplicationRatingUncheckedCreateNestedManyWithoutBandApplicationInput
 }
@@ -1470,9 +1470,9 @@ export type BandApplicationUpdateWithoutBandApplicationTagInput = {
   demoEmbedUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   demoEmbed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   demoEmbedType?: Prisma.NullableEnumDemoEmbedTypeFieldUpdateOperationsInput | $Enums.DemoEmbedType | null
+  repertoire?: Prisma.NullableEnumBandRepertoireFieldUpdateOperationsInput | $Enums.BandRepertoire | null
   spotifyArtist?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   spotifyMonthlyListeners?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  repertoire?: Prisma.NullableEnumBandRepertoireFieldUpdateOperationsInput | $Enums.BandRepertoire | null
   contactedByViewer?: Prisma.ViewerUpdateOneWithoutBandApplicationNestedInput
   event?: Prisma.EventUpdateOneRequiredWithoutBandApplicationNestedInput
   bandApplicationComment?: Prisma.BandApplicationCommentUpdateManyWithoutBandApplicationNestedInput
@@ -1510,9 +1510,9 @@ export type BandApplicationUncheckedUpdateWithoutBandApplicationTagInput = {
   demoEmbedUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   demoEmbed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   demoEmbedType?: Prisma.NullableEnumDemoEmbedTypeFieldUpdateOperationsInput | $Enums.DemoEmbedType | null
+  repertoire?: Prisma.NullableEnumBandRepertoireFieldUpdateOperationsInput | $Enums.BandRepertoire | null
   spotifyArtist?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   spotifyMonthlyListeners?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  repertoire?: Prisma.NullableEnumBandRepertoireFieldUpdateOperationsInput | $Enums.BandRepertoire | null
   bandApplicationComment?: Prisma.BandApplicationCommentUncheckedUpdateManyWithoutBandApplicationNestedInput
   bandApplicationRating?: Prisma.BandApplicationRatingUncheckedUpdateManyWithoutBandApplicationNestedInput
 }
@@ -1546,9 +1546,9 @@ export type BandApplicationCreateWithoutBandApplicationRatingInput = {
   demoEmbedUrl?: string | null
   demoEmbed?: string | null
   demoEmbedType?: $Enums.DemoEmbedType | null
+  repertoire?: $Enums.BandRepertoire | null
   spotifyArtist?: string | null
   spotifyMonthlyListeners?: number | null
-  repertoire?: $Enums.BandRepertoire | null
   contactedByViewer?: Prisma.ViewerCreateNestedOneWithoutBandApplicationInput
   event: Prisma.EventCreateNestedOneWithoutBandApplicationInput
   bandApplicationComment?: Prisma.BandApplicationCommentCreateNestedManyWithoutBandApplicationInput
@@ -1586,9 +1586,9 @@ export type BandApplicationUncheckedCreateWithoutBandApplicationRatingInput = {
   demoEmbedUrl?: string | null
   demoEmbed?: string | null
   demoEmbedType?: $Enums.DemoEmbedType | null
+  repertoire?: $Enums.BandRepertoire | null
   spotifyArtist?: string | null
   spotifyMonthlyListeners?: number | null
-  repertoire?: $Enums.BandRepertoire | null
   bandApplicationComment?: Prisma.BandApplicationCommentUncheckedCreateNestedManyWithoutBandApplicationInput
   BandApplicationTag?: Prisma.BandApplicationTagUncheckedCreateNestedManyWithoutBandApplicationInput
 }
@@ -1638,9 +1638,9 @@ export type BandApplicationUpdateWithoutBandApplicationRatingInput = {
   demoEmbedUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   demoEmbed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   demoEmbedType?: Prisma.NullableEnumDemoEmbedTypeFieldUpdateOperationsInput | $Enums.DemoEmbedType | null
+  repertoire?: Prisma.NullableEnumBandRepertoireFieldUpdateOperationsInput | $Enums.BandRepertoire | null
   spotifyArtist?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   spotifyMonthlyListeners?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  repertoire?: Prisma.NullableEnumBandRepertoireFieldUpdateOperationsInput | $Enums.BandRepertoire | null
   contactedByViewer?: Prisma.ViewerUpdateOneWithoutBandApplicationNestedInput
   event?: Prisma.EventUpdateOneRequiredWithoutBandApplicationNestedInput
   bandApplicationComment?: Prisma.BandApplicationCommentUpdateManyWithoutBandApplicationNestedInput
@@ -1678,9 +1678,9 @@ export type BandApplicationUncheckedUpdateWithoutBandApplicationRatingInput = {
   demoEmbedUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   demoEmbed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   demoEmbedType?: Prisma.NullableEnumDemoEmbedTypeFieldUpdateOperationsInput | $Enums.DemoEmbedType | null
+  repertoire?: Prisma.NullableEnumBandRepertoireFieldUpdateOperationsInput | $Enums.BandRepertoire | null
   spotifyArtist?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   spotifyMonthlyListeners?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  repertoire?: Prisma.NullableEnumBandRepertoireFieldUpdateOperationsInput | $Enums.BandRepertoire | null
   bandApplicationComment?: Prisma.BandApplicationCommentUncheckedUpdateManyWithoutBandApplicationNestedInput
   BandApplicationTag?: Prisma.BandApplicationTagUncheckedUpdateManyWithoutBandApplicationNestedInput
 }
@@ -1714,9 +1714,9 @@ export type BandApplicationCreateWithoutBandApplicationCommentInput = {
   demoEmbedUrl?: string | null
   demoEmbed?: string | null
   demoEmbedType?: $Enums.DemoEmbedType | null
+  repertoire?: $Enums.BandRepertoire | null
   spotifyArtist?: string | null
   spotifyMonthlyListeners?: number | null
-  repertoire?: $Enums.BandRepertoire | null
   contactedByViewer?: Prisma.ViewerCreateNestedOneWithoutBandApplicationInput
   event: Prisma.EventCreateNestedOneWithoutBandApplicationInput
   bandApplicationRating?: Prisma.BandApplicationRatingCreateNestedManyWithoutBandApplicationInput
@@ -1754,9 +1754,9 @@ export type BandApplicationUncheckedCreateWithoutBandApplicationCommentInput = {
   demoEmbedUrl?: string | null
   demoEmbed?: string | null
   demoEmbedType?: $Enums.DemoEmbedType | null
+  repertoire?: $Enums.BandRepertoire | null
   spotifyArtist?: string | null
   spotifyMonthlyListeners?: number | null
-  repertoire?: $Enums.BandRepertoire | null
   bandApplicationRating?: Prisma.BandApplicationRatingUncheckedCreateNestedManyWithoutBandApplicationInput
   BandApplicationTag?: Prisma.BandApplicationTagUncheckedCreateNestedManyWithoutBandApplicationInput
 }
@@ -1806,9 +1806,9 @@ export type BandApplicationUpdateWithoutBandApplicationCommentInput = {
   demoEmbedUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   demoEmbed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   demoEmbedType?: Prisma.NullableEnumDemoEmbedTypeFieldUpdateOperationsInput | $Enums.DemoEmbedType | null
+  repertoire?: Prisma.NullableEnumBandRepertoireFieldUpdateOperationsInput | $Enums.BandRepertoire | null
   spotifyArtist?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   spotifyMonthlyListeners?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  repertoire?: Prisma.NullableEnumBandRepertoireFieldUpdateOperationsInput | $Enums.BandRepertoire | null
   contactedByViewer?: Prisma.ViewerUpdateOneWithoutBandApplicationNestedInput
   event?: Prisma.EventUpdateOneRequiredWithoutBandApplicationNestedInput
   bandApplicationRating?: Prisma.BandApplicationRatingUpdateManyWithoutBandApplicationNestedInput
@@ -1846,9 +1846,9 @@ export type BandApplicationUncheckedUpdateWithoutBandApplicationCommentInput = {
   demoEmbedUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   demoEmbed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   demoEmbedType?: Prisma.NullableEnumDemoEmbedTypeFieldUpdateOperationsInput | $Enums.DemoEmbedType | null
+  repertoire?: Prisma.NullableEnumBandRepertoireFieldUpdateOperationsInput | $Enums.BandRepertoire | null
   spotifyArtist?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   spotifyMonthlyListeners?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  repertoire?: Prisma.NullableEnumBandRepertoireFieldUpdateOperationsInput | $Enums.BandRepertoire | null
   bandApplicationRating?: Prisma.BandApplicationRatingUncheckedUpdateManyWithoutBandApplicationNestedInput
   BandApplicationTag?: Prisma.BandApplicationTagUncheckedUpdateManyWithoutBandApplicationNestedInput
 }
@@ -1882,9 +1882,9 @@ export type BandApplicationCreateWithoutEventInput = {
   demoEmbedUrl?: string | null
   demoEmbed?: string | null
   demoEmbedType?: $Enums.DemoEmbedType | null
+  repertoire?: $Enums.BandRepertoire | null
   spotifyArtist?: string | null
   spotifyMonthlyListeners?: number | null
-  repertoire?: $Enums.BandRepertoire | null
   contactedByViewer?: Prisma.ViewerCreateNestedOneWithoutBandApplicationInput
   bandApplicationComment?: Prisma.BandApplicationCommentCreateNestedManyWithoutBandApplicationInput
   bandApplicationRating?: Prisma.BandApplicationRatingCreateNestedManyWithoutBandApplicationInput
@@ -1921,9 +1921,9 @@ export type BandApplicationUncheckedCreateWithoutEventInput = {
   demoEmbedUrl?: string | null
   demoEmbed?: string | null
   demoEmbedType?: $Enums.DemoEmbedType | null
+  repertoire?: $Enums.BandRepertoire | null
   spotifyArtist?: string | null
   spotifyMonthlyListeners?: number | null
-  repertoire?: $Enums.BandRepertoire | null
   bandApplicationComment?: Prisma.BandApplicationCommentUncheckedCreateNestedManyWithoutBandApplicationInput
   bandApplicationRating?: Prisma.BandApplicationRatingUncheckedCreateNestedManyWithoutBandApplicationInput
   BandApplicationTag?: Prisma.BandApplicationTagUncheckedCreateNestedManyWithoutBandApplicationInput
@@ -1985,9 +1985,9 @@ export type BandApplicationCreateManyContactedByViewerInput = {
   demoEmbedUrl?: string | null
   demoEmbed?: string | null
   demoEmbedType?: $Enums.DemoEmbedType | null
+  repertoire?: $Enums.BandRepertoire | null
   spotifyArtist?: string | null
   spotifyMonthlyListeners?: number | null
-  repertoire?: $Enums.BandRepertoire | null
 }
 
 export type BandApplicationUpdateWithoutContactedByViewerInput = {
@@ -2019,9 +2019,9 @@ export type BandApplicationUpdateWithoutContactedByViewerInput = {
   demoEmbedUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   demoEmbed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   demoEmbedType?: Prisma.NullableEnumDemoEmbedTypeFieldUpdateOperationsInput | $Enums.DemoEmbedType | null
+  repertoire?: Prisma.NullableEnumBandRepertoireFieldUpdateOperationsInput | $Enums.BandRepertoire | null
   spotifyArtist?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   spotifyMonthlyListeners?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  repertoire?: Prisma.NullableEnumBandRepertoireFieldUpdateOperationsInput | $Enums.BandRepertoire | null
   event?: Prisma.EventUpdateOneRequiredWithoutBandApplicationNestedInput
   bandApplicationComment?: Prisma.BandApplicationCommentUpdateManyWithoutBandApplicationNestedInput
   bandApplicationRating?: Prisma.BandApplicationRatingUpdateManyWithoutBandApplicationNestedInput
@@ -2058,9 +2058,9 @@ export type BandApplicationUncheckedUpdateWithoutContactedByViewerInput = {
   demoEmbedUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   demoEmbed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   demoEmbedType?: Prisma.NullableEnumDemoEmbedTypeFieldUpdateOperationsInput | $Enums.DemoEmbedType | null
+  repertoire?: Prisma.NullableEnumBandRepertoireFieldUpdateOperationsInput | $Enums.BandRepertoire | null
   spotifyArtist?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   spotifyMonthlyListeners?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  repertoire?: Prisma.NullableEnumBandRepertoireFieldUpdateOperationsInput | $Enums.BandRepertoire | null
   bandApplicationComment?: Prisma.BandApplicationCommentUncheckedUpdateManyWithoutBandApplicationNestedInput
   bandApplicationRating?: Prisma.BandApplicationRatingUncheckedUpdateManyWithoutBandApplicationNestedInput
   BandApplicationTag?: Prisma.BandApplicationTagUncheckedUpdateManyWithoutBandApplicationNestedInput
@@ -2096,9 +2096,9 @@ export type BandApplicationUncheckedUpdateManyWithoutContactedByViewerInput = {
   demoEmbedUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   demoEmbed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   demoEmbedType?: Prisma.NullableEnumDemoEmbedTypeFieldUpdateOperationsInput | $Enums.DemoEmbedType | null
+  repertoire?: Prisma.NullableEnumBandRepertoireFieldUpdateOperationsInput | $Enums.BandRepertoire | null
   spotifyArtist?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   spotifyMonthlyListeners?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  repertoire?: Prisma.NullableEnumBandRepertoireFieldUpdateOperationsInput | $Enums.BandRepertoire | null
 }
 
 export type BandApplicationCreateManyEventInput = {
@@ -2131,9 +2131,9 @@ export type BandApplicationCreateManyEventInput = {
   demoEmbedUrl?: string | null
   demoEmbed?: string | null
   demoEmbedType?: $Enums.DemoEmbedType | null
+  repertoire?: $Enums.BandRepertoire | null
   spotifyArtist?: string | null
   spotifyMonthlyListeners?: number | null
-  repertoire?: $Enums.BandRepertoire | null
 }
 
 export type BandApplicationUpdateWithoutEventInput = {
@@ -2165,9 +2165,9 @@ export type BandApplicationUpdateWithoutEventInput = {
   demoEmbedUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   demoEmbed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   demoEmbedType?: Prisma.NullableEnumDemoEmbedTypeFieldUpdateOperationsInput | $Enums.DemoEmbedType | null
+  repertoire?: Prisma.NullableEnumBandRepertoireFieldUpdateOperationsInput | $Enums.BandRepertoire | null
   spotifyArtist?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   spotifyMonthlyListeners?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  repertoire?: Prisma.NullableEnumBandRepertoireFieldUpdateOperationsInput | $Enums.BandRepertoire | null
   contactedByViewer?: Prisma.ViewerUpdateOneWithoutBandApplicationNestedInput
   bandApplicationComment?: Prisma.BandApplicationCommentUpdateManyWithoutBandApplicationNestedInput
   bandApplicationRating?: Prisma.BandApplicationRatingUpdateManyWithoutBandApplicationNestedInput
@@ -2204,9 +2204,9 @@ export type BandApplicationUncheckedUpdateWithoutEventInput = {
   demoEmbedUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   demoEmbed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   demoEmbedType?: Prisma.NullableEnumDemoEmbedTypeFieldUpdateOperationsInput | $Enums.DemoEmbedType | null
+  repertoire?: Prisma.NullableEnumBandRepertoireFieldUpdateOperationsInput | $Enums.BandRepertoire | null
   spotifyArtist?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   spotifyMonthlyListeners?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  repertoire?: Prisma.NullableEnumBandRepertoireFieldUpdateOperationsInput | $Enums.BandRepertoire | null
   bandApplicationComment?: Prisma.BandApplicationCommentUncheckedUpdateManyWithoutBandApplicationNestedInput
   bandApplicationRating?: Prisma.BandApplicationRatingUncheckedUpdateManyWithoutBandApplicationNestedInput
   BandApplicationTag?: Prisma.BandApplicationTagUncheckedUpdateManyWithoutBandApplicationNestedInput
@@ -2242,9 +2242,9 @@ export type BandApplicationUncheckedUpdateManyWithoutEventInput = {
   demoEmbedUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   demoEmbed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   demoEmbedType?: Prisma.NullableEnumDemoEmbedTypeFieldUpdateOperationsInput | $Enums.DemoEmbedType | null
+  repertoire?: Prisma.NullableEnumBandRepertoireFieldUpdateOperationsInput | $Enums.BandRepertoire | null
   spotifyArtist?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   spotifyMonthlyListeners?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  repertoire?: Prisma.NullableEnumBandRepertoireFieldUpdateOperationsInput | $Enums.BandRepertoire | null
 }
 
 
@@ -2327,9 +2327,9 @@ export type BandApplicationSelect<ExtArgs extends runtime.Types.Extensions.Inter
   demoEmbedUrl?: boolean
   demoEmbed?: boolean
   demoEmbedType?: boolean
+  repertoire?: boolean
   spotifyArtist?: boolean
   spotifyMonthlyListeners?: boolean
-  repertoire?: boolean
   contactedByViewer?: boolean | Prisma.BandApplication$contactedByViewerArgs<ExtArgs>
   event?: boolean | Prisma.EventDefaultArgs<ExtArgs>
   bandApplicationComment?: boolean | Prisma.BandApplication$bandApplicationCommentArgs<ExtArgs>
@@ -2369,9 +2369,9 @@ export type BandApplicationSelectCreateManyAndReturn<ExtArgs extends runtime.Typ
   demoEmbedUrl?: boolean
   demoEmbed?: boolean
   demoEmbedType?: boolean
+  repertoire?: boolean
   spotifyArtist?: boolean
   spotifyMonthlyListeners?: boolean
-  repertoire?: boolean
   contactedByViewer?: boolean | Prisma.BandApplication$contactedByViewerArgs<ExtArgs>
   event?: boolean | Prisma.EventDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["bandApplication"]>
@@ -2407,9 +2407,9 @@ export type BandApplicationSelectUpdateManyAndReturn<ExtArgs extends runtime.Typ
   demoEmbedUrl?: boolean
   demoEmbed?: boolean
   demoEmbedType?: boolean
+  repertoire?: boolean
   spotifyArtist?: boolean
   spotifyMonthlyListeners?: boolean
-  repertoire?: boolean
   contactedByViewer?: boolean | Prisma.BandApplication$contactedByViewerArgs<ExtArgs>
   event?: boolean | Prisma.EventDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["bandApplication"]>
@@ -2445,12 +2445,12 @@ export type BandApplicationSelectScalar = {
   demoEmbedUrl?: boolean
   demoEmbed?: boolean
   demoEmbedType?: boolean
+  repertoire?: boolean
   spotifyArtist?: boolean
   spotifyMonthlyListeners?: boolean
-  repertoire?: boolean
 }
 
-export type BandApplicationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "createdAt" | "email" | "bandname" | "genre" | "city" | "facebook" | "demo" | "description" | "numberOfArtists" | "numberOfNonMaleArtists" | "contactName" | "contactPhone" | "knowsKultFrom" | "distance" | "facebookLikes" | "website" | "genreCategory" | "heardAboutBookingFrom" | "contactedByViewerId" | "instagram" | "instagramFollower" | "eventId" | "hasPreviouslyPlayed" | "lastContactedAt" | "latitude" | "longitude" | "demoEmbedUrl" | "demoEmbed" | "demoEmbedType" | "spotifyArtist" | "spotifyMonthlyListeners" | "repertoire", ExtArgs["result"]["bandApplication"]>
+export type BandApplicationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "createdAt" | "email" | "bandname" | "genre" | "city" | "facebook" | "demo" | "description" | "numberOfArtists" | "numberOfNonMaleArtists" | "contactName" | "contactPhone" | "knowsKultFrom" | "distance" | "facebookLikes" | "website" | "genreCategory" | "heardAboutBookingFrom" | "contactedByViewerId" | "instagram" | "instagramFollower" | "eventId" | "hasPreviouslyPlayed" | "lastContactedAt" | "latitude" | "longitude" | "demoEmbedUrl" | "demoEmbed" | "demoEmbedType" | "repertoire" | "spotifyArtist" | "spotifyMonthlyListeners", ExtArgs["result"]["bandApplication"]>
 export type BandApplicationInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   contactedByViewer?: boolean | Prisma.BandApplication$contactedByViewerArgs<ExtArgs>
   event?: boolean | Prisma.EventDefaultArgs<ExtArgs>
@@ -2508,9 +2508,9 @@ export type $BandApplicationPayload<ExtArgs extends runtime.Types.Extensions.Int
     demoEmbedUrl: string | null
     demoEmbed: string | null
     demoEmbedType: $Enums.DemoEmbedType | null
+    repertoire: $Enums.BandRepertoire | null
     spotifyArtist: string | null
     spotifyMonthlyListeners: number | null
-    repertoire: $Enums.BandRepertoire | null
   }, ExtArgs["result"]["bandApplication"]>
   composites: {}
 }
@@ -2969,9 +2969,9 @@ export interface BandApplicationFieldRefs {
   readonly demoEmbedUrl: Prisma.FieldRef<"BandApplication", 'String'>
   readonly demoEmbed: Prisma.FieldRef<"BandApplication", 'String'>
   readonly demoEmbedType: Prisma.FieldRef<"BandApplication", 'DemoEmbedType'>
+  readonly repertoire: Prisma.FieldRef<"BandApplication", 'BandRepertoire'>
   readonly spotifyArtist: Prisma.FieldRef<"BandApplication", 'String'>
   readonly spotifyMonthlyListeners: Prisma.FieldRef<"BandApplication", 'Int'>
-  readonly repertoire: Prisma.FieldRef<"BandApplication", 'BandRepertoire'>
 }
     
 

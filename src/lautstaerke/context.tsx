@@ -44,32 +44,35 @@ export const SERIES = [
     get: (r: NoiseRecord) => decodeDb(r.lcpeak1s),
   },
   {
-    label: 'LAeq,15m',
+    label: 'LAeq,5m',
     stroke: '#2b8cbe',
     dash: [6, 4],
-    get: (_r: NoiseRecord, d: NoiseRecording) => decodeDb(d.laeq15m),
+    get: (_r: NoiseRecord, d: NoiseRecording) =>
+      d.laeq5m == null ? null : decodeDb(d.laeq5m),
   },
   {
-    label: 'LCeq,15m',
+    label: 'LCeq,5m',
     stroke: '#74a9cf',
     dash: [6, 4],
-    get: (_r: NoiseRecord, d: NoiseRecording) => decodeDb(d.lceq15m),
+    get: (_r: NoiseRecord, d: NoiseRecording) =>
+      d.lceq5m == null ? null : decodeDb(d.lceq5m),
   },
 ] as const satisfies ReadonlyArray<{
   label: string;
   stroke: string;
   dash?: readonly number[];
-  get: (r: NoiseRecord, d: NoiseRecording) => number;
+  get: (r: NoiseRecord, d: NoiseRecording) => number | null;
 }>;
 
 export type DeviceState = {
   lastSeen: number;
   latest: NoiseRecord;
-  laeq15m: number;
-  lceq15m: number;
+  // null until the device's 5-minute ring buffer is full (no data yet).
+  laeq5m: number | null;
+  lceq5m: number | null;
   batteryMv?: number;
 };
-export type DeviceBuffer = number[][];
+export type DeviceBuffer = (number | null)[][];
 
 export type BluetoothSlice = {
   deviceName: string | null;

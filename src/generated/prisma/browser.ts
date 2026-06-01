@@ -172,3 +172,8 @@ export type Donation = Prisma.DonationModel
  * 
  */
 export type DeviceLocation = Prisma.DeviceLocationModel
+/**
+ * Model NoiseLog
+ * 
+ */
+export type NoiseLog = Prisma.NoiseLogModel

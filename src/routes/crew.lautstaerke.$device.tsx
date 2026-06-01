@@ -341,8 +341,8 @@ function DeviceDetail() {
           color="#2b8cbe"
         />
         <BigNumber
-          value={deviceState ? decodeDb(deviceState.laeq15m) : null}
-          label="LAeq,15m"
+          value={deviceState?.laeq5m != null ? decodeDb(deviceState.laeq5m) : null}
+          label="LAeq,5m"
           color="#2b8cbe"
         />
         <BigNumber
@@ -351,8 +351,8 @@ function DeviceDetail() {
           color="#74a9cf"
         />
         <BigNumber
-          value={deviceState ? decodeDb(deviceState.lceq15m) : null}
-          label="LCeq,15m"
+          value={deviceState?.lceq5m != null ? decodeDb(deviceState.lceq5m) : null}
+          label="LCeq,5m"
           color="#74a9cf"
         />
       </SimpleGrid>

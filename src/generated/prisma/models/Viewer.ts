@@ -197,11 +197,11 @@ export type ViewerWhereInput = {
   BandApplication?: Prisma.BandApplicationListRelationFilter
   BandApplicationComment?: Prisma.BandApplicationCommentListRelationFilter
   BandApplicationRating?: Prisma.BandApplicationRatingListRelationFilter
-  Nonce?: Prisma.NonceListRelationFilter
-  ViewerLocation?: Prisma.ViewerLocationListRelationFilter
-  NonceRequest?: Prisma.NonceRequestListRelationFilter
   BandApplicationTag?: Prisma.BandApplicationTagListRelationFilter
   CrewCard?: Prisma.CrewCardListRelationFilter
+  Nonce?: Prisma.NonceListRelationFilter
+  NonceRequest?: Prisma.NonceRequestListRelationFilter
+  ViewerLocation?: Prisma.ViewerLocationListRelationFilter
 }
 
 export type ViewerOrderByWithRelationInput = {
@@ -215,11 +215,11 @@ export type ViewerOrderByWithRelationInput = {
   BandApplication?: Prisma.BandApplicationOrderByRelationAggregateInput
   BandApplicationComment?: Prisma.BandApplicationCommentOrderByRelationAggregateInput
   BandApplicationRating?: Prisma.BandApplicationRatingOrderByRelationAggregateInput
-  Nonce?: Prisma.NonceOrderByRelationAggregateInput
-  ViewerLocation?: Prisma.ViewerLocationOrderByRelationAggregateInput
-  NonceRequest?: Prisma.NonceRequestOrderByRelationAggregateInput
   BandApplicationTag?: Prisma.BandApplicationTagOrderByRelationAggregateInput
   CrewCard?: Prisma.CrewCardOrderByRelationAggregateInput
+  Nonce?: Prisma.NonceOrderByRelationAggregateInput
+  NonceRequest?: Prisma.NonceRequestOrderByRelationAggregateInput
+  ViewerLocation?: Prisma.ViewerLocationOrderByRelationAggregateInput
   _relevance?: Prisma.ViewerOrderByRelevanceInput
 }
 
@@ -237,11 +237,11 @@ export type ViewerWhereUniqueInput = Prisma.AtLeast<{
   BandApplication?: Prisma.BandApplicationListRelationFilter
   BandApplicationComment?: Prisma.BandApplicationCommentListRelationFilter
   BandApplicationRating?: Prisma.BandApplicationRatingListRelationFilter
-  Nonce?: Prisma.NonceListRelationFilter
-  ViewerLocation?: Prisma.ViewerLocationListRelationFilter
-  NonceRequest?: Prisma.NonceRequestListRelationFilter
   BandApplicationTag?: Prisma.BandApplicationTagListRelationFilter
   CrewCard?: Prisma.CrewCardListRelationFilter
+  Nonce?: Prisma.NonceListRelationFilter
+  NonceRequest?: Prisma.NonceRequestListRelationFilter
+  ViewerLocation?: Prisma.ViewerLocationListRelationFilter
 }, "id">
 
 export type ViewerOrderByWithAggregationInput = {
@@ -281,11 +281,11 @@ export type ViewerCreateInput = {
   BandApplication?: Prisma.BandApplicationCreateNestedManyWithoutContactedByViewerInput
   BandApplicationComment?: Prisma.BandApplicationCommentCreateNestedManyWithoutViewerInput
   BandApplicationRating?: Prisma.BandApplicationRatingCreateNestedManyWithoutViewerInput
-  Nonce?: Prisma.NonceCreateNestedManyWithoutCreatedForInput
-  ViewerLocation?: Prisma.ViewerLocationCreateNestedManyWithoutViewerInput
-  NonceRequest?: Prisma.NonceRequestCreateNestedManyWithoutCreatedForInput
   BandApplicationTag?: Prisma.BandApplicationTagCreateNestedManyWithoutCreatedByViewerInput
   CrewCard?: Prisma.CrewCardCreateNestedManyWithoutViewerInput
+  Nonce?: Prisma.NonceCreateNestedManyWithoutCreatedForInput
+  NonceRequest?: Prisma.NonceRequestCreateNestedManyWithoutCreatedForInput
+  ViewerLocation?: Prisma.ViewerLocationCreateNestedManyWithoutViewerInput
 }
 
 export type ViewerUncheckedCreateInput = {
@@ -299,11 +299,11 @@ export type ViewerUncheckedCreateInput = {
   BandApplication?: Prisma.BandApplicationUncheckedCreateNestedManyWithoutContactedByViewerInput
   BandApplicationComment?: Prisma.BandApplicationCommentUncheckedCreateNestedManyWithoutViewerInput
   BandApplicationRating?: Prisma.BandApplicationRatingUncheckedCreateNestedManyWithoutViewerInput
-  Nonce?: Prisma.NonceUncheckedCreateNestedManyWithoutCreatedForInput
-  ViewerLocation?: Prisma.ViewerLocationUncheckedCreateNestedManyWithoutViewerInput
-  NonceRequest?: Prisma.NonceRequestUncheckedCreateNestedManyWithoutCreatedForInput
   BandApplicationTag?: Prisma.BandApplicationTagUncheckedCreateNestedManyWithoutCreatedByViewerInput
   CrewCard?: Prisma.CrewCardUncheckedCreateNestedManyWithoutViewerInput
+  Nonce?: Prisma.NonceUncheckedCreateNestedManyWithoutCreatedForInput
+  NonceRequest?: Prisma.NonceRequestUncheckedCreateNestedManyWithoutCreatedForInput
+  ViewerLocation?: Prisma.ViewerLocationUncheckedCreateNestedManyWithoutViewerInput
 }
 
 export type ViewerUpdateInput = {
@@ -317,11 +317,11 @@ export type ViewerUpdateInput = {
   BandApplication?: Prisma.BandApplicationUpdateManyWithoutContactedByViewerNestedInput
   BandApplicationComment?: Prisma.BandApplicationCommentUpdateManyWithoutViewerNestedInput
   BandApplicationRating?: Prisma.BandApplicationRatingUpdateManyWithoutViewerNestedInput
-  Nonce?: Prisma.NonceUpdateManyWithoutCreatedForNestedInput
-  ViewerLocation?: Prisma.ViewerLocationUpdateManyWithoutViewerNestedInput
-  NonceRequest?: Prisma.NonceRequestUpdateManyWithoutCreatedForNestedInput
   BandApplicationTag?: Prisma.BandApplicationTagUpdateManyWithoutCreatedByViewerNestedInput
   CrewCard?: Prisma.CrewCardUpdateManyWithoutViewerNestedInput
+  Nonce?: Prisma.NonceUpdateManyWithoutCreatedForNestedInput
+  NonceRequest?: Prisma.NonceRequestUpdateManyWithoutCreatedForNestedInput
+  ViewerLocation?: Prisma.ViewerLocationUpdateManyWithoutViewerNestedInput
 }
 
 export type ViewerUncheckedUpdateInput = {
@@ -335,11 +335,11 @@ export type ViewerUncheckedUpdateInput = {
   BandApplication?: Prisma.BandApplicationUncheckedUpdateManyWithoutContactedByViewerNestedInput
   BandApplicationComment?: Prisma.BandApplicationCommentUncheckedUpdateManyWithoutViewerNestedInput
   BandApplicationRating?: Prisma.BandApplicationRatingUncheckedUpdateManyWithoutViewerNestedInput
-  Nonce?: Prisma.NonceUncheckedUpdateManyWithoutCreatedForNestedInput
-  ViewerLocation?: Prisma.ViewerLocationUncheckedUpdateManyWithoutViewerNestedInput
-  NonceRequest?: Prisma.NonceRequestUncheckedUpdateManyWithoutCreatedForNestedInput
   BandApplicationTag?: Prisma.BandApplicationTagUncheckedUpdateManyWithoutCreatedByViewerNestedInput
   CrewCard?: Prisma.CrewCardUncheckedUpdateManyWithoutViewerNestedInput
+  Nonce?: Prisma.NonceUncheckedUpdateManyWithoutCreatedForNestedInput
+  NonceRequest?: Prisma.NonceRequestUncheckedUpdateManyWithoutCreatedForNestedInput
+  ViewerLocation?: Prisma.ViewerLocationUncheckedUpdateManyWithoutViewerNestedInput
 }
 
 export type ViewerCreateManyInput = {
@@ -576,10 +576,10 @@ export type ViewerCreateWithoutCrewCardInput = {
   BandApplication?: Prisma.BandApplicationCreateNestedManyWithoutContactedByViewerInput
   BandApplicationComment?: Prisma.BandApplicationCommentCreateNestedManyWithoutViewerInput
   BandApplicationRating?: Prisma.BandApplicationRatingCreateNestedManyWithoutViewerInput
-  Nonce?: Prisma.NonceCreateNestedManyWithoutCreatedForInput
-  ViewerLocation?: Prisma.ViewerLocationCreateNestedManyWithoutViewerInput
-  NonceRequest?: Prisma.NonceRequestCreateNestedManyWithoutCreatedForInput
   BandApplicationTag?: Prisma.BandApplicationTagCreateNestedManyWithoutCreatedByViewerInput
+  Nonce?: Prisma.NonceCreateNestedManyWithoutCreatedForInput
+  NonceRequest?: Prisma.NonceRequestCreateNestedManyWithoutCreatedForInput
+  ViewerLocation?: Prisma.ViewerLocationCreateNestedManyWithoutViewerInput
 }
 
 export type ViewerUncheckedCreateWithoutCrewCardInput = {
@@ -593,10 +593,10 @@ export type ViewerUncheckedCreateWithoutCrewCardInput = {
   BandApplication?: Prisma.BandApplicationUncheckedCreateNestedManyWithoutContactedByViewerInput
   BandApplicationComment?: Prisma.BandApplicationCommentUncheckedCreateNestedManyWithoutViewerInput
   BandApplicationRating?: Prisma.BandApplicationRatingUncheckedCreateNestedManyWithoutViewerInput
-  Nonce?: Prisma.NonceUncheckedCreateNestedManyWithoutCreatedForInput
-  ViewerLocation?: Prisma.ViewerLocationUncheckedCreateNestedManyWithoutViewerInput
-  NonceRequest?: Prisma.NonceRequestUncheckedCreateNestedManyWithoutCreatedForInput
   BandApplicationTag?: Prisma.BandApplicationTagUncheckedCreateNestedManyWithoutCreatedByViewerInput
+  Nonce?: Prisma.NonceUncheckedCreateNestedManyWithoutCreatedForInput
+  NonceRequest?: Prisma.NonceRequestUncheckedCreateNestedManyWithoutCreatedForInput
+  ViewerLocation?: Prisma.ViewerLocationUncheckedCreateNestedManyWithoutViewerInput
 }
 
 export type ViewerCreateOrConnectWithoutCrewCardInput = {
@@ -626,10 +626,10 @@ export type ViewerUpdateWithoutCrewCardInput = {
   BandApplication?: Prisma.BandApplicationUpdateManyWithoutContactedByViewerNestedInput
   BandApplicationComment?: Prisma.BandApplicationCommentUpdateManyWithoutViewerNestedInput
   BandApplicationRating?: Prisma.BandApplicationRatingUpdateManyWithoutViewerNestedInput
-  Nonce?: Prisma.NonceUpdateManyWithoutCreatedForNestedInput
-  ViewerLocation?: Prisma.ViewerLocationUpdateManyWithoutViewerNestedInput
-  NonceRequest?: Prisma.NonceRequestUpdateManyWithoutCreatedForNestedInput
   BandApplicationTag?: Prisma.BandApplicationTagUpdateManyWithoutCreatedByViewerNestedInput
+  Nonce?: Prisma.NonceUpdateManyWithoutCreatedForNestedInput
+  NonceRequest?: Prisma.NonceRequestUpdateManyWithoutCreatedForNestedInput
+  ViewerLocation?: Prisma.ViewerLocationUpdateManyWithoutViewerNestedInput
 }
 
 export type ViewerUncheckedUpdateWithoutCrewCardInput = {
@@ -643,10 +643,10 @@ export type ViewerUncheckedUpdateWithoutCrewCardInput = {
   BandApplication?: Prisma.BandApplicationUncheckedUpdateManyWithoutContactedByViewerNestedInput
   BandApplicationComment?: Prisma.BandApplicationCommentUncheckedUpdateManyWithoutViewerNestedInput
   BandApplicationRating?: Prisma.BandApplicationRatingUncheckedUpdateManyWithoutViewerNestedInput
-  Nonce?: Prisma.NonceUncheckedUpdateManyWithoutCreatedForNestedInput
-  ViewerLocation?: Prisma.ViewerLocationUncheckedUpdateManyWithoutViewerNestedInput
-  NonceRequest?: Prisma.NonceRequestUncheckedUpdateManyWithoutCreatedForNestedInput
   BandApplicationTag?: Prisma.BandApplicationTagUncheckedUpdateManyWithoutCreatedByViewerNestedInput
+  Nonce?: Prisma.NonceUncheckedUpdateManyWithoutCreatedForNestedInput
+  NonceRequest?: Prisma.NonceRequestUncheckedUpdateManyWithoutCreatedForNestedInput
+  ViewerLocation?: Prisma.ViewerLocationUncheckedUpdateManyWithoutViewerNestedInput
 }
 
 export type ViewerCreateWithoutBandApplicationInput = {
@@ -659,11 +659,11 @@ export type ViewerCreateWithoutBandApplicationInput = {
   updatedAt?: Date | string
   BandApplicationComment?: Prisma.BandApplicationCommentCreateNestedManyWithoutViewerInput
   BandApplicationRating?: Prisma.BandApplicationRatingCreateNestedManyWithoutViewerInput
-  Nonce?: Prisma.NonceCreateNestedManyWithoutCreatedForInput
-  ViewerLocation?: Prisma.ViewerLocationCreateNestedManyWithoutViewerInput
-  NonceRequest?: Prisma.NonceRequestCreateNestedManyWithoutCreatedForInput
   BandApplicationTag?: Prisma.BandApplicationTagCreateNestedManyWithoutCreatedByViewerInput
   CrewCard?: Prisma.CrewCardCreateNestedManyWithoutViewerInput
+  Nonce?: Prisma.NonceCreateNestedManyWithoutCreatedForInput
+  NonceRequest?: Prisma.NonceRequestCreateNestedManyWithoutCreatedForInput
+  ViewerLocation?: Prisma.ViewerLocationCreateNestedManyWithoutViewerInput
 }
 
 export type ViewerUncheckedCreateWithoutBandApplicationInput = {
@@ -676,11 +676,11 @@ export type ViewerUncheckedCreateWithoutBandApplicationInput = {
   updatedAt?: Date | string
   BandApplicationComment?: Prisma.BandApplicationCommentUncheckedCreateNestedManyWithoutViewerInput
   BandApplicationRating?: Prisma.BandApplicationRatingUncheckedCreateNestedManyWithoutViewerInput
-  Nonce?: Prisma.NonceUncheckedCreateNestedManyWithoutCreatedForInput
-  ViewerLocation?: Prisma.ViewerLocationUncheckedCreateNestedManyWithoutViewerInput
-  NonceRequest?: Prisma.NonceRequestUncheckedCreateNestedManyWithoutCreatedForInput
   BandApplicationTag?: Prisma.BandApplicationTagUncheckedCreateNestedManyWithoutCreatedByViewerInput
   CrewCard?: Prisma.CrewCardUncheckedCreateNestedManyWithoutViewerInput
+  Nonce?: Prisma.NonceUncheckedCreateNestedManyWithoutCreatedForInput
+  NonceRequest?: Prisma.NonceRequestUncheckedCreateNestedManyWithoutCreatedForInput
+  ViewerLocation?: Prisma.ViewerLocationUncheckedCreateNestedManyWithoutViewerInput
 }
 
 export type ViewerCreateOrConnectWithoutBandApplicationInput = {
@@ -709,11 +709,11 @@ export type ViewerUpdateWithoutBandApplicationInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   BandApplicationComment?: Prisma.BandApplicationCommentUpdateManyWithoutViewerNestedInput
   BandApplicationRating?: Prisma.BandApplicationRatingUpdateManyWithoutViewerNestedInput
-  Nonce?: Prisma.NonceUpdateManyWithoutCreatedForNestedInput
-  ViewerLocation?: Prisma.ViewerLocationUpdateManyWithoutViewerNestedInput
-  NonceRequest?: Prisma.NonceRequestUpdateManyWithoutCreatedForNestedInput
   BandApplicationTag?: Prisma.BandApplicationTagUpdateManyWithoutCreatedByViewerNestedInput
   CrewCard?: Prisma.CrewCardUpdateManyWithoutViewerNestedInput
+  Nonce?: Prisma.NonceUpdateManyWithoutCreatedForNestedInput
+  NonceRequest?: Prisma.NonceRequestUpdateManyWithoutCreatedForNestedInput
+  ViewerLocation?: Prisma.ViewerLocationUpdateManyWithoutViewerNestedInput
 }
 
 export type ViewerUncheckedUpdateWithoutBandApplicationInput = {
@@ -726,11 +726,11 @@ export type ViewerUncheckedUpdateWithoutBandApplicationInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   BandApplicationComment?: Prisma.BandApplicationCommentUncheckedUpdateManyWithoutViewerNestedInput
   BandApplicationRating?: Prisma.BandApplicationRatingUncheckedUpdateManyWithoutViewerNestedInput
-  Nonce?: Prisma.NonceUncheckedUpdateManyWithoutCreatedForNestedInput
-  ViewerLocation?: Prisma.ViewerLocationUncheckedUpdateManyWithoutViewerNestedInput
-  NonceRequest?: Prisma.NonceRequestUncheckedUpdateManyWithoutCreatedForNestedInput
   BandApplicationTag?: Prisma.BandApplicationTagUncheckedUpdateManyWithoutCreatedByViewerNestedInput
   CrewCard?: Prisma.CrewCardUncheckedUpdateManyWithoutViewerNestedInput
+  Nonce?: Prisma.NonceUncheckedUpdateManyWithoutCreatedForNestedInput
+  NonceRequest?: Prisma.NonceRequestUncheckedUpdateManyWithoutCreatedForNestedInput
+  ViewerLocation?: Prisma.ViewerLocationUncheckedUpdateManyWithoutViewerNestedInput
 }
 
 export type ViewerCreateWithoutBandApplicationTagInput = {
@@ -744,10 +744,10 @@ export type ViewerCreateWithoutBandApplicationTagInput = {
   BandApplication?: Prisma.BandApplicationCreateNestedManyWithoutContactedByViewerInput
   BandApplicationComment?: Prisma.BandApplicationCommentCreateNestedManyWithoutViewerInput
   BandApplicationRating?: Prisma.BandApplicationRatingCreateNestedManyWithoutViewerInput
-  Nonce?: Prisma.NonceCreateNestedManyWithoutCreatedForInput
-  ViewerLocation?: Prisma.ViewerLocationCreateNestedManyWithoutViewerInput
-  NonceRequest?: Prisma.NonceRequestCreateNestedManyWithoutCreatedForInput
   CrewCard?: Prisma.CrewCardCreateNestedManyWithoutViewerInput
+  Nonce?: Prisma.NonceCreateNestedManyWithoutCreatedForInput
+  NonceRequest?: Prisma.NonceRequestCreateNestedManyWithoutCreatedForInput
+  ViewerLocation?: Prisma.ViewerLocationCreateNestedManyWithoutViewerInput
 }
 
 export type ViewerUncheckedCreateWithoutBandApplicationTagInput = {
@@ -761,10 +761,10 @@ export type ViewerUncheckedCreateWithoutBandApplicationTagInput = {
   BandApplication?: Prisma.BandApplicationUncheckedCreateNestedManyWithoutContactedByViewerInput
   BandApplicationComment?: Prisma.BandApplicationCommentUncheckedCreateNestedManyWithoutViewerInput
   BandApplicationRating?: Prisma.BandApplicationRatingUncheckedCreateNestedManyWithoutViewerInput
-  Nonce?: Prisma.NonceUncheckedCreateNestedManyWithoutCreatedForInput
-  ViewerLocation?: Prisma.ViewerLocationUncheckedCreateNestedManyWithoutViewerInput
-  NonceRequest?: Prisma.NonceRequestUncheckedCreateNestedManyWithoutCreatedForInput
   CrewCard?: Prisma.CrewCardUncheckedCreateNestedManyWithoutViewerInput
+  Nonce?: Prisma.NonceUncheckedCreateNestedManyWithoutCreatedForInput
+  NonceRequest?: Prisma.NonceRequestUncheckedCreateNestedManyWithoutCreatedForInput
+  ViewerLocation?: Prisma.ViewerLocationUncheckedCreateNestedManyWithoutViewerInput
 }
 
 export type ViewerCreateOrConnectWithoutBandApplicationTagInput = {
@@ -794,10 +794,10 @@ export type ViewerUpdateWithoutBandApplicationTagInput = {
   BandApplication?: Prisma.BandApplicationUpdateManyWithoutContactedByViewerNestedInput
   BandApplicationComment?: Prisma.BandApplicationCommentUpdateManyWithoutViewerNestedInput
   BandApplicationRating?: Prisma.BandApplicationRatingUpdateManyWithoutViewerNestedInput
-  Nonce?: Prisma.NonceUpdateManyWithoutCreatedForNestedInput
-  ViewerLocation?: Prisma.ViewerLocationUpdateManyWithoutViewerNestedInput
-  NonceRequest?: Prisma.NonceRequestUpdateManyWithoutCreatedForNestedInput
   CrewCard?: Prisma.CrewCardUpdateManyWithoutViewerNestedInput
+  Nonce?: Prisma.NonceUpdateManyWithoutCreatedForNestedInput
+  NonceRequest?: Prisma.NonceRequestUpdateManyWithoutCreatedForNestedInput
+  ViewerLocation?: Prisma.ViewerLocationUpdateManyWithoutViewerNestedInput
 }
 
 export type ViewerUncheckedUpdateWithoutBandApplicationTagInput = {
@@ -811,10 +811,10 @@ export type ViewerUncheckedUpdateWithoutBandApplicationTagInput = {
   BandApplication?: Prisma.BandApplicationUncheckedUpdateManyWithoutContactedByViewerNestedInput
   BandApplicationComment?: Prisma.BandApplicationCommentUncheckedUpdateManyWithoutViewerNestedInput
   BandApplicationRating?: Prisma.BandApplicationRatingUncheckedUpdateManyWithoutViewerNestedInput
-  Nonce?: Prisma.NonceUncheckedUpdateManyWithoutCreatedForNestedInput
-  ViewerLocation?: Prisma.ViewerLocationUncheckedUpdateManyWithoutViewerNestedInput
-  NonceRequest?: Prisma.NonceRequestUncheckedUpdateManyWithoutCreatedForNestedInput
   CrewCard?: Prisma.CrewCardUncheckedUpdateManyWithoutViewerNestedInput
+  Nonce?: Prisma.NonceUncheckedUpdateManyWithoutCreatedForNestedInput
+  NonceRequest?: Prisma.NonceRequestUncheckedUpdateManyWithoutCreatedForNestedInput
+  ViewerLocation?: Prisma.ViewerLocationUncheckedUpdateManyWithoutViewerNestedInput
 }
 
 export type ViewerCreateWithoutBandApplicationRatingInput = {
@@ -827,11 +827,11 @@ export type ViewerCreateWithoutBandApplicationRatingInput = {
   updatedAt?: Date | string
   BandApplication?: Prisma.BandApplicationCreateNestedManyWithoutContactedByViewerInput
   BandApplicationComment?: Prisma.BandApplicationCommentCreateNestedManyWithoutViewerInput
-  Nonce?: Prisma.NonceCreateNestedManyWithoutCreatedForInput
-  ViewerLocation?: Prisma.ViewerLocationCreateNestedManyWithoutViewerInput
-  NonceRequest?: Prisma.NonceRequestCreateNestedManyWithoutCreatedForInput
   BandApplicationTag?: Prisma.BandApplicationTagCreateNestedManyWithoutCreatedByViewerInput
   CrewCard?: Prisma.CrewCardCreateNestedManyWithoutViewerInput
+  Nonce?: Prisma.NonceCreateNestedManyWithoutCreatedForInput
+  NonceRequest?: Prisma.NonceRequestCreateNestedManyWithoutCreatedForInput
+  ViewerLocation?: Prisma.ViewerLocationCreateNestedManyWithoutViewerInput
 }
 
 export type ViewerUncheckedCreateWithoutBandApplicationRatingInput = {
@@ -844,11 +844,11 @@ export type ViewerUncheckedCreateWithoutBandApplicationRatingInput = {
   updatedAt?: Date | string
   BandApplication?: Prisma.BandApplicationUncheckedCreateNestedManyWithoutContactedByViewerInput
   BandApplicationComment?: Prisma.BandApplicationCommentUncheckedCreateNestedManyWithoutViewerInput
-  Nonce?: Prisma.NonceUncheckedCreateNestedManyWithoutCreatedForInput
-  ViewerLocation?: Prisma.ViewerLocationUncheckedCreateNestedManyWithoutViewerInput
-  NonceRequest?: Prisma.NonceRequestUncheckedCreateNestedManyWithoutCreatedForInput
   BandApplicationTag?: Prisma.BandApplicationTagUncheckedCreateNestedManyWithoutCreatedByViewerInput
   CrewCard?: Prisma.CrewCardUncheckedCreateNestedManyWithoutViewerInput
+  Nonce?: Prisma.NonceUncheckedCreateNestedManyWithoutCreatedForInput
+  NonceRequest?: Prisma.NonceRequestUncheckedCreateNestedManyWithoutCreatedForInput
+  ViewerLocation?: Prisma.ViewerLocationUncheckedCreateNestedManyWithoutViewerInput
 }
 
 export type ViewerCreateOrConnectWithoutBandApplicationRatingInput = {
@@ -877,11 +877,11 @@ export type ViewerUpdateWithoutBandApplicationRatingInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   BandApplication?: Prisma.BandApplicationUpdateManyWithoutContactedByViewerNestedInput
   BandApplicationComment?: Prisma.BandApplicationCommentUpdateManyWithoutViewerNestedInput
-  Nonce?: Prisma.NonceUpdateManyWithoutCreatedForNestedInput
-  ViewerLocation?: Prisma.ViewerLocationUpdateManyWithoutViewerNestedInput
-  NonceRequest?: Prisma.NonceRequestUpdateManyWithoutCreatedForNestedInput
   BandApplicationTag?: Prisma.BandApplicationTagUpdateManyWithoutCreatedByViewerNestedInput
   CrewCard?: Prisma.CrewCardUpdateManyWithoutViewerNestedInput
+  Nonce?: Prisma.NonceUpdateManyWithoutCreatedForNestedInput
+  NonceRequest?: Prisma.NonceRequestUpdateManyWithoutCreatedForNestedInput
+  ViewerLocation?: Prisma.ViewerLocationUpdateManyWithoutViewerNestedInput
 }
 
 export type ViewerUncheckedUpdateWithoutBandApplicationRatingInput = {
@@ -894,11 +894,11 @@ export type ViewerUncheckedUpdateWithoutBandApplicationRatingInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   BandApplication?: Prisma.BandApplicationUncheckedUpdateManyWithoutContactedByViewerNestedInput
   BandApplicationComment?: Prisma.BandApplicationCommentUncheckedUpdateManyWithoutViewerNestedInput
-  Nonce?: Prisma.NonceUncheckedUpdateManyWithoutCreatedForNestedInput
-  ViewerLocation?: Prisma.ViewerLocationUncheckedUpdateManyWithoutViewerNestedInput
-  NonceRequest?: Prisma.NonceRequestUncheckedUpdateManyWithoutCreatedForNestedInput
   BandApplicationTag?: Prisma.BandApplicationTagUncheckedUpdateManyWithoutCreatedByViewerNestedInput
   CrewCard?: Prisma.CrewCardUncheckedUpdateManyWithoutViewerNestedInput
+  Nonce?: Prisma.NonceUncheckedUpdateManyWithoutCreatedForNestedInput
+  NonceRequest?: Prisma.NonceRequestUncheckedUpdateManyWithoutCreatedForNestedInput
+  ViewerLocation?: Prisma.ViewerLocationUncheckedUpdateManyWithoutViewerNestedInput
 }
 
 export type ViewerCreateWithoutBandApplicationCommentInput = {
@@ -911,11 +911,11 @@ export type ViewerCreateWithoutBandApplicationCommentInput = {
   updatedAt?: Date | string
   BandApplication?: Prisma.BandApplicationCreateNestedManyWithoutContactedByViewerInput
   BandApplicationRating?: Prisma.BandApplicationRatingCreateNestedManyWithoutViewerInput
-  Nonce?: Prisma.NonceCreateNestedManyWithoutCreatedForInput
-  ViewerLocation?: Prisma.ViewerLocationCreateNestedManyWithoutViewerInput
-  NonceRequest?: Prisma.NonceRequestCreateNestedManyWithoutCreatedForInput
   BandApplicationTag?: Prisma.BandApplicationTagCreateNestedManyWithoutCreatedByViewerInput
   CrewCard?: Prisma.CrewCardCreateNestedManyWithoutViewerInput
+  Nonce?: Prisma.NonceCreateNestedManyWithoutCreatedForInput
+  NonceRequest?: Prisma.NonceRequestCreateNestedManyWithoutCreatedForInput
+  ViewerLocation?: Prisma.ViewerLocationCreateNestedManyWithoutViewerInput
 }
 
 export type ViewerUncheckedCreateWithoutBandApplicationCommentInput = {
@@ -928,11 +928,11 @@ export type ViewerUncheckedCreateWithoutBandApplicationCommentInput = {
   updatedAt?: Date | string
   BandApplication?: Prisma.BandApplicationUncheckedCreateNestedManyWithoutContactedByViewerInput
   BandApplicationRating?: Prisma.BandApplicationRatingUncheckedCreateNestedManyWithoutViewerInput
-  Nonce?: Prisma.NonceUncheckedCreateNestedManyWithoutCreatedForInput
-  ViewerLocation?: Prisma.ViewerLocationUncheckedCreateNestedManyWithoutViewerInput
-  NonceRequest?: Prisma.NonceRequestUncheckedCreateNestedManyWithoutCreatedForInput
   BandApplicationTag?: Prisma.BandApplicationTagUncheckedCreateNestedManyWithoutCreatedByViewerInput
   CrewCard?: Prisma.CrewCardUncheckedCreateNestedManyWithoutViewerInput
+  Nonce?: Prisma.NonceUncheckedCreateNestedManyWithoutCreatedForInput
+  NonceRequest?: Prisma.NonceRequestUncheckedCreateNestedManyWithoutCreatedForInput
+  ViewerLocation?: Prisma.ViewerLocationUncheckedCreateNestedManyWithoutViewerInput
 }
 
 export type ViewerCreateOrConnectWithoutBandApplicationCommentInput = {
@@ -961,11 +961,11 @@ export type ViewerUpdateWithoutBandApplicationCommentInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   BandApplication?: Prisma.BandApplicationUpdateManyWithoutContactedByViewerNestedInput
   BandApplicationRating?: Prisma.BandApplicationRatingUpdateManyWithoutViewerNestedInput
-  Nonce?: Prisma.NonceUpdateManyWithoutCreatedForNestedInput
-  ViewerLocation?: Prisma.ViewerLocationUpdateManyWithoutViewerNestedInput
-  NonceRequest?: Prisma.NonceRequestUpdateManyWithoutCreatedForNestedInput
   BandApplicationTag?: Prisma.BandApplicationTagUpdateManyWithoutCreatedByViewerNestedInput
   CrewCard?: Prisma.CrewCardUpdateManyWithoutViewerNestedInput
+  Nonce?: Prisma.NonceUpdateManyWithoutCreatedForNestedInput
+  NonceRequest?: Prisma.NonceRequestUpdateManyWithoutCreatedForNestedInput
+  ViewerLocation?: Prisma.ViewerLocationUpdateManyWithoutViewerNestedInput
 }
 
 export type ViewerUncheckedUpdateWithoutBandApplicationCommentInput = {
@@ -978,11 +978,11 @@ export type ViewerUncheckedUpdateWithoutBandApplicationCommentInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   BandApplication?: Prisma.BandApplicationUncheckedUpdateManyWithoutContactedByViewerNestedInput
   BandApplicationRating?: Prisma.BandApplicationRatingUncheckedUpdateManyWithoutViewerNestedInput
-  Nonce?: Prisma.NonceUncheckedUpdateManyWithoutCreatedForNestedInput
-  ViewerLocation?: Prisma.ViewerLocationUncheckedUpdateManyWithoutViewerNestedInput
-  NonceRequest?: Prisma.NonceRequestUncheckedUpdateManyWithoutCreatedForNestedInput
   BandApplicationTag?: Prisma.BandApplicationTagUncheckedUpdateManyWithoutCreatedByViewerNestedInput
   CrewCard?: Prisma.CrewCardUncheckedUpdateManyWithoutViewerNestedInput
+  Nonce?: Prisma.NonceUncheckedUpdateManyWithoutCreatedForNestedInput
+  NonceRequest?: Prisma.NonceRequestUncheckedUpdateManyWithoutCreatedForNestedInput
+  ViewerLocation?: Prisma.ViewerLocationUncheckedUpdateManyWithoutViewerNestedInput
 }
 
 export type ViewerCreateWithoutNonceInput = {
@@ -996,10 +996,10 @@ export type ViewerCreateWithoutNonceInput = {
   BandApplication?: Prisma.BandApplicationCreateNestedManyWithoutContactedByViewerInput
   BandApplicationComment?: Prisma.BandApplicationCommentCreateNestedManyWithoutViewerInput
   BandApplicationRating?: Prisma.BandApplicationRatingCreateNestedManyWithoutViewerInput
-  ViewerLocation?: Prisma.ViewerLocationCreateNestedManyWithoutViewerInput
-  NonceRequest?: Prisma.NonceRequestCreateNestedManyWithoutCreatedForInput
   BandApplicationTag?: Prisma.BandApplicationTagCreateNestedManyWithoutCreatedByViewerInput
   CrewCard?: Prisma.CrewCardCreateNestedManyWithoutViewerInput
+  NonceRequest?: Prisma.NonceRequestCreateNestedManyWithoutCreatedForInput
+  ViewerLocation?: Prisma.ViewerLocationCreateNestedManyWithoutViewerInput
 }
 
 export type ViewerUncheckedCreateWithoutNonceInput = {
@@ -1013,10 +1013,10 @@ export type ViewerUncheckedCreateWithoutNonceInput = {
   BandApplication?: Prisma.BandApplicationUncheckedCreateNestedManyWithoutContactedByViewerInput
   BandApplicationComment?: Prisma.BandApplicationCommentUncheckedCreateNestedManyWithoutViewerInput
   BandApplicationRating?: Prisma.BandApplicationRatingUncheckedCreateNestedManyWithoutViewerInput
-  ViewerLocation?: Prisma.ViewerLocationUncheckedCreateNestedManyWithoutViewerInput
-  NonceRequest?: Prisma.NonceRequestUncheckedCreateNestedManyWithoutCreatedForInput
   BandApplicationTag?: Prisma.BandApplicationTagUncheckedCreateNestedManyWithoutCreatedByViewerInput
   CrewCard?: Prisma.CrewCardUncheckedCreateNestedManyWithoutViewerInput
+  NonceRequest?: Prisma.NonceRequestUncheckedCreateNestedManyWithoutCreatedForInput
+  ViewerLocation?: Prisma.ViewerLocationUncheckedCreateNestedManyWithoutViewerInput
 }
 
 export type ViewerCreateOrConnectWithoutNonceInput = {
@@ -1046,10 +1046,10 @@ export type ViewerUpdateWithoutNonceInput = {
   BandApplication?: Prisma.BandApplicationUpdateManyWithoutContactedByViewerNestedInput
   BandApplicationComment?: Prisma.BandApplicationCommentUpdateManyWithoutViewerNestedInput
   BandApplicationRating?: Prisma.BandApplicationRatingUpdateManyWithoutViewerNestedInput
-  ViewerLocation?: Prisma.ViewerLocationUpdateManyWithoutViewerNestedInput
-  NonceRequest?: Prisma.NonceRequestUpdateManyWithoutCreatedForNestedInput
   BandApplicationTag?: Prisma.BandApplicationTagUpdateManyWithoutCreatedByViewerNestedInput
   CrewCard?: Prisma.CrewCardUpdateManyWithoutViewerNestedInput
+  NonceRequest?: Prisma.NonceRequestUpdateManyWithoutCreatedForNestedInput
+  ViewerLocation?: Prisma.ViewerLocationUpdateManyWithoutViewerNestedInput
 }
 
 export type ViewerUncheckedUpdateWithoutNonceInput = {
@@ -1063,10 +1063,10 @@ export type ViewerUncheckedUpdateWithoutNonceInput = {
   BandApplication?: Prisma.BandApplicationUncheckedUpdateManyWithoutContactedByViewerNestedInput
   BandApplicationComment?: Prisma.BandApplicationCommentUncheckedUpdateManyWithoutViewerNestedInput
   BandApplicationRating?: Prisma.BandApplicationRatingUncheckedUpdateManyWithoutViewerNestedInput
-  ViewerLocation?: Prisma.ViewerLocationUncheckedUpdateManyWithoutViewerNestedInput
-  NonceRequest?: Prisma.NonceRequestUncheckedUpdateManyWithoutCreatedForNestedInput
   BandApplicationTag?: Prisma.BandApplicationTagUncheckedUpdateManyWithoutCreatedByViewerNestedInput
   CrewCard?: Prisma.CrewCardUncheckedUpdateManyWithoutViewerNestedInput
+  NonceRequest?: Prisma.NonceRequestUncheckedUpdateManyWithoutCreatedForNestedInput
+  ViewerLocation?: Prisma.ViewerLocationUncheckedUpdateManyWithoutViewerNestedInput
 }
 
 export type ViewerCreateWithoutNonceRequestInput = {
@@ -1080,10 +1080,10 @@ export type ViewerCreateWithoutNonceRequestInput = {
   BandApplication?: Prisma.BandApplicationCreateNestedManyWithoutContactedByViewerInput
   BandApplicationComment?: Prisma.BandApplicationCommentCreateNestedManyWithoutViewerInput
   BandApplicationRating?: Prisma.BandApplicationRatingCreateNestedManyWithoutViewerInput
-  Nonce?: Prisma.NonceCreateNestedManyWithoutCreatedForInput
-  ViewerLocation?: Prisma.ViewerLocationCreateNestedManyWithoutViewerInput
   BandApplicationTag?: Prisma.BandApplicationTagCreateNestedManyWithoutCreatedByViewerInput
   CrewCard?: Prisma.CrewCardCreateNestedManyWithoutViewerInput
+  Nonce?: Prisma.NonceCreateNestedManyWithoutCreatedForInput
+  ViewerLocation?: Prisma.ViewerLocationCreateNestedManyWithoutViewerInput
 }
 
 export type ViewerUncheckedCreateWithoutNonceRequestInput = {
@@ -1097,10 +1097,10 @@ export type ViewerUncheckedCreateWithoutNonceRequestInput = {
   BandApplication?: Prisma.BandApplicationUncheckedCreateNestedManyWithoutContactedByViewerInput
   BandApplicationComment?: Prisma.BandApplicationCommentUncheckedCreateNestedManyWithoutViewerInput
   BandApplicationRating?: Prisma.BandApplicationRatingUncheckedCreateNestedManyWithoutViewerInput
-  Nonce?: Prisma.NonceUncheckedCreateNestedManyWithoutCreatedForInput
-  ViewerLocation?: Prisma.ViewerLocationUncheckedCreateNestedManyWithoutViewerInput
   BandApplicationTag?: Prisma.BandApplicationTagUncheckedCreateNestedManyWithoutCreatedByViewerInput
   CrewCard?: Prisma.CrewCardUncheckedCreateNestedManyWithoutViewerInput
+  Nonce?: Prisma.NonceUncheckedCreateNestedManyWithoutCreatedForInput
+  ViewerLocation?: Prisma.ViewerLocationUncheckedCreateNestedManyWithoutViewerInput
 }
 
 export type ViewerCreateOrConnectWithoutNonceRequestInput = {
@@ -1130,10 +1130,10 @@ export type ViewerUpdateWithoutNonceRequestInput = {
   BandApplication?: Prisma.BandApplicationUpdateManyWithoutContactedByViewerNestedInput
   BandApplicationComment?: Prisma.BandApplicationCommentUpdateManyWithoutViewerNestedInput
   BandApplicationRating?: Prisma.BandApplicationRatingUpdateManyWithoutViewerNestedInput
-  Nonce?: Prisma.NonceUpdateManyWithoutCreatedForNestedInput
-  ViewerLocation?: Prisma.ViewerLocationUpdateManyWithoutViewerNestedInput
   BandApplicationTag?: Prisma.BandApplicationTagUpdateManyWithoutCreatedByViewerNestedInput
   CrewCard?: Prisma.CrewCardUpdateManyWithoutViewerNestedInput
+  Nonce?: Prisma.NonceUpdateManyWithoutCreatedForNestedInput
+  ViewerLocation?: Prisma.ViewerLocationUpdateManyWithoutViewerNestedInput
 }
 
 export type ViewerUncheckedUpdateWithoutNonceRequestInput = {
@@ -1147,10 +1147,10 @@ export type ViewerUncheckedUpdateWithoutNonceRequestInput = {
   BandApplication?: Prisma.BandApplicationUncheckedUpdateManyWithoutContactedByViewerNestedInput
   BandApplicationComment?: Prisma.BandApplicationCommentUncheckedUpdateManyWithoutViewerNestedInput
   BandApplicationRating?: Prisma.BandApplicationRatingUncheckedUpdateManyWithoutViewerNestedInput
-  Nonce?: Prisma.NonceUncheckedUpdateManyWithoutCreatedForNestedInput
-  ViewerLocation?: Prisma.ViewerLocationUncheckedUpdateManyWithoutViewerNestedInput
   BandApplicationTag?: Prisma.BandApplicationTagUncheckedUpdateManyWithoutCreatedByViewerNestedInput
   CrewCard?: Prisma.CrewCardUncheckedUpdateManyWithoutViewerNestedInput
+  Nonce?: Prisma.NonceUncheckedUpdateManyWithoutCreatedForNestedInput
+  ViewerLocation?: Prisma.ViewerLocationUncheckedUpdateManyWithoutViewerNestedInput
 }
 
 export type ViewerCreateWithoutViewerLocationInput = {
@@ -1164,10 +1164,10 @@ export type ViewerCreateWithoutViewerLocationInput = {
   BandApplication?: Prisma.BandApplicationCreateNestedManyWithoutContactedByViewerInput
   BandApplicationComment?: Prisma.BandApplicationCommentCreateNestedManyWithoutViewerInput
   BandApplicationRating?: Prisma.BandApplicationRatingCreateNestedManyWithoutViewerInput
-  Nonce?: Prisma.NonceCreateNestedManyWithoutCreatedForInput
-  NonceRequest?: Prisma.NonceRequestCreateNestedManyWithoutCreatedForInput
   BandApplicationTag?: Prisma.BandApplicationTagCreateNestedManyWithoutCreatedByViewerInput
   CrewCard?: Prisma.CrewCardCreateNestedManyWithoutViewerInput
+  Nonce?: Prisma.NonceCreateNestedManyWithoutCreatedForInput
+  NonceRequest?: Prisma.NonceRequestCreateNestedManyWithoutCreatedForInput
 }
 
 export type ViewerUncheckedCreateWithoutViewerLocationInput = {
@@ -1181,10 +1181,10 @@ export type ViewerUncheckedCreateWithoutViewerLocationInput = {
   BandApplication?: Prisma.BandApplicationUncheckedCreateNestedManyWithoutContactedByViewerInput
   BandApplicationComment?: Prisma.BandApplicationCommentUncheckedCreateNestedManyWithoutViewerInput
   BandApplicationRating?: Prisma.BandApplicationRatingUncheckedCreateNestedManyWithoutViewerInput
-  Nonce?: Prisma.NonceUncheckedCreateNestedManyWithoutCreatedForInput
-  NonceRequest?: Prisma.NonceRequestUncheckedCreateNestedManyWithoutCreatedForInput
   BandApplicationTag?: Prisma.BandApplicationTagUncheckedCreateNestedManyWithoutCreatedByViewerInput
   CrewCard?: Prisma.CrewCardUncheckedCreateNestedManyWithoutViewerInput
+  Nonce?: Prisma.NonceUncheckedCreateNestedManyWithoutCreatedForInput
+  NonceRequest?: Prisma.NonceRequestUncheckedCreateNestedManyWithoutCreatedForInput
 }
 
 export type ViewerCreateOrConnectWithoutViewerLocationInput = {
@@ -1214,10 +1214,10 @@ export type ViewerUpdateWithoutViewerLocationInput = {
   BandApplication?: Prisma.BandApplicationUpdateManyWithoutContactedByViewerNestedInput
   BandApplicationComment?: Prisma.BandApplicationCommentUpdateManyWithoutViewerNestedInput
   BandApplicationRating?: Prisma.BandApplicationRatingUpdateManyWithoutViewerNestedInput
-  Nonce?: Prisma.NonceUpdateManyWithoutCreatedForNestedInput
-  NonceRequest?: Prisma.NonceRequestUpdateManyWithoutCreatedForNestedInput
   BandApplicationTag?: Prisma.BandApplicationTagUpdateManyWithoutCreatedByViewerNestedInput
   CrewCard?: Prisma.CrewCardUpdateManyWithoutViewerNestedInput
+  Nonce?: Prisma.NonceUpdateManyWithoutCreatedForNestedInput
+  NonceRequest?: Prisma.NonceRequestUpdateManyWithoutCreatedForNestedInput
 }
 
 export type ViewerUncheckedUpdateWithoutViewerLocationInput = {
@@ -1231,10 +1231,10 @@ export type ViewerUncheckedUpdateWithoutViewerLocationInput = {
   BandApplication?: Prisma.BandApplicationUncheckedUpdateManyWithoutContactedByViewerNestedInput
   BandApplicationComment?: Prisma.BandApplicationCommentUncheckedUpdateManyWithoutViewerNestedInput
   BandApplicationRating?: Prisma.BandApplicationRatingUncheckedUpdateManyWithoutViewerNestedInput
-  Nonce?: Prisma.NonceUncheckedUpdateManyWithoutCreatedForNestedInput
-  NonceRequest?: Prisma.NonceRequestUncheckedUpdateManyWithoutCreatedForNestedInput
   BandApplicationTag?: Prisma.BandApplicationTagUncheckedUpdateManyWithoutCreatedByViewerNestedInput
   CrewCard?: Prisma.CrewCardUncheckedUpdateManyWithoutViewerNestedInput
+  Nonce?: Prisma.NonceUncheckedUpdateManyWithoutCreatedForNestedInput
+  NonceRequest?: Prisma.NonceRequestUncheckedUpdateManyWithoutCreatedForNestedInput
 }
 
 
@@ -1246,22 +1246,22 @@ export type ViewerCountOutputType = {
   BandApplication: number
   BandApplicationComment: number
   BandApplicationRating: number
-  Nonce: number
-  ViewerLocation: number
-  NonceRequest: number
   BandApplicationTag: number
   CrewCard: number
+  Nonce: number
+  NonceRequest: number
+  ViewerLocation: number
 }
 
 export type ViewerCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   BandApplication?: boolean | ViewerCountOutputTypeCountBandApplicationArgs
   BandApplicationComment?: boolean | ViewerCountOutputTypeCountBandApplicationCommentArgs
   BandApplicationRating?: boolean | ViewerCountOutputTypeCountBandApplicationRatingArgs
-  Nonce?: boolean | ViewerCountOutputTypeCountNonceArgs
-  ViewerLocation?: boolean | ViewerCountOutputTypeCountViewerLocationArgs
-  NonceRequest?: boolean | ViewerCountOutputTypeCountNonceRequestArgs
   BandApplicationTag?: boolean | ViewerCountOutputTypeCountBandApplicationTagArgs
   CrewCard?: boolean | ViewerCountOutputTypeCountCrewCardArgs
+  Nonce?: boolean | ViewerCountOutputTypeCountNonceArgs
+  NonceRequest?: boolean | ViewerCountOutputTypeCountNonceRequestArgs
+  ViewerLocation?: boolean | ViewerCountOutputTypeCountViewerLocationArgs
 }
 
 /**
@@ -1298,15 +1298,22 @@ export type ViewerCountOutputTypeCountBandApplicationRatingArgs<ExtArgs extends 
 /**
  * ViewerCountOutputType without action
  */
-export type ViewerCountOutputTypeCountNonceArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.NonceWhereInput
+export type ViewerCountOutputTypeCountBandApplicationTagArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.BandApplicationTagWhereInput
 }
 
 /**
  * ViewerCountOutputType without action
  */
-export type ViewerCountOutputTypeCountViewerLocationArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.ViewerLocationWhereInput
+export type ViewerCountOutputTypeCountCrewCardArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.CrewCardWhereInput
+}
+
+/**
+ * ViewerCountOutputType without action
+ */
+export type ViewerCountOutputTypeCountNonceArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.NonceWhereInput
 }
 
 /**
@@ -1319,15 +1326,8 @@ export type ViewerCountOutputTypeCountNonceRequestArgs<ExtArgs extends runtime.T
 /**
  * ViewerCountOutputType without action
  */
-export type ViewerCountOutputTypeCountBandApplicationTagArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.BandApplicationTagWhereInput
-}
-
-/**
- * ViewerCountOutputType without action
- */
-export type ViewerCountOutputTypeCountCrewCardArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.CrewCardWhereInput
+export type ViewerCountOutputTypeCountViewerLocationArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ViewerLocationWhereInput
 }
 
 
@@ -1342,11 +1342,11 @@ export type ViewerSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   BandApplication?: boolean | Prisma.Viewer$BandApplicationArgs<ExtArgs>
   BandApplicationComment?: boolean | Prisma.Viewer$BandApplicationCommentArgs<ExtArgs>
   BandApplicationRating?: boolean | Prisma.Viewer$BandApplicationRatingArgs<ExtArgs>
-  Nonce?: boolean | Prisma.Viewer$NonceArgs<ExtArgs>
-  ViewerLocation?: boolean | Prisma.Viewer$ViewerLocationArgs<ExtArgs>
-  NonceRequest?: boolean | Prisma.Viewer$NonceRequestArgs<ExtArgs>
   BandApplicationTag?: boolean | Prisma.Viewer$BandApplicationTagArgs<ExtArgs>
   CrewCard?: boolean | Prisma.Viewer$CrewCardArgs<ExtArgs>
+  Nonce?: boolean | Prisma.Viewer$NonceArgs<ExtArgs>
+  NonceRequest?: boolean | Prisma.Viewer$NonceRequestArgs<ExtArgs>
+  ViewerLocation?: boolean | Prisma.Viewer$ViewerLocationArgs<ExtArgs>
   _count?: boolean | Prisma.ViewerCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["viewer"]>
 
@@ -1385,11 +1385,11 @@ export type ViewerInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   BandApplication?: boolean | Prisma.Viewer$BandApplicationArgs<ExtArgs>
   BandApplicationComment?: boolean | Prisma.Viewer$BandApplicationCommentArgs<ExtArgs>
   BandApplicationRating?: boolean | Prisma.Viewer$BandApplicationRatingArgs<ExtArgs>
-  Nonce?: boolean | Prisma.Viewer$NonceArgs<ExtArgs>
-  ViewerLocation?: boolean | Prisma.Viewer$ViewerLocationArgs<ExtArgs>
-  NonceRequest?: boolean | Prisma.Viewer$NonceRequestArgs<ExtArgs>
   BandApplicationTag?: boolean | Prisma.Viewer$BandApplicationTagArgs<ExtArgs>
   CrewCard?: boolean | Prisma.Viewer$CrewCardArgs<ExtArgs>
+  Nonce?: boolean | Prisma.Viewer$NonceArgs<ExtArgs>
+  NonceRequest?: boolean | Prisma.Viewer$NonceRequestArgs<ExtArgs>
+  ViewerLocation?: boolean | Prisma.Viewer$ViewerLocationArgs<ExtArgs>
   _count?: boolean | Prisma.ViewerCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type ViewerIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -1401,11 +1401,11 @@ export type $ViewerPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
     BandApplication: Prisma.$BandApplicationPayload<ExtArgs>[]
     BandApplicationComment: Prisma.$BandApplicationCommentPayload<ExtArgs>[]
     BandApplicationRating: Prisma.$BandApplicationRatingPayload<ExtArgs>[]
-    Nonce: Prisma.$NoncePayload<ExtArgs>[]
-    ViewerLocation: Prisma.$ViewerLocationPayload<ExtArgs>[]
-    NonceRequest: Prisma.$NonceRequestPayload<ExtArgs>[]
     BandApplicationTag: Prisma.$BandApplicationTagPayload<ExtArgs>[]
     CrewCard: Prisma.$CrewCardPayload<ExtArgs>[]
+    Nonce: Prisma.$NoncePayload<ExtArgs>[]
+    NonceRequest: Prisma.$NonceRequestPayload<ExtArgs>[]
+    ViewerLocation: Prisma.$ViewerLocationPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1812,11 +1812,11 @@ export interface Prisma__ViewerClient<T, Null = never, ExtArgs extends runtime.T
   BandApplication<T extends Prisma.Viewer$BandApplicationArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Viewer$BandApplicationArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BandApplicationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   BandApplicationComment<T extends Prisma.Viewer$BandApplicationCommentArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Viewer$BandApplicationCommentArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BandApplicationCommentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   BandApplicationRating<T extends Prisma.Viewer$BandApplicationRatingArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Viewer$BandApplicationRatingArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BandApplicationRatingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  Nonce<T extends Prisma.Viewer$NonceArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Viewer$NonceArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NoncePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  ViewerLocation<T extends Prisma.Viewer$ViewerLocationArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Viewer$ViewerLocationArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ViewerLocationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  NonceRequest<T extends Prisma.Viewer$NonceRequestArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Viewer$NonceRequestArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NonceRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   BandApplicationTag<T extends Prisma.Viewer$BandApplicationTagArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Viewer$BandApplicationTagArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BandApplicationTagPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   CrewCard<T extends Prisma.Viewer$CrewCardArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Viewer$CrewCardArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CrewCardPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  Nonce<T extends Prisma.Viewer$NonceArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Viewer$NonceArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NoncePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  NonceRequest<T extends Prisma.Viewer$NonceRequestArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Viewer$NonceRequestArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NonceRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  ViewerLocation<T extends Prisma.Viewer$ViewerLocationArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Viewer$ViewerLocationArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ViewerLocationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2318,78 +2318,6 @@ export type Viewer$BandApplicationRatingArgs<ExtArgs extends runtime.Types.Exten
 }
 
 /**
- * Viewer.Nonce
- */
-export type Viewer$NonceArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the Nonce
-   */
-  select?: Prisma.NonceSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the Nonce
-   */
-  omit?: Prisma.NonceOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.NonceInclude<ExtArgs> | null
-  where?: Prisma.NonceWhereInput
-  orderBy?: Prisma.NonceOrderByWithRelationInput | Prisma.NonceOrderByWithRelationInput[]
-  cursor?: Prisma.NonceWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.NonceScalarFieldEnum | Prisma.NonceScalarFieldEnum[]
-}
-
-/**
- * Viewer.ViewerLocation
- */
-export type Viewer$ViewerLocationArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the ViewerLocation
-   */
-  select?: Prisma.ViewerLocationSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the ViewerLocation
-   */
-  omit?: Prisma.ViewerLocationOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.ViewerLocationInclude<ExtArgs> | null
-  where?: Prisma.ViewerLocationWhereInput
-  orderBy?: Prisma.ViewerLocationOrderByWithRelationInput | Prisma.ViewerLocationOrderByWithRelationInput[]
-  cursor?: Prisma.ViewerLocationWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.ViewerLocationScalarFieldEnum | Prisma.ViewerLocationScalarFieldEnum[]
-}
-
-/**
- * Viewer.NonceRequest
- */
-export type Viewer$NonceRequestArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the NonceRequest
-   */
-  select?: Prisma.NonceRequestSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the NonceRequest
-   */
-  omit?: Prisma.NonceRequestOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.NonceRequestInclude<ExtArgs> | null
-  where?: Prisma.NonceRequestWhereInput
-  orderBy?: Prisma.NonceRequestOrderByWithRelationInput | Prisma.NonceRequestOrderByWithRelationInput[]
-  cursor?: Prisma.NonceRequestWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.NonceRequestScalarFieldEnum | Prisma.NonceRequestScalarFieldEnum[]
-}
-
-/**
  * Viewer.BandApplicationTag
  */
 export type Viewer$BandApplicationTagArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2435,6 +2363,78 @@ export type Viewer$CrewCardArgs<ExtArgs extends runtime.Types.Extensions.Interna
   take?: number
   skip?: number
   distinct?: Prisma.CrewCardScalarFieldEnum | Prisma.CrewCardScalarFieldEnum[]
+}
+
+/**
+ * Viewer.Nonce
+ */
+export type Viewer$NonceArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Nonce
+   */
+  select?: Prisma.NonceSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Nonce
+   */
+  omit?: Prisma.NonceOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.NonceInclude<ExtArgs> | null
+  where?: Prisma.NonceWhereInput
+  orderBy?: Prisma.NonceOrderByWithRelationInput | Prisma.NonceOrderByWithRelationInput[]
+  cursor?: Prisma.NonceWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.NonceScalarFieldEnum | Prisma.NonceScalarFieldEnum[]
+}
+
+/**
+ * Viewer.NonceRequest
+ */
+export type Viewer$NonceRequestArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the NonceRequest
+   */
+  select?: Prisma.NonceRequestSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the NonceRequest
+   */
+  omit?: Prisma.NonceRequestOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.NonceRequestInclude<ExtArgs> | null
+  where?: Prisma.NonceRequestWhereInput
+  orderBy?: Prisma.NonceRequestOrderByWithRelationInput | Prisma.NonceRequestOrderByWithRelationInput[]
+  cursor?: Prisma.NonceRequestWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.NonceRequestScalarFieldEnum | Prisma.NonceRequestScalarFieldEnum[]
+}
+
+/**
+ * Viewer.ViewerLocation
+ */
+export type Viewer$ViewerLocationArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ViewerLocation
+   */
+  select?: Prisma.ViewerLocationSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ViewerLocation
+   */
+  omit?: Prisma.ViewerLocationOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ViewerLocationInclude<ExtArgs> | null
+  where?: Prisma.ViewerLocationWhereInput
+  orderBy?: Prisma.ViewerLocationOrderByWithRelationInput | Prisma.ViewerLocationOrderByWithRelationInput[]
+  cursor?: Prisma.ViewerLocationWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ViewerLocationScalarFieldEnum | Prisma.ViewerLocationScalarFieldEnum[]
 }
 
 /**

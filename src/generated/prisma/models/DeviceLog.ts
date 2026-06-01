@@ -228,8 +228,8 @@ export type DeviceLogWhereInput = {
   deviceId?: Prisma.StringFilter<"DeviceLog"> | string
   createdAt?: Prisma.DateTimeFilter<"DeviceLog"> | Date | string
   deviceTime?: Prisma.DateTimeFilter<"DeviceLog"> | Date | string
+  CardTransaction?: Prisma.XOR<Prisma.CardTransactionNullableScalarRelationFilter, Prisma.CardTransactionWhereInput> | null
   device?: Prisma.XOR<Prisma.DeviceScalarRelationFilter, Prisma.DeviceWhereInput>
-  CardTransaction?: Prisma.CardTransactionListRelationFilter
 }
 
 export type DeviceLogOrderByWithRelationInput = {
@@ -239,8 +239,8 @@ export type DeviceLogOrderByWithRelationInput = {
   deviceId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   deviceTime?: Prisma.SortOrder
+  CardTransaction?: Prisma.CardTransactionOrderByWithRelationInput
   device?: Prisma.DeviceOrderByWithRelationInput
-  CardTransaction?: Prisma.CardTransactionOrderByRelationAggregateInput
   _relevance?: Prisma.DeviceLogOrderByRelevanceInput
 }
 
@@ -254,8 +254,8 @@ export type DeviceLogWhereUniqueInput = Prisma.AtLeast<{
   deviceId?: Prisma.StringFilter<"DeviceLog"> | string
   createdAt?: Prisma.DateTimeFilter<"DeviceLog"> | Date | string
   deviceTime?: Prisma.DateTimeFilter<"DeviceLog"> | Date | string
+  CardTransaction?: Prisma.XOR<Prisma.CardTransactionNullableScalarRelationFilter, Prisma.CardTransactionWhereInput> | null
   device?: Prisma.XOR<Prisma.DeviceScalarRelationFilter, Prisma.DeviceWhereInput>
-  CardTransaction?: Prisma.CardTransactionListRelationFilter
 }, "clientId">
 
 export type DeviceLogOrderByWithAggregationInput = {
@@ -290,8 +290,8 @@ export type DeviceLogCreateInput = {
   usbVoltage?: number | null
   createdAt?: Date | string
   deviceTime: Date | string
+  CardTransaction?: Prisma.CardTransactionCreateNestedOneWithoutDeviceLogInput
   device: Prisma.DeviceCreateNestedOneWithoutDeviceLogInput
-  CardTransaction?: Prisma.CardTransactionCreateNestedManyWithoutDeviceLogInput
 }
 
 export type DeviceLogUncheckedCreateInput = {
@@ -301,7 +301,7 @@ export type DeviceLogUncheckedCreateInput = {
   deviceId: string
   createdAt?: Date | string
   deviceTime: Date | string
-  CardTransaction?: Prisma.CardTransactionUncheckedCreateNestedManyWithoutDeviceLogInput
+  CardTransaction?: Prisma.CardTransactionUncheckedCreateNestedOneWithoutDeviceLogInput
 }
 
 export type DeviceLogUpdateInput = {
@@ -310,8 +310,8 @@ export type DeviceLogUpdateInput = {
   usbVoltage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deviceTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  CardTransaction?: Prisma.CardTransactionUpdateOneWithoutDeviceLogNestedInput
   device?: Prisma.DeviceUpdateOneRequiredWithoutDeviceLogNestedInput
-  CardTransaction?: Prisma.CardTransactionUpdateManyWithoutDeviceLogNestedInput
 }
 
 export type DeviceLogUncheckedUpdateInput = {
@@ -321,7 +321,7 @@ export type DeviceLogUncheckedUpdateInput = {
   deviceId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deviceTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  CardTransaction?: Prisma.CardTransactionUncheckedUpdateManyWithoutDeviceLogNestedInput
+  CardTransaction?: Prisma.CardTransactionUncheckedUpdateOneWithoutDeviceLogNestedInput
 }
 
 export type DeviceLogCreateManyInput = {
@@ -470,7 +470,7 @@ export type DeviceLogCreateWithoutDeviceInput = {
   usbVoltage?: number | null
   createdAt?: Date | string
   deviceTime: Date | string
-  CardTransaction?: Prisma.CardTransactionCreateNestedManyWithoutDeviceLogInput
+  CardTransaction?: Prisma.CardTransactionCreateNestedOneWithoutDeviceLogInput
 }
 
 export type DeviceLogUncheckedCreateWithoutDeviceInput = {
@@ -479,7 +479,7 @@ export type DeviceLogUncheckedCreateWithoutDeviceInput = {
   usbVoltage?: number | null
   createdAt?: Date | string
   deviceTime: Date | string
-  CardTransaction?: Prisma.CardTransactionUncheckedCreateNestedManyWithoutDeviceLogInput
+  CardTransaction?: Prisma.CardTransactionUncheckedCreateNestedOneWithoutDeviceLogInput
 }
 
 export type DeviceLogCreateOrConnectWithoutDeviceInput = {
@@ -586,7 +586,7 @@ export type DeviceLogUpdateWithoutDeviceInput = {
   usbVoltage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deviceTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  CardTransaction?: Prisma.CardTransactionUpdateManyWithoutDeviceLogNestedInput
+  CardTransaction?: Prisma.CardTransactionUpdateOneWithoutDeviceLogNestedInput
 }
 
 export type DeviceLogUncheckedUpdateWithoutDeviceInput = {
@@ -595,7 +595,7 @@ export type DeviceLogUncheckedUpdateWithoutDeviceInput = {
   usbVoltage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deviceTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  CardTransaction?: Prisma.CardTransactionUncheckedUpdateManyWithoutDeviceLogNestedInput
+  CardTransaction?: Prisma.CardTransactionUncheckedUpdateOneWithoutDeviceLogNestedInput
 }
 
 export type DeviceLogUncheckedUpdateManyWithoutDeviceInput = {
@@ -607,35 +607,6 @@ export type DeviceLogUncheckedUpdateManyWithoutDeviceInput = {
 }
 
 
-/**
- * Count Type DeviceLogCountOutputType
- */
-
-export type DeviceLogCountOutputType = {
-  CardTransaction: number
-}
-
-export type DeviceLogCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  CardTransaction?: boolean | DeviceLogCountOutputTypeCountCardTransactionArgs
-}
-
-/**
- * DeviceLogCountOutputType without action
- */
-export type DeviceLogCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the DeviceLogCountOutputType
-   */
-  select?: Prisma.DeviceLogCountOutputTypeSelect<ExtArgs> | null
-}
-
-/**
- * DeviceLogCountOutputType without action
- */
-export type DeviceLogCountOutputTypeCountCardTransactionArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.CardTransactionWhereInput
-}
-
 
 export type DeviceLogSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   clientId?: boolean
@@ -644,9 +615,8 @@ export type DeviceLogSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   deviceId?: boolean
   createdAt?: boolean
   deviceTime?: boolean
-  device?: boolean | Prisma.DeviceDefaultArgs<ExtArgs>
   CardTransaction?: boolean | Prisma.DeviceLog$CardTransactionArgs<ExtArgs>
-  _count?: boolean | Prisma.DeviceLogCountOutputTypeDefaultArgs<ExtArgs>
+  device?: boolean | Prisma.DeviceDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["deviceLog"]>
 
 export type DeviceLogSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -680,9 +650,8 @@ export type DeviceLogSelectScalar = {
 
 export type DeviceLogOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"clientId" | "batteryVoltage" | "usbVoltage" | "deviceId" | "createdAt" | "deviceTime", ExtArgs["result"]["deviceLog"]>
 export type DeviceLogInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  device?: boolean | Prisma.DeviceDefaultArgs<ExtArgs>
   CardTransaction?: boolean | Prisma.DeviceLog$CardTransactionArgs<ExtArgs>
-  _count?: boolean | Prisma.DeviceLogCountOutputTypeDefaultArgs<ExtArgs>
+  device?: boolean | Prisma.DeviceDefaultArgs<ExtArgs>
 }
 export type DeviceLogIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   device?: boolean | Prisma.DeviceDefaultArgs<ExtArgs>
@@ -694,8 +663,8 @@ export type DeviceLogIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
 export type $DeviceLogPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "DeviceLog"
   objects: {
+    CardTransaction: Prisma.$CardTransactionPayload<ExtArgs> | null
     device: Prisma.$DevicePayload<ExtArgs>
-    CardTransaction: Prisma.$CardTransactionPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     clientId: string
@@ -1098,8 +1067,8 @@ readonly fields: DeviceLogFieldRefs;
  */
 export interface Prisma__DeviceLogClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  CardTransaction<T extends Prisma.DeviceLog$CardTransactionArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.DeviceLog$CardTransactionArgs<ExtArgs>>): Prisma.Prisma__CardTransactionClient<runtime.Types.Result.GetResult<Prisma.$CardTransactionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   device<T extends Prisma.DeviceDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.DeviceDefaultArgs<ExtArgs>>): Prisma.Prisma__DeviceClient<runtime.Types.Result.GetResult<Prisma.$DevicePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-  CardTransaction<T extends Prisma.DeviceLog$CardTransactionArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.DeviceLog$CardTransactionArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CardTransactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1552,11 +1521,6 @@ export type DeviceLog$CardTransactionArgs<ExtArgs extends runtime.Types.Extensio
    */
   include?: Prisma.CardTransactionInclude<ExtArgs> | null
   where?: Prisma.CardTransactionWhereInput
-  orderBy?: Prisma.CardTransactionOrderByWithRelationInput | Prisma.CardTransactionOrderByWithRelationInput[]
-  cursor?: Prisma.CardTransactionWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.CardTransactionScalarFieldEnum | Prisma.CardTransactionScalarFieldEnum[]
 }
 
 /**

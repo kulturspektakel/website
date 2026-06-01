@@ -3,7 +3,7 @@ import {prismaClient} from '../../utils/prismaClient.server';
 
 export const deviceLocations = createServerFn().handler(async () => {
   const rows = await prismaClient.deviceLocation.findMany({
-    where: {device: {type: 'NOISE_MONITOR'}},
+    where: {Device: {type: 'NOISE_MONITOR'}},
     orderBy: {createdAt: 'desc'},
     distinct: ['deviceId'],
     select: {deviceId: true, locationName: true},

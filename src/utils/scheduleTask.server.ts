@@ -15,6 +15,14 @@ export async function scheduleTask(
   data: z.infer<typeof schema>,
 ): Promise<void>;
 export async function scheduleTask(
+  task: 'badgeAwarded',
+  data: {orderId: number},
+): Promise<void>;
+export async function scheduleTask(
+  task: 'crewCardEnrolled',
+  data: {crewCardId: number[]; validUntil: string},
+): Promise<void>;
+export async function scheduleTask(
   task: string,
   data: Record<string, unknown>,
 ): Promise<void> {

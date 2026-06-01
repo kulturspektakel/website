@@ -228,10 +228,10 @@ export type OrderWhereInput = {
   deposit?: Prisma.IntFilter<"Order"> | number
   deviceId?: Prisma.StringNullableFilter<"Order"> | string | null
   crewCardId?: Prisma.BytesNullableFilter<"Order"> | runtime.Bytes | null
-  device?: Prisma.XOR<Prisma.DeviceNullableScalarRelationFilter, Prisma.DeviceWhereInput> | null
-  items?: Prisma.OrderItemListRelationFilter
   CardTransaction?: Prisma.CardTransactionListRelationFilter
   crewCard?: Prisma.XOR<Prisma.CrewCardNullableScalarRelationFilter, Prisma.CrewCardWhereInput> | null
+  device?: Prisma.XOR<Prisma.DeviceNullableScalarRelationFilter, Prisma.DeviceWhereInput> | null
+  items?: Prisma.OrderItemListRelationFilter
 }
 
 export type OrderOrderByWithRelationInput = {
@@ -241,10 +241,10 @@ export type OrderOrderByWithRelationInput = {
   deposit?: Prisma.SortOrder
   deviceId?: Prisma.SortOrderInput | Prisma.SortOrder
   crewCardId?: Prisma.SortOrderInput | Prisma.SortOrder
-  device?: Prisma.DeviceOrderByWithRelationInput
-  items?: Prisma.OrderItemOrderByRelationAggregateInput
   CardTransaction?: Prisma.CardTransactionOrderByRelationAggregateInput
   crewCard?: Prisma.CrewCardOrderByWithRelationInput
+  device?: Prisma.DeviceOrderByWithRelationInput
+  items?: Prisma.OrderItemOrderByRelationAggregateInput
   _relevance?: Prisma.OrderOrderByRelevanceInput
 }
 
@@ -258,10 +258,10 @@ export type OrderWhereUniqueInput = Prisma.AtLeast<{
   deposit?: Prisma.IntFilter<"Order"> | number
   deviceId?: Prisma.StringNullableFilter<"Order"> | string | null
   crewCardId?: Prisma.BytesNullableFilter<"Order"> | runtime.Bytes | null
-  device?: Prisma.XOR<Prisma.DeviceNullableScalarRelationFilter, Prisma.DeviceWhereInput> | null
-  items?: Prisma.OrderItemListRelationFilter
   CardTransaction?: Prisma.CardTransactionListRelationFilter
   crewCard?: Prisma.XOR<Prisma.CrewCardNullableScalarRelationFilter, Prisma.CrewCardWhereInput> | null
+  device?: Prisma.XOR<Prisma.DeviceNullableScalarRelationFilter, Prisma.DeviceWhereInput> | null
+  items?: Prisma.OrderItemListRelationFilter
 }, "id">
 
 export type OrderOrderByWithAggregationInput = {
@@ -294,10 +294,10 @@ export type OrderCreateInput = {
   createdAt?: Date | string
   payment: $Enums.OrderPayment
   deposit?: number
-  device?: Prisma.DeviceCreateNestedOneWithoutOrderInput
-  items?: Prisma.OrderItemCreateNestedManyWithoutOrderInput
   CardTransaction?: Prisma.CardTransactionCreateNestedManyWithoutOrderInput
   crewCard?: Prisma.CrewCardCreateNestedOneWithoutOrderInput
+  device?: Prisma.DeviceCreateNestedOneWithoutOrderInput
+  items?: Prisma.OrderItemCreateNestedManyWithoutOrderInput
 }
 
 export type OrderUncheckedCreateInput = {
@@ -307,18 +307,18 @@ export type OrderUncheckedCreateInput = {
   deposit?: number
   deviceId?: string | null
   crewCardId?: runtime.Bytes | null
-  items?: Prisma.OrderItemUncheckedCreateNestedManyWithoutOrderInput
   CardTransaction?: Prisma.CardTransactionUncheckedCreateNestedManyWithoutOrderInput
+  items?: Prisma.OrderItemUncheckedCreateNestedManyWithoutOrderInput
 }
 
 export type OrderUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   payment?: Prisma.EnumOrderPaymentFieldUpdateOperationsInput | $Enums.OrderPayment
   deposit?: Prisma.IntFieldUpdateOperationsInput | number
-  device?: Prisma.DeviceUpdateOneWithoutOrderNestedInput
-  items?: Prisma.OrderItemUpdateManyWithoutOrderNestedInput
   CardTransaction?: Prisma.CardTransactionUpdateManyWithoutOrderNestedInput
   crewCard?: Prisma.CrewCardUpdateOneWithoutOrderNestedInput
+  device?: Prisma.DeviceUpdateOneWithoutOrderNestedInput
+  items?: Prisma.OrderItemUpdateManyWithoutOrderNestedInput
 }
 
 export type OrderUncheckedUpdateInput = {
@@ -328,8 +328,8 @@ export type OrderUncheckedUpdateInput = {
   deposit?: Prisma.IntFieldUpdateOperationsInput | number
   deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   crewCardId?: Prisma.NullableBytesFieldUpdateOperationsInput | runtime.Bytes | null
-  items?: Prisma.OrderItemUncheckedUpdateManyWithoutOrderNestedInput
   CardTransaction?: Prisma.CardTransactionUncheckedUpdateManyWithoutOrderNestedInput
+  items?: Prisma.OrderItemUncheckedUpdateManyWithoutOrderNestedInput
 }
 
 export type OrderCreateManyInput = {
@@ -545,9 +545,9 @@ export type OrderCreateWithoutDeviceInput = {
   createdAt?: Date | string
   payment: $Enums.OrderPayment
   deposit?: number
-  items?: Prisma.OrderItemCreateNestedManyWithoutOrderInput
   CardTransaction?: Prisma.CardTransactionCreateNestedManyWithoutOrderInput
   crewCard?: Prisma.CrewCardCreateNestedOneWithoutOrderInput
+  items?: Prisma.OrderItemCreateNestedManyWithoutOrderInput
 }
 
 export type OrderUncheckedCreateWithoutDeviceInput = {
@@ -556,8 +556,8 @@ export type OrderUncheckedCreateWithoutDeviceInput = {
   payment: $Enums.OrderPayment
   deposit?: number
   crewCardId?: runtime.Bytes | null
-  items?: Prisma.OrderItemUncheckedCreateNestedManyWithoutOrderInput
   CardTransaction?: Prisma.CardTransactionUncheckedCreateNestedManyWithoutOrderInput
+  items?: Prisma.OrderItemUncheckedCreateNestedManyWithoutOrderInput
 }
 
 export type OrderCreateOrConnectWithoutDeviceInput = {
@@ -602,9 +602,9 @@ export type OrderCreateWithoutItemsInput = {
   createdAt?: Date | string
   payment: $Enums.OrderPayment
   deposit?: number
-  device?: Prisma.DeviceCreateNestedOneWithoutOrderInput
   CardTransaction?: Prisma.CardTransactionCreateNestedManyWithoutOrderInput
   crewCard?: Prisma.CrewCardCreateNestedOneWithoutOrderInput
+  device?: Prisma.DeviceCreateNestedOneWithoutOrderInput
 }
 
 export type OrderUncheckedCreateWithoutItemsInput = {
@@ -637,9 +637,9 @@ export type OrderUpdateWithoutItemsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   payment?: Prisma.EnumOrderPaymentFieldUpdateOperationsInput | $Enums.OrderPayment
   deposit?: Prisma.IntFieldUpdateOperationsInput | number
-  device?: Prisma.DeviceUpdateOneWithoutOrderNestedInput
   CardTransaction?: Prisma.CardTransactionUpdateManyWithoutOrderNestedInput
   crewCard?: Prisma.CrewCardUpdateOneWithoutOrderNestedInput
+  device?: Prisma.DeviceUpdateOneWithoutOrderNestedInput
 }
 
 export type OrderUncheckedUpdateWithoutItemsInput = {
@@ -656,9 +656,9 @@ export type OrderCreateWithoutCardTransactionInput = {
   createdAt?: Date | string
   payment: $Enums.OrderPayment
   deposit?: number
+  crewCard?: Prisma.CrewCardCreateNestedOneWithoutOrderInput
   device?: Prisma.DeviceCreateNestedOneWithoutOrderInput
   items?: Prisma.OrderItemCreateNestedManyWithoutOrderInput
-  crewCard?: Prisma.CrewCardCreateNestedOneWithoutOrderInput
 }
 
 export type OrderUncheckedCreateWithoutCardTransactionInput = {
@@ -691,9 +691,9 @@ export type OrderUpdateWithoutCardTransactionInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   payment?: Prisma.EnumOrderPaymentFieldUpdateOperationsInput | $Enums.OrderPayment
   deposit?: Prisma.IntFieldUpdateOperationsInput | number
+  crewCard?: Prisma.CrewCardUpdateOneWithoutOrderNestedInput
   device?: Prisma.DeviceUpdateOneWithoutOrderNestedInput
   items?: Prisma.OrderItemUpdateManyWithoutOrderNestedInput
-  crewCard?: Prisma.CrewCardUpdateOneWithoutOrderNestedInput
 }
 
 export type OrderUncheckedUpdateWithoutCardTransactionInput = {
@@ -710,9 +710,9 @@ export type OrderCreateWithoutCrewCardInput = {
   createdAt?: Date | string
   payment: $Enums.OrderPayment
   deposit?: number
+  CardTransaction?: Prisma.CardTransactionCreateNestedManyWithoutOrderInput
   device?: Prisma.DeviceCreateNestedOneWithoutOrderInput
   items?: Prisma.OrderItemCreateNestedManyWithoutOrderInput
-  CardTransaction?: Prisma.CardTransactionCreateNestedManyWithoutOrderInput
 }
 
 export type OrderUncheckedCreateWithoutCrewCardInput = {
@@ -721,8 +721,8 @@ export type OrderUncheckedCreateWithoutCrewCardInput = {
   payment: $Enums.OrderPayment
   deposit?: number
   deviceId?: string | null
-  items?: Prisma.OrderItemUncheckedCreateNestedManyWithoutOrderInput
   CardTransaction?: Prisma.CardTransactionUncheckedCreateNestedManyWithoutOrderInput
+  items?: Prisma.OrderItemUncheckedCreateNestedManyWithoutOrderInput
 }
 
 export type OrderCreateOrConnectWithoutCrewCardInput = {
@@ -763,9 +763,9 @@ export type OrderUpdateWithoutDeviceInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   payment?: Prisma.EnumOrderPaymentFieldUpdateOperationsInput | $Enums.OrderPayment
   deposit?: Prisma.IntFieldUpdateOperationsInput | number
-  items?: Prisma.OrderItemUpdateManyWithoutOrderNestedInput
   CardTransaction?: Prisma.CardTransactionUpdateManyWithoutOrderNestedInput
   crewCard?: Prisma.CrewCardUpdateOneWithoutOrderNestedInput
+  items?: Prisma.OrderItemUpdateManyWithoutOrderNestedInput
 }
 
 export type OrderUncheckedUpdateWithoutDeviceInput = {
@@ -774,8 +774,8 @@ export type OrderUncheckedUpdateWithoutDeviceInput = {
   payment?: Prisma.EnumOrderPaymentFieldUpdateOperationsInput | $Enums.OrderPayment
   deposit?: Prisma.IntFieldUpdateOperationsInput | number
   crewCardId?: Prisma.NullableBytesFieldUpdateOperationsInput | runtime.Bytes | null
-  items?: Prisma.OrderItemUncheckedUpdateManyWithoutOrderNestedInput
   CardTransaction?: Prisma.CardTransactionUncheckedUpdateManyWithoutOrderNestedInput
+  items?: Prisma.OrderItemUncheckedUpdateManyWithoutOrderNestedInput
 }
 
 export type OrderUncheckedUpdateManyWithoutDeviceInput = {
@@ -798,9 +798,9 @@ export type OrderUpdateWithoutCrewCardInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   payment?: Prisma.EnumOrderPaymentFieldUpdateOperationsInput | $Enums.OrderPayment
   deposit?: Prisma.IntFieldUpdateOperationsInput | number
+  CardTransaction?: Prisma.CardTransactionUpdateManyWithoutOrderNestedInput
   device?: Prisma.DeviceUpdateOneWithoutOrderNestedInput
   items?: Prisma.OrderItemUpdateManyWithoutOrderNestedInput
-  CardTransaction?: Prisma.CardTransactionUpdateManyWithoutOrderNestedInput
 }
 
 export type OrderUncheckedUpdateWithoutCrewCardInput = {
@@ -809,8 +809,8 @@ export type OrderUncheckedUpdateWithoutCrewCardInput = {
   payment?: Prisma.EnumOrderPaymentFieldUpdateOperationsInput | $Enums.OrderPayment
   deposit?: Prisma.IntFieldUpdateOperationsInput | number
   deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  items?: Prisma.OrderItemUncheckedUpdateManyWithoutOrderNestedInput
   CardTransaction?: Prisma.CardTransactionUncheckedUpdateManyWithoutOrderNestedInput
+  items?: Prisma.OrderItemUncheckedUpdateManyWithoutOrderNestedInput
 }
 
 export type OrderUncheckedUpdateManyWithoutCrewCardInput = {
@@ -827,13 +827,13 @@ export type OrderUncheckedUpdateManyWithoutCrewCardInput = {
  */
 
 export type OrderCountOutputType = {
-  items: number
   CardTransaction: number
+  items: number
 }
 
 export type OrderCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  items?: boolean | OrderCountOutputTypeCountItemsArgs
   CardTransaction?: boolean | OrderCountOutputTypeCountCardTransactionArgs
+  items?: boolean | OrderCountOutputTypeCountItemsArgs
 }
 
 /**
@@ -849,15 +849,15 @@ export type OrderCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extens
 /**
  * OrderCountOutputType without action
  */
-export type OrderCountOutputTypeCountItemsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.OrderItemWhereInput
+export type OrderCountOutputTypeCountCardTransactionArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.CardTransactionWhereInput
 }
 
 /**
  * OrderCountOutputType without action
  */
-export type OrderCountOutputTypeCountCardTransactionArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.CardTransactionWhereInput
+export type OrderCountOutputTypeCountItemsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.OrderItemWhereInput
 }
 
 
@@ -868,10 +868,10 @@ export type OrderSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   deposit?: boolean
   deviceId?: boolean
   crewCardId?: boolean
-  device?: boolean | Prisma.Order$deviceArgs<ExtArgs>
-  items?: boolean | Prisma.Order$itemsArgs<ExtArgs>
   CardTransaction?: boolean | Prisma.Order$CardTransactionArgs<ExtArgs>
   crewCard?: boolean | Prisma.Order$crewCardArgs<ExtArgs>
+  device?: boolean | Prisma.Order$deviceArgs<ExtArgs>
+  items?: boolean | Prisma.Order$itemsArgs<ExtArgs>
   _count?: boolean | Prisma.OrderCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["order"]>
 
@@ -882,8 +882,8 @@ export type OrderSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   deposit?: boolean
   deviceId?: boolean
   crewCardId?: boolean
-  device?: boolean | Prisma.Order$deviceArgs<ExtArgs>
   crewCard?: boolean | Prisma.Order$crewCardArgs<ExtArgs>
+  device?: boolean | Prisma.Order$deviceArgs<ExtArgs>
 }, ExtArgs["result"]["order"]>
 
 export type OrderSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -893,8 +893,8 @@ export type OrderSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   deposit?: boolean
   deviceId?: boolean
   crewCardId?: boolean
-  device?: boolean | Prisma.Order$deviceArgs<ExtArgs>
   crewCard?: boolean | Prisma.Order$crewCardArgs<ExtArgs>
+  device?: boolean | Prisma.Order$deviceArgs<ExtArgs>
 }, ExtArgs["result"]["order"]>
 
 export type OrderSelectScalar = {
@@ -908,28 +908,28 @@ export type OrderSelectScalar = {
 
 export type OrderOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "createdAt" | "payment" | "deposit" | "deviceId" | "crewCardId", ExtArgs["result"]["order"]>
 export type OrderInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  device?: boolean | Prisma.Order$deviceArgs<ExtArgs>
-  items?: boolean | Prisma.Order$itemsArgs<ExtArgs>
   CardTransaction?: boolean | Prisma.Order$CardTransactionArgs<ExtArgs>
   crewCard?: boolean | Prisma.Order$crewCardArgs<ExtArgs>
+  device?: boolean | Prisma.Order$deviceArgs<ExtArgs>
+  items?: boolean | Prisma.Order$itemsArgs<ExtArgs>
   _count?: boolean | Prisma.OrderCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type OrderIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  device?: boolean | Prisma.Order$deviceArgs<ExtArgs>
   crewCard?: boolean | Prisma.Order$crewCardArgs<ExtArgs>
+  device?: boolean | Prisma.Order$deviceArgs<ExtArgs>
 }
 export type OrderIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  device?: boolean | Prisma.Order$deviceArgs<ExtArgs>
   crewCard?: boolean | Prisma.Order$crewCardArgs<ExtArgs>
+  device?: boolean | Prisma.Order$deviceArgs<ExtArgs>
 }
 
 export type $OrderPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Order"
   objects: {
-    device: Prisma.$DevicePayload<ExtArgs> | null
-    items: Prisma.$OrderItemPayload<ExtArgs>[]
     CardTransaction: Prisma.$CardTransactionPayload<ExtArgs>[]
     crewCard: Prisma.$CrewCardPayload<ExtArgs> | null
+    device: Prisma.$DevicePayload<ExtArgs> | null
+    items: Prisma.$OrderItemPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
@@ -1332,10 +1332,10 @@ readonly fields: OrderFieldRefs;
  */
 export interface Prisma__OrderClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  device<T extends Prisma.Order$deviceArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Order$deviceArgs<ExtArgs>>): Prisma.Prisma__DeviceClient<runtime.Types.Result.GetResult<Prisma.$DevicePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-  items<T extends Prisma.Order$itemsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Order$itemsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$OrderItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   CardTransaction<T extends Prisma.Order$CardTransactionArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Order$CardTransactionArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CardTransactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   crewCard<T extends Prisma.Order$crewCardArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Order$crewCardArgs<ExtArgs>>): Prisma.Prisma__CrewCardClient<runtime.Types.Result.GetResult<Prisma.$CrewCardPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  device<T extends Prisma.Order$deviceArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Order$deviceArgs<ExtArgs>>): Prisma.Prisma__DeviceClient<runtime.Types.Result.GetResult<Prisma.$DevicePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  items<T extends Prisma.Order$itemsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Order$itemsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$OrderItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1772,49 +1772,6 @@ export type OrderDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Interna
 }
 
 /**
- * Order.device
- */
-export type Order$deviceArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the Device
-   */
-  select?: Prisma.DeviceSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the Device
-   */
-  omit?: Prisma.DeviceOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.DeviceInclude<ExtArgs> | null
-  where?: Prisma.DeviceWhereInput
-}
-
-/**
- * Order.items
- */
-export type Order$itemsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the OrderItem
-   */
-  select?: Prisma.OrderItemSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the OrderItem
-   */
-  omit?: Prisma.OrderItemOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.OrderItemInclude<ExtArgs> | null
-  where?: Prisma.OrderItemWhereInput
-  orderBy?: Prisma.OrderItemOrderByWithRelationInput | Prisma.OrderItemOrderByWithRelationInput[]
-  cursor?: Prisma.OrderItemWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.OrderItemScalarFieldEnum | Prisma.OrderItemScalarFieldEnum[]
-}
-
-/**
  * Order.CardTransaction
  */
 export type Order$CardTransactionArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1855,6 +1812,49 @@ export type Order$crewCardArgs<ExtArgs extends runtime.Types.Extensions.Internal
    */
   include?: Prisma.CrewCardInclude<ExtArgs> | null
   where?: Prisma.CrewCardWhereInput
+}
+
+/**
+ * Order.device
+ */
+export type Order$deviceArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Device
+   */
+  select?: Prisma.DeviceSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Device
+   */
+  omit?: Prisma.DeviceOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.DeviceInclude<ExtArgs> | null
+  where?: Prisma.DeviceWhereInput
+}
+
+/**
+ * Order.items
+ */
+export type Order$itemsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the OrderItem
+   */
+  select?: Prisma.OrderItemSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the OrderItem
+   */
+  omit?: Prisma.OrderItemOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.OrderItemInclude<ExtArgs> | null
+  where?: Prisma.OrderItemWhereInput
+  orderBy?: Prisma.OrderItemOrderByWithRelationInput | Prisma.OrderItemOrderByWithRelationInput[]
+  cursor?: Prisma.OrderItemWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.OrderItemScalarFieldEnum | Prisma.OrderItemScalarFieldEnum[]
 }
 
 /**
