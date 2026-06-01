@@ -142,27 +142,6 @@ resource "google_cloud_scheduler_job" "gmail_watch_refresh" {
   depends_on = [google_project_service.apis]
 }
 
-# Cron-scheduled task: hits the heartbeat route every 5 minutes with an OIDC
-# token whose audience matches `gcpAuth('heartbeat')` on the route.
-resource "google_cloud_scheduler_job" "heartbeat" {
-  name        = "heartbeat"
-  description = "Demo: hits /api/tasks/heartbeat every 5 minutes."
-  schedule    = "*/5 * * * *"
-  time_zone   = "UTC"
-  region      = local.region
-
-  http_target {
-    uri         = "${local.site_url}/api/tasks/heartbeat"
-    http_method = "POST"
-    oidc_token {
-      service_account_email = google_service_account.tasks.email
-      audience              = "heartbeat"
-    }
-  }
-
-  depends_on = [google_project_service.apis]
-}
-
 output "project_id" {
   description = "Set as GCP_PROJECT_ID on Vercel."
   value       = local.project_id

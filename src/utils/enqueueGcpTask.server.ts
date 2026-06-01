@@ -35,11 +35,6 @@ type EnqueueOptions = {
  * site, same shape as `scheduleTask` in `scheduleTask.server.ts`.
  */
 export async function enqueueGcpTask(
-  task: 'demo',
-  payload: {message: string},
-  options?: EnqueueOptions,
-): Promise<void>;
-export async function enqueueGcpTask(
   task: 'create-nonce-request',
   payload: {id: string; email: string},
   options?: EnqueueOptions,

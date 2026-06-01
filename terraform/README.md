@@ -1,18 +1,21 @@
 # GCP-triggered tasks
 
-This directory provisions the Google Cloud side of the task system: one Cloud
-Tasks queue, one service account, and one demo Cloud Scheduler job. The
-Vercel-side handlers live in `src/routes/api.tasks.*.ts` and
-`src/utils/gcpAuth.server.ts`.
+This directory provisions the Google Cloud side of the task system: a Cloud
+Tasks queue, a Cloud Scheduler job (Gmail watch refresh), a Pub/Sub push
+subscription (Gmail notifications), a service account, three API keys (Maps
+server, Maps browser, Sheets), and Cloud Monitoring (uptime check + alert
+policies). The Vercel-side handlers live in `src/routes/api.tasks.*.ts` and
+`src/server/routes/tasks.*.ts`.
 
 ## How the auth works
 
-Both Cloud Scheduler and Cloud Tasks can be configured to attach an **OIDC
-token** to outbound HTTP requests. The token is a JWT signed by Google as the
-service account this Terraform creates. The Vercel middleware
-(`gcpAuth(audience)`) verifies the signature against Google's public keys and
-checks that the `email` claim matches our service account and the `aud` claim
-matches the per-route audience. No shared secret to rotate.
+Cloud Scheduler, Cloud Tasks, and Pub/Sub push subscriptions all attach an
+**OIDC token** to their outbound HTTP requests. The token is a JWT signed by
+Google as the `tasks-invoker` service account this Terraform creates. The
+Vercel middleware (`gcpAuth(audience)`) verifies the signature against
+Google's public keys and checks that the `email` claim matches our service
+account and the `aud` claim matches the per-route audience. No shared secret
+to rotate.
 
 ## Prerequisites
 
@@ -44,25 +47,27 @@ Copy these outputs into the Vercel project's environment variables:
 | `GCP_TASKS_SERVICE_ACCOUNT_KEY_JSON` | `terraform output -raw tasks_service_account_key_json` |
 | `SITE_URL` | `https://www.kulturspektakel.de` (hardcoded in `main.tf`) |
 
-Then redeploy.
+Or run `yarn sync:gcp-env` from the repo root — it writes a managed block in
+`.env` from these outputs.
 
 ## Smoke test
 
-1. **Scheduled task:** GCP Console → Cloud Scheduler → `heartbeat` → "Run
-   now". The Vercel logs should show `[heartbeat] tick at …` within a few
+1. **Scheduled task:** GCP Console → Cloud Scheduler → `gmail-watch-refresh`
+   → "Run now". Cloud Scheduler logs should show HTTP 204 within a few
    seconds.
-2. **Ad-hoc task:** `curl -X POST https://YOUR_SITE/api/tasks/trigger-demo -H
-   'content-type: application/json' -d '{"message":"hi"}'`. Within ~1s the
-   Vercel logs should show `[demo task] hi`.
-3. **Auth gate:** `curl -X POST https://YOUR_SITE/api/tasks/heartbeat` (no
-   credentials) → `401 Unauthorized`.
+2. **Auth gate:** `curl -X POST https://YOUR_SITE/api/tasks/gmail-watch-refresh`
+   (no credentials) → `401 Unauthorized`.
+3. **End-to-end:** send an email to a watched inbox (booking/info/lager
+   @kulturspektakel.de) — within seconds a "Neue E-Mail" Slack notification
+   should land in the matching channel.
 
-## Adding a new scheduled task
+## Adding a new scheduled (cron) task
 
-1. Add a handler to `src/server/routes/tasks.ts` and a route file
+1. Add a handler in `src/server/routes/tasks.<name>.ts` and a route file
    `src/routes/api.tasks.<name>.ts` using `gcpAuth('<name>')`.
-2. Add a `google_cloud_scheduler_job` block here — copy `heartbeat`, change
-   the `name`, `schedule`, `uri`, and the `audience` to match the route.
+2. Add a `google_cloud_scheduler_job` block here — copy
+   `gmail_watch_refresh`, change the `name`, `schedule`, `uri`, and the
+   `audience` to match the route.
 3. `terraform apply`.
 
 ## Adding a new ad-hoc (Cloud Tasks) task
