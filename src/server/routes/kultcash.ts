@@ -17,6 +17,7 @@ import {tzOffset} from '@date-fns/tz';
 import crc32 from 'crc-32';
 import {ApiError} from '../../utils/apiError.server';
 import type {DeviceToken} from '../../utils/apiAuth.server';
+import {enqueueGcpTask} from '../../utils/enqueueGcpTask.server';
 import {scheduleTask} from '../../utils/scheduleTask.server';
 import UnreachableCaseError from '../../utils/UnreachableCaseError';
 
@@ -250,7 +251,7 @@ export async function handleLog(request: Request): Promise<Response> {
     });
 
     if (createdOrder.crewCardId) {
-      await scheduleTask('badgeAwarded', {orderId: createdOrder.id});
+      await enqueueGcpTask('badge-awarded', {orderId: createdOrder.id});
     }
   }
 

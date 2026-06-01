@@ -3,20 +3,12 @@ import type {schema} from '../routes/_main.mitgliedsantrag';
 import {prismaClient} from './prismaClient.server';
 
 export async function scheduleTask(
-  task: 'createNonceRequest',
-  data: {id: string; email: string},
-): Promise<void>;
-export async function scheduleTask(
   task: 'createBandApplication',
   data: {id: string},
 ): Promise<void>;
 export async function scheduleTask(
   task: 'createMembershipApplication',
   data: z.infer<typeof schema>,
-): Promise<void>;
-export async function scheduleTask(
-  task: 'badgeAwarded',
-  data: {orderId: number},
 ): Promise<void>;
 export async function scheduleTask(
   task: 'crewCardEnrolled',

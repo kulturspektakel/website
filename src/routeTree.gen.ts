@@ -14,7 +14,6 @@ import { Route as MainRouteImport } from './routes/_main'
 import { Route as CrewIndexRouteImport } from './routes/crew.index'
 import { Route as MainIndexRouteImport } from './routes/_main.index'
 import { Route as CrewLautstaerkeRouteImport } from './routes/crew.lautstaerke'
-import { Route as ApiBadgesRouteImport } from './routes/api.badges'
 import { Route as MainSpeisekarteRouteImport } from './routes/_main.speisekarte'
 import { Route as MainPlakateRouteImport } from './routes/_main.plakate'
 import { Route as MainNuclinoSsoRouteImport } from './routes/_main.nuclino-sso'
@@ -38,6 +37,7 @@ import { Route as ApiTasksNonceInvalidateRouteImport } from './routes/api.tasks.
 import { Route as ApiTasksHeartbeatRouteImport } from './routes/api.tasks.heartbeat'
 import { Route as ApiTasksDemoRouteImport } from './routes/api.tasks.demo'
 import { Route as ApiTasksCreateNonceRequestRouteImport } from './routes/api.tasks.create-nonce-request'
+import { Route as ApiTasksBadgeAwardedRouteImport } from './routes/api.tasks.badge-awarded'
 import { Route as ApiNoiseLogRouteImport } from './routes/api.noise.log'
 import { Route as ApiKultcashLogRouteImport } from './routes/api.kultcash.log'
 import { Route as ApiKultcashListsRouteImport } from './routes/api.kultcash.lists'
@@ -79,11 +79,6 @@ const CrewLautstaerkeRoute = CrewLautstaerkeRouteImport.update({
   id: '/lautstaerke',
   path: '/lautstaerke',
   getParentRoute: () => CrewRoute,
-} as any)
-const ApiBadgesRoute = ApiBadgesRouteImport.update({
-  id: '/api/badges',
-  path: '/api/badges',
-  getParentRoute: () => rootRouteImport,
 } as any)
 const MainSpeisekarteRoute = MainSpeisekarteRouteImport.update({
   id: '/speisekarte',
@@ -202,6 +197,11 @@ const ApiTasksCreateNonceRequestRoute =
     path: '/api/tasks/create-nonce-request',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiTasksBadgeAwardedRoute = ApiTasksBadgeAwardedRouteImport.update({
+  id: '/api/tasks/badge-awarded',
+  path: '/api/tasks/badge-awarded',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiNoiseLogRoute = ApiNoiseLogRouteImport.update({
   id: '/api/noise/log',
   path: '/api/noise/log',
@@ -308,7 +308,6 @@ export interface FileRoutesByFullPath {
   '/nuclino-sso': typeof MainNuclinoSsoRoute
   '/plakate': typeof MainPlakateRoute
   '/speisekarte': typeof MainSpeisekarteRoute
-  '/api/badges': typeof ApiBadgesRoute
   '/crew/lautstaerke': typeof CrewLautstaerkeRouteWithChildren
   '/crew/': typeof CrewIndexRoute
   '/booking/$applicationType': typeof MainBookingApplicationTypeRoute
@@ -322,6 +321,7 @@ export interface FileRoutesByFullPath {
   '/api/kultcash/lists': typeof ApiKultcashListsRoute
   '/api/kultcash/log': typeof ApiKultcashLogRoute
   '/api/noise/log': typeof ApiNoiseLogRoute
+  '/api/tasks/badge-awarded': typeof ApiTasksBadgeAwardedRoute
   '/api/tasks/create-nonce-request': typeof ApiTasksCreateNonceRequestRoute
   '/api/tasks/demo': typeof ApiTasksDemoRoute
   '/api/tasks/heartbeat': typeof ApiTasksHeartbeatRoute
@@ -352,7 +352,6 @@ export interface FileRoutesByTo {
   '/nuclino-sso': typeof MainNuclinoSsoRoute
   '/plakate': typeof MainPlakateRoute
   '/speisekarte': typeof MainSpeisekarteRoute
-  '/api/badges': typeof ApiBadgesRoute
   '/': typeof MainIndexRoute
   '/crew': typeof CrewIndexRoute
   '/booking/$applicationType': typeof MainBookingApplicationTypeRoute
@@ -366,6 +365,7 @@ export interface FileRoutesByTo {
   '/api/kultcash/lists': typeof ApiKultcashListsRoute
   '/api/kultcash/log': typeof ApiKultcashLogRoute
   '/api/noise/log': typeof ApiNoiseLogRoute
+  '/api/tasks/badge-awarded': typeof ApiTasksBadgeAwardedRoute
   '/api/tasks/create-nonce-request': typeof ApiTasksCreateNonceRequestRoute
   '/api/tasks/demo': typeof ApiTasksDemoRoute
   '/api/tasks/heartbeat': typeof ApiTasksHeartbeatRoute
@@ -400,7 +400,6 @@ export interface FileRoutesById {
   '/_main/nuclino-sso': typeof MainNuclinoSsoRoute
   '/_main/plakate': typeof MainPlakateRoute
   '/_main/speisekarte': typeof MainSpeisekarteRoute
-  '/api/badges': typeof ApiBadgesRoute
   '/crew/lautstaerke': typeof CrewLautstaerkeRouteWithChildren
   '/_main/': typeof MainIndexRoute
   '/crew/': typeof CrewIndexRoute
@@ -415,6 +414,7 @@ export interface FileRoutesById {
   '/api/kultcash/lists': typeof ApiKultcashListsRoute
   '/api/kultcash/log': typeof ApiKultcashLogRoute
   '/api/noise/log': typeof ApiNoiseLogRoute
+  '/api/tasks/badge-awarded': typeof ApiTasksBadgeAwardedRoute
   '/api/tasks/create-nonce-request': typeof ApiTasksCreateNonceRequestRoute
   '/api/tasks/demo': typeof ApiTasksDemoRoute
   '/api/tasks/heartbeat': typeof ApiTasksHeartbeatRoute
@@ -450,7 +450,6 @@ export interface FileRouteTypes {
     | '/nuclino-sso'
     | '/plakate'
     | '/speisekarte'
-    | '/api/badges'
     | '/crew/lautstaerke'
     | '/crew/'
     | '/booking/$applicationType'
@@ -464,6 +463,7 @@ export interface FileRouteTypes {
     | '/api/kultcash/lists'
     | '/api/kultcash/log'
     | '/api/noise/log'
+    | '/api/tasks/badge-awarded'
     | '/api/tasks/create-nonce-request'
     | '/api/tasks/demo'
     | '/api/tasks/heartbeat'
@@ -494,7 +494,6 @@ export interface FileRouteTypes {
     | '/nuclino-sso'
     | '/plakate'
     | '/speisekarte'
-    | '/api/badges'
     | '/'
     | '/crew'
     | '/booking/$applicationType'
@@ -508,6 +507,7 @@ export interface FileRouteTypes {
     | '/api/kultcash/lists'
     | '/api/kultcash/log'
     | '/api/noise/log'
+    | '/api/tasks/badge-awarded'
     | '/api/tasks/create-nonce-request'
     | '/api/tasks/demo'
     | '/api/tasks/heartbeat'
@@ -541,7 +541,6 @@ export interface FileRouteTypes {
     | '/_main/nuclino-sso'
     | '/_main/plakate'
     | '/_main/speisekarte'
-    | '/api/badges'
     | '/crew/lautstaerke'
     | '/_main/'
     | '/crew/'
@@ -556,6 +555,7 @@ export interface FileRouteTypes {
     | '/api/kultcash/lists'
     | '/api/kultcash/log'
     | '/api/noise/log'
+    | '/api/tasks/badge-awarded'
     | '/api/tasks/create-nonce-request'
     | '/api/tasks/demo'
     | '/api/tasks/heartbeat'
@@ -576,11 +576,11 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   MainRoute: typeof MainRouteWithChildren
   CrewRoute: typeof CrewRouteWithChildren
-  ApiBadgesRoute: typeof ApiBadgesRoute
   ApiKultcashConfigRoute: typeof ApiKultcashConfigRoute
   ApiKultcashListsRoute: typeof ApiKultcashListsRoute
   ApiKultcashLogRoute: typeof ApiKultcashLogRoute
   ApiNoiseLogRoute: typeof ApiNoiseLogRoute
+  ApiTasksBadgeAwardedRoute: typeof ApiTasksBadgeAwardedRoute
   ApiTasksCreateNonceRequestRoute: typeof ApiTasksCreateNonceRequestRoute
   ApiTasksDemoRoute: typeof ApiTasksDemoRoute
   ApiTasksHeartbeatRoute: typeof ApiTasksHeartbeatRoute
@@ -626,13 +626,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/crew/lautstaerke'
       preLoaderRoute: typeof CrewLautstaerkeRouteImport
       parentRoute: typeof CrewRoute
-    }
-    '/api/badges': {
-      id: '/api/badges'
-      path: '/api/badges'
-      fullPath: '/api/badges'
-      preLoaderRoute: typeof ApiBadgesRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/_main/speisekarte': {
       id: '/_main/speisekarte'
@@ -793,6 +786,13 @@ declare module '@tanstack/react-router' {
       path: '/api/tasks/create-nonce-request'
       fullPath: '/api/tasks/create-nonce-request'
       preLoaderRoute: typeof ApiTasksCreateNonceRequestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tasks/badge-awarded': {
+      id: '/api/tasks/badge-awarded'
+      path: '/api/tasks/badge-awarded'
+      fullPath: '/api/tasks/badge-awarded'
+      preLoaderRoute: typeof ApiTasksBadgeAwardedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/noise/log': {
@@ -1030,11 +1030,11 @@ const CrewRouteWithChildren = CrewRoute._addFileChildren(CrewRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   MainRoute: MainRouteWithChildren,
   CrewRoute: CrewRouteWithChildren,
-  ApiBadgesRoute: ApiBadgesRoute,
   ApiKultcashConfigRoute: ApiKultcashConfigRoute,
   ApiKultcashListsRoute: ApiKultcashListsRoute,
   ApiKultcashLogRoute: ApiKultcashLogRoute,
   ApiNoiseLogRoute: ApiNoiseLogRoute,
+  ApiTasksBadgeAwardedRoute: ApiTasksBadgeAwardedRoute,
   ApiTasksCreateNonceRequestRoute: ApiTasksCreateNonceRequestRoute,
   ApiTasksDemoRoute: ApiTasksDemoRoute,
   ApiTasksHeartbeatRoute: ApiTasksHeartbeatRoute,

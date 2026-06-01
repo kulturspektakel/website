@@ -40,17 +40,19 @@ export const createNonceRequest = createServerFn()
       },
     });
 
-    // Sends the Slack DM with approve/reject buttons.
-    await enqueueGcpTask('create-nonce-request', {
-      id: nonceRequest.id,
-      email: data.email,
-    });
-    // Cleans up the row if the user never approves it.
-    await enqueueGcpTask(
-      'nonce-request-invalidate',
-      {nonceRequestId: nonceRequest.id},
-      {scheduleAt: expiresAt},
-    );
+    await Promise.all([
+      // Sends the Slack DM with approve/reject buttons.
+      enqueueGcpTask('create-nonce-request', {
+        id: nonceRequest.id,
+        email: data.email,
+      }),
+      // Cleans up the row if the user never approves it.
+      enqueueGcpTask(
+        'nonce-request-invalidate',
+        {nonceRequestId: nonceRequest.id},
+        {scheduleAt: expiresAt},
+      ),
+    ]);
 
     return nonceRequest.id;
   });

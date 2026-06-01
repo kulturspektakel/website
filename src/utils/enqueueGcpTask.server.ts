@@ -55,6 +55,11 @@ export async function enqueueGcpTask(
   options?: EnqueueOptions,
 ): Promise<void>;
 export async function enqueueGcpTask(
+  task: 'badge-awarded',
+  payload: {orderId: number},
+  options?: EnqueueOptions,
+): Promise<void>;
+export async function enqueueGcpTask(
   task: string,
   payload: Record<string, unknown>,
   options?: EnqueueOptions,
@@ -125,7 +130,12 @@ type GcpContext = {
   siteUrl: string;
 };
 
+let cachedContext: GcpContext | null = null;
+
 function gcpContext(): GcpContext {
+  if (cachedContext) {
+    return cachedContext;
+  }
   const projectId = requireEnv('GCP_PROJECT_ID');
   const location = requireEnv('GCP_LOCATION');
   const queue = requireEnv('GCP_TASKS_QUEUE');
@@ -135,12 +145,13 @@ function gcpContext(): GcpContext {
     requireEnv('GCP_TASKS_SERVICE_ACCOUNT_KEY_JSON'),
   );
   const client = new CloudTasksClient({credentials, projectId});
-  return {
+  cachedContext = {
     client,
     queuePath: client.queuePath(projectId, location, queue),
     serviceAccountEmail,
     siteUrl,
   };
+  return cachedContext;
 }
 
 function requireEnv(name: string): string {
