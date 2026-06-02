@@ -14,7 +14,7 @@ Task handlers live in `src/routes/api.tasks.*.ts` and
 |---|---|
 | `main.tf` | Providers, locals (`project_id`, `region`, `site_url`), API enablement |
 | `production.tf` | Runtime infra: `tasks-invoker` SA, queue, scheduler, Pub/Sub, API keys, monitoring |
-| `deployment.tf` | CI plumbing: `ci-secret-pusher` SA + key + the GH Actions secret that wires it up |
+| `deployment.tf` | CI plumbing: `ci-secret-pusher` SA + key, plus a `ci_secret_pusher_key` output used to refresh the `GCP_SA_KEY` GH Actions secret on rotation |
 | `tools/sync-env.js` | Reads Secret Manager → writes `.env` + `src/utils/env.server.ts` (typed accessor) + optional Vercel push |
 
 ## How auth works (for tasks)
