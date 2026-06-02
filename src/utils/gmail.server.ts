@@ -29,18 +29,24 @@ export const GMAIL_ACCOUNTS = Object.keys(GMAIL_REMINDERS);
  * An authenticated Gmail v1 client that impersonates `account` via the
  * Workspace-delegated service account. Both env vars come from the existing
  * `gmail-reminder@gmail-reminder-api.iam.gserviceaccount.com` SA — same one
- * the legacy api uses — so this works as long as domain-wide delegation
- * stays configured for the kulturspektakel.de Workspace.
+ * the legacy api uses (same SM secret names, too) — so this works as long
+ * as domain-wide delegation stays configured for the kulturspektakel.de
+ * Workspace.
  *
  * The `.replace(/\\n/g, '\n')` mirrors what legacy does — covers the case
  * where the PEM was stored with escaped newlines (e.g. some Vercel UI flows)
  * rather than literal ones.
  */
 export async function gmailClient(account: string): Promise<gmail_v1.Gmail> {
-  const email = process.env.GMAIL_SA_EMAIL;
-  const key = process.env.GMAIL_SA_PRIVATE_KEY?.replace(/\\n/g, '\n');
+  const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+  const key = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(
+    /\\n/g,
+    '\n',
+  );
   if (!email || !key) {
-    throw new Error('GMAIL_SA_EMAIL / GMAIL_SA_PRIVATE_KEY not set');
+    throw new Error(
+      'GOOGLE_SERVICE_ACCOUNT_EMAIL / GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY not set',
+    );
   }
   const auth = new google.auth.JWT({
     email,

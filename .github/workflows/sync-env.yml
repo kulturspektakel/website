@@ -1,0 +1,39 @@
+name: sync env to vercel
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'terraform/main.tf'
+      - 'tools/sync-env.js'
+      - '.github/workflows/sync-env.yml'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: install
+        run: yarn install --frozen-lockfile
+
+      - id: gcp-auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.15.5
+
+      - name: terraform init
+        working-directory: terraform
+        run: terraform init
+
+      - name: sync to vercel
+        run: yarn sync:env --vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}

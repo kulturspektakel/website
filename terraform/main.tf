@@ -5,7 +5,22 @@ terraform {
       source  = "hashicorp/google"
       version = "~> 6.0"
     }
+    github = {
+      source  = "integrations/github"
+      version = "~> 6.0"
+    }
   }
+  backend "gcs" {
+    bucket = "gmail-reminder-api-tfstate"
+    prefix = "website"
+  }
+}
+
+# GitHub provider authenticates from `gh auth token` (export GITHUB_TOKEN=$(gh
+# auth token) before running terraform). Used here only to push the
+# CI service account key into the website repo's GH Actions secrets.
+provider "github" {
+  owner = "kulturspektakel"
 }
 
 locals {
@@ -13,24 +28,22 @@ locals {
   region     = "europe-west1"
   site_url   = "https://www.kulturspektakel.de"
 
-  # Secrets read from Secret Manager and exposed as Vercel env vars.
-  # Map: env var name → Secret Manager secret name. They're usually the same,
-  # but a few historical names differ (e.g. legacy api uses
-  # GOOGLE_SERVICE_ACCOUNT_* in SM for what we call GMAIL_SA_*).
-  # Add a new entry here (and create the SM secret via `gcloud secrets create`)
-  # to make a new secret available to the app via `env.NAME`.
-  managed_secrets = {
-    AWS_ACCESS_KEY_ID     = "AWS_ACCESS_KEY_ID"
-    AWS_SECRET_ACCESS_KEY = "AWS_SECRET_ACCESS_KEY"
-    CONTACTLESS_SALT      = "CONTACTLESS_SALT"
-    DATABASE_URL          = "DATABASE_URL"
-    GMAIL_SA_EMAIL        = "GOOGLE_SERVICE_ACCOUNT_EMAIL"
-    GMAIL_SA_PRIVATE_KEY  = "GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY"
-    SLACK_BOT_TOKEN       = "SLACK_BOT_TOKEN"
-    SPOTIFY_CLIENT_ID     = "SPOTIFY_CLIENT_ID"
-    SPOTIFY_CLIENT_SECRET = "SPOTIFY_CLIENT_SECRET"
-    STRIPE_API_KEY        = "STRIPE_API_KEY"
-  }
+  # Secrets read from Secret Manager and exposed as Vercel env vars under
+  # the same name. Add an entry here (and create the SM secret via
+  # `gcloud secrets create`) to make a new secret available to the app
+  # via `env.NAME`.
+  managed_secrets = toset([
+    "AWS_ACCESS_KEY_ID",
+    "AWS_SECRET_ACCESS_KEY",
+    "CONTACTLESS_SALT",
+    "DATABASE_URL",
+    "GOOGLE_SERVICE_ACCOUNT_EMAIL",
+    "GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY",
+    "SLACK_BOT_TOKEN",
+    "SPOTIFY_CLIENT_ID",
+    "SPOTIFY_CLIENT_SECRET",
+    "STRIPE_API_KEY",
+  ])
 }
 
 data "google_project" "this" {
@@ -38,9 +51,9 @@ data "google_project" "this" {
 }
 
 # Single for_each data source for everything in `managed_secrets`.
-# Adding a new secret = add an entry to the map above + create it via gcloud.
+# Adding a new secret = add a name to the set above + create it via gcloud.
 data "google_secret_manager_secret_version" "managed" {
-  for_each = toset(values(local.managed_secrets))
+  for_each = local.managed_secrets
   secret   = each.key
 }
 
@@ -119,6 +132,40 @@ resource "google_cloud_tasks_queue" "default" {
   depends_on = [google_project_service.apis]
 }
 
+# ---- CI service account ----------------------------------------------------
+#
+# Read-only Secret Manager + state-bucket access for the
+# `.github/workflows/sync-env.yml` workflow. Its JSON key is pushed into
+# the website repo's GH Actions secrets as `GCP_SA_KEY` (see below).
+resource "google_service_account" "ci_secret_pusher" {
+  account_id   = "ci-secret-pusher"
+  display_name = "CI: read SM secrets, push to Vercel"
+  depends_on   = [google_project_service.apis]
+}
+
+resource "google_project_iam_member" "ci_secret_pusher_sm" {
+  project = local.project_id
+  role    = "roles/secretmanager.secretAccessor"
+  member  = "serviceAccount:${google_service_account.ci_secret_pusher.email}"
+}
+
+# Needed for `terraform init` + `terraform output` against the GCS backend.
+resource "google_storage_bucket_iam_member" "ci_secret_pusher_state_reader" {
+  bucket = "gmail-reminder-api-tfstate"
+  role   = "roles/storage.objectViewer"
+  member = "serviceAccount:${google_service_account.ci_secret_pusher.email}"
+}
+
+resource "google_service_account_key" "ci_secret_pusher" {
+  service_account_id = google_service_account.ci_secret_pusher.name
+}
+
+resource "github_actions_secret" "gcp_sa_key" {
+  repository      = "website"
+  secret_name     = "GCP_SA_KEY"
+  plaintext_value = base64decode(google_service_account_key.ci_secret_pusher.private_key)
+}
+
 # Pub/Sub push subscription for Gmail notifications: every new email in our
 # watched inboxes (booking/info/lager) → POST to /api/tasks/gmail-notification.
 # The topic itself (`mail-reminder`) and the publisher side (Gmail watch via
@@ -185,10 +232,10 @@ locals {
       GOOGLE_MAPS_API_KEY_SERVER         = google_apikeys_key.maps_server.key_string
       GOOGLE_MAPS_API_KEY                = google_apikeys_key.maps_browser.key_string
     },
-    # SM-backed secrets (with optional env-var ↔ SM-name aliasing).
+    # SM-backed secrets — env var name == SM secret name.
     {
-      for env_name, sm_name in local.managed_secrets :
-      env_name => data.google_secret_manager_secret_version.managed[sm_name].secret_data
+      for name in local.managed_secrets :
+      name => data.google_secret_manager_secret_version.managed[name].secret_data
     },
   )
 }

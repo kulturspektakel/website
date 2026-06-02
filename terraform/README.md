@@ -47,6 +47,8 @@ the `aud` claim matches the per-route audience. No shared secret to rotate.
 - Terraform ≥ 1.6 (`brew install hashicorp/tap/terraform`).
 - `yarn install` from the repo root.
 - For pushing to Vercel: `yarn vercel login` once.
+- Terraform state lives in `gs://gmail-reminder-api-tfstate/website/` — your
+  gcloud creds need read+write on that bucket (you do, as project owner).
 
 ## First-time setup (new machine)
 
@@ -130,14 +132,43 @@ Then `terraform apply && yarn sync:env --vercel`.
 
 ### Push existing values to Vercel (no SM changes)
 
+GitHub Actions does this automatically:
+
+- **On push to `main`** if `terraform/main.tf` or `tools/sync-env.js`
+  changed — see [`.github/workflows/sync-env.yml`](../.github/workflows/sync-env.yml).
+- **On manual trigger** — open the workflow in the Actions tab and click
+  "Run workflow". Use this after rotating a secret in Secret Manager
+  (which is invisible to git, so no auto-trigger).
+
+Or run locally:
+
 ```sh
 yarn sync:env --vercel
 ```
 
-Idempotent — re-running just refreshes existing entries. **Preview**
-deployments are skipped: Vercel CLI 50.x rejects the non-interactive
-"all preview branches" add. If you need a value on preview, add it via
-`vercel env add NAME preview <branch>` manually.
+Idempotent either way — re-running just refreshes existing entries.
+**Preview** deployments are skipped: Vercel CLI 50.x rejects the
+non-interactive "all preview branches" add. If you need a value on
+preview, add it via `vercel env add NAME preview <branch>` manually.
+
+### How the GH Actions workflow auths to GCP
+
+`terraform/main.tf` provisions a dedicated `ci-secret-pusher` service
+account with `roles/secretmanager.secretAccessor` (project-level) +
+`roles/storage.objectViewer` on the state bucket — narrow enough that
+its JSON key only reads secrets, never writes infra. Terraform pushes
+the key into the GH repo as the `GCP_SA_KEY` Actions secret via the
+`integrations/github` provider, so a `terraform apply` keeps the GH
+secret in sync if the key ever rotates.
+
+Local `terraform apply` needs a GitHub token for that:
+
+```sh
+GITHUB_TOKEN=$(awk '/oauth_token:/ {print $2}' ~/.config/gh/hosts.yml) \
+  terraform -chdir=terraform apply
+```
+
+(On modern `gh` CLI: `GITHUB_TOKEN=$(gh auth token) terraform ...`.)
 
 ### What's committed vs. not
 
