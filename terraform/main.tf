@@ -12,60 +12,43 @@ locals {
   project_id = "gmail-reminder-api"
   region     = "europe-west1"
   site_url   = "https://www.kulturspektakel.de"
+
+  # Secrets read from Secret Manager and exposed as Vercel env vars under the
+  # same name. Add a new entry here (and create it via `gcloud secrets create`)
+  # to make a new secret available to the app via `env.NAME`.
+  managed_secret_names = [
+    "AWS_ACCESS_KEY_ID",
+    "AWS_SECRET_ACCESS_KEY",
+    "CONTACTLESS_SALT",
+    "DATABASE_URL",
+    "SLACK_BOT_TOKEN",
+    "SPOTIFY_CLIENT_ID",
+    "SPOTIFY_CLIENT_SECRET",
+    "STRIPE_API_KEY",
+  ]
 }
 
 data "google_project" "this" {
   project_id = local.project_id
 }
 
-# Reference (don't manage) the Gmail Workspace service account secrets. The
-# secrets were created when the legacy api needed them; both projects read
-# them today via different env-var names. Reading via data source surfaces
-# them in our outputs/sync flow without taking ownership.
+# Single for_each data source for everything in `managed_secret_names`.
+# Adding a new secret = add a name to the list above + create it via gcloud.
+data "google_secret_manager_secret_version" "managed" {
+  for_each = toset(local.managed_secret_names)
+  secret   = each.key
+}
+
+# Two existing Workspace-SA secrets get *renamed* on the way out, because
+# the legacy api uses `GOOGLE_SERVICE_ACCOUNT_*` for the same values that we
+# call `GMAIL_SA_*`. Read them separately so we can map the names in
+# `local.env_vars` below.
 data "google_secret_manager_secret_version" "gmail_sa_email" {
   secret = "GOOGLE_SERVICE_ACCOUNT_EMAIL"
 }
 
 data "google_secret_manager_secret_version" "gmail_sa_private_key" {
   secret = "GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY"
-}
-
-# AWS SES credentials for the transactional email transport
-# (`src/utils/sendMail.server.ts`). Same data-source-only pattern as the
-# Gmail secrets above.
-data "google_secret_manager_secret_version" "aws_access_key_id" {
-  secret = "AWS_ACCESS_KEY_ID"
-}
-
-data "google_secret_manager_secret_version" "aws_secret_access_key" {
-  secret = "AWS_SECRET_ACCESS_KEY"
-}
-
-# Other secrets sourced from Secret Manager — pre-existing entries
-# populated outside Terraform; we just expose them through the sync flow so
-# .env stays a derived artifact.
-data "google_secret_manager_secret_version" "stripe_api_key" {
-  secret = "STRIPE_API_KEY"
-}
-
-data "google_secret_manager_secret_version" "contactless_salt" {
-  secret = "CONTACTLESS_SALT"
-}
-
-data "google_secret_manager_secret_version" "database_url" {
-  secret = "DATABASE_URL"
-}
-
-data "google_secret_manager_secret_version" "spotify_client_id" {
-  secret = "SPOTIFY_CLIENT_ID"
-}
-
-data "google_secret_manager_secret_version" "spotify_client_secret" {
-  secret = "SPOTIFY_CLIENT_SECRET"
-}
-
-data "google_secret_manager_secret_version" "slack_bot_token" {
-  secret = "SLACK_BOT_TOKEN"
 }
 
 provider "google" {
@@ -192,94 +175,36 @@ resource "google_cloud_scheduler_job" "gmail_watch_refresh" {
   depends_on = [google_project_service.apis]
 }
 
-output "project_id" {
-  description = "Set as GCP_PROJECT_ID on Vercel."
-  value       = local.project_id
+# Single source of truth for everything the app expects in `process.env` /
+# `env.X` (see src/utils/env.server.ts, which is auto-generated from this
+# map's keys). `tools/sync-env.py` iterates this and writes .env + the typed
+# env module + optionally pushes to Vercel.
+locals {
+  env_vars = merge(
+    # Static config + values derived from terraform-managed resources.
+    {
+      GCP_PROJECT_ID                     = local.project_id
+      SITE_URL                           = local.site_url
+      GCP_LOCATION                       = google_cloud_tasks_queue.default.location
+      GCP_TASKS_QUEUE                    = google_cloud_tasks_queue.default.name
+      GCP_TASKS_SERVICE_ACCOUNT_EMAIL    = google_service_account.tasks.email
+      GCP_TASKS_SERVICE_ACCOUNT_KEY_JSON = base64decode(google_service_account_key.tasks_key.private_key)
+      GOOGLE_MAPS_API_KEY_SERVER         = google_apikeys_key.maps_server.key_string
+      GOOGLE_MAPS_API_KEY                = google_apikeys_key.maps_browser.key_string
+      GMAIL_SA_EMAIL                     = data.google_secret_manager_secret_version.gmail_sa_email.secret_data
+      GMAIL_SA_PRIVATE_KEY               = data.google_secret_manager_secret_version.gmail_sa_private_key.secret_data
+    },
+    # SM-backed secrets where the env var name == SM secret name.
+    {
+      for name in local.managed_secret_names :
+      name => data.google_secret_manager_secret_version.managed[name].secret_data
+    },
+  )
 }
 
-output "site_url" {
-  description = "Set as SITE_URL on Vercel."
-  value       = local.site_url
-}
-
-output "tasks_service_account_email" {
-  description = "Set as GCP_TASKS_SERVICE_ACCOUNT_EMAIL on Vercel."
-  value       = google_service_account.tasks.email
-}
-
-output "tasks_service_account_key_json" {
-  description = "Set as GCP_TASKS_SERVICE_ACCOUNT_KEY_JSON on Vercel. Sensitive."
-  value       = base64decode(google_service_account_key.tasks_key.private_key)
-  sensitive   = true
-}
-
-output "tasks_queue_name" {
-  description = "Set as GCP_TASKS_QUEUE on Vercel."
-  value       = google_cloud_tasks_queue.default.name
-}
-
-output "tasks_queue_location" {
-  description = "Set as GCP_LOCATION on Vercel."
-  value       = google_cloud_tasks_queue.default.location
-}
-
-output "gmail_sa_email" {
-  description = "Set as GMAIL_SA_EMAIL on Vercel. Sourced from existing Secret Manager."
-  value       = data.google_secret_manager_secret_version.gmail_sa_email.secret_data
-  sensitive   = true
-}
-
-output "gmail_sa_private_key" {
-  description = "Set as GMAIL_SA_PRIVATE_KEY on Vercel. Multi-line PEM."
-  value       = data.google_secret_manager_secret_version.gmail_sa_private_key.secret_data
-  sensitive   = true
-}
-
-output "aws_access_key_id" {
-  description = "Set as AWS_ACCESS_KEY_ID on Vercel. Used by SES transport."
-  value       = data.google_secret_manager_secret_version.aws_access_key_id.secret_data
-  sensitive   = true
-}
-
-output "aws_secret_access_key" {
-  description = "Set as AWS_SECRET_ACCESS_KEY on Vercel. Used by SES transport."
-  value       = data.google_secret_manager_secret_version.aws_secret_access_key.secret_data
-  sensitive   = true
-}
-
-output "stripe_api_key" {
-  description = "Set as STRIPE_API_KEY on Vercel."
-  value       = data.google_secret_manager_secret_version.stripe_api_key.secret_data
-  sensitive   = true
-}
-
-output "contactless_salt" {
-  description = "Set as CONTACTLESS_SALT on Vercel."
-  value       = data.google_secret_manager_secret_version.contactless_salt.secret_data
-  sensitive   = true
-}
-
-output "database_url" {
-  description = "Set as DATABASE_URL on Vercel."
-  value       = data.google_secret_manager_secret_version.database_url.secret_data
-  sensitive   = true
-}
-
-output "spotify_client_id" {
-  description = "Set as SPOTIFY_CLIENT_ID on Vercel."
-  value       = data.google_secret_manager_secret_version.spotify_client_id.secret_data
-  sensitive   = true
-}
-
-output "spotify_client_secret" {
-  description = "Set as SPOTIFY_CLIENT_SECRET on Vercel."
-  value       = data.google_secret_manager_secret_version.spotify_client_secret.secret_data
-  sensitive   = true
-}
-
-output "slack_bot_token" {
-  description = "Set as SLACK_BOT_TOKEN on Vercel."
-  value       = data.google_secret_manager_secret_version.slack_bot_token.secret_data
+output "env_vars" {
+  description = "All values the app expects in process.env. Iterated by tools/sync-env.py."
+  value       = local.env_vars
   sensitive   = true
 }
 
@@ -332,18 +257,6 @@ resource "google_apikeys_key" "maps_browser" {
   }
 
   depends_on = [google_project_service.apis]
-}
-
-output "maps_server_key_string" {
-  description = "Set as GOOGLE_MAPS_API_KEY_SERVER on Vercel. Sensitive."
-  value       = google_apikeys_key.maps_server.key_string
-  sensitive   = true
-}
-
-output "maps_browser_key_string" {
-  description = "Set as GOOGLE_MAPS_API (or GOOGLE_MAPS_API_KEY — see note in main.tf) on Vercel. Sensitive."
-  value       = google_apikeys_key.maps_browser.key_string
-  sensitive   = true
 }
 
 # Dedicated key for the Google Sheets API — separate concern from Maps, lives
