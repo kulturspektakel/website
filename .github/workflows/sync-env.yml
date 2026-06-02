@@ -4,7 +4,6 @@ on:
   push:
     branches: [main]
     paths:
-      - 'terraform/main.tf'
       - 'tools/sync-env.js'
       - '.github/workflows/sync-env.yml'
   workflow_dispatch:
@@ -20,18 +19,9 @@ jobs:
       - name: install
         run: yarn install --frozen-lockfile
 
-      - id: gcp-auth
-        uses: google-github-actions/auth@v2
+      - uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
-
-      - uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.15.5
-
-      - name: terraform init
-        working-directory: terraform
-        run: terraform init
 
       - name: sync to vercel
         run: yarn sync:env --vercel
