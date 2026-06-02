@@ -79,16 +79,25 @@ are skipped (Vercel CLI 50.x limitation).
 
 ```sh
 cd terraform
-GITHUB_TOKEN=$(awk '/oauth_token:/ {print $2}' ~/.config/gh/hosts.yml) \
-  terraform apply
+terraform apply
 ```
 
-`GITHUB_TOKEN` is needed because terraform also pushes the `GCP_SA_KEY` GH
-Actions secret. State is local (`terraform/terraform.tfstate`, gitignored).
+State is local (`terraform/terraform.tfstate`, gitignored). When changing
+the constants in `local` (project id, region, site url), also update
+`STATIC_ENV_VARS` at the top of `tools/sync-env.js` — those values are
+duplicated there.
 
-When changing the constants in `local` (project id, region, site url),
-also update `STATIC_ENV_VARS` at the top of `tools/sync-env.js` — those
-values are duplicated there.
+### Rotating the CI service account key
+
+The `GCP_SA_KEY` Actions secret was set up once by terraform but is no
+longer managed by it. If you ever rotate the `ci-secret-pusher` SA key:
+
+```sh
+terraform -chdir=terraform taint google_service_account_key.ci_secret_pusher
+terraform -chdir=terraform apply  # destroys + recreates the key
+terraform -chdir=terraform output -raw ci_secret_pusher_key | \
+  gh secret set GCP_SA_KEY -R kulturspektakel/website
+```
 
 ## Adding a new task
 

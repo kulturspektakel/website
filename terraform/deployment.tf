@@ -22,11 +22,12 @@ resource "google_service_account_key" "ci_secret_pusher" {
   service_account_id = google_service_account.ci_secret_pusher.name
 }
 
-# Pushes the SA key into the website repo's GH Actions secrets. A
-# `terraform apply` keeps this in sync if the key ever rotates, so the
-# .github/workflows/sync-env.yml workflow always has working credentials.
-resource "github_actions_secret" "gcp_sa_key" {
-  repository  = "website"
-  secret_name = "GCP_SA_KEY"
+# Exposed for manual rotation: when this key ever changes (terraform
+# destroy + recreate), push the new value to the GH Actions secret via
+#   terraform -chdir=terraform output -raw ci_secret_pusher_key | \
+#     gh secret set GCP_SA_KEY -R kulturspektakel/website
+output "ci_secret_pusher_key" {
+  description = "JSON SA key for the CI sync workflow. Sensitive."
   value       = base64decode(google_service_account_key.ci_secret_pusher.private_key)
+  sensitive   = true
 }

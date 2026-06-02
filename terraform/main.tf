@@ -5,10 +5,6 @@ terraform {
       source  = "hashicorp/google"
       version = "~> 6.0"
     }
-    github = {
-      source  = "integrations/github"
-      version = "~> 6.0"
-    }
   }
 }
 
@@ -19,13 +15,6 @@ provider "google" {
   # accepts requests made via user ADC credentials. Harmless for other APIs.
   user_project_override = true
   billing_project       = local.project_id
-}
-
-# GitHub provider authenticates from `gh auth token` (export GITHUB_TOKEN=$(gh
-# auth token) before running terraform). Used only in deployment.tf to push
-# the CI service account key into the website repo's GH Actions secrets.
-provider "github" {
-  owner = "kulturspektakel"
 }
 
 locals {
