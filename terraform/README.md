@@ -49,11 +49,12 @@ new Stripe(env.STRIPE_API_KEY); // typed string, validated at access
 echo -n "value" | gcloud secrets create NEW_KEY --data-file=- \
   --project=gmail-reminder-api
 # add "NEW_KEY" to MANAGED_SECRETS in tools/sync-env.js
-yarn sync:env --vercel
-git commit -am "Add NEW_KEY"
+yarn sync:env             # regenerate .env + env.server.ts locally
+git commit -am "Add NEW_KEY" && git push
 ```
 
-Then `env.NEW_KEY` is available in code.
+The push to main edits `tools/sync-env.js`, so GH Actions auto-syncs to
+Vercel. Once it lands, `env.NEW_KEY` is available in code.
 
 ## Rotating a secret
 
