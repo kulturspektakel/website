@@ -30,6 +30,17 @@ data "google_secret_manager_secret_version" "gmail_sa_private_key" {
   secret = "GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY"
 }
 
+# AWS SES credentials for the transactional email transport
+# (`src/utils/sendMail.server.ts`). Same data-source-only pattern as the
+# Gmail secrets above.
+data "google_secret_manager_secret_version" "aws_access_key_id" {
+  secret = "AWS_ACCESS_KEY_ID"
+}
+
+data "google_secret_manager_secret_version" "aws_secret_access_key" {
+  secret = "AWS_SECRET_ACCESS_KEY"
+}
+
 provider "google" {
   project = local.project_id
   region  = local.region
@@ -194,6 +205,18 @@ output "gmail_sa_email" {
 output "gmail_sa_private_key" {
   description = "Set as GMAIL_SA_PRIVATE_KEY on Vercel. Multi-line PEM."
   value       = data.google_secret_manager_secret_version.gmail_sa_private_key.secret_data
+  sensitive   = true
+}
+
+output "aws_access_key_id" {
+  description = "Set as AWS_ACCESS_KEY_ID on Vercel. Used by SES transport."
+  value       = data.google_secret_manager_secret_version.aws_access_key_id.secret_data
+  sensitive   = true
+}
+
+output "aws_secret_access_key" {
+  description = "Set as AWS_SECRET_ACCESS_KEY on Vercel. Used by SES transport."
+  value       = data.google_secret_manager_secret_version.aws_secret_access_key.secret_data
   sensitive   = true
 }
 

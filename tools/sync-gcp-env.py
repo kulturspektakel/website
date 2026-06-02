@@ -52,6 +52,8 @@ def main() -> int:
         "GMAIL_SA_EMAIL": f'"{out("gmail_sa_email")}"',
         # Multi-line PEM; dotenv supports multi-line values inside double quotes.
         "GMAIL_SA_PRIVATE_KEY": f'"{out("gmail_sa_private_key")}"',
+        "AWS_ACCESS_KEY_ID": f'"{out("aws_access_key_id")}"',
+        "AWS_SECRET_ACCESS_KEY": f'"{out("aws_secret_access_key")}"',
     }
     new_block = (
         BLOCK_START

@@ -60,6 +60,11 @@ export async function enqueueGcpTask(
   options?: EnqueueOptions,
 ): Promise<void>;
 export async function enqueueGcpTask(
+  task: 'send-email',
+  payload: import('../server/routes/tasks.send-email').SendEmailPayload,
+  options?: EnqueueOptions,
+): Promise<void>;
+export async function enqueueGcpTask(
   task: string,
   payload: Record<string, unknown>,
   options?: EnqueueOptions,

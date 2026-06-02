@@ -31,6 +31,7 @@ import { Route as MainSlugRouteImport } from './routes/_main.$slug'
 import { Route as CrewLautstaerkeIndexRouteImport } from './routes/crew.lautstaerke.index'
 import { Route as MainLineupIndexRouteImport } from './routes/_main.lineup.index'
 import { Route as CrewLautstaerkeDeviceRouteImport } from './routes/crew.lautstaerke.$device'
+import { Route as ApiTasksSendEmailRouteImport } from './routes/api.tasks.send-email'
 import { Route as ApiTasksNonceRequestInvalidateRouteImport } from './routes/api.tasks.nonce-request-invalidate'
 import { Route as ApiTasksNonceInvalidateRouteImport } from './routes/api.tasks.nonce-invalidate'
 import { Route as ApiTasksGmailWatchRefreshRouteImport } from './routes/api.tasks.gmail-watch-refresh'
@@ -164,6 +165,11 @@ const CrewLautstaerkeDeviceRoute = CrewLautstaerkeDeviceRouteImport.update({
   id: '/$device',
   path: '/$device',
   getParentRoute: () => CrewLautstaerkeRoute,
+} as any)
+const ApiTasksSendEmailRoute = ApiTasksSendEmailRouteImport.update({
+  id: '/api/tasks/send-email',
+  path: '/api/tasks/send-email',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiTasksNonceRequestInvalidateRoute =
   ApiTasksNonceRequestInvalidateRouteImport.update({
@@ -330,6 +336,7 @@ export interface FileRoutesByFullPath {
   '/api/tasks/gmail-watch-refresh': typeof ApiTasksGmailWatchRefreshRoute
   '/api/tasks/nonce-invalidate': typeof ApiTasksNonceInvalidateRoute
   '/api/tasks/nonce-request-invalidate': typeof ApiTasksNonceRequestInvalidateRoute
+  '/api/tasks/send-email': typeof ApiTasksSendEmailRoute
   '/crew/lautstaerke/$device': typeof CrewLautstaerkeDeviceRoute
   '/lineup/': typeof MainLineupIndexRoute
   '/crew/lautstaerke/': typeof CrewLautstaerkeIndexRoute
@@ -374,6 +381,7 @@ export interface FileRoutesByTo {
   '/api/tasks/gmail-watch-refresh': typeof ApiTasksGmailWatchRefreshRoute
   '/api/tasks/nonce-invalidate': typeof ApiTasksNonceInvalidateRoute
   '/api/tasks/nonce-request-invalidate': typeof ApiTasksNonceRequestInvalidateRoute
+  '/api/tasks/send-email': typeof ApiTasksSendEmailRoute
   '/crew/lautstaerke/$device': typeof CrewLautstaerkeDeviceRoute
   '/lineup': typeof MainLineupIndexRoute
   '/crew/lautstaerke': typeof CrewLautstaerkeIndexRoute
@@ -423,6 +431,7 @@ export interface FileRoutesById {
   '/api/tasks/gmail-watch-refresh': typeof ApiTasksGmailWatchRefreshRoute
   '/api/tasks/nonce-invalidate': typeof ApiTasksNonceInvalidateRoute
   '/api/tasks/nonce-request-invalidate': typeof ApiTasksNonceRequestInvalidateRoute
+  '/api/tasks/send-email': typeof ApiTasksSendEmailRoute
   '/crew/lautstaerke/$device': typeof CrewLautstaerkeDeviceRoute
   '/_main/lineup/': typeof MainLineupIndexRoute
   '/crew/lautstaerke/': typeof CrewLautstaerkeIndexRoute
@@ -472,6 +481,7 @@ export interface FileRouteTypes {
     | '/api/tasks/gmail-watch-refresh'
     | '/api/tasks/nonce-invalidate'
     | '/api/tasks/nonce-request-invalidate'
+    | '/api/tasks/send-email'
     | '/crew/lautstaerke/$device'
     | '/lineup/'
     | '/crew/lautstaerke/'
@@ -516,6 +526,7 @@ export interface FileRouteTypes {
     | '/api/tasks/gmail-watch-refresh'
     | '/api/tasks/nonce-invalidate'
     | '/api/tasks/nonce-request-invalidate'
+    | '/api/tasks/send-email'
     | '/crew/lautstaerke/$device'
     | '/lineup'
     | '/crew/lautstaerke'
@@ -564,6 +575,7 @@ export interface FileRouteTypes {
     | '/api/tasks/gmail-watch-refresh'
     | '/api/tasks/nonce-invalidate'
     | '/api/tasks/nonce-request-invalidate'
+    | '/api/tasks/send-email'
     | '/crew/lautstaerke/$device'
     | '/_main/lineup/'
     | '/crew/lautstaerke/'
@@ -589,6 +601,7 @@ export interface RootRouteChildren {
   ApiTasksGmailWatchRefreshRoute: typeof ApiTasksGmailWatchRefreshRoute
   ApiTasksNonceInvalidateRoute: typeof ApiTasksNonceInvalidateRoute
   ApiTasksNonceRequestInvalidateRoute: typeof ApiTasksNonceRequestInvalidateRoute
+  ApiTasksSendEmailRoute: typeof ApiTasksSendEmailRoute
   ApiSpendenQuittungIdRoute: typeof ApiSpendenQuittungIdRoute
 }
 
@@ -747,6 +760,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/crew/lautstaerke/$device'
       preLoaderRoute: typeof CrewLautstaerkeDeviceRouteImport
       parentRoute: typeof CrewLautstaerkeRoute
+    }
+    '/api/tasks/send-email': {
+      id: '/api/tasks/send-email'
+      path: '/api/tasks/send-email'
+      fullPath: '/api/tasks/send-email'
+      preLoaderRoute: typeof ApiTasksSendEmailRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/tasks/nonce-request-invalidate': {
       id: '/api/tasks/nonce-request-invalidate'
@@ -1043,6 +1063,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiTasksGmailWatchRefreshRoute: ApiTasksGmailWatchRefreshRoute,
   ApiTasksNonceInvalidateRoute: ApiTasksNonceInvalidateRoute,
   ApiTasksNonceRequestInvalidateRoute: ApiTasksNonceRequestInvalidateRoute,
+  ApiTasksSendEmailRoute: ApiTasksSendEmailRoute,
   ApiSpendenQuittungIdRoute: ApiSpendenQuittungIdRoute,
 }
 export const routeTree = rootRouteImport

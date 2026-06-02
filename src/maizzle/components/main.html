@@ -1,0 +1,137 @@
+<!DOCTYPE {{{ page.doctype || 'html' }}}>
+<html
+  lang="{{ page.language || 'de' }}"
+  xmlns:v="urn:schemas-microsoft-com:vml"
+>
+  <head>
+    <meta charset="{{ page.charset || 'utf-8' }}" />
+    <meta name="x-apple-disable-message-reformatting" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="supported-color-schemes" content="light dark" />
+    <!--[if mso]>
+      <noscript>
+        <xml>
+          <o:OfficeDocumentSettings
+            xmlns:o="urn:schemas-microsoft-com:office:office"
+          >
+            <o:PixelsPerInch>96</o:PixelsPerInch>
+          </o:OfficeDocumentSettings>
+        </xml>
+      </noscript>
+      <style>
+        td,
+        th,
+        div,
+        p,
+        a,
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+          font-family: 'Segoe UI', sans-serif;
+          mso-line-height-rule: exactly;
+        }
+        .mso-break-all {
+          word-break: break-all;
+        }
+      </style>
+    <![endif]-->
+    <if condition="page.title">
+      <title>{{{ page.title }}}</title>
+    </if>
+    <style>
+      @tailwind components;
+      @tailwind utilities;
+
+      img {
+        @apply max-w-full align-middle;
+      }
+      h1 {
+        @apply text-2xl mt-0;
+      }
+      h2 {
+        @apply text-xl;
+      }
+      h3 {
+        @apply text-lg mb-0;
+      }
+      h4,
+      h5,
+      h6 {
+        @apply text-base;
+      }
+      p {
+        @apply m-0;
+      }
+      * + p {
+        @apply mt-2 mb-0;
+      }
+
+      li {
+        @apply mb-2;
+      }
+      a {
+        @apply text-brand-500;
+      }
+    </style>
+    <stack name="head" />
+  </head>
+  <body
+    class="font-sans leading-6 [word-break:break-word] {{ page.bodyClass || '' }}"
+  >
+    <if condition="page.preheader">
+      <div class="hidden">
+        {{{ page.preheader }}}
+        <each loop="item in Array.from(Array(150))">&#8199;&#847; </each>
+        <each loop="item in Array.from(Array(150))">&shy; </each>
+        &nbsp;
+      </div>
+    </if>
+    <div
+      role="article"
+      aria-roledescription="email"
+      aria-label="{{{ page.title || '' }}}"
+      lang="{{ page.language || 'de' }}"
+    >
+      <div class="max-w-screen-sm mx-auto">
+        <yield />
+      </div>
+
+      <div class="text-center text-xs mt-6">
+        <img
+          src="logo.png"
+          width="40"
+          height="40"
+          alt="Kulturspektakel Gauting"
+        />
+        <p class="m-0 mt-4">
+          <span class="font-semibold">Kulturspektakel Gauting e.V.</span><br />
+          Anschrift: Bahnhofstr. 6, 82131 Gauting<br />
+          Festivalgelände: Germeringer Str. 41, Gauting
+        </p>
+        <p>
+          <a
+            href="https://kulturspektakel.de"
+            class="text-brand no-underline hover:underline"
+            >Webseite</a
+          >
+          &bull;
+          <a
+            href="https://facebook.com/kulturspektakel"
+            class="text-brand no-underline hover:underline"
+            >Facebook</a
+          >
+          &bull;
+          <a
+            href="https://instagram.com/kulturspektakel"
+            class="text-brand no-underline hover:underline"
+            >Instagram</a
+          >
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
