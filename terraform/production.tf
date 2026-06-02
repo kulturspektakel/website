@@ -47,6 +47,21 @@ resource "google_service_account_key" "tasks_key" {
   service_account_id = google_service_account.tasks.name
 }
 
+# Mirror the SA key JSON into Secret Manager so the env-sync script (and
+# Vercel via that) can pull it without going through terraform output.
+resource "google_secret_manager_secret" "tasks_sa_key" {
+  secret_id = "GCP_TASKS_SERVICE_ACCOUNT_KEY_JSON"
+  replication {
+    auto {}
+  }
+  depends_on = [google_project_service.apis]
+}
+
+resource "google_secret_manager_secret_version" "tasks_sa_key" {
+  secret      = google_secret_manager_secret.tasks_sa_key.id
+  secret_data = base64decode(google_service_account_key.tasks_key.private_key)
+}
+
 # ---- Cloud Tasks + Scheduler + Pub/Sub ------------------------------------
 
 resource "google_cloud_tasks_queue" "default" {
@@ -132,6 +147,21 @@ resource "google_apikeys_key" "maps_server" {
   depends_on = [google_project_service.apis]
 }
 
+# Mirror the server-side Maps key into Secret Manager so sync-env can fetch
+# it without going through terraform output.
+resource "google_secret_manager_secret" "maps_server_key" {
+  secret_id = "GOOGLE_MAPS_API_KEY_SERVER"
+  replication {
+    auto {}
+  }
+  depends_on = [google_project_service.apis]
+}
+
+resource "google_secret_manager_secret_version" "maps_server_key" {
+  secret      = google_secret_manager_secret.maps_server_key.id
+  secret_data = google_apikeys_key.maps_server.key_string
+}
+
 # Public browser Maps key. Loaded by `@googlemaps/react-wrapper` in
 # `src/components/GoogleMaps.tsx` to render maps + markers. Referrer-locked to
 # our domain + local dev, and API-locked to just the Maps JS API.
@@ -149,6 +179,20 @@ resource "google_apikeys_key" "maps_browser" {
   }
 
   depends_on = [google_project_service.apis]
+}
+
+# Mirror the browser Maps key into Secret Manager.
+resource "google_secret_manager_secret" "maps_browser_key" {
+  secret_id = "GOOGLE_MAPS_API_KEY"
+  replication {
+    auto {}
+  }
+  depends_on = [google_project_service.apis]
+}
+
+resource "google_secret_manager_secret_version" "maps_browser_key" {
+  secret      = google_secret_manager_secret.maps_browser_key.id
+  secret_data = google_apikeys_key.maps_browser.key_string
 }
 
 # Dedicated key for the Google Sheets API — separate concern from Maps, lives

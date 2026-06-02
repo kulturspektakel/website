@@ -1814,6 +1814,13 @@
   resolved "https://registry.yarnpkg.com/@floating-ui/utils/-/utils-0.2.11.tgz#a269e055e40e2f45873bae9d1a2fdccbd314ea3f"
   integrity sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==
 
+"@google-cloud/secret-manager@^6.1.2":
+  version "6.1.2"
+  resolved "https://registry.yarnpkg.com/@google-cloud/secret-manager/-/secret-manager-6.1.2.tgz#262aff39192fde4132b1a0e90f99e27a183586e7"
+  integrity sha512-X4GiHC1OsZU8LOcnM/hk7Q+W/orZLSJz6IAvBJrjaQCj1pSRHkTHJnU87A6E5G8/ubIJjL6vs1GJ8f17TkDzPw==
+  dependencies:
+    google-gax "^5.0.0"
+
 "@google-cloud/tasks@^6.2.2":
   version "6.2.2"
   resolved "https://registry.yarnpkg.com/@google-cloud/tasks/-/tasks-6.2.2.tgz#af4add17411f7bd24e58d8d6756f1cb946ddb67a"

@@ -11,22 +11,20 @@ Task handlers live in `src/routes/api.tasks.*.ts` and
 
 ## How it fits together
 
-The single source of truth for every env var is `local.env_vars` in
-`main.tf`. The flow:
+Everything the app reads from `process.env` either lives in Secret Manager
+(real secrets + a few terraform-managed values mirrored to SM) or is
+hardcoded static config in `tools/sync-env.js`.
 
 ```
-Secret Manager values ─→ terraform data source ─→ local.env_vars
-                                                       │
-                                                       ▼
-                                            terraform output env_vars
-                                                       │
-                                                       ▼
-                                            yarn sync:env       ─→ .env
-                                                       │            (gitignored)
-                                                       ├─→ src/utils/env.server.ts
-                                                       │            (typed, committed)
-                                                       └─(with --vercel)─→ Vercel
+   Secret Manager  ───┐
+                      ▼
+   (gcloud / SDK)   yarn sync:env  ─→ .env (gitignored)
+                      │             ─→ src/utils/env.server.ts (typed, committed)
+                      └─(with --vercel)─→ Vercel
 ```
+
+No terraform state involvement, so the same command runs locally (against
+ADC) and in GitHub Actions (against a service-account key).
 
 ## How the auth works (for running tasks)
 
@@ -47,18 +45,15 @@ the `aud` claim matches the per-route audience. No shared secret to rotate.
 - Terraform ≥ 1.6 (`brew install hashicorp/tap/terraform`).
 - `yarn install` from the repo root.
 - For pushing to Vercel: `yarn vercel login` once.
-- Terraform state lives in `gs://gmail-reminder-api-tfstate/website/` — your
-  gcloud creds need read+write on that bucket (you do, as project owner).
 
 ## First-time setup (new machine)
 
 ```sh
-terraform -chdir=terraform init   # one-time per checkout
 yarn sync:env
 ```
 
 That writes:
-- `.env` (gitignored) — populated from Secret Manager via terraform outputs
+- `.env` (gitignored) — populated from Secret Manager
 - `src/utils/env.server.ts` (committed) — typed accessor module
 
 After that `yarn dev` works. Nothing is copied from anywhere by hand.
@@ -67,11 +62,18 @@ After that `yarn dev` works. Nothing is copied from anywhere by hand.
 
 ```sh
 cd terraform
-terraform apply
+GITHUB_TOKEN=$(awk '/oauth_token:/ {print $2}' ~/.config/gh/hosts.yml) \
+  terraform apply
 ```
 
+The `GITHUB_TOKEN` is needed so terraform can keep the `GCP_SA_KEY` GH
+Actions secret in sync with the `ci-secret-pusher` service account key.
+(On modern `gh`: `GITHUB_TOKEN=$(gh auth token) terraform apply`.)
+
 Project ID, region, and site URL are hardcoded in the `locals` block at
-the top of `main.tf` — edit there if they need to change.
+the top of `main.tf` — edit there if they need to change. **Also update
+`STATIC_ENV_VARS` in `tools/sync-env.js`** since those values are
+duplicated there for the no-terraform sync path.
 
 ## Secrets workflow
 
@@ -83,17 +85,10 @@ the top of `main.tf` — edit there if they need to change.
      --project=gmail-reminder-api
    ```
 
-2. **Add the name to `local.managed_secrets`** in `terraform/main.tf`:
-   ```hcl
-   managed_secrets = toset([
-     ...
-     "NEW_SECRET",
-   ])
-   ```
+2. **Add the name to `MANAGED_SECRETS`** in `tools/sync-env.js`.
 
-3. **Apply + sync + push**:
+3. **Sync + push**:
    ```sh
-   terraform -chdir=terraform apply
    yarn sync:env --vercel
    ```
 
@@ -111,31 +106,21 @@ echo -n "new-value" | gcloud secrets versions add NEW_SECRET --data-file=- \
 yarn sync:env --vercel
 ```
 
-Terraform data sources always read `latest`, so no `.tf` change needed.
+Always reads `latest` — no other changes needed.
 
 ### Adding a non-secret env var
 
-Non-secret values (like `SITE_URL`, `GCP_LOCATION`, or a terraform-managed
-resource attribute) go in the literal half of the `local.env_vars` merge:
-
-```hcl
-env_vars = merge(
-  {
-    ...
-    NEW_CONFIG_VAR = "static-value-or-${resource.attr}"
-  },
-  ...
-)
-```
-
-Then `terraform apply && yarn sync:env --vercel`.
+Non-secret static values (project id, site url, etc.) live in
+`STATIC_ENV_VARS` at the top of `tools/sync-env.js`. Add an entry and run
+`yarn sync:env --vercel`.
 
 ### Push existing values to Vercel (no SM changes)
 
 GitHub Actions does this automatically:
 
-- **On push to `main`** if `terraform/main.tf` or `tools/sync-env.js`
-  changed — see [`.github/workflows/sync-env.yml`](../.github/workflows/sync-env.yml).
+- **On push to `main`** if `tools/sync-env.js` or
+  `.github/workflows/sync-env.yml` changed — see
+  [`.github/workflows/sync-env.yml`](../.github/workflows/sync-env.yml).
 - **On manual trigger** — open the workflow in the Actions tab and click
   "Run workflow". Use this after rotating a secret in Secret Manager
   (which is invisible to git, so no auto-trigger).
@@ -153,28 +138,19 @@ preview, add it via `vercel env add NAME preview <branch>` manually.
 
 ### How the GH Actions workflow auths to GCP
 
-`terraform/main.tf` provisions a dedicated `ci-secret-pusher` service
-account with `roles/secretmanager.secretAccessor` (project-level) +
-`roles/storage.objectViewer` on the state bucket — narrow enough that
-its JSON key only reads secrets, never writes infra. Terraform pushes
-the key into the GH repo as the `GCP_SA_KEY` Actions secret via the
-`integrations/github` provider, so a `terraform apply` keeps the GH
+`deployment.tf` provisions a dedicated `ci-secret-pusher` service
+account with `roles/secretmanager.secretAccessor` — narrow enough that
+its JSON key only reads secrets, never writes anything. Terraform
+pushes the key into the GH repo as the `GCP_SA_KEY` Actions secret via
+the `integrations/github` provider, so `terraform apply` keeps the GH
 secret in sync if the key ever rotates.
-
-Local `terraform apply` needs a GitHub token for that:
-
-```sh
-GITHUB_TOKEN=$(awk '/oauth_token:/ {print $2}' ~/.config/gh/hosts.yml) \
-  terraform -chdir=terraform apply
-```
-
-(On modern `gh` CLI: `GITHUB_TOKEN=$(gh auth token) terraform ...`.)
 
 ### What's committed vs. not
 
 | File | Committed? |
 |---|---|
 | `terraform/*.tf`, `terraform/.terraform.lock.hcl` | yes |
+| `terraform/terraform.tfstate` | **no** — gitignored, lives on your machine |
 | `tools/sync-env.js` | yes |
 | `src/utils/env.server.ts` | yes — generated, but committed for the typed access surface |
 | `.env` | **no** — gitignored, regenerate with `yarn sync:env` |
@@ -197,7 +173,7 @@ GITHUB_TOKEN=$(awk '/oauth_token:/ {print $2}' ~/.config/gh/hosts.yml) \
 
 1. Add a handler `src/server/routes/tasks.<name>.ts` and a route file
    `src/routes/api.tasks.<name>.ts` using `gcpAuth('<name>')`.
-2. Add a `google_cloud_scheduler_job` block in `main.tf` — copy
+2. Add a `google_cloud_scheduler_job` block in `production.tf` — copy
    `gmail_watch_refresh`, change `name`, `schedule`, `uri`, and the
    `audience` to match the route.
 3. `terraform apply`.
@@ -207,3 +183,12 @@ GITHUB_TOKEN=$(awk '/oauth_token:/ {print $2}' ~/.config/gh/hosts.yml) \
 1. Add a handler + route the same way, plus a new overload in
    `src/utils/enqueueGcpTask.server.ts`.
 2. No Terraform change needed — they all share the `default` queue.
+
+## File layout
+
+- `main.tf` — providers, backend, locals, API enablement (just the project's
+  shared bits).
+- `production.tf` — runtime infra: SA, queue, scheduler, pubsub sub, API
+  keys, Cloud Monitoring, and the SM mirrors for the API keys + SA key.
+- `deployment.tf` — CI plumbing: `ci-secret-pusher` SA + key + IAM +
+  the `github_actions_secret` that wires it into the GH repo.

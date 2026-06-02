@@ -18,13 +18,6 @@ resource "google_project_iam_member" "ci_secret_pusher_sm" {
   member  = "serviceAccount:${google_service_account.ci_secret_pusher.email}"
 }
 
-# Needed for `terraform init` + `terraform output` against the GCS backend.
-resource "google_storage_bucket_iam_member" "ci_secret_pusher_state_reader" {
-  bucket = "gmail-reminder-api-tfstate"
-  role   = "roles/storage.objectViewer"
-  member = "serviceAccount:${google_service_account.ci_secret_pusher.email}"
-}
-
 resource "google_service_account_key" "ci_secret_pusher" {
   service_account_id = google_service_account.ci_secret_pusher.name
 }
