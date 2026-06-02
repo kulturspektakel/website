@@ -14,7 +14,7 @@
     "generate:env": "dotenv-vault pull",
     "generate:mail": "maizzle build --config ./maizzle/config.production.js",
     "mail": "maizzle serve --config ./maizzle/config.js",
-    "sync:env": "tools/sync-env.py",
+    "sync:env": "node tools/sync-env.js",
     "test": "vitest",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "typecheck": "tsc --noEmit"
