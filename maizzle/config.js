@@ -1,5 +1,13 @@
+import 'dotenv/config';
 import emailVariants from 'tailwindcss-email-variants';
 import {markdownToTxt} from 'markdown-to-txt';
+
+if (!process.env.SITE_URL) {
+  throw new Error(
+    'SITE_URL is not set — maizzle needs it to build absolute asset URLs. ' +
+      'Run `yarn sync:gcp-env` or copy .env from a teammate.',
+  );
+}
 
 /** @type {import('@maizzle/framework').Config} */
 export default {
@@ -18,7 +26,7 @@ export default {
     root: 'maizzle',
     folders: ['components'],
   },
-  baseURL: 'https://www.kulturspektakel.de/maizzle/',
+  baseURL: `${process.env.SITE_URL}/maizzle/`,
   css: {
     purge: true,
     inline: true,
