@@ -13,42 +13,35 @@ locals {
   region     = "europe-west1"
   site_url   = "https://www.kulturspektakel.de"
 
-  # Secrets read from Secret Manager and exposed as Vercel env vars under the
-  # same name. Add a new entry here (and create it via `gcloud secrets create`)
+  # Secrets read from Secret Manager and exposed as Vercel env vars.
+  # Map: env var name → Secret Manager secret name. They're usually the same,
+  # but a few historical names differ (e.g. legacy api uses
+  # GOOGLE_SERVICE_ACCOUNT_* in SM for what we call GMAIL_SA_*).
+  # Add a new entry here (and create the SM secret via `gcloud secrets create`)
   # to make a new secret available to the app via `env.NAME`.
-  managed_secret_names = [
-    "AWS_ACCESS_KEY_ID",
-    "AWS_SECRET_ACCESS_KEY",
-    "CONTACTLESS_SALT",
-    "DATABASE_URL",
-    "SLACK_BOT_TOKEN",
-    "SPOTIFY_CLIENT_ID",
-    "SPOTIFY_CLIENT_SECRET",
-    "STRIPE_API_KEY",
-  ]
+  managed_secrets = {
+    AWS_ACCESS_KEY_ID     = "AWS_ACCESS_KEY_ID"
+    AWS_SECRET_ACCESS_KEY = "AWS_SECRET_ACCESS_KEY"
+    CONTACTLESS_SALT      = "CONTACTLESS_SALT"
+    DATABASE_URL          = "DATABASE_URL"
+    GMAIL_SA_EMAIL        = "GOOGLE_SERVICE_ACCOUNT_EMAIL"
+    GMAIL_SA_PRIVATE_KEY  = "GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY"
+    SLACK_BOT_TOKEN       = "SLACK_BOT_TOKEN"
+    SPOTIFY_CLIENT_ID     = "SPOTIFY_CLIENT_ID"
+    SPOTIFY_CLIENT_SECRET = "SPOTIFY_CLIENT_SECRET"
+    STRIPE_API_KEY        = "STRIPE_API_KEY"
+  }
 }
 
 data "google_project" "this" {
   project_id = local.project_id
 }
 
-# Single for_each data source for everything in `managed_secret_names`.
-# Adding a new secret = add a name to the list above + create it via gcloud.
+# Single for_each data source for everything in `managed_secrets`.
+# Adding a new secret = add an entry to the map above + create it via gcloud.
 data "google_secret_manager_secret_version" "managed" {
-  for_each = toset(local.managed_secret_names)
+  for_each = toset(values(local.managed_secrets))
   secret   = each.key
-}
-
-# Two existing Workspace-SA secrets get *renamed* on the way out, because
-# the legacy api uses `GOOGLE_SERVICE_ACCOUNT_*` for the same values that we
-# call `GMAIL_SA_*`. Read them separately so we can map the names in
-# `local.env_vars` below.
-data "google_secret_manager_secret_version" "gmail_sa_email" {
-  secret = "GOOGLE_SERVICE_ACCOUNT_EMAIL"
-}
-
-data "google_secret_manager_secret_version" "gmail_sa_private_key" {
-  secret = "GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY"
 }
 
 provider "google" {
@@ -191,13 +184,11 @@ locals {
       GCP_TASKS_SERVICE_ACCOUNT_KEY_JSON = base64decode(google_service_account_key.tasks_key.private_key)
       GOOGLE_MAPS_API_KEY_SERVER         = google_apikeys_key.maps_server.key_string
       GOOGLE_MAPS_API_KEY                = google_apikeys_key.maps_browser.key_string
-      GMAIL_SA_EMAIL                     = data.google_secret_manager_secret_version.gmail_sa_email.secret_data
-      GMAIL_SA_PRIVATE_KEY               = data.google_secret_manager_secret_version.gmail_sa_private_key.secret_data
     },
-    # SM-backed secrets where the env var name == SM secret name.
+    # SM-backed secrets (with optional env-var ↔ SM-name aliasing).
     {
-      for name in local.managed_secret_names :
-      name => data.google_secret_manager_secret_version.managed[name].secret_data
+      for env_name, sm_name in local.managed_secrets :
+      env_name => data.google_secret_manager_secret_version.managed[sm_name].secret_data
     },
   )
 }
