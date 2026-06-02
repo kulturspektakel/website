@@ -41,6 +41,33 @@ data "google_secret_manager_secret_version" "aws_secret_access_key" {
   secret = "AWS_SECRET_ACCESS_KEY"
 }
 
+# Other secrets sourced from Secret Manager — pre-existing entries
+# populated outside Terraform; we just expose them through the sync flow so
+# .env stays a derived artifact.
+data "google_secret_manager_secret_version" "stripe_api_key" {
+  secret = "STRIPE_API_KEY"
+}
+
+data "google_secret_manager_secret_version" "contactless_salt" {
+  secret = "CONTACTLESS_SALT"
+}
+
+data "google_secret_manager_secret_version" "database_url" {
+  secret = "DATABASE_URL"
+}
+
+data "google_secret_manager_secret_version" "spotify_client_id" {
+  secret = "SPOTIFY_CLIENT_ID"
+}
+
+data "google_secret_manager_secret_version" "spotify_client_secret" {
+  secret = "SPOTIFY_CLIENT_SECRET"
+}
+
+data "google_secret_manager_secret_version" "slack_bot_token" {
+  secret = "SLACK_BOT_TOKEN"
+}
+
 provider "google" {
   project = local.project_id
   region  = local.region
@@ -217,6 +244,42 @@ output "aws_access_key_id" {
 output "aws_secret_access_key" {
   description = "Set as AWS_SECRET_ACCESS_KEY on Vercel. Used by SES transport."
   value       = data.google_secret_manager_secret_version.aws_secret_access_key.secret_data
+  sensitive   = true
+}
+
+output "stripe_api_key" {
+  description = "Set as STRIPE_API_KEY on Vercel."
+  value       = data.google_secret_manager_secret_version.stripe_api_key.secret_data
+  sensitive   = true
+}
+
+output "contactless_salt" {
+  description = "Set as CONTACTLESS_SALT on Vercel."
+  value       = data.google_secret_manager_secret_version.contactless_salt.secret_data
+  sensitive   = true
+}
+
+output "database_url" {
+  description = "Set as DATABASE_URL on Vercel."
+  value       = data.google_secret_manager_secret_version.database_url.secret_data
+  sensitive   = true
+}
+
+output "spotify_client_id" {
+  description = "Set as SPOTIFY_CLIENT_ID on Vercel."
+  value       = data.google_secret_manager_secret_version.spotify_client_id.secret_data
+  sensitive   = true
+}
+
+output "spotify_client_secret" {
+  description = "Set as SPOTIFY_CLIENT_SECRET on Vercel."
+  value       = data.google_secret_manager_secret_version.spotify_client_secret.secret_data
+  sensitive   = true
+}
+
+output "slack_bot_token" {
+  description = "Set as SLACK_BOT_TOKEN on Vercel."
+  value       = data.google_secret_manager_secret_version.slack_bot_token.secret_data
   sensitive   = true
 }
 

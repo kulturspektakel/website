@@ -54,6 +54,12 @@ def main() -> int:
         "GMAIL_SA_PRIVATE_KEY": f'"{out("gmail_sa_private_key")}"',
         "AWS_ACCESS_KEY_ID": f'"{out("aws_access_key_id")}"',
         "AWS_SECRET_ACCESS_KEY": f'"{out("aws_secret_access_key")}"',
+        "STRIPE_API_KEY": f'"{out("stripe_api_key")}"',
+        "CONTACTLESS_SALT": f'"{out("contactless_salt")}"',
+        "DATABASE_URL": f'"{out("database_url")}"',
+        "SPOTIFY_CLIENT_ID": f'"{out("spotify_client_id")}"',
+        "SPOTIFY_CLIENT_SECRET": f'"{out("spotify_client_secret")}"',
+        "SLACK_BOT_TOKEN": f'"{out("slack_bot_token")}"',
     }
     new_block = (
         BLOCK_START
