@@ -203,7 +203,7 @@ locals {
 }
 
 output "env_vars" {
-  description = "All values the app expects in process.env. Iterated by tools/sync-env.py."
+  description = "All values the app expects in process.env. Iterated by tools/sync-env.js."
   value       = local.env_vars
   sensitive   = true
 }
