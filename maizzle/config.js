@@ -4,22 +4,22 @@ import {markdownToTxt} from 'markdown-to-txt';
 /** @type {import('@maizzle/framework').Config} */
 export default {
   build: {
-    content: ['src/maizzle/templates/**/*.md'],
+    content: ['maizzle/templates/**/*.md'],
     static: {
-      source: ['src/maizzle/assets/**/*'],
+      source: ['maizzle/assets/**/*'],
       // Repo-rooted public/maizzle/ — Vercel + Nitro serve everything in
       // public/ at the site root, so assets end up at
       // https://www.kulturspektakel.de/maizzle/<file>.
-      destination: '../../../public/maizzle',
+      destination: '../../public/maizzle',
     },
     output: {
-      path: 'src/maizzle/generated',
-      from: 'src/maizzle/templates',
+      path: 'maizzle/generated',
+      from: 'maizzle/templates',
       extension: 'ts',
     },
   },
   components: {
-    root: 'src/maizzle',
+    root: 'maizzle',
     folders: ['components'],
   },
   baseURL: 'https://www.kulturspektakel.de/maizzle/',
@@ -29,8 +29,8 @@ export default {
     tailwind: {
       plugins: [emailVariants],
       content: [
-        'src/maizzle/templates/**/*.md',
-        'src/maizzle/components/**/*.html',
+        'maizzle/templates/**/*.md',
+        'maizzle/components/**/*.html',
       ],
       theme: {
         extend: {

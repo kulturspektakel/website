@@ -12,7 +12,7 @@ const {templateFn} = vi.hoisted(() => ({
 vi.mock('../../utils/sendMail.server', () => ({
   transport: {sendMail},
 }));
-vi.mock('../../maizzle/generated', () => ({
+vi.mock('../../../maizzle/generated', () => ({
   default: {
     confirmBandApplication: templateFn,
   },

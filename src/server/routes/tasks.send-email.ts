@@ -1,5 +1,5 @@
 import type Mail from 'nodemailer/lib/mailer';
-import mails from '../../maizzle/generated';
+import mails from '../../../maizzle/generated';
 import {readJsonPayload} from '../../utils/readJsonPayload.server';
 import {transport, type From} from '../../utils/sendMail.server';
 
