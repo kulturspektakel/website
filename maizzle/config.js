@@ -5,13 +5,9 @@ import {markdownToTxt} from 'markdown-to-txt';
 export default {
   build: {
     content: ['maizzle/templates/**/*.md'],
-    static: {
-      source: ['maizzle/assets/**/*'],
-      // Repo-rooted public/maizzle/ — Vercel + Nitro serve everything in
-      // public/ at the site root, so assets end up at
-      // https://www.kulturspektakel.de/maizzle/<file>.
-      destination: '../../public/maizzle',
-    },
+    // Assets live directly in public/maizzle/ — Vercel + Nitro serve
+    // everything in public/ at the site root, so they're already at
+    // https://www.kulturspektakel.de/maizzle/<file> without any copy step.
     output: {
       path: 'maizzle/generated',
       from: 'maizzle/templates',
