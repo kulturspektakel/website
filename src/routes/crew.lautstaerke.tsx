@@ -77,6 +77,8 @@ function LautstaerkeLayout() {
           latest: record,
           laeq5m: decoded.laeq5m ?? null,
           lceq5m: decoded.lceq5m ?? null,
+          laeq30m: decoded.laeq30m ?? null,
+          lceq30m: decoded.lceq30m ?? null,
           batteryMv: decoded.batteryMv,
         },
       }));

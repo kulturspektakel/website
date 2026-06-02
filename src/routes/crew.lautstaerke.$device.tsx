@@ -1,6 +1,6 @@
 import {createFileRoute, Link} from '@tanstack/react-router';
 import {LuArrowLeft} from 'react-icons/lu';
-import {useEffect, useMemo, useRef} from 'react';
+import {useEffect, useMemo, useRef, useState} from 'react';
 import {
   Box,
   Flex,
@@ -12,10 +12,12 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import uPlot from 'uplot';
+import {SegmentedControl} from '../components/chakra-snippets/segmented-control';
 import {
   GAP_THRESHOLD_S,
   SERIES,
   WINDOW_S,
+  type Weighting,
   decodeDb,
   isFresh,
   useLautstaerkeCtx,
@@ -23,7 +25,10 @@ import {
 } from '../lautstaerke/context';
 import {BatteryChip} from '../lautstaerke/BatteryChip';
 import {BluetoothChip} from '../lautstaerke/BluetoothChip';
-import {type NoiseRecording_Record as NoiseRecord} from '../proto/noise';
+import {
+  type NoiseRecording,
+  type NoiseRecording_Record as NoiseRecord,
+} from '../proto/noise';
 import {seo} from '../utils/seo';
 
 export const Route = createFileRoute('/crew/lautstaerke/$device')({
@@ -53,6 +58,11 @@ const fmtTime = (ts: number) => {
   return `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
 };
 
+// Fixed-width legend value: "120.5", " 95.5", "  --.-" — always 6 chars so the
+// monospaced legend stays aligned whether the value is missing or three digits.
+const fmtDbLegend = (_u: uPlot, v: number | null) =>
+  (v == null ? '--.-' : v.toFixed(1)).padStart(6, ' ');
+
 const gapsRefiner: uPlot.Series.GapsRefiner = (u, _sIdx, i0, i1, nullGaps) => {
   const xs = u.data[0];
   const out = nullGaps.slice();
@@ -66,6 +76,10 @@ const gapsRefiner: uPlot.Series.GapsRefiner = (u, _sIdx, i0, i1, nullGaps) => {
   }
   return out;
 };
+
+// Weighting-independent identity of a series ('LAeq,1s' -> 'Leq,1s'), so the
+// legend toggle state can be shared across the dB(A)/dB(C) switch.
+const seriesKind = (label: string) => label[0] + label.slice(2);
 
 const FREQS = [
   20, 25, 31.5, 40, 50, 63, 80, 100, 125, 160, 200, 250, 315, 400, 500, 630,
@@ -121,7 +135,7 @@ function BandChart({record}: {record: NoiseRecord | null}) {
       legend: {show: false},
       scales: {
         x: {time: false, range: () => [-0.7, FREQS.length - 0.3]},
-        y: {range: () => [40, 110]},
+        y: {range: () => [30, 110]},
       },
       axes: [
         {
@@ -151,8 +165,8 @@ function BandChart({record}: {record: NoiseRecord | null}) {
         },
         {
           label: 'Pegel',
-          stroke: '#2b8cbe',
-          fill: '#2b8cbe',
+          stroke: '#fef08a',
+          fill: '#fef08a',
           paths: uPlot.paths.bars!({size: [0.85, 60]}),
           points: {show: false},
           value: (_u, v) => (v == null ? '' : `${v.toFixed(1)} dB`),
@@ -191,7 +205,19 @@ function BandChart({record}: {record: NoiseRecord | null}) {
     plot.setData([xs, ys] as uPlot.AlignedData);
   }, [record, xs]);
 
-  return <Box ref={containerRef} w="full" h="full" />;
+  return (
+    <Box
+      ref={containerRef}
+      w="full"
+      h="full"
+      css={{
+        // Crosshair: plain gray, a touch lighter than the grid (gray.700).
+        '& .u-cursor-x, & .u-cursor-y': {
+          borderColor: 'var(--chakra-colors-gray-500)',
+        },
+      }}
+    />
+  );
 }
 
 function DeviceDetail() {
@@ -200,6 +226,17 @@ function DeviceDetail() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const plotRef = useRef<uPlot | null>(null);
   const now = useTick();
+  const [weighting, setWeighting] = useState<Weighting>('A');
+  // Visibility keyed by weighting-independent series kind, kept in sync with
+  // the chart legend so the big numbers mirror exactly what's plotted and the
+  // toggle state carries across the dB(A)/dB(C) switch.
+  const [shown, setShown] = useState<Record<string, boolean>>(() => {
+    const m: Record<string, boolean> = {};
+    for (const s of SERIES) m[seriesKind(s.label)] = !('hidden' in s && s.hidden);
+    return m;
+  });
+  const shownRef = useRef(shown);
+  shownRef.current = shown;
 
   if (!ctx.deviceData.current[device]) {
     ctx.deviceData.current[device] = [[], ...SERIES.map(() => [] as number[])];
@@ -212,7 +249,14 @@ function DeviceDetail() {
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-    const data = ctx.deviceData.current[device];
+    const fullData = ctx.deviceData.current[device];
+    // Only the selected weighting's series are plotted. The buffer always
+    // carries every column, so project it down to [time, ...visible].
+    const visible = SERIES.map((s, i) => ({s, col: i + 1})).filter(
+      ({s}) => s.weighting === weighting,
+    );
+    const project = () =>
+      [fullData[0], ...visible.map(({col}) => fullData[col])] as uPlot.AlignedData;
     const axisStroke = resolveCssVar(AXIS_STROKE_VAR, '#9ca3af');
     const gridStroke = resolveCssVar(GRID_STROKE_VAR, '#374151');
     const canvasHeight = () =>
@@ -229,7 +273,7 @@ function DeviceDetail() {
             return [max - WINDOW_S, max];
           },
         },
-        y: {range: () => [40, 110]},
+        y: {range: () => [30, 110]},
       },
       axes: [
         {
@@ -248,21 +292,36 @@ function DeviceDetail() {
       series: [
         {
           label: 'Zeit',
-          value: (_u, v) => (v == null ? '' : fmtTime(v)),
+          value: (_u, v) => (v == null ? '--:--:--' : fmtTime(v)),
         },
-        ...SERIES.map((s) => ({
+        ...visible.map(({s}) => ({
           label: s.label,
           stroke: s.stroke,
+          show: shownRef.current[seriesKind(s.label)],
           width: 1.5,
-          dash: 'dash' in s ? (s.dash as unknown as number[]) : undefined,
           spanGaps: false,
           gaps: gapsRefiner,
           points: {show: false},
+          value: fmtDbLegend,
         })),
       ],
+      hooks: {
+        setSeries: [
+          (_u, sIdx, sOpts) => {
+            // Mirror legend show/hide toggles into React state.
+            if (sIdx == null || sOpts.show == null) return;
+            const v = visible[sIdx - 1];
+            if (!v) return;
+            const k = seriesKind(v.s.label);
+            setShown((prev) =>
+              prev[k] === sOpts.show ? prev : {...prev, [k]: sOpts.show!},
+            );
+          },
+        ],
+      },
     };
 
-    const plot = new uPlot(opts, data as uPlot.AlignedData, container);
+    const plot = new uPlot(opts, project(), container);
     plotRef.current = plot;
 
     const ro = new ResizeObserver(() => {
@@ -274,7 +333,7 @@ function DeviceDetail() {
     ro.observe(container);
 
     const handler = () => {
-      plotRef.current?.setData(data as uPlot.AlignedData);
+      plotRef.current?.setData(project());
     };
     ctx.bus.addEventListener(`record:${device}`, handler);
 
@@ -284,7 +343,23 @@ function DeviceDetail() {
       plot.destroy();
       plotRef.current = null;
     };
-  }, [device, ctx.bus, ctx.deviceData]);
+  }, [device, ctx.bus, ctx.deviceData, weighting]);
+
+  // The 5m/30m getters read these off a NoiseRecording; reconstruct a minimal
+  // one from the persisted device state so the same getters feed the numbers.
+  const decodedLike = {
+    laeq5m: deviceState?.laeq5m ?? undefined,
+    lceq5m: deviceState?.lceq5m ?? undefined,
+    laeq30m: deviceState?.laeq30m ?? undefined,
+    lceq30m: deviceState?.lceq30m ?? undefined,
+  } as NoiseRecording;
+  const bigNumbers = SERIES.filter(
+    (s) => s.weighting === weighting && shown[seriesKind(s.label)],
+  ).map((s) => ({
+    label: s.label,
+    color: s.stroke,
+    value: latest ? s.get(latest, decodedLike) : null,
+  }));
 
   return (
     <Box display="flex" flexDirection="column" flex="1" minH="0">
@@ -333,28 +408,34 @@ function DeviceDetail() {
           </HStack>
         </VStack>
         {ctx.bluetooth.deviceName === device && <BluetoothChip />}
+        <SegmentedControl
+          size="sm"
+          flexShrink="0"
+          value={weighting}
+          onValueChange={(e) => setWeighting(e.value as Weighting)}
+          bg="gray.800"
+          css={{
+            '--segment-indicator-bg': 'var(--chakra-colors-gray-600)',
+            '& [data-part="item"]': {color: 'var(--chakra-colors-gray-400)'},
+            '& [data-part="item"][data-state="checked"]': {
+              color: 'var(--chakra-colors-white)',
+            },
+          }}
+          items={[
+            {value: 'A', label: 'dB(A)'},
+            {value: 'C', label: 'dB(C)'},
+          ]}
+        />
       </HStack>
-      <SimpleGrid columns={4} gap="3" mb="3">
-        <BigNumber
-          value={latest ? decodeDb(latest.laeq1s) : null}
-          label="LAeq,1s"
-          color="#2b8cbe"
-        />
-        <BigNumber
-          value={deviceState?.laeq5m != null ? decodeDb(deviceState.laeq5m) : null}
-          label="LAeq,5m"
-          color="#2b8cbe"
-        />
-        <BigNumber
-          value={latest ? decodeDb(latest.lceq1s) : null}
-          label="LCeq,1s"
-          color="#74a9cf"
-        />
-        <BigNumber
-          value={deviceState?.lceq5m != null ? decodeDb(deviceState.lceq5m) : null}
-          label="LCeq,5m"
-          color="#74a9cf"
-        />
+      <SimpleGrid columns={bigNumbers.length || 1} gap="3" mb="3">
+        {bigNumbers.map((n) => (
+          <BigNumber
+            key={n.label}
+            value={n.value}
+            label={n.label}
+            color={n.color}
+          />
+        ))}
       </SimpleGrid>
       <Flex
         flex="1"
@@ -370,7 +451,16 @@ function DeviceDetail() {
           css={{
             '& .u-legend': {
               fontSize: '11px',
+              fontFamily: 'var(--chakra-fonts-mono)',
               color: 'var(--chakra-colors-gray-300)',
+            },
+            // Keep the fixed-width padding from fmtDbLegend intact.
+            '& .u-legend .u-value': {
+              whiteSpace: 'pre',
+            },
+            // Crosshair: plain gray, a touch lighter than the grid (gray.700).
+            '& .u-cursor-x, & .u-cursor-y': {
+              borderColor: 'var(--chakra-colors-gray-500)',
             },
           }}
         />

@@ -17,50 +17,79 @@ export const GAP_THRESHOLD_S = 15;
 
 export const decodeDb = (byte: number) => 20 + byte / 2;
 
+export type Weighting = 'A' | 'C';
+
+// Order matters: this is the legend order within each weighting. Each Leq is a
+// shade of yellow (lighter → darker as the window grows); max and peak are
+// shades of orange. All lines are solid.
 export const SERIES = [
   {
     label: 'LAeq,1s',
-    stroke: '#2b8cbe',
+    weighting: 'A',
+    stroke: '#fef08a',
     get: (r: NoiseRecord) => decodeDb(r.laeq1s),
   },
   {
-    label: 'LCeq,1s',
-    stroke: '#74a9cf',
-    get: (r: NoiseRecord) => decodeDb(r.lceq1s),
-  },
-  {
-    label: 'LAFmax',
-    stroke: '#e6550d',
-    get: (r: NoiseRecord) => decodeDb(r.lafmax1s),
-  },
-  {
-    label: 'LCFmax',
-    stroke: '#a63603',
-    get: (r: NoiseRecord) => decodeDb(r.lcfmax1s),
-  },
-  {
-    label: 'LCpeak',
-    stroke: '#756bb1',
-    get: (r: NoiseRecord) => decodeDb(r.lcpeak1s),
-  },
-  {
     label: 'LAeq,5m',
-    stroke: '#2b8cbe',
-    dash: [6, 4],
+    weighting: 'A',
+    stroke: '#eab308',
     get: (_r: NoiseRecord, d: NoiseRecording) =>
       d.laeq5m == null ? null : decodeDb(d.laeq5m),
   },
   {
+    label: 'LAeq,30m',
+    weighting: 'A',
+    stroke: '#a16207',
+    get: (_r: NoiseRecord, d: NoiseRecording) =>
+      d.laeq30m == null ? null : decodeDb(d.laeq30m),
+  },
+  {
+    label: 'LAFmax',
+    weighting: 'A',
+    stroke: '#f87171',
+    hidden: true,
+    get: (r: NoiseRecord) => decodeDb(r.lafmax1s),
+  },
+  {
+    label: 'LCeq,1s',
+    weighting: 'C',
+    stroke: '#fef08a',
+    get: (r: NoiseRecord) => decodeDb(r.lceq1s),
+  },
+  {
     label: 'LCeq,5m',
-    stroke: '#74a9cf',
-    dash: [6, 4],
+    weighting: 'C',
+    stroke: '#eab308',
     get: (_r: NoiseRecord, d: NoiseRecording) =>
       d.lceq5m == null ? null : decodeDb(d.lceq5m),
   },
+  {
+    label: 'LCeq,30m',
+    weighting: 'C',
+    stroke: '#a16207',
+    get: (_r: NoiseRecord, d: NoiseRecording) =>
+      d.lceq30m == null ? null : decodeDb(d.lceq30m),
+  },
+  {
+    label: 'LCFmax',
+    weighting: 'C',
+    stroke: '#f87171',
+    hidden: true,
+    get: (r: NoiseRecord) => decodeDb(r.lcfmax1s),
+  },
+  {
+    label: 'LCpeak',
+    weighting: 'C',
+    stroke: '#b91c1c',
+    hidden: true,
+    get: (r: NoiseRecord) => decodeDb(r.lcpeak1s),
+  },
 ] as const satisfies ReadonlyArray<{
   label: string;
+  weighting: Weighting;
   stroke: string;
-  dash?: readonly number[];
+  // hidden from the chart by default; still toggleable via the legend.
+  hidden?: boolean;
   get: (r: NoiseRecord, d: NoiseRecording) => number | null;
 }>;
 
@@ -70,6 +99,9 @@ export type DeviceState = {
   // null until the device's 5-minute ring buffer is full (no data yet).
   laeq5m: number | null;
   lceq5m: number | null;
+  // null until the device's 30-minute ring buffer is full.
+  laeq30m: number | null;
+  lceq30m: number | null;
   batteryMv?: number;
 };
 export type DeviceBuffer = (number | null)[][];
