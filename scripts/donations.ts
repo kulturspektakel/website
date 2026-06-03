@@ -5,6 +5,7 @@
  *
  * `yarn email:donations` to run.
  */
+import 'dotenv/config';
 import {prismaClient} from '../src/utils/prismaClient.server';
 import {sendMail} from '../src/utils/sendMail.server';
 

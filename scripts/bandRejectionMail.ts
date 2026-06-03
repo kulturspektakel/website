@@ -6,6 +6,7 @@
  *
  * Set `EVENT_ID` before running. `yarn email:band-rejection` to run.
  */
+import 'dotenv/config';
 import {google} from 'googleapis';
 import {env} from '../src/utils/env.server';
 import {prismaClient} from '../src/utils/prismaClient.server';

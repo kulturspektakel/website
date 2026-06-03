@@ -4,6 +4,7 @@
  *
  * Fill in `SHEET_ID` before running. `yarn email:band-infosheet` to run.
  */
+import 'dotenv/config';
 import {sendMail} from '../src/utils/sendMail.server';
 import {readGoogleSheet} from './readGoogleSheet';
 
