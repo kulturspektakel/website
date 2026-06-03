@@ -14,7 +14,11 @@
     "generate:env": "dotenv-vault pull",
     "generate:mail": "maizzle build --config ./maizzle/config.production.js",
     "mail": "maizzle serve --config ./maizzle/config.js",
-    "sync:env": "node tools/sync-env.js",
+    "sync:env": "node scripts/sync-env.js",
+    "email:band-infosheet": "tsx scripts/bandInfosheet.ts",
+    "email:band-lineup": "tsx scripts/bandLineup.ts",
+    "email:band-rejection": "tsx scripts/bandRejectionMail.ts",
+    "email:donations": "tsx scripts/donations.ts",
     "test": "vitest",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "typecheck": "tsc --noEmit"
@@ -39,6 +43,7 @@
     "prisma": "^7.6.0",
     "tailwindcss-email-variants": "^3.0.5",
     "ts-proto": "^2.11.8",
+    "tsx": "^4.22.4",
     "typescript": "^6.0.2",
     "vercel": "^50.39.0",
     "vitest": "^4.1.2"

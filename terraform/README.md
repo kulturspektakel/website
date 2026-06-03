@@ -15,7 +15,7 @@ Task handlers live in `src/routes/api.tasks.*.ts` and
 | `main.tf` | Providers, locals (`project_id`, `region`, `site_url`), API enablement |
 | `production.tf` | Runtime infra: `tasks-invoker` SA, queue, scheduler, Pub/Sub, API keys, monitoring |
 | `deployment.tf` | CI plumbing: `ci-secret-pusher` SA + key, plus a `ci_secret_pusher_key` output used to refresh the `GCP_SA_KEY` GH Actions secret on rotation |
-| `tools/sync-env.js` | Reads Secret Manager → writes `.env` + `src/utils/env.server.ts` (typed accessor) + optional Vercel push |
+| `scripts/sync-env.js` | Reads Secret Manager → writes `.env` + `src/utils/env.server.ts` (typed accessor) + optional Vercel push |
 
 ## How auth works (for tasks)
 
@@ -48,12 +48,12 @@ new Stripe(env.STRIPE_API_KEY); // typed string, validated at access
 ```sh
 echo -n "value" | gcloud secrets create NEW_KEY --data-file=- \
   --project=gmail-reminder-api
-# add "NEW_KEY" to MANAGED_SECRETS in tools/sync-env.js
+# add "NEW_KEY" to MANAGED_SECRETS in scripts/sync-env.js
 yarn sync:env             # regenerate .env + env.server.ts locally
 git commit -am "Add NEW_KEY" && git push
 ```
 
-The push to main edits `tools/sync-env.js`, so GH Actions auto-syncs to
+The push to main edits `scripts/sync-env.js`, so GH Actions auto-syncs to
 Vercel. Once it lands, `env.NEW_KEY` is available in code.
 
 ## Rotating a secret
@@ -68,7 +68,7 @@ changes are invisible to git, so no auto-trigger.)
 
 ## Pushing env vars to Vercel
 
-Happens automatically on push to `main` when `tools/sync-env.js` or
+Happens automatically on push to `main` when `scripts/sync-env.js` or
 `.github/workflows/sync-env.yml` changes. For manual triggers (after a SM
 rotation), use **Run workflow** in the Actions tab.
 
@@ -84,7 +84,7 @@ terraform apply
 
 State is local (`terraform/terraform.tfstate`, gitignored). When changing
 the constants in `local` (project id, region, site url), also update
-`STATIC_ENV_VARS` at the top of `tools/sync-env.js` — those values are
+`STATIC_ENV_VARS` at the top of `scripts/sync-env.js` — those values are
 duplicated there.
 
 ### Rotating the CI service account key
