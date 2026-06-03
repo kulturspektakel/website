@@ -6,6 +6,10 @@ terraform {
       version = "~> 6.0"
     }
   }
+  backend "gcs" {
+    bucket = "gmail-reminder-api-tfstate"
+    prefix = "terraform/state"
+  }
 }
 
 provider "google" {
