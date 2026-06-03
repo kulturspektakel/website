@@ -93,6 +93,14 @@ When changing the constants in `local` (project id, region, site url), also
 update `STATIC_ENV_VARS` at the top of `scripts/sync-env.js` — those values
 are duplicated there.
 
+CI never applies. The `terraform-drift` job in `.github/workflows/main.yml`
+runs `terraform plan -refresh=false` on every push to `main` and **fails the
+deploy if committed config wasn't applied** — your reminder to run
+`terraform apply` locally. It reads only state + data sources (not live
+infra), so the `ci-secret-pusher` SA needs just the read-only roles in
+`deployment.tf` (`ci_state_reader` + `ci_plan_reader`). It does not block the
+app build; the workflow just goes red.
+
 ### Rotating the CI service account key
 
 The `GCP_SA_KEY` Actions secret was set up once by terraform but is no

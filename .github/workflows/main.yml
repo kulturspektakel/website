@@ -9,6 +9,32 @@ on:
   workflow_dispatch:
 
 jobs:
+  # We apply terraform locally, never in CI. This job only *checks* that the
+  # committed config has no un-applied changes, so a forgotten `terraform
+  # apply` fails the deploy as a reminder. `-refresh=false` keeps it to a
+  # config-vs-state diff (no live-infra read), so the CI SA needs only the
+  # read-only roles granted in terraform/deployment.tf. It does not gate the
+  # build below — the app still ships; the workflow just goes red.
+  terraform-drift:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.15.5
+      - name: init
+        run: terraform init
+      - name: check for un-applied changes
+        # exit 2 = pending changes => fail the deploy (run `terraform apply`
+        # locally). exit 0 = clean. exit 1 = real error.
+        run: terraform plan -refresh=false -lock=false -detailed-exitcode -no-color
+
   build:
     runs-on: ubuntu-latest
     steps:
