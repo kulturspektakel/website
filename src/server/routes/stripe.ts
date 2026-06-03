@@ -4,10 +4,7 @@ import {DonationSource} from '../../generated/prisma/client';
 import {ApiError} from '../../utils/apiError.server';
 import {enqueueGcpTask} from '../../utils/enqueueGcpTask.server';
 import {slackApiRequest} from '../../utils/slack.server';
-
-// #zuschuesse — where donations get announced (same channel as new
-// memberships, see tasks.create-membership-application).
-const SLACK_CHANNEL_ZUSCHUESSE = 'C030FV86XKR';
+import {SlackChannel} from '../../utils/slackChannels';
 
 const currencyFormat = new Intl.NumberFormat('de-DE', {
   style: 'currency',
@@ -76,8 +73,23 @@ async function checkoutSessionCompleted(session: Stripe.Checkout.Session) {
 
   const email =
     session.customer_email ?? session.customer_details?.email ?? undefined;
+  // The donor's own "Name" custom field — what they want shown publicly. It's
+  // optional, so this may be undefined. `||` (not `??`) so a blank/empty value
+  // collapses to undefined too.
   const name =
-    session.custom_fields.find((field) => field.key === 'name')?.text?.value ??
+    session.custom_fields.find((field) => field.key === 'name')?.text?.value ||
+    undefined;
+  // The receipt (Spendenquittung) needs the donor's legal name, so prefer the
+  // billing name Stripe collected (`customer_details.name`) and only fall back
+  // to the custom field. Pre-filled here as a default the donor confirms/edits
+  // on the receipt form; the receipt isn't issued until `spendenQuittungAt`.
+  const billingName = session.customer_details?.name || undefined;
+  const address = session.customer_details?.address;
+  // German receipt layout: "Straße und Hausnummer" then "PLZ und Ort".
+  const quittungStreet =
+    [address?.line1, address?.line2].filter(Boolean).join(', ') || undefined;
+  const quittungCity =
+    [address?.postal_code, address?.city].filter(Boolean).join(' ') ||
     undefined;
 
   const donation = await prismaClient.donation.create({
@@ -87,6 +99,9 @@ async function checkoutSessionCompleted(session: Stripe.Checkout.Session) {
       email,
       amount: session.amount_total,
       name,
+      quittungName: billingName ?? name,
+      quittungStreet,
+      quittungCity,
       source: DonationSource.Stripe,
     },
   });
@@ -94,8 +109,8 @@ async function checkoutSessionCompleted(session: Stripe.Checkout.Session) {
   const formattedAmount = currencyFormat.format(session.amount_total / 100);
 
   await slackApiRequest('chat.postMessage', {
-    channel: SLACK_CHANNEL_ZUSCHUESSE,
-    text: `💰 ${formattedAmount} Spende von *${name ?? 'Unbekannt'}*`,
+    channel: SlackChannel.zuschuesse,
+    text: `💰 ${formattedAmount} Spende von *${name ?? billingName ?? 'Unbekannt'}*`,
   });
 
   if (email) {

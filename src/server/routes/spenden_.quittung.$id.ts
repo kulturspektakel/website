@@ -13,7 +13,9 @@ const FormSchemaWithId = z.object({
 const select = {
   id: true,
   name: true,
-  namePrivate: true,
+  quittungName: true,
+  quittungStreet: true,
+  quittungCity: true,
   amount: true,
   createdAt: true,
   source: true,

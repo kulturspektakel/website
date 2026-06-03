@@ -48,9 +48,9 @@ function RouteComponent() {
 
   const formik = useFormik<z.infer<typeof FormSchema>>({
     initialValues: {
-      quittungName: initialData.namePrivate ?? initialData.name ?? '',
-      quittungStreet: '',
-      quittungCity: '',
+      quittungName: initialData.quittungName ?? initialData.name ?? '',
+      quittungStreet: initialData.quittungStreet ?? '',
+      quittungCity: initialData.quittungCity ?? '',
     },
     validationSchema: toFormikValidationSchema(FormSchema),
     onSubmit: (values) =>

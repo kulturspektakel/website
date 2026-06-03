@@ -1,5 +1,6 @@
 import {beforeEach, describe, expect, test, vi} from 'vitest';
 import Stripe from 'stripe';
+import {SlackChannel} from '../../utils/slackChannels';
 
 const {enqueueGcpTask} = vi.hoisted(() => ({enqueueGcpTask: vi.fn()}));
 const {slackApiRequest} = vi.hoisted(() => ({slackApiRequest: vi.fn()}));
@@ -81,12 +82,17 @@ describe('handleStripeWebhook', () => {
         email: 'donor@example.test',
         amount: 5000,
         name: 'Erika Musterfrau',
+        // No billing name/address on this event, so the receipt name falls back
+        // to the custom field and the address fields stay empty.
+        quittungName: 'Erika Musterfrau',
+        quittungStreet: undefined,
+        quittungCity: undefined,
         source: 'Stripe',
       },
     });
 
     expect(slackApiRequest).toHaveBeenCalledWith('chat.postMessage', {
-      channel: 'C030FV86XKR',
+      channel: SlackChannel.zuschuesse,
       text: `💰 ${eur(5000)} Spende von *Erika Musterfrau*`,
     });
 
@@ -120,9 +126,72 @@ describe('handleStripeWebhook', () => {
       }),
     );
     expect(slackApiRequest).toHaveBeenCalledWith('chat.postMessage', {
-      channel: 'C030FV86XKR',
+      channel: SlackChannel.zuschuesse,
       text: `💰 ${eur(5000)} Spende von *Unbekannt*`,
     });
+  });
+
+  test('uses the billing name for the receipt when the custom field is blank', async () => {
+    // Mirrors a real event: optional "name" custom field present but null,
+    // donor name only in customer_details.name. The public `name` stays empty
+    // (custom field only); the receipt name uses the billing name.
+    await handleStripeWebhook(
+      signedRequest(
+        checkoutCompleted({
+          customer_email: null,
+          customer_details: {email: 'barbara@example.test', name: 'Barbara Thomas'},
+          custom_fields: [{key: 'name', text: {value: null}}],
+        }),
+      ),
+    );
+
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          name: undefined,
+          quittungName: 'Barbara Thomas',
+        }),
+      }),
+    );
+    // Slack still shows the best available name (billing as fallback).
+    expect(slackApiRequest).toHaveBeenCalledWith('chat.postMessage', {
+      channel: SlackChannel.zuschuesse,
+      text: `💰 ${eur(5000)} Spende von *Barbara Thomas*`,
+    });
+  });
+
+  test('prefills the receipt name and address from the billing details', async () => {
+    await handleStripeWebhook(
+      signedRequest(
+        checkoutCompleted({
+          customer_details: {
+            email: 'donor@example.test',
+            name: 'Barbara Thomas',
+            address: {
+              line1: 'Bahnhofstraße 6',
+              line2: 'Hinterhaus',
+              postal_code: '82131',
+              city: 'Gauting',
+              country: 'DE',
+              state: null,
+            },
+          },
+        }),
+      ),
+    );
+
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          // Public name still comes from the custom field.
+          name: 'Erika Musterfrau',
+          // Receipt name prefers the billing name over the custom field.
+          quittungName: 'Barbara Thomas',
+          quittungStreet: 'Bahnhofstraße 6, Hinterhaus',
+          quittungCity: '82131 Gauting',
+        }),
+      }),
+    );
   });
 
   test('skips the email when Stripe collected no address', async () => {

@@ -1,6 +1,6 @@
 generator client {
   provider        = "prisma-client"
-  output          = "../types/prisma"
+  output          = "../src/generated/prisma"
   previewFeatures = ["fullTextSearchPostgres", "postgresqlExtensions"]
 }
 
@@ -357,7 +357,6 @@ model Donation {
   reference          String?
   source             DonationSource
   message            String?
-  namePrivate        String?
   sentConfirmationAt DateTime?
   id                 String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   spendenQuittungAt  DateTime?
