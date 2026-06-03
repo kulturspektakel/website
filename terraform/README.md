@@ -79,13 +79,19 @@ are skipped (Vercel CLI 50.x limitation).
 
 ```sh
 cd terraform
+terraform init   # first time on a machine: pulls remote state from GCS
 terraform apply
 ```
 
-State is local (`terraform/terraform.tfstate`, gitignored). When changing
-the constants in `local` (project id, region, site url), also update
-`STATIC_ENV_VARS` at the top of `scripts/sync-env.js` — those values are
-duplicated there.
+State lives in a versioned GCS bucket (`gs://gmail-reminder-api-tfstate`,
+prefix `terraform/state`), configured via the `backend "gcs"` block in
+`main.tf`. It is shared across machines with locking, so there is no local
+`terraform.tfstate` to sync. `terraform init` reads the backend and pulls
+the state; it relies on the same ADC login as the rest of setup.
+
+When changing the constants in `local` (project id, region, site url), also
+update `STATIC_ENV_VARS` at the top of `scripts/sync-env.js` — those values
+are duplicated there.
 
 ### Rotating the CI service account key
 
