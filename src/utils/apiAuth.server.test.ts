@@ -103,7 +103,7 @@ describe('parseToken — unauthenticated', () => {
 
   test('returns undefined when CONTACTLESS_SALT is unset', async () => {
     const saved = process.env.CONTACTLESS_SALT;
-    delete process.env.CONTACTLESS_SALT;
+    delete (process.env as Partial<NodeJS.ProcessEnv>).CONTACTLESS_SALT;
     try {
       const token = await parseToken(
         request({

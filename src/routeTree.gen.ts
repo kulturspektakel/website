@@ -31,13 +31,21 @@ import { Route as MainSlugRouteImport } from './routes/_main.$slug'
 import { Route as CrewLautstaerkeIndexRouteImport } from './routes/crew.lautstaerke.index'
 import { Route as MainLineupIndexRouteImport } from './routes/_main.lineup.index'
 import { Route as CrewLautstaerkeDeviceRouteImport } from './routes/crew.lautstaerke.$device'
+import { Route as ApiTasksSpotifyListenersRouteImport } from './routes/api.tasks.spotify-listeners'
 import { Route as ApiTasksSendEmailRouteImport } from './routes/api.tasks.send-email'
 import { Route as ApiTasksNonceRequestInvalidateRouteImport } from './routes/api.tasks.nonce-request-invalidate'
 import { Route as ApiTasksNonceInvalidateRouteImport } from './routes/api.tasks.nonce-invalidate'
+import { Route as ApiTasksInstagramFollowerRouteImport } from './routes/api.tasks.instagram-follower'
 import { Route as ApiTasksGmailWatchRefreshRouteImport } from './routes/api.tasks.gmail-watch-refresh'
 import { Route as ApiTasksGmailReminderRouteImport } from './routes/api.tasks.gmail-reminder'
 import { Route as ApiTasksGmailNotificationRouteImport } from './routes/api.tasks.gmail-notification'
+import { Route as ApiTasksFacebookLikesRouteImport } from './routes/api.tasks.facebook-likes'
+import { Route as ApiTasksCrewCardEnrolledRouteImport } from './routes/api.tasks.crew-card-enrolled'
 import { Route as ApiTasksCreateNonceRequestRouteImport } from './routes/api.tasks.create-nonce-request'
+import { Route as ApiTasksCreateMembershipApplicationRouteImport } from './routes/api.tasks.create-membership-application'
+import { Route as ApiTasksCreateBandApplicationRouteImport } from './routes/api.tasks.create-band-application'
+import { Route as ApiTasksBandApplicationDistanceRouteImport } from './routes/api.tasks.band-application-distance'
+import { Route as ApiTasksBandApplicationDemoRouteImport } from './routes/api.tasks.band-application-demo'
 import { Route as ApiTasksBadgeAwardedRouteImport } from './routes/api.tasks.badge-awarded'
 import { Route as ApiNoiseLogRouteImport } from './routes/api.noise.log'
 import { Route as ApiKultcashLogRouteImport } from './routes/api.kultcash.log'
@@ -166,6 +174,12 @@ const CrewLautstaerkeDeviceRoute = CrewLautstaerkeDeviceRouteImport.update({
   path: '/$device',
   getParentRoute: () => CrewLautstaerkeRoute,
 } as any)
+const ApiTasksSpotifyListenersRoute =
+  ApiTasksSpotifyListenersRouteImport.update({
+    id: '/api/tasks/spotify-listeners',
+    path: '/api/tasks/spotify-listeners',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiTasksSendEmailRoute = ApiTasksSendEmailRouteImport.update({
   id: '/api/tasks/send-email',
   path: '/api/tasks/send-email',
@@ -182,6 +196,12 @@ const ApiTasksNonceInvalidateRoute = ApiTasksNonceInvalidateRouteImport.update({
   path: '/api/tasks/nonce-invalidate',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiTasksInstagramFollowerRoute =
+  ApiTasksInstagramFollowerRouteImport.update({
+    id: '/api/tasks/instagram-follower',
+    path: '/api/tasks/instagram-follower',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiTasksGmailWatchRefreshRoute =
   ApiTasksGmailWatchRefreshRouteImport.update({
     id: '/api/tasks/gmail-watch-refresh',
@@ -199,10 +219,45 @@ const ApiTasksGmailNotificationRoute =
     path: '/api/tasks/gmail-notification',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiTasksFacebookLikesRoute = ApiTasksFacebookLikesRouteImport.update({
+  id: '/api/tasks/facebook-likes',
+  path: '/api/tasks/facebook-likes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTasksCrewCardEnrolledRoute =
+  ApiTasksCrewCardEnrolledRouteImport.update({
+    id: '/api/tasks/crew-card-enrolled',
+    path: '/api/tasks/crew-card-enrolled',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiTasksCreateNonceRequestRoute =
   ApiTasksCreateNonceRequestRouteImport.update({
     id: '/api/tasks/create-nonce-request',
     path: '/api/tasks/create-nonce-request',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiTasksCreateMembershipApplicationRoute =
+  ApiTasksCreateMembershipApplicationRouteImport.update({
+    id: '/api/tasks/create-membership-application',
+    path: '/api/tasks/create-membership-application',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiTasksCreateBandApplicationRoute =
+  ApiTasksCreateBandApplicationRouteImport.update({
+    id: '/api/tasks/create-band-application',
+    path: '/api/tasks/create-band-application',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiTasksBandApplicationDistanceRoute =
+  ApiTasksBandApplicationDistanceRouteImport.update({
+    id: '/api/tasks/band-application-distance',
+    path: '/api/tasks/band-application-distance',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiTasksBandApplicationDemoRoute =
+  ApiTasksBandApplicationDemoRouteImport.update({
+    id: '/api/tasks/band-application-demo',
+    path: '/api/tasks/band-application-demo',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiTasksBadgeAwardedRoute = ApiTasksBadgeAwardedRouteImport.update({
@@ -330,13 +385,21 @@ export interface FileRoutesByFullPath {
   '/api/kultcash/log': typeof ApiKultcashLogRoute
   '/api/noise/log': typeof ApiNoiseLogRoute
   '/api/tasks/badge-awarded': typeof ApiTasksBadgeAwardedRoute
+  '/api/tasks/band-application-demo': typeof ApiTasksBandApplicationDemoRoute
+  '/api/tasks/band-application-distance': typeof ApiTasksBandApplicationDistanceRoute
+  '/api/tasks/create-band-application': typeof ApiTasksCreateBandApplicationRoute
+  '/api/tasks/create-membership-application': typeof ApiTasksCreateMembershipApplicationRoute
   '/api/tasks/create-nonce-request': typeof ApiTasksCreateNonceRequestRoute
+  '/api/tasks/crew-card-enrolled': typeof ApiTasksCrewCardEnrolledRoute
+  '/api/tasks/facebook-likes': typeof ApiTasksFacebookLikesRoute
   '/api/tasks/gmail-notification': typeof ApiTasksGmailNotificationRoute
   '/api/tasks/gmail-reminder': typeof ApiTasksGmailReminderRoute
   '/api/tasks/gmail-watch-refresh': typeof ApiTasksGmailWatchRefreshRoute
+  '/api/tasks/instagram-follower': typeof ApiTasksInstagramFollowerRoute
   '/api/tasks/nonce-invalidate': typeof ApiTasksNonceInvalidateRoute
   '/api/tasks/nonce-request-invalidate': typeof ApiTasksNonceRequestInvalidateRoute
   '/api/tasks/send-email': typeof ApiTasksSendEmailRoute
+  '/api/tasks/spotify-listeners': typeof ApiTasksSpotifyListenersRoute
   '/crew/lautstaerke/$device': typeof CrewLautstaerkeDeviceRoute
   '/lineup/': typeof MainLineupIndexRoute
   '/crew/lautstaerke/': typeof CrewLautstaerkeIndexRoute
@@ -375,13 +438,21 @@ export interface FileRoutesByTo {
   '/api/kultcash/log': typeof ApiKultcashLogRoute
   '/api/noise/log': typeof ApiNoiseLogRoute
   '/api/tasks/badge-awarded': typeof ApiTasksBadgeAwardedRoute
+  '/api/tasks/band-application-demo': typeof ApiTasksBandApplicationDemoRoute
+  '/api/tasks/band-application-distance': typeof ApiTasksBandApplicationDistanceRoute
+  '/api/tasks/create-band-application': typeof ApiTasksCreateBandApplicationRoute
+  '/api/tasks/create-membership-application': typeof ApiTasksCreateMembershipApplicationRoute
   '/api/tasks/create-nonce-request': typeof ApiTasksCreateNonceRequestRoute
+  '/api/tasks/crew-card-enrolled': typeof ApiTasksCrewCardEnrolledRoute
+  '/api/tasks/facebook-likes': typeof ApiTasksFacebookLikesRoute
   '/api/tasks/gmail-notification': typeof ApiTasksGmailNotificationRoute
   '/api/tasks/gmail-reminder': typeof ApiTasksGmailReminderRoute
   '/api/tasks/gmail-watch-refresh': typeof ApiTasksGmailWatchRefreshRoute
+  '/api/tasks/instagram-follower': typeof ApiTasksInstagramFollowerRoute
   '/api/tasks/nonce-invalidate': typeof ApiTasksNonceInvalidateRoute
   '/api/tasks/nonce-request-invalidate': typeof ApiTasksNonceRequestInvalidateRoute
   '/api/tasks/send-email': typeof ApiTasksSendEmailRoute
+  '/api/tasks/spotify-listeners': typeof ApiTasksSpotifyListenersRoute
   '/crew/lautstaerke/$device': typeof CrewLautstaerkeDeviceRoute
   '/lineup': typeof MainLineupIndexRoute
   '/crew/lautstaerke': typeof CrewLautstaerkeIndexRoute
@@ -425,13 +496,21 @@ export interface FileRoutesById {
   '/api/kultcash/log': typeof ApiKultcashLogRoute
   '/api/noise/log': typeof ApiNoiseLogRoute
   '/api/tasks/badge-awarded': typeof ApiTasksBadgeAwardedRoute
+  '/api/tasks/band-application-demo': typeof ApiTasksBandApplicationDemoRoute
+  '/api/tasks/band-application-distance': typeof ApiTasksBandApplicationDistanceRoute
+  '/api/tasks/create-band-application': typeof ApiTasksCreateBandApplicationRoute
+  '/api/tasks/create-membership-application': typeof ApiTasksCreateMembershipApplicationRoute
   '/api/tasks/create-nonce-request': typeof ApiTasksCreateNonceRequestRoute
+  '/api/tasks/crew-card-enrolled': typeof ApiTasksCrewCardEnrolledRoute
+  '/api/tasks/facebook-likes': typeof ApiTasksFacebookLikesRoute
   '/api/tasks/gmail-notification': typeof ApiTasksGmailNotificationRoute
   '/api/tasks/gmail-reminder': typeof ApiTasksGmailReminderRoute
   '/api/tasks/gmail-watch-refresh': typeof ApiTasksGmailWatchRefreshRoute
+  '/api/tasks/instagram-follower': typeof ApiTasksInstagramFollowerRoute
   '/api/tasks/nonce-invalidate': typeof ApiTasksNonceInvalidateRoute
   '/api/tasks/nonce-request-invalidate': typeof ApiTasksNonceRequestInvalidateRoute
   '/api/tasks/send-email': typeof ApiTasksSendEmailRoute
+  '/api/tasks/spotify-listeners': typeof ApiTasksSpotifyListenersRoute
   '/crew/lautstaerke/$device': typeof CrewLautstaerkeDeviceRoute
   '/_main/lineup/': typeof MainLineupIndexRoute
   '/crew/lautstaerke/': typeof CrewLautstaerkeIndexRoute
@@ -475,13 +554,21 @@ export interface FileRouteTypes {
     | '/api/kultcash/log'
     | '/api/noise/log'
     | '/api/tasks/badge-awarded'
+    | '/api/tasks/band-application-demo'
+    | '/api/tasks/band-application-distance'
+    | '/api/tasks/create-band-application'
+    | '/api/tasks/create-membership-application'
     | '/api/tasks/create-nonce-request'
+    | '/api/tasks/crew-card-enrolled'
+    | '/api/tasks/facebook-likes'
     | '/api/tasks/gmail-notification'
     | '/api/tasks/gmail-reminder'
     | '/api/tasks/gmail-watch-refresh'
+    | '/api/tasks/instagram-follower'
     | '/api/tasks/nonce-invalidate'
     | '/api/tasks/nonce-request-invalidate'
     | '/api/tasks/send-email'
+    | '/api/tasks/spotify-listeners'
     | '/crew/lautstaerke/$device'
     | '/lineup/'
     | '/crew/lautstaerke/'
@@ -520,13 +607,21 @@ export interface FileRouteTypes {
     | '/api/kultcash/log'
     | '/api/noise/log'
     | '/api/tasks/badge-awarded'
+    | '/api/tasks/band-application-demo'
+    | '/api/tasks/band-application-distance'
+    | '/api/tasks/create-band-application'
+    | '/api/tasks/create-membership-application'
     | '/api/tasks/create-nonce-request'
+    | '/api/tasks/crew-card-enrolled'
+    | '/api/tasks/facebook-likes'
     | '/api/tasks/gmail-notification'
     | '/api/tasks/gmail-reminder'
     | '/api/tasks/gmail-watch-refresh'
+    | '/api/tasks/instagram-follower'
     | '/api/tasks/nonce-invalidate'
     | '/api/tasks/nonce-request-invalidate'
     | '/api/tasks/send-email'
+    | '/api/tasks/spotify-listeners'
     | '/crew/lautstaerke/$device'
     | '/lineup'
     | '/crew/lautstaerke'
@@ -569,13 +664,21 @@ export interface FileRouteTypes {
     | '/api/kultcash/log'
     | '/api/noise/log'
     | '/api/tasks/badge-awarded'
+    | '/api/tasks/band-application-demo'
+    | '/api/tasks/band-application-distance'
+    | '/api/tasks/create-band-application'
+    | '/api/tasks/create-membership-application'
     | '/api/tasks/create-nonce-request'
+    | '/api/tasks/crew-card-enrolled'
+    | '/api/tasks/facebook-likes'
     | '/api/tasks/gmail-notification'
     | '/api/tasks/gmail-reminder'
     | '/api/tasks/gmail-watch-refresh'
+    | '/api/tasks/instagram-follower'
     | '/api/tasks/nonce-invalidate'
     | '/api/tasks/nonce-request-invalidate'
     | '/api/tasks/send-email'
+    | '/api/tasks/spotify-listeners'
     | '/crew/lautstaerke/$device'
     | '/_main/lineup/'
     | '/crew/lautstaerke/'
@@ -595,13 +698,21 @@ export interface RootRouteChildren {
   ApiKultcashLogRoute: typeof ApiKultcashLogRoute
   ApiNoiseLogRoute: typeof ApiNoiseLogRoute
   ApiTasksBadgeAwardedRoute: typeof ApiTasksBadgeAwardedRoute
+  ApiTasksBandApplicationDemoRoute: typeof ApiTasksBandApplicationDemoRoute
+  ApiTasksBandApplicationDistanceRoute: typeof ApiTasksBandApplicationDistanceRoute
+  ApiTasksCreateBandApplicationRoute: typeof ApiTasksCreateBandApplicationRoute
+  ApiTasksCreateMembershipApplicationRoute: typeof ApiTasksCreateMembershipApplicationRoute
   ApiTasksCreateNonceRequestRoute: typeof ApiTasksCreateNonceRequestRoute
+  ApiTasksCrewCardEnrolledRoute: typeof ApiTasksCrewCardEnrolledRoute
+  ApiTasksFacebookLikesRoute: typeof ApiTasksFacebookLikesRoute
   ApiTasksGmailNotificationRoute: typeof ApiTasksGmailNotificationRoute
   ApiTasksGmailReminderRoute: typeof ApiTasksGmailReminderRoute
   ApiTasksGmailWatchRefreshRoute: typeof ApiTasksGmailWatchRefreshRoute
+  ApiTasksInstagramFollowerRoute: typeof ApiTasksInstagramFollowerRoute
   ApiTasksNonceInvalidateRoute: typeof ApiTasksNonceInvalidateRoute
   ApiTasksNonceRequestInvalidateRoute: typeof ApiTasksNonceRequestInvalidateRoute
   ApiTasksSendEmailRoute: typeof ApiTasksSendEmailRoute
+  ApiTasksSpotifyListenersRoute: typeof ApiTasksSpotifyListenersRoute
   ApiSpendenQuittungIdRoute: typeof ApiSpendenQuittungIdRoute
 }
 
@@ -761,6 +872,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrewLautstaerkeDeviceRouteImport
       parentRoute: typeof CrewLautstaerkeRoute
     }
+    '/api/tasks/spotify-listeners': {
+      id: '/api/tasks/spotify-listeners'
+      path: '/api/tasks/spotify-listeners'
+      fullPath: '/api/tasks/spotify-listeners'
+      preLoaderRoute: typeof ApiTasksSpotifyListenersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/tasks/send-email': {
       id: '/api/tasks/send-email'
       path: '/api/tasks/send-email'
@@ -780,6 +898,13 @@ declare module '@tanstack/react-router' {
       path: '/api/tasks/nonce-invalidate'
       fullPath: '/api/tasks/nonce-invalidate'
       preLoaderRoute: typeof ApiTasksNonceInvalidateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tasks/instagram-follower': {
+      id: '/api/tasks/instagram-follower'
+      path: '/api/tasks/instagram-follower'
+      fullPath: '/api/tasks/instagram-follower'
+      preLoaderRoute: typeof ApiTasksInstagramFollowerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/tasks/gmail-watch-refresh': {
@@ -803,11 +928,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTasksGmailNotificationRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/tasks/facebook-likes': {
+      id: '/api/tasks/facebook-likes'
+      path: '/api/tasks/facebook-likes'
+      fullPath: '/api/tasks/facebook-likes'
+      preLoaderRoute: typeof ApiTasksFacebookLikesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tasks/crew-card-enrolled': {
+      id: '/api/tasks/crew-card-enrolled'
+      path: '/api/tasks/crew-card-enrolled'
+      fullPath: '/api/tasks/crew-card-enrolled'
+      preLoaderRoute: typeof ApiTasksCrewCardEnrolledRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/tasks/create-nonce-request': {
       id: '/api/tasks/create-nonce-request'
       path: '/api/tasks/create-nonce-request'
       fullPath: '/api/tasks/create-nonce-request'
       preLoaderRoute: typeof ApiTasksCreateNonceRequestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tasks/create-membership-application': {
+      id: '/api/tasks/create-membership-application'
+      path: '/api/tasks/create-membership-application'
+      fullPath: '/api/tasks/create-membership-application'
+      preLoaderRoute: typeof ApiTasksCreateMembershipApplicationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tasks/create-band-application': {
+      id: '/api/tasks/create-band-application'
+      path: '/api/tasks/create-band-application'
+      fullPath: '/api/tasks/create-band-application'
+      preLoaderRoute: typeof ApiTasksCreateBandApplicationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tasks/band-application-distance': {
+      id: '/api/tasks/band-application-distance'
+      path: '/api/tasks/band-application-distance'
+      fullPath: '/api/tasks/band-application-distance'
+      preLoaderRoute: typeof ApiTasksBandApplicationDistanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tasks/band-application-demo': {
+      id: '/api/tasks/band-application-demo'
+      path: '/api/tasks/band-application-demo'
+      fullPath: '/api/tasks/band-application-demo'
+      preLoaderRoute: typeof ApiTasksBandApplicationDemoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/tasks/badge-awarded': {
@@ -1057,13 +1224,22 @@ const rootRouteChildren: RootRouteChildren = {
   ApiKultcashLogRoute: ApiKultcashLogRoute,
   ApiNoiseLogRoute: ApiNoiseLogRoute,
   ApiTasksBadgeAwardedRoute: ApiTasksBadgeAwardedRoute,
+  ApiTasksBandApplicationDemoRoute: ApiTasksBandApplicationDemoRoute,
+  ApiTasksBandApplicationDistanceRoute: ApiTasksBandApplicationDistanceRoute,
+  ApiTasksCreateBandApplicationRoute: ApiTasksCreateBandApplicationRoute,
+  ApiTasksCreateMembershipApplicationRoute:
+    ApiTasksCreateMembershipApplicationRoute,
   ApiTasksCreateNonceRequestRoute: ApiTasksCreateNonceRequestRoute,
+  ApiTasksCrewCardEnrolledRoute: ApiTasksCrewCardEnrolledRoute,
+  ApiTasksFacebookLikesRoute: ApiTasksFacebookLikesRoute,
   ApiTasksGmailNotificationRoute: ApiTasksGmailNotificationRoute,
   ApiTasksGmailReminderRoute: ApiTasksGmailReminderRoute,
   ApiTasksGmailWatchRefreshRoute: ApiTasksGmailWatchRefreshRoute,
+  ApiTasksInstagramFollowerRoute: ApiTasksInstagramFollowerRoute,
   ApiTasksNonceInvalidateRoute: ApiTasksNonceInvalidateRoute,
   ApiTasksNonceRequestInvalidateRoute: ApiTasksNonceRequestInvalidateRoute,
   ApiTasksSendEmailRoute: ApiTasksSendEmailRoute,
+  ApiTasksSpotifyListenersRoute: ApiTasksSpotifyListenersRoute,
   ApiSpendenQuittungIdRoute: ApiSpendenQuittungIdRoute,
 }
 export const routeTree = rootRouteImport

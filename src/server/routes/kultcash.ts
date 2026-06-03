@@ -18,7 +18,6 @@ import crc32 from 'crc-32';
 import {ApiError} from '../../utils/apiError.server';
 import type {DeviceToken} from '../../utils/apiAuth.server';
 import {enqueueGcpTask} from '../../utils/enqueueGcpTask.server';
-import {scheduleTask} from '../../utils/scheduleTask.server';
 import UnreachableCaseError from '../../utils/UnreachableCaseError';
 
 const PROTOBUF_HEADERS = {'Content-Type': 'application/x-protobuf'};
@@ -273,7 +272,7 @@ export async function handleLog(request: Request): Promise<Response> {
       create: crewCardData,
     });
 
-    await scheduleTask('crewCardEnrolled', {
+    await enqueueGcpTask('crew-card-enrolled', {
       crewCardId: Array.from(crewCardData.id),
       validUntil: validUntil.toISOString(),
     });

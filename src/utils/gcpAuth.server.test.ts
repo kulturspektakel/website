@@ -93,7 +93,7 @@ describe('parseGcpToken — production', () => {
   });
 
   test('rejects when GCP_TASKS_SERVICE_ACCOUNT_EMAIL is unset', async () => {
-    delete process.env.GCP_TASKS_SERVICE_ACCOUNT_EMAIL;
+    delete (process.env as Partial<NodeJS.ProcessEnv>).GCP_TASKS_SERVICE_ACCOUNT_EMAIL;
     expect(
       await parseGcpToken(
         request({Authorization: 'Bearer good-jwt'}),

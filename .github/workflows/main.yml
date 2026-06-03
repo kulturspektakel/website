@@ -18,6 +18,18 @@ jobs:
           node-version: 22
       - name: install
         run: yarn
+
+      # Pull every secret from Secret Manager and push it to Vercel before
+      # building. `sync:env` throws if any managed secret is missing/empty, so
+      # this fails the deploy rather than shipping with a missing secret.
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - name: sync secrets to vercel
+        run: yarn sync:env --vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
       - name: create release
         run: |
           yarn vercel build --prod

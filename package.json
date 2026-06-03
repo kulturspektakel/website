@@ -67,6 +67,7 @@
     "@tanstack/react-start": "^1.167.16",
     "@tanstack/start-static-server-functions": "^1.166.25",
     "@twemoji/svg": "^15.0.0",
+    "bandcamp-scraper": "^1.5.0",
     "crc-32": "^1.2.2",
     "date-fns": "^4.1.0",
     "dotenv": "^17.4.1",

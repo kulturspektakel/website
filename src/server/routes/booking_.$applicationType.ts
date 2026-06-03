@@ -1,6 +1,6 @@
 import {createServerFn} from '@tanstack/react-start';
 import {prismaClient} from '../../utils/prismaClient.server';
-import {scheduleTask} from '../../utils/scheduleTask.server';
+import {enqueueGcpTask} from '../../utils/enqueueGcpTask.server';
 import {schema as step3Schema} from '../../components/booking/Step3';
 import z from 'zod';
 
@@ -24,5 +24,5 @@ export const createBandApplication = createServerFn()
       data,
       select: {id: true},
     });
-    await scheduleTask('createBandApplication', application);
+    await enqueueGcpTask('create-band-application', application);
   });

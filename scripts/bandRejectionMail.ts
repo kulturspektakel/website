@@ -8,7 +8,6 @@
  */
 import 'dotenv/config';
 import {google} from 'googleapis';
-import {env} from '../src/utils/env.server';
 import {prismaClient} from '../src/utils/prismaClient.server';
 import {sendMail} from '../src/utils/sendMail.server';
 
@@ -31,8 +30,8 @@ async function main() {
   console.log(`Sending ${data.length} rejections for ${event.name}`);
 
   const client = new google.auth.JWT({
-    email: env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-    key: env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY.replace(/\\n/g, '\n'),
+    email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+    key: process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY.replace(/\\n/g, '\n'),
     scopes: ['https://www.googleapis.com/auth/gmail.readonly'],
     subject: account,
   });

@@ -64,9 +64,45 @@ resource "google_secret_manager_secret_version" "tasks_sa_key" {
 
 # ---- Cloud Tasks + Scheduler + Pub/Sub ------------------------------------
 
+# Fail-fast queue for most tasks (email, slack, distance, membership, nonce,
+# badges, …). A handful of attempts with short backoff: these either succeed
+# quickly or point at a real bug worth surfacing.
 resource "google_cloud_tasks_queue" "default" {
-  name       = "default"
-  location   = local.region
+  name     = "default"
+  location = local.region
+
+  retry_config {
+    max_attempts  = 5
+    min_backoff   = "1s"
+    max_backoff   = "60s"
+    max_doublings = 16
+  }
+
+  depends_on = [google_project_service.apis]
+}
+
+# Patient queue for the band-application scrapers (demo resolution, Instagram,
+# Spotify). These hit external sites that rate-limit us, so we retry many times
+# with a deliberately long backoff — up to 1h between attempts — to let limits
+# reset rather than hammering and getting blocked.
+resource "google_cloud_tasks_queue" "scrapers" {
+  name     = "scrapers"
+  location = local.region
+
+  rate_limits {
+    # Keep concurrency low so we don't fan out parallel requests at the same
+    # rate-limited host.
+    max_concurrent_dispatches = 1
+    max_dispatches_per_second = 1
+  }
+
+  retry_config {
+    max_attempts  = 25
+    min_backoff   = "30s"
+    max_backoff   = "3600s"
+    max_doublings = 16
+  }
+
   depends_on = [google_project_service.apis]
 }
 

@@ -32,7 +32,7 @@ type EnqueueOptions = {
  * dev server without GCP credentials.
  *
  * Overloaded once per task name so the payload type is checked at every call
- * site, same shape as `scheduleTask` in `scheduleTask.server.ts`.
+ * site.
  */
 export async function enqueueGcpTask(
   task: 'create-nonce-request',
@@ -65,6 +65,46 @@ export async function enqueueGcpTask(
   options?: EnqueueOptions,
 ): Promise<void>;
 export async function enqueueGcpTask(
+  task: 'create-membership-application',
+  payload: import('../server/routes/tasks.create-membership-application').CreateMembershipApplicationPayload,
+  options?: EnqueueOptions,
+): Promise<void>;
+export async function enqueueGcpTask(
+  task: 'crew-card-enrolled',
+  payload: import('../server/routes/tasks.crew-card-enrolled').CrewCardEnrolledPayload,
+  options?: EnqueueOptions,
+): Promise<void>;
+export async function enqueueGcpTask(
+  task: 'create-band-application',
+  payload: import('../server/routes/tasks.create-band-application').CreateBandApplicationPayload,
+  options?: EnqueueOptions,
+): Promise<void>;
+export async function enqueueGcpTask(
+  task: 'band-application-distance',
+  payload: import('../server/routes/tasks.band-application-distance').BandApplicationDistancePayload,
+  options?: EnqueueOptions,
+): Promise<void>;
+export async function enqueueGcpTask(
+  task: 'band-application-demo',
+  payload: import('../server/routes/tasks.band-application-demo').BandApplicationDemoPayload,
+  options?: EnqueueOptions,
+): Promise<void>;
+export async function enqueueGcpTask(
+  task: 'facebook-likes',
+  payload: import('../server/routes/tasks.facebook-likes').FacebookLikesPayload,
+  options?: EnqueueOptions,
+): Promise<void>;
+export async function enqueueGcpTask(
+  task: 'instagram-follower',
+  payload: import('../server/routes/tasks.instagram-follower').InstagramFollowerPayload,
+  options?: EnqueueOptions,
+): Promise<void>;
+export async function enqueueGcpTask(
+  task: 'spotify-listeners',
+  payload: import('../server/routes/tasks.spotify-listeners').SpotifyListenersPayload,
+  options?: EnqueueOptions,
+): Promise<void>;
+export async function enqueueGcpTask(
   task: string,
   payload: Record<string, unknown>,
   options?: EnqueueOptions,
@@ -79,10 +119,11 @@ export async function enqueueGcpTask(
   }
 
   const ctx = gcpContext();
+  const queuePath = queuePathForTask(ctx, task);
   await ctx.client.createTask({
-    parent: ctx.queuePath,
+    parent: queuePath,
     task: {
-      name: options?.key ? `${ctx.queuePath}/tasks/${options.key}` : undefined,
+      name: options?.key ? `${queuePath}/tasks/${options.key}` : undefined,
       // Defer execution until `scheduleAt` if given (up to 30 days out, per
       // Cloud Tasks). Without it the task runs as soon as the queue can
       // dispatch it.
@@ -116,8 +157,14 @@ export async function cancelGcpTask(key: string): Promise<void> {
     return;
   }
   const ctx = gcpContext();
+  // Keyed (cancellable) tasks only ever live on the default queue.
+  const queuePath = ctx.client.queuePath(
+    ctx.projectId,
+    ctx.location,
+    ctx.defaultQueue,
+  );
   try {
-    await ctx.client.deleteTask({name: `${ctx.queuePath}/tasks/${key}`});
+    await ctx.client.deleteTask({name: `${queuePath}/tasks/${key}`});
   } catch (e) {
     // gRPC NOT_FOUND has code 5; the task is already gone, which is what the
     // caller wanted anyway.
@@ -128,9 +175,29 @@ export async function cancelGcpTask(key: string): Promise<void> {
   }
 }
 
+/**
+ * Tasks that scrape external, rate-limiting sites. They run on a separate
+ * `scrapers` queue (see terraform) with a long backoff and low concurrency so
+ * we back off rather than hammer a host that's already throttling us.
+ * Everything else runs on the fail-fast `default` queue.
+ */
+const SCRAPER_TASKS = new Set<string>([
+  'band-application-demo',
+  'instagram-follower',
+  'spotify-listeners',
+]);
+
+function queuePathForTask(ctx: GcpContext, task: string): string {
+  const queue = SCRAPER_TASKS.has(task) ? ctx.scraperQueue : ctx.defaultQueue;
+  return ctx.client.queuePath(ctx.projectId, ctx.location, queue);
+}
+
 type GcpContext = {
   client: CloudTasksClient;
-  queuePath: string;
+  projectId: string;
+  location: string;
+  defaultQueue: string;
+  scraperQueue: string;
   serviceAccountEmail: string;
   siteUrl: string;
 };
@@ -141,28 +208,17 @@ function gcpContext(): GcpContext {
   if (cachedContext) {
     return cachedContext;
   }
-  const projectId = requireEnv('GCP_PROJECT_ID');
-  const location = requireEnv('GCP_LOCATION');
-  const queue = requireEnv('GCP_TASKS_QUEUE');
-  const serviceAccountEmail = requireEnv('GCP_TASKS_SERVICE_ACCOUNT_EMAIL');
-  const siteUrl = requireEnv('SITE_URL');
-  const credentials = JSON.parse(
-    requireEnv('GCP_TASKS_SERVICE_ACCOUNT_KEY_JSON'),
-  );
+  const projectId = process.env.GCP_PROJECT_ID;
+  const credentials = JSON.parse(process.env.GCP_TASKS_SERVICE_ACCOUNT_KEY_JSON);
   const client = new CloudTasksClient({credentials, projectId});
   cachedContext = {
     client,
-    queuePath: client.queuePath(projectId, location, queue),
-    serviceAccountEmail,
-    siteUrl,
+    projectId,
+    location: process.env.GCP_LOCATION,
+    defaultQueue: process.env.GCP_TASKS_QUEUE,
+    scraperQueue: process.env.GCP_TASKS_SCRAPER_QUEUE,
+    serviceAccountEmail: process.env.GCP_TASKS_SERVICE_ACCOUNT_EMAIL,
+    siteUrl: process.env.SITE_URL,
   };
   return cachedContext;
-}
-
-function requireEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) {
-    throw new Error(`Missing required env var: ${name}`);
-  }
-  return value;
 }

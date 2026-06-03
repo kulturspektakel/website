@@ -4,12 +4,6 @@ generator client {
   previewFeatures = ["fullTextSearchPostgres", "postgresqlExtensions"]
 }
 
-generator pothos {
-  provider     = "prisma-pothos-types"
-  output       = "../types/pothos.ts"
-  clientOutput = "./prisma"
-}
-
 datasource db {
   provider   = "postgresql"
   extensions = [citext, pg_trgm, pgcrypto, unaccent, uuid_ossp(map: "uuid-ossp", schema: "public")]

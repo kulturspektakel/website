@@ -5,11 +5,10 @@
  * Needs `GOOGLE_SHEETS_KEY` (the API key restricted to sheets.googleapis.com,
  * provisioned in terraform/production.tf and synced into `.env`).
  */
-import {env} from '../src/utils/env.server';
 
 export async function readGoogleSheet(sheetId: string, sheetName: string) {
   const res = await fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(sheetName)}?key=${env.GOOGLE_SHEETS_KEY}`,
+    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(sheetName)}?key=${process.env.GOOGLE_SHEETS_KEY}`,
   );
   if (!res.ok) {
     throw new Error(`Sheets API ${res.status}: ${await res.text()}`);
