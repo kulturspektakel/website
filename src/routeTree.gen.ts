@@ -47,6 +47,7 @@ import { Route as ApiTasksCreateBandApplicationRouteImport } from './routes/api.
 import { Route as ApiTasksBandApplicationDistanceRouteImport } from './routes/api.tasks.band-application-distance'
 import { Route as ApiTasksBandApplicationDemoRouteImport } from './routes/api.tasks.band-application-demo'
 import { Route as ApiTasksBadgeAwardedRouteImport } from './routes/api.tasks.badge-awarded'
+import { Route as ApiStripeWebhookRouteImport } from './routes/api.stripe.webhook'
 import { Route as ApiNoiseLogRouteImport } from './routes/api.noise.log'
 import { Route as ApiKultcashLogRouteImport } from './routes/api.kultcash.log'
 import { Route as ApiKultcashListsRouteImport } from './routes/api.kultcash.lists'
@@ -265,6 +266,11 @@ const ApiTasksBadgeAwardedRoute = ApiTasksBadgeAwardedRouteImport.update({
   path: '/api/tasks/badge-awarded',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
+  id: '/api/stripe/webhook',
+  path: '/api/stripe/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiNoiseLogRoute = ApiNoiseLogRouteImport.update({
   id: '/api/noise/log',
   path: '/api/noise/log',
@@ -384,6 +390,7 @@ export interface FileRoutesByFullPath {
   '/api/kultcash/lists': typeof ApiKultcashListsRoute
   '/api/kultcash/log': typeof ApiKultcashLogRoute
   '/api/noise/log': typeof ApiNoiseLogRoute
+  '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/api/tasks/badge-awarded': typeof ApiTasksBadgeAwardedRoute
   '/api/tasks/band-application-demo': typeof ApiTasksBandApplicationDemoRoute
   '/api/tasks/band-application-distance': typeof ApiTasksBandApplicationDistanceRoute
@@ -437,6 +444,7 @@ export interface FileRoutesByTo {
   '/api/kultcash/lists': typeof ApiKultcashListsRoute
   '/api/kultcash/log': typeof ApiKultcashLogRoute
   '/api/noise/log': typeof ApiNoiseLogRoute
+  '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/api/tasks/badge-awarded': typeof ApiTasksBadgeAwardedRoute
   '/api/tasks/band-application-demo': typeof ApiTasksBandApplicationDemoRoute
   '/api/tasks/band-application-distance': typeof ApiTasksBandApplicationDistanceRoute
@@ -495,6 +503,7 @@ export interface FileRoutesById {
   '/api/kultcash/lists': typeof ApiKultcashListsRoute
   '/api/kultcash/log': typeof ApiKultcashLogRoute
   '/api/noise/log': typeof ApiNoiseLogRoute
+  '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/api/tasks/badge-awarded': typeof ApiTasksBadgeAwardedRoute
   '/api/tasks/band-application-demo': typeof ApiTasksBandApplicationDemoRoute
   '/api/tasks/band-application-distance': typeof ApiTasksBandApplicationDistanceRoute
@@ -553,6 +562,7 @@ export interface FileRouteTypes {
     | '/api/kultcash/lists'
     | '/api/kultcash/log'
     | '/api/noise/log'
+    | '/api/stripe/webhook'
     | '/api/tasks/badge-awarded'
     | '/api/tasks/band-application-demo'
     | '/api/tasks/band-application-distance'
@@ -606,6 +616,7 @@ export interface FileRouteTypes {
     | '/api/kultcash/lists'
     | '/api/kultcash/log'
     | '/api/noise/log'
+    | '/api/stripe/webhook'
     | '/api/tasks/badge-awarded'
     | '/api/tasks/band-application-demo'
     | '/api/tasks/band-application-distance'
@@ -663,6 +674,7 @@ export interface FileRouteTypes {
     | '/api/kultcash/lists'
     | '/api/kultcash/log'
     | '/api/noise/log'
+    | '/api/stripe/webhook'
     | '/api/tasks/badge-awarded'
     | '/api/tasks/band-application-demo'
     | '/api/tasks/band-application-distance'
@@ -697,6 +709,7 @@ export interface RootRouteChildren {
   ApiKultcashListsRoute: typeof ApiKultcashListsRoute
   ApiKultcashLogRoute: typeof ApiKultcashLogRoute
   ApiNoiseLogRoute: typeof ApiNoiseLogRoute
+  ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
   ApiTasksBadgeAwardedRoute: typeof ApiTasksBadgeAwardedRoute
   ApiTasksBandApplicationDemoRoute: typeof ApiTasksBandApplicationDemoRoute
   ApiTasksBandApplicationDistanceRoute: typeof ApiTasksBandApplicationDistanceRoute
@@ -984,6 +997,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTasksBadgeAwardedRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/stripe/webhook': {
+      id: '/api/stripe/webhook'
+      path: '/api/stripe/webhook'
+      fullPath: '/api/stripe/webhook'
+      preLoaderRoute: typeof ApiStripeWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/noise/log': {
       id: '/api/noise/log'
       path: '/api/noise/log'
@@ -1223,6 +1243,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiKultcashListsRoute: ApiKultcashListsRoute,
   ApiKultcashLogRoute: ApiKultcashLogRoute,
   ApiNoiseLogRoute: ApiNoiseLogRoute,
+  ApiStripeWebhookRoute: ApiStripeWebhookRoute,
   ApiTasksBadgeAwardedRoute: ApiTasksBadgeAwardedRoute,
   ApiTasksBandApplicationDemoRoute: ApiTasksBandApplicationDemoRoute,
   ApiTasksBandApplicationDistanceRoute: ApiTasksBandApplicationDistanceRoute,

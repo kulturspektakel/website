@@ -24,6 +24,7 @@ declare namespace NodeJS {
     SPOTIFY_CLIENT_ID: string;
     SPOTIFY_CLIENT_SECRET: string;
     STRIPE_API_KEY: string;
+    STRIPE_SIGNING_SECRET: string;
     YOUTUBE_API_KEY: string;
   }
 }
