@@ -4,8 +4,23 @@ The Nuclino wiki login (kult.wiki) used to span two repos: this website (the
 `/nuclino-sso` page + nonce-request flow) and the legacy `api.kulturspektakel.de`
 (the SAML IdP + the Slack approve/reject handler). The SAML IdP has been migrated
 into this repo (`src/server/routes/saml.ts`, routes `src/routes/saml.login.ts` and
-`src/routes/saml.logout.ts`). These follow-ups finish the consolidation and remove
-the architectural baggage left over from the split.
+`src/routes/saml.logout.ts`) and is **live and working in production** (password
+and Slack/nonce paths). These follow-ups finish the consolidation and remove the
+architectural baggage left over from the split.
+
+## Gotcha: same-origin server routes vs the Navigation API
+
+Moving the IdP onto this domain turned the `/nuclino-sso` password form's action
+from a cross-origin URL into a same-origin path (`/saml/login`). The `_main`
+layout had a Navigation API handler (`navigation.addEventListener('navigate')`,
+for the browser tab spinner) that **intercepted every same-origin navigation** and
+resolved only on `router.onResolved` — which never fires for a server-only route
+like `/saml/login`. The result: the form POST (and the nonce
+`window.location.href = '/saml/login?…'` redirect) became a client-side navigation
+to a route with no client component — URL changed, **no network request**, hung
+forever. Fixed by removing that interceptor. If a same-origin form/redirect to a
+server route ever "hangs with no network request" again, suspect navigation
+interception, not the server.
 
 ## How the flow works today
 
