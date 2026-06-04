@@ -177,6 +177,7 @@ function pushToVercel(envVars) {
   const tokenArgs = process.env.VERCEL_TOKEN
     ? ['--token', process.env.VERCEL_TOKEN]
     : [];
+  const failures = [];
   for (const name of Object.keys(envVars).sort()) {
     const value = envVars[name];
     for (const environment of ['production', 'development']) {
@@ -199,8 +200,17 @@ function pushToVercel(envVars) {
       );
       if (!ok) {
         console.log(`      stderr: ${(result.stderr ?? '').trim().slice(-200)}`);
+        failures.push(`${name} (${environment})`);
       }
     }
+  }
+  // Fail loudly: a silent partial sync is how missing secrets reached
+  // production unnoticed. Attempt every var first so the log lists them all,
+  // then throw so the build fails.
+  if (failures.length) {
+    throw new Error(
+      `Failed to push ${failures.length} env var(s) to Vercel: ${failures.join(', ')}`,
+    );
   }
 }
 
