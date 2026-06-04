@@ -136,11 +136,11 @@ async function samlRequest(request: Request) {
   const query = Object.fromEntries(new URL(request.url).searchParams);
   const body: Record<string, string> = {};
   if (request.method === 'POST') {
-    const form = await request.formData();
-    for (const [key, value] of form.entries()) {
-      if (typeof value === 'string') {
-        body[key] = value;
-      }
+    // The login form posts application/x-www-form-urlencoded. `request.formData()`
+    // does not populate fields on the Nitro/Vercel runtime handler, so parse the
+    // raw body ourselves.
+    for (const [key, value] of new URLSearchParams(await request.text())) {
+      body[key] = value;
     }
   }
   return {query, body};

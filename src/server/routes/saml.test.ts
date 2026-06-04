@@ -49,6 +49,17 @@ describe('handleSamlLogin password fallback', () => {
     expect(res.status).toBe(302);
     expect(res.headers.get('location')).toContain('kult.wiki');
   });
+
+  test('parses the urlencoded body so a correct password passes the gate', async () => {
+    // Regression: the body must be read from the raw form, not request.formData()
+    // (which is empty on the deployed runtime). A correct password gets past the
+    // redirect gate into sendSAMLResponse, which then rejects here because no
+    // SAMLRequest is present — anything other than a kult.wiki redirect proves the
+    // password was parsed and matched.
+    await expect(
+      handleSamlLogin(postLogin({password: 'shared-wiki-pw'})),
+    ).rejects.toBeDefined();
+  });
 });
 
 describe('handleSamlLogin nonce flow', () => {
