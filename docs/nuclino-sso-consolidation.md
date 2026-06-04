@@ -28,53 +28,38 @@ interception, not the server.
 2. Login, two ways:
    - **Slack**: enter email → `createNonceRequest` creates a `NonceRequest`
      (status `Pending`) and enqueues the `create-nonce-request` task, which sends
-     a Slack DM with approve/reject buttons. The button click is handled by the
-     **legacy api** (`src/routes/slack/interaction.ts`), which flips the
-     `NonceRequest` to `Approved`. The page polls `checkNonceRequest`; once
-     approved it mints a one-time `Nonce`, returns it, and the browser redirects
-     to `/saml/login?…&nonce=…`.
-   - **Password**: form POSTs the shared password straight to `/saml/login`.
-3. `/saml/login` consumes the nonce (or checks the password) and returns an
+     a Slack DM with approve/reject buttons. The button click is handled here by
+     `/api/slack/interaction`, which flips the `NonceRequest` to `Approved`. The
+     page polls `checkNonceRequest`; once approved it mints a one-time `Nonce`,
+     returns it, and the browser redirects to `/api/saml/login?…&nonce=…`.
+   - **Password**: form POSTs the shared password straight to `/api/saml/login`.
+3. `/api/saml/login` consumes the nonce (or checks the password) and returns an
    auto-submitting form that POSTs the SAML assertion to Nuclino's ACS.
 
 ## Follow-ups (priority order)
 
-### 1. Move the Slack approve/reject handler into this repo — *completes the migration*
+### 1. Move the Slack approve/reject handler into this repo — ✅ DONE
 
-The `approve-nonce-request` / `reject-nonce-request` Slack interaction handler
-still lives **only** in the legacy api (`src/routes/slack/interaction.ts`,
-updates `NonceRequest.status`). Until it moves here, the website's Slack login
-path depends on the legacy service still running — so the legacy app can't be
-decommissioned.
+The `approve-nonce-request` / `reject-nonce-request` handler now lives here at
+`src/server/routes/slack/interaction.ts` (route `/api/slack/interaction`),
+flipping `NonceRequest.status`. The full inbound Slack surface (interaction,
+`/2fa`, events, `/mailingliste`, `/owntracks`, `/nuclino`/token) was migrated
+too. Remaining: repoint the Slack App Request URLs to `/api/slack/*` (cutover).
 
-- Port the `block_actions` handler to a website route (Slack interactivity
-  webhook → flip `NonceRequest.status` to `Approved`/`Rejected`).
-- Repoint Slack's interactivity Request URL at the new endpoint.
+### 2. Collapse `NonceRequest → Nonce` into a single step — ❌ obsolete, do NOT do
 
-### 2. Collapse `NonceRequest → Nonce` into a single step — *the real architectural win*
+This assumed `Nonce` was throwaway baggage from the split. It isn't: the
+`/nuclino` one-click flow (`src/server/routes/slack/token.ts`) mints a `Nonce`
+**directly** (no `NonceRequest`) and carries it via the `nonce` cookie. So
+`Nonce` is the shared one-time credential consumed at `/api/saml/login` by both
+the Slack-approval flow and the `/nuclino` flow — deleting the model would break
+`/nuclino`. Keep the two-table design.
 
-The two-table dance (`NonceRequest` for the human-approval workflow, `Nonce` for
-the SAML credential) only exists because two separate services handed off through
-the database. With everything in one app, `/saml/login` can consume the **approved
-`NonceRequest` directly by its id** (the browser already holds that id from
-`createNonceRequest`) instead of minting a throwaway `Nonce`.
+### 3. Delete the "dead" cookie branch — ✅ resolved (now live, keep it)
 
-Removing it deletes:
-- the `Nonce` Prisma model (needs a migration),
-- the `nonce-invalidate` GCP task (`src/server/routes/tasks.nonce-invalidate.ts`
-  + its route),
-- a create-then-delete DB round-trip on every login.
-
-`checkNonceRequest` would just confirm approval; `viewerFromNonce` in `saml.ts`
-becomes "load the approved, unexpired `NonceRequest` by id and consume it."
-Deliberate change — touches the schema, so do it on its own.
-
-### 3. Delete the dead cookie branch — *trivial*
-
-`beforeLoad` in `src/server/routes/nuclino-sso.ts` reads `getCookie('nonce')` and
-redirects if present, but **nothing in the repo ever sets a `nonce` cookie**. It's
-dead code. Remove it — or, if #2 moves to a cookie-based session, wire it up
-properly instead.
+`beforeLoad` in `nuclino-sso.ts` reads `getCookie('nonce')` — and that cookie is
+now **set** by `GET /api/slack/token` (the `/nuclino` flow). The branch is live
+and correct; do not remove it.
 
 ### 4. Rotate the copied-forward secrets — *security hygiene*
 
@@ -87,23 +72,28 @@ rotated so the leaked values are no longer live:
 - **`NUCLINO_ANONYMOUS_PASSWORD`**: set a new shared wiki password (coordinate
   with crew) and update the GSM secret.
 
-### 5. Decommission the legacy SAML half — *after #1 and Nuclino is repointed*
+### 5. Decommission the legacy app — *unblocked once cutover completes*
 
-Once #1 is done and Nuclino's SSO config points at
-`https://www.kulturspektakel.de/saml/login`, the following in
-`api.kulturspektakel.de` are redundant and can be removed:
-- the `/saml/*` route (`src/routes/saml/index.ts`),
-- the `createNonceRequest` / `nonceInvalidate` / `nonceRequestInvalidate`
-  graphile-worker tasks (this repo uses GCP Cloud Tasks instead),
-- the `SAML_PRIVATE_KEY`, `NUCLINO_ANONYMOUS_PASSWORD`, `NUCLINO_TEAM_ID` env vars.
+#1 is done and the whole Slack/SAML/OwnTracks/Nuclino surface is migrated, so
+once the **cutover** finishes (Slack App Request URLs → `/api/slack/*`; Nuclino
+IdP Entity ID → `https://www.kulturspektakel.de/api/saml/login`, SSO URL stays
+`…/nuclino-sso`; `/owntracks` device configs re-issued), the legacy
+`api.kulturspektakel.de` no longer receives any traffic for these features and
+can be retired. Redundant there: the `/saml/*` + `/slack/*` + `/owntracks`
+routes, the Slack/nonce graphile-worker tasks, the `nuclinoUpdateMessage` cron,
+and the `SAML_PRIVATE_KEY` / `NUCLINO_*` / `JWT_SECRET` env vars. (Edits in the
+*other* repo — not this one.)
 
 ## Operational prerequisites (for going live here)
 
-- **Repoint Nuclino**: SSO URL + IdP Entity ID →
-  `https://www.kulturspektakel.de/saml/login`.
-- **Secrets in Secret Manager** (read by `scripts/sync-env.js`): create
-  `SAML_PRIVATE_KEY` and `NUCLINO_ANONYMOUS_PASSWORD` (both already listed in
-  `MANAGED_SECRETS`); `NUCLINO_TEAM_ID` is non-secret static config in the script.
+- **Repoint Nuclino**: IdP Entity ID →
+  `https://www.kulturspektakel.de/api/saml/login`; SSO URL → `…/nuclino-sso`
+  (the login page — unchanged when the IdP routes moved under `/api`).
+- **Repoint the Slack App** Request URLs → `/api/slack/*` (interaction, events,
+  and the `/2fa` `/mailingliste` `/owntracks` `/nuclino` slash commands).
+- **Secrets in Secret Manager** (read by `scripts/sync-env.js`'s `ENV_VARS`
+  manifest): `SAML_PRIVATE_KEY`, `NUCLINO_ANONYMOUS_PASSWORD`, `NUCLINO_TEAM_ID`,
+  `NUCLINO_API_KEY`, `NUCLINO_WORKSPACE_ID`, `JWT_SECRET` — all created in GSM.
 - **Rotate, don't copy**: the legacy repo commits these secrets in plaintext in
   `.env.json`. Prefer regenerating `SAML_PRIVATE_KEY` (+ updating the public cert
   inlined in `saml.ts` and on Nuclino) and rotating the shared password rather
