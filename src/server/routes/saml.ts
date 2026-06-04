@@ -136,11 +136,11 @@ async function samlRequest(request: Request) {
   const query = Object.fromEntries(new URL(request.url).searchParams);
   const body: Record<string, string> = {};
   if (request.method === 'POST') {
-    // The login form posts application/x-www-form-urlencoded. Parse the raw body
-    // with URLSearchParams rather than request.formData() so body parsing doesn't
-    // depend on the server adapter's formData() implementation.
-    for (const [key, value] of new URLSearchParams(await request.text())) {
-      body[key] = value;
+    const form = await request.formData();
+    for (const [key, value] of form.entries()) {
+      if (typeof value === 'string') {
+        body[key] = value;
+      }
     }
   }
   return {query, body};
