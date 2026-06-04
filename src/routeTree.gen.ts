@@ -9,12 +9,19 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as OwntracksRouteImport } from './routes/owntracks'
 import { Route as CrewRouteImport } from './routes/crew'
 import { Route as MainRouteImport } from './routes/_main'
 import { Route as CrewIndexRouteImport } from './routes/crew.index'
 import { Route as MainIndexRouteImport } from './routes/_main.index'
+import { Route as SlackTwofactorRouteImport } from './routes/slack.twofactor'
+import { Route as SlackOwntracksRouteImport } from './routes/slack.owntracks'
+import { Route as SlackMailinglisteRouteImport } from './routes/slack.mailingliste'
+import { Route as SlackInteractionRouteImport } from './routes/slack.interaction'
+import { Route as SlackEventsRouteImport } from './routes/slack.events'
 import { Route as SamlLogoutRouteImport } from './routes/saml.logout'
 import { Route as SamlLoginRouteImport } from './routes/saml.login'
+import { Route as OwntracksConfigRouteImport } from './routes/owntracks.config'
 import { Route as CrewLautstaerkeRouteImport } from './routes/crew.lautstaerke'
 import { Route as MainSpeisekarteRouteImport } from './routes/_main.speisekarte'
 import { Route as MainPlakateRouteImport } from './routes/_main.plakate'
@@ -35,6 +42,7 @@ import { Route as MainLineupIndexRouteImport } from './routes/_main.lineup.index
 import { Route as CrewLautstaerkeDeviceRouteImport } from './routes/crew.lautstaerke.$device'
 import { Route as ApiTasksSpotifyListenersRouteImport } from './routes/api.tasks.spotify-listeners'
 import { Route as ApiTasksSendEmailRouteImport } from './routes/api.tasks.send-email'
+import { Route as ApiTasksNuclinoUpdateMessageRouteImport } from './routes/api.tasks.nuclino-update-message'
 import { Route as ApiTasksNonceRequestInvalidateRouteImport } from './routes/api.tasks.nonce-request-invalidate'
 import { Route as ApiTasksNonceInvalidateRouteImport } from './routes/api.tasks.nonce-invalidate'
 import { Route as ApiTasksInstagramFollowerRouteImport } from './routes/api.tasks.instagram-follower'
@@ -68,6 +76,11 @@ import { Route as MainCardHashKultRouteImport } from './routes/_main.card.$hash.
 import { Route as MainCardHashCrewRouteImport } from './routes/_main.card.$hash.crew'
 import { Route as MainBookingApplicationTypeDankeRouteImport } from './routes/_main.booking_.$applicationType_.danke'
 
+const OwntracksRoute = OwntracksRouteImport.update({
+  id: '/owntracks',
+  path: '/owntracks',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CrewRoute = CrewRouteImport.update({
   id: '/crew',
   path: '/crew',
@@ -87,6 +100,31 @@ const MainIndexRoute = MainIndexRouteImport.update({
   path: '/',
   getParentRoute: () => MainRoute,
 } as any)
+const SlackTwofactorRoute = SlackTwofactorRouteImport.update({
+  id: '/slack/twofactor',
+  path: '/slack/twofactor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SlackOwntracksRoute = SlackOwntracksRouteImport.update({
+  id: '/slack/owntracks',
+  path: '/slack/owntracks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SlackMailinglisteRoute = SlackMailinglisteRouteImport.update({
+  id: '/slack/mailingliste',
+  path: '/slack/mailingliste',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SlackInteractionRoute = SlackInteractionRouteImport.update({
+  id: '/slack/interaction',
+  path: '/slack/interaction',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SlackEventsRoute = SlackEventsRouteImport.update({
+  id: '/slack/events',
+  path: '/slack/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SamlLogoutRoute = SamlLogoutRouteImport.update({
   id: '/saml/logout',
   path: '/saml/logout',
@@ -96,6 +134,11 @@ const SamlLoginRoute = SamlLoginRouteImport.update({
   id: '/saml/login',
   path: '/saml/login',
   getParentRoute: () => rootRouteImport,
+} as any)
+const OwntracksConfigRoute = OwntracksConfigRouteImport.update({
+  id: '/config',
+  path: '/config',
+  getParentRoute: () => OwntracksRoute,
 } as any)
 const CrewLautstaerkeRoute = CrewLautstaerkeRouteImport.update({
   id: '/lautstaerke',
@@ -198,6 +241,12 @@ const ApiTasksSendEmailRoute = ApiTasksSendEmailRouteImport.update({
   path: '/api/tasks/send-email',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiTasksNuclinoUpdateMessageRoute =
+  ApiTasksNuclinoUpdateMessageRouteImport.update({
+    id: '/api/tasks/nuclino-update-message',
+    path: '/api/tasks/nuclino-update-message',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiTasksNonceRequestInvalidateRoute =
   ApiTasksNonceRequestInvalidateRouteImport.update({
     id: '/api/tasks/nonce-request-invalidate',
@@ -375,6 +424,7 @@ const MainBookingApplicationTypeDankeRoute =
 export interface FileRoutesByFullPath {
   '/': typeof MainIndexRoute
   '/crew': typeof CrewRouteWithChildren
+  '/owntracks': typeof OwntracksRouteWithChildren
   '/$slug': typeof MainSlugRoute
   '/Route': typeof MainRouteRoute
   '/angebot': typeof MainAngebotRoute
@@ -390,8 +440,14 @@ export interface FileRoutesByFullPath {
   '/plakate': typeof MainPlakateRoute
   '/speisekarte': typeof MainSpeisekarteRoute
   '/crew/lautstaerke': typeof CrewLautstaerkeRouteWithChildren
+  '/owntracks/config': typeof OwntracksConfigRoute
   '/saml/login': typeof SamlLoginRoute
   '/saml/logout': typeof SamlLogoutRoute
+  '/slack/events': typeof SlackEventsRoute
+  '/slack/interaction': typeof SlackInteractionRoute
+  '/slack/mailingliste': typeof SlackMailinglisteRoute
+  '/slack/owntracks': typeof SlackOwntracksRoute
+  '/slack/twofactor': typeof SlackTwofactorRoute
   '/crew/': typeof CrewIndexRoute
   '/booking/$applicationType': typeof MainBookingApplicationTypeRoute
   '/card/$hash': typeof MainCardHashRouteWithChildren
@@ -419,6 +475,7 @@ export interface FileRoutesByFullPath {
   '/api/tasks/instagram-follower': typeof ApiTasksInstagramFollowerRoute
   '/api/tasks/nonce-invalidate': typeof ApiTasksNonceInvalidateRoute
   '/api/tasks/nonce-request-invalidate': typeof ApiTasksNonceRequestInvalidateRoute
+  '/api/tasks/nuclino-update-message': typeof ApiTasksNuclinoUpdateMessageRoute
   '/api/tasks/send-email': typeof ApiTasksSendEmailRoute
   '/api/tasks/spotify-listeners': typeof ApiTasksSpotifyListenersRoute
   '/crew/lautstaerke/$device': typeof CrewLautstaerkeDeviceRoute
@@ -432,6 +489,7 @@ export interface FileRoutesByFullPath {
   '/api/spenden/quittung/$id': typeof ApiSpendenQuittungIdRoute
 }
 export interface FileRoutesByTo {
+  '/owntracks': typeof OwntracksRouteWithChildren
   '/$slug': typeof MainSlugRoute
   '/Route': typeof MainRouteRoute
   '/angebot': typeof MainAngebotRoute
@@ -445,8 +503,14 @@ export interface FileRoutesByTo {
   '/nuclino-sso': typeof MainNuclinoSsoRoute
   '/plakate': typeof MainPlakateRoute
   '/speisekarte': typeof MainSpeisekarteRoute
+  '/owntracks/config': typeof OwntracksConfigRoute
   '/saml/login': typeof SamlLoginRoute
   '/saml/logout': typeof SamlLogoutRoute
+  '/slack/events': typeof SlackEventsRoute
+  '/slack/interaction': typeof SlackInteractionRoute
+  '/slack/mailingliste': typeof SlackMailinglisteRoute
+  '/slack/owntracks': typeof SlackOwntracksRoute
+  '/slack/twofactor': typeof SlackTwofactorRoute
   '/': typeof MainIndexRoute
   '/crew': typeof CrewIndexRoute
   '/booking/$applicationType': typeof MainBookingApplicationTypeRoute
@@ -475,6 +539,7 @@ export interface FileRoutesByTo {
   '/api/tasks/instagram-follower': typeof ApiTasksInstagramFollowerRoute
   '/api/tasks/nonce-invalidate': typeof ApiTasksNonceInvalidateRoute
   '/api/tasks/nonce-request-invalidate': typeof ApiTasksNonceRequestInvalidateRoute
+  '/api/tasks/nuclino-update-message': typeof ApiTasksNuclinoUpdateMessageRoute
   '/api/tasks/send-email': typeof ApiTasksSendEmailRoute
   '/api/tasks/spotify-listeners': typeof ApiTasksSpotifyListenersRoute
   '/crew/lautstaerke/$device': typeof CrewLautstaerkeDeviceRoute
@@ -491,6 +556,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_main': typeof MainRouteWithChildren
   '/crew': typeof CrewRouteWithChildren
+  '/owntracks': typeof OwntracksRouteWithChildren
   '/_main/$slug': typeof MainSlugRoute
   '/_main/Route': typeof MainRouteRoute
   '/_main/angebot': typeof MainAngebotRoute
@@ -506,8 +572,14 @@ export interface FileRoutesById {
   '/_main/plakate': typeof MainPlakateRoute
   '/_main/speisekarte': typeof MainSpeisekarteRoute
   '/crew/lautstaerke': typeof CrewLautstaerkeRouteWithChildren
+  '/owntracks/config': typeof OwntracksConfigRoute
   '/saml/login': typeof SamlLoginRoute
   '/saml/logout': typeof SamlLogoutRoute
+  '/slack/events': typeof SlackEventsRoute
+  '/slack/interaction': typeof SlackInteractionRoute
+  '/slack/mailingliste': typeof SlackMailinglisteRoute
+  '/slack/owntracks': typeof SlackOwntracksRoute
+  '/slack/twofactor': typeof SlackTwofactorRoute
   '/_main/': typeof MainIndexRoute
   '/crew/': typeof CrewIndexRoute
   '/_main/booking_/$applicationType': typeof MainBookingApplicationTypeRoute
@@ -536,6 +608,7 @@ export interface FileRoutesById {
   '/api/tasks/instagram-follower': typeof ApiTasksInstagramFollowerRoute
   '/api/tasks/nonce-invalidate': typeof ApiTasksNonceInvalidateRoute
   '/api/tasks/nonce-request-invalidate': typeof ApiTasksNonceRequestInvalidateRoute
+  '/api/tasks/nuclino-update-message': typeof ApiTasksNuclinoUpdateMessageRoute
   '/api/tasks/send-email': typeof ApiTasksSendEmailRoute
   '/api/tasks/spotify-listeners': typeof ApiTasksSpotifyListenersRoute
   '/crew/lautstaerke/$device': typeof CrewLautstaerkeDeviceRoute
@@ -553,6 +626,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/crew'
+    | '/owntracks'
     | '/$slug'
     | '/Route'
     | '/angebot'
@@ -568,8 +642,14 @@ export interface FileRouteTypes {
     | '/plakate'
     | '/speisekarte'
     | '/crew/lautstaerke'
+    | '/owntracks/config'
     | '/saml/login'
     | '/saml/logout'
+    | '/slack/events'
+    | '/slack/interaction'
+    | '/slack/mailingliste'
+    | '/slack/owntracks'
+    | '/slack/twofactor'
     | '/crew/'
     | '/booking/$applicationType'
     | '/card/$hash'
@@ -597,6 +677,7 @@ export interface FileRouteTypes {
     | '/api/tasks/instagram-follower'
     | '/api/tasks/nonce-invalidate'
     | '/api/tasks/nonce-request-invalidate'
+    | '/api/tasks/nuclino-update-message'
     | '/api/tasks/send-email'
     | '/api/tasks/spotify-listeners'
     | '/crew/lautstaerke/$device'
@@ -610,6 +691,7 @@ export interface FileRouteTypes {
     | '/api/spenden/quittung/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/owntracks'
     | '/$slug'
     | '/Route'
     | '/angebot'
@@ -623,8 +705,14 @@ export interface FileRouteTypes {
     | '/nuclino-sso'
     | '/plakate'
     | '/speisekarte'
+    | '/owntracks/config'
     | '/saml/login'
     | '/saml/logout'
+    | '/slack/events'
+    | '/slack/interaction'
+    | '/slack/mailingliste'
+    | '/slack/owntracks'
+    | '/slack/twofactor'
     | '/'
     | '/crew'
     | '/booking/$applicationType'
@@ -653,6 +741,7 @@ export interface FileRouteTypes {
     | '/api/tasks/instagram-follower'
     | '/api/tasks/nonce-invalidate'
     | '/api/tasks/nonce-request-invalidate'
+    | '/api/tasks/nuclino-update-message'
     | '/api/tasks/send-email'
     | '/api/tasks/spotify-listeners'
     | '/crew/lautstaerke/$device'
@@ -668,6 +757,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_main'
     | '/crew'
+    | '/owntracks'
     | '/_main/$slug'
     | '/_main/Route'
     | '/_main/angebot'
@@ -683,8 +773,14 @@ export interface FileRouteTypes {
     | '/_main/plakate'
     | '/_main/speisekarte'
     | '/crew/lautstaerke'
+    | '/owntracks/config'
     | '/saml/login'
     | '/saml/logout'
+    | '/slack/events'
+    | '/slack/interaction'
+    | '/slack/mailingliste'
+    | '/slack/owntracks'
+    | '/slack/twofactor'
     | '/_main/'
     | '/crew/'
     | '/_main/booking_/$applicationType'
@@ -713,6 +809,7 @@ export interface FileRouteTypes {
     | '/api/tasks/instagram-follower'
     | '/api/tasks/nonce-invalidate'
     | '/api/tasks/nonce-request-invalidate'
+    | '/api/tasks/nuclino-update-message'
     | '/api/tasks/send-email'
     | '/api/tasks/spotify-listeners'
     | '/crew/lautstaerke/$device'
@@ -729,8 +826,14 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   MainRoute: typeof MainRouteWithChildren
   CrewRoute: typeof CrewRouteWithChildren
+  OwntracksRoute: typeof OwntracksRouteWithChildren
   SamlLoginRoute: typeof SamlLoginRoute
   SamlLogoutRoute: typeof SamlLogoutRoute
+  SlackEventsRoute: typeof SlackEventsRoute
+  SlackInteractionRoute: typeof SlackInteractionRoute
+  SlackMailinglisteRoute: typeof SlackMailinglisteRoute
+  SlackOwntracksRoute: typeof SlackOwntracksRoute
+  SlackTwofactorRoute: typeof SlackTwofactorRoute
   ApiKultcashConfigRoute: typeof ApiKultcashConfigRoute
   ApiKultcashListsRoute: typeof ApiKultcashListsRoute
   ApiKultcashLogRoute: typeof ApiKultcashLogRoute
@@ -750,6 +853,7 @@ export interface RootRouteChildren {
   ApiTasksInstagramFollowerRoute: typeof ApiTasksInstagramFollowerRoute
   ApiTasksNonceInvalidateRoute: typeof ApiTasksNonceInvalidateRoute
   ApiTasksNonceRequestInvalidateRoute: typeof ApiTasksNonceRequestInvalidateRoute
+  ApiTasksNuclinoUpdateMessageRoute: typeof ApiTasksNuclinoUpdateMessageRoute
   ApiTasksSendEmailRoute: typeof ApiTasksSendEmailRoute
   ApiTasksSpotifyListenersRoute: typeof ApiTasksSpotifyListenersRoute
   ApiSpendenQuittungIdRoute: typeof ApiSpendenQuittungIdRoute
@@ -757,6 +861,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/owntracks': {
+      id: '/owntracks'
+      path: '/owntracks'
+      fullPath: '/owntracks'
+      preLoaderRoute: typeof OwntracksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/crew': {
       id: '/crew'
       path: '/crew'
@@ -785,6 +896,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainIndexRouteImport
       parentRoute: typeof MainRoute
     }
+    '/slack/twofactor': {
+      id: '/slack/twofactor'
+      path: '/slack/twofactor'
+      fullPath: '/slack/twofactor'
+      preLoaderRoute: typeof SlackTwofactorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/slack/owntracks': {
+      id: '/slack/owntracks'
+      path: '/slack/owntracks'
+      fullPath: '/slack/owntracks'
+      preLoaderRoute: typeof SlackOwntracksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/slack/mailingliste': {
+      id: '/slack/mailingliste'
+      path: '/slack/mailingliste'
+      fullPath: '/slack/mailingliste'
+      preLoaderRoute: typeof SlackMailinglisteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/slack/interaction': {
+      id: '/slack/interaction'
+      path: '/slack/interaction'
+      fullPath: '/slack/interaction'
+      preLoaderRoute: typeof SlackInteractionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/slack/events': {
+      id: '/slack/events'
+      path: '/slack/events'
+      fullPath: '/slack/events'
+      preLoaderRoute: typeof SlackEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/saml/logout': {
       id: '/saml/logout'
       path: '/saml/logout'
@@ -798,6 +944,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/saml/login'
       preLoaderRoute: typeof SamlLoginRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/owntracks/config': {
+      id: '/owntracks/config'
+      path: '/config'
+      fullPath: '/owntracks/config'
+      preLoaderRoute: typeof OwntracksConfigRouteImport
+      parentRoute: typeof OwntracksRoute
     }
     '/crew/lautstaerke': {
       id: '/crew/lautstaerke'
@@ -937,6 +1090,13 @@ declare module '@tanstack/react-router' {
       path: '/api/tasks/send-email'
       fullPath: '/api/tasks/send-email'
       preLoaderRoute: typeof ApiTasksSendEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tasks/nuclino-update-message': {
+      id: '/api/tasks/nuclino-update-message'
+      path: '/api/tasks/nuclino-update-message'
+      fullPath: '/api/tasks/nuclino-update-message'
+      preLoaderRoute: typeof ApiTasksNuclinoUpdateMessageRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/tasks/nonce-request-invalidate': {
@@ -1276,11 +1436,29 @@ const CrewRouteChildren: CrewRouteChildren = {
 
 const CrewRouteWithChildren = CrewRoute._addFileChildren(CrewRouteChildren)
 
+interface OwntracksRouteChildren {
+  OwntracksConfigRoute: typeof OwntracksConfigRoute
+}
+
+const OwntracksRouteChildren: OwntracksRouteChildren = {
+  OwntracksConfigRoute: OwntracksConfigRoute,
+}
+
+const OwntracksRouteWithChildren = OwntracksRoute._addFileChildren(
+  OwntracksRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   MainRoute: MainRouteWithChildren,
   CrewRoute: CrewRouteWithChildren,
+  OwntracksRoute: OwntracksRouteWithChildren,
   SamlLoginRoute: SamlLoginRoute,
   SamlLogoutRoute: SamlLogoutRoute,
+  SlackEventsRoute: SlackEventsRoute,
+  SlackInteractionRoute: SlackInteractionRoute,
+  SlackMailinglisteRoute: SlackMailinglisteRoute,
+  SlackOwntracksRoute: SlackOwntracksRoute,
+  SlackTwofactorRoute: SlackTwofactorRoute,
   ApiKultcashConfigRoute: ApiKultcashConfigRoute,
   ApiKultcashListsRoute: ApiKultcashListsRoute,
   ApiKultcashLogRoute: ApiKultcashLogRoute,
@@ -1301,6 +1479,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiTasksInstagramFollowerRoute: ApiTasksInstagramFollowerRoute,
   ApiTasksNonceInvalidateRoute: ApiTasksNonceInvalidateRoute,
   ApiTasksNonceRequestInvalidateRoute: ApiTasksNonceRequestInvalidateRoute,
+  ApiTasksNuclinoUpdateMessageRoute: ApiTasksNuclinoUpdateMessageRoute,
   ApiTasksSendEmailRoute: ApiTasksSendEmailRoute,
   ApiTasksSpotifyListenersRoute: ApiTasksSpotifyListenersRoute,
   ApiSpendenQuittungIdRoute: ApiSpendenQuittungIdRoute,

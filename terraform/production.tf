@@ -170,6 +170,27 @@ resource "google_cloud_scheduler_job" "gmail_watch_refresh" {
   depends_on = [google_project_service.apis]
 }
 
+# Posts recently-edited Nuclino pages to #wiki. Polls every 5 minutes (the
+# handler only notifies pages edited 5-10 min ago, so one run catches them).
+resource "google_cloud_scheduler_job" "nuclino_update_message" {
+  name        = "nuclino-update-message"
+  description = "Announce recently-edited Nuclino pages in #wiki."
+  schedule    = "*/5 * * * *"
+  time_zone   = "UTC"
+  region      = local.region
+
+  http_target {
+    uri         = "${local.site_url}/api/tasks/nuclino-update-message"
+    http_method = "POST"
+    oidc_token {
+      service_account_email = google_service_account.tasks.email
+      audience              = "nuclino-update-message"
+    }
+  }
+
+  depends_on = [google_project_service.apis]
+}
+
 # ---- Google API keys -------------------------------------------------------
 
 # Server-side Maps key, shared with the legacy `~/api.kulturspektakel.de`
