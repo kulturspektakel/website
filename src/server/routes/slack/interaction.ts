@@ -27,7 +27,8 @@ type SlackButtonAction = {
     | 'approve-nonce-request'
     | 'reject-nonce-request'
     | 'two-factor-code'
-    | 'assign-crew-card-modal';
+    | 'assign-crew-card-modal'
+    | 'nuclino-login-open';
   value?: string;
 };
 
@@ -126,6 +127,9 @@ export async function handleSlackInteraction(
           );
           return ok();
         }
+        // The /nuclino modal button is a url button; clicking it also fires an
+        // interaction we just ack (the url opens the login redirect itself).
+        case 'nuclino-login-open':
         case 'users_select-action':
           return ok();
         default:

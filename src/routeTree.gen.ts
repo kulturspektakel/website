@@ -15,6 +15,7 @@ import { Route as MainRouteImport } from './routes/_main'
 import { Route as CrewIndexRouteImport } from './routes/crew.index'
 import { Route as MainIndexRouteImport } from './routes/_main.index'
 import { Route as SlackTwofactorRouteImport } from './routes/slack.twofactor'
+import { Route as SlackTokenRouteImport } from './routes/slack.token'
 import { Route as SlackOwntracksRouteImport } from './routes/slack.owntracks'
 import { Route as SlackMailinglisteRouteImport } from './routes/slack.mailingliste'
 import { Route as SlackInteractionRouteImport } from './routes/slack.interaction'
@@ -103,6 +104,11 @@ const MainIndexRoute = MainIndexRouteImport.update({
 const SlackTwofactorRoute = SlackTwofactorRouteImport.update({
   id: '/slack/twofactor',
   path: '/slack/twofactor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SlackTokenRoute = SlackTokenRouteImport.update({
+  id: '/slack/token',
+  path: '/slack/token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SlackOwntracksRoute = SlackOwntracksRouteImport.update({
@@ -447,6 +453,7 @@ export interface FileRoutesByFullPath {
   '/slack/interaction': typeof SlackInteractionRoute
   '/slack/mailingliste': typeof SlackMailinglisteRoute
   '/slack/owntracks': typeof SlackOwntracksRoute
+  '/slack/token': typeof SlackTokenRoute
   '/slack/twofactor': typeof SlackTwofactorRoute
   '/crew/': typeof CrewIndexRoute
   '/booking/$applicationType': typeof MainBookingApplicationTypeRoute
@@ -510,6 +517,7 @@ export interface FileRoutesByTo {
   '/slack/interaction': typeof SlackInteractionRoute
   '/slack/mailingliste': typeof SlackMailinglisteRoute
   '/slack/owntracks': typeof SlackOwntracksRoute
+  '/slack/token': typeof SlackTokenRoute
   '/slack/twofactor': typeof SlackTwofactorRoute
   '/': typeof MainIndexRoute
   '/crew': typeof CrewIndexRoute
@@ -579,6 +587,7 @@ export interface FileRoutesById {
   '/slack/interaction': typeof SlackInteractionRoute
   '/slack/mailingliste': typeof SlackMailinglisteRoute
   '/slack/owntracks': typeof SlackOwntracksRoute
+  '/slack/token': typeof SlackTokenRoute
   '/slack/twofactor': typeof SlackTwofactorRoute
   '/_main/': typeof MainIndexRoute
   '/crew/': typeof CrewIndexRoute
@@ -649,6 +658,7 @@ export interface FileRouteTypes {
     | '/slack/interaction'
     | '/slack/mailingliste'
     | '/slack/owntracks'
+    | '/slack/token'
     | '/slack/twofactor'
     | '/crew/'
     | '/booking/$applicationType'
@@ -712,6 +722,7 @@ export interface FileRouteTypes {
     | '/slack/interaction'
     | '/slack/mailingliste'
     | '/slack/owntracks'
+    | '/slack/token'
     | '/slack/twofactor'
     | '/'
     | '/crew'
@@ -780,6 +791,7 @@ export interface FileRouteTypes {
     | '/slack/interaction'
     | '/slack/mailingliste'
     | '/slack/owntracks'
+    | '/slack/token'
     | '/slack/twofactor'
     | '/_main/'
     | '/crew/'
@@ -833,6 +845,7 @@ export interface RootRouteChildren {
   SlackInteractionRoute: typeof SlackInteractionRoute
   SlackMailinglisteRoute: typeof SlackMailinglisteRoute
   SlackOwntracksRoute: typeof SlackOwntracksRoute
+  SlackTokenRoute: typeof SlackTokenRoute
   SlackTwofactorRoute: typeof SlackTwofactorRoute
   ApiKultcashConfigRoute: typeof ApiKultcashConfigRoute
   ApiKultcashListsRoute: typeof ApiKultcashListsRoute
@@ -901,6 +914,13 @@ declare module '@tanstack/react-router' {
       path: '/slack/twofactor'
       fullPath: '/slack/twofactor'
       preLoaderRoute: typeof SlackTwofactorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/slack/token': {
+      id: '/slack/token'
+      path: '/slack/token'
+      fullPath: '/slack/token'
+      preLoaderRoute: typeof SlackTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/slack/owntracks': {
@@ -1458,6 +1478,7 @@ const rootRouteChildren: RootRouteChildren = {
   SlackInteractionRoute: SlackInteractionRoute,
   SlackMailinglisteRoute: SlackMailinglisteRoute,
   SlackOwntracksRoute: SlackOwntracksRoute,
+  SlackTokenRoute: SlackTokenRoute,
   SlackTwofactorRoute: SlackTwofactorRoute,
   ApiKultcashConfigRoute: ApiKultcashConfigRoute,
   ApiKultcashListsRoute: ApiKultcashListsRoute,
