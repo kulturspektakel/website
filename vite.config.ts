@@ -16,6 +16,15 @@ export default defineConfig({
     }),
     nitroV2Plugin({
       preset: 'vercel',
+      // The /api/tasks/nuclino-update-message cron scans the whole Nuclino
+      // workspace (~14 sequential paginated requests, ~7s) since the API has no
+      // recency sort. That brushes Vercel's default function timeout and
+      // intermittently 504s. Raise the ceiling (a max, billed by actual time).
+      vercel: {
+        functions: {
+          maxDuration: 60,
+        },
+      },
     }),
     viteReact(),
   ],
