@@ -51,6 +51,15 @@ jobs:
       - uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
+      # sync:env reads the non-secret config from the terraform `env_vars`
+      # output, so terraform must be initialized against the GCS state first.
+      # The CI SA already has read access (terraform/deployment.tf).
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.15.5
+      - name: terraform init
+        run: terraform init
+        working-directory: terraform
       - name: sync secrets to vercel
         run: yarn sync:env --vercel
         env:

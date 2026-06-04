@@ -2,8 +2,9 @@
 
 Terraform managing everything on GCP for the website (Cloud Tasks queue,
 Cloud Scheduler jobs, Pub/Sub push subscription, Maps/Sheets API keys,
-service accounts, Cloud Monitoring), plus the script that syncs Secret
-Manager values into `.env` + Vercel.
+service accounts, Cloud Monitoring), plus `scripts/sync-env.js`, which
+generates the app's `.env` (and pushes it to Vercel) from a single manifest
+of env vars sourced from terraform outputs + Secret Manager.
 
 Task handlers live in `src/routes/api.tasks.*.ts` and
 `src/server/routes/tasks.*.ts`.
@@ -13,9 +14,9 @@ Task handlers live in `src/routes/api.tasks.*.ts` and
 | File | What's in it |
 |---|---|
 | `main.tf` | Providers, locals (`project_id`, `region`, `site_url`), API enablement |
-| `production.tf` | Runtime infra: `tasks-invoker` SA, queue, scheduler, Pub/Sub, API keys, monitoring |
+| `production.tf` | Runtime infra: `tasks-invoker` SA, queue, scheduler, Pub/Sub, API keys, monitoring; plus the `env_vars` output (non-secret config for the app) |
 | `deployment.tf` | CI plumbing: `ci-secret-pusher` SA + key, plus a `ci_secret_pusher_key` output used to refresh the `GCP_SA_KEY` GH Actions secret on rotation |
-| `scripts/sync-env.js` | Reads Secret Manager → writes `.env` + `src/utils/env.server.ts` (typed accessor) + optional Vercel push |
+| `scripts/sync-env.js` | The `ENV_VARS` manifest (every var + its source) → reads the `env_vars` terraform output + Secret Manager → writes `.env` + `types/env.d.ts` (types `process.env`) + optional Vercel push |
 
 ## How auth works (for tasks)
 
@@ -30,28 +31,42 @@ shared secrets to rotate.
 gcloud auth application-default login
 gcloud config set project gmail-reminder-api
 yarn install
+terraform -chdir=terraform init   # sync:env reads the `env_vars` output
 yarn sync:env
 ```
 
-Writes `.env` (gitignored) + `src/utils/env.server.ts` (committed, typed).
-`yarn dev` works after this.
+Writes `.env` (gitignored) + `types/env.d.ts` (committed; types
+`process.env`). `yarn dev` works after this.
 
 ## Using env vars in code
 
+Read them off `process.env` — `types/env.d.ts` types every declared key, so
+typos and missing vars are compile errors.
+
 ```ts
-import {env} from '@/utils/env.server';
-new Stripe(env.STRIPE_API_KEY); // typed string, validated at access
+new Stripe(process.env.STRIPE_API_KEY); // typed via types/env.d.ts
 ```
 
-## Adding a new secret
+## Adding a new env var
+
+Every variable is declared once in the `ENV_VARS` manifest at the top of
+`scripts/sync-env.js`, tagged with its source (`'terraform'` or `'secret'`).
+That manifest drives `.env`, the typed accessor, and the Vercel push.
+
+**A secret** — create it in Secret Manager, then declare it:
 
 ```sh
 echo -n "value" | gcloud secrets create NEW_KEY --data-file=- \
   --project=gmail-reminder-api
-# add "NEW_KEY" to MANAGED_SECRETS in scripts/sync-env.js
-yarn sync:env             # regenerate .env + env.server.ts locally
+# add `NEW_KEY: 'secret',` to ENV_VARS in scripts/sync-env.js
+yarn sync:env             # regenerate .env + types/env.d.ts locally
 git commit -am "Add NEW_KEY" && git push
 ```
+
+**Non-secret config** — add it to the `env_vars` output in `production.tf`,
+`terraform apply`, then declare `NEW_KEY: 'terraform',` in `ENV_VARS` and
+`yarn sync:env`. (`sync-env.js` errors if the manifest and the `env_vars`
+output disagree, so the two stay in lockstep.)
 
 The push to main edits `scripts/sync-env.js`, so GH Actions auto-syncs to
 Vercel. Once it lands, `env.NEW_KEY` is available in code.
@@ -63,14 +78,14 @@ echo -n "new-value" | gcloud secrets versions add EXISTING_KEY --data-file=- \
   --project=gmail-reminder-api
 ```
 
-Then in GitHub Actions → "sync env to vercel" → **Run workflow**. (SM
-changes are invisible to git, so no auto-trigger.)
+Then in GitHub Actions → **Deploy** → **Run workflow**. (SM changes are
+invisible to git, so a push won't pick them up — trigger it manually.)
 
 ## Pushing env vars to Vercel
 
-Happens automatically on push to `main` when `scripts/sync-env.js` or
-`.github/workflows/sync-env.yml` changes. For manual triggers (after a SM
-rotation), use **Run workflow** in the Actions tab.
+Happens automatically on every push to `main` (the **Deploy** workflow,
+`.github/workflows/main.yml`). For manual triggers (after a SM rotation),
+use **Run workflow** in the Actions tab.
 
 Run locally with `yarn sync:env --vercel`. Idempotent. Preview deployments
 are skipped (Vercel CLI 50.x limitation).
@@ -89,9 +104,11 @@ prefix `terraform/state`), configured via the `backend "gcs"` block in
 `terraform.tfstate` to sync. `terraform init` reads the backend and pulls
 the state; it relies on the same ADC login as the rest of setup.
 
-When changing the constants in `local` (project id, region, site url), also
-update `STATIC_ENV_VARS` at the top of `scripts/sync-env.js` — those values
-are duplicated there.
+The non-secret config the app needs (project id, region, site url, queue
+names, tasks-invoker SA email) is exposed via the `env_vars` output in
+`production.tf`; `sync-env.js` reads it with `terraform output`, so there's
+nothing to keep in sync by hand — change a `local` and the env follows after
+the next `terraform apply` + `yarn sync:env`.
 
 CI never applies. The `terraform-drift` job in `.github/workflows/main.yml`
 runs `terraform plan -refresh=false` on every push to `main` and **fails the

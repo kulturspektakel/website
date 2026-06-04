@@ -106,6 +106,25 @@ resource "google_cloud_tasks_queue" "scrapers" {
   depends_on = [google_project_service.apis]
 }
 
+# ---- Env config for the Vercel app ----------------------------------------
+#
+# Non-secret config that the app reads from its environment. Terraform owns
+# every value here (locals + resource attributes), so this output is the
+# single source of truth — `scripts/sync-env.js` reads it via
+# `terraform output -json env_vars` instead of duplicating the literals.
+# Real secrets are not here; those live in Secret Manager (MANAGED_SECRETS).
+output "env_vars" {
+  description = "Non-secret env config read by scripts/sync-env.js."
+  value = {
+    GCP_PROJECT_ID                  = local.project_id
+    SITE_URL                        = local.site_url
+    GCP_LOCATION                    = local.region
+    GCP_TASKS_QUEUE                 = google_cloud_tasks_queue.default.name
+    GCP_TASKS_SCRAPER_QUEUE         = google_cloud_tasks_queue.scrapers.name
+    GCP_TASKS_SERVICE_ACCOUNT_EMAIL = google_service_account.tasks.email
+  }
+}
+
 # Pub/Sub push subscription for Gmail notifications: every new email in our
 # watched inboxes (booking/info/lager) → POST to /api/tasks/gmail-notification.
 # The topic itself (`mail-reminder`) and the publisher side (Gmail watch via
