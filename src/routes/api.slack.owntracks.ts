@@ -1,6 +1,6 @@
 import {createFileRoute} from '@tanstack/react-router';
-import {apiErrorBoundary} from '../utils/apiError.server';
-import {handleOwnTracksCommand} from '../server/routes/slack/owntracks';
+import {apiErrorBoundary} from '../server/apiError.server';
+import {handleOwnTracksCommand} from '../server/slack/owntracks';
 
 export const Route = createFileRoute('/api/slack/owntracks')({
   server: {

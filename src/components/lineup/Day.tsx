@@ -1,7 +1,7 @@
 import {Heading, SimpleGrid} from '@chakra-ui/react';
 import DateString from '../DateString';
 import Band from './Band';
-import type {SpotifyPlayerState} from '../SpotifyPlayer';
+import type {SpotifyPlayerState} from './SpotifyPlayer';
 
 export default function Day({
   day,

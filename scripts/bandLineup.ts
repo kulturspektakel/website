@@ -5,7 +5,7 @@
  * Fill in `SHEET_ID` before running. `yarn email:band-lineup` to run.
  */
 import 'dotenv/config';
-import {sendMail} from '../src/utils/sendMail.server';
+import {sendMail} from '../src/server/sendMail.server';
 import {readGoogleSheet} from './readGoogleSheet';
 
 const SHEET_ID = '----';

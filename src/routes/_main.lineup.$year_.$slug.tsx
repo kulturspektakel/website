@@ -12,10 +12,93 @@ import {
 import Image from '../components/Image';
 import {Gallery} from 'react-photoswipe-gallery';
 import {Tooltip} from '../components/chakra-snippets/tooltip';
-import {createFileRoute, Link as RouterLink} from '@tanstack/react-router';
+import {
+  createFileRoute,
+  Link as RouterLink,
+  notFound,
+} from '@tanstack/react-router';
 import {DirectusImage, imageUrl} from '../utils/directusImage';
-import {loader} from '../server/routes/lineup.$year_.$slug';
+import {createServerFn} from '@tanstack/react-start';
+import {prismaClient} from '../server/prismaClient.server';
+import {directusImage} from '../server/directusImage.server';
+import {isSameDay} from '../utils/dateUtils';
 import {seo} from '../utils/seo';
+
+const loader = createServerFn()
+  .inputValidator((data: {year: string; slug: string}) => data)
+  .handler(async ({data}) => {
+    const band = await prismaClient.bandPlaying.findUnique({
+      where: {
+        eventId_slug: {
+          eventId: `kult${data.year}`,
+          slug: data.slug,
+        },
+      },
+      select: {
+        name: true,
+        slug: true,
+        photo: true,
+        startTime: true,
+        genre: true,
+        spotify: true,
+        youtube: true,
+        instagram: true,
+        facebook: true,
+        website: true,
+        soundcloud: true,
+        shortDescription: true,
+        description: true,
+        area: {
+          select: {
+            id: true,
+            displayName: true,
+            themeColor: true,
+          },
+        },
+      },
+    });
+
+    if (!band) {
+      throw notFound();
+    }
+
+    const neighborSelect = {
+      name: true,
+      slug: true,
+      startTime: true,
+    };
+
+    const [previous, next] = await Promise.all([
+      prismaClient.bandPlaying.findFirst({
+        where: {
+          eventId: `kult${data.year}`,
+          areaId: band.area.id,
+          startTime: {lt: band.startTime},
+        },
+        orderBy: {startTime: 'desc'},
+        select: neighborSelect,
+      }),
+      prismaClient.bandPlaying.findFirst({
+        where: {
+          eventId: `kult${data.year}`,
+          areaId: band.area.id,
+          startTime: {gt: band.startTime},
+        },
+        orderBy: {startTime: 'asc'},
+        select: neighborSelect,
+      }),
+    ]);
+
+    return {
+      ...band,
+      photo: await directusImage(band.photo),
+      previous:
+        previous && isSameDay(previous.startTime, band.startTime)
+          ? previous
+          : null,
+      next: next && isSameDay(next.startTime, band.startTime) ? next : null,
+    };
+  });
 
 export const Route = createFileRoute('/_main/lineup/$year_/$slug')({
   component: LineupBand,

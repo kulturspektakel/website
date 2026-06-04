@@ -1,6 +1,6 @@
 import {createFileRoute} from '@tanstack/react-router';
-import {apiErrorBoundary} from '../utils/apiError.server';
-import {handleMailingListCommand} from '../server/routes/slack/mailingList';
+import {apiErrorBoundary} from '../server/apiError.server';
+import {handleMailingListCommand} from '../server/slack/mailingList';
 
 export const Route = createFileRoute('/api/slack/mailingliste')({
   server: {

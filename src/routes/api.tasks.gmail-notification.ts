@@ -1,7 +1,7 @@
 import {createFileRoute} from '@tanstack/react-router';
-import {apiErrorBoundary} from '../utils/apiError.server';
-import {gcpAuth} from '../utils/gcpAuth.server';
-import {handleGmailNotification} from '../server/routes/tasks.gmail-notification';
+import {apiErrorBoundary} from '../server/apiError.server';
+import {gcpAuth} from '../server/gcpAuth.server';
+import {handleGmailNotification} from '../server/tasks/gmail-notification';
 
 export const Route = createFileRoute('/api/tasks/gmail-notification')({
   server: {

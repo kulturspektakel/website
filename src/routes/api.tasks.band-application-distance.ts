@@ -1,7 +1,7 @@
 import {createFileRoute} from '@tanstack/react-router';
-import {apiErrorBoundary} from '../utils/apiError.server';
-import {gcpAuth} from '../utils/gcpAuth.server';
-import {handleBandApplicationDistance} from '../server/routes/tasks.band-application-distance';
+import {apiErrorBoundary} from '../server/apiError.server';
+import {gcpAuth} from '../server/gcpAuth.server';
+import {handleBandApplicationDistance} from '../server/tasks/band-application-distance';
 
 export const Route = createFileRoute('/api/tasks/band-application-distance')({
   server: {

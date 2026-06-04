@@ -3,7 +3,7 @@ import {FaPlay, FaPause} from 'react-icons/fa6';
 import DateString from '../DateString';
 import Card from '../Card';
 import {imageUrl} from '../../utils/directusImage';
-import type {SpotifyPlayerState} from '../SpotifyPlayer';
+import type {SpotifyPlayerState} from './SpotifyPlayer';
 
 export default function Band({
   band,

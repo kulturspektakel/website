@@ -4,8 +4,33 @@ import {Gallery} from 'react-photoswipe-gallery';
 import {Alert} from '../components/chakra-snippets/alert';
 import Image from '../components/Image';
 import {imageUrl} from '../utils/directusImage';
-import {loader} from '../server/routes/plakate';
+import {createServerFn} from '@tanstack/react-start';
+import {prismaClient} from '../server/prismaClient.server';
+import {directusImages} from '../server/directusImage.server';
 import {seo} from '../utils/seo';
+
+const loader = createServerFn().handler(async () => {
+  const data = await prismaClient.event.findMany({
+    where: {
+      eventType: 'Kulturspektakel',
+    },
+    orderBy: {
+      start: 'desc',
+    },
+    select: {
+      id: true,
+      name: true,
+      start: true,
+      poster: true,
+    },
+  });
+
+  const images = await directusImages(data.map((event) => event.poster));
+  return data.map(({poster, ...data}) => ({
+    ...data,
+    poster: poster ? images[poster] : null,
+  }));
+});
 
 export const Route = createFileRoute('/_main/plakate')({
   component: Plakate,

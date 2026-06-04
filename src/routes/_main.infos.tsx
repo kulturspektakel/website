@@ -4,8 +4,34 @@ import DateString from '../components/DateString';
 import Mark from '../components/Mark';
 import {LinkButton} from '../components/chakra-snippets/link-button';
 import {createFileRoute} from '@tanstack/react-router';
-import {loader} from '../server/routes/infos';
+import {createServerFn} from '@tanstack/react-start';
+import {multiPage} from '../server/markdownText.server';
+import {convertIcsCalendar, type IcsCalendar} from 'ts-ics';
 import {seo} from '../utils/seo';
+
+const loader = createServerFn().handler(async () => {
+  const calendarUrl =
+    'https://calendar.google.com/calendar/ical/c_d5cfc52054d3dae0761245fee799a7c2c61691fb62554f30ea652adcca183304%40group.calendar.google.com/public/basic.ics';
+
+  const cal = await fetch(calendarUrl).then((res) => res.text());
+
+  return {
+    crewCalendar:
+      convertIcsCalendar<IcsCalendar>(undefined, cal)
+        ?.events?.map((e) => ({
+          start: e.start.date,
+          end: e.end?.date,
+          id: e.uid,
+          summary: e.summary,
+          location: e.location?.replace(/\\,/g, ','),
+          allDay: e.start.type === 'DATE',
+        }))
+        .filter((e) => e.start.getTime() > Date.now())
+        .sort((a, b) => a.start.getTime() - b.start.getTime()) ?? [],
+    calendarUrl,
+    pages: await multiPage(['infos', 'verein']),
+  };
+});
 
 export const Route = createFileRoute('/_main/infos')({
   component: Infos,

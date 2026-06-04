@@ -1,6 +1,6 @@
 import {createFileRoute} from '@tanstack/react-router';
-import {apiErrorBoundary} from '../utils/apiError.server';
-import {handleSamlLogout} from '../server/routes/saml';
+import {apiErrorBoundary} from '../server/apiError.server';
+import {handleSamlLogout} from '../server/saml';
 
 export const Route = createFileRoute('/api/saml/logout')({
   server: {

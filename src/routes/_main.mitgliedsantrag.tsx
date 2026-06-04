@@ -7,15 +7,22 @@ import Steps from '../components/Steps';
 import {useState} from 'react';
 import {Field} from '../components/chakra-snippets/field';
 import {Slider} from '../components/chakra-snippets/slider';
-import {ConnectedField} from '../components/ConnectedField';
+import {ConnectedField} from '../components/forms/ConnectedField';
 import {RadioCardItem} from '../components/chakra-snippets/radio-card';
 import React from 'react';
-import {ConnectedRadioCard} from '../components/ConnectedRadioCard';
+import {ConnectedRadioCard} from '../components/forms/ConnectedRadioCard';
 import ReloadWarning from '../components/ReloadWarning';
 import {createFileRoute, useNavigate} from '@tanstack/react-router';
 import {seo} from '../utils/seo';
 import {useMutation} from '@tanstack/react-query';
-import {createMembership} from '../server/routes/mitgliedsantrag';
+import {createServerFn} from '@tanstack/react-start';
+import {enqueueGcpTask} from '../server/enqueueGcpTask.server';
+
+const createMembership = createServerFn()
+  .inputValidator((data: any) => data)
+  .handler(async ({data}) => {
+    await enqueueGcpTask('create-membership-application', data);
+  });
 
 const MEMBERSHIP_FEES = {
   kult: {

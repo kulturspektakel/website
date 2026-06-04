@@ -2,7 +2,7 @@ import {VStack, Heading, Text} from '@chakra-ui/react';
 import {lazy, Suspense} from 'react';
 import {createFileRoute} from '@tanstack/react-router';
 
-const Confetti = lazy(() => import('../components/booking/Confetti'));
+const Confetti = lazy(() => import('../components/Confetti'));
 import {seo} from '../utils/seo';
 
 export const Route = createFileRoute('/_main/mitgliedsantrag_/danke')({

@@ -1,7 +1,7 @@
 import {Box} from '@chakra-ui/react';
 import Page from '../Page';
 import {useSuspenseQuery} from '@tanstack/react-query';
-import {pageLoader} from '../../server/routes/$slug';
+import {pageLoader} from '../../server/pageLoader';
 
 export function StageInfo(props: {id: string}) {
   const {data} = useSuspenseQuery({

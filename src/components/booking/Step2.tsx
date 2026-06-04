@@ -3,7 +3,7 @@ import {Field as FormikField} from 'formik';
 import useIsDJ from './useIsDJ';
 import {useFormikContext} from 'formik';
 import {InputGroup} from '../chakra-snippets/input-group';
-import {ConnectedField} from '../ConnectedField';
+import {ConnectedField} from '../forms/ConnectedField';
 import {z} from 'zod';
 import normalizeUrl from 'normalize-url';
 import {

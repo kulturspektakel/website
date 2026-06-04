@@ -1,5 +1,5 @@
 import {VStack, Heading, Text, Image} from '@chakra-ui/react';
-import Confetti from '../components/booking/Confetti';
+import Confetti from '../components/Confetti';
 import DateString from '../components/DateString';
 import {createFileRoute} from '@tanstack/react-router';
 import {parseBookingParams} from './_main.booking_.$applicationType';

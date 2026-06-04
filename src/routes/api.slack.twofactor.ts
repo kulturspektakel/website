@@ -1,6 +1,6 @@
 import {createFileRoute} from '@tanstack/react-router';
-import {apiErrorBoundary} from '../utils/apiError.server';
-import {handleTwoFactorCommand} from '../server/routes/slack/twofactor';
+import {apiErrorBoundary} from '../server/apiError.server';
+import {handleTwoFactorCommand} from '../server/slack/twofactor';
 
 export const Route = createFileRoute('/api/slack/twofactor')({
   server: {

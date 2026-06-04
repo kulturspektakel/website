@@ -1,7 +1,7 @@
 import {createFileRoute} from '@tanstack/react-router';
-import {apiErrorBoundary} from '../utils/apiError.server';
-import {gcpAuth} from '../utils/gcpAuth.server';
-import {handleBadgeAwarded} from '../server/routes/tasks.badge-awarded';
+import {apiErrorBoundary} from '../server/apiError.server';
+import {gcpAuth} from '../server/gcpAuth.server';
+import {handleBadgeAwarded} from '../server/tasks/badge-awarded';
 
 export const Route = createFileRoute('/api/tasks/badge-awarded')({
   server: {

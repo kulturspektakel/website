@@ -1,6 +1,6 @@
 import {Textarea} from '@chakra-ui/react';
 import useIsDJ from './useIsDJ';
-import {ConnectedField} from '../ConnectedField';
+import {ConnectedField} from '../forms/ConnectedField';
 import {z} from 'zod';
 import {useSearch} from '@tanstack/react-router';
 import {

@@ -1,7 +1,7 @@
 import {createFileRoute} from '@tanstack/react-router';
-import {apiErrorBoundary} from '../utils/apiError.server';
-import {gcpAuth} from '../utils/gcpAuth.server';
-import {handleSendEmail} from '../server/routes/tasks.send-email';
+import {apiErrorBoundary} from '../server/apiError.server';
+import {gcpAuth} from '../server/gcpAuth.server';
+import {handleSendEmail} from '../server/tasks/send-email';
 
 export const Route = createFileRoute('/api/tasks/send-email')({
   server: {

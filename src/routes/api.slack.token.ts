@@ -1,9 +1,9 @@
 import {createFileRoute} from '@tanstack/react-router';
-import {apiErrorBoundary} from '../utils/apiError.server';
+import {apiErrorBoundary} from '../server/apiError.server';
 import {
   handleNuclinoTokenCommand,
   handleNuclinoTokenRedirect,
-} from '../server/routes/slack/token';
+} from '../server/slack/token';
 
 export const Route = createFileRoute('/api/slack/token')({
   server: {

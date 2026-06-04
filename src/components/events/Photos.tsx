@@ -5,9 +5,17 @@ import {Gallery} from 'react-photoswipe-gallery';
 import Image from '../Image';
 import {Link} from '@tanstack/react-router';
 import {DirectusImage, imageUrl} from '../../utils/directusImage';
-import {useServerFn} from '@tanstack/react-start';
-import {loadMoreImages} from '../../server/components/Photos';
+import {createServerFn, useServerFn} from '@tanstack/react-start';
+import {directusImageConnection} from '../../server/directusImage.server';
 import {DataSourceArray} from 'photoswipe';
+
+const loadMoreImages = createServerFn()
+  .inputValidator(
+    (params: {limit: number; offset: number; eventId: string}) => params,
+  )
+  .handler(async ({data: {eventId, offset, limit}}) => {
+    return await directusImageConnection('Event', eventId, limit, offset);
+  });
 
 const SIZE = 70;
 

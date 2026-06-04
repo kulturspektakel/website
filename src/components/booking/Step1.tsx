@@ -10,7 +10,7 @@ import DuplicateApplicationWarning from './DuplicateApplicationWarning';
 import useIsDJ from './useIsDJ';
 import {useFormikContext} from 'formik';
 import {Alert} from '../chakra-snippets/alert';
-import {ConnectedField} from '../ConnectedField';
+import {ConnectedField} from '../forms/ConnectedField';
 import {z} from 'zod';
 import {BandRepertoire, GenreCategory} from '../../generated/prisma/browser';
 

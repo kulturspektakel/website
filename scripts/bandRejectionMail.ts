@@ -8,8 +8,8 @@
  */
 import 'dotenv/config';
 import {google} from 'googleapis';
-import {prismaClient} from '../src/utils/prismaClient.server';
-import {sendMail} from '../src/utils/sendMail.server';
+import {prismaClient} from '../src/server/prismaClient.server';
+import {sendMail} from '../src/server/sendMail.server';
 
 const account = 'booking@kulturspektakel.de';
 const EVENT_ID = 'kult2026';

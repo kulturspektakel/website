@@ -11,9 +11,31 @@ import React, {useMemo} from 'react';
 import Card from '../components/Card';
 import DateString from '../components/DateString';
 import Mark from '../components/Mark';
-import {useServerFn} from '@tanstack/react-start';
-import {loader} from '../server/routes/news.archiv';
+import {createServerFn, useServerFn} from '@tanstack/react-start';
+import {prismaClient} from '../server/prismaClient.server';
+import {markdownPages} from '../server/markdownText.server';
 import {imageUrl} from '../utils/directusImage';
+
+const loader = createServerFn()
+  .inputValidator((cursor: string | undefined) => cursor)
+  .handler(async ({data: cursor}) => {
+    const data = await prismaClient.news.findMany({
+      select: {
+        title: true,
+        content: true,
+        slug: true,
+        createdAt: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: 30,
+      skip: cursor ? 1 : 0,
+      cursor: cursor ? {slug: cursor} : undefined,
+    });
+
+    return await markdownPages(data);
+  });
 import {useInfiniteQuery} from '@tanstack/react-query';
 import {seo} from '../utils/seo';
 

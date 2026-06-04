@@ -1,7 +1,7 @@
 import {createFileRoute} from '@tanstack/react-router';
-import {apiErrorBoundary} from '../utils/apiError.server';
-import {deviceAuth} from '../utils/apiAuth.server';
-import {handleLog} from '../server/routes/kultcash';
+import {apiErrorBoundary} from '../server/apiError.server';
+import {deviceAuth} from '../server/apiAuth.server';
+import {handleLog} from '../server/kultcash';
 
 export const Route = createFileRoute('/api/kultcash/log')({
   server: {

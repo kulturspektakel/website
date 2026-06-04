@@ -8,7 +8,16 @@ import Footer from '../components/Footer/Footer';
 import photoswipeCSS from 'photoswipe/dist/photoswipe.css?url';
 import {dateStringComponents} from '../components/DateString';
 import {seo} from '../utils/seo';
-import {loadEvent} from '../server/routes/_main';
+import {createServerFn} from '@tanstack/react-start';
+import {setResponseHeader} from '@tanstack/react-start/server';
+import {getCurrentEvent} from '../server/getCurrentEvent.server';
+
+const loadEvent = createServerFn({method: 'GET'}).handler(async () => {
+  setResponseHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600');
+  return {
+    event: await getCurrentEvent(),
+  };
+});
 
 export const Route = createFileRoute('/_main')({
   beforeLoad: () => loadEvent(),

@@ -1,12 +1,50 @@
 import {Box, Heading, Link} from '@chakra-ui/react';
 import Card from '../components/Card';
 import DateString, {dateStringComponents} from '../components/DateString';
-import GoogleMaps from '../components/GoogleMaps';
+import GoogleMaps from '../components/events/GoogleMaps';
 import Headline from '../components/Headline';
 import Event from '../components/events/Event';
-import {createFileRoute} from '@tanstack/react-router';
+import {createFileRoute, notFound} from '@tanstack/react-router';
 import {seo} from '../utils/seo';
-import {loader} from '../server/routes/events_.$id';
+import {createServerFn} from '@tanstack/react-start';
+import {prismaClient} from '../server/prismaClient.server';
+import {
+  directusImage,
+  directusImageConnection,
+} from '../server/directusImage.server';
+import {eventSelect} from '../components/events/Event';
+
+const loader = createServerFn()
+  .inputValidator((eventId: string) => eventId)
+  .handler(async ({data: eventId}) => {
+    const data = await prismaClient.event.findUnique({
+      where: {
+        id: eventId,
+      },
+      select: {
+        ...eventSelect,
+        latitude: true,
+        longitude: true,
+      },
+    });
+
+    if (!data) {
+      throw notFound();
+    }
+
+    const lineupAnnounced =
+      !data.lineupAnnouncementTime || data.lineupAnnouncementTime <= new Date();
+
+    return {
+      event: {
+        ...data,
+        BandPlaying: lineupAnnounced ? data.BandPlaying : [],
+        poster: await directusImage(data.poster),
+        media: await directusImageConnection('Event', eventId, 100),
+      },
+      apiKey: process.env.GOOGLE_MAPS_API_KEY,
+    };
+  });
 
 export const Route = createFileRoute('/_main/events_/$id')({
   component: EventComponent,

@@ -13,12 +13,50 @@ import DateString from '../components/DateString';
 import Headline from '../components/Headline';
 import {SegmentedControlOrSelect} from '../components/SegmentedControlOrSelect';
 import {createFileRoute} from '@tanstack/react-router';
-import {useServerFn} from '@tanstack/react-start';
+import {createServerFn, useServerFn} from '@tanstack/react-start';
 import {EventType} from '../generated/prisma/browser';
 import {useInfiniteQuery} from '@tanstack/react-query';
 import {useState} from 'react';
 import {seo} from '../utils/seo';
-import {loader} from '../server/routes/events';
+import {prismaClient} from '../server/prismaClient.server';
+import {
+  directusImage,
+  directusImageConnection,
+} from '../server/directusImage.server';
+import {eventSelect} from '../components/events/Event';
+
+const loader = createServerFn()
+  .inputValidator(
+    (cursor: {cursor?: string; eventType: EventType | 'ALL'}) => cursor,
+  )
+  .handler(async ({data}) => {
+    const res = await prismaClient.event.findMany({
+      select: eventSelect,
+      orderBy: {
+        start: 'desc',
+      },
+      where: {
+        eventType:
+          data && data.eventType !== 'ALL' ? data.eventType : undefined,
+      },
+      take: 10,
+      skip: data?.cursor ? 1 : 0,
+      cursor: data?.cursor ? {id: data.cursor} : undefined,
+    });
+
+    return Promise.all(
+      res.map(async (e) => {
+        const lineupAnnounced =
+          !e.lineupAnnouncementTime || e.lineupAnnouncementTime <= new Date();
+        return {
+          ...e,
+          BandPlaying: lineupAnnounced ? e.BandPlaying : [],
+          poster: await directusImage(e.poster),
+          media: await directusImageConnection('Event', e.id),
+        };
+      }),
+    );
+  });
 
 const PAGE_SIZE = 10;
 

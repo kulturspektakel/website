@@ -1,6 +1,6 @@
 import {createFileRoute} from '@tanstack/react-router';
-import {apiErrorBoundary} from '../utils/apiError.server';
-import {handleSlackEvents} from '../server/routes/slack/events';
+import {apiErrorBoundary} from '../server/apiError.server';
+import {handleSlackEvents} from '../server/slack/events';
 
 export const Route = createFileRoute('/api/slack/events')({
   server: {

@@ -22,16 +22,38 @@ import {Alert} from '../components/chakra-snippets/alert';
 import {createFileRoute, notFound, useNavigate} from '@tanstack/react-router';
 import useIsDJ from '../components/booking/useIsDJ';
 import {useMutation} from '@tanstack/react-query';
-import {
-  createBandApplication,
-  type ServerSchemaInput,
-} from '../server/routes/booking_.$applicationType';
+import {createServerFn} from '@tanstack/react-start';
+import {prismaClient} from '../server/prismaClient.server';
+import {enqueueGcpTask} from '../server/enqueueGcpTask.server';
 import z from 'zod';
 import {toFormikValidationSchema} from 'zod-formik-adapter';
 import {
   GenreCategory,
   HeardAboutBookingFrom,
 } from '../generated/prisma/browser';
+
+// Server schema validates step3 + eventId and transforms spotifyArtist
+const serverSchema = z
+  .object({
+    eventId: z.string(),
+  })
+  .and(step3Schema)
+  .transform(({spotifyArtist, ...data}) => ({
+    ...data,
+    spotifyArtist: spotifyArtist ? spotifyArtist.id : null,
+  }));
+
+export type ServerSchemaInput = z.input<typeof serverSchema>;
+
+const createBandApplication = createServerFn()
+  .inputValidator(serverSchema)
+  .handler(async ({data}) => {
+    const application = await prismaClient.bandApplication.create({
+      data,
+      select: {id: true},
+    });
+    await enqueueGcpTask('create-band-application', application);
+  });
 
 export function parseBookingParams(params: {applicationType: string}) {
   switch (params.applicationType) {

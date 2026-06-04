@@ -1,7 +1,7 @@
 import {createFileRoute, notFound} from '@tanstack/react-router';
 import Page from '../components/Page';
 import {seo} from '../utils/seo';
-import {pageLoader} from '../server/routes/$slug';
+import {pageLoader} from '../server/pageLoader';
 
 export const Route = createFileRoute('/_main/$slug')({
   component: PageRoute,

@@ -1,6 +1,7 @@
-import {createFileRoute, useNavigate} from '@tanstack/react-router';
+import {createFileRoute, useNavigate, redirect} from '@tanstack/react-router';
 import {seo} from '../utils/seo';
-import {loader, setData} from '../server/routes/spenden_.quittung.$id';
+import {createServerFn} from '@tanstack/react-start';
+import {prismaClient} from '../server/prismaClient.server';
 import {Heading, Text, VStack, Button, Flex} from '@chakra-ui/react';
 import {useMemo} from 'react';
 import DateString from '../components/DateString';
@@ -8,13 +9,70 @@ import {useMutation} from '@tanstack/react-query';
 import z from 'zod';
 import {FormikProvider, useFormik} from 'formik';
 import {toFormikValidationSchema} from 'zod-formik-adapter';
-import {ConnectedField} from '../components/ConnectedField';
+import {ConnectedField} from '../components/forms/ConnectedField';
 
 const FormSchema = z.object({
   quittungStreet: z.string().min(1),
   quittungCity: z.string().min(1),
   quittungName: z.string().min(1),
 });
+
+const FormSchemaWithId = z.object({
+  quittungStreet: z.string().min(1),
+  quittungCity: z.string().min(1),
+  quittungName: z.string().min(1),
+  id: z.uuid(),
+});
+
+const select = {
+  id: true,
+  name: true,
+  quittungName: true,
+  quittungStreet: true,
+  quittungCity: true,
+  amount: true,
+  createdAt: true,
+  source: true,
+  spendenQuittungAt: true,
+} as const;
+
+const loader = createServerFn()
+  .inputValidator((id: string) => id)
+  .handler(async ({data: id}) => {
+    const data = await prismaClient.donation.findFirstOrThrow({
+      select,
+      where: {
+        id,
+      },
+    });
+
+    if (data.spendenQuittungAt) {
+      throw redirect({
+        to: '/api/spenden/quittung/$id',
+        params: {id: data.id},
+      });
+    }
+
+    return data;
+  });
+
+const setData = createServerFn()
+  .inputValidator(FormSchemaWithId)
+  .handler(async ({data: {id, ...data}}) => {
+    return prismaClient.donation.update({
+      where: {
+        id,
+        spendenQuittungAt: {
+          equals: null,
+        },
+      },
+      data: {
+        ...data,
+        spendenQuittungAt: new Date(),
+      },
+      select,
+    });
+  });
 
 export const Route = createFileRoute('/_main/spenden_/quittung/$id')({
   loaderDeps: ({search}) => ({search}),

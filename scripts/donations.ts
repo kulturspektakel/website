@@ -6,8 +6,8 @@
  * `yarn email:donations` to run.
  */
 import 'dotenv/config';
-import {prismaClient} from '../src/utils/prismaClient.server';
-import {sendMail} from '../src/utils/sendMail.server';
+import {prismaClient} from '../src/server/prismaClient.server';
+import {sendMail} from '../src/server/sendMail.server';
 
 async function main() {
   const donations = await prismaClient.donation.findMany({

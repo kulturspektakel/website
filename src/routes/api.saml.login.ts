@@ -1,6 +1,6 @@
 import {createFileRoute} from '@tanstack/react-router';
-import {apiErrorBoundary} from '../utils/apiError.server';
-import {handleSamlLogin} from '../server/routes/saml';
+import {apiErrorBoundary} from '../server/apiError.server';
+import {handleSamlLogin} from '../server/saml';
 
 export const Route = createFileRoute('/api/saml/login')({
   server: {
