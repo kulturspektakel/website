@@ -24,24 +24,45 @@ import {
 import {createServerFn} from '@tanstack/react-start';
 import {prismaClient} from '../server/prismaClient.server';
 
-const deviceLocations = createServerFn().handler(async () => {
-  const rows = await prismaClient.deviceLocation.findMany({
-    where: {Device: {type: 'NOISE_MONITOR'}},
-    orderBy: {createdAt: 'desc'},
-    distinct: ['deviceId'],
-    select: {deviceId: true, locationName: true},
+const noiseDevices = createServerFn().handler(async () => {
+  const devices = await prismaClient.device.findMany({
+    where: {type: 'NOISE_MONITOR'},
+    select: {
+      id: true,
+      lastSeen: true,
+      DeviceLocation: {
+        orderBy: {createdAt: 'desc'},
+        take: 1,
+        select: {locationName: true},
+      },
+    },
   });
-  return Object.fromEntries(rows.map((r) => [r.deviceId, r.locationName]));
+  const deviceIds = devices.map((d) => d.id).sort();
+  const deviceLocations = Object.fromEntries(
+    devices.flatMap((d) =>
+      d.DeviceLocation[0] ? [[d.id, d.DeviceLocation[0].locationName]] : [],
+    ),
+  );
+  const deviceLastSeen = Object.fromEntries(
+    devices.flatMap((d) =>
+      d.lastSeen ? [[d.id, d.lastSeen.getTime()]] : [],
+    ),
+  );
+  return {deviceIds, deviceLocations, deviceLastSeen};
 });
 
 export const Route = createFileRoute('/crew/lautstaerke')({
   component: LautstaerkeLayout,
-  loader: async () => await deviceLocations(),
+  loader: async () => await noiseDevices(),
   head: () => seo({title: 'Lautstärke'}),
 });
 
 function LautstaerkeLayout() {
-  const locations = Route.useLoaderData();
+  const {
+    deviceIds,
+    deviceLocations: locations,
+    deviceLastSeen,
+  } = Route.useLoaderData();
   const [connected, setConnected] = useState(false);
   const [devices, setDevices] = useState<Record<string, DeviceState>>({});
   const busRef = useRef<EventTarget>(new EventTarget());
@@ -230,7 +251,9 @@ function LautstaerkeLayout() {
       devices,
       bus: busRef.current,
       deviceData: deviceDataRef,
+      deviceIds,
       deviceLocations: locations,
+      deviceLastSeen,
       bluetooth: {
         deviceName: bleDeviceName,
         connecting: bleConnecting,
@@ -243,7 +266,9 @@ function LautstaerkeLayout() {
     [
       connected,
       devices,
+      deviceIds,
       locations,
+      deviceLastSeen,
       bleDeviceName,
       bleConnecting,
       bleError,

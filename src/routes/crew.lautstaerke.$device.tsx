@@ -3,6 +3,7 @@ import {LuArrowLeft} from 'react-icons/lu';
 import {useEffect, useMemo, useRef, useState} from 'react';
 import {
   Box,
+  Button,
   Flex,
   HStack,
   Heading,
@@ -12,7 +13,6 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import uPlot from 'uplot';
-import {SegmentedControl} from '../components/chakra-snippets/segmented-control';
 import {
   GAP_THRESHOLD_S,
   SERIES,
@@ -50,18 +50,12 @@ const resolveCssVar = (cssVar: string, fallback: string): string => {
 
 const AXIS_STROKE_VAR = 'var(--chakra-colors-gray-400)';
 const GRID_STROKE_VAR = 'var(--chakra-colors-gray-700)';
-const CHART_BOTTOM_RESERVE = 36;
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
 const fmtTime = (ts: number) => {
   const d = new Date(ts * 1000);
   return `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
 };
-
-// Fixed-width legend value: "120.5", " 95.5", "  --.-" — always 6 chars so the
-// monospaced legend stays aligned whether the value is missing or three digits.
-const fmtDbLegend = (_u: uPlot, v: number | null) =>
-  (v == null ? '--.-' : v.toFixed(1)).padStart(6, ' ');
 
 const gapsRefiner: uPlot.Series.GapsRefiner = (u, _sIdx, i0, i1, nullGaps) => {
   const xs = u.data[0];
@@ -90,17 +84,35 @@ const FREQS = [
 const fmtHz = (f: number) =>
   f >= 1000 ? `${(f / 1000).toLocaleString('de-DE')}k` : `${f}`;
 
+// Doubles as the chart legend: shows the value (live, or at the cursor while
+// hovering) and toggles the matching chart line on click. Dimmed when hidden.
 function BigNumber({
   value,
   label,
   color,
+  enabled,
+  onClick,
 }: {
   value: number | null;
   label: string;
   color: string;
+  enabled: boolean;
+  onClick: () => void;
 }) {
   return (
-    <VStack gap="1" align="center" flex="1">
+    <VStack
+      gap="1"
+      align="center"
+      flex="1"
+      minW="0"
+      role="button"
+      onClick={onClick}
+      opacity={enabled ? 1 : 0.2}
+      cursor="pointer"
+      userSelect="none"
+      transition="opacity 0.15s"
+      _hover={{opacity: enabled ? 0.8 : 0.4}}
+    >
       <Text
         fontSize={{base: 'clamp(1rem, 7vw, 2rem)', lg: 'clamp(2rem, 6vw, 4rem)'}}
         fontFamily="mono"
@@ -127,12 +139,14 @@ function BandChart({record}: {record: NoiseRecord | null}) {
     const axisStroke = resolveCssVar(AXIS_STROKE_VAR, '#9ca3af');
     const gridStroke = resolveCssVar(GRID_STROKE_VAR, '#374151');
     const canvasHeight = () =>
-      Math.max(100, (container.clientHeight || 240) - CHART_BOTTOM_RESERVE);
+      Math.max(100, container.clientHeight || 240);
 
     const opts: uPlot.Options = {
       width: container.clientWidth || 800,
       height: canvasHeight(),
       legend: {show: false},
+      // No hover interaction on the frequency chart — kill the crosshair.
+      cursor: {show: false},
       scales: {
         x: {time: false, range: () => [-0.7, FREQS.length - 0.3]},
         y: {range: () => [30, 110]},
@@ -152,7 +166,6 @@ function BandChart({record}: {record: NoiseRecord | null}) {
           ticks: {stroke: gridStroke},
         },
         {
-          label: 'dB',
           stroke: axisStroke,
           grid: {stroke: gridStroke},
           ticks: {stroke: gridStroke},
@@ -206,17 +219,7 @@ function BandChart({record}: {record: NoiseRecord | null}) {
   }, [record, xs]);
 
   return (
-    <Box
-      ref={containerRef}
-      w="full"
-      h="full"
-      css={{
-        // Crosshair: plain gray, a touch lighter than the grid (gray.700).
-        '& .u-cursor-x, & .u-cursor-y': {
-          borderColor: 'var(--chakra-colors-gray-500)',
-        },
-      }}
-    />
+    <Box ref={containerRef} w="full" h="full" />
   );
 }
 
@@ -227,6 +230,10 @@ function DeviceDetail() {
   const plotRef = useRef<uPlot | null>(null);
   const now = useTick();
   const [weighting, setWeighting] = useState<Weighting>('A');
+  // Chart cursor: null when not hovering (big numbers show live values), a
+  // buffer index for the hovered sample, or 'gap' when the cursor sits in a
+  // region with no nearby sample (big numbers show — rather than stale data).
+  const [cursorIdx, setCursorIdx] = useState<number | 'gap' | null>(null);
   // Visibility keyed by weighting-independent series kind, kept in sync with
   // the chart legend so the big numbers mirror exactly what's plotted and the
   // toggle state carries across the dB(A)/dB(C) switch.
@@ -260,11 +267,13 @@ function DeviceDetail() {
     const axisStroke = resolveCssVar(AXIS_STROKE_VAR, '#9ca3af');
     const gridStroke = resolveCssVar(GRID_STROKE_VAR, '#374151');
     const canvasHeight = () =>
-      Math.max(100, (container.clientHeight || 280) - CHART_BOTTOM_RESERVE);
+      Math.max(100, container.clientHeight || 280);
 
     const opts: uPlot.Options = {
       width: container.clientWidth || 800,
       height: canvasHeight(),
+      // The big-number row above doubles as the legend, so hide uPlot's own.
+      legend: {show: false},
       scales: {
         x: {
           time: true,
@@ -283,7 +292,6 @@ function DeviceDetail() {
           ticks: {stroke: gridStroke},
         },
         {
-          label: 'dB',
           stroke: axisStroke,
           grid: {stroke: gridStroke},
           ticks: {stroke: gridStroke},
@@ -302,20 +310,28 @@ function DeviceDetail() {
           spanGaps: false,
           gaps: gapsRefiner,
           points: {show: false},
-          value: fmtDbLegend,
         })),
       ],
       hooks: {
-        setSeries: [
-          (_u, sIdx, sOpts) => {
-            // Mirror legend show/hide toggles into React state.
-            if (sIdx == null || sOpts.show == null) return;
-            const v = visible[sIdx - 1];
-            if (!v) return;
-            const k = seriesKind(v.s.label);
-            setShown((prev) =>
-              prev[k] === sOpts.show ? prev : {...prev, [k]: sOpts.show!},
-            );
+        setCursor: [
+          (u) => {
+            // Drive the big numbers off the hovered sample; null when the
+            // cursor leaves the plot so they fall back to live values. uPlot
+            // snaps idx to the nearest sample even across a gap, so flag a
+            // 'gap' when that sample is further away than the gap threshold.
+            const idx = u.cursor.idx;
+            let next: number | 'gap' | null;
+            if (idx == null) {
+              next = null;
+            } else {
+              const dataX = u.data[0][idx] as number | undefined;
+              const cursorX = u.posToVal(u.cursor.left ?? -1, 'x');
+              next =
+                dataX == null || Math.abs(cursorX - dataX) > GAP_THRESHOLD_S
+                  ? 'gap'
+                  : idx;
+            }
+            setCursorIdx((prev) => (prev === next ? prev : next));
           },
         ],
       },
@@ -345,6 +361,16 @@ function DeviceDetail() {
     };
   }, [device, ctx.bus, ctx.deviceData, weighting]);
 
+  // Push big-number show/hide toggles into the chart. Kept separate from plot
+  // creation so toggling a series doesn't tear down and rebuild the whole plot.
+  useEffect(() => {
+    const plot = plotRef.current;
+    if (!plot) return;
+    SERIES.map((s, i) => ({s, i}))
+      .filter(({s}) => s.weighting === weighting)
+      .forEach(({s}, vi) => plot.setSeries(vi + 1, {show: shown[seriesKind(s.label)]}));
+  }, [shown, weighting]);
+
   // The 5m/30m getters read these off a NoiseRecording; reconstruct a minimal
   // one from the persisted device state so the same getters feed the numbers.
   const decodedLike = {
@@ -353,13 +379,24 @@ function DeviceDetail() {
     laeq30m: deviceState?.laeq30m ?? undefined,
     lceq30m: deviceState?.lceq30m ?? undefined,
   } as NoiseRecording;
-  const bigNumbers = SERIES.filter(
-    (s) => s.weighting === weighting && shown[seriesKind(s.label)],
-  ).map((s) => ({
-    label: s.label,
-    color: s.stroke,
-    value: latest ? s.get(latest, decodedLike) : null,
-  }));
+  // All metrics for the current weighting are always shown. While hovering, the
+  // value comes from the buffered sample under the cursor (column i+1 mirrors
+  // SERIES[i]); otherwise it's the live latest reading.
+  const fullData = ctx.deviceData.current[device];
+  const bigNumbers = SERIES.map((s, i) => ({s, i}))
+    .filter(({s}) => s.weighting === weighting)
+    .map(({s, i}) => {
+      const k = seriesKind(s.label);
+      const value =
+        cursorIdx === 'gap'
+          ? null
+          : cursorIdx != null
+            ? ((fullData[i + 1]?.[cursorIdx] ?? null) as number | null)
+            : latest
+              ? s.get(latest, decodedLike)
+              : null;
+      return {kind: k, label: s.label, color: s.stroke, value, enabled: shown[k]};
+    });
 
   return (
     <Box display="flex" flexDirection="column" flex="1" minH="0">
@@ -408,24 +445,16 @@ function DeviceDetail() {
           </HStack>
         </VStack>
         {ctx.bluetooth.deviceName === device && <BluetoothChip />}
-        <SegmentedControl
+        <Button
           size="sm"
           flexShrink="0"
-          value={weighting}
-          onValueChange={(e) => setWeighting(e.value as Weighting)}
-          bg="gray.800"
-          css={{
-            '--segment-indicator-bg': 'var(--chakra-colors-gray-600)',
-            '& [data-part="item"]': {color: 'var(--chakra-colors-gray-400)'},
-            '& [data-part="item"][data-state="checked"]': {
-              color: 'var(--chakra-colors-white)',
-            },
-          }}
-          items={[
-            {value: 'A', label: 'dB(A)'},
-            {value: 'C', label: 'dB(C)'},
-          ]}
-        />
+          variant="outline"
+          fontFamily="mono"
+          minW="20"
+          onClick={() => setWeighting((w) => (w === 'A' ? 'C' : 'A'))}
+        >
+          {weighting === 'A' ? 'dB(A)' : 'dB(C)'}
+        </Button>
       </HStack>
       <SimpleGrid columns={bigNumbers.length || 1} gap="3" mb="3">
         {bigNumbers.map((n) => (
@@ -434,6 +463,10 @@ function DeviceDetail() {
             value={n.value}
             label={n.label}
             color={n.color}
+            enabled={n.enabled}
+            onClick={() =>
+              setShown((prev) => ({...prev, [n.kind]: !prev[n.kind]}))
+            }
           />
         ))}
       </SimpleGrid>
@@ -441,7 +474,7 @@ function DeviceDetail() {
         flex="1"
         minH="0"
         direction={{base: 'column', lg: 'row'}}
-        gap="4"
+        gap="2"
       >
         <Box
           flex="1"
@@ -449,18 +482,8 @@ function DeviceDetail() {
           ref={containerRef}
           overflow="hidden"
           css={{
-            '& .u-legend': {
-              fontSize: '11px',
-              fontFamily: 'var(--chakra-fonts-mono)',
-              color: 'var(--chakra-colors-gray-300)',
-            },
-            // Keep the fixed-width padding from fmtDbLegend intact.
-            '& .u-legend .u-value': {
-              whiteSpace: 'pre',
-            },
-            // Crosshair: plain gray, a touch lighter than the grid (gray.700).
             '& .u-cursor-x, & .u-cursor-y': {
-              borderColor: 'var(--chakra-colors-gray-500)',
+              borderColor: 'var(--chakra-colors-white)',
             },
           }}
         />

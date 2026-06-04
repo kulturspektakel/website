@@ -121,7 +121,13 @@ export type LautstaerkeCtx = {
   bus: EventTarget;
   deviceData: MutableRefObject<Record<string, DeviceBuffer>>;
   bluetooth: BluetoothSlice;
+  // All NOISE_MONITOR device ids from the database (sorted). This is the set of
+  // rows rendered in the list; MQTT only drives each row's activity indicator.
+  deviceIds: string[];
   deviceLocations: Record<string, string>;
+  // Last-seen timestamp (epoch ms) from the DB's Device.lastSeen, per device.
+  // For a live MQTT message we use its receive time instead; see the list view.
+  deviceLastSeen: Record<string, number>;
 };
 
 export const LautstaerkeContext = createContext<LautstaerkeCtx | null>(null);
@@ -149,5 +155,17 @@ export function useTick(intervalMs = 1000): number {
 
 export function isFresh(lastSeen: number | undefined, now: number): boolean {
   return lastSeen != null && now - lastSeen < ACTIVE_WINDOW_MS;
+}
+
+const relativeTime = new Intl.RelativeTimeFormat('de-DE', {numeric: 'auto'});
+
+// German relative time (e.g. "vor 5 Minuten") for a past timestamp.
+export function formatLastSeen(ts: number, now: number): string {
+  const diffS = Math.round((ts - now) / 1000);
+  const abs = Math.abs(diffS);
+  if (abs < 60) return relativeTime.format(diffS, 'second');
+  if (abs < 3600) return relativeTime.format(Math.round(diffS / 60), 'minute');
+  if (abs < 86400) return relativeTime.format(Math.round(diffS / 3600), 'hour');
+  return relativeTime.format(Math.round(diffS / 86400), 'day');
 }
 

@@ -13,6 +13,7 @@ import {
 import {LuBluetooth} from 'react-icons/lu';
 import {
   decodeDb,
+  formatLastSeen,
   isFresh,
   useLautstaerkeCtx,
   useTick,
@@ -27,7 +28,26 @@ export const Route = createFileRoute('/crew/lautstaerke/')({
 function DeviceList() {
   const ctx = useLautstaerkeCtx();
   const now = useTick();
-  const names = Object.keys(ctx.devices).sort();
+  // DB-registered devices are always listed; devices first seen via MQTT are
+  // added on the fly so newly discovered monitors show up without a DB entry.
+  // Ordering: active (recently seen) devices first, then by location name,
+  // then by device name as the final tie-breaker.
+  const names = [
+    ...new Set([...ctx.deviceIds, ...Object.keys(ctx.devices)]),
+  ].sort((a, b) => {
+    const aActive = isFresh(ctx.devices[a]?.lastSeen, now);
+    const bActive = isFresh(ctx.devices[b]?.lastSeen, now);
+    if (aActive !== bActive) return aActive ? -1 : 1;
+
+    const aLoc = ctx.deviceLocations[a];
+    const bLoc = ctx.deviceLocations[b];
+    if (aLoc !== bLoc) {
+      if (!aLoc) return 1;
+      if (!bLoc) return -1;
+      return aLoc.localeCompare(bLoc);
+    }
+    return a.localeCompare(b);
+  });
 
   return (
     <Box display="flex" flexDirection="column" flex="1" minH="0">
@@ -47,11 +67,18 @@ function DeviceList() {
           <Spinner size="lg" />
         </Center>
       ) : names.length === 0 ? (
-        <Text color="gray.500">Noch keine Geräte empfangen.</Text>
+        <Text color="gray.500">Keine Lärmmessgeräte registriert.</Text>
       ) : (
         <VStack align="stretch" gap="2">
           {names.map((name) => {
             const state = ctx.devices[name];
+            const active = isFresh(state?.lastSeen, now);
+            // Newest of the DB's lastSeen and the latest MQTT message we've seen
+            // this session; shown only while the device isn't currently active.
+            const lastSeen = Math.max(
+              ctx.deviceLastSeen[name] ?? 0,
+              state?.lastSeen ?? 0,
+            );
             return (
               <Box
                 key={name}
@@ -72,30 +99,47 @@ function DeviceList() {
                       mr="2"
                       rounded="full"
                       flexShrink="0"
-                      bg={
-                        isFresh(state.lastSeen, now) ? 'green.500' : 'gray.400'
-                      }
+                      bg={active ? 'green.500' : 'gray.400'}
                     />
                     <DeviceTitle
                       deviceName={name}
                       locationName={ctx.deviceLocations[name]}
-                      batteryMv={state.batteryMv}
+                      batteryMv={state?.batteryMv}
                     />
                     {ctx.bluetooth.deviceName === name && <BluetoothChip />}
                     <VStack gap="1" align="end" minW="0">
-                      <Text fontFamily="mono" fontWeight="bold" lineHeight="1">
-                        {decodeDb(state.latest.laeq1s).toFixed(1)} dB(A)
-                      </Text>
-                      <Text
-                        fontFamily="mono"
-                        fontSize="xs"
-                        color="gray.500"
-                        lineHeight="1"
-                      >
-                        {state.laeq5m == null
-                          ? '— dB(A) 5m'
-                          : `${decodeDb(state.laeq5m).toFixed(1)} dB(A) 5m`}
-                      </Text>
+                      {active ? (
+                        <>
+                          <Text
+                            fontFamily="mono"
+                            fontWeight="bold"
+                            lineHeight="1"
+                          >
+                            {decodeDb(state!.latest.laeq1s).toFixed(1)} dB(A)
+                          </Text>
+                          <Text
+                            fontFamily="mono"
+                            fontSize="xs"
+                            color="gray.500"
+                            lineHeight="1"
+                          >
+                            {state!.laeq5m == null
+                              ? '— dB(A) 5m'
+                              : `${decodeDb(state!.laeq5m).toFixed(1)} dB(A) 5m`}
+                          </Text>
+                        </>
+                      ) : (
+                        <Text
+                          fontFamily="mono"
+                          fontSize="xs"
+                          color="gray.500"
+                          lineHeight="1"
+                        >
+                          {lastSeen > 0
+                            ? formatLastSeen(lastSeen, now)
+                            : 'nie gesehen'}
+                        </Text>
+                      )}
                     </VStack>
                   </HStack>
                 </Link>
