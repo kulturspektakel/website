@@ -13,6 +13,8 @@ import { Route as CrewRouteImport } from './routes/crew'
 import { Route as MainRouteImport } from './routes/_main'
 import { Route as CrewIndexRouteImport } from './routes/crew.index'
 import { Route as MainIndexRouteImport } from './routes/_main.index'
+import { Route as SamlLogoutRouteImport } from './routes/saml.logout'
+import { Route as SamlLoginRouteImport } from './routes/saml.login'
 import { Route as CrewLautstaerkeRouteImport } from './routes/crew.lautstaerke'
 import { Route as MainSpeisekarteRouteImport } from './routes/_main.speisekarte'
 import { Route as MainPlakateRouteImport } from './routes/_main.plakate'
@@ -84,6 +86,16 @@ const MainIndexRoute = MainIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => MainRoute,
+} as any)
+const SamlLogoutRoute = SamlLogoutRouteImport.update({
+  id: '/saml/logout',
+  path: '/saml/logout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SamlLoginRoute = SamlLoginRouteImport.update({
+  id: '/saml/login',
+  path: '/saml/login',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const CrewLautstaerkeRoute = CrewLautstaerkeRouteImport.update({
   id: '/lautstaerke',
@@ -378,6 +390,8 @@ export interface FileRoutesByFullPath {
   '/plakate': typeof MainPlakateRoute
   '/speisekarte': typeof MainSpeisekarteRoute
   '/crew/lautstaerke': typeof CrewLautstaerkeRouteWithChildren
+  '/saml/login': typeof SamlLoginRoute
+  '/saml/logout': typeof SamlLogoutRoute
   '/crew/': typeof CrewIndexRoute
   '/booking/$applicationType': typeof MainBookingApplicationTypeRoute
   '/card/$hash': typeof MainCardHashRouteWithChildren
@@ -431,6 +445,8 @@ export interface FileRoutesByTo {
   '/nuclino-sso': typeof MainNuclinoSsoRoute
   '/plakate': typeof MainPlakateRoute
   '/speisekarte': typeof MainSpeisekarteRoute
+  '/saml/login': typeof SamlLoginRoute
+  '/saml/logout': typeof SamlLogoutRoute
   '/': typeof MainIndexRoute
   '/crew': typeof CrewIndexRoute
   '/booking/$applicationType': typeof MainBookingApplicationTypeRoute
@@ -490,6 +506,8 @@ export interface FileRoutesById {
   '/_main/plakate': typeof MainPlakateRoute
   '/_main/speisekarte': typeof MainSpeisekarteRoute
   '/crew/lautstaerke': typeof CrewLautstaerkeRouteWithChildren
+  '/saml/login': typeof SamlLoginRoute
+  '/saml/logout': typeof SamlLogoutRoute
   '/_main/': typeof MainIndexRoute
   '/crew/': typeof CrewIndexRoute
   '/_main/booking_/$applicationType': typeof MainBookingApplicationTypeRoute
@@ -550,6 +568,8 @@ export interface FileRouteTypes {
     | '/plakate'
     | '/speisekarte'
     | '/crew/lautstaerke'
+    | '/saml/login'
+    | '/saml/logout'
     | '/crew/'
     | '/booking/$applicationType'
     | '/card/$hash'
@@ -603,6 +623,8 @@ export interface FileRouteTypes {
     | '/nuclino-sso'
     | '/plakate'
     | '/speisekarte'
+    | '/saml/login'
+    | '/saml/logout'
     | '/'
     | '/crew'
     | '/booking/$applicationType'
@@ -661,6 +683,8 @@ export interface FileRouteTypes {
     | '/_main/plakate'
     | '/_main/speisekarte'
     | '/crew/lautstaerke'
+    | '/saml/login'
+    | '/saml/logout'
     | '/_main/'
     | '/crew/'
     | '/_main/booking_/$applicationType'
@@ -705,6 +729,8 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   MainRoute: typeof MainRouteWithChildren
   CrewRoute: typeof CrewRouteWithChildren
+  SamlLoginRoute: typeof SamlLoginRoute
+  SamlLogoutRoute: typeof SamlLogoutRoute
   ApiKultcashConfigRoute: typeof ApiKultcashConfigRoute
   ApiKultcashListsRoute: typeof ApiKultcashListsRoute
   ApiKultcashLogRoute: typeof ApiKultcashLogRoute
@@ -758,6 +784,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof MainIndexRouteImport
       parentRoute: typeof MainRoute
+    }
+    '/saml/logout': {
+      id: '/saml/logout'
+      path: '/saml/logout'
+      fullPath: '/saml/logout'
+      preLoaderRoute: typeof SamlLogoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/saml/login': {
+      id: '/saml/login'
+      path: '/saml/login'
+      fullPath: '/saml/login'
+      preLoaderRoute: typeof SamlLoginRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/crew/lautstaerke': {
       id: '/crew/lautstaerke'
@@ -1239,6 +1279,8 @@ const CrewRouteWithChildren = CrewRoute._addFileChildren(CrewRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   MainRoute: MainRouteWithChildren,
   CrewRoute: CrewRouteWithChildren,
+  SamlLoginRoute: SamlLoginRoute,
+  SamlLogoutRoute: SamlLogoutRoute,
   ApiKultcashConfigRoute: ApiKultcashConfigRoute,
   ApiKultcashListsRoute: ApiKultcashListsRoute,
   ApiKultcashLogRoute: ApiKultcashLogRoute,

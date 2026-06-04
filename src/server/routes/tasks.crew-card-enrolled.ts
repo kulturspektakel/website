@@ -2,14 +2,12 @@ import {subDays} from 'date-fns';
 import {readJsonPayload} from '../../utils/readJsonPayload.server';
 import {slackApiRequest} from '../../utils/slack.server';
 import {ApiError} from '../../utils/apiError.server';
+import {SlackChannel} from '../../utils/slackChannels';
 
 export type CrewCardEnrolledPayload = {
   crewCardId: number[];
   validUntil: string;
 };
-
-// #crewcards — where freshly-activated CrewCards get announced.
-const SLACK_CHANNEL_CREWCARDS = 'C0965QS6763';
 
 /**
  * Migrated from `~/api.kulturspektakel.de/src/tasks/crewCardEnrolled.ts`
@@ -43,7 +41,7 @@ export async function handleCrewCardEnrolled(
   );
 
   const res = await slackApiRequest('chat.postMessage', {
-    channel: SLACK_CHANNEL_CREWCARDS,
+    channel: SlackChannel.crewcards,
     text: `CrewCard ${cardId} wurde aktiviert`,
     blocks: [
       {

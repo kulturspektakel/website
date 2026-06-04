@@ -3,12 +3,9 @@ import {readJsonPayload} from '../../utils/readJsonPayload.server';
 import {enqueueGcpTask} from '../../utils/enqueueGcpTask.server';
 import {slackApiRequest} from '../../utils/slack.server';
 import {ApiError} from '../../utils/apiError.server';
+import {SlackChannel} from '../../utils/slackChannels';
 
 export type CreateBandApplicationPayload = {id: string};
-
-// #dj and #bandbewerbungen — where new applications get announced.
-const SLACK_CHANNEL_DJ = 'C0491HCU5G9';
-const SLACK_CHANNEL_BANDBEWERBUNGEN = 'C3U99AB54';
 
 /**
  * Migrated from `~/api.kulturspektakel.de/src/tasks/createBandApplication.ts`.
@@ -77,7 +74,7 @@ async function postSlackAnnouncement(
   isDJ: boolean,
 ) {
   const res = await slackApiRequest('chat.postMessage', {
-    channel: isDJ ? SLACK_CHANNEL_DJ : SLACK_CHANNEL_BANDBEWERBUNGEN,
+    channel: isDJ ? SlackChannel.dj : SlackChannel.bandbewerbungen,
     text: `Bewerbung von „${application.bandname}“`,
     blocks: [
       {

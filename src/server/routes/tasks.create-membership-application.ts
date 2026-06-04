@@ -3,6 +3,7 @@ import type {schema} from '../../routes/_main.mitgliedsantrag';
 import {enqueueGcpTask} from '../../utils/enqueueGcpTask.server';
 import {readJsonPayload} from '../../utils/readJsonPayload.server';
 import {slackApiRequest} from '../../utils/slack.server';
+import {SlackChannel} from '../../utils/slackChannels';
 import type {z} from 'zod';
 
 export type CreateMembershipApplicationPayload = z.infer<typeof schema>;
@@ -14,9 +15,6 @@ const MEMBERSHIP_FEES = {
   kult: {reduced: 1500, regular: 3000},
   foerderverein: {reduced: 1500, regular: 3000},
 } as const;
-
-// #zuschuesse — where new memberships get announced.
-const SLACK_CHANNEL_ZUSCHUESSE = 'C030FV86XKR';
 
 /**
  * Migrated from `~/api.kulturspektakel.de/src/tasks/createMembershipApplication.ts`.
@@ -67,7 +65,7 @@ export async function handleCreateMembershipApplication(
 
   await Promise.all([
     slackApiRequest('chat.postMessage', {
-      channel: SLACK_CHANNEL_ZUSCHUESSE,
+      channel: SlackChannel.zuschuesse,
       text: `${data.name} ist jetzt Mitglied im ${getLegalName(data.membership)}${supporter}`,
     }),
     enqueueGcpTask('send-email', {

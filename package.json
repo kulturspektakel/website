@@ -94,6 +94,7 @@
     "react-photoswipe-gallery": "^4.0.0",
     "react-use": "^17.6.0",
     "react-use-facebook-pixel": "^2.0.0",
+    "samlify": "^2.10.1",
     "stripe": "^20.3.1",
     "tomo-typeahead": "^0.0.6",
     "ts-ics": "^2.4.3",

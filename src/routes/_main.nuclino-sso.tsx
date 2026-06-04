@@ -29,7 +29,9 @@ export const Route = createFileRoute('/_main/nuclino-sso')({
     }),
 });
 
-export const LOGIN_URL = 'https://api.kulturspektakel.de/saml/login';
+// Same-origin path to the SAML IdP login endpoint. Resolve against an origin
+// (`window.location.origin` on the client, `SITE_URL` on the server) before use.
+export const LOGIN_URL = '/saml/login';
 
 function NonceChecker({requestId}: {requestId: string}) {
   const search = Route.useSearch()!;
@@ -43,7 +45,7 @@ function NonceChecker({requestId}: {requestId: string}) {
       if (!nonce) {
         return null;
       }
-      const url = new URL(LOGIN_URL);
+      const url = new URL(LOGIN_URL, window.location.origin);
       Object.entries(search).forEach(([key, value]) =>
         url.searchParams.set(key, value),
       );
@@ -62,7 +64,7 @@ function NonceChecker({requestId}: {requestId: string}) {
             data: {nonceRequestId: requestId},
           });
           if (nonce) {
-            const url = new URL(LOGIN_URL);
+            const url = new URL(LOGIN_URL, window.location.origin);
             Object.entries(search).forEach(([key, value]) =>
               url.searchParams.set(key, value),
             );
@@ -153,7 +155,7 @@ function Sso() {
 
             <form
               method="post"
-              action={`https://api.kulturspektakel.de/saml/login?${searchParams.toString()}`}
+              action={`${LOGIN_URL}?${searchParams.toString()}`}
             >
               <VStack w="100%" gap="2">
                 <Heading as="h2" size="xl">

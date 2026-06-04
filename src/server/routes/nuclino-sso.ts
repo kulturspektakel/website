@@ -13,7 +13,7 @@ export const beforeLoad = createServerFn()
   .handler(({data}) => {
     const nonce = getCookie('nonce');
     if (nonce) {
-      const url = new URL(LOGIN_URL);
+      const url = new URL(LOGIN_URL, process.env.SITE_URL);
       Object.entries(data).forEach(([key, value]) =>
         url.searchParams.set(key, value),
       );
