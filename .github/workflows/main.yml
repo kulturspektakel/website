@@ -28,6 +28,9 @@ jobs:
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.15.5
+          # Disable the CLI wrapper — it swallows terraform's exit code, so the
+          # `-detailed-exitcode` 2 below would never fail the step otherwise.
+          terraform_wrapper: false
       - name: init
         run: terraform init
       - name: check for un-applied changes
