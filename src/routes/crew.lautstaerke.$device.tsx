@@ -22,9 +22,9 @@ import {
   isFresh,
   useLautstaerkeCtx,
   useTick,
-} from '../lautstaerke/context';
-import {BatteryChip} from '../lautstaerke/BatteryChip';
-import {BluetoothChip} from '../lautstaerke/BluetoothChip';
+} from '../components/lautstaerke/context';
+import {BatteryChip} from '../components/lautstaerke/BatteryChip';
+import {BluetoothChip} from '../components/lautstaerke/BluetoothChip';
 import {
   type NoiseRecording,
   type NoiseRecording_Record as NoiseRecord,

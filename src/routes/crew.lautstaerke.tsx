@@ -15,12 +15,12 @@ import {
   type DeviceBuffer,
   type DeviceState,
   type LautstaerkeCtx,
-} from '../lautstaerke/context';
+} from '../components/lautstaerke/context';
 import {
   connectBleDevice,
   isWebBluetoothSupported,
   type BleConnection,
-} from '../lautstaerke/bluetooth';
+} from '../components/lautstaerke/bluetooth';
 import {deviceLocations} from '../server/routes/crew.lautstaerke';
 
 export const Route = createFileRoute('/crew/lautstaerke')({

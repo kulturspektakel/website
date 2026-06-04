@@ -8,7 +8,7 @@ import {
 import {
   type NoiseRecording,
   type NoiseRecording_Record as NoiseRecord,
-} from '../proto/noise';
+} from '../../proto/noise';
 
 export const TOPIC = 'noise/+/record';
 export const ACTIVE_WINDOW_MS = 10_000;
