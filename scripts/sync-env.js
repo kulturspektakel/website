@@ -171,18 +171,28 @@ function renderTypes(names) {
 }
 
 function pushToVercel(envVars) {
+  // In CI there's no interactive `vercel login`, so the CLI needs the token
+  // passed explicitly — otherwise every `env add/rm` fails with "No existing
+  // credentials found" and the sync silently no-ops (it doesn't fail the build).
+  const tokenArgs = process.env.VERCEL_TOKEN
+    ? ['--token', process.env.VERCEL_TOKEN]
+    : [];
   for (const name of Object.keys(envVars).sort()) {
     const value = envVars[name];
     for (const environment of ['production', 'development']) {
-      spawnSync(VERCEL, ['env', 'rm', name, environment, '--yes'], {
+      spawnSync(VERCEL, ['env', 'rm', name, environment, '--yes', ...tokenArgs], {
         encoding: 'utf-8',
         timeout: 60_000,
       });
-      const result = spawnSync(VERCEL, ['env', 'add', name, environment], {
-        input: value,
-        encoding: 'utf-8',
-        timeout: 60_000,
-      });
+      const result = spawnSync(
+        VERCEL,
+        ['env', 'add', name, environment, ...tokenArgs],
+        {
+          input: value,
+          encoding: 'utf-8',
+          timeout: 60_000,
+        },
+      );
       const ok = result.status === 0;
       console.log(
         `${ok ? 'OK  ' : 'FAIL'} ${name.padEnd(40)} ${environment}`,
