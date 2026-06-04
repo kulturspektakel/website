@@ -54,43 +54,6 @@ function MainLayout() {
   const progressBar = useRef<ProgressBar | null>(null);
 
   useEffect(() => {
-    // Native Navigation API for browser tab spinner (Chromium)
-    if (typeof window !== 'undefined' && 'navigation' in window) {
-      const handler = (event: NavigateEvent) => {
-        if (!event.canIntercept) return;
-        // Don't intercept download-attribute clicks — intercepting would
-        // suppress the browser's native download behavior.
-        if (event.downloadRequest !== null) return;
-        // Only intercept same-origin navigations the router can resolve.
-        // Without this, a cross-origin navigation (e.g. form GET to another
-        // host) gets intercepted, the URL bar updates, but the promise below
-        // never resolves because router.onResolved is never fired — leaving
-        // Safari stuck on the old page with the new URL.
-        try {
-          if (
-            new URL(event.destination.url).origin !== window.location.origin
-          ) {
-            return;
-          }
-        } catch {
-          return;
-        }
-        event.intercept({
-          handler: () =>
-            new Promise<void>((resolve) => {
-              const unsub = router.subscribe('onResolved', () => {
-                unsub();
-                resolve();
-              });
-            }),
-        });
-      };
-      navigation.addEventListener('navigate', handler);
-      return () => navigation.removeEventListener('navigate', handler);
-    }
-  }, [router]);
-
-  useEffect(() => {
     const unsubBefore = router.subscribe('onBeforeNavigate', () => {
       if (typeof window !== 'undefined') {
         progressBar.current?.finish();
