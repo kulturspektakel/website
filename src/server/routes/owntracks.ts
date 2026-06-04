@@ -57,7 +57,7 @@ export function configString(viewer: Viewer): string {
   const config = {
     _type: 'configuration',
     mode: Mode.HTTP,
-    url: `${process.env.SITE_URL}/owntracks`,
+    url: `${process.env.SITE_URL}/api/owntracks`,
     monitoring: Monitoring.Significant,
     auth: true,
     username: viewer.id,

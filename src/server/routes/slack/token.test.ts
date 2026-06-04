@@ -73,7 +73,7 @@ describe('handleNuclinoTokenCommand (POST)', () => {
     // modal opened, button links back to /slack/token with the nonce
     const view = slackApiRequest.mock.calls[0][1].view;
     const buttonUrl = view.blocks[1].elements[0].url as string;
-    expect(buttonUrl).toContain('https://www.kulturspektakel.de/slack/token');
+    expect(buttonUrl).toContain('https://www.kulturspektakel.de/api/slack/token');
     expect(buttonUrl).toContain('nonce=n-1');
   });
 });

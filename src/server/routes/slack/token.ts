@@ -47,7 +47,7 @@ export async function handleNuclinoTokenCommand(
     'redirectUrl',
     'https://app.nuclino.com/Kulturspektakel/General',
   );
-  const url = new URL(`${process.env.SITE_URL}/slack/token`);
+  const url = new URL(`${process.env.SITE_URL}/api/slack/token`);
   url.searchParams.append('nonce', nonce);
   url.searchParams.append('redirect', nuclinoSsoUrl.toString());
 

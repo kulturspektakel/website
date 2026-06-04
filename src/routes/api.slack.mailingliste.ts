@@ -1,13 +1,13 @@
 import {createFileRoute} from '@tanstack/react-router';
 import {apiErrorBoundary} from '../utils/apiError.server';
-import {handleOwnTracksCommand} from '../server/routes/slack/owntracks';
+import {handleMailingListCommand} from '../server/routes/slack/mailingList';
 
-export const Route = createFileRoute('/slack/owntracks')({
+export const Route = createFileRoute('/api/slack/mailingliste')({
   server: {
     // Slack posts the slash command directly; intentionally no auth (matches legacy).
     middleware: [apiErrorBoundary],
     handlers: {
-      POST: ({request}) => handleOwnTracksCommand(request),
+      POST: ({request}) => handleMailingListCommand(request),
     },
   },
 });

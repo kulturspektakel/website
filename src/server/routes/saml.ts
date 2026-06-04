@@ -7,19 +7,19 @@ import {prismaClient} from '../../utils/prismaClient.server';
  *
  * SAML 2.0 Identity Provider for single sign-on into the Nuclino wiki
  * (kult.wiki). Two ways to authenticate:
- *   - `GET /saml/login?nonce=…` — completes login from a one-time nonce that
+ *   - `GET /api/saml/login?nonce=…` — completes login from a one-time nonce that
  *     was minted after Slack approval (see `_main.nuclino-sso.tsx`).
- *   - `POST /saml/login` (form field `password`) — shared-password fallback
+ *   - `POST /api/saml/login` (form field `password`) — shared-password fallback
  *     for Crew members without a Slack account.
- * `GET /saml/logout` handles SP-initiated logout.
+ * `GET /api/saml/logout` handles SP-initiated logout.
  *
- * The IdP entityID / SSO URL is the public URL of `/saml/login` and must match
+ * The IdP entityID / SSO URL is the public URL of `/api/saml/login` and must match
  * what is configured on the Nuclino side. When this moved off
  * `api.kulturspektakel.de` the entityID changed to this site's domain
  * (`SITE_URL`), so the Nuclino SSO configuration was updated to point here.
  */
-const SSO_URL = `${process.env.SITE_URL}/saml/login`;
-const SLO_URL = `${process.env.SITE_URL}/saml/logout`;
+const SSO_URL = `${process.env.SITE_URL}/api/saml/login`;
+const SLO_URL = `${process.env.SITE_URL}/api/saml/logout`;
 
 // Public signing certificate. Originally read from `artifacts/saml.crt`; inlined
 // here because Vercel's serverless bundle can't reliably read loose files at

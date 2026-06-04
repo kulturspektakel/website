@@ -1,7 +1,7 @@
 import {createFileRoute} from '@tanstack/react-router';
 import {apiErrorBoundary} from '../utils/apiError.server';
 
-export const Route = createFileRoute('/owntracks/config')({
+export const Route = createFileRoute('/api/owntracks/config')({
   server: {
     middleware: [apiErrorBoundary],
     handlers: {

@@ -18,7 +18,7 @@ export async function handleOwnTracksCommand(
     throw new Error('Slack user not found');
   }
   const viewer = await upsertViewer(slackUser);
-  const configUrl = `${process.env.SITE_URL}/owntracks/config?config=${configString(viewer)}`;
+  const configUrl = `${process.env.SITE_URL}/api/owntracks/config?config=${configString(viewer)}`;
 
   return Response.json({
     blocks: [

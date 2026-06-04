@@ -9,21 +9,12 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as OwntracksRouteImport } from './routes/owntracks'
 import { Route as CrewRouteImport } from './routes/crew'
 import { Route as MainRouteImport } from './routes/_main'
 import { Route as CrewIndexRouteImport } from './routes/crew.index'
 import { Route as MainIndexRouteImport } from './routes/_main.index'
-import { Route as SlackTwofactorRouteImport } from './routes/slack.twofactor'
-import { Route as SlackTokenRouteImport } from './routes/slack.token'
-import { Route as SlackOwntracksRouteImport } from './routes/slack.owntracks'
-import { Route as SlackMailinglisteRouteImport } from './routes/slack.mailingliste'
-import { Route as SlackInteractionRouteImport } from './routes/slack.interaction'
-import { Route as SlackEventsRouteImport } from './routes/slack.events'
-import { Route as SamlLogoutRouteImport } from './routes/saml.logout'
-import { Route as SamlLoginRouteImport } from './routes/saml.login'
-import { Route as OwntracksConfigRouteImport } from './routes/owntracks.config'
 import { Route as CrewLautstaerkeRouteImport } from './routes/crew.lautstaerke'
+import { Route as ApiOwntracksRouteImport } from './routes/api.owntracks'
 import { Route as MainSpeisekarteRouteImport } from './routes/_main.speisekarte'
 import { Route as MainPlakateRouteImport } from './routes/_main.plakate'
 import { Route as MainNuclinoSsoRouteImport } from './routes/_main.nuclino-sso'
@@ -59,6 +50,15 @@ import { Route as ApiTasksBandApplicationDistanceRouteImport } from './routes/ap
 import { Route as ApiTasksBandApplicationDemoRouteImport } from './routes/api.tasks.band-application-demo'
 import { Route as ApiTasksBadgeAwardedRouteImport } from './routes/api.tasks.badge-awarded'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api.stripe.webhook'
+import { Route as ApiSlackTwofactorRouteImport } from './routes/api.slack.twofactor'
+import { Route as ApiSlackTokenRouteImport } from './routes/api.slack.token'
+import { Route as ApiSlackOwntracksRouteImport } from './routes/api.slack.owntracks'
+import { Route as ApiSlackMailinglisteRouteImport } from './routes/api.slack.mailingliste'
+import { Route as ApiSlackInteractionRouteImport } from './routes/api.slack.interaction'
+import { Route as ApiSlackEventsRouteImport } from './routes/api.slack.events'
+import { Route as ApiSamlLogoutRouteImport } from './routes/api.saml.logout'
+import { Route as ApiSamlLoginRouteImport } from './routes/api.saml.login'
+import { Route as ApiOwntracksConfigRouteImport } from './routes/api.owntracks.config'
 import { Route as ApiNoiseLogRouteImport } from './routes/api.noise.log'
 import { Route as ApiKultcashLogRouteImport } from './routes/api.kultcash.log'
 import { Route as ApiKultcashListsRouteImport } from './routes/api.kultcash.lists'
@@ -77,11 +77,6 @@ import { Route as MainCardHashKultRouteImport } from './routes/_main.card.$hash.
 import { Route as MainCardHashCrewRouteImport } from './routes/_main.card.$hash.crew'
 import { Route as MainBookingApplicationTypeDankeRouteImport } from './routes/_main.booking_.$applicationType_.danke'
 
-const OwntracksRoute = OwntracksRouteImport.update({
-  id: '/owntracks',
-  path: '/owntracks',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const CrewRoute = CrewRouteImport.update({
   id: '/crew',
   path: '/crew',
@@ -101,55 +96,15 @@ const MainIndexRoute = MainIndexRouteImport.update({
   path: '/',
   getParentRoute: () => MainRoute,
 } as any)
-const SlackTwofactorRoute = SlackTwofactorRouteImport.update({
-  id: '/slack/twofactor',
-  path: '/slack/twofactor',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SlackTokenRoute = SlackTokenRouteImport.update({
-  id: '/slack/token',
-  path: '/slack/token',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SlackOwntracksRoute = SlackOwntracksRouteImport.update({
-  id: '/slack/owntracks',
-  path: '/slack/owntracks',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SlackMailinglisteRoute = SlackMailinglisteRouteImport.update({
-  id: '/slack/mailingliste',
-  path: '/slack/mailingliste',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SlackInteractionRoute = SlackInteractionRouteImport.update({
-  id: '/slack/interaction',
-  path: '/slack/interaction',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SlackEventsRoute = SlackEventsRouteImport.update({
-  id: '/slack/events',
-  path: '/slack/events',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SamlLogoutRoute = SamlLogoutRouteImport.update({
-  id: '/saml/logout',
-  path: '/saml/logout',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SamlLoginRoute = SamlLoginRouteImport.update({
-  id: '/saml/login',
-  path: '/saml/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OwntracksConfigRoute = OwntracksConfigRouteImport.update({
-  id: '/config',
-  path: '/config',
-  getParentRoute: () => OwntracksRoute,
-} as any)
 const CrewLautstaerkeRoute = CrewLautstaerkeRouteImport.update({
   id: '/lautstaerke',
   path: '/lautstaerke',
   getParentRoute: () => CrewRoute,
+} as any)
+const ApiOwntracksRoute = ApiOwntracksRouteImport.update({
+  id: '/api/owntracks',
+  path: '/api/owntracks',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const MainSpeisekarteRoute = MainSpeisekarteRouteImport.update({
   id: '/speisekarte',
@@ -338,6 +293,51 @@ const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
   path: '/api/stripe/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiSlackTwofactorRoute = ApiSlackTwofactorRouteImport.update({
+  id: '/api/slack/twofactor',
+  path: '/api/slack/twofactor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSlackTokenRoute = ApiSlackTokenRouteImport.update({
+  id: '/api/slack/token',
+  path: '/api/slack/token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSlackOwntracksRoute = ApiSlackOwntracksRouteImport.update({
+  id: '/api/slack/owntracks',
+  path: '/api/slack/owntracks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSlackMailinglisteRoute = ApiSlackMailinglisteRouteImport.update({
+  id: '/api/slack/mailingliste',
+  path: '/api/slack/mailingliste',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSlackInteractionRoute = ApiSlackInteractionRouteImport.update({
+  id: '/api/slack/interaction',
+  path: '/api/slack/interaction',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSlackEventsRoute = ApiSlackEventsRouteImport.update({
+  id: '/api/slack/events',
+  path: '/api/slack/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSamlLogoutRoute = ApiSamlLogoutRouteImport.update({
+  id: '/api/saml/logout',
+  path: '/api/saml/logout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSamlLoginRoute = ApiSamlLoginRouteImport.update({
+  id: '/api/saml/login',
+  path: '/api/saml/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiOwntracksConfigRoute = ApiOwntracksConfigRouteImport.update({
+  id: '/config',
+  path: '/config',
+  getParentRoute: () => ApiOwntracksRoute,
+} as any)
 const ApiNoiseLogRoute = ApiNoiseLogRouteImport.update({
   id: '/api/noise/log',
   path: '/api/noise/log',
@@ -430,7 +430,6 @@ const MainBookingApplicationTypeDankeRoute =
 export interface FileRoutesByFullPath {
   '/': typeof MainIndexRoute
   '/crew': typeof CrewRouteWithChildren
-  '/owntracks': typeof OwntracksRouteWithChildren
   '/$slug': typeof MainSlugRoute
   '/Route': typeof MainRouteRoute
   '/angebot': typeof MainAngebotRoute
@@ -445,16 +444,8 @@ export interface FileRoutesByFullPath {
   '/nuclino-sso': typeof MainNuclinoSsoRoute
   '/plakate': typeof MainPlakateRoute
   '/speisekarte': typeof MainSpeisekarteRoute
+  '/api/owntracks': typeof ApiOwntracksRouteWithChildren
   '/crew/lautstaerke': typeof CrewLautstaerkeRouteWithChildren
-  '/owntracks/config': typeof OwntracksConfigRoute
-  '/saml/login': typeof SamlLoginRoute
-  '/saml/logout': typeof SamlLogoutRoute
-  '/slack/events': typeof SlackEventsRoute
-  '/slack/interaction': typeof SlackInteractionRoute
-  '/slack/mailingliste': typeof SlackMailinglisteRoute
-  '/slack/owntracks': typeof SlackOwntracksRoute
-  '/slack/token': typeof SlackTokenRoute
-  '/slack/twofactor': typeof SlackTwofactorRoute
   '/crew/': typeof CrewIndexRoute
   '/booking/$applicationType': typeof MainBookingApplicationTypeRoute
   '/card/$hash': typeof MainCardHashRouteWithChildren
@@ -467,6 +458,15 @@ export interface FileRoutesByFullPath {
   '/api/kultcash/lists': typeof ApiKultcashListsRoute
   '/api/kultcash/log': typeof ApiKultcashLogRoute
   '/api/noise/log': typeof ApiNoiseLogRoute
+  '/api/owntracks/config': typeof ApiOwntracksConfigRoute
+  '/api/saml/login': typeof ApiSamlLoginRoute
+  '/api/saml/logout': typeof ApiSamlLogoutRoute
+  '/api/slack/events': typeof ApiSlackEventsRoute
+  '/api/slack/interaction': typeof ApiSlackInteractionRoute
+  '/api/slack/mailingliste': typeof ApiSlackMailinglisteRoute
+  '/api/slack/owntracks': typeof ApiSlackOwntracksRoute
+  '/api/slack/token': typeof ApiSlackTokenRoute
+  '/api/slack/twofactor': typeof ApiSlackTwofactorRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/api/tasks/badge-awarded': typeof ApiTasksBadgeAwardedRoute
   '/api/tasks/band-application-demo': typeof ApiTasksBandApplicationDemoRoute
@@ -496,7 +496,6 @@ export interface FileRoutesByFullPath {
   '/api/spenden/quittung/$id': typeof ApiSpendenQuittungIdRoute
 }
 export interface FileRoutesByTo {
-  '/owntracks': typeof OwntracksRouteWithChildren
   '/$slug': typeof MainSlugRoute
   '/Route': typeof MainRouteRoute
   '/angebot': typeof MainAngebotRoute
@@ -510,15 +509,7 @@ export interface FileRoutesByTo {
   '/nuclino-sso': typeof MainNuclinoSsoRoute
   '/plakate': typeof MainPlakateRoute
   '/speisekarte': typeof MainSpeisekarteRoute
-  '/owntracks/config': typeof OwntracksConfigRoute
-  '/saml/login': typeof SamlLoginRoute
-  '/saml/logout': typeof SamlLogoutRoute
-  '/slack/events': typeof SlackEventsRoute
-  '/slack/interaction': typeof SlackInteractionRoute
-  '/slack/mailingliste': typeof SlackMailinglisteRoute
-  '/slack/owntracks': typeof SlackOwntracksRoute
-  '/slack/token': typeof SlackTokenRoute
-  '/slack/twofactor': typeof SlackTwofactorRoute
+  '/api/owntracks': typeof ApiOwntracksRouteWithChildren
   '/': typeof MainIndexRoute
   '/crew': typeof CrewIndexRoute
   '/booking/$applicationType': typeof MainBookingApplicationTypeRoute
@@ -532,6 +523,15 @@ export interface FileRoutesByTo {
   '/api/kultcash/lists': typeof ApiKultcashListsRoute
   '/api/kultcash/log': typeof ApiKultcashLogRoute
   '/api/noise/log': typeof ApiNoiseLogRoute
+  '/api/owntracks/config': typeof ApiOwntracksConfigRoute
+  '/api/saml/login': typeof ApiSamlLoginRoute
+  '/api/saml/logout': typeof ApiSamlLogoutRoute
+  '/api/slack/events': typeof ApiSlackEventsRoute
+  '/api/slack/interaction': typeof ApiSlackInteractionRoute
+  '/api/slack/mailingliste': typeof ApiSlackMailinglisteRoute
+  '/api/slack/owntracks': typeof ApiSlackOwntracksRoute
+  '/api/slack/token': typeof ApiSlackTokenRoute
+  '/api/slack/twofactor': typeof ApiSlackTwofactorRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/api/tasks/badge-awarded': typeof ApiTasksBadgeAwardedRoute
   '/api/tasks/band-application-demo': typeof ApiTasksBandApplicationDemoRoute
@@ -564,7 +564,6 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_main': typeof MainRouteWithChildren
   '/crew': typeof CrewRouteWithChildren
-  '/owntracks': typeof OwntracksRouteWithChildren
   '/_main/$slug': typeof MainSlugRoute
   '/_main/Route': typeof MainRouteRoute
   '/_main/angebot': typeof MainAngebotRoute
@@ -579,16 +578,8 @@ export interface FileRoutesById {
   '/_main/nuclino-sso': typeof MainNuclinoSsoRoute
   '/_main/plakate': typeof MainPlakateRoute
   '/_main/speisekarte': typeof MainSpeisekarteRoute
+  '/api/owntracks': typeof ApiOwntracksRouteWithChildren
   '/crew/lautstaerke': typeof CrewLautstaerkeRouteWithChildren
-  '/owntracks/config': typeof OwntracksConfigRoute
-  '/saml/login': typeof SamlLoginRoute
-  '/saml/logout': typeof SamlLogoutRoute
-  '/slack/events': typeof SlackEventsRoute
-  '/slack/interaction': typeof SlackInteractionRoute
-  '/slack/mailingliste': typeof SlackMailinglisteRoute
-  '/slack/owntracks': typeof SlackOwntracksRoute
-  '/slack/token': typeof SlackTokenRoute
-  '/slack/twofactor': typeof SlackTwofactorRoute
   '/_main/': typeof MainIndexRoute
   '/crew/': typeof CrewIndexRoute
   '/_main/booking_/$applicationType': typeof MainBookingApplicationTypeRoute
@@ -602,6 +593,15 @@ export interface FileRoutesById {
   '/api/kultcash/lists': typeof ApiKultcashListsRoute
   '/api/kultcash/log': typeof ApiKultcashLogRoute
   '/api/noise/log': typeof ApiNoiseLogRoute
+  '/api/owntracks/config': typeof ApiOwntracksConfigRoute
+  '/api/saml/login': typeof ApiSamlLoginRoute
+  '/api/saml/logout': typeof ApiSamlLogoutRoute
+  '/api/slack/events': typeof ApiSlackEventsRoute
+  '/api/slack/interaction': typeof ApiSlackInteractionRoute
+  '/api/slack/mailingliste': typeof ApiSlackMailinglisteRoute
+  '/api/slack/owntracks': typeof ApiSlackOwntracksRoute
+  '/api/slack/token': typeof ApiSlackTokenRoute
+  '/api/slack/twofactor': typeof ApiSlackTwofactorRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/api/tasks/badge-awarded': typeof ApiTasksBadgeAwardedRoute
   '/api/tasks/band-application-demo': typeof ApiTasksBandApplicationDemoRoute
@@ -635,7 +635,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/crew'
-    | '/owntracks'
     | '/$slug'
     | '/Route'
     | '/angebot'
@@ -650,16 +649,8 @@ export interface FileRouteTypes {
     | '/nuclino-sso'
     | '/plakate'
     | '/speisekarte'
+    | '/api/owntracks'
     | '/crew/lautstaerke'
-    | '/owntracks/config'
-    | '/saml/login'
-    | '/saml/logout'
-    | '/slack/events'
-    | '/slack/interaction'
-    | '/slack/mailingliste'
-    | '/slack/owntracks'
-    | '/slack/token'
-    | '/slack/twofactor'
     | '/crew/'
     | '/booking/$applicationType'
     | '/card/$hash'
@@ -672,6 +663,15 @@ export interface FileRouteTypes {
     | '/api/kultcash/lists'
     | '/api/kultcash/log'
     | '/api/noise/log'
+    | '/api/owntracks/config'
+    | '/api/saml/login'
+    | '/api/saml/logout'
+    | '/api/slack/events'
+    | '/api/slack/interaction'
+    | '/api/slack/mailingliste'
+    | '/api/slack/owntracks'
+    | '/api/slack/token'
+    | '/api/slack/twofactor'
     | '/api/stripe/webhook'
     | '/api/tasks/badge-awarded'
     | '/api/tasks/band-application-demo'
@@ -701,7 +701,6 @@ export interface FileRouteTypes {
     | '/api/spenden/quittung/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/owntracks'
     | '/$slug'
     | '/Route'
     | '/angebot'
@@ -715,15 +714,7 @@ export interface FileRouteTypes {
     | '/nuclino-sso'
     | '/plakate'
     | '/speisekarte'
-    | '/owntracks/config'
-    | '/saml/login'
-    | '/saml/logout'
-    | '/slack/events'
-    | '/slack/interaction'
-    | '/slack/mailingliste'
-    | '/slack/owntracks'
-    | '/slack/token'
-    | '/slack/twofactor'
+    | '/api/owntracks'
     | '/'
     | '/crew'
     | '/booking/$applicationType'
@@ -737,6 +728,15 @@ export interface FileRouteTypes {
     | '/api/kultcash/lists'
     | '/api/kultcash/log'
     | '/api/noise/log'
+    | '/api/owntracks/config'
+    | '/api/saml/login'
+    | '/api/saml/logout'
+    | '/api/slack/events'
+    | '/api/slack/interaction'
+    | '/api/slack/mailingliste'
+    | '/api/slack/owntracks'
+    | '/api/slack/token'
+    | '/api/slack/twofactor'
     | '/api/stripe/webhook'
     | '/api/tasks/badge-awarded'
     | '/api/tasks/band-application-demo'
@@ -768,7 +768,6 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_main'
     | '/crew'
-    | '/owntracks'
     | '/_main/$slug'
     | '/_main/Route'
     | '/_main/angebot'
@@ -783,16 +782,8 @@ export interface FileRouteTypes {
     | '/_main/nuclino-sso'
     | '/_main/plakate'
     | '/_main/speisekarte'
+    | '/api/owntracks'
     | '/crew/lautstaerke'
-    | '/owntracks/config'
-    | '/saml/login'
-    | '/saml/logout'
-    | '/slack/events'
-    | '/slack/interaction'
-    | '/slack/mailingliste'
-    | '/slack/owntracks'
-    | '/slack/token'
-    | '/slack/twofactor'
     | '/_main/'
     | '/crew/'
     | '/_main/booking_/$applicationType'
@@ -806,6 +797,15 @@ export interface FileRouteTypes {
     | '/api/kultcash/lists'
     | '/api/kultcash/log'
     | '/api/noise/log'
+    | '/api/owntracks/config'
+    | '/api/saml/login'
+    | '/api/saml/logout'
+    | '/api/slack/events'
+    | '/api/slack/interaction'
+    | '/api/slack/mailingliste'
+    | '/api/slack/owntracks'
+    | '/api/slack/token'
+    | '/api/slack/twofactor'
     | '/api/stripe/webhook'
     | '/api/tasks/badge-awarded'
     | '/api/tasks/band-application-demo'
@@ -838,19 +838,19 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   MainRoute: typeof MainRouteWithChildren
   CrewRoute: typeof CrewRouteWithChildren
-  OwntracksRoute: typeof OwntracksRouteWithChildren
-  SamlLoginRoute: typeof SamlLoginRoute
-  SamlLogoutRoute: typeof SamlLogoutRoute
-  SlackEventsRoute: typeof SlackEventsRoute
-  SlackInteractionRoute: typeof SlackInteractionRoute
-  SlackMailinglisteRoute: typeof SlackMailinglisteRoute
-  SlackOwntracksRoute: typeof SlackOwntracksRoute
-  SlackTokenRoute: typeof SlackTokenRoute
-  SlackTwofactorRoute: typeof SlackTwofactorRoute
+  ApiOwntracksRoute: typeof ApiOwntracksRouteWithChildren
   ApiKultcashConfigRoute: typeof ApiKultcashConfigRoute
   ApiKultcashListsRoute: typeof ApiKultcashListsRoute
   ApiKultcashLogRoute: typeof ApiKultcashLogRoute
   ApiNoiseLogRoute: typeof ApiNoiseLogRoute
+  ApiSamlLoginRoute: typeof ApiSamlLoginRoute
+  ApiSamlLogoutRoute: typeof ApiSamlLogoutRoute
+  ApiSlackEventsRoute: typeof ApiSlackEventsRoute
+  ApiSlackInteractionRoute: typeof ApiSlackInteractionRoute
+  ApiSlackMailinglisteRoute: typeof ApiSlackMailinglisteRoute
+  ApiSlackOwntracksRoute: typeof ApiSlackOwntracksRoute
+  ApiSlackTokenRoute: typeof ApiSlackTokenRoute
+  ApiSlackTwofactorRoute: typeof ApiSlackTwofactorRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
   ApiTasksBadgeAwardedRoute: typeof ApiTasksBadgeAwardedRoute
   ApiTasksBandApplicationDemoRoute: typeof ApiTasksBandApplicationDemoRoute
@@ -874,13 +874,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/owntracks': {
-      id: '/owntracks'
-      path: '/owntracks'
-      fullPath: '/owntracks'
-      preLoaderRoute: typeof OwntracksRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/crew': {
       id: '/crew'
       path: '/crew'
@@ -909,75 +902,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainIndexRouteImport
       parentRoute: typeof MainRoute
     }
-    '/slack/twofactor': {
-      id: '/slack/twofactor'
-      path: '/slack/twofactor'
-      fullPath: '/slack/twofactor'
-      preLoaderRoute: typeof SlackTwofactorRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/slack/token': {
-      id: '/slack/token'
-      path: '/slack/token'
-      fullPath: '/slack/token'
-      preLoaderRoute: typeof SlackTokenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/slack/owntracks': {
-      id: '/slack/owntracks'
-      path: '/slack/owntracks'
-      fullPath: '/slack/owntracks'
-      preLoaderRoute: typeof SlackOwntracksRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/slack/mailingliste': {
-      id: '/slack/mailingliste'
-      path: '/slack/mailingliste'
-      fullPath: '/slack/mailingliste'
-      preLoaderRoute: typeof SlackMailinglisteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/slack/interaction': {
-      id: '/slack/interaction'
-      path: '/slack/interaction'
-      fullPath: '/slack/interaction'
-      preLoaderRoute: typeof SlackInteractionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/slack/events': {
-      id: '/slack/events'
-      path: '/slack/events'
-      fullPath: '/slack/events'
-      preLoaderRoute: typeof SlackEventsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/saml/logout': {
-      id: '/saml/logout'
-      path: '/saml/logout'
-      fullPath: '/saml/logout'
-      preLoaderRoute: typeof SamlLogoutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/saml/login': {
-      id: '/saml/login'
-      path: '/saml/login'
-      fullPath: '/saml/login'
-      preLoaderRoute: typeof SamlLoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/owntracks/config': {
-      id: '/owntracks/config'
-      path: '/config'
-      fullPath: '/owntracks/config'
-      preLoaderRoute: typeof OwntracksConfigRouteImport
-      parentRoute: typeof OwntracksRoute
-    }
     '/crew/lautstaerke': {
       id: '/crew/lautstaerke'
       path: '/lautstaerke'
       fullPath: '/crew/lautstaerke'
       preLoaderRoute: typeof CrewLautstaerkeRouteImport
       parentRoute: typeof CrewRoute
+    }
+    '/api/owntracks': {
+      id: '/api/owntracks'
+      path: '/api/owntracks'
+      fullPath: '/api/owntracks'
+      preLoaderRoute: typeof ApiOwntracksRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_main/speisekarte': {
       id: '/_main/speisekarte'
@@ -1224,6 +1161,69 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiStripeWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/slack/twofactor': {
+      id: '/api/slack/twofactor'
+      path: '/api/slack/twofactor'
+      fullPath: '/api/slack/twofactor'
+      preLoaderRoute: typeof ApiSlackTwofactorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/slack/token': {
+      id: '/api/slack/token'
+      path: '/api/slack/token'
+      fullPath: '/api/slack/token'
+      preLoaderRoute: typeof ApiSlackTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/slack/owntracks': {
+      id: '/api/slack/owntracks'
+      path: '/api/slack/owntracks'
+      fullPath: '/api/slack/owntracks'
+      preLoaderRoute: typeof ApiSlackOwntracksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/slack/mailingliste': {
+      id: '/api/slack/mailingliste'
+      path: '/api/slack/mailingliste'
+      fullPath: '/api/slack/mailingliste'
+      preLoaderRoute: typeof ApiSlackMailinglisteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/slack/interaction': {
+      id: '/api/slack/interaction'
+      path: '/api/slack/interaction'
+      fullPath: '/api/slack/interaction'
+      preLoaderRoute: typeof ApiSlackInteractionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/slack/events': {
+      id: '/api/slack/events'
+      path: '/api/slack/events'
+      fullPath: '/api/slack/events'
+      preLoaderRoute: typeof ApiSlackEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/saml/logout': {
+      id: '/api/saml/logout'
+      path: '/api/saml/logout'
+      fullPath: '/api/saml/logout'
+      preLoaderRoute: typeof ApiSamlLogoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/saml/login': {
+      id: '/api/saml/login'
+      path: '/api/saml/login'
+      fullPath: '/api/saml/login'
+      preLoaderRoute: typeof ApiSamlLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/owntracks/config': {
+      id: '/api/owntracks/config'
+      path: '/config'
+      fullPath: '/api/owntracks/config'
+      preLoaderRoute: typeof ApiOwntracksConfigRouteImport
+      parentRoute: typeof ApiOwntracksRoute
+    }
     '/api/noise/log': {
       id: '/api/noise/log'
       path: '/api/noise/log'
@@ -1456,34 +1456,34 @@ const CrewRouteChildren: CrewRouteChildren = {
 
 const CrewRouteWithChildren = CrewRoute._addFileChildren(CrewRouteChildren)
 
-interface OwntracksRouteChildren {
-  OwntracksConfigRoute: typeof OwntracksConfigRoute
+interface ApiOwntracksRouteChildren {
+  ApiOwntracksConfigRoute: typeof ApiOwntracksConfigRoute
 }
 
-const OwntracksRouteChildren: OwntracksRouteChildren = {
-  OwntracksConfigRoute: OwntracksConfigRoute,
+const ApiOwntracksRouteChildren: ApiOwntracksRouteChildren = {
+  ApiOwntracksConfigRoute: ApiOwntracksConfigRoute,
 }
 
-const OwntracksRouteWithChildren = OwntracksRoute._addFileChildren(
-  OwntracksRouteChildren,
+const ApiOwntracksRouteWithChildren = ApiOwntracksRoute._addFileChildren(
+  ApiOwntracksRouteChildren,
 )
 
 const rootRouteChildren: RootRouteChildren = {
   MainRoute: MainRouteWithChildren,
   CrewRoute: CrewRouteWithChildren,
-  OwntracksRoute: OwntracksRouteWithChildren,
-  SamlLoginRoute: SamlLoginRoute,
-  SamlLogoutRoute: SamlLogoutRoute,
-  SlackEventsRoute: SlackEventsRoute,
-  SlackInteractionRoute: SlackInteractionRoute,
-  SlackMailinglisteRoute: SlackMailinglisteRoute,
-  SlackOwntracksRoute: SlackOwntracksRoute,
-  SlackTokenRoute: SlackTokenRoute,
-  SlackTwofactorRoute: SlackTwofactorRoute,
+  ApiOwntracksRoute: ApiOwntracksRouteWithChildren,
   ApiKultcashConfigRoute: ApiKultcashConfigRoute,
   ApiKultcashListsRoute: ApiKultcashListsRoute,
   ApiKultcashLogRoute: ApiKultcashLogRoute,
   ApiNoiseLogRoute: ApiNoiseLogRoute,
+  ApiSamlLoginRoute: ApiSamlLoginRoute,
+  ApiSamlLogoutRoute: ApiSamlLogoutRoute,
+  ApiSlackEventsRoute: ApiSlackEventsRoute,
+  ApiSlackInteractionRoute: ApiSlackInteractionRoute,
+  ApiSlackMailinglisteRoute: ApiSlackMailinglisteRoute,
+  ApiSlackOwntracksRoute: ApiSlackOwntracksRoute,
+  ApiSlackTokenRoute: ApiSlackTokenRoute,
+  ApiSlackTwofactorRoute: ApiSlackTwofactorRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
   ApiTasksBadgeAwardedRoute: ApiTasksBadgeAwardedRoute,
   ApiTasksBandApplicationDemoRoute: ApiTasksBandApplicationDemoRoute,

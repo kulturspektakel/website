@@ -31,7 +31,7 @@ export const Route = createFileRoute('/_main/nuclino-sso')({
 
 // Same-origin path to the SAML IdP login endpoint. Resolve against an origin
 // (`window.location.origin` on the client, `SITE_URL` on the server) before use.
-export const LOGIN_URL = '/saml/login';
+export const LOGIN_URL = '/api/saml/login';
 
 function NonceChecker({requestId}: {requestId: string}) {
   const search = Route.useSearch()!;
