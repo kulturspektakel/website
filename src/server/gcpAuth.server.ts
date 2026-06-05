@@ -60,16 +60,26 @@ export async function parseGcpToken(
 }
 
 /**
- * Request middleware that requires a GCP-signed OIDC token whose `aud` matches
- * `audience` and whose signer matches `GCP_TASKS_SERVICE_ACCOUNT_EMAIL`.
- * Returns 401 otherwise. On success exposes the token to handlers as
- * `context.gcp`. Bypassed in dev — see `parseGcpToken`.
+ * Parent-route middleware for the `/api/tasks/*` layout. The expected OIDC
+ * `aud` is derived from the path — `/api/tasks/<task>` → `<task>` — which is
+ * exactly the audience `enqueueGcpTask` signs each token with. Mounting this on
+ * the `api.tasks` layout route authenticates every task subroute automatically,
+ * so a newly added route under `/api/tasks/` can't accidentally ship
+ * unauthenticated. The per-task `aud` binding is preserved: a token minted for
+ * `send-email` only validates against `/api/tasks/send-email`.
+ *
+ * Requires a GCP-signed OIDC token whose `aud` matches the derived task name and
+ * whose signer matches `GCP_TASKS_SERVICE_ACCOUNT_EMAIL`; returns 401 otherwise.
+ * On success exposes the token to handlers as `context.gcp`. Bypassed in dev —
+ * see `parseGcpToken`.
  */
-export const gcpAuth = (audience: string) =>
-  createMiddleware({type: 'request'}).server(async ({request, next}) => {
-    const token = await parseGcpToken(request, audience);
+export const gcpTasksAuth = createMiddleware({type: 'request'}).server(
+  async ({request, next}) => {
+    const task = new URL(request.url).pathname.split('/')[3];
+    const token = task ? await parseGcpToken(request, task) : undefined;
     if (!token) {
       return new Response('Unauthorized', {status: 401});
     }
     return next({context: {gcp: token}});
-  });
+  },
+);

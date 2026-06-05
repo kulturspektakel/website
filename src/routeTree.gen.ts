@@ -14,7 +14,11 @@ import { Route as MainRouteImport } from './routes/_main'
 import { Route as CrewIndexRouteImport } from './routes/crew.index'
 import { Route as MainIndexRouteImport } from './routes/_main.index'
 import { Route as CrewLautstaerkeRouteImport } from './routes/crew.lautstaerke'
+import { Route as CrewAuthReturnRouteImport } from './routes/crew.auth-return'
+import { Route as ApiTasksRouteImport } from './routes/api.tasks'
 import { Route as ApiOwntracksRouteImport } from './routes/api.owntracks'
+import { Route as ApiNoiseRouteImport } from './routes/api.noise'
+import { Route as ApiKultcashRouteImport } from './routes/api.kultcash'
 import { Route as MainSpeisekarteRouteImport } from './routes/_main.speisekarte'
 import { Route as MainPlakateRouteImport } from './routes/_main.plakate'
 import { Route as MainNuclinoSsoRouteImport } from './routes/_main.nuclino-sso'
@@ -103,9 +107,29 @@ const CrewLautstaerkeRoute = CrewLautstaerkeRouteImport.update({
   path: '/lautstaerke',
   getParentRoute: () => CrewRoute,
 } as any)
+const CrewAuthReturnRoute = CrewAuthReturnRouteImport.update({
+  id: '/auth-return',
+  path: '/auth-return',
+  getParentRoute: () => CrewRoute,
+} as any)
+const ApiTasksRoute = ApiTasksRouteImport.update({
+  id: '/api/tasks',
+  path: '/api/tasks',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiOwntracksRoute = ApiOwntracksRouteImport.update({
   id: '/api/owntracks',
   path: '/api/owntracks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiNoiseRoute = ApiNoiseRouteImport.update({
+  id: '/api/noise',
+  path: '/api/noise',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiKultcashRoute = ApiKultcashRouteImport.update({
+  id: '/api/kultcash',
+  path: '/api/kultcash',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MainSpeisekarteRoute = MainSpeisekarteRouteImport.update({
@@ -195,100 +219,100 @@ const CrewLautstaerkeDeviceRoute = CrewLautstaerkeDeviceRouteImport.update({
 } as any)
 const ApiTasksSpotifyListenersRoute =
   ApiTasksSpotifyListenersRouteImport.update({
-    id: '/api/tasks/spotify-listeners',
-    path: '/api/tasks/spotify-listeners',
-    getParentRoute: () => rootRouteImport,
+    id: '/spotify-listeners',
+    path: '/spotify-listeners',
+    getParentRoute: () => ApiTasksRoute,
   } as any)
 const ApiTasksSendEmailRoute = ApiTasksSendEmailRouteImport.update({
-  id: '/api/tasks/send-email',
-  path: '/api/tasks/send-email',
-  getParentRoute: () => rootRouteImport,
+  id: '/send-email',
+  path: '/send-email',
+  getParentRoute: () => ApiTasksRoute,
 } as any)
 const ApiTasksNuclinoUpdateMessageRoute =
   ApiTasksNuclinoUpdateMessageRouteImport.update({
-    id: '/api/tasks/nuclino-update-message',
-    path: '/api/tasks/nuclino-update-message',
-    getParentRoute: () => rootRouteImport,
+    id: '/nuclino-update-message',
+    path: '/nuclino-update-message',
+    getParentRoute: () => ApiTasksRoute,
   } as any)
 const ApiTasksNonceRequestInvalidateRoute =
   ApiTasksNonceRequestInvalidateRouteImport.update({
-    id: '/api/tasks/nonce-request-invalidate',
-    path: '/api/tasks/nonce-request-invalidate',
-    getParentRoute: () => rootRouteImport,
+    id: '/nonce-request-invalidate',
+    path: '/nonce-request-invalidate',
+    getParentRoute: () => ApiTasksRoute,
   } as any)
 const ApiTasksNonceInvalidateRoute = ApiTasksNonceInvalidateRouteImport.update({
-  id: '/api/tasks/nonce-invalidate',
-  path: '/api/tasks/nonce-invalidate',
-  getParentRoute: () => rootRouteImport,
+  id: '/nonce-invalidate',
+  path: '/nonce-invalidate',
+  getParentRoute: () => ApiTasksRoute,
 } as any)
 const ApiTasksInstagramFollowerRoute =
   ApiTasksInstagramFollowerRouteImport.update({
-    id: '/api/tasks/instagram-follower',
-    path: '/api/tasks/instagram-follower',
-    getParentRoute: () => rootRouteImport,
+    id: '/instagram-follower',
+    path: '/instagram-follower',
+    getParentRoute: () => ApiTasksRoute,
   } as any)
 const ApiTasksGmailWatchRefreshRoute =
   ApiTasksGmailWatchRefreshRouteImport.update({
-    id: '/api/tasks/gmail-watch-refresh',
-    path: '/api/tasks/gmail-watch-refresh',
-    getParentRoute: () => rootRouteImport,
+    id: '/gmail-watch-refresh',
+    path: '/gmail-watch-refresh',
+    getParentRoute: () => ApiTasksRoute,
   } as any)
 const ApiTasksGmailReminderRoute = ApiTasksGmailReminderRouteImport.update({
-  id: '/api/tasks/gmail-reminder',
-  path: '/api/tasks/gmail-reminder',
-  getParentRoute: () => rootRouteImport,
+  id: '/gmail-reminder',
+  path: '/gmail-reminder',
+  getParentRoute: () => ApiTasksRoute,
 } as any)
 const ApiTasksGmailNotificationRoute =
   ApiTasksGmailNotificationRouteImport.update({
-    id: '/api/tasks/gmail-notification',
-    path: '/api/tasks/gmail-notification',
-    getParentRoute: () => rootRouteImport,
+    id: '/gmail-notification',
+    path: '/gmail-notification',
+    getParentRoute: () => ApiTasksRoute,
   } as any)
 const ApiTasksFacebookLikesRoute = ApiTasksFacebookLikesRouteImport.update({
-  id: '/api/tasks/facebook-likes',
-  path: '/api/tasks/facebook-likes',
-  getParentRoute: () => rootRouteImport,
+  id: '/facebook-likes',
+  path: '/facebook-likes',
+  getParentRoute: () => ApiTasksRoute,
 } as any)
 const ApiTasksCrewCardEnrolledRoute =
   ApiTasksCrewCardEnrolledRouteImport.update({
-    id: '/api/tasks/crew-card-enrolled',
-    path: '/api/tasks/crew-card-enrolled',
-    getParentRoute: () => rootRouteImport,
+    id: '/crew-card-enrolled',
+    path: '/crew-card-enrolled',
+    getParentRoute: () => ApiTasksRoute,
   } as any)
 const ApiTasksCreateNonceRequestRoute =
   ApiTasksCreateNonceRequestRouteImport.update({
-    id: '/api/tasks/create-nonce-request',
-    path: '/api/tasks/create-nonce-request',
-    getParentRoute: () => rootRouteImport,
+    id: '/create-nonce-request',
+    path: '/create-nonce-request',
+    getParentRoute: () => ApiTasksRoute,
   } as any)
 const ApiTasksCreateMembershipApplicationRoute =
   ApiTasksCreateMembershipApplicationRouteImport.update({
-    id: '/api/tasks/create-membership-application',
-    path: '/api/tasks/create-membership-application',
-    getParentRoute: () => rootRouteImport,
+    id: '/create-membership-application',
+    path: '/create-membership-application',
+    getParentRoute: () => ApiTasksRoute,
   } as any)
 const ApiTasksCreateBandApplicationRoute =
   ApiTasksCreateBandApplicationRouteImport.update({
-    id: '/api/tasks/create-band-application',
-    path: '/api/tasks/create-band-application',
-    getParentRoute: () => rootRouteImport,
+    id: '/create-band-application',
+    path: '/create-band-application',
+    getParentRoute: () => ApiTasksRoute,
   } as any)
 const ApiTasksBandApplicationDistanceRoute =
   ApiTasksBandApplicationDistanceRouteImport.update({
-    id: '/api/tasks/band-application-distance',
-    path: '/api/tasks/band-application-distance',
-    getParentRoute: () => rootRouteImport,
+    id: '/band-application-distance',
+    path: '/band-application-distance',
+    getParentRoute: () => ApiTasksRoute,
   } as any)
 const ApiTasksBandApplicationDemoRoute =
   ApiTasksBandApplicationDemoRouteImport.update({
-    id: '/api/tasks/band-application-demo',
-    path: '/api/tasks/band-application-demo',
-    getParentRoute: () => rootRouteImport,
+    id: '/band-application-demo',
+    path: '/band-application-demo',
+    getParentRoute: () => ApiTasksRoute,
   } as any)
 const ApiTasksBadgeAwardedRoute = ApiTasksBadgeAwardedRouteImport.update({
-  id: '/api/tasks/badge-awarded',
-  path: '/api/tasks/badge-awarded',
-  getParentRoute: () => rootRouteImport,
+  id: '/badge-awarded',
+  path: '/badge-awarded',
+  getParentRoute: () => ApiTasksRoute,
 } as any)
 const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
   id: '/api/stripe/webhook',
@@ -341,24 +365,24 @@ const ApiOwntracksConfigRoute = ApiOwntracksConfigRouteImport.update({
   getParentRoute: () => ApiOwntracksRoute,
 } as any)
 const ApiNoiseLogRoute = ApiNoiseLogRouteImport.update({
-  id: '/api/noise/log',
-  path: '/api/noise/log',
-  getParentRoute: () => rootRouteImport,
+  id: '/log',
+  path: '/log',
+  getParentRoute: () => ApiNoiseRoute,
 } as any)
 const ApiKultcashLogRoute = ApiKultcashLogRouteImport.update({
-  id: '/api/kultcash/log',
-  path: '/api/kultcash/log',
-  getParentRoute: () => rootRouteImport,
+  id: '/log',
+  path: '/log',
+  getParentRoute: () => ApiKultcashRoute,
 } as any)
 const ApiKultcashListsRoute = ApiKultcashListsRouteImport.update({
-  id: '/api/kultcash/lists',
-  path: '/api/kultcash/lists',
-  getParentRoute: () => rootRouteImport,
+  id: '/lists',
+  path: '/lists',
+  getParentRoute: () => ApiKultcashRoute,
 } as any)
 const ApiKultcashConfigRoute = ApiKultcashConfigRouteImport.update({
-  id: '/api/kultcash/config',
-  path: '/api/kultcash/config',
-  getParentRoute: () => rootRouteImport,
+  id: '/config',
+  path: '/config',
+  getParentRoute: () => ApiKultcashRoute,
 } as any)
 const MainNewsArchivRoute = MainNewsArchivRouteImport.update({
   id: '/news/archiv',
@@ -458,7 +482,11 @@ export interface FileRoutesByFullPath {
   '/nuclino-sso': typeof MainNuclinoSsoRoute
   '/plakate': typeof MainPlakateRoute
   '/speisekarte': typeof MainSpeisekarteRoute
+  '/api/kultcash': typeof ApiKultcashRouteWithChildren
+  '/api/noise': typeof ApiNoiseRouteWithChildren
   '/api/owntracks': typeof ApiOwntracksRouteWithChildren
+  '/api/tasks': typeof ApiTasksRouteWithChildren
+  '/crew/auth-return': typeof CrewAuthReturnRoute
   '/crew/lautstaerke': typeof CrewLautstaerkeRouteWithChildren
   '/crew/': typeof CrewIndexRoute
   '/booking/$applicationType': typeof MainBookingApplicationTypeRoute
@@ -525,7 +553,11 @@ export interface FileRoutesByTo {
   '/nuclino-sso': typeof MainNuclinoSsoRoute
   '/plakate': typeof MainPlakateRoute
   '/speisekarte': typeof MainSpeisekarteRoute
+  '/api/kultcash': typeof ApiKultcashRouteWithChildren
+  '/api/noise': typeof ApiNoiseRouteWithChildren
   '/api/owntracks': typeof ApiOwntracksRouteWithChildren
+  '/api/tasks': typeof ApiTasksRouteWithChildren
+  '/crew/auth-return': typeof CrewAuthReturnRoute
   '/': typeof MainIndexRoute
   '/crew': typeof CrewIndexRoute
   '/booking/$applicationType': typeof MainBookingApplicationTypeRoute
@@ -595,7 +627,11 @@ export interface FileRoutesById {
   '/_main/nuclino-sso': typeof MainNuclinoSsoRoute
   '/_main/plakate': typeof MainPlakateRoute
   '/_main/speisekarte': typeof MainSpeisekarteRoute
+  '/api/kultcash': typeof ApiKultcashRouteWithChildren
+  '/api/noise': typeof ApiNoiseRouteWithChildren
   '/api/owntracks': typeof ApiOwntracksRouteWithChildren
+  '/api/tasks': typeof ApiTasksRouteWithChildren
+  '/crew/auth-return': typeof CrewAuthReturnRoute
   '/crew/lautstaerke': typeof CrewLautstaerkeRouteWithChildren
   '/_main/': typeof MainIndexRoute
   '/crew/': typeof CrewIndexRoute
@@ -668,7 +704,11 @@ export interface FileRouteTypes {
     | '/nuclino-sso'
     | '/plakate'
     | '/speisekarte'
+    | '/api/kultcash'
+    | '/api/noise'
     | '/api/owntracks'
+    | '/api/tasks'
+    | '/crew/auth-return'
     | '/crew/lautstaerke'
     | '/crew/'
     | '/booking/$applicationType'
@@ -735,7 +775,11 @@ export interface FileRouteTypes {
     | '/nuclino-sso'
     | '/plakate'
     | '/speisekarte'
+    | '/api/kultcash'
+    | '/api/noise'
     | '/api/owntracks'
+    | '/api/tasks'
+    | '/crew/auth-return'
     | '/'
     | '/crew'
     | '/booking/$applicationType'
@@ -804,7 +848,11 @@ export interface FileRouteTypes {
     | '/_main/nuclino-sso'
     | '/_main/plakate'
     | '/_main/speisekarte'
+    | '/api/kultcash'
+    | '/api/noise'
     | '/api/owntracks'
+    | '/api/tasks'
+    | '/crew/auth-return'
     | '/crew/lautstaerke'
     | '/_main/'
     | '/crew/'
@@ -862,11 +910,10 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   MainRoute: typeof MainRouteWithChildren
   CrewRoute: typeof CrewRouteWithChildren
+  ApiKultcashRoute: typeof ApiKultcashRouteWithChildren
+  ApiNoiseRoute: typeof ApiNoiseRouteWithChildren
   ApiOwntracksRoute: typeof ApiOwntracksRouteWithChildren
-  ApiKultcashConfigRoute: typeof ApiKultcashConfigRoute
-  ApiKultcashListsRoute: typeof ApiKultcashListsRoute
-  ApiKultcashLogRoute: typeof ApiKultcashLogRoute
-  ApiNoiseLogRoute: typeof ApiNoiseLogRoute
+  ApiTasksRoute: typeof ApiTasksRouteWithChildren
   ApiSamlLoginRoute: typeof ApiSamlLoginRoute
   ApiSamlLogoutRoute: typeof ApiSamlLogoutRoute
   ApiSlackEventsRoute: typeof ApiSlackEventsRoute
@@ -876,23 +923,6 @@ export interface RootRouteChildren {
   ApiSlackTokenRoute: typeof ApiSlackTokenRoute
   ApiSlackTwofactorRoute: typeof ApiSlackTwofactorRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
-  ApiTasksBadgeAwardedRoute: typeof ApiTasksBadgeAwardedRoute
-  ApiTasksBandApplicationDemoRoute: typeof ApiTasksBandApplicationDemoRoute
-  ApiTasksBandApplicationDistanceRoute: typeof ApiTasksBandApplicationDistanceRoute
-  ApiTasksCreateBandApplicationRoute: typeof ApiTasksCreateBandApplicationRoute
-  ApiTasksCreateMembershipApplicationRoute: typeof ApiTasksCreateMembershipApplicationRoute
-  ApiTasksCreateNonceRequestRoute: typeof ApiTasksCreateNonceRequestRoute
-  ApiTasksCrewCardEnrolledRoute: typeof ApiTasksCrewCardEnrolledRoute
-  ApiTasksFacebookLikesRoute: typeof ApiTasksFacebookLikesRoute
-  ApiTasksGmailNotificationRoute: typeof ApiTasksGmailNotificationRoute
-  ApiTasksGmailReminderRoute: typeof ApiTasksGmailReminderRoute
-  ApiTasksGmailWatchRefreshRoute: typeof ApiTasksGmailWatchRefreshRoute
-  ApiTasksInstagramFollowerRoute: typeof ApiTasksInstagramFollowerRoute
-  ApiTasksNonceInvalidateRoute: typeof ApiTasksNonceInvalidateRoute
-  ApiTasksNonceRequestInvalidateRoute: typeof ApiTasksNonceRequestInvalidateRoute
-  ApiTasksNuclinoUpdateMessageRoute: typeof ApiTasksNuclinoUpdateMessageRoute
-  ApiTasksSendEmailRoute: typeof ApiTasksSendEmailRoute
-  ApiTasksSpotifyListenersRoute: typeof ApiTasksSpotifyListenersRoute
   ApiSpendenQuittungIdRoute: typeof ApiSpendenQuittungIdRoute
 }
 
@@ -933,11 +963,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrewLautstaerkeRouteImport
       parentRoute: typeof CrewRoute
     }
+    '/crew/auth-return': {
+      id: '/crew/auth-return'
+      path: '/auth-return'
+      fullPath: '/crew/auth-return'
+      preLoaderRoute: typeof CrewAuthReturnRouteImport
+      parentRoute: typeof CrewRoute
+    }
+    '/api/tasks': {
+      id: '/api/tasks'
+      path: '/api/tasks'
+      fullPath: '/api/tasks'
+      preLoaderRoute: typeof ApiTasksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/owntracks': {
       id: '/api/owntracks'
       path: '/api/owntracks'
       fullPath: '/api/owntracks'
       preLoaderRoute: typeof ApiOwntracksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/noise': {
+      id: '/api/noise'
+      path: '/api/noise'
+      fullPath: '/api/noise'
+      preLoaderRoute: typeof ApiNoiseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/kultcash': {
+      id: '/api/kultcash'
+      path: '/api/kultcash'
+      fullPath: '/api/kultcash'
+      preLoaderRoute: typeof ApiKultcashRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_main/speisekarte': {
@@ -1061,122 +1119,122 @@ declare module '@tanstack/react-router' {
     }
     '/api/tasks/spotify-listeners': {
       id: '/api/tasks/spotify-listeners'
-      path: '/api/tasks/spotify-listeners'
+      path: '/spotify-listeners'
       fullPath: '/api/tasks/spotify-listeners'
       preLoaderRoute: typeof ApiTasksSpotifyListenersRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApiTasksRoute
     }
     '/api/tasks/send-email': {
       id: '/api/tasks/send-email'
-      path: '/api/tasks/send-email'
+      path: '/send-email'
       fullPath: '/api/tasks/send-email'
       preLoaderRoute: typeof ApiTasksSendEmailRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApiTasksRoute
     }
     '/api/tasks/nuclino-update-message': {
       id: '/api/tasks/nuclino-update-message'
-      path: '/api/tasks/nuclino-update-message'
+      path: '/nuclino-update-message'
       fullPath: '/api/tasks/nuclino-update-message'
       preLoaderRoute: typeof ApiTasksNuclinoUpdateMessageRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApiTasksRoute
     }
     '/api/tasks/nonce-request-invalidate': {
       id: '/api/tasks/nonce-request-invalidate'
-      path: '/api/tasks/nonce-request-invalidate'
+      path: '/nonce-request-invalidate'
       fullPath: '/api/tasks/nonce-request-invalidate'
       preLoaderRoute: typeof ApiTasksNonceRequestInvalidateRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApiTasksRoute
     }
     '/api/tasks/nonce-invalidate': {
       id: '/api/tasks/nonce-invalidate'
-      path: '/api/tasks/nonce-invalidate'
+      path: '/nonce-invalidate'
       fullPath: '/api/tasks/nonce-invalidate'
       preLoaderRoute: typeof ApiTasksNonceInvalidateRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApiTasksRoute
     }
     '/api/tasks/instagram-follower': {
       id: '/api/tasks/instagram-follower'
-      path: '/api/tasks/instagram-follower'
+      path: '/instagram-follower'
       fullPath: '/api/tasks/instagram-follower'
       preLoaderRoute: typeof ApiTasksInstagramFollowerRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApiTasksRoute
     }
     '/api/tasks/gmail-watch-refresh': {
       id: '/api/tasks/gmail-watch-refresh'
-      path: '/api/tasks/gmail-watch-refresh'
+      path: '/gmail-watch-refresh'
       fullPath: '/api/tasks/gmail-watch-refresh'
       preLoaderRoute: typeof ApiTasksGmailWatchRefreshRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApiTasksRoute
     }
     '/api/tasks/gmail-reminder': {
       id: '/api/tasks/gmail-reminder'
-      path: '/api/tasks/gmail-reminder'
+      path: '/gmail-reminder'
       fullPath: '/api/tasks/gmail-reminder'
       preLoaderRoute: typeof ApiTasksGmailReminderRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApiTasksRoute
     }
     '/api/tasks/gmail-notification': {
       id: '/api/tasks/gmail-notification'
-      path: '/api/tasks/gmail-notification'
+      path: '/gmail-notification'
       fullPath: '/api/tasks/gmail-notification'
       preLoaderRoute: typeof ApiTasksGmailNotificationRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApiTasksRoute
     }
     '/api/tasks/facebook-likes': {
       id: '/api/tasks/facebook-likes'
-      path: '/api/tasks/facebook-likes'
+      path: '/facebook-likes'
       fullPath: '/api/tasks/facebook-likes'
       preLoaderRoute: typeof ApiTasksFacebookLikesRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApiTasksRoute
     }
     '/api/tasks/crew-card-enrolled': {
       id: '/api/tasks/crew-card-enrolled'
-      path: '/api/tasks/crew-card-enrolled'
+      path: '/crew-card-enrolled'
       fullPath: '/api/tasks/crew-card-enrolled'
       preLoaderRoute: typeof ApiTasksCrewCardEnrolledRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApiTasksRoute
     }
     '/api/tasks/create-nonce-request': {
       id: '/api/tasks/create-nonce-request'
-      path: '/api/tasks/create-nonce-request'
+      path: '/create-nonce-request'
       fullPath: '/api/tasks/create-nonce-request'
       preLoaderRoute: typeof ApiTasksCreateNonceRequestRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApiTasksRoute
     }
     '/api/tasks/create-membership-application': {
       id: '/api/tasks/create-membership-application'
-      path: '/api/tasks/create-membership-application'
+      path: '/create-membership-application'
       fullPath: '/api/tasks/create-membership-application'
       preLoaderRoute: typeof ApiTasksCreateMembershipApplicationRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApiTasksRoute
     }
     '/api/tasks/create-band-application': {
       id: '/api/tasks/create-band-application'
-      path: '/api/tasks/create-band-application'
+      path: '/create-band-application'
       fullPath: '/api/tasks/create-band-application'
       preLoaderRoute: typeof ApiTasksCreateBandApplicationRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApiTasksRoute
     }
     '/api/tasks/band-application-distance': {
       id: '/api/tasks/band-application-distance'
-      path: '/api/tasks/band-application-distance'
+      path: '/band-application-distance'
       fullPath: '/api/tasks/band-application-distance'
       preLoaderRoute: typeof ApiTasksBandApplicationDistanceRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApiTasksRoute
     }
     '/api/tasks/band-application-demo': {
       id: '/api/tasks/band-application-demo'
-      path: '/api/tasks/band-application-demo'
+      path: '/band-application-demo'
       fullPath: '/api/tasks/band-application-demo'
       preLoaderRoute: typeof ApiTasksBandApplicationDemoRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApiTasksRoute
     }
     '/api/tasks/badge-awarded': {
       id: '/api/tasks/badge-awarded'
-      path: '/api/tasks/badge-awarded'
+      path: '/badge-awarded'
       fullPath: '/api/tasks/badge-awarded'
       preLoaderRoute: typeof ApiTasksBadgeAwardedRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApiTasksRoute
     }
     '/api/stripe/webhook': {
       id: '/api/stripe/webhook'
@@ -1250,31 +1308,31 @@ declare module '@tanstack/react-router' {
     }
     '/api/noise/log': {
       id: '/api/noise/log'
-      path: '/api/noise/log'
+      path: '/log'
       fullPath: '/api/noise/log'
       preLoaderRoute: typeof ApiNoiseLogRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApiNoiseRoute
     }
     '/api/kultcash/log': {
       id: '/api/kultcash/log'
-      path: '/api/kultcash/log'
+      path: '/log'
       fullPath: '/api/kultcash/log'
       preLoaderRoute: typeof ApiKultcashLogRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApiKultcashRoute
     }
     '/api/kultcash/lists': {
       id: '/api/kultcash/lists'
-      path: '/api/kultcash/lists'
+      path: '/lists'
       fullPath: '/api/kultcash/lists'
       preLoaderRoute: typeof ApiKultcashListsRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApiKultcashRoute
     }
     '/api/kultcash/config': {
       id: '/api/kultcash/config'
-      path: '/api/kultcash/config'
+      path: '/config'
       fullPath: '/api/kultcash/config'
       preLoaderRoute: typeof ApiKultcashConfigRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApiKultcashRoute
     }
     '/_main/news/archiv': {
       id: '/_main/news/archiv'
@@ -1498,16 +1556,46 @@ const CrewLautstaerkeRouteWithChildren = CrewLautstaerkeRoute._addFileChildren(
 )
 
 interface CrewRouteChildren {
+  CrewAuthReturnRoute: typeof CrewAuthReturnRoute
   CrewLautstaerkeRoute: typeof CrewLautstaerkeRouteWithChildren
   CrewIndexRoute: typeof CrewIndexRoute
 }
 
 const CrewRouteChildren: CrewRouteChildren = {
+  CrewAuthReturnRoute: CrewAuthReturnRoute,
   CrewLautstaerkeRoute: CrewLautstaerkeRouteWithChildren,
   CrewIndexRoute: CrewIndexRoute,
 }
 
 const CrewRouteWithChildren = CrewRoute._addFileChildren(CrewRouteChildren)
+
+interface ApiKultcashRouteChildren {
+  ApiKultcashConfigRoute: typeof ApiKultcashConfigRoute
+  ApiKultcashListsRoute: typeof ApiKultcashListsRoute
+  ApiKultcashLogRoute: typeof ApiKultcashLogRoute
+}
+
+const ApiKultcashRouteChildren: ApiKultcashRouteChildren = {
+  ApiKultcashConfigRoute: ApiKultcashConfigRoute,
+  ApiKultcashListsRoute: ApiKultcashListsRoute,
+  ApiKultcashLogRoute: ApiKultcashLogRoute,
+}
+
+const ApiKultcashRouteWithChildren = ApiKultcashRoute._addFileChildren(
+  ApiKultcashRouteChildren,
+)
+
+interface ApiNoiseRouteChildren {
+  ApiNoiseLogRoute: typeof ApiNoiseLogRoute
+}
+
+const ApiNoiseRouteChildren: ApiNoiseRouteChildren = {
+  ApiNoiseLogRoute: ApiNoiseLogRoute,
+}
+
+const ApiNoiseRouteWithChildren = ApiNoiseRoute._addFileChildren(
+  ApiNoiseRouteChildren,
+)
 
 interface ApiOwntracksRouteChildren {
   ApiOwntracksConfigRoute: typeof ApiOwntracksConfigRoute
@@ -1521,23 +1609,27 @@ const ApiOwntracksRouteWithChildren = ApiOwntracksRoute._addFileChildren(
   ApiOwntracksRouteChildren,
 )
 
-const rootRouteChildren: RootRouteChildren = {
-  MainRoute: MainRouteWithChildren,
-  CrewRoute: CrewRouteWithChildren,
-  ApiOwntracksRoute: ApiOwntracksRouteWithChildren,
-  ApiKultcashConfigRoute: ApiKultcashConfigRoute,
-  ApiKultcashListsRoute: ApiKultcashListsRoute,
-  ApiKultcashLogRoute: ApiKultcashLogRoute,
-  ApiNoiseLogRoute: ApiNoiseLogRoute,
-  ApiSamlLoginRoute: ApiSamlLoginRoute,
-  ApiSamlLogoutRoute: ApiSamlLogoutRoute,
-  ApiSlackEventsRoute: ApiSlackEventsRoute,
-  ApiSlackInteractionRoute: ApiSlackInteractionRoute,
-  ApiSlackMailinglisteRoute: ApiSlackMailinglisteRoute,
-  ApiSlackOwntracksRoute: ApiSlackOwntracksRoute,
-  ApiSlackTokenRoute: ApiSlackTokenRoute,
-  ApiSlackTwofactorRoute: ApiSlackTwofactorRoute,
-  ApiStripeWebhookRoute: ApiStripeWebhookRoute,
+interface ApiTasksRouteChildren {
+  ApiTasksBadgeAwardedRoute: typeof ApiTasksBadgeAwardedRoute
+  ApiTasksBandApplicationDemoRoute: typeof ApiTasksBandApplicationDemoRoute
+  ApiTasksBandApplicationDistanceRoute: typeof ApiTasksBandApplicationDistanceRoute
+  ApiTasksCreateBandApplicationRoute: typeof ApiTasksCreateBandApplicationRoute
+  ApiTasksCreateMembershipApplicationRoute: typeof ApiTasksCreateMembershipApplicationRoute
+  ApiTasksCreateNonceRequestRoute: typeof ApiTasksCreateNonceRequestRoute
+  ApiTasksCrewCardEnrolledRoute: typeof ApiTasksCrewCardEnrolledRoute
+  ApiTasksFacebookLikesRoute: typeof ApiTasksFacebookLikesRoute
+  ApiTasksGmailNotificationRoute: typeof ApiTasksGmailNotificationRoute
+  ApiTasksGmailReminderRoute: typeof ApiTasksGmailReminderRoute
+  ApiTasksGmailWatchRefreshRoute: typeof ApiTasksGmailWatchRefreshRoute
+  ApiTasksInstagramFollowerRoute: typeof ApiTasksInstagramFollowerRoute
+  ApiTasksNonceInvalidateRoute: typeof ApiTasksNonceInvalidateRoute
+  ApiTasksNonceRequestInvalidateRoute: typeof ApiTasksNonceRequestInvalidateRoute
+  ApiTasksNuclinoUpdateMessageRoute: typeof ApiTasksNuclinoUpdateMessageRoute
+  ApiTasksSendEmailRoute: typeof ApiTasksSendEmailRoute
+  ApiTasksSpotifyListenersRoute: typeof ApiTasksSpotifyListenersRoute
+}
+
+const ApiTasksRouteChildren: ApiTasksRouteChildren = {
   ApiTasksBadgeAwardedRoute: ApiTasksBadgeAwardedRoute,
   ApiTasksBandApplicationDemoRoute: ApiTasksBandApplicationDemoRoute,
   ApiTasksBandApplicationDistanceRoute: ApiTasksBandApplicationDistanceRoute,
@@ -1556,6 +1648,28 @@ const rootRouteChildren: RootRouteChildren = {
   ApiTasksNuclinoUpdateMessageRoute: ApiTasksNuclinoUpdateMessageRoute,
   ApiTasksSendEmailRoute: ApiTasksSendEmailRoute,
   ApiTasksSpotifyListenersRoute: ApiTasksSpotifyListenersRoute,
+}
+
+const ApiTasksRouteWithChildren = ApiTasksRoute._addFileChildren(
+  ApiTasksRouteChildren,
+)
+
+const rootRouteChildren: RootRouteChildren = {
+  MainRoute: MainRouteWithChildren,
+  CrewRoute: CrewRouteWithChildren,
+  ApiKultcashRoute: ApiKultcashRouteWithChildren,
+  ApiNoiseRoute: ApiNoiseRouteWithChildren,
+  ApiOwntracksRoute: ApiOwntracksRouteWithChildren,
+  ApiTasksRoute: ApiTasksRouteWithChildren,
+  ApiSamlLoginRoute: ApiSamlLoginRoute,
+  ApiSamlLogoutRoute: ApiSamlLogoutRoute,
+  ApiSlackEventsRoute: ApiSlackEventsRoute,
+  ApiSlackInteractionRoute: ApiSlackInteractionRoute,
+  ApiSlackMailinglisteRoute: ApiSlackMailinglisteRoute,
+  ApiSlackOwntracksRoute: ApiSlackOwntracksRoute,
+  ApiSlackTokenRoute: ApiSlackTokenRoute,
+  ApiSlackTwofactorRoute: ApiSlackTwofactorRoute,
+  ApiStripeWebhookRoute: ApiStripeWebhookRoute,
   ApiSpendenQuittungIdRoute: ApiSpendenQuittungIdRoute,
 }
 export const routeTree = rootRouteImport
