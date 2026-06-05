@@ -70,6 +70,8 @@ import { Route as MainLineupYearRouteImport } from './routes/_main.lineup.$year'
 import { Route as MainEventsIdRouteImport } from './routes/_main.events_.$id'
 import { Route as MainCardHashRouteImport } from './routes/_main.card.$hash'
 import { Route as MainBookingApplicationTypeRouteImport } from './routes/_main.booking_.$applicationType'
+import { Route as CrewLautstaerkeDeviceIndexRouteImport } from './routes/crew.lautstaerke.$device.index'
+import { Route as CrewLautstaerkeDeviceDateRouteImport } from './routes/crew.lautstaerke.$device.$date'
 import { Route as ApiSpendenQuittungIdRouteImport } from './routes/api.spenden.quittung.$id'
 import { Route as MainSpendenQuittungIdRouteImport } from './routes/_main.spenden_.quittung.$id'
 import { Route as MainLineupYearSlugRouteImport } from './routes/_main.lineup.$year_.$slug'
@@ -395,6 +397,18 @@ const MainBookingApplicationTypeRoute =
     path: '/booking/$applicationType',
     getParentRoute: () => MainRoute,
   } as any)
+const CrewLautstaerkeDeviceIndexRoute =
+  CrewLautstaerkeDeviceIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => CrewLautstaerkeDeviceRoute,
+  } as any)
+const CrewLautstaerkeDeviceDateRoute =
+  CrewLautstaerkeDeviceDateRouteImport.update({
+    id: '/$date',
+    path: '/$date',
+    getParentRoute: () => CrewLautstaerkeDeviceRoute,
+  } as any)
 const ApiSpendenQuittungIdRoute = ApiSpendenQuittungIdRouteImport.update({
   id: '/api/spenden/quittung/$id',
   path: '/api/spenden/quittung/$id',
@@ -485,7 +499,7 @@ export interface FileRoutesByFullPath {
   '/api/tasks/nuclino-update-message': typeof ApiTasksNuclinoUpdateMessageRoute
   '/api/tasks/send-email': typeof ApiTasksSendEmailRoute
   '/api/tasks/spotify-listeners': typeof ApiTasksSpotifyListenersRoute
-  '/crew/lautstaerke/$device': typeof CrewLautstaerkeDeviceRoute
+  '/crew/lautstaerke/$device': typeof CrewLautstaerkeDeviceRouteWithChildren
   '/lineup/': typeof MainLineupIndexRoute
   '/crew/lautstaerke/': typeof CrewLautstaerkeIndexRoute
   '/booking/$applicationType/danke': typeof MainBookingApplicationTypeDankeRoute
@@ -494,6 +508,8 @@ export interface FileRoutesByFullPath {
   '/lineup/$year/$slug': typeof MainLineupYearSlugRoute
   '/spenden/quittung/$id': typeof MainSpendenQuittungIdRoute
   '/api/spenden/quittung/$id': typeof ApiSpendenQuittungIdRoute
+  '/crew/lautstaerke/$device/$date': typeof CrewLautstaerkeDeviceDateRoute
+  '/crew/lautstaerke/$device/': typeof CrewLautstaerkeDeviceIndexRoute
 }
 export interface FileRoutesByTo {
   '/$slug': typeof MainSlugRoute
@@ -550,7 +566,6 @@ export interface FileRoutesByTo {
   '/api/tasks/nuclino-update-message': typeof ApiTasksNuclinoUpdateMessageRoute
   '/api/tasks/send-email': typeof ApiTasksSendEmailRoute
   '/api/tasks/spotify-listeners': typeof ApiTasksSpotifyListenersRoute
-  '/crew/lautstaerke/$device': typeof CrewLautstaerkeDeviceRoute
   '/lineup': typeof MainLineupIndexRoute
   '/crew/lautstaerke': typeof CrewLautstaerkeIndexRoute
   '/booking/$applicationType/danke': typeof MainBookingApplicationTypeDankeRoute
@@ -559,6 +574,8 @@ export interface FileRoutesByTo {
   '/lineup/$year/$slug': typeof MainLineupYearSlugRoute
   '/spenden/quittung/$id': typeof MainSpendenQuittungIdRoute
   '/api/spenden/quittung/$id': typeof ApiSpendenQuittungIdRoute
+  '/crew/lautstaerke/$device/$date': typeof CrewLautstaerkeDeviceDateRoute
+  '/crew/lautstaerke/$device': typeof CrewLautstaerkeDeviceIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -620,7 +637,7 @@ export interface FileRoutesById {
   '/api/tasks/nuclino-update-message': typeof ApiTasksNuclinoUpdateMessageRoute
   '/api/tasks/send-email': typeof ApiTasksSendEmailRoute
   '/api/tasks/spotify-listeners': typeof ApiTasksSpotifyListenersRoute
-  '/crew/lautstaerke/$device': typeof CrewLautstaerkeDeviceRoute
+  '/crew/lautstaerke/$device': typeof CrewLautstaerkeDeviceRouteWithChildren
   '/_main/lineup/': typeof MainLineupIndexRoute
   '/crew/lautstaerke/': typeof CrewLautstaerkeIndexRoute
   '/_main/booking_/$applicationType_/danke': typeof MainBookingApplicationTypeDankeRoute
@@ -629,6 +646,8 @@ export interface FileRoutesById {
   '/_main/lineup/$year_/$slug': typeof MainLineupYearSlugRoute
   '/_main/spenden_/quittung/$id': typeof MainSpendenQuittungIdRoute
   '/api/spenden/quittung/$id': typeof ApiSpendenQuittungIdRoute
+  '/crew/lautstaerke/$device/$date': typeof CrewLautstaerkeDeviceDateRoute
+  '/crew/lautstaerke/$device/': typeof CrewLautstaerkeDeviceIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -699,6 +718,8 @@ export interface FileRouteTypes {
     | '/lineup/$year/$slug'
     | '/spenden/quittung/$id'
     | '/api/spenden/quittung/$id'
+    | '/crew/lautstaerke/$device/$date'
+    | '/crew/lautstaerke/$device/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/$slug'
@@ -755,7 +776,6 @@ export interface FileRouteTypes {
     | '/api/tasks/nuclino-update-message'
     | '/api/tasks/send-email'
     | '/api/tasks/spotify-listeners'
-    | '/crew/lautstaerke/$device'
     | '/lineup'
     | '/crew/lautstaerke'
     | '/booking/$applicationType/danke'
@@ -764,6 +784,8 @@ export interface FileRouteTypes {
     | '/lineup/$year/$slug'
     | '/spenden/quittung/$id'
     | '/api/spenden/quittung/$id'
+    | '/crew/lautstaerke/$device/$date'
+    | '/crew/lautstaerke/$device'
   id:
     | '__root__'
     | '/_main'
@@ -833,6 +855,8 @@ export interface FileRouteTypes {
     | '/_main/lineup/$year_/$slug'
     | '/_main/spenden_/quittung/$id'
     | '/api/spenden/quittung/$id'
+    | '/crew/lautstaerke/$device/$date'
+    | '/crew/lautstaerke/$device/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1301,6 +1325,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainBookingApplicationTypeRouteImport
       parentRoute: typeof MainRoute
     }
+    '/crew/lautstaerke/$device/': {
+      id: '/crew/lautstaerke/$device/'
+      path: '/'
+      fullPath: '/crew/lautstaerke/$device/'
+      preLoaderRoute: typeof CrewLautstaerkeDeviceIndexRouteImport
+      parentRoute: typeof CrewLautstaerkeDeviceRoute
+    }
+    '/crew/lautstaerke/$device/$date': {
+      id: '/crew/lautstaerke/$device/$date'
+      path: '/$date'
+      fullPath: '/crew/lautstaerke/$device/$date'
+      preLoaderRoute: typeof CrewLautstaerkeDeviceDateRouteImport
+      parentRoute: typeof CrewLautstaerkeDeviceRoute
+    }
     '/api/spenden/quittung/$id': {
       id: '/api/spenden/quittung/$id'
       path: '/api/spenden/quittung/$id'
@@ -1430,13 +1468,28 @@ const MainRouteChildren: MainRouteChildren = {
 
 const MainRouteWithChildren = MainRoute._addFileChildren(MainRouteChildren)
 
+interface CrewLautstaerkeDeviceRouteChildren {
+  CrewLautstaerkeDeviceDateRoute: typeof CrewLautstaerkeDeviceDateRoute
+  CrewLautstaerkeDeviceIndexRoute: typeof CrewLautstaerkeDeviceIndexRoute
+}
+
+const CrewLautstaerkeDeviceRouteChildren: CrewLautstaerkeDeviceRouteChildren = {
+  CrewLautstaerkeDeviceDateRoute: CrewLautstaerkeDeviceDateRoute,
+  CrewLautstaerkeDeviceIndexRoute: CrewLautstaerkeDeviceIndexRoute,
+}
+
+const CrewLautstaerkeDeviceRouteWithChildren =
+  CrewLautstaerkeDeviceRoute._addFileChildren(
+    CrewLautstaerkeDeviceRouteChildren,
+  )
+
 interface CrewLautstaerkeRouteChildren {
-  CrewLautstaerkeDeviceRoute: typeof CrewLautstaerkeDeviceRoute
+  CrewLautstaerkeDeviceRoute: typeof CrewLautstaerkeDeviceRouteWithChildren
   CrewLautstaerkeIndexRoute: typeof CrewLautstaerkeIndexRoute
 }
 
 const CrewLautstaerkeRouteChildren: CrewLautstaerkeRouteChildren = {
-  CrewLautstaerkeDeviceRoute: CrewLautstaerkeDeviceRoute,
+  CrewLautstaerkeDeviceRoute: CrewLautstaerkeDeviceRouteWithChildren,
   CrewLautstaerkeIndexRoute: CrewLautstaerkeIndexRoute,
 }
 
