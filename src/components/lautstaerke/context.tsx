@@ -11,7 +11,10 @@ import {
 } from '../../proto/noise';
 
 export const TOPIC = 'noise/+/record';
-export const ACTIVE_WINDOW_MS = 10_000;
+// A device counts as online — and its live spectrum keeps showing — while its
+// most recent record is younger than this. Used by both the presence
+// indicator (isFresh) and the frequency chart's live/empty decision.
+export const ACTIVE_WINDOW_MS = 5_000;
 export const WINDOW_S = 300;
 export const GAP_THRESHOLD_S = 15;
 

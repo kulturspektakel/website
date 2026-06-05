@@ -47,8 +47,6 @@ const resolveCssVar = (cssVar: string, fallback: string): string => {
 
 const AXIS_STROKE_VAR = 'var(--chakra-colors-gray-400)';
 const GRID_STROKE_VAR = 'var(--chakra-colors-gray-700)';
-// How long the live spectrum stays on the band chart after the last record.
-const BAND_FRESH_MS = 2_500;
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
 const fmtTime = (ts: number) => {
@@ -342,7 +340,7 @@ function DeviceDetail() {
   // Single 1 Hz tick driving both charts. The time chart re-projects the
   // rolling buffer — keeping its right edge at "now" and rendering gaps when
   // data stops — while the band chart shows the live spectrum, or empty bars
-  // once the latest record is older than BAND_FRESH_MS (missing vs live data).
+  // once the device is no longer fresh (ACTIVE_WINDOW_MS; missing vs live).
   useEffect(() => {
     const visibleCols = SERIES.map((s, i) => ({s, col: i + 1})).filter(
       ({s}) => s.weighting === weighting,
@@ -361,10 +359,8 @@ function DeviceDetail() {
       const bandPlot = bandPlotRef.current;
       if (bandPlot) {
         const st = deviceStateRef.current;
-        const live =
-          st?.lastSeen != null && Date.now() - st.lastSeen < BAND_FRESH_MS;
-        const ys = live
-          ? Array.from(st.latest.bands, (b) => decodeDb(b))
+        const ys = isFresh(st?.lastSeen, Date.now())
+          ? Array.from(st!.latest.bands, (b) => decodeDb(b))
           : emptyBands;
         bandPlot.setData([bandXs, ys] as uPlot.AlignedData);
       }
