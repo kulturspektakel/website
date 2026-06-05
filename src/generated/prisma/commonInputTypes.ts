@@ -206,6 +206,40 @@ export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedDateTimeNullableFilter<$PrismaModel>
 }
 
+export type EnumDietTypeNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.DietType | Prisma.EnumDietTypeFieldRefInput<$PrismaModel> | null
+  in?: $Enums.DietType[] | Prisma.ListEnumDietTypeFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.DietType[] | Prisma.ListEnumDietTypeFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumDietTypeNullableFilter<$PrismaModel> | $Enums.DietType | null
+}
+
+export type EnumMinimumAgeFilter<$PrismaModel = never> = {
+  equals?: $Enums.MinimumAge | Prisma.EnumMinimumAgeFieldRefInput<$PrismaModel>
+  in?: $Enums.MinimumAge[] | Prisma.ListEnumMinimumAgeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.MinimumAge[] | Prisma.ListEnumMinimumAgeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumMinimumAgeFilter<$PrismaModel> | $Enums.MinimumAge
+}
+
+export type EnumDietTypeNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.DietType | Prisma.EnumDietTypeFieldRefInput<$PrismaModel> | null
+  in?: $Enums.DietType[] | Prisma.ListEnumDietTypeFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.DietType[] | Prisma.ListEnumDietTypeFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumDietTypeNullableWithAggregatesFilter<$PrismaModel> | $Enums.DietType | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumDietTypeNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumDietTypeNullableFilter<$PrismaModel>
+}
+
+export type EnumMinimumAgeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.MinimumAge | Prisma.EnumMinimumAgeFieldRefInput<$PrismaModel>
+  in?: $Enums.MinimumAge[] | Prisma.ListEnumMinimumAgeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.MinimumAge[] | Prisma.ListEnumMinimumAgeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumMinimumAgeWithAggregatesFilter<$PrismaModel> | $Enums.MinimumAge
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumMinimumAgeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumMinimumAgeFilter<$PrismaModel>
+}
+
 export type IntNullableFilter<$PrismaModel = never> = {
   equals?: number | Prisma.IntFieldRefInput<$PrismaModel> | null
   in?: number[] | Prisma.ListIntFieldRefInput<$PrismaModel> | null
@@ -795,6 +829,40 @@ export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
   _min?: Prisma.NestedDateTimeNullableFilter<$PrismaModel>
   _max?: Prisma.NestedDateTimeNullableFilter<$PrismaModel>
+}
+
+export type NestedEnumDietTypeNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.DietType | Prisma.EnumDietTypeFieldRefInput<$PrismaModel> | null
+  in?: $Enums.DietType[] | Prisma.ListEnumDietTypeFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.DietType[] | Prisma.ListEnumDietTypeFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumDietTypeNullableFilter<$PrismaModel> | $Enums.DietType | null
+}
+
+export type NestedEnumMinimumAgeFilter<$PrismaModel = never> = {
+  equals?: $Enums.MinimumAge | Prisma.EnumMinimumAgeFieldRefInput<$PrismaModel>
+  in?: $Enums.MinimumAge[] | Prisma.ListEnumMinimumAgeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.MinimumAge[] | Prisma.ListEnumMinimumAgeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumMinimumAgeFilter<$PrismaModel> | $Enums.MinimumAge
+}
+
+export type NestedEnumDietTypeNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.DietType | Prisma.EnumDietTypeFieldRefInput<$PrismaModel> | null
+  in?: $Enums.DietType[] | Prisma.ListEnumDietTypeFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.DietType[] | Prisma.ListEnumDietTypeFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumDietTypeNullableWithAggregatesFilter<$PrismaModel> | $Enums.DietType | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumDietTypeNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumDietTypeNullableFilter<$PrismaModel>
+}
+
+export type NestedEnumMinimumAgeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.MinimumAge | Prisma.EnumMinimumAgeFieldRefInput<$PrismaModel>
+  in?: $Enums.MinimumAge[] | Prisma.ListEnumMinimumAgeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.MinimumAge[] | Prisma.ListEnumMinimumAgeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumMinimumAgeWithAggregatesFilter<$PrismaModel> | $Enums.MinimumAge
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumMinimumAgeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumMinimumAgeFilter<$PrismaModel>
 }
 
 export type NestedEnumDeviceTypeFilter<$PrismaModel = never> = {

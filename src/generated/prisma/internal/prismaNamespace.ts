@@ -2907,7 +2907,9 @@ export const ProductScalarFieldEnum = {
   price: 'price',
   order: 'order',
   productListId: 'productListId',
-  requiresDeposit: 'requiresDeposit'
+  requiresDeposit: 'requiresDeposit',
+  diet: 'diet',
+  minimumAge: 'minimumAge'
 } as const
 
 export type ProductScalarFieldEnum = (typeof ProductScalarFieldEnum)[keyof typeof ProductScalarFieldEnum]
@@ -3653,6 +3655,34 @@ export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaMode
  * Reference to a field of type 'Boolean'
  */
 export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+    
+
+
+/**
+ * Reference to a field of type 'DietType'
+ */
+export type EnumDietTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DietType'>
+    
+
+
+/**
+ * Reference to a field of type 'DietType[]'
+ */
+export type ListEnumDietTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DietType[]'>
+    
+
+
+/**
+ * Reference to a field of type 'MinimumAge'
+ */
+export type EnumMinimumAgeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MinimumAge'>
+    
+
+
+/**
+ * Reference to a field of type 'MinimumAge[]'
+ */
+export type ListEnumMinimumAgeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MinimumAge[]'>
     
 
 

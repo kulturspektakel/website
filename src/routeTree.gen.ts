@@ -13,6 +13,7 @@ import { Route as CrewRouteImport } from './routes/crew'
 import { Route as MainRouteImport } from './routes/_main'
 import { Route as CrewIndexRouteImport } from './routes/crew.index'
 import { Route as MainIndexRouteImport } from './routes/_main.index'
+import { Route as CrewProdukteRouteImport } from './routes/crew.produkte'
 import { Route as CrewLautstaerkeRouteImport } from './routes/crew.lautstaerke'
 import { Route as CrewAuthReturnRouteImport } from './routes/crew.auth-return'
 import { Route as ApiTasksRouteImport } from './routes/api.tasks'
@@ -33,8 +34,10 @@ import { Route as MainBadgesRouteImport } from './routes/_main.badges'
 import { Route as MainAngebotRouteImport } from './routes/_main.angebot'
 import { Route as MainRouteRouteImport } from './routes/_main.Route'
 import { Route as MainSlugRouteImport } from './routes/_main.$slug'
+import { Route as CrewProdukteIndexRouteImport } from './routes/crew.produkte.index'
 import { Route as CrewLautstaerkeIndexRouteImport } from './routes/crew.lautstaerke.index'
 import { Route as MainLineupIndexRouteImport } from './routes/_main.lineup.index'
+import { Route as CrewProdukteListIdRouteImport } from './routes/crew.produkte.$listId'
 import { Route as CrewLautstaerkeDeviceRouteImport } from './routes/crew.lautstaerke.$device'
 import { Route as ApiTasksSpotifyListenersRouteImport } from './routes/api.tasks.spotify-listeners'
 import { Route as ApiTasksSendEmailRouteImport } from './routes/api.tasks.send-email'
@@ -101,6 +104,11 @@ const MainIndexRoute = MainIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => MainRoute,
+} as any)
+const CrewProdukteRoute = CrewProdukteRouteImport.update({
+  id: '/produkte',
+  path: '/produkte',
+  getParentRoute: () => CrewRoute,
 } as any)
 const CrewLautstaerkeRoute = CrewLautstaerkeRouteImport.update({
   id: '/lautstaerke',
@@ -202,6 +210,11 @@ const MainSlugRoute = MainSlugRouteImport.update({
   path: '/$slug',
   getParentRoute: () => MainRoute,
 } as any)
+const CrewProdukteIndexRoute = CrewProdukteIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CrewProdukteRoute,
+} as any)
 const CrewLautstaerkeIndexRoute = CrewLautstaerkeIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -211,6 +224,11 @@ const MainLineupIndexRoute = MainLineupIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => MainLineupRoute,
+} as any)
+const CrewProdukteListIdRoute = CrewProdukteListIdRouteImport.update({
+  id: '/$listId',
+  path: '/$listId',
+  getParentRoute: () => CrewProdukteRoute,
 } as any)
 const CrewLautstaerkeDeviceRoute = CrewLautstaerkeDeviceRouteImport.update({
   id: '/$device',
@@ -488,6 +506,7 @@ export interface FileRoutesByFullPath {
   '/api/tasks': typeof ApiTasksRouteWithChildren
   '/crew/auth-return': typeof CrewAuthReturnRoute
   '/crew/lautstaerke': typeof CrewLautstaerkeRouteWithChildren
+  '/crew/produkte': typeof CrewProdukteRouteWithChildren
   '/crew/': typeof CrewIndexRoute
   '/booking/$applicationType': typeof MainBookingApplicationTypeRoute
   '/card/$hash': typeof MainCardHashRouteWithChildren
@@ -528,8 +547,10 @@ export interface FileRoutesByFullPath {
   '/api/tasks/send-email': typeof ApiTasksSendEmailRoute
   '/api/tasks/spotify-listeners': typeof ApiTasksSpotifyListenersRoute
   '/crew/lautstaerke/$device': typeof CrewLautstaerkeDeviceRouteWithChildren
+  '/crew/produkte/$listId': typeof CrewProdukteListIdRoute
   '/lineup/': typeof MainLineupIndexRoute
   '/crew/lautstaerke/': typeof CrewLautstaerkeIndexRoute
+  '/crew/produkte/': typeof CrewProdukteIndexRoute
   '/booking/$applicationType/danke': typeof MainBookingApplicationTypeDankeRoute
   '/card/$hash/crew': typeof MainCardHashCrewRoute
   '/card/$hash/kult': typeof MainCardHashKultRoute
@@ -598,8 +619,10 @@ export interface FileRoutesByTo {
   '/api/tasks/nuclino-update-message': typeof ApiTasksNuclinoUpdateMessageRoute
   '/api/tasks/send-email': typeof ApiTasksSendEmailRoute
   '/api/tasks/spotify-listeners': typeof ApiTasksSpotifyListenersRoute
+  '/crew/produkte/$listId': typeof CrewProdukteListIdRoute
   '/lineup': typeof MainLineupIndexRoute
   '/crew/lautstaerke': typeof CrewLautstaerkeIndexRoute
+  '/crew/produkte': typeof CrewProdukteIndexRoute
   '/booking/$applicationType/danke': typeof MainBookingApplicationTypeDankeRoute
   '/card/$hash/crew': typeof MainCardHashCrewRoute
   '/card/$hash/kult': typeof MainCardHashKultRoute
@@ -633,6 +656,7 @@ export interface FileRoutesById {
   '/api/tasks': typeof ApiTasksRouteWithChildren
   '/crew/auth-return': typeof CrewAuthReturnRoute
   '/crew/lautstaerke': typeof CrewLautstaerkeRouteWithChildren
+  '/crew/produkte': typeof CrewProdukteRouteWithChildren
   '/_main/': typeof MainIndexRoute
   '/crew/': typeof CrewIndexRoute
   '/_main/booking_/$applicationType': typeof MainBookingApplicationTypeRoute
@@ -674,8 +698,10 @@ export interface FileRoutesById {
   '/api/tasks/send-email': typeof ApiTasksSendEmailRoute
   '/api/tasks/spotify-listeners': typeof ApiTasksSpotifyListenersRoute
   '/crew/lautstaerke/$device': typeof CrewLautstaerkeDeviceRouteWithChildren
+  '/crew/produkte/$listId': typeof CrewProdukteListIdRoute
   '/_main/lineup/': typeof MainLineupIndexRoute
   '/crew/lautstaerke/': typeof CrewLautstaerkeIndexRoute
+  '/crew/produkte/': typeof CrewProdukteIndexRoute
   '/_main/booking_/$applicationType_/danke': typeof MainBookingApplicationTypeDankeRoute
   '/_main/card/$hash/crew': typeof MainCardHashCrewRoute
   '/_main/card/$hash/kult': typeof MainCardHashKultRoute
@@ -710,6 +736,7 @@ export interface FileRouteTypes {
     | '/api/tasks'
     | '/crew/auth-return'
     | '/crew/lautstaerke'
+    | '/crew/produkte'
     | '/crew/'
     | '/booking/$applicationType'
     | '/card/$hash'
@@ -750,8 +777,10 @@ export interface FileRouteTypes {
     | '/api/tasks/send-email'
     | '/api/tasks/spotify-listeners'
     | '/crew/lautstaerke/$device'
+    | '/crew/produkte/$listId'
     | '/lineup/'
     | '/crew/lautstaerke/'
+    | '/crew/produkte/'
     | '/booking/$applicationType/danke'
     | '/card/$hash/crew'
     | '/card/$hash/kult'
@@ -820,8 +849,10 @@ export interface FileRouteTypes {
     | '/api/tasks/nuclino-update-message'
     | '/api/tasks/send-email'
     | '/api/tasks/spotify-listeners'
+    | '/crew/produkte/$listId'
     | '/lineup'
     | '/crew/lautstaerke'
+    | '/crew/produkte'
     | '/booking/$applicationType/danke'
     | '/card/$hash/crew'
     | '/card/$hash/kult'
@@ -854,6 +885,7 @@ export interface FileRouteTypes {
     | '/api/tasks'
     | '/crew/auth-return'
     | '/crew/lautstaerke'
+    | '/crew/produkte'
     | '/_main/'
     | '/crew/'
     | '/_main/booking_/$applicationType'
@@ -895,8 +927,10 @@ export interface FileRouteTypes {
     | '/api/tasks/send-email'
     | '/api/tasks/spotify-listeners'
     | '/crew/lautstaerke/$device'
+    | '/crew/produkte/$listId'
     | '/_main/lineup/'
     | '/crew/lautstaerke/'
+    | '/crew/produkte/'
     | '/_main/booking_/$applicationType_/danke'
     | '/_main/card/$hash/crew'
     | '/_main/card/$hash/kult'
@@ -955,6 +989,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof MainIndexRouteImport
       parentRoute: typeof MainRoute
+    }
+    '/crew/produkte': {
+      id: '/crew/produkte'
+      path: '/produkte'
+      fullPath: '/crew/produkte'
+      preLoaderRoute: typeof CrewProdukteRouteImport
+      parentRoute: typeof CrewRoute
     }
     '/crew/lautstaerke': {
       id: '/crew/lautstaerke'
@@ -1096,6 +1137,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainSlugRouteImport
       parentRoute: typeof MainRoute
     }
+    '/crew/produkte/': {
+      id: '/crew/produkte/'
+      path: '/'
+      fullPath: '/crew/produkte/'
+      preLoaderRoute: typeof CrewProdukteIndexRouteImport
+      parentRoute: typeof CrewProdukteRoute
+    }
     '/crew/lautstaerke/': {
       id: '/crew/lautstaerke/'
       path: '/'
@@ -1109,6 +1157,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/lineup/'
       preLoaderRoute: typeof MainLineupIndexRouteImport
       parentRoute: typeof MainLineupRoute
+    }
+    '/crew/produkte/$listId': {
+      id: '/crew/produkte/$listId'
+      path: '/$listId'
+      fullPath: '/crew/produkte/$listId'
+      preLoaderRoute: typeof CrewProdukteListIdRouteImport
+      parentRoute: typeof CrewProdukteRoute
     }
     '/crew/lautstaerke/$device': {
       id: '/crew/lautstaerke/$device'
@@ -1555,15 +1610,31 @@ const CrewLautstaerkeRouteWithChildren = CrewLautstaerkeRoute._addFileChildren(
   CrewLautstaerkeRouteChildren,
 )
 
+interface CrewProdukteRouteChildren {
+  CrewProdukteListIdRoute: typeof CrewProdukteListIdRoute
+  CrewProdukteIndexRoute: typeof CrewProdukteIndexRoute
+}
+
+const CrewProdukteRouteChildren: CrewProdukteRouteChildren = {
+  CrewProdukteListIdRoute: CrewProdukteListIdRoute,
+  CrewProdukteIndexRoute: CrewProdukteIndexRoute,
+}
+
+const CrewProdukteRouteWithChildren = CrewProdukteRoute._addFileChildren(
+  CrewProdukteRouteChildren,
+)
+
 interface CrewRouteChildren {
   CrewAuthReturnRoute: typeof CrewAuthReturnRoute
   CrewLautstaerkeRoute: typeof CrewLautstaerkeRouteWithChildren
+  CrewProdukteRoute: typeof CrewProdukteRouteWithChildren
   CrewIndexRoute: typeof CrewIndexRoute
 }
 
 const CrewRouteChildren: CrewRouteChildren = {
   CrewAuthReturnRoute: CrewAuthReturnRoute,
   CrewLautstaerkeRoute: CrewLautstaerkeRouteWithChildren,
+  CrewProdukteRoute: CrewProdukteRouteWithChildren,
   CrewIndexRoute: CrewIndexRoute,
 }
 

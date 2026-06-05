@@ -74,6 +74,8 @@ model Product {
   order           Int
   productListId   Int
   requiresDeposit Boolean            @default(false)
+  diet            DietType?
+  minimumAge      MinimumAge         @default(NONE)
   productList     ProductList        @relation(fields: [productListId], references: [id])
   additives       ProductAdditives[] @relation("ProductToProductAdditives")
 }
@@ -394,6 +396,24 @@ model NoiseLog {
   lcpeak_1s Int   @db.SmallInt // unweighted abs sample peak (v1 approximation)
 
   @@unique([deviceId, measuredAt])
+}
+
+// Ordered diet chain: VEGAN ⊆ VEGETARIAN ⊆ OMNIVORE.
+// Only applies to consumables (food/drink); null = not applicable / unclassified.
+// Independent dietary axes (e.g. halal, gluten-free) should be added as their
+// own fields on Product rather than expanded into this enum.
+enum DietType {
+  OMNIVORE
+  VEGETARIAN
+  VEGAN
+}
+
+// Ordered age restriction (German Jugendschutzgesetz): NONE < AGE_16 < AGE_18.
+// AGE_16 = beer/wine, AGE_18 = spirits. Most products are NONE (given to anyone).
+enum MinimumAge {
+  NONE
+  AGE_16
+  AGE_18
 }
 
 enum NonceRequestStatus {

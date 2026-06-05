@@ -16,11 +16,18 @@ import {verifyDirectusSession} from '../server/directusAuth.server';
  * originally requested. That return path must be listed verbatim in
  * `AUTH_SLACK_REDIRECT_ALLOW_LIST` on the Directus side (it matches origin+path
  * exactly, ignoring the query string), or Directus refuses the redirect.
+ *
+ * In dev (`NODE_ENV !== 'production'`) the check is skipped so `/crew/*` is
+ * reachable from a local dev server — the `directus_session_token` cookie is
+ * scoped to `crew.kulturspektakel.de` and never reaches `localhost`.
  */
 const crewLoginUrl = createServerFn()
   .inputValidator((to: string) => to)
   .handler(({data}) => {
-    if (verifyDirectusSession(getCookie('directus_session_token'))) {
+    if (
+      process.env.NODE_ENV !== 'production' ||
+      verifyDirectusSession(getCookie('directus_session_token'))
+    ) {
       return null;
     }
     const returnUrl = new URL('/crew/auth-return', process.env.SITE_URL);

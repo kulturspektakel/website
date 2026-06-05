@@ -47,6 +47,8 @@ export type ProductMinAggregateOutputType = {
   order: number | null
   productListId: number | null
   requiresDeposit: boolean | null
+  diet: $Enums.DietType | null
+  minimumAge: $Enums.MinimumAge | null
 }
 
 export type ProductMaxAggregateOutputType = {
@@ -56,6 +58,8 @@ export type ProductMaxAggregateOutputType = {
   order: number | null
   productListId: number | null
   requiresDeposit: boolean | null
+  diet: $Enums.DietType | null
+  minimumAge: $Enums.MinimumAge | null
 }
 
 export type ProductCountAggregateOutputType = {
@@ -65,6 +69,8 @@ export type ProductCountAggregateOutputType = {
   order: number
   productListId: number
   requiresDeposit: number
+  diet: number
+  minimumAge: number
   _all: number
 }
 
@@ -90,6 +96,8 @@ export type ProductMinAggregateInputType = {
   order?: true
   productListId?: true
   requiresDeposit?: true
+  diet?: true
+  minimumAge?: true
 }
 
 export type ProductMaxAggregateInputType = {
@@ -99,6 +107,8 @@ export type ProductMaxAggregateInputType = {
   order?: true
   productListId?: true
   requiresDeposit?: true
+  diet?: true
+  minimumAge?: true
 }
 
 export type ProductCountAggregateInputType = {
@@ -108,6 +118,8 @@ export type ProductCountAggregateInputType = {
   order?: true
   productListId?: true
   requiresDeposit?: true
+  diet?: true
+  minimumAge?: true
   _all?: true
 }
 
@@ -204,6 +216,8 @@ export type ProductGroupByOutputType = {
   order: number
   productListId: number
   requiresDeposit: boolean
+  diet: $Enums.DietType | null
+  minimumAge: $Enums.MinimumAge
   _count: ProductCountAggregateOutputType | null
   _avg: ProductAvgAggregateOutputType | null
   _sum: ProductSumAggregateOutputType | null
@@ -236,6 +250,8 @@ export type ProductWhereInput = {
   order?: Prisma.IntFilter<"Product"> | number
   productListId?: Prisma.IntFilter<"Product"> | number
   requiresDeposit?: Prisma.BoolFilter<"Product"> | boolean
+  diet?: Prisma.EnumDietTypeNullableFilter<"Product"> | $Enums.DietType | null
+  minimumAge?: Prisma.EnumMinimumAgeFilter<"Product"> | $Enums.MinimumAge
   productList?: Prisma.XOR<Prisma.ProductListScalarRelationFilter, Prisma.ProductListWhereInput>
   additives?: Prisma.ProductAdditivesListRelationFilter
 }
@@ -247,6 +263,8 @@ export type ProductOrderByWithRelationInput = {
   order?: Prisma.SortOrder
   productListId?: Prisma.SortOrder
   requiresDeposit?: Prisma.SortOrder
+  diet?: Prisma.SortOrderInput | Prisma.SortOrder
+  minimumAge?: Prisma.SortOrder
   productList?: Prisma.ProductListOrderByWithRelationInput
   additives?: Prisma.ProductAdditivesOrderByRelationAggregateInput
   _relevance?: Prisma.ProductOrderByRelevanceInput
@@ -262,6 +280,8 @@ export type ProductWhereUniqueInput = Prisma.AtLeast<{
   order?: Prisma.IntFilter<"Product"> | number
   productListId?: Prisma.IntFilter<"Product"> | number
   requiresDeposit?: Prisma.BoolFilter<"Product"> | boolean
+  diet?: Prisma.EnumDietTypeNullableFilter<"Product"> | $Enums.DietType | null
+  minimumAge?: Prisma.EnumMinimumAgeFilter<"Product"> | $Enums.MinimumAge
   productList?: Prisma.XOR<Prisma.ProductListScalarRelationFilter, Prisma.ProductListWhereInput>
   additives?: Prisma.ProductAdditivesListRelationFilter
 }, "id">
@@ -273,6 +293,8 @@ export type ProductOrderByWithAggregationInput = {
   order?: Prisma.SortOrder
   productListId?: Prisma.SortOrder
   requiresDeposit?: Prisma.SortOrder
+  diet?: Prisma.SortOrderInput | Prisma.SortOrder
+  minimumAge?: Prisma.SortOrder
   _count?: Prisma.ProductCountOrderByAggregateInput
   _avg?: Prisma.ProductAvgOrderByAggregateInput
   _max?: Prisma.ProductMaxOrderByAggregateInput
@@ -290,6 +312,8 @@ export type ProductScalarWhereWithAggregatesInput = {
   order?: Prisma.IntWithAggregatesFilter<"Product"> | number
   productListId?: Prisma.IntWithAggregatesFilter<"Product"> | number
   requiresDeposit?: Prisma.BoolWithAggregatesFilter<"Product"> | boolean
+  diet?: Prisma.EnumDietTypeNullableWithAggregatesFilter<"Product"> | $Enums.DietType | null
+  minimumAge?: Prisma.EnumMinimumAgeWithAggregatesFilter<"Product"> | $Enums.MinimumAge
 }
 
 export type ProductCreateInput = {
@@ -297,6 +321,8 @@ export type ProductCreateInput = {
   price: number
   order: number
   requiresDeposit?: boolean
+  diet?: $Enums.DietType | null
+  minimumAge?: $Enums.MinimumAge
   productList: Prisma.ProductListCreateNestedOneWithoutProductInput
   additives?: Prisma.ProductAdditivesCreateNestedManyWithoutProductInput
 }
@@ -308,6 +334,8 @@ export type ProductUncheckedCreateInput = {
   order: number
   productListId: number
   requiresDeposit?: boolean
+  diet?: $Enums.DietType | null
+  minimumAge?: $Enums.MinimumAge
   additives?: Prisma.ProductAdditivesUncheckedCreateNestedManyWithoutProductInput
 }
 
@@ -316,6 +344,8 @@ export type ProductUpdateInput = {
   price?: Prisma.IntFieldUpdateOperationsInput | number
   order?: Prisma.IntFieldUpdateOperationsInput | number
   requiresDeposit?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  diet?: Prisma.NullableEnumDietTypeFieldUpdateOperationsInput | $Enums.DietType | null
+  minimumAge?: Prisma.EnumMinimumAgeFieldUpdateOperationsInput | $Enums.MinimumAge
   productList?: Prisma.ProductListUpdateOneRequiredWithoutProductNestedInput
   additives?: Prisma.ProductAdditivesUpdateManyWithoutProductNestedInput
 }
@@ -327,6 +357,8 @@ export type ProductUncheckedUpdateInput = {
   order?: Prisma.IntFieldUpdateOperationsInput | number
   productListId?: Prisma.IntFieldUpdateOperationsInput | number
   requiresDeposit?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  diet?: Prisma.NullableEnumDietTypeFieldUpdateOperationsInput | $Enums.DietType | null
+  minimumAge?: Prisma.EnumMinimumAgeFieldUpdateOperationsInput | $Enums.MinimumAge
   additives?: Prisma.ProductAdditivesUncheckedUpdateManyWithoutProductNestedInput
 }
 
@@ -337,6 +369,8 @@ export type ProductCreateManyInput = {
   order: number
   productListId: number
   requiresDeposit?: boolean
+  diet?: $Enums.DietType | null
+  minimumAge?: $Enums.MinimumAge
 }
 
 export type ProductUpdateManyMutationInput = {
@@ -344,6 +378,8 @@ export type ProductUpdateManyMutationInput = {
   price?: Prisma.IntFieldUpdateOperationsInput | number
   order?: Prisma.IntFieldUpdateOperationsInput | number
   requiresDeposit?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  diet?: Prisma.NullableEnumDietTypeFieldUpdateOperationsInput | $Enums.DietType | null
+  minimumAge?: Prisma.EnumMinimumAgeFieldUpdateOperationsInput | $Enums.MinimumAge
 }
 
 export type ProductUncheckedUpdateManyInput = {
@@ -353,6 +389,8 @@ export type ProductUncheckedUpdateManyInput = {
   order?: Prisma.IntFieldUpdateOperationsInput | number
   productListId?: Prisma.IntFieldUpdateOperationsInput | number
   requiresDeposit?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  diet?: Prisma.NullableEnumDietTypeFieldUpdateOperationsInput | $Enums.DietType | null
+  minimumAge?: Prisma.EnumMinimumAgeFieldUpdateOperationsInput | $Enums.MinimumAge
 }
 
 export type ProductListRelationFilter = {
@@ -378,6 +416,8 @@ export type ProductCountOrderByAggregateInput = {
   order?: Prisma.SortOrder
   productListId?: Prisma.SortOrder
   requiresDeposit?: Prisma.SortOrder
+  diet?: Prisma.SortOrder
+  minimumAge?: Prisma.SortOrder
 }
 
 export type ProductAvgOrderByAggregateInput = {
@@ -394,6 +434,8 @@ export type ProductMaxOrderByAggregateInput = {
   order?: Prisma.SortOrder
   productListId?: Prisma.SortOrder
   requiresDeposit?: Prisma.SortOrder
+  diet?: Prisma.SortOrder
+  minimumAge?: Prisma.SortOrder
 }
 
 export type ProductMinOrderByAggregateInput = {
@@ -403,6 +445,8 @@ export type ProductMinOrderByAggregateInput = {
   order?: Prisma.SortOrder
   productListId?: Prisma.SortOrder
   requiresDeposit?: Prisma.SortOrder
+  diet?: Prisma.SortOrder
+  minimumAge?: Prisma.SortOrder
 }
 
 export type ProductSumOrderByAggregateInput = {
@@ -454,6 +498,14 @@ export type ProductUncheckedUpdateManyWithoutProductListNestedInput = {
   deleteMany?: Prisma.ProductScalarWhereInput | Prisma.ProductScalarWhereInput[]
 }
 
+export type NullableEnumDietTypeFieldUpdateOperationsInput = {
+  set?: $Enums.DietType | null
+}
+
+export type EnumMinimumAgeFieldUpdateOperationsInput = {
+  set?: $Enums.MinimumAge
+}
+
 export type ProductCreateNestedManyWithoutAdditivesInput = {
   create?: Prisma.XOR<Prisma.ProductCreateWithoutAdditivesInput, Prisma.ProductUncheckedCreateWithoutAdditivesInput> | Prisma.ProductCreateWithoutAdditivesInput[] | Prisma.ProductUncheckedCreateWithoutAdditivesInput[]
   connectOrCreate?: Prisma.ProductCreateOrConnectWithoutAdditivesInput | Prisma.ProductCreateOrConnectWithoutAdditivesInput[]
@@ -497,6 +549,8 @@ export type ProductCreateWithoutProductListInput = {
   price: number
   order: number
   requiresDeposit?: boolean
+  diet?: $Enums.DietType | null
+  minimumAge?: $Enums.MinimumAge
   additives?: Prisma.ProductAdditivesCreateNestedManyWithoutProductInput
 }
 
@@ -506,6 +560,8 @@ export type ProductUncheckedCreateWithoutProductListInput = {
   price: number
   order: number
   requiresDeposit?: boolean
+  diet?: $Enums.DietType | null
+  minimumAge?: $Enums.MinimumAge
   additives?: Prisma.ProductAdditivesUncheckedCreateNestedManyWithoutProductInput
 }
 
@@ -545,6 +601,8 @@ export type ProductScalarWhereInput = {
   order?: Prisma.IntFilter<"Product"> | number
   productListId?: Prisma.IntFilter<"Product"> | number
   requiresDeposit?: Prisma.BoolFilter<"Product"> | boolean
+  diet?: Prisma.EnumDietTypeNullableFilter<"Product"> | $Enums.DietType | null
+  minimumAge?: Prisma.EnumMinimumAgeFilter<"Product"> | $Enums.MinimumAge
 }
 
 export type ProductCreateWithoutAdditivesInput = {
@@ -552,6 +610,8 @@ export type ProductCreateWithoutAdditivesInput = {
   price: number
   order: number
   requiresDeposit?: boolean
+  diet?: $Enums.DietType | null
+  minimumAge?: $Enums.MinimumAge
   productList: Prisma.ProductListCreateNestedOneWithoutProductInput
 }
 
@@ -562,6 +622,8 @@ export type ProductUncheckedCreateWithoutAdditivesInput = {
   order: number
   productListId: number
   requiresDeposit?: boolean
+  diet?: $Enums.DietType | null
+  minimumAge?: $Enums.MinimumAge
 }
 
 export type ProductCreateOrConnectWithoutAdditivesInput = {
@@ -591,6 +653,8 @@ export type ProductCreateManyProductListInput = {
   price: number
   order: number
   requiresDeposit?: boolean
+  diet?: $Enums.DietType | null
+  minimumAge?: $Enums.MinimumAge
 }
 
 export type ProductUpdateWithoutProductListInput = {
@@ -598,6 +662,8 @@ export type ProductUpdateWithoutProductListInput = {
   price?: Prisma.IntFieldUpdateOperationsInput | number
   order?: Prisma.IntFieldUpdateOperationsInput | number
   requiresDeposit?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  diet?: Prisma.NullableEnumDietTypeFieldUpdateOperationsInput | $Enums.DietType | null
+  minimumAge?: Prisma.EnumMinimumAgeFieldUpdateOperationsInput | $Enums.MinimumAge
   additives?: Prisma.ProductAdditivesUpdateManyWithoutProductNestedInput
 }
 
@@ -607,6 +673,8 @@ export type ProductUncheckedUpdateWithoutProductListInput = {
   price?: Prisma.IntFieldUpdateOperationsInput | number
   order?: Prisma.IntFieldUpdateOperationsInput | number
   requiresDeposit?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  diet?: Prisma.NullableEnumDietTypeFieldUpdateOperationsInput | $Enums.DietType | null
+  minimumAge?: Prisma.EnumMinimumAgeFieldUpdateOperationsInput | $Enums.MinimumAge
   additives?: Prisma.ProductAdditivesUncheckedUpdateManyWithoutProductNestedInput
 }
 
@@ -616,6 +684,8 @@ export type ProductUncheckedUpdateManyWithoutProductListInput = {
   price?: Prisma.IntFieldUpdateOperationsInput | number
   order?: Prisma.IntFieldUpdateOperationsInput | number
   requiresDeposit?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  diet?: Prisma.NullableEnumDietTypeFieldUpdateOperationsInput | $Enums.DietType | null
+  minimumAge?: Prisma.EnumMinimumAgeFieldUpdateOperationsInput | $Enums.MinimumAge
 }
 
 export type ProductUpdateWithoutAdditivesInput = {
@@ -623,6 +693,8 @@ export type ProductUpdateWithoutAdditivesInput = {
   price?: Prisma.IntFieldUpdateOperationsInput | number
   order?: Prisma.IntFieldUpdateOperationsInput | number
   requiresDeposit?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  diet?: Prisma.NullableEnumDietTypeFieldUpdateOperationsInput | $Enums.DietType | null
+  minimumAge?: Prisma.EnumMinimumAgeFieldUpdateOperationsInput | $Enums.MinimumAge
   productList?: Prisma.ProductListUpdateOneRequiredWithoutProductNestedInput
 }
 
@@ -633,6 +705,8 @@ export type ProductUncheckedUpdateWithoutAdditivesInput = {
   order?: Prisma.IntFieldUpdateOperationsInput | number
   productListId?: Prisma.IntFieldUpdateOperationsInput | number
   requiresDeposit?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  diet?: Prisma.NullableEnumDietTypeFieldUpdateOperationsInput | $Enums.DietType | null
+  minimumAge?: Prisma.EnumMinimumAgeFieldUpdateOperationsInput | $Enums.MinimumAge
 }
 
 export type ProductUncheckedUpdateManyWithoutAdditivesInput = {
@@ -642,6 +716,8 @@ export type ProductUncheckedUpdateManyWithoutAdditivesInput = {
   order?: Prisma.IntFieldUpdateOperationsInput | number
   productListId?: Prisma.IntFieldUpdateOperationsInput | number
   requiresDeposit?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  diet?: Prisma.NullableEnumDietTypeFieldUpdateOperationsInput | $Enums.DietType | null
+  minimumAge?: Prisma.EnumMinimumAgeFieldUpdateOperationsInput | $Enums.MinimumAge
 }
 
 
@@ -682,6 +758,8 @@ export type ProductSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   order?: boolean
   productListId?: boolean
   requiresDeposit?: boolean
+  diet?: boolean
+  minimumAge?: boolean
   productList?: boolean | Prisma.ProductListDefaultArgs<ExtArgs>
   additives?: boolean | Prisma.Product$additivesArgs<ExtArgs>
   _count?: boolean | Prisma.ProductCountOutputTypeDefaultArgs<ExtArgs>
@@ -694,6 +772,8 @@ export type ProductSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   order?: boolean
   productListId?: boolean
   requiresDeposit?: boolean
+  diet?: boolean
+  minimumAge?: boolean
   productList?: boolean | Prisma.ProductListDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["product"]>
 
@@ -704,6 +784,8 @@ export type ProductSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   order?: boolean
   productListId?: boolean
   requiresDeposit?: boolean
+  diet?: boolean
+  minimumAge?: boolean
   productList?: boolean | Prisma.ProductListDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["product"]>
 
@@ -714,9 +796,11 @@ export type ProductSelectScalar = {
   order?: boolean
   productListId?: boolean
   requiresDeposit?: boolean
+  diet?: boolean
+  minimumAge?: boolean
 }
 
-export type ProductOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "price" | "order" | "productListId" | "requiresDeposit", ExtArgs["result"]["product"]>
+export type ProductOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "price" | "order" | "productListId" | "requiresDeposit" | "diet" | "minimumAge", ExtArgs["result"]["product"]>
 export type ProductInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   productList?: boolean | Prisma.ProductListDefaultArgs<ExtArgs>
   additives?: boolean | Prisma.Product$additivesArgs<ExtArgs>
@@ -742,6 +826,8 @@ export type $ProductPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     order: number
     productListId: number
     requiresDeposit: boolean
+    diet: $Enums.DietType | null
+    minimumAge: $Enums.MinimumAge
   }, ExtArgs["result"]["product"]>
   composites: {}
 }
@@ -1173,6 +1259,8 @@ export interface ProductFieldRefs {
   readonly order: Prisma.FieldRef<"Product", 'Int'>
   readonly productListId: Prisma.FieldRef<"Product", 'Int'>
   readonly requiresDeposit: Prisma.FieldRef<"Product", 'Boolean'>
+  readonly diet: Prisma.FieldRef<"Product", 'DietType'>
+  readonly minimumAge: Prisma.FieldRef<"Product", 'MinimumAge'>
 }
     
 

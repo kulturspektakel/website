@@ -9,6 +9,24 @@
 * 🟢 You can import this file directly.
 */
 
+export const DietType = {
+  OMNIVORE: 'OMNIVORE',
+  VEGETARIAN: 'VEGETARIAN',
+  VEGAN: 'VEGAN'
+} as const
+
+export type DietType = (typeof DietType)[keyof typeof DietType]
+
+
+export const MinimumAge = {
+  NONE: 'NONE',
+  AGE_16: 'AGE_16',
+  AGE_18: 'AGE_18'
+} as const
+
+export type MinimumAge = (typeof MinimumAge)[keyof typeof MinimumAge]
+
+
 export const NonceRequestStatus = {
   Pending: 'Pending',
   Approved: 'Approved',
