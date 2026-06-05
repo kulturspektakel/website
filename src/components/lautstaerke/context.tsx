@@ -118,7 +118,6 @@ export type BluetoothSlice = {
 export type LautstaerkeCtx = {
   connected: boolean;
   devices: Record<string, DeviceState>;
-  bus: EventTarget;
   deviceData: MutableRefObject<Record<string, DeviceBuffer>>;
   bluetooth: BluetoothSlice;
   // All NOISE_MONITOR device ids from the database (sorted). This is the set of

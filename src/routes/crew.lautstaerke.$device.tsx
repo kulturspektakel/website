@@ -25,10 +25,7 @@ import {
 } from '../components/lautstaerke/context';
 import {BatteryChip} from '../components/lautstaerke/BatteryChip';
 import {BluetoothChip} from '../components/lautstaerke/BluetoothChip';
-import {
-  type NoiseRecording,
-  type NoiseRecording_Record as NoiseRecord,
-} from '../proto/noise';
+import {type NoiseRecording} from '../proto/noise';
 import {seo} from '../utils/seo';
 
 export const Route = createFileRoute('/crew/lautstaerke/$device')({
@@ -50,6 +47,8 @@ const resolveCssVar = (cssVar: string, fallback: string): string => {
 
 const AXIS_STROKE_VAR = 'var(--chakra-colors-gray-400)';
 const GRID_STROKE_VAR = 'var(--chakra-colors-gray-700)';
+// How long the live spectrum stays on the band chart after the last record.
+const BAND_FRESH_MS = 2_500;
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
 const fmtTime = (ts: number) => {
@@ -128,106 +127,14 @@ function BigNumber({
   );
 }
 
-function BandChart({record}: {record: NoiseRecord | null}) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const plotRef = useRef<uPlot | null>(null);
-  const xs = useMemo(() => FREQS.map((_, i) => i), []);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    const axisStroke = resolveCssVar(AXIS_STROKE_VAR, '#9ca3af');
-    const gridStroke = resolveCssVar(GRID_STROKE_VAR, '#374151');
-    const canvasHeight = () =>
-      Math.max(100, container.clientHeight || 240);
-
-    const opts: uPlot.Options = {
-      width: container.clientWidth || 800,
-      height: canvasHeight(),
-      legend: {show: false},
-      // No hover interaction on the frequency chart — kill the crosshair.
-      cursor: {show: false},
-      scales: {
-        x: {time: false, range: () => [-0.7, FREQS.length - 0.3]},
-        y: {range: () => [30, 110]},
-      },
-      axes: [
-        {
-          values: (_u, ticks) =>
-            ticks.map((t) => {
-              const f = FREQS[Math.round(t)];
-              return f == null ? '' : fmtHz(f);
-            }),
-          rotate: -45,
-          size: 50,
-          space: 28,
-          stroke: axisStroke,
-          grid: {stroke: gridStroke},
-          ticks: {stroke: gridStroke},
-        },
-        {
-          stroke: axisStroke,
-          grid: {stroke: gridStroke},
-          ticks: {stroke: gridStroke},
-        },
-      ],
-      series: [
-        {
-          label: 'Frequenz',
-          value: (_u, v) => (v == null ? '' : `${fmtHz(FREQS[Math.round(v)] ?? 0)} Hz`),
-        },
-        {
-          label: 'Pegel',
-          stroke: '#fef08a',
-          fill: '#fef08a',
-          paths: uPlot.paths.bars!({size: [0.85, 60]}),
-          points: {show: false},
-          value: (_u, v) => (v == null ? '' : `${v.toFixed(1)} dB`),
-        },
-      ],
-    };
-
-    const plot = new uPlot(
-      opts,
-      [xs, new Array(FREQS.length).fill(NaN)] as uPlot.AlignedData,
-      container,
-    );
-    plotRef.current = plot;
-
-    const ro = new ResizeObserver(() => {
-      plot.setSize({
-        width: container.clientWidth,
-        height: canvasHeight(),
-      });
-    });
-    ro.observe(container);
-
-    return () => {
-      ro.disconnect();
-      plot.destroy();
-      plotRef.current = null;
-    };
-  }, [xs]);
-
-  useEffect(() => {
-    const plot = plotRef.current;
-    if (!plot) return;
-    const ys = record
-      ? Array.from(record.bands, (b) => decodeDb(b))
-      : new Array(FREQS.length).fill(NaN);
-    plot.setData([xs, ys] as uPlot.AlignedData);
-  }, [record, xs]);
-
-  return (
-    <Box ref={containerRef} w="full" h="full" />
-  );
-}
-
 function DeviceDetail() {
   const {device} = Route.useParams();
   const ctx = useLautstaerkeCtx();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const plotRef = useRef<uPlot | null>(null);
+  const bandRef = useRef<HTMLDivElement | null>(null);
+  const bandPlotRef = useRef<uPlot | null>(null);
+  const bandXs = useMemo(() => FREQS.map((_, i) => i), []);
   const now = useTick();
   const [weighting, setWeighting] = useState<Weighting>('A');
   // Chart cursor: null when not hovering (big numbers show live values), a
@@ -251,7 +158,10 @@ function DeviceDetail() {
 
   const deviceState = ctx.devices[device];
   const latest = deviceState?.latest ?? null;
-  const bandRecord = isFresh(deviceState?.lastSeen, now) ? latest : null;
+  // Read by the 1 Hz tick (below) without making it a dependency, so the tick
+  // always sees the current state without being torn down on every record.
+  const deviceStateRef = useRef(deviceState);
+  deviceStateRef.current = deviceState;
 
   useEffect(() => {
     const container = containerRef.current;
@@ -348,18 +258,122 @@ function DeviceDetail() {
     });
     ro.observe(container);
 
-    const handler = () => {
-      plotRef.current?.setData(project());
-    };
-    ctx.bus.addEventListener(`record:${device}`, handler);
-
     return () => {
-      ctx.bus.removeEventListener(`record:${device}`, handler);
       ro.disconnect();
       plot.destroy();
       plotRef.current = null;
     };
-  }, [device, ctx.bus, ctx.deviceData, weighting]);
+  }, [device, ctx.deviceData, weighting]);
+
+  // Frequency-band chart. Created once; its data is set by the shared tick.
+  useEffect(() => {
+    const container = bandRef.current;
+    if (!container) return;
+    const axisStroke = resolveCssVar(AXIS_STROKE_VAR, '#9ca3af');
+    const gridStroke = resolveCssVar(GRID_STROKE_VAR, '#374151');
+    const canvasHeight = () => Math.max(100, container.clientHeight || 240);
+
+    const opts: uPlot.Options = {
+      width: container.clientWidth || 800,
+      height: canvasHeight(),
+      legend: {show: false},
+      // No hover interaction on the frequency chart — kill the crosshair.
+      cursor: {show: false},
+      scales: {
+        x: {time: false, range: () => [-0.7, FREQS.length - 0.3]},
+        y: {range: () => [30, 110]},
+      },
+      axes: [
+        {
+          values: (_u, ticks) =>
+            ticks.map((t) => {
+              const f = FREQS[Math.round(t)];
+              return f == null ? '' : fmtHz(f);
+            }),
+          rotate: -45,
+          size: 50,
+          space: 28,
+          stroke: axisStroke,
+          grid: {stroke: gridStroke},
+          ticks: {stroke: gridStroke},
+        },
+        {
+          stroke: axisStroke,
+          grid: {stroke: gridStroke},
+          ticks: {stroke: gridStroke},
+        },
+      ],
+      series: [
+        {
+          label: 'Frequenz',
+          value: (_u, v) =>
+            v == null ? '' : `${fmtHz(FREQS[Math.round(v)] ?? 0)} Hz`,
+        },
+        {
+          label: 'Pegel',
+          stroke: '#fef08a',
+          fill: '#fef08a',
+          paths: uPlot.paths.bars!({size: [0.85, 60]}),
+          points: {show: false},
+          value: (_u, v) => (v == null ? '' : `${v.toFixed(1)} dB`),
+        },
+      ],
+    };
+
+    const plot = new uPlot(
+      opts,
+      [bandXs, new Array(FREQS.length).fill(NaN)] as uPlot.AlignedData,
+      container,
+    );
+    bandPlotRef.current = plot;
+
+    const ro = new ResizeObserver(() => {
+      plot.setSize({width: container.clientWidth, height: canvasHeight()});
+    });
+    ro.observe(container);
+
+    return () => {
+      ro.disconnect();
+      plot.destroy();
+      bandPlotRef.current = null;
+    };
+  }, [bandXs]);
+
+  // Single 1 Hz tick driving both charts. The time chart re-projects the
+  // rolling buffer — keeping its right edge at "now" and rendering gaps when
+  // data stops — while the band chart shows the live spectrum, or empty bars
+  // once the latest record is older than BAND_FRESH_MS (missing vs live data).
+  useEffect(() => {
+    const visibleCols = SERIES.map((s, i) => ({s, col: i + 1})).filter(
+      ({s}) => s.weighting === weighting,
+    );
+    const emptyBands = new Array(FREQS.length).fill(NaN);
+
+    const tick = () => {
+      const fullData = ctx.deviceData.current[device];
+      const timePlot = plotRef.current;
+      if (timePlot && fullData) {
+        timePlot.setData([
+          fullData[0],
+          ...visibleCols.map(({col}) => fullData[col]),
+        ] as uPlot.AlignedData);
+      }
+      const bandPlot = bandPlotRef.current;
+      if (bandPlot) {
+        const st = deviceStateRef.current;
+        const live =
+          st?.lastSeen != null && Date.now() - st.lastSeen < BAND_FRESH_MS;
+        const ys = live
+          ? Array.from(st.latest.bands, (b) => decodeDb(b))
+          : emptyBands;
+        bandPlot.setData([bandXs, ys] as uPlot.AlignedData);
+      }
+    };
+
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [device, weighting, ctx.deviceData, bandXs]);
 
   // Push big-number show/hide toggles into the chart. Kept separate from plot
   // creation so toggling a series doesn't tear down and rebuild the whole plot.
@@ -418,6 +432,13 @@ function DeviceDetail() {
             </Heading>
           )}
           <HStack gap="2">
+            <Box
+              w="3"
+              h="3"
+              rounded="full"
+              flexShrink="0"
+              bg={isFresh(deviceState?.lastSeen, now) ? 'green.500' : 'gray.400'}
+            />
             {ctx.deviceLocations[device] ? (
               <Text
                 fontFamily="mono"
@@ -487,9 +508,7 @@ function DeviceDetail() {
             },
           }}
         />
-        <Box flex="1" minH="200px">
-          <BandChart record={bandRecord} />
-        </Box>
+        <Box flex="1" minH="200px" ref={bandRef} overflow="hidden" />
       </Flex>
     </Box>
   );

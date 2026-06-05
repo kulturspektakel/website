@@ -65,7 +65,6 @@ function LautstaerkeLayout() {
   } = Route.useLoaderData();
   const [connected, setConnected] = useState(false);
   const [devices, setDevices] = useState<Record<string, DeviceState>>({});
-  const busRef = useRef<EventTarget>(new EventTarget());
   const deviceDataRef = useRef<Record<string, DeviceBuffer>>({});
 
   const [bleDeviceName, setBleDeviceName] = useState<string | null>(null);
@@ -114,11 +113,6 @@ function LautstaerkeLayout() {
           batteryMv: decoded.batteryMv,
         },
       }));
-      busRef.current.dispatchEvent(
-        new CustomEvent(`record:${deviceName}`, {
-          detail: {record, receiveTime},
-        }),
-      );
     },
     [],
   );
@@ -249,7 +243,6 @@ function LautstaerkeLayout() {
     () => ({
       connected,
       devices,
-      bus: busRef.current,
       deviceData: deviceDataRef,
       deviceIds,
       deviceLocations: locations,
