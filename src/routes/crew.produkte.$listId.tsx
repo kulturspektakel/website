@@ -1,4 +1,4 @@
-import {createFileRoute, notFound} from '@tanstack/react-router';
+import {createFileRoute, notFound, useBlocker} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
 import {
   Badge,
@@ -6,7 +6,6 @@ import {
   Button,
   Heading,
   HStack,
-  IconButton,
   Span,
   Stack,
   Text,
@@ -15,7 +14,7 @@ import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import {Form, Formik, useField} from 'formik';
 import {toFormikValidate} from 'zod-formik-adapter';
 import {z} from 'zod';
-import {useEffect, useState} from 'react';
+import {useEffect, useMemo, useRef, useState} from 'react';
 import {
   DndContext,
   PointerSensor,
@@ -31,7 +30,6 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import {CSS} from '@dnd-kit/utilities';
-import {FaGripVertical, FaPen, FaTrash} from 'react-icons/fa6';
 import {prismaClient} from '../server/prismaClient.server';
 import {formatCents, parseEuroToCents} from '../utils/currency';
 import {listAdditives} from './crew.produkte';
@@ -145,65 +143,64 @@ const productFields = z.object({
   additiveIds: z.array(z.string()),
 });
 
-const createProduct = createServerFn()
-  .inputValidator(productFields.extend({productListId: z.number().int()}))
-  .handler(async ({data}) => {
-    const max = await prismaClient.product.aggregate({
-      where: {productListId: data.productListId},
-      _max: {order: true},
-    });
-    await prismaClient.product.create({
-      data: {
-        productListId: data.productListId,
-        name: data.name,
-        price: data.price,
-        order: (max._max.order ?? -1) + 1,
-        requiresDeposit: data.requiresDeposit,
-        diet: data.diet,
-        minimumAge: data.minimumAge,
-        additives: {connect: data.additiveIds.map((id) => ({id}))},
-      },
-    });
-  });
-
-const updateProduct = createServerFn()
-  .inputValidator(productFields.extend({id: z.number().int()}))
-  .handler(async ({data}) => {
-    await prismaClient.product.update({
-      where: {id: data.id},
-      data: {
-        name: data.name,
-        price: data.price,
-        requiresDeposit: data.requiresDeposit,
-        diet: data.diet,
-        minimumAge: data.minimumAge,
-        additives: {set: data.additiveIds.map((id) => ({id}))},
-      },
-    });
-  });
-
-const deleteProduct = createServerFn()
-  .inputValidator((id: number) => id)
-  .handler(async ({data: id}) => {
-    await prismaClient.product.delete({where: {id}});
-  });
-
-const reorderProducts = createServerFn()
+/**
+ * Persist the whole desired product list in one transaction: products with an
+ * `id` are updated, those without are created, and any existing product missing
+ * from the payload is deleted. `order` is taken from the array position, so a
+ * reorder is just a different array order. This mirrors the deferred-edit UI,
+ * where add/edit/delete/reorder are staged client-side and committed at once.
+ */
+const saveProducts = createServerFn()
   .inputValidator(
     z.object({
       productListId: z.number().int(),
-      orderedIds: z.array(z.number().int()),
+      products: z.array(productFields.extend({id: z.number().int().nullable()})),
     }),
   )
   .handler(async ({data}) => {
-    await prismaClient.$transaction(
-      data.orderedIds.map((id, index) =>
-        prismaClient.product.update({
-          where: {id},
-          data: {order: index},
-        }),
-      ),
+    const existing = await prismaClient.product.findMany({
+      where: {productListId: data.productListId},
+      select: {id: true},
+    });
+    const keep = new Set(
+      data.products.flatMap((p) => (p.id == null ? [] : [p.id])),
     );
+    const toDelete = existing
+      .filter((e) => !keep.has(e.id))
+      .map((e) => e.id);
+
+    await prismaClient.$transaction([
+      ...(toDelete.length
+        ? [prismaClient.product.deleteMany({where: {id: {in: toDelete}}})]
+        : []),
+      ...data.products.map((p, index) =>
+        p.id == null
+          ? prismaClient.product.create({
+              data: {
+                productListId: data.productListId,
+                name: p.name,
+                price: p.price,
+                order: index,
+                requiresDeposit: p.requiresDeposit,
+                diet: p.diet,
+                minimumAge: p.minimumAge,
+                additives: {connect: p.additiveIds.map((id) => ({id}))},
+              },
+            })
+          : prismaClient.product.update({
+              where: {id: p.id},
+              data: {
+                name: p.name,
+                price: p.price,
+                order: index,
+                requiresDeposit: p.requiresDeposit,
+                diet: p.diet,
+                minimumAge: p.minimumAge,
+                additives: {set: p.additiveIds.map((id) => ({id}))},
+              },
+            }),
+      ),
+    ]);
   });
 
 // ---------------------------------------------------------------------------
@@ -242,7 +239,12 @@ function ProductListEditor() {
           await queryClient.invalidateQueries({queryKey: ['productLists']});
         }}
       />
-      <Products listId={list.id} products={list.product} onChanged={invalidate} />
+      <Products
+        key={list.id}
+        listId={list.id}
+        products={list.product}
+        onSaved={invalidate}
+      />
     </Stack>
   );
 }
@@ -317,89 +319,165 @@ function ListSettings({
 // Products
 // ---------------------------------------------------------------------------
 
+/**
+ * Client-side working copy of a product. `id` is `null` for products that have
+ * been added but not yet saved; `key` is a stable identifier for React/dnd-kit
+ * that survives reorders (and exists for unsaved products that have no `id`).
+ */
+type DraftProduct = {
+  key: string;
+  id: number | null;
+  name: string;
+  price: number;
+  requiresDeposit: boolean;
+  diet: (typeof DIET_VALUES)[number] | null;
+  minimumAge: (typeof AGE_VALUES)[number];
+  additiveIds: string[];
+};
+
+type DraftValues = Omit<DraftProduct, 'key' | 'id'>;
+
+function toDraft(p: ProductData): DraftProduct {
+  return {
+    key: `p${p.id}`,
+    id: p.id,
+    name: p.name,
+    price: p.price,
+    requiresDeposit: p.requiresDeposit,
+    diet: p.diet,
+    minimumAge: p.minimumAge,
+    additiveIds: p.additives.map((a) => a.id),
+  };
+}
+
+// Order-sensitive fingerprint used to detect unsaved changes.
+function fingerprint(draft: DraftProduct[]): string {
+  return JSON.stringify(
+    draft.map((d) => ({
+      id: d.id,
+      name: d.name,
+      price: d.price,
+      requiresDeposit: d.requiresDeposit,
+      diet: d.diet,
+      minimumAge: d.minimumAge,
+      additiveIds: [...d.additiveIds].sort(),
+    })),
+  );
+}
+
 function Products({
   listId,
   products,
-  onChanged,
+  onSaved,
 }: {
   listId: number;
   products: ProductData[];
-  onChanged: () => Promise<void> | void;
+  onSaved: () => Promise<void> | void;
 }) {
-  const [ordered, setOrdered] = useState(products);
+  const [draft, setDraft] = useState<DraftProduct[]>(() =>
+    products.map(toDraft),
+  );
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogProduct, setDialogProduct] = useState<ProductData | null>(null);
+  const [editingKey, setEditingKey] = useState<string | null>(null);
+  const tempSeq = useRef(0);
+  const justDragged = useRef(false);
 
   useEffect(() => {
-    setOrdered(products);
+    setDraft(products.map(toDraft));
   }, [products]);
 
-  const sensors = useSensors(useSensor(PointerSensor));
+  const saved = useMemo(() => fingerprint(products.map(toDraft)), [products]);
+  const dirty = fingerprint(draft) !== saved;
 
-  const reorderMutation = useMutation({
-    mutationFn: (orderedIds: number[]) =>
-      reorderProducts({data: {productListId: listId, orderedIds}}),
-    onSuccess: () => onChanged(),
+  // Warn before navigating away (incl. switching lists) or unloading with
+  // unsaved changes.
+  useBlocker({
+    disabled: !dirty,
+    enableBeforeUnload: () => dirty,
+    shouldBlockFn: () =>
+      !window.confirm('Es gibt ungespeicherte Änderungen. Verwerfen?'),
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (id: number) => deleteProduct({data: id}),
-    onSuccess: () => onChanged(),
+  const sensors = useSensors(
+    useSensor(PointerSensor, {activationConstraint: {distance: 5}}),
+  );
+
+  const saveMutation = useMutation({
+    mutationFn: () =>
+      saveProducts({
+        data: {
+          productListId: listId,
+          products: draft.map((d) => ({
+            id: d.id,
+            name: d.name,
+            price: d.price,
+            requiresDeposit: d.requiresDeposit,
+            diet: d.diet,
+            minimumAge: d.minimumAge,
+            additiveIds: d.additiveIds,
+          })),
+        },
+      }),
+    onSuccess: () => onSaved(),
   });
 
   const onDragEnd = (event: DragEndEvent) => {
+    justDragged.current = true;
+    setTimeout(() => {
+      justDragged.current = false;
+    }, 50);
     const {active, over} = event;
     if (!over || active.id === over.id) return;
-    const oldIndex = ordered.findIndex((p) => p.id === Number(active.id));
-    const newIndex = ordered.findIndex((p) => p.id === Number(over.id));
-    if (oldIndex < 0 || newIndex < 0) return;
-    const next = arrayMove(ordered, oldIndex, newIndex);
-    setOrdered(next);
-    reorderMutation.mutate(next.map((p) => p.id));
+    setDraft((cur) => {
+      const oldIndex = cur.findIndex((p) => p.key === active.id);
+      const newIndex = cur.findIndex((p) => p.key === over.id);
+      if (oldIndex < 0 || newIndex < 0) return cur;
+      return arrayMove(cur, oldIndex, newIndex);
+    });
+  };
+
+  const editing = draft.find((d) => d.key === editingKey) ?? null;
+
+  const applyDialog = (values: DraftValues) => {
+    setDraft((cur) =>
+      editingKey == null
+        ? [...cur, {key: `new${tempSeq.current++}`, id: null, ...values}]
+        : cur.map((d) => (d.key === editingKey ? {...d, ...values} : d)),
+    );
+    setDialogOpen(false);
+  };
+
+  const deleteDialog = () => {
+    setDraft((cur) => cur.filter((d) => d.key !== editingKey));
+    setDialogOpen(false);
   };
 
   return (
     <Box>
-      <HStack justify="space-between" mb="3">
-        <Heading size="md">Produkte</Heading>
-        <Button
-          size="sm"
-          onClick={() => {
-            setDialogProduct(null);
-            setDialogOpen(true);
-          }}
-        >
-          Produkt hinzufügen
-        </Button>
-      </HStack>
+      <Heading size="md" mb="3">
+        Produkte
+      </Heading>
 
-      {ordered.length === 0 ? (
-        <Text color="fg.muted">Noch keine Produkte.</Text>
-      ) : (
+      {draft.length > 0 && (
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragEnd={onDragEnd}
         >
           <SortableContext
-            items={ordered.map((p) => p.id)}
+            items={draft.map((p) => p.key)}
             strategy={verticalListSortingStrategy}
           >
-            <Stack gap="2">
-              {ordered.map((product) => (
+            <Stack gap="2" mb="3">
+              {draft.map((product, index) => (
                 <ProductRow
-                  key={product.id}
+                  key={product.key}
                   product={product}
+                  position={index + 1}
                   onEdit={() => {
-                    setDialogProduct(product);
+                    if (justDragged.current) return;
+                    setEditingKey(product.key);
                     setDialogOpen(true);
-                  }}
-                  onDelete={() => {
-                    if (
-                      window.confirm(`„${product.name}" wirklich löschen?`)
-                    ) {
-                      deleteMutation.mutate(product.id);
-                    }
                   }}
                 />
               ))}
@@ -408,15 +486,32 @@ function Products({
         </DndContext>
       )}
 
+      <Button
+        variant="outline"
+        w="full"
+        mb="6"
+        onClick={() => {
+          setEditingKey(null);
+          setDialogOpen(true);
+        }}
+      >
+        Produkt hinzufügen
+      </Button>
+
+      <Button
+        onClick={() => saveMutation.mutate()}
+        loading={saveMutation.isPending}
+        disabled={!dirty}
+      >
+        Speichern
+      </Button>
+
       <ProductDialog
         open={dialogOpen}
-        listId={listId}
-        product={dialogProduct}
-        onClose={() => setDialogOpen(false)}
-        onSaved={async () => {
-          await onChanged();
-          setDialogOpen(false);
-        }}
+        product={editing}
+        onCancel={() => setDialogOpen(false)}
+        onSave={applyDialog}
+        onDelete={editing ? deleteDialog : undefined}
       />
     </Box>
   );
@@ -424,15 +519,15 @@ function Products({
 
 function ProductRow({
   product,
+  position,
   onEdit,
-  onDelete,
 }: {
-  product: ProductData;
+  product: DraftProduct;
+  position: number;
   onEdit: () => void;
-  onDelete: () => void;
 }) {
   const {attributes, listeners, setNodeRef, transform, transition, isDragging} =
-    useSortable({id: product.id});
+    useSortable({id: product.key});
 
   return (
     <HStack
@@ -447,52 +542,33 @@ function ProductRow({
       p="2"
       gap="3"
       bg="bg"
+      cursor="grab"
+      _hover={{bg: 'bg.muted'}}
+      onClick={onEdit}
+      {...attributes}
+      {...listeners}
     >
-      <IconButton
-        aria-label="Verschieben"
-        variant="ghost"
-        size="sm"
-        cursor="grab"
-        {...attributes}
-        {...listeners}
-      >
-        <FaGripVertical />
-      </IconButton>
+      <Span minW="6" textAlign="center" fontWeight="bold" color="fg.muted">
+        {position}
+      </Span>
       <Box flex="1">
         <Text fontWeight="medium">{product.name}</Text>
         <HStack gap="2" mt="1">
           {product.requiresDeposit && <Badge colorPalette="orange">Pfand</Badge>}
-          {product.diet && (
+          {product.diet && product.diet !== 'OMNIVORE' && (
             <Badge colorPalette="green">{DIET_LABELS[product.diet]}</Badge>
           )}
           {product.minimumAge !== 'NONE' && (
             <Badge colorPalette="red">{AGE_LABELS[product.minimumAge]}</Badge>
           )}
-          {product.additives.length > 0 && (
+          {product.additiveIds.length > 0 && (
             <Badge variant="surface">
-              {product.additives.length} Zusatzstoffe
+              {product.additiveIds.length} Zusatzstoffe
             </Badge>
           )}
         </HStack>
       </Box>
       <Span fontWeight="medium">{formatCents(product.price)}</Span>
-      <IconButton
-        aria-label="Bearbeiten"
-        variant="ghost"
-        size="sm"
-        onClick={onEdit}
-      >
-        <FaPen />
-      </IconButton>
-      <IconButton
-        aria-label="Löschen"
-        variant="ghost"
-        size="sm"
-        colorPalette="red"
-        onClick={onDelete}
-      >
-        <FaTrash />
-      </IconButton>
     </HStack>
   );
 }
@@ -514,45 +590,26 @@ const productFormSchema = z.object({
 
 function ProductDialog({
   open,
-  listId,
   product,
-  onClose,
-  onSaved,
+  onCancel,
+  onSave,
+  onDelete,
 }: {
   open: boolean;
-  listId: number;
-  product: ProductData | null;
-  onClose: () => void;
-  onSaved: () => Promise<void> | void;
+  product: DraftProduct | null;
+  onCancel: () => void;
+  onSave: (values: DraftValues) => void;
+  onDelete?: () => void;
 }) {
   const {data: additives} = useQuery({
     queryKey: ['additives'],
     queryFn: () => listAdditives(),
   });
 
-  const mutation = useMutation({
-    mutationFn: (values: z.infer<typeof productFormSchema>) => {
-      const payload = {
-        name: values.name,
-        price: parseEuroToCents(values.price)!,
-        requiresDeposit: values.requiresDeposit,
-        diet: (values.diet || null) as
-          | (typeof DIET_VALUES)[number]
-          | null,
-        minimumAge: values.minimumAge,
-        additiveIds: values.additiveIds,
-      };
-      return product
-        ? updateProduct({data: {...payload, id: product.id}})
-        : createProduct({data: {...payload, productListId: listId}});
-    },
-    onSuccess: () => onSaved(),
-  });
-
   return (
     <DialogRoot
       open={open}
-      onOpenChange={(e) => !e.open && onClose()}
+      onOpenChange={(e) => !e.open && onCancel()}
       placement="center"
       size="lg"
     >
@@ -570,10 +627,21 @@ function ProductDialog({
             requiresDeposit: product?.requiresDeposit ?? false,
             diet: product?.diet ?? '',
             minimumAge: product?.minimumAge ?? 'NONE',
-            additiveIds: product?.additives.map((a) => a.id) ?? [],
+            additiveIds: product?.additiveIds ?? [],
           }}
           validate={toFormikValidate(productFormSchema)}
-          onSubmit={(values) => mutation.mutate(values)}
+          onSubmit={(values) =>
+            onSave({
+              name: values.name.trim(),
+              price: parseEuroToCents(values.price)!,
+              requiresDeposit: values.requiresDeposit,
+              diet: (values.diet || null) as
+                | (typeof DIET_VALUES)[number]
+                | null,
+              minimumAge: values.minimumAge,
+              additiveIds: values.additiveIds,
+            })
+          }
         >
           <Form>
             <DialogBody>
@@ -608,12 +676,21 @@ function ProductDialog({
               </Stack>
             </DialogBody>
             <DialogFooter>
-              <Button variant="outline" type="button" onClick={onClose}>
+              {onDelete && (
+                <Button
+                  colorPalette="red"
+                  variant="outline"
+                  type="button"
+                  mr="auto"
+                  onClick={onDelete}
+                >
+                  Löschen
+                </Button>
+              )}
+              <Button variant="outline" type="button" onClick={onCancel}>
                 Abbrechen
               </Button>
-              <Button type="submit" loading={mutation.isPending}>
-                Speichern
-              </Button>
+              <Button type="submit">Übernehmen</Button>
             </DialogFooter>
           </Form>
         </Formik>
