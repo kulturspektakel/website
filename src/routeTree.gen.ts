@@ -9,6 +9,8 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VeganRouteImport } from './routes/vegan'
+import { Route as GlutenfreiRouteImport } from './routes/glutenfrei'
 import { Route as CrewRouteImport } from './routes/crew'
 import { Route as MainRouteImport } from './routes/_main'
 import { Route as CrewIndexRouteImport } from './routes/crew.index'
@@ -69,7 +71,6 @@ import { Route as ApiOwntracksConfigRouteImport } from './routes/api.owntracks.c
 import { Route as ApiNoiseLogRouteImport } from './routes/api.noise.log'
 import { Route as ApiKultcashLogRouteImport } from './routes/api.kultcash.log'
 import { Route as ApiKultcashListsRouteImport } from './routes/api.kultcash.lists'
-import { Route as ApiKultcashConfigRouteImport } from './routes/api.kultcash.config'
 import { Route as MainNewsArchivRouteImport } from './routes/_main.news.archiv'
 import { Route as MainNewsSlugRouteImport } from './routes/_main.news.$slug'
 import { Route as MainMitgliedsantragDankeRouteImport } from './routes/_main.mitgliedsantrag_.danke'
@@ -86,6 +87,16 @@ import { Route as MainCardHashKultRouteImport } from './routes/_main.card.$hash.
 import { Route as MainCardHashCrewRouteImport } from './routes/_main.card.$hash.crew'
 import { Route as MainBookingApplicationTypeDankeRouteImport } from './routes/_main.booking_.$applicationType_.danke'
 
+const VeganRoute = VeganRouteImport.update({
+  id: '/vegan',
+  path: '/vegan',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GlutenfreiRoute = GlutenfreiRouteImport.update({
+  id: '/glutenfrei',
+  path: '/glutenfrei',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CrewRoute = CrewRouteImport.update({
   id: '/crew',
   path: '/crew',
@@ -397,11 +408,6 @@ const ApiKultcashListsRoute = ApiKultcashListsRouteImport.update({
   path: '/lists',
   getParentRoute: () => ApiKultcashRoute,
 } as any)
-const ApiKultcashConfigRoute = ApiKultcashConfigRouteImport.update({
-  id: '/config',
-  path: '/config',
-  getParentRoute: () => ApiKultcashRoute,
-} as any)
 const MainNewsArchivRoute = MainNewsArchivRouteImport.update({
   id: '/news/archiv',
   path: '/news/archiv',
@@ -486,6 +492,8 @@ const MainBookingApplicationTypeDankeRoute =
 export interface FileRoutesByFullPath {
   '/': typeof MainIndexRoute
   '/crew': typeof CrewRouteWithChildren
+  '/glutenfrei': typeof GlutenfreiRoute
+  '/vegan': typeof VeganRoute
   '/$slug': typeof MainSlugRoute
   '/Route': typeof MainRouteRoute
   '/angebot': typeof MainAngebotRoute
@@ -515,7 +523,6 @@ export interface FileRoutesByFullPath {
   '/mitgliedsantrag/danke': typeof MainMitgliedsantragDankeRoute
   '/news/$slug': typeof MainNewsSlugRoute
   '/news/archiv': typeof MainNewsArchivRoute
-  '/api/kultcash/config': typeof ApiKultcashConfigRoute
   '/api/kultcash/lists': typeof ApiKultcashListsRoute
   '/api/kultcash/log': typeof ApiKultcashLogRoute
   '/api/noise/log': typeof ApiNoiseLogRoute
@@ -561,6 +568,8 @@ export interface FileRoutesByFullPath {
   '/crew/lautstaerke/$device/': typeof CrewLautstaerkeDeviceIndexRoute
 }
 export interface FileRoutesByTo {
+  '/glutenfrei': typeof GlutenfreiRoute
+  '/vegan': typeof VeganRoute
   '/$slug': typeof MainSlugRoute
   '/Route': typeof MainRouteRoute
   '/angebot': typeof MainAngebotRoute
@@ -588,7 +597,6 @@ export interface FileRoutesByTo {
   '/mitgliedsantrag/danke': typeof MainMitgliedsantragDankeRoute
   '/news/$slug': typeof MainNewsSlugRoute
   '/news/archiv': typeof MainNewsArchivRoute
-  '/api/kultcash/config': typeof ApiKultcashConfigRoute
   '/api/kultcash/lists': typeof ApiKultcashListsRoute
   '/api/kultcash/log': typeof ApiKultcashLogRoute
   '/api/noise/log': typeof ApiNoiseLogRoute
@@ -636,6 +644,8 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_main': typeof MainRouteWithChildren
   '/crew': typeof CrewRouteWithChildren
+  '/glutenfrei': typeof GlutenfreiRoute
+  '/vegan': typeof VeganRoute
   '/_main/$slug': typeof MainSlugRoute
   '/_main/Route': typeof MainRouteRoute
   '/_main/angebot': typeof MainAngebotRoute
@@ -666,7 +676,6 @@ export interface FileRoutesById {
   '/_main/mitgliedsantrag_/danke': typeof MainMitgliedsantragDankeRoute
   '/_main/news/$slug': typeof MainNewsSlugRoute
   '/_main/news/archiv': typeof MainNewsArchivRoute
-  '/api/kultcash/config': typeof ApiKultcashConfigRoute
   '/api/kultcash/lists': typeof ApiKultcashListsRoute
   '/api/kultcash/log': typeof ApiKultcashLogRoute
   '/api/noise/log': typeof ApiNoiseLogRoute
@@ -716,6 +725,8 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/crew'
+    | '/glutenfrei'
+    | '/vegan'
     | '/$slug'
     | '/Route'
     | '/angebot'
@@ -745,7 +756,6 @@ export interface FileRouteTypes {
     | '/mitgliedsantrag/danke'
     | '/news/$slug'
     | '/news/archiv'
-    | '/api/kultcash/config'
     | '/api/kultcash/lists'
     | '/api/kultcash/log'
     | '/api/noise/log'
@@ -791,6 +801,8 @@ export interface FileRouteTypes {
     | '/crew/lautstaerke/$device/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/glutenfrei'
+    | '/vegan'
     | '/$slug'
     | '/Route'
     | '/angebot'
@@ -818,7 +830,6 @@ export interface FileRouteTypes {
     | '/mitgliedsantrag/danke'
     | '/news/$slug'
     | '/news/archiv'
-    | '/api/kultcash/config'
     | '/api/kultcash/lists'
     | '/api/kultcash/log'
     | '/api/noise/log'
@@ -865,6 +876,8 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_main'
     | '/crew'
+    | '/glutenfrei'
+    | '/vegan'
     | '/_main/$slug'
     | '/_main/Route'
     | '/_main/angebot'
@@ -895,7 +908,6 @@ export interface FileRouteTypes {
     | '/_main/mitgliedsantrag_/danke'
     | '/_main/news/$slug'
     | '/_main/news/archiv'
-    | '/api/kultcash/config'
     | '/api/kultcash/lists'
     | '/api/kultcash/log'
     | '/api/noise/log'
@@ -944,6 +956,8 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   MainRoute: typeof MainRouteWithChildren
   CrewRoute: typeof CrewRouteWithChildren
+  GlutenfreiRoute: typeof GlutenfreiRoute
+  VeganRoute: typeof VeganRoute
   ApiKultcashRoute: typeof ApiKultcashRouteWithChildren
   ApiNoiseRoute: typeof ApiNoiseRouteWithChildren
   ApiOwntracksRoute: typeof ApiOwntracksRouteWithChildren
@@ -962,6 +976,20 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/vegan': {
+      id: '/vegan'
+      path: '/vegan'
+      fullPath: '/vegan'
+      preLoaderRoute: typeof VeganRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/glutenfrei': {
+      id: '/glutenfrei'
+      path: '/glutenfrei'
+      fullPath: '/glutenfrei'
+      preLoaderRoute: typeof GlutenfreiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/crew': {
       id: '/crew'
       path: '/crew'
@@ -1382,13 +1410,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiKultcashListsRouteImport
       parentRoute: typeof ApiKultcashRoute
     }
-    '/api/kultcash/config': {
-      id: '/api/kultcash/config'
-      path: '/config'
-      fullPath: '/api/kultcash/config'
-      preLoaderRoute: typeof ApiKultcashConfigRouteImport
-      parentRoute: typeof ApiKultcashRoute
-    }
     '/_main/news/archiv': {
       id: '/_main/news/archiv'
       path: '/news/archiv'
@@ -1641,13 +1662,11 @@ const CrewRouteChildren: CrewRouteChildren = {
 const CrewRouteWithChildren = CrewRoute._addFileChildren(CrewRouteChildren)
 
 interface ApiKultcashRouteChildren {
-  ApiKultcashConfigRoute: typeof ApiKultcashConfigRoute
   ApiKultcashListsRoute: typeof ApiKultcashListsRoute
   ApiKultcashLogRoute: typeof ApiKultcashLogRoute
 }
 
 const ApiKultcashRouteChildren: ApiKultcashRouteChildren = {
-  ApiKultcashConfigRoute: ApiKultcashConfigRoute,
   ApiKultcashListsRoute: ApiKultcashListsRoute,
   ApiKultcashLogRoute: ApiKultcashLogRoute,
 }
@@ -1728,6 +1747,8 @@ const ApiTasksRouteWithChildren = ApiTasksRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   MainRoute: MainRouteWithChildren,
   CrewRoute: CrewRouteWithChildren,
+  GlutenfreiRoute: GlutenfreiRoute,
+  VeganRoute: VeganRoute,
   ApiKultcashRoute: ApiKultcashRouteWithChildren,
   ApiNoiseRoute: ApiNoiseRouteWithChildren,
   ApiOwntracksRoute: ApiOwntracksRouteWithChildren,

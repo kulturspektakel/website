@@ -22,18 +22,20 @@ export default function LinkButton<TRouter extends RegisteredRouter, TOptions>({
   ...props
 }: Props<TRouter, TOptions>) {
   return (
-    <Button role="link" variant="subtle" disabled={disabled} {...props}>
-      {disabled ? (
-        children
-      ) : (
-        <Link
-          href={linkOptions?.href}
-          _hover={{textDecoration: 'none'}}
-          {...linkOptions}
-        >
-          {children}
-        </Link>
-      )}
+    // `asChild` merges the button styles onto the Link so the rendered anchor
+    // is the single focusable element (no nested <a> inside <button>). When
+    // disabled we render a plain <button> with no navigable link.
+    <Button
+      role="link"
+      variant="subtle"
+      disabled={disabled}
+      asChild={!disabled}
+      // Set on the Button (Chakra) rather than the TanStack Link, so it compiles
+      // to CSS instead of leaking as an `_hover` DOM attribute on the anchor.
+      _hover={{textDecoration: 'none'}}
+      {...props}
+    >
+      {disabled ? children : <Link {...linkOptions}>{children}</Link>}
     </Button>
   );
 }
