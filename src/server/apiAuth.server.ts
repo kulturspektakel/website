@@ -51,11 +51,9 @@ function parseBasicAuth(
 /**
  * Resolve the authenticated identity for a request, or `undefined`.
  *
- * Supports both KultCash contactless terminal generations:
- *  - v2: HTTP Basic auth + a `Contactless/` user-agent
- *  - v1: ESP8266 firmware sending `x-esp8266-sta-mac` + a bearer token
- *
- * Both verify `sha1(deviceId + CONTACTLESS_SALT)`.
+ * Devices authenticate via HTTP Basic auth with a product user-agent (e.g.
+ * `Contactless/`, `NoiseMonitor/`) and a `sha1(deviceId + CONTACTLESS_SALT)`
+ * password.
  */
 export async function parseToken(
   request: Request,
@@ -70,8 +68,8 @@ export async function parseToken(
   const userAgent = headers.get('user-agent') ?? '';
 
   if (
-    // v2 device (contactless terminal or noise monitor): HTTP Basic auth with
-    // a product user-agent and a `sha1(deviceId + salt)` password.
+    // Device (contactless terminal or noise monitor): HTTP Basic auth with a
+    // product user-agent and a `sha1(deviceId + salt)` password.
     basicUser &&
     DEVICE_USER_AGENT_PREFIXES.some((prefix) => userAgent.startsWith(prefix)) &&
     basicUser.pass === sha1(basicUser.name + salt)
@@ -79,27 +77,11 @@ export async function parseToken(
     return {iss: 'device', deviceId: basicUser.name};
   }
 
-  const staMac = headers.get('x-esp8266-sta-mac');
-  if (staMac != null) {
-    // Contactless v1 device
-    // ESPhttpUpdate.setAuthorization prefixes the auth header with "Basic " :-/
-    const [, token] =
-      headers.get('authorization')?.match(/^(?:Basic )?Bearer (.+)$/) ?? [];
-    const deviceId = staMac.substring(9);
-    if (token && token === sha1(`${deviceId}${salt}`)) {
-      return {iss: 'device', deviceId};
-    }
-  }
-
   return undefined;
 }
 
 function getSoftwareVersion(request: Request): string | undefined {
-  const userAgent = request.headers.get('user-agent')?.split('/').pop();
-  if (userAgent) {
-    return userAgent;
-  }
-  return request.headers.get('x-esp8266-version') ?? undefined;
+  return request.headers.get('user-agent')?.split('/').pop() || undefined;
 }
 
 /**

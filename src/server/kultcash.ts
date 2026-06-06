@@ -16,7 +16,6 @@ import {subMinutes, addDays, isBefore, differenceInDays} from 'date-fns';
 import {tzOffset} from '@date-fns/tz';
 import crc32 from 'crc-32';
 import {ApiError} from './apiError.server';
-import type {DeviceToken} from './apiAuth.server';
 import {enqueueGcpTask} from './enqueueGcpTask.server';
 import UnreachableCaseError from '../utils/UnreachableCaseError';
 
@@ -49,31 +48,6 @@ function getDeviceConfig(
 
   deviceConfig.checksum = crc32.buf(DeviceConfig.encode(deviceConfig).finish());
   return deviceConfig;
-}
-
-/**
- * GET /api/kultcash/config — returns the product list configured for the
- * requesting device, as an encoded `DeviceConfig` protobuf message.
- */
-export async function handleConfig(device: DeviceToken): Promise<Response> {
-  const result = await prismaClient.device.findUnique({
-    where: {id: device.deviceId},
-    include: {
-      productList: {
-        include: productListQuery,
-      },
-    },
-  });
-
-  const list = result?.productList;
-  if (!list) {
-    return new Response(null, {status: 204});
-  }
-
-  const message = DeviceConfig.encode(getDeviceConfig(list)).finish();
-  return new Response(message.buffer as ArrayBuffer, {
-    headers: PROTOBUF_HEADERS,
-  });
 }
 
 /**

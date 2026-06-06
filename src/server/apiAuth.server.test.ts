@@ -17,7 +17,7 @@ function basicAuth(name: string, pass: string) {
   return 'Basic ' + Buffer.from(`${name}:${pass}`).toString('base64');
 }
 
-describe('parseToken — v2 device (Basic auth + product user-agent)', () => {
+describe('parseToken — device (Basic auth + product user-agent)', () => {
   test('authenticates a contactless terminal', async () => {
     const token = await parseToken(
       request({
@@ -53,43 +53,6 @@ describe('parseToken — v2 device (Basic auth + product user-agent)', () => {
       request({
         'User-Agent': 'curl/8.0',
         Authorization: basicAuth('KASSE1', sign('KASSE1' + SALT)),
-      }),
-    );
-    expect(token).toBeUndefined();
-  });
-});
-
-describe('parseToken — v1 device (ESP8266)', () => {
-  // The firmware sends the device id in `x-esp8266-sta-mac` after a 9-char
-  // prefix, and the bearer token is `sha1(deviceId + salt)`.
-  const staMac = '012345678AA:BB:CC:DD:EE:FF';
-  const deviceId = staMac.substring(9);
-
-  test('authenticates via x-esp8266-sta-mac + Bearer token', async () => {
-    const token = await parseToken(
-      request({
-        'x-esp8266-sta-mac': staMac,
-        Authorization: `Bearer ${sign(deviceId + SALT)}`,
-      }),
-    );
-    expect(token).toEqual({iss: 'device', deviceId});
-  });
-
-  test('tolerates the "Basic Bearer" authorization prefix', async () => {
-    const token = await parseToken(
-      request({
-        'x-esp8266-sta-mac': staMac,
-        Authorization: `Basic Bearer ${sign(deviceId + SALT)}`,
-      }),
-    );
-    expect(token).toEqual({iss: 'device', deviceId});
-  });
-
-  test('rejects a wrong token', async () => {
-    const token = await parseToken(
-      request({
-        'x-esp8266-sta-mac': staMac,
-        Authorization: 'Bearer wrong',
       }),
     );
     expect(token).toBeUndefined();
