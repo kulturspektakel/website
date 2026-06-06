@@ -10,7 +10,6 @@
 */
 
 export const DietType = {
-  OMNIVORE: 'OMNIVORE',
   VEGETARIAN: 'VEGETARIAN',
   VEGAN: 'VEGAN'
 } as const

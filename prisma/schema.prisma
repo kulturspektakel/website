@@ -398,12 +398,11 @@ model NoiseLog {
   @@unique([deviceId, measuredAt])
 }
 
-// Ordered diet chain: VEGAN ⊆ VEGETARIAN ⊆ OMNIVORE.
-// Only applies to consumables (food/drink); null = not applicable / unclassified.
+// Ordered diet chain: VEGAN ⊆ VEGETARIAN. Only applies to consumables
+// (food/drink); null = not applicable / unclassified / omnivore.
 // Independent dietary axes (e.g. halal, gluten-free) should be added as their
 // own fields on Product rather than expanded into this enum.
 enum DietType {
-  OMNIVORE
   VEGETARIAN
   VEGAN
 }

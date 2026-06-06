@@ -1,20 +1,29 @@
-import {createFileRoute, notFound, useBlocker} from '@tanstack/react-router';
+import {createFileRoute, Link, notFound, useBlocker} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
 import {
   Badge,
   Box,
   Button,
+  Combobox,
   Heading,
   HStack,
+  IconButton,
+  Input,
+  Portal,
   Span,
   Stack,
+  TagsInput,
   Text,
+  useCombobox,
+  useFilter,
+  useListCollection,
+  useTagsInput,
 } from '@chakra-ui/react';
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import {Form, Formik, useField} from 'formik';
 import {toFormikValidate} from 'zod-formik-adapter';
 import {z} from 'zod';
-import {useEffect, useMemo, useRef, useState} from 'react';
+import {useEffect, useId, useMemo, useRef, useState} from 'react';
 import {
   DndContext,
   PointerSensor,
@@ -30,20 +39,21 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import {CSS} from '@dnd-kit/utilities';
+import {FaChevronLeft} from 'react-icons/fa6';
+import {LuPencil} from 'react-icons/lu';
 import {prismaClient} from '../server/prismaClient.server';
+import {seo} from '../utils/seo';
 import {formatCents, parseEuroToCents} from '../utils/currency';
 import {listAdditives} from './crew.produkte';
 import {ConnectedField} from '../components/forms/ConnectedField';
 import {ConnectedCheckbox} from '../components/forms/ConnectedCheckbox';
 import {Field} from '../components/chakra-snippets/field';
-import {Checkbox} from '../components/chakra-snippets/checkbox';
-import {Switch} from '../components/chakra-snippets/switch';
-import {
-  NativeSelectField,
-  NativeSelectRoot,
-} from '../components/chakra-snippets/native-select';
+import {InputGroup} from '../components/chakra-snippets/input-group';
+import {BudeDialog} from '../components/produkte/BudeDialog';
+import {SegmentedControl} from '../components/chakra-snippets/segmented-control';
 import {
   DialogBody,
+  DialogCloseTrigger,
   DialogContent,
   DialogFooter,
   DialogHeader,
@@ -55,13 +65,19 @@ import {
 // Enums & labels
 // ---------------------------------------------------------------------------
 
-const DIET_VALUES = ['OMNIVORE', 'VEGETARIAN', 'VEGAN'] as const;
+const DIET_VALUES = ['VEGETARIAN', 'VEGAN'] as const;
 const AGE_VALUES = ['NONE', 'AGE_16', 'AGE_18'] as const;
+// Sentinel for the "nein" segment; maps to `diet: null`. A non-empty value is
+// required because SegmentGroup won't select an empty-string item.
+const DIET_NONE = 'NONE';
 
 const DIET_LABELS: Record<(typeof DIET_VALUES)[number], string> = {
-  OMNIVORE: 'Omnivor',
   VEGETARIAN: 'Vegetarisch',
   VEGAN: 'Vegan',
+};
+const DIET_COLORS: Record<(typeof DIET_VALUES)[number], string> = {
+  VEGETARIAN: 'green',
+  VEGAN: 'teal',
 };
 const AGE_LABELS: Record<(typeof AGE_VALUES)[number], string> = {
   NONE: 'keine',
@@ -106,32 +122,6 @@ const getProductList = createServerFn()
       throw notFound();
     }
     return list;
-  });
-
-const productListInput = z.object({
-  id: z.number().int(),
-  name: z.string().trim().min(1).max(20),
-  emoji: z
-    .string()
-    .trim()
-    .max(8)
-    .nullable()
-    .transform((v) => (v ? v : null)),
-  active: z.boolean(),
-});
-
-const updateProductList = createServerFn()
-  .inputValidator(productListInput)
-  .handler(async ({data}) => {
-    await prismaClient.productList.update({
-      where: {id: data.id},
-      data: {
-        name: data.name,
-        emoji: data.emoji,
-        active: data.active,
-        updatedAt: new Date(),
-      },
-    });
   });
 
 const productFields = z.object({
@@ -200,6 +190,11 @@ const saveProducts = createServerFn()
               },
             }),
       ),
+      // Adding/editing/deleting/reordering products counts as editing the bude.
+      prismaClient.productList.update({
+        where: {id: data.productListId},
+        data: {updatedAt: new Date()},
+      }),
     ]);
   });
 
@@ -210,6 +205,12 @@ const saveProducts = createServerFn()
 export const Route = createFileRoute('/crew/produkte/$listId')({
   component: ProductListEditor,
   loader: async ({params}) => await getProductList({data: params.listId}),
+  head: ({loaderData}) =>
+    seo({
+      title: loaderData
+        ? `${loaderData.emoji ? `${loaderData.emoji} ` : ''}${loaderData.name}`
+        : 'Produkte',
+    }),
 });
 
 type ListData = Awaited<ReturnType<typeof getProductList>>;
@@ -226,93 +227,13 @@ function ProductListEditor() {
     initialData: initial,
   });
 
-  const invalidate = () =>
-    queryClient.invalidateQueries({queryKey: ['productList', listId]});
+  const invalidate = async () => {
+    await queryClient.invalidateQueries({queryKey: ['productList', listId]});
+    // The bude's updatedAt changed too, so refresh the overview list.
+    await queryClient.invalidateQueries({queryKey: ['productLists']});
+  };
 
-  return (
-    <Stack gap="8">
-      <ListSettings
-        key={list.id}
-        list={list}
-        onSaved={async () => {
-          await invalidate();
-          await queryClient.invalidateQueries({queryKey: ['productLists']});
-        }}
-      />
-      <Products
-        key={list.id}
-        listId={list.id}
-        products={list.product}
-        onSaved={invalidate}
-      />
-    </Stack>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// List settings
-// ---------------------------------------------------------------------------
-
-function ListSettings({
-  list,
-  onSaved,
-}: {
-  list: ListData;
-  onSaved: () => Promise<void> | void;
-}) {
-  const mutation = useMutation({
-    mutationFn: (data: z.input<typeof productListInput>) =>
-      updateProductList({data}),
-    onSuccess: () => onSaved(),
-  });
-
-  return (
-    <Box>
-      <Heading size="md" mb="3">
-        Listeneinstellungen
-      </Heading>
-      <Formik
-        initialValues={{
-          id: list.id,
-          name: list.name,
-          emoji: list.emoji ?? '',
-          active: list.active,
-        }}
-        validate={toFormikValidate(productListInput)}
-        onSubmit={(values) => mutation.mutate(values)}
-      >
-        {({values, setFieldValue}) => (
-          <Form>
-            <Stack gap="4">
-              <HStack gap="4" align="flex-end">
-                <Box flex="1">
-                  <ConnectedField name="name" label="Name" required />
-                </Box>
-                <Box w="32">
-                  <ConnectedField
-                    name="emoji"
-                    label="Emoji"
-                    optionalText="optional"
-                  />
-                </Box>
-              </HStack>
-              <Switch
-                checked={values.active}
-                onCheckedChange={(e) => setFieldValue('active', e.checked)}
-              >
-                Liste aktiv
-              </Switch>
-              <Box>
-                <Button type="submit" loading={mutation.isPending}>
-                  Speichern
-                </Button>
-              </Box>
-            </Stack>
-          </Form>
-        )}
-      </Formik>
-    </Box>
-  );
+  return <Products key={list.id} list={list} onSaved={invalidate} />;
 }
 
 // ---------------------------------------------------------------------------
@@ -324,9 +245,7 @@ function ListSettings({
  * been added but not yet saved; `key` is a stable identifier for React/dnd-kit
  * that survives reorders (and exists for unsaved products that have no `id`).
  */
-type DraftProduct = {
-  key: string;
-  id: number | null;
+type DraftValues = {
   name: string;
   price: number;
   requiresDeposit: boolean;
@@ -335,7 +254,7 @@ type DraftProduct = {
   additiveIds: string[];
 };
 
-type DraftValues = Omit<DraftProduct, 'key' | 'id'>;
+type DraftProduct = DraftValues & {key: string; id: number | null};
 
 function toDraft(p: ProductData): DraftProduct {
   return {
@@ -366,19 +285,20 @@ function fingerprint(draft: DraftProduct[]): string {
 }
 
 function Products({
-  listId,
-  products,
+  list,
   onSaved,
 }: {
-  listId: number;
-  products: ProductData[];
+  list: ListData;
   onSaved: () => Promise<void> | void;
 }) {
+  const listId = list.id;
+  const products = list.product;
   const [draft, setDraft] = useState<DraftProduct[]>(() =>
     products.map(toDraft),
   );
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingKey, setEditingKey] = useState<string | null>(null);
+  const [budeEditOpen, setBudeEditOpen] = useState(false);
   const tempSeq = useRef(0);
   const justDragged = useRef(false);
 
@@ -387,7 +307,7 @@ function Products({
   }, [products]);
 
   const saved = useMemo(() => fingerprint(products.map(toDraft)), [products]);
-  const dirty = fingerprint(draft) !== saved;
+  const dirty = useMemo(() => fingerprint(draft), [draft]) !== saved;
 
   // Warn before navigating away (incl. switching lists) or unloading with
   // unsaved changes.
@@ -454,12 +374,53 @@ function Products({
 
   return (
     <Box>
-      <Heading size="md" mb="3">
-        Produkte
-      </Heading>
+      <HStack gap="2" align="center" mb="6">
+        <IconButton asChild aria-label="Zurück" variant="ghost" size="sm">
+          <Link to="/crew/produkte">
+            <FaChevronLeft />
+          </Link>
+        </IconButton>
+        <Heading size="2xl" flex="1">
+          {list.emoji ? `${list.emoji} ` : ''}
+          {list.name}
+        </Heading>
+        <IconButton
+          aria-label="Bude bearbeiten"
+          borderRadius="full"
+          size="sm"
+          onClick={() => setBudeEditOpen(true)}
+        >
+          <LuPencil />
+        </IconButton>
+      </HStack>
+
+      {dirty && (
+        <HStack
+          justify="space-between"
+          colorPalette="orange"
+          bg="colorPalette.subtle"
+          color="colorPalette.fg"
+          borderWidth="1px"
+          borderColor="colorPalette.muted"
+          borderRadius="md"
+          p="3"
+          mb="4"
+        >
+          <Text fontWeight="medium">Ungespeicherte Änderungen</Text>
+          <Button
+            size="sm"
+            colorPalette="orange"
+            onClick={() => saveMutation.mutate()}
+            loading={saveMutation.isPending}
+          >
+            Speichern
+          </Button>
+        </HStack>
+      )}
 
       {draft.length > 0 && (
         <DndContext
+          id={`produkte-products-${listId}`}
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragEnd={onDragEnd}
@@ -498,20 +459,22 @@ function Products({
         Produkt hinzufügen
       </Button>
 
-      <Button
-        onClick={() => saveMutation.mutate()}
-        loading={saveMutation.isPending}
-        disabled={!dirty}
-      >
-        Speichern
-      </Button>
-
       <ProductDialog
         open={dialogOpen}
         product={editing}
         onCancel={() => setDialogOpen(false)}
         onSave={applyDialog}
         onDelete={editing ? deleteDialog : undefined}
+      />
+
+      <BudeDialog
+        open={budeEditOpen}
+        list={list}
+        onClose={() => setBudeEditOpen(false)}
+        onSaved={async () => {
+          await onSaved();
+          setBudeEditOpen(false);
+        }}
       />
     </Box>
   );
@@ -540,6 +503,7 @@ function ProductRow({
       borderWidth="1px"
       borderRadius="md"
       p="2"
+      minH="16"
       gap="3"
       bg="bg"
       cursor="grab"
@@ -553,10 +517,12 @@ function ProductRow({
       </Span>
       <Box flex="1">
         <Text fontWeight="medium">{product.name}</Text>
-        <HStack gap="2" mt="1">
+        <HStack gap="2" mt="1" _empty={{display: 'none'}}>
           {product.requiresDeposit && <Badge colorPalette="orange">Pfand</Badge>}
-          {product.diet && product.diet !== 'OMNIVORE' && (
-            <Badge colorPalette="green">{DIET_LABELS[product.diet]}</Badge>
+          {product.diet && (
+            <Badge colorPalette={DIET_COLORS[product.diet]}>
+              {DIET_LABELS[product.diet]}
+            </Badge>
           )}
           {product.minimumAge !== 'NONE' && (
             <Badge colorPalette="red">{AGE_LABELS[product.minimumAge]}</Badge>
@@ -619,13 +585,16 @@ function ProductDialog({
             {product ? 'Produkt bearbeiten' : 'Neues Produkt'}
           </DialogTitle>
         </DialogHeader>
+        <DialogCloseTrigger />
         {open && (
         <Formik
           initialValues={{
             name: product?.name ?? '',
-            price: product ? (product.price / 100).toFixed(2) : '',
+            price: product
+              ? (product.price / 100).toFixed(2).replace('.', ',')
+              : '',
             requiresDeposit: product?.requiresDeposit ?? false,
-            diet: product?.diet ?? '',
+            diet: product?.diet ?? DIET_NONE,
             minimumAge: product?.minimumAge ?? 'NONE',
             additiveIds: product?.additiveIds ?? [],
           }}
@@ -635,9 +604,10 @@ function ProductDialog({
               name: values.name.trim(),
               price: parseEuroToCents(values.price)!,
               requiresDeposit: values.requiresDeposit,
-              diet: (values.diet || null) as
-                | (typeof DIET_VALUES)[number]
-                | null,
+              diet:
+                values.diet === DIET_NONE
+                  ? null
+                  : (values.diet as (typeof DIET_VALUES)[number]),
               minimumAge: values.minimumAge,
               additiveIds: values.additiveIds,
             })
@@ -646,32 +616,34 @@ function ProductDialog({
           <Form>
             <DialogBody>
               <Stack gap="4">
-                <ConnectedField name="name" label="Name" required />
-                <ConnectedField
-                  name="price"
-                  label="Preis (€)"
-                  inputMode="decimal"
-                  required
-                />
+                <HStack gap="4" align="flex-start">
+                  <Box flex="1">
+                    <ConnectedField name="name" label="Name" required />
+                  </Box>
+                  <Box w="28">
+                    <PriceField />
+                  </Box>
+                </HStack>
                 <ConnectedCheckbox
                   name="requiresDeposit"
                   label="Pfandpflichtig"
                 />
-                <FormSelect name="diet" label="Ernährung">
-                  <option value="">keine Angabe</option>
-                  {DIET_VALUES.map((v) => (
-                    <option key={v} value={v}>
-                      {DIET_LABELS[v]}
-                    </option>
-                  ))}
-                </FormSelect>
-                <FormSelect name="minimumAge" label="Altersbeschränkung">
-                  {AGE_VALUES.map((v) => (
-                    <option key={v} value={v}>
-                      {AGE_LABELS[v]}
-                    </option>
-                  ))}
-                </FormSelect>
+                <FormSegment
+                  name="diet"
+                  label="vegetarisch/vegan"
+                  items={[
+                    {value: DIET_NONE, label: 'nein'},
+                    ...DIET_VALUES.map((v) => ({value: v, label: DIET_LABELS[v]})),
+                  ]}
+                />
+                <FormSegment
+                  name="minimumAge"
+                  label="Altersbeschränkung"
+                  items={AGE_VALUES.map((v) => ({
+                    value: v,
+                    label: AGE_LABELS[v],
+                  }))}
+                />
                 <AdditivesField additives={additives ?? []} />
               </Stack>
             </DialogBody>
@@ -687,9 +659,6 @@ function ProductDialog({
                   Löschen
                 </Button>
               )}
-              <Button variant="outline" type="button" onClick={onCancel}>
-                Abbrechen
-              </Button>
               <Button type="submit">Übernehmen</Button>
             </DialogFooter>
           </Form>
@@ -700,21 +669,53 @@ function ProductDialog({
   );
 }
 
-function FormSelect({
+function FormSegment({
   name,
   label,
-  children,
+  items,
 }: {
   name: string;
   label: string;
-  children: React.ReactNode;
+  items: Array<{value: string; label: string}>;
 }) {
-  const [field] = useField(name);
+  const [field, , helpers] = useField<string>(name);
   return (
     <Field label={label}>
-      <NativeSelectRoot>
-        <NativeSelectField {...field}>{children}</NativeSelectField>
-      </NativeSelectRoot>
+      <SegmentedControl
+        items={items}
+        value={field.value}
+        onValueChange={(e) => helpers.setValue(e.value ?? '')}
+        width="full"
+        css={{'& [data-part="item"]': {flex: 1, justifyContent: 'center'}}}
+      />
+    </Field>
+  );
+}
+
+function PriceField() {
+  const [field, meta, helpers] = useField<string>('price');
+  const showError = meta.touched && Boolean(meta.error);
+  return (
+    <Field
+      label="Preis"
+      required
+      invalid={showError}
+      errorText={showError ? meta.error : undefined}
+    >
+      <InputGroup w="full" endElement="€">
+        <Input
+          inputMode="decimal"
+          value={field.value}
+          onChange={(e) => helpers.setValue(e.target.value)}
+          onBlur={() => {
+            helpers.setTouched(true);
+            const cents = parseEuroToCents(field.value);
+            if (cents != null) {
+              helpers.setValue((cents / 100).toFixed(2).replace('.', ','));
+            }
+          }}
+        />
+      </InputGroup>
     </Field>
   );
 }
@@ -725,29 +726,72 @@ function AdditivesField({
   additives: Array<{id: string; displayName: string}>;
 }) {
   const [field, , helpers] = useField<string[]>('additiveIds');
-  const selected = new Set(field.value);
+  const {contains} = useFilter({sensitivity: 'base'});
+  const {collection, filter, set} = useListCollection({
+    initialItems: additives.map((a) => ({label: a.displayName, value: a.id})),
+    filter: contains,
+  });
+
+  // Keep the collection in sync once the additives query resolves.
+  useEffect(() => {
+    set(additives.map((a) => ({label: a.displayName, value: a.id})));
+  }, [additives, set]);
+
+  const labelFor = (id: string) =>
+    additives.find((a) => a.id === id)?.displayName ?? id;
+
+  const uid = useId();
+  const tags = useTagsInput({
+    ids: {input: `additive-input-${uid}`, control: `additive-control-${uid}`},
+    value: field.value,
+    onValueChange: (e) => helpers.setValue(e.value),
+    editable: false,
+    // Only existing additives, no duplicates.
+    validate: (e) =>
+      additives.some((a) => a.id === e.inputValue) &&
+      !e.value.includes(e.inputValue),
+  });
+
+  const combobox = useCombobox({
+    ids: {input: `additive-input-${uid}`, control: `additive-control-${uid}`},
+    collection,
+    value: [],
+    selectionBehavior: 'clear',
+    onInputValueChange: (e) => filter(e.inputValue),
+    onValueChange: (e) => tags.addValue(e.value[0]),
+  });
 
   return (
-    <Field label="Zusatzstoffe">
-      <Stack gap="1" maxH="48" overflowY="auto" w="full">
-        {additives.map((additive) => (
-          <Checkbox
-            key={additive.id}
-            checked={selected.has(additive.id)}
-            onCheckedChange={(e) => {
-              const next = new Set(field.value);
-              if (e.checked) {
-                next.add(additive.id);
-              } else {
-                next.delete(additive.id);
-              }
-              helpers.setValue([...next]);
-            }}
-          >
-            {additive.displayName}
-          </Checkbox>
-        ))}
-      </Stack>
-    </Field>
+    <Combobox.RootProvider value={combobox}>
+      <TagsInput.RootProvider value={tags}>
+        <TagsInput.Label>Zusatzstoffe/Allergene</TagsInput.Label>
+        <TagsInput.Control>
+          {tags.value.map((tag, index) => (
+            <TagsInput.Item key={tag} index={index} value={tag}>
+              <TagsInput.ItemPreview>
+                <TagsInput.ItemText>{labelFor(tag)}</TagsInput.ItemText>
+                <TagsInput.ItemDeleteTrigger />
+              </TagsInput.ItemPreview>
+            </TagsInput.Item>
+          ))}
+          <Combobox.Input unstyled asChild>
+            <TagsInput.Input placeholder="hinzufügen…" />
+          </Combobox.Input>
+        </TagsInput.Control>
+        <Portal>
+          <Combobox.Positioner>
+            <Combobox.Content>
+              <Combobox.Empty>Keine Treffer</Combobox.Empty>
+              {collection.items.map((item) => (
+                <Combobox.Item item={item} key={item.value}>
+                  <Combobox.ItemText>{item.label}</Combobox.ItemText>
+                  <Combobox.ItemIndicator />
+                </Combobox.Item>
+              ))}
+            </Combobox.Content>
+          </Combobox.Positioner>
+        </Portal>
+      </TagsInput.RootProvider>
+    </Combobox.RootProvider>
   );
 }

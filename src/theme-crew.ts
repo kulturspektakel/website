@@ -25,6 +25,20 @@ const overrides: SystemConfig = {
         },
       },
     },
+    slotRecipes: {
+      // Make the selected segment dark with light text so it's easy to spot.
+      segmentGroup: {
+        slots: ['root', 'item', 'indicator', 'label', 'itemText', 'itemControl'],
+        base: {
+          indicator: {bg: 'fg'},
+          item: {
+            _checked: {color: 'fg.inverted'},
+            // SSR fallback (before the indicator mounts) must match too.
+            '&[data-state=checked][data-ssr]': {bg: 'fg', color: 'fg.inverted'},
+          },
+        },
+      },
+    },
   },
   globalCss: {
     'html, body': {
