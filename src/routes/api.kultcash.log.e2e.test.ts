@@ -159,6 +159,48 @@ describe('POST /api/kultcash/log', () => {
     expect(items).toHaveLength(1);
   });
 
+  test('order with a known listId stores it on the items', async () => {
+    const clientId = 'log-order-list';
+    const [{id: listId}] = await query<{id: number}>(
+      `insert into "ProductList" (name) values ('Test') returning id`,
+    );
+    const res = await post(
+      LogMessage.create({
+        ...base,
+        clientId,
+        order: {
+          paymentMethod: Payment.CASH,
+          listId,
+          cartItems: [{amount: 1, product: {name: 'Bier', price: 200}}],
+        },
+      }),
+    );
+    expect(res.status).toBe(201);
+
+    const items = await query<{productListId: number | null}>(
+      `select oi."productListId" from "OrderItem" oi
+       join "Order" o on o.id = oi."orderId"
+       where o.payment = 'CASH' and oi.name = 'Bier' and oi."productListId" = $1`,
+      [listId],
+    );
+    expect(items).toHaveLength(1);
+  });
+
+  test('order referencing an unknown listId is rejected with 400', async () => {
+    const res = await post(
+      LogMessage.create({
+        ...base,
+        clientId: 'log-order-bad-list',
+        order: {
+          paymentMethod: Payment.CASH,
+          listId: 999_999,
+          cartItems: [{amount: 1, product: {name: 'Bier', price: 200}}],
+        },
+      }),
+    );
+    expect(res.status).toBe(400);
+  });
+
   test('crew card enrollment upserts the card and resets its flags', async () => {
     const crewCardId = [0x01, 0x02, 0x03, 0x04];
     const idBuf = Buffer.from(crewCardId);

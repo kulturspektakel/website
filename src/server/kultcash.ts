@@ -142,6 +142,26 @@ export async function handleLog(request: Request): Promise<Response> {
     deviceTime = subMinutes(deviceTime, tzOffset('Europe/Berlin', deviceTime));
   }
 
+  // If the device references a product list that no longer exists on the server
+  // (e.g. it was deleted), the order's items can't be attributed and the nested
+  // write would fail with a foreign-key error — surfacing as a 500 the device
+  // retries forever. Reject it as an invalid request instead, so the device
+  // treats the file as bad and stops retrying. A missing/unset listId is fine:
+  // the item rows just store a null product list (name/price are denormalized).
+  if (
+    order?.listId != null &&
+    !(await prismaClient.productList.findUnique({
+      where: {id: order.listId},
+      select: {id: true},
+    }))
+  ) {
+    throw new ApiError(
+      400,
+      'Bad Request',
+      new Error(`Order references unknown productListId ${order.listId}`),
+    );
+  }
+
   const orderCreate: Prisma.OrderCreateInput | undefined =
     order != null
       ? {
