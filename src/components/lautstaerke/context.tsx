@@ -16,7 +16,10 @@ export const TOPIC = 'noise/+/record';
 // indicator (isFresh) and the frequency chart's live/empty decision.
 export const ACTIVE_WINDOW_MS = 5_000;
 export const WINDOW_S = 300;
-export const GAP_THRESHOLD_S = 15;
+// Live samples arrive ~1/s; break the line (and treat the cursor as "in a gap")
+// once consecutive samples are more than this far apart — i.e. a few seconds of
+// missing data, while tolerating normal sub-second delivery jitter.
+export const GAP_THRESHOLD_S = 3;
 
 export const decodeDb = (byte: number) => 20 + byte / 2;
 
