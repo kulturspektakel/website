@@ -50,7 +50,10 @@ import {ConnectedCheckbox} from '../components/forms/ConnectedCheckbox';
 import {Field} from '../components/chakra-snippets/field';
 import {InputGroup} from '../components/chakra-snippets/input-group';
 import {BudeDialog} from '../components/produkte/BudeDialog';
-import {SegmentedControl} from '../components/chakra-snippets/segmented-control';
+import {
+  NativeSelectField,
+  NativeSelectRoot,
+} from '../components/chakra-snippets/native-select';
 import {
   DialogBody,
   DialogCloseTrigger,
@@ -628,7 +631,7 @@ function ProductDialog({
                   name="requiresDeposit"
                   label="Pfandpflichtig"
                 />
-                <FormSegment
+                <FormSelect
                   name="diet"
                   label="vegetarisch/vegan"
                   items={[
@@ -636,7 +639,7 @@ function ProductDialog({
                     ...DIET_VALUES.map((v) => ({value: v, label: DIET_LABELS[v]})),
                   ]}
                 />
-                <FormSegment
+                <FormSelect
                   name="minimumAge"
                   label="Altersbeschränkung"
                   items={AGE_VALUES.map((v) => ({
@@ -669,7 +672,7 @@ function ProductDialog({
   );
 }
 
-function FormSegment({
+function FormSelect({
   name,
   label,
   items,
@@ -681,13 +684,13 @@ function FormSegment({
   const [field, , helpers] = useField<string>(name);
   return (
     <Field label={label}>
-      <SegmentedControl
-        items={items}
-        value={field.value}
-        onValueChange={(e) => helpers.setValue(e.value ?? '')}
-        width="full"
-        css={{'& [data-part="item"]': {flex: 1, justifyContent: 'center'}}}
-      />
+      <NativeSelectRoot>
+        <NativeSelectField
+          items={items}
+          value={field.value}
+          onChange={(e) => helpers.setValue(e.currentTarget.value)}
+        />
+      </NativeSelectRoot>
     </Field>
   );
 }
