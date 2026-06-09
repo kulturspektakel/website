@@ -31,6 +31,23 @@ type APIResponse<T> =
   | {status: 'success'; data: T}
   | {status: 'fail' | 'error'; message: string};
 
+/**
+ * Thrown when the Nuclino API responds with a non-2xx status. Carries the HTTP
+ * status so callers can decide how to react (e.g. the #wiki cron tolerates a
+ * temporarily-unavailable API — 429/5xx — and skips that run).
+ */
+export class NuclinoApiError extends Error {
+  constructor(readonly status: number, statusText: string) {
+    super(`Nuclino API ${status} ${statusText}`);
+    this.name = 'NuclinoApiError';
+  }
+
+  /** Transient: rate-limited or upstream server error, retried on the next run. */
+  get isUnavailable(): boolean {
+    return this.status === 429 || this.status >= 500;
+  }
+}
+
 async function nuclinoAPIRequest<T>(url: string): Promise<T> {
   const apiKey = process.env.NUCLINO_API_KEY;
   if (!apiKey) {
@@ -38,7 +55,7 @@ async function nuclinoAPIRequest<T>(url: string): Promise<T> {
   }
   const res = await fetch(url, {headers: {Authorization: apiKey}});
   if (!res.ok) {
-    throw new Error(`${res.status} ${res.statusText}`);
+    throw new NuclinoApiError(res.status, res.statusText);
   }
   const data: APIResponse<T> = await res.json();
   if (data.status !== 'success') {
