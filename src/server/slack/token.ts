@@ -25,15 +25,17 @@ async function createNonce(createdForId: string): Promise<string> {
   return nonce;
 }
 
-/** POST: `/nuclino` slash command → opens the login modal. */
-export async function handleNuclinoTokenCommand(
-  request: Request,
-): Promise<Response> {
-  const form = await request.formData();
-  const userId = String(form.get('user_id') ?? '');
-  const triggerId = String(form.get('trigger_id') ?? '');
-
-  const slackUser = await fetchUser(userId);
+/**
+ * Open the Nuclino login modal for a Slack user. Used by the `/nuclino` slash
+ * command (default redirect) and the `nuclino-login-generation` button on a
+ * Nuclino link unfurl (which passes the specific page as `redirectUrl`).
+ */
+export async function openNuclinoLoginModal(
+  slackUserId: string,
+  triggerId: string,
+  redirectUrl = 'https://app.nuclino.com/Kulturspektakel/General',
+): Promise<void> {
+  const slackUser = await fetchUser(slackUserId);
   if (!slackUser) {
     throw new ApiError(400, 'Slack user not found');
   }
@@ -43,10 +45,7 @@ export async function handleNuclinoTokenCommand(
   const nuclinoSsoUrl = new URL(
     `https://api.nuclino.com/api/sso/${process.env.NUCLINO_TEAM_ID}/login`,
   );
-  nuclinoSsoUrl.searchParams.append(
-    'redirectUrl',
-    'https://app.nuclino.com/Kulturspektakel/General',
-  );
+  nuclinoSsoUrl.searchParams.append('redirectUrl', redirectUrl);
   const url = new URL(`${process.env.SITE_URL}/api/slack/token`);
   url.searchParams.append('nonce', nonce);
   url.searchParams.append('redirect', nuclinoSsoUrl.toString());
@@ -98,6 +97,16 @@ export async function handleNuclinoTokenCommand(
   if (!response.ok) {
     throw new ApiError(502, 'views.open failed', new Error(response.error));
   }
+}
+
+/** POST: `/nuclino` slash command → opens the login modal. */
+export async function handleNuclinoTokenCommand(
+  request: Request,
+): Promise<Response> {
+  const form = await request.formData();
+  const userId = String(form.get('user_id') ?? '');
+  const triggerId = String(form.get('trigger_id') ?? '');
+  await openNuclinoLoginModal(userId, triggerId);
   return new Response(null, {status: 200});
 }
 

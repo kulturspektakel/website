@@ -118,6 +118,17 @@ async function unfurlNuclinoLink(url: string) {
         elements: [
           {
             type: 'button',
+            style: 'primary',
+            text: {
+              type: 'plain_text',
+              text: 'Einloggen',
+              emoji: true,
+            },
+            value: `https://app.nuclino.com/Kulturspektakel/${match[2]}/${match[3]}`,
+            action_id: 'nuclino-login-generation',
+          },
+          {
+            type: 'button',
             text: {type: 'plain_text', text: 'Öffnen', emoji: true},
             url: pageUrl,
             action_id: 'nuclino-link-open',

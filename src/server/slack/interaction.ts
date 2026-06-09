@@ -6,14 +6,14 @@ import {
   assignCrewCard,
   showCrewCardAssignmentModal,
 } from './crewCardEnrollment';
+import {openNuclinoLoginModal} from './token';
 
 /**
  * Migrated from `~/api.kulturspektakel.de/src/routes/slack/interaction.ts`.
  *
  * Slack interactivity webhook. Slack POSTs `application/x-www-form-urlencoded`
  * with a `payload` field (JSON). Handles button clicks (block_actions) and modal
- * submissions (view_submission). The obsolete `nuclino-login-*` actions are
- * dropped (replaced by the `/nuclino-sso` page).
+ * submissions (view_submission).
  */
 
 type SlackInteractionPayload = {
@@ -28,6 +28,7 @@ type SlackButtonAction = {
     | 'reject-nonce-request'
     | 'two-factor-code'
     | 'assign-crew-card-modal'
+    | 'nuclino-login-generation'
     | 'nuclino-login-open';
   value?: string;
 };
@@ -93,7 +94,9 @@ export async function handleSlackInteraction(
                   : 'Rejected',
             },
           });
-          await postResponseUrl(payload.response_url, {delete_original: 'true'});
+          await postResponseUrl(payload.response_url, {
+            delete_original: 'true',
+          });
           return ok();
         }
         case 'two-factor-code': {
@@ -124,6 +127,14 @@ export async function handleSlackInteraction(
             action.value,
             payload.trigger_id,
             payload.response_url,
+          );
+          return ok();
+        }
+        case 'nuclino-login-generation': {
+          await openNuclinoLoginModal(
+            payload.user.id,
+            payload.trigger_id,
+            action.value,
           );
           return ok();
         }
