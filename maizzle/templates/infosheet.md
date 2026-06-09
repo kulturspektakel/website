@@ -8,15 +8,15 @@ alle wichtigen Infos für euren Auftritt. Bitte lest euch alles sorgfältig
 durch und meldet euch bei Fragen oder Unklarheiten bei uns. Wir freuen auf
 ein großartiges Festival mit euch!
 
-**Auftrittsdatum:** {{ dynamic.day }}\
-**Bühne:** {{ dynamic.stage }}\
-**Ankunft:** {{ dynamic.getin }} Uhr\
-**Umbau und Linecheck:** {{ dynamic.soundcheck }} Uhr\
-**Auftrittsbeginn:** {{ dynamic.start }} Uhr\
-**Auftrittsende:** {{ dynamic.end }} Uhr\
-**Veranstaltungsort:** Schulcampus, Germeringer Str. 41, 82131 Gauting\
-**Bühnenbetreuung vor Ort:** {{ dynamic.contact }}\
-**Booking-Team:** {{ dynamic.backupContact }}
+- **Auftrittsdatum:** {{ dynamic.day }}\
+- **Bühne:** {{ dynamic.stage }}\
+- **Ankunft:** {{ dynamic.getin }} Uhr\
+- **Umbau und Linecheck:** {{ dynamic.soundcheck }} Uhr\
+- **Auftrittsbeginn:** {{ dynamic.start }} Uhr\
+- **Auftrittsende:** {{ dynamic.end }} Uhr\
+- **Veranstaltungsort:** Schulcampus, Germeringer Str. 41, 82131 Gauting\
+- **Bühnenbetreuung vor Ort:** {{ dynamic.contact }}\
+- **Booking-Team:** {{ dynamic.backupContact }}
 
 Die Ankunftszeit ist aus organisatorischen Gründen unbedingt einzuhalten,
 aber natürlich könnt ihr auch gerne früher kommen. Bitte meldet euch direkt bei
@@ -53,6 +53,8 @@ anderes abgesprochen ist. Um Zeit und Aufwand zu sparen, könnt ihr euch
 gerne die Backline mit einer anderen Band teilen. Wir stellen auf Nachfrage
 den Kontakt zu Bands, die vor oder nach euch spielen, her.
 
+Hier findet ihr die [technischen Datenblätter](https://share.nuclino-site.com/Technische-Informationen-Bhnen-Kulturspektakel-Gauting-2026-2fELFUeN8O81fZOxNFnAUL) für die Bühnen.
+
 ## Verpflegung
 
 Auf dem Gelände könnt ihr aus einem großen Angebot an Speisen (auch
@@ -79,8 +81,7 @@ Kulturspektakel stellt kein Personal für den Merch-Verkauf.
 
 Auf dem Festival, inklusive der Auftritte auf den Bühnen, machen wir
 Foto- und Videoaufnahmen, die wir auf unserer Webseite und
-Social-Media-Kanälen zur Bewerbung der Veranstaltung nutzen. Wenn es dazu
-Fragen gibt, wendet euch an presse@kulturspektakel.de. Eigene
+Social-Media-Kanälen zur Bewerbung der Veranstaltung nutzen. Eigene
 Foto-/Videograf:innen könnt ihr gerne mitbringen.
 
 ## Anfahrt

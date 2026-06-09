@@ -9,11 +9,10 @@ import {sendMail} from '../src/server/sendMail.server';
 import {readGoogleSheet} from './readGoogleSheet';
 
 const SHEET_ID = '---';
-const SHEET_NAME = 'Infosheet';
+const SHEET_NAME = 'Infosheets';
 
 async function main() {
   const {values} = await readGoogleSheet(SHEET_ID, SHEET_NAME);
-  values.shift(); // remove header
 
   for (const band of values) {
     const [
@@ -49,7 +48,9 @@ async function main() {
         name,
         eventYear,
       },
-      {to: email},
+      {
+        to: email.split(',').map((e: string) => e.trim()),
+      },
     );
     console.log(`Sent for ${bandname}`);
   }

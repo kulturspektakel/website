@@ -52,13 +52,21 @@ h3 {
 h4,
 h5,
 h6 {
+  margin-bottom: 0px;
   font-size: 1rem;
   line-height: 1.5rem;
+}
+h1 + p,
+h3 + p,
+h4 + p,
+h5 + p,
+h6 + p {
+  margin-top: 0.25rem;
 }
 .hover-underline:hover {
   text-decoration-line: underline;
 }</style>  </head>
-  <body style="font-family: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'; line-height: 1.5rem; word-break: break-word;">
+  <body style="font-family: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'; line-height: 1.375; word-break: break-word;">
     <div role="article" aria-roledescription="email" aria-label="Informationen zum Auftritt von „${bandname}“ - Kulturspektakel ${eventYear}" lang="de">
       <div style="margin-left: auto; margin-right: auto; max-width: 640px;">
         <p style="margin: 0px;">Hey ${name},<br>
@@ -66,15 +74,17 @@ wir freuen uns, dass ihr beim Kulturspektakel Gauting dabei seid! Hier sind
 alle wichtigen Infos für euren Auftritt. Bitte lest euch alles sorgfältig
 durch und meldet euch bei Fragen oder Unklarheiten bei uns. Wir freuen auf
 ein großartiges Festival mit euch!</p>
-<p style="margin: 0px; margin-top: 0.5rem; margin-bottom: 0px;"><strong>Auftrittsdatum:</strong> ${day}<br>
-<strong>Bühne:</strong> ${stage}<br>
-<strong>Ankunft:</strong> ${getin} Uhr<br>
-<strong>Umbau und Linecheck:</strong> ${soundcheck} Uhr<br>
-<strong>Auftrittsbeginn:</strong> ${start} Uhr<br>
-<strong>Auftrittsende:</strong> ${end} Uhr<br>
-<strong>Veranstaltungsort:</strong> Schulcampus, Germeringer Str. 41, 82131 Gauting<br>
-<strong>Bühnenbetreuung vor Ort:</strong> ${contact}<br>
-<strong>Booking-Team:</strong> ${backupContact}</p>
+<ul>
+<li style="margin-bottom: 0.5rem;"><strong>Auftrittsdatum:</strong> ${day}\</li>
+<li style="margin-bottom: 0.5rem;"><strong>Bühne:</strong> ${stage}\</li>
+<li style="margin-bottom: 0.5rem;"><strong>Ankunft:</strong> ${getin} Uhr\</li>
+<li style="margin-bottom: 0.5rem;"><strong>Umbau und Linecheck:</strong> ${soundcheck} Uhr\</li>
+<li style="margin-bottom: 0.5rem;"><strong>Auftrittsbeginn:</strong> ${start} Uhr\</li>
+<li style="margin-bottom: 0.5rem;"><strong>Auftrittsende:</strong> ${end} Uhr\</li>
+<li style="margin-bottom: 0.5rem;"><strong>Veranstaltungsort:</strong> Schulcampus, Germeringer Str. 41, 82131 Gauting\</li>
+<li style="margin-bottom: 0.5rem;"><strong>Bühnenbetreuung vor Ort:</strong> ${contact}\</li>
+<li style="margin-bottom: 0.5rem;"><strong>Booking-Team:</strong> ${backupContact}</li>
+</ul>
 <p style="margin: 0px; margin-top: 0.5rem; margin-bottom: 0px;">Die Ankunftszeit ist aus organisatorischen Gründen unbedingt einzuhalten,
 aber natürlich könnt ihr auch gerne früher kommen. Bitte meldet euch direkt bei
 eurer Bühnenbetreuung, sobald ihr da seid. Bei den genannten Linecheck- und
@@ -84,49 +94,49 @@ Beschränkungen (z.B. auf Grund von Wetter, Organisation, Lärmschutzauflagen)
 gehen nicht zu Lasten des Kulturspektakels. Den Anweisungen der jeweiligen
 Bühnenbetreuung ist Folge zu leisten. Der Abbau findet zügig und direkt nach
 dem Auftritt statt.</p>
-<h2 style="font-size: 1.25rem; line-height: 1.75rem;">Verhinderung</h2>
-<p style="margin: 0px; margin-top: 0.5rem; margin-bottom: 0px;">Eine Verhinderung ist uns umgehend mitzuteilen. Im Vorfeld der Veranstaltung
+<h2 style="margin-bottom: 0px; font-size: 1.25rem; line-height: 1.75rem;">Verhinderung</h2>
+<p style="margin: 0px; margin-bottom: 0px; margin-top: 0.25rem;">Eine Verhinderung ist uns umgehend mitzuteilen. Im Vorfeld der Veranstaltung
 bitte per E-Mail an booking@kulturspektakel.de. Bei kurzfristigen
 Verhinderungen unbedingt zusätzlich telefonisch Bescheid geben. Jegliche
 Ansprüche entfallen, sofern der Auftritt nicht
 stattfinden kann und nichts anderweitiges vereinbart wurde.</p>
-<h2 style="font-size: 1.25rem; line-height: 1.75rem;">Kosten</h2>
-<p style="margin: 0px; margin-top: 0.5rem; margin-bottom: 0px;">${fee} Das Kulturspektakel übernimmt die anfallenden Gebühren bei
+<h2 style="margin-bottom: 0px; font-size: 1.25rem; line-height: 1.75rem;">Kosten</h2>
+<p style="margin: 0px; margin-bottom: 0px; margin-top: 0.25rem;">${fee} Das Kulturspektakel übernimmt die anfallenden Gebühren bei
 GEMA und KSK (Künstlersozialkasse). Die Künster:innen können eigenständig
 die Musikfolge im Onlinesystem der GEMA einreichen. (GEMA-Nummer:
 0943659900; KSK-Nummer: 84091594X003)</p>
-<h2 style="font-size: 1.25rem; line-height: 1.75rem;">Technik/Umbau</h2>
-<p style="margin: 0px; margin-top: 0.5rem; margin-bottom: 0px;">Wir sorgen für eine Bühne, Beschallungs- und Lichttechnik, Mikrofonierung
+<h2 style="margin-bottom: 0px; font-size: 1.25rem; line-height: 1.75rem;">Technik/Umbau</h2>
+<p style="margin: 0px; margin-bottom: 0px; margin-top: 0.25rem;">Wir sorgen für eine Bühne, Beschallungs- und Lichttechnik, Mikrofonierung
 und Monitoring, außerdem steht für jede Bühne ein Techniker/eine Technikerin
 zur Verfügung. Bands und Künstler:innen bringen ihre komplette Backline
 (Instrumente, Verstärker, Schlagzeug, etc.) selbst mit, soweit nichts
 anderes abgesprochen ist. Um Zeit und Aufwand zu sparen, könnt ihr euch
 gerne die Backline mit einer anderen Band teilen. Wir stellen auf Nachfrage
 den Kontakt zu Bands, die vor oder nach euch spielen, her.</p>
-<h2 style="font-size: 1.25rem; line-height: 1.75rem;">Verpflegung</h2>
-<p style="margin: 0px; margin-top: 0.5rem; margin-bottom: 0px;">Auf dem Gelände könnt ihr aus einem großen Angebot an Speisen (auch
+<p style="margin: 0px; margin-top: 0.5rem; margin-bottom: 0px;">Hier findet ihr die <a href="https://share.nuclino-site.com/Technische-Informationen-Bhnen-Kulturspektakel-Gauting-2026-2fELFUeN8O81fZOxNFnAUL" style="color: rgb(225, 46, 46);">technischen Datenblätter</a> für die Bühnen.</p>
+<h2 style="margin-bottom: 0px; font-size: 1.25rem; line-height: 1.75rem;">Verpflegung</h2>
+<p style="margin: 0px; margin-bottom: 0px; margin-top: 0.25rem;">Auf dem Gelände könnt ihr aus einem großen Angebot an Speisen (auch
 vegetarisch und vegan) und Getränken auswählen. Hierzu bekommt ihr von der
 Bühnenbetreuung Essens- und Getränkegutscheine.</p>
-<h2 style="font-size: 1.25rem; line-height: 1.75rem;">Inhalte des Auftritts</h2>
-<p style="margin: 0px; margin-top: 0.5rem; margin-bottom: 0px;">Die Künstler:innen sind in der Gestaltung ihres Auftritts frei und der
+<h2 style="margin-bottom: 0px; font-size: 1.25rem; line-height: 1.75rem;">Inhalte des Auftritts</h2>
+<p style="margin: 0px; margin-bottom: 0px; margin-top: 0.25rem;">Die Künstler:innen sind in der Gestaltung ihres Auftritts frei und der
 Veranstalter hat keine Weisungsbefugnis sowohl in musikalischer als auch
 inhaltlicher Hinsicht. Wir behalten uns jedoch vor, gegen
 menschenverachtende Inhalte, wie etwa Rechtsextremismus, Antisemitismus,
 Sexismus, Gewaltverherrlichung etc., vorzugehen und den Auftritt
 gegebenenfalls abzubrechen.</p>
-<h2 style="font-size: 1.25rem; line-height: 1.75rem;">Merchandise-Verkauf</h2>
-<p style="margin: 0px; margin-top: 0.5rem; margin-bottom: 0px;">Am Tag des Auftrittes könnt ihr vor Ort Merchandising-Artikel sowie
+<h2 style="margin-bottom: 0px; font-size: 1.25rem; line-height: 1.75rem;">Merchandise-Verkauf</h2>
+<p style="margin: 0px; margin-bottom: 0px; margin-top: 0.25rem;">Am Tag des Auftrittes könnt ihr vor Ort Merchandising-Artikel sowie
 Tonträger verkaufen. Dafür werden keine Gebühren erhoben. Der Standort
 hierfür wird vor Ort mit der Bühnenbetreuung abgesprochen. Das
 Kulturspektakel stellt kein Personal für den Merch-Verkauf.</p>
-<h2 style="font-size: 1.25rem; line-height: 1.75rem;">Foto- und Videoaufnahmen</h2>
-<p style="margin: 0px; margin-top: 0.5rem; margin-bottom: 0px;">Auf dem Festival, inklusive der Auftritte auf den Bühnen, machen wir
+<h2 style="margin-bottom: 0px; font-size: 1.25rem; line-height: 1.75rem;">Foto- und Videoaufnahmen</h2>
+<p style="margin: 0px; margin-bottom: 0px; margin-top: 0.25rem;">Auf dem Festival, inklusive der Auftritte auf den Bühnen, machen wir
 Foto- und Videoaufnahmen, die wir auf unserer Webseite und
-Social-Media-Kanälen zur Bewerbung der Veranstaltung nutzen. Wenn es dazu
-Fragen gibt, wendet euch an presse@kulturspektakel.de. Eigene
+Social-Media-Kanälen zur Bewerbung der Veranstaltung nutzen. Eigene
 Foto-/Videograf:innen könnt ihr gerne mitbringen.</p>
-<h2 style="font-size: 1.25rem; line-height: 1.75rem;">Anfahrt</h2>
-<p style="margin: 0px; margin-top: 0.5rem; margin-bottom: 0px;">Von München aus ist die Anfahrt über die Autobahn A96 Richtung Lindau zu
+<h2 style="margin-bottom: 0px; font-size: 1.25rem; line-height: 1.75rem;">Anfahrt</h2>
+<p style="margin: 0px; margin-bottom: 0px; margin-top: 0.25rem;">Von München aus ist die Anfahrt über die Autobahn A96 Richtung Lindau zu
 empfehlen. Die Adresse des Festivals lautet Germeringer Straße, 82131
 Gauting, die Zufahrt zur Waldbühne erfolgt über die Wiesmahdstraße. An den
 Zufahrten zum Gelände befinden sich Schranken, diese sollten offen sein.
@@ -169,14 +179,14 @@ alle wichtigen Infos für euren Auftritt. Bitte lest euch alles sorgfältig
 durch und meldet euch bei Fragen oder Unklarheiten bei uns. Wir freuen auf
 ein großartiges Festival mit euch!
 
-Auftrittsdatum: ${day}
-Bühne: ${stage}
-Ankunft: ${getin} Uhr
-Umbau und Linecheck: ${soundcheck} Uhr
-Auftrittsbeginn: ${start} Uhr
-Auftrittsende: ${end} Uhr
-Veranstaltungsort: Schulcampus, Germeringer Str. 41, 82131 Gauting
-Bühnenbetreuung vor Ort: ${contact}
+Auftrittsdatum: ${day}\
+Bühne: ${stage}\
+Ankunft: ${getin} Uhr\
+Umbau und Linecheck: ${soundcheck} Uhr\
+Auftrittsbeginn: ${start} Uhr\
+Auftrittsende: ${end} Uhr\
+Veranstaltungsort: Schulcampus, Germeringer Str. 41, 82131 Gauting\
+Bühnenbetreuung vor Ort: ${contact}\
 Booking-Team: ${backupContact}
 
 Die Ankunftszeit ist aus organisatorischen Gründen unbedingt einzuhalten,
@@ -192,7 +202,7 @@ dem Auftritt statt.
 Verhinderung
 
 Eine Verhinderung ist uns umgehend mitzuteilen. Im Vorfeld der Veranstaltung
-bitte per E-Mail an &#x62;&#111;&#x6f;&#107;&#x69;&#x6e;&#x67;&#x40;&#x6b;&#x75;&#x6c;&#116;&#x75;&#114;&#x73;&#x70;&#x65;&#x6b;&#116;&#x61;&#107;&#x65;&#108;&#x2e;&#x64;&#x65;. Bei kurzfristigen
+bitte per E-Mail an &#98;&#111;&#111;&#107;&#105;&#x6e;&#x67;&#64;&#107;&#117;&#x6c;&#116;&#117;&#x72;&#x73;&#x70;&#x65;&#107;&#116;&#x61;&#107;&#x65;&#108;&#x2e;&#x64;&#101;. Bei kurzfristigen
 Verhinderungen unbedingt zusätzlich telefonisch Bescheid geben. Jegliche
 Ansprüche entfallen, sofern der Auftritt nicht
 stattfinden kann und nichts anderweitiges vereinbart wurde.
@@ -213,6 +223,8 @@ zur Verfügung. Bands und Künstler:innen bringen ihre komplette Backline
 anderes abgesprochen ist. Um Zeit und Aufwand zu sparen, könnt ihr euch
 gerne die Backline mit einer anderen Band teilen. Wir stellen auf Nachfrage
 den Kontakt zu Bands, die vor oder nach euch spielen, her.
+
+Hier findet ihr die technischen Datenblätter für die Bühnen.
 
 Verpflegung
 
@@ -240,8 +252,7 @@ Foto- und Videoaufnahmen
 
 Auf dem Festival, inklusive der Auftritte auf den Bühnen, machen wir
 Foto- und Videoaufnahmen, die wir auf unserer Webseite und
-Social-Media-Kanälen zur Bewerbung der Veranstaltung nutzen. Wenn es dazu
-Fragen gibt, wendet euch an &#x70;&#x72;&#x65;&#x73;&#115;&#x65;&#64;&#x6b;&#x75;&#x6c;&#x74;&#117;&#x72;&#115;&#x70;&#101;&#107;&#x74;&#97;&#107;&#x65;&#x6c;&#x2e;&#x64;&#x65;. Eigene
+Social-Media-Kanälen zur Bewerbung der Veranstaltung nutzen. Eigene
 Foto-/Videograf:innen könnt ihr gerne mitbringen.
 
 Anfahrt

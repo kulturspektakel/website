@@ -40,6 +40,7 @@ export default ({link}: {link: string}) => ({
     <![endif]-->      <title>Spende</title>
     <style>
 h2 {
+  margin-bottom: 0px;
   font-size: 1.25rem;
   line-height: 1.75rem;
 }
@@ -51,8 +52,16 @@ h3 {
 h4,
 h5,
 h6 {
+  margin-bottom: 0px;
   font-size: 1rem;
   line-height: 1.5rem;
+}
+h2 + p,
+h3 + p,
+h4 + p,
+h5 + p,
+h6 + p {
+  margin-top: 0.25rem;
 }
 li {
   margin-bottom: 0.5rem;
@@ -60,7 +69,7 @@ li {
 .hover-underline:hover {
   text-decoration-line: underline;
 }</style>  </head>
-  <body style="font-family: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'; line-height: 1.5rem; word-break: break-word;">      <div style="display: none;">
+  <body style="font-family: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'; line-height: 1.375; word-break: break-word;">      <div style="display: none;">
         Vielen Dank für deine Spende
         &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847; &#8199;&#847;
         &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy; &shy;
@@ -69,7 +78,7 @@ li {
     <div role="article" aria-roledescription="email" aria-label="Spende" lang="de">
       <div style="margin-left: auto; margin-right: auto; max-width: 640px;">
         <h1 style="margin-top: 0px; font-size: 1.5rem; line-height: 2rem;">Vielen Dank für deine Spende</h1>
-<p style="margin: 0px; margin-top: 0.5rem; margin-bottom: 0px;">Deine Spende trägt dazu bei, dass das Kult weiterhin lebendig und zugänglich bleibt. Das wissen wir sehr zu schätzen und möchten uns ausdrücklich dafür bedanken. Wir freuen uns dich auch beim nächsten Kulturspektakel wieder zu sehen.</p>
+<p style="margin: 0px; margin-bottom: 0px; margin-top: 0.25rem;">Deine Spende trägt dazu bei, dass das Kult weiterhin lebendig und zugänglich bleibt. Das wissen wir sehr zu schätzen und möchten uns ausdrücklich dafür bedanken. Wir freuen uns dich auch beim nächsten Kulturspektakel wieder zu sehen.</p>
 <p style="margin: 0px; margin-top: 0.5rem; margin-bottom: 0px;">Wenn du eine Spendenquittung benötigst, kannst du sie unter folgendem Link herunterladen: ${link}</p>
 <p style="margin: 0px; margin-top: 0.5rem; margin-bottom: 0px;">Falls du sonst noch Fragen hast, melde dich gerne jederzeit bei uns mit einer Antwort auf diese E-Mail.</p>
 <p style="margin: 0px; margin-top: 0.5rem; margin-bottom: 0px;">Vielen Dank und beste Grüße<br>
