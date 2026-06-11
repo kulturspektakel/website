@@ -4,6 +4,7 @@ import {LuBluetooth} from 'react-icons/lu';
 import {IconButton} from '@chakra-ui/react';
 import {MenuContent, MenuItem, MenuRoot, MenuTrigger} from '../chakra-snippets/menu';
 import {CalibrationDialog} from './CalibrationDialog';
+import {WifiDialog} from './WifiDialog';
 import {useLautstaerkeCtx} from './context';
 
 // Owns the whole Bluetooth lifecycle, shared by the overview and device views.
@@ -14,6 +15,7 @@ export function BluetoothMenu() {
   const {bluetooth} = useLautstaerkeCtx();
   const navigate = useNavigate();
   const [calibrating, setCalibrating] = useState(false);
+  const [wifiOpen, setWifiOpen] = useState(false);
 
   if (!bluetooth.supported) return null;
 
@@ -61,6 +63,9 @@ export function BluetoothMenu() {
           <MenuItem value="calibrate" onClick={() => setCalibrating(true)}>
             Kalibrieren
           </MenuItem>
+          <MenuItem value="wifi" onClick={() => setWifiOpen(true)}>
+            WLAN einrichten
+          </MenuItem>
           <MenuItem
             value="disconnect"
             color="red.400"
@@ -76,6 +81,12 @@ export function BluetoothMenu() {
       <CalibrationDialog
         open={calibrating}
         onClose={() => setCalibrating(false)}
+        bluetooth={bluetooth}
+        deviceName={bluetooth.deviceName}
+      />
+      <WifiDialog
+        open={wifiOpen}
+        onClose={() => setWifiOpen(false)}
         bluetooth={bluetooth}
         deviceName={bluetooth.deviceName}
       />

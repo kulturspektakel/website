@@ -159,11 +159,8 @@ export function CalibrationDialog({
           >
             Zurücksetzen
           </Button>
-          <Button variant="outline" onClick={onClose} disabled={saving}>
-            Abbrechen
-          </Button>
           <Button onClick={apply} loading={saving} disabled={!offsets}>
-            Anwenden
+            Speichern
           </Button>
         </DialogFooter>
       </DialogContent>

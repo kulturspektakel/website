@@ -169,6 +169,8 @@ export type BluetoothSlice = {
   // Per-band calibration over the connected device; both throw if not connected.
   readCalibration: () => Promise<number[]>;
   writeCalibration: (offsetsDb: number[]) => Promise<void>;
+  // Push WiFi credentials to the connected device; throws if not connected.
+  writeWifi: (ssid: string, password: string) => Promise<void>;
 };
 
 export type LautstaerkeCtx = {
