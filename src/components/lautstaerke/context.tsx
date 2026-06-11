@@ -165,6 +165,9 @@ export type BluetoothSlice = {
   supported: boolean;
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
+  // Per-band calibration over the connected device; both throw if not connected.
+  readCalibration: () => Promise<number[]>;
+  writeCalibration: (offsetsDb: number[]) => Promise<void>;
 };
 
 export type LautstaerkeCtx = {

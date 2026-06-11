@@ -19,6 +19,8 @@ import {
 import {
   connectBleDevice,
   isWebBluetoothSupported,
+  readCalibration,
+  writeCalibration,
   type BleConnection,
 } from '../components/lautstaerke/bluetooth';
 import {createServerFn} from '@tanstack/react-start';
@@ -235,6 +237,18 @@ function LautstaerkeLayout() {
     }
   }, [bleConnecting, cleanupBle, ingest]);
 
+  const readCal = useCallback(async () => {
+    const conn = bleConnRef.current;
+    if (!conn) throw new Error('Kein Gerät über Bluetooth verbunden.');
+    return readCalibration(conn);
+  }, []);
+
+  const writeCal = useCallback(async (offsetsDb: number[]) => {
+    const conn = bleConnRef.current;
+    if (!conn) throw new Error('Kein Gerät über Bluetooth verbunden.');
+    await writeCalibration(conn, offsetsDb);
+  }, []);
+
   useEffect(() => {
     return () => cleanupBle();
   }, [cleanupBle]);
@@ -254,6 +268,8 @@ function LautstaerkeLayout() {
         supported: bleSupported,
         connect: connectBle,
         disconnect: disconnectBle,
+        readCalibration: readCal,
+        writeCalibration: writeCal,
       },
     }),
     [
@@ -268,6 +284,8 @@ function LautstaerkeLayout() {
       bleSupported,
       connectBle,
       disconnectBle,
+      readCal,
+      writeCal,
     ],
   );
 

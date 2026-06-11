@@ -14,7 +14,9 @@ export function BatteryChip({mv}: {mv: number}) {
       fontWeight="medium"
       whiteSpace="nowrap"
     >
-      {(mv / 1000).toFixed(2)} V
+      {/* Measured through a 2:1 voltage divider, so double to get the real
+          battery voltage. */}
+      {((mv * 2) / 1000).toFixed(2)} V
     </Box>
   );
 }

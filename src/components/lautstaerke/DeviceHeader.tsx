@@ -1,5 +1,6 @@
 import {Link} from '@tanstack/react-router';
-import {LuArrowLeft} from 'react-icons/lu';
+import {useState} from 'react';
+import {LuArrowLeft, LuSlidersHorizontal} from 'react-icons/lu';
 import {
   Box,
   Button,
@@ -12,6 +13,7 @@ import {
 import {DayPicker} from './DayPicker';
 import {BatteryChip} from './BatteryChip';
 import {BluetoothChip} from './BluetoothChip';
+import {CalibrationDialog} from './CalibrationDialog';
 import {isFresh, useLautstaerkeCtx, useTick} from './context';
 import {useDeviceView} from './deviceView';
 
@@ -50,6 +52,8 @@ export function DeviceHeader({
   const ctx = useLautstaerkeCtx();
   const {weighting, toggleWeighting} = useDeviceView();
   const deviceState = ctx.devices[device];
+  const bleConnected = ctx.bluetooth.deviceName === device;
+  const [calibrating, setCalibrating] = useState(false);
 
   return (
     <HStack mb="4" align="center">
@@ -85,7 +89,26 @@ export function DeviceHeader({
           )}
         </HStack>
       </VStack>
-      {ctx.bluetooth.deviceName === device && <BluetoothChip />}
+      {bleConnected && (
+        <>
+          <BluetoothChip />
+          <IconButton
+            aria-label="Kalibrieren"
+            size="sm"
+            flexShrink="0"
+            variant="outline"
+            onClick={() => setCalibrating(true)}
+          >
+            <LuSlidersHorizontal />
+          </IconButton>
+          <CalibrationDialog
+            open={calibrating}
+            onClose={() => setCalibrating(false)}
+            bluetooth={ctx.bluetooth}
+            deviceName={device}
+          />
+        </>
+      )}
       <DayPicker device={device} days={days} value={dayValue} />
       <Button
         size="sm"
