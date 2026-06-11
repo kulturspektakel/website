@@ -18,6 +18,7 @@ import {
   formatBandFrequency,
 } from './bluetooth';
 import {type BluetoothSlice} from './context';
+import {toaster} from '../chakra-snippets/toaster';
 
 export function CalibrationDialog({
   open,
@@ -78,9 +79,14 @@ export function CalibrationDialog({
     setError(null);
     try {
       await writeCalibration(offsets);
+      toaster.create({type: 'success', title: 'Kalibrierung gespeichert'});
       onClose();
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      toaster.create({
+        type: 'error',
+        title: 'Kalibrierung fehlgeschlagen',
+        description: e instanceof Error ? e.message : String(e),
+      });
     } finally {
       setSaving(false);
     }
@@ -111,31 +117,36 @@ export function CalibrationDialog({
             </Center>
           ) : (
             <Stack gap="4">
-              {error && (
-                <Text color="red.500" fontSize="sm">
-                  {error}
-                </Text>
-              )}
               {BAND_FREQUENCIES.map((hz, i) => (
-                <Slider
-                  key={hz}
-                  label={
-                    <HStack gap="2">
-                      <Box minW="16" fontFamily="mono">
-                        {formatBandFrequency(hz)}
-                      </Box>
-                      <Text color="gray.500" fontFamily="mono" fontSize="xs">
-                        {offsets[i]! > 0 ? '+' : ''}
-                        {offsets[i]!.toFixed(1)} dB
-                      </Text>
-                    </HStack>
-                  }
-                  value={[offsets[i]!]}
-                  min={-CAL_MAX_DB}
-                  max={CAL_MAX_DB}
-                  step={CAL_STEP_DB}
-                  onValueChange={({value}) => setBand(i, value[0]!)}
-                />
+                <HStack key={hz} gap="3">
+                  <Box
+                    minW="16"
+                    fontFamily="mono"
+                    flexShrink="0"
+                    textAlign="end"
+                  >
+                    {formatBandFrequency(hz)}
+                  </Box>
+                  <Slider
+                    flex="1"
+                    value={[offsets[i]!]}
+                    min={-CAL_MAX_DB}
+                    max={CAL_MAX_DB}
+                    step={CAL_STEP_DB}
+                    onValueChange={({value}) => setBand(i, value[0]!)}
+                  />
+                  <Text
+                    color="gray.500"
+                    fontFamily="mono"
+                    fontSize="xs"
+                    minW="14"
+                    textAlign="end"
+                    flexShrink="0"
+                  >
+                    {offsets[i]! > 0 ? '+' : ''}
+                    {offsets[i]!.toFixed(1)} dB
+                  </Text>
+                </HStack>
               ))}
             </Stack>
           )}

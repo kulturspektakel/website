@@ -1,16 +1,13 @@
 import {createFileRoute, Link} from '@tanstack/react-router';
 import {
   Box,
-  Button,
   Center,
   HStack,
   Heading,
-  IconButton,
   Spinner,
   Text,
   VStack,
 } from '@chakra-ui/react';
-import {LuBluetooth} from 'react-icons/lu';
 import {
   decodeDb,
   formatLastSeen,
@@ -19,7 +16,7 @@ import {
   useTick,
 } from '../components/lautstaerke/context';
 import {BatteryChip} from '../components/lautstaerke/BatteryChip';
-import {BluetoothChip} from '../components/lautstaerke/BluetoothChip';
+import {BluetoothMenu} from '../components/lautstaerke/BluetoothMenu';
 
 export const Route = createFileRoute('/crew/lautstaerke/')({
   component: DeviceList,
@@ -30,11 +27,16 @@ function DeviceList() {
   const now = useTick();
   // DB-registered devices are always listed; devices first seen via MQTT are
   // added on the fly so newly discovered monitors show up without a DB entry.
-  // Ordering: active (recently seen) devices first, then by location name,
-  // then by device name as the final tie-breaker.
+  // Ordering: the Bluetooth-connected device first, then active (recently seen)
+  // devices, then by location name, then by device name as the final tie-breaker.
+  const bleName = ctx.bluetooth.deviceName;
   const names = [
     ...new Set([...ctx.deviceIds, ...Object.keys(ctx.devices)]),
   ].sort((a, b) => {
+    const aBle = a === bleName;
+    const bBle = b === bleName;
+    if (aBle !== bBle) return aBle ? -1 : 1;
+
     const aActive = isFresh(ctx.devices[a]?.lastSeen, now);
     const bActive = isFresh(ctx.devices[b]?.lastSeen, now);
     if (aActive !== bActive) return aActive ? -1 : 1;
@@ -55,13 +57,8 @@ function DeviceList() {
         <Heading as="h1" size="2xl">
           Lautstärke
         </Heading>
-        <BluetoothControl />
+        <BluetoothMenu />
       </HStack>
-      {ctx.bluetooth.error && (
-        <Text color="red.500" mb="3" fontSize="sm">
-          {ctx.bluetooth.error}
-        </Text>
-      )}
       {names.length === 0 && !ctx.connected ? (
         <Center flex="1" py="10">
           <Spinner size="lg" />
@@ -73,6 +70,7 @@ function DeviceList() {
           {names.map((name) => {
             const state = ctx.devices[name];
             const active = isFresh(state?.lastSeen, now);
+            const ble = name === bleName;
             // Newest of the DB's lastSeen and the latest MQTT message we've seen
             // this session; shown only while the device isn't currently active.
             const lastSeen = Math.max(
@@ -99,14 +97,13 @@ function DeviceList() {
                       mr="2"
                       rounded="full"
                       flexShrink="0"
-                      bg={active ? 'green.500' : 'gray.400'}
+                      bg={ble ? 'blue.500' : active ? 'green.500' : 'gray.400'}
                     />
                     <DeviceTitle
                       deviceName={name}
                       locationName={ctx.deviceLocations[name]}
                       batteryMv={state?.batteryMv}
                     />
-                    {ctx.bluetooth.deviceName === name && <BluetoothChip />}
                     <VStack gap="1" align="end" minW="0">
                       {active ? (
                         <>
@@ -183,50 +180,5 @@ function DeviceTitle({
         {battery}
       </HStack>
     </VStack>
-  );
-}
-
-function BluetoothControl() {
-  const {bluetooth} = useLautstaerkeCtx();
-  if (!bluetooth.supported) return null;
-  if (bluetooth.deviceName) {
-    return (
-      <HStack
-        gap="2"
-        px="2"
-        py="1"
-        rounded="md"
-        borderWidth="1px"
-        borderColor="blue.500"
-        bg="blue.950"
-      >
-        <Box w="2" h="2" rounded="full" bg="blue.500" />
-        <Text fontSize="sm" fontFamily="mono">
-          {bluetooth.deviceName}
-        </Text>
-        <Button
-          size="xs"
-          variant="outline"
-          onClick={() => {
-            void bluetooth.disconnect();
-          }}
-        >
-          Trennen
-        </Button>
-      </HStack>
-    );
-  }
-  return (
-    <IconButton
-      aria-label="Bluetooth verbinden"
-      rounded="full"
-      size="sm"
-      onClick={() => {
-        void bluetooth.connect();
-      }}
-      loading={bluetooth.connecting}
-    >
-      <LuBluetooth />
-    </IconButton>
   );
 }

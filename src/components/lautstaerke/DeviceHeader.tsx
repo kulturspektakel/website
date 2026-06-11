@@ -1,26 +1,17 @@
 import {Link} from '@tanstack/react-router';
-import {useState} from 'react';
-import {LuArrowLeft, LuSlidersHorizontal} from 'react-icons/lu';
-import {
-  Box,
-  Button,
-  HStack,
-  Heading,
-  IconButton,
-  Text,
-  VStack,
-} from '@chakra-ui/react';
+import {LuArrowLeft} from 'react-icons/lu';
+import {Box, Button, HStack, Heading, IconButton, Text, VStack} from '@chakra-ui/react';
 import {DayPicker} from './DayPicker';
 import {BatteryChip} from './BatteryChip';
-import {BluetoothChip} from './BluetoothChip';
-import {CalibrationDialog} from './CalibrationDialog';
+import {BluetoothMenu} from './BluetoothMenu';
 import {isFresh, useLautstaerkeCtx, useTick} from './context';
 import {useDeviceView} from './deviceView';
 
 // Online dot. Ticks internally so only it (not the whole header) re-renders each
 // second. Driven by live MQTT state, which is "is the device alive now" —
-// independent of which day is being viewed, so it shows on every view.
-function LiveStatusDot({lastSeen}: {lastSeen?: number}) {
+// independent of which day is being viewed, so it shows on every view. Turns
+// blue while this device is the one connected over Bluetooth.
+function LiveStatusDot({lastSeen, ble}: {lastSeen?: number; ble: boolean}) {
   const now = useTick();
   return (
     <Box
@@ -28,7 +19,7 @@ function LiveStatusDot({lastSeen}: {lastSeen?: number}) {
       h="3"
       rounded="full"
       flexShrink="0"
-      bg={isFresh(lastSeen, now) ? 'green.500' : 'gray.400'}
+      bg={ble ? 'blue.500' : isFresh(lastSeen, now) ? 'green.500' : 'gray.400'}
     />
   );
 }
@@ -53,7 +44,6 @@ export function DeviceHeader({
   const {weighting, toggleWeighting} = useDeviceView();
   const deviceState = ctx.devices[device];
   const bleConnected = ctx.bluetooth.deviceName === device;
-  const [calibrating, setCalibrating] = useState(false);
 
   return (
     <HStack mb="4" align="center">
@@ -74,7 +64,7 @@ export function DeviceHeader({
           </Heading>
         )}
         <HStack gap="2" minW="0" w="full">
-          <LiveStatusDot lastSeen={deviceState?.lastSeen} />
+          <LiveStatusDot lastSeen={deviceState?.lastSeen} ble={bleConnected} />
           {location ? (
             <Text fontFamily="mono" fontSize="sm" color="gray.500" truncate minW="0">
               {device}
@@ -89,26 +79,7 @@ export function DeviceHeader({
           )}
         </HStack>
       </VStack>
-      {bleConnected && (
-        <>
-          <BluetoothChip />
-          <IconButton
-            aria-label="Kalibrieren"
-            size="sm"
-            flexShrink="0"
-            variant="outline"
-            onClick={() => setCalibrating(true)}
-          >
-            <LuSlidersHorizontal />
-          </IconButton>
-          <CalibrationDialog
-            open={calibrating}
-            onClose={() => setCalibrating(false)}
-            bluetooth={ctx.bluetooth}
-            deviceName={device}
-          />
-        </>
-      )}
+      <BluetoothMenu />
       <DayPicker device={device} days={days} value={dayValue} />
       <Button
         size="sm"

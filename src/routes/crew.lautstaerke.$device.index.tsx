@@ -1,6 +1,6 @@
 import {createFileRoute} from '@tanstack/react-router';
 import {useEffect, useMemo, useRef, useState} from 'react';
-import {Box, Flex} from '@chakra-ui/react';
+import {Box, Flex, Text} from '@chakra-ui/react';
 import uPlot from 'uplot';
 import {
   GAP_THRESHOLD_S,
@@ -9,6 +9,8 @@ import {
   decodeDb,
   isFresh,
   useLautstaerkeCtx,
+  useTick,
+  type DeviceState,
 } from '../components/lautstaerke/context';
 import {BigNumberRow, useSeriesToggle} from '../components/lautstaerke/BigNumber';
 import {NoiseTimeChart} from '../components/lautstaerke/NoiseTimeChart';
@@ -20,6 +22,7 @@ import {
   resolveCssVar,
 } from '../components/lautstaerke/chartUtils';
 import {type NoiseRecording} from '../proto/noise';
+import {ChartTooltip} from '../components/lautstaerke/ChartTooltip';
 
 export const Route = createFileRoute('/crew/lautstaerke/$device/')({
   component: DeviceLive,
@@ -41,6 +44,14 @@ function DeviceLive() {
   const bandRef = useRef<HTMLDivElement | null>(null);
   const bandPlotRef = useRef<uPlot | null>(null);
   const bandXs = useMemo(() => FREQS.map((_, i) => i), []);
+  // Hovered frequency band: which bar (index into FREQS) and where to anchor the
+  // tooltip, in container-relative CSS pixels. null when not hovering a bar.
+  const [bandHover, setBandHover] = useState<{
+    idx: number;
+    left: number;
+    top: number;
+  } | null>(null);
+  const now = useTick();
   // Chart cursor: null when not hovering (big numbers show live values), a
   // buffer index for the hovered sample, or 'gap' when the cursor sits in a
   // region with no nearby sample (big numbers show — rather than stale data).
@@ -70,8 +81,13 @@ function DeviceLive() {
       width: container.clientWidth || 800,
       height: canvasHeight(),
       legend: {show: false},
-      // No hover interaction on the frequency chart — kill the crosshair.
-      cursor: {show: false},
+      // Snap the cursor to the nearest bar so hovering reveals that band's value
+      // via the React tooltip below; no crosshair points, no drag-to-zoom.
+      cursor: {
+        y: false,
+        points: {show: false},
+        drag: {x: false, y: false},
+      },
       scales: {
         x: {time: false, range: () => [-0.7, FREQS.length - 0.3]},
         y: {range: () => [30, 110]},
@@ -111,6 +127,26 @@ function DeviceLive() {
           value: (_u, v) => (v == null ? '' : `${v.toFixed(1)} dB`),
         },
       ],
+      hooks: {
+        setCursor: [
+          (u) => {
+            const {idx, left, top} = u.cursor;
+            if (idx == null || left == null || left < 0 || top == null) {
+              setBandHover(null);
+              return;
+            }
+            // u.cursor.left/top are relative to the plotting area; offset by it
+            // to anchor the tooltip in container coordinates.
+            const over = u.over.getBoundingClientRect();
+            const root = container.getBoundingClientRect();
+            setBandHover({
+              idx,
+              left: over.left - root.left + left,
+              top: over.top - root.top + top,
+            });
+          },
+        ],
+      },
     };
 
     const plot = new uPlot(
@@ -187,8 +223,49 @@ function DeviceLive() {
           gapThresholdX={GAP_THRESHOLD_S}
           onCursorIdx={setCursorIdx}
         />
-        <Box flex="1" minH="200px" ref={bandRef} overflow="hidden" />
+        <Box flex="1" minH="200px" position="relative">
+          <Box
+            position="absolute"
+            inset="0"
+            ref={bandRef}
+            overflow="hidden"
+            css={{
+              '& .u-cursor-x': {
+                borderColor: 'var(--chakra-colors-white)',
+              },
+            }}
+          />
+          {bandHover && <BandTooltip hover={bandHover} state={deviceState} now={now} />}
+        </Box>
       </Flex>
     </>
+  );
+}
+
+// Floating value readout for the hovered frequency band. The level is read live
+// from the device's latest record (DeviceLive re-renders as records arrive), or
+// shown as — once the device is no longer active.
+function BandTooltip({
+  hover,
+  state,
+  now,
+}: {
+  hover: {idx: number; left: number; top: number};
+  state: DeviceState | undefined;
+  now: number;
+}) {
+  const band = isFresh(state?.lastSeen, now)
+    ? state!.latest.bands[hover.idx]
+    : undefined;
+  const db = band == null ? null : decodeDb(band);
+  return (
+    <ChartTooltip left={hover.left} top={hover.top}>
+      <Text fontFamily="mono" fontSize="xs" color="gray.400" lineHeight="1.2">
+        {fmtHz(FREQS[hover.idx] ?? 0)} Hz
+      </Text>
+      <Text fontFamily="mono" fontWeight="bold" lineHeight="1.2">
+        {db == null ? '—' : `${db.toFixed(1)} dB`}
+      </Text>
+    </ChartTooltip>
   );
 }

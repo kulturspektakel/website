@@ -1,5 +1,5 @@
-import {useEffect, useMemo, useRef} from 'react';
-import {Box} from '@chakra-ui/react';
+import {useEffect, useMemo, useRef, useState} from 'react';
+import {Box, Text} from '@chakra-ui/react';
 import uPlot from 'uplot';
 import {
   AXIS_STROKE_VAR,
@@ -10,6 +10,7 @@ import {
   seriesKind,
 } from './chartUtils';
 import {type Weighting} from './context';
+import {ChartTooltip} from './ChartTooltip';
 
 // Shared time-series chart for both the live and historical noise pages. The
 // big-number row above each page doubles as the legend, so uPlot's own is off.
@@ -49,6 +50,11 @@ export function NoiseTimeChart({
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const plotRef = useRef<uPlot | null>(null);
+  // Hovered time readout: where to anchor the tooltip (container-relative CSS
+  // pixels) and the formatted time under the cursor. null when not hovering.
+  const [tip, setTip] = useState<{left: number; top: number; label: string} | null>(
+    null,
+  );
 
   // Read by the long-lived plot closures (range/axis/cursor) and the 1 Hz tick
   // without making them effect dependencies, so the plot isn't torn down when
@@ -90,6 +96,8 @@ export function NoiseTimeChart({
       width: container.clientWidth || 800,
       height: canvasHeight(),
       legend: {show: false},
+      // Only the vertical guide line — no horizontal line, no snapped points.
+      cursor: {y: false, points: {show: false}},
       // Place time ticks on `timeZone` boundaries, independent of viewer TZ.
       tzDate: (ts) => zonedDate(ts),
       scales: {
@@ -133,6 +141,7 @@ export function NoiseTimeChart({
             // across a gap, so flag 'gap' when that sample is further away than
             // the gap threshold.
             const idx = u.cursor.idx;
+            const {left, top} = u.cursor;
             let next: number | 'gap' | null;
             if (idx == null) {
               next = null;
@@ -145,6 +154,19 @@ export function NoiseTimeChart({
                   : idx;
             }
             onCursorRef.current(next);
+
+            // Time tooltip, anchored to the vertical line at the mouse x.
+            if (idx == null || left == null || left < 0 || top == null) {
+              setTip(null);
+            } else {
+              const over = u.over.getBoundingClientRect();
+              const root = container.getBoundingClientRect();
+              setTip({
+                left: over.left - root.left + left,
+                top: over.top - root.top + top,
+                label: xAxisFormatRef.current(u.posToVal(left, 'x')),
+              });
+            }
           },
         ],
       },
@@ -194,16 +216,25 @@ export function NoiseTimeChart({
   }, [shown, visible]);
 
   return (
-    <Box
-      flex="1"
-      minH="200px"
-      ref={containerRef}
-      overflow="hidden"
-      css={{
-        '& .u-cursor-x, & .u-cursor-y': {
-          borderColor: 'var(--chakra-colors-white)',
-        },
-      }}
-    />
+    <Box flex="1" minH="200px" position="relative">
+      <Box
+        position="absolute"
+        inset="0"
+        ref={containerRef}
+        overflow="hidden"
+        css={{
+          '& .u-cursor-x': {
+            borderColor: 'var(--chakra-colors-white)',
+          },
+        }}
+      />
+      {tip && (
+        <ChartTooltip left={tip.left} top={tip.top}>
+          <Text fontFamily="mono" fontSize="xs" lineHeight="1.2">
+            {tip.label}
+          </Text>
+        </ChartTooltip>
+      )}
+    </Box>
   );
 }

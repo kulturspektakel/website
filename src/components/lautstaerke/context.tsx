@@ -161,9 +161,10 @@ export type DeviceBuffer = (number | null)[][];
 export type BluetoothSlice = {
   deviceName: string | null;
   connecting: boolean;
-  error: string | null;
   supported: boolean;
-  connect: () => Promise<void>;
+  // Resolves to the connected device's name, or null if the user cancelled or
+  // the connection failed (the error is exposed via `error`).
+  connect: () => Promise<string | null>;
   disconnect: () => Promise<void>;
   // Per-band calibration over the connected device; both throw if not connected.
   readCalibration: () => Promise<number[]>;

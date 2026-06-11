@@ -25,6 +25,7 @@ import {
 } from '../components/lautstaerke/bluetooth';
 import {createServerFn} from '@tanstack/react-start';
 import {prismaClient} from '../server/prismaClient.server';
+import {Toaster, toaster} from '../components/chakra-snippets/toaster';
 
 const noiseDevices = createServerFn().handler(async () => {
   const devices = await prismaClient.device.findMany({
@@ -71,7 +72,6 @@ function LautstaerkeLayout() {
 
   const [bleDeviceName, setBleDeviceName] = useState<string | null>(null);
   const [bleConnecting, setBleConnecting] = useState(false);
-  const [bleError, setBleError] = useState<string | null>(null);
   const [bleSupported, setBleSupported] = useState(false);
 
   useEffect(() => {
@@ -191,13 +191,11 @@ function LautstaerkeLayout() {
 
   const disconnectBle = useCallback(async () => {
     cleanupBle();
-    setBleError(null);
   }, [cleanupBle]);
 
-  const connectBle = useCallback(async () => {
-    if (bleConnecting) return;
+  const connectBle = useCallback(async (): Promise<string | null> => {
+    if (bleConnecting) return null;
     if (bleConnRef.current) cleanupBle();
-    setBleError(null);
     setBleConnecting(true);
     try {
       const conn = await connectBleDevice();
@@ -214,7 +212,10 @@ function LautstaerkeLayout() {
       };
       const onDisconnect = () => {
         cleanupBle();
-        setBleError('Bluetooth-Verbindung getrennt.');
+        toaster.create({
+          type: 'info',
+          title: 'Bluetooth-Verbindung getrennt',
+        });
       };
       conn.characteristic.addEventListener(
         'characteristicvaluechanged',
@@ -224,14 +225,20 @@ function LautstaerkeLayout() {
       bleConnRef.current = conn;
       bleHandlersRef.current = {onValue, onDisconnect};
       setBleDeviceName(conn.deviceName);
+      return conn.deviceName;
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       if (
         !(e instanceof DOMException && e.name === 'NotFoundError') &&
         !/User cancelled/i.test(msg)
       ) {
-        setBleError(msg);
+        toaster.create({
+          type: 'error',
+          title: 'Bluetooth-Verbindung fehlgeschlagen',
+          description: msg,
+        });
       }
+      return null;
     } finally {
       setBleConnecting(false);
     }
@@ -264,7 +271,6 @@ function LautstaerkeLayout() {
       bluetooth: {
         deviceName: bleDeviceName,
         connecting: bleConnecting,
-        error: bleError,
         supported: bleSupported,
         connect: connectBle,
         disconnect: disconnectBle,
@@ -280,7 +286,6 @@ function LautstaerkeLayout() {
       deviceLastSeen,
       bleDeviceName,
       bleConnecting,
-      bleError,
       bleSupported,
       connectBle,
       disconnectBle,
@@ -303,6 +308,7 @@ function LautstaerkeLayout() {
         >
           <Outlet />
         </Box>
+        <Toaster />
       </DarkMode>
     </LautstaerkeContext.Provider>
   );
