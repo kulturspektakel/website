@@ -1,5 +1,5 @@
 /// <reference types="web-bluetooth" />
-import {createFileRoute, Outlet} from '@tanstack/react-router';
+import {createFileRoute, Outlet, useBlocker} from '@tanstack/react-router';
 import {Box} from '@chakra-ui/react';
 import {DarkMode} from '../components/chakra-snippets/color-mode';
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
@@ -269,6 +269,17 @@ function LautstaerkeLayout() {
   useEffect(() => {
     return () => cleanupBle();
   }, [cleanupBle]);
+
+  // Warn before navigating away or reloading while connected over Bluetooth —
+  // leaving the page tears down the BLE connection.
+  useBlocker({
+    disabled: !bleDeviceName,
+    enableBeforeUnload: () => bleDeviceName != null,
+    shouldBlockFn: () =>
+      !window.confirm(
+        'Du bist über Bluetooth verbunden. Wenn du die Seite verlässt, wird die Verbindung getrennt. Trotzdem fortfahren?',
+      ),
+  });
 
   const ctx = useMemo<LautstaerkeCtx>(
     () => ({
