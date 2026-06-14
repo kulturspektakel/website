@@ -27,6 +27,9 @@ const overrides: SystemConfig = {
         base: {
           root: {
             bg: 'white',
+            // Match the field's radius so the white root bg doesn't peek out
+            // behind the field's rounded corners.
+            borderRadius: 'l2',
           },
         },
       }),

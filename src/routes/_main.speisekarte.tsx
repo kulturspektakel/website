@@ -1,6 +1,6 @@
-import {Heading, ListItem, ListRoot} from '@chakra-ui/react';
+import {Flex, Heading, ListItem, ListRoot} from '@chakra-ui/react';
 import ProductList from '../components/speisekarte/ProductList';
-import FilterNotice from '../components/speisekarte/FilterNotice';
+import DietFilterSelect from '../components/speisekarte/DietFilterSelect';
 import {createFileRoute} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
 import {prismaClient} from '../server/prismaClient.server';
@@ -88,10 +88,16 @@ export default function Speisekarte() {
 
   return (
     <>
-      <Heading mb="10" textAlign="center" size="3xl">
-        Speisen & Getränke
-      </Heading>
-      {filter && <FilterNotice filter={filter} />}
+      <Flex
+        mb="10"
+        gap="4"
+        direction={{base: 'column', md: 'row'}}
+        align={{base: 'stretch', md: 'center'}}
+        justify="space-between"
+      >
+        <Heading size="3xl">Speisen & Getränke</Heading>
+        <DietFilterSelect filter={filter} />
+      </Flex>
       <ListRoot
         display="block"
         columnGap="10"
