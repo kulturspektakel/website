@@ -3,7 +3,7 @@ import {useState} from 'react';
 import {LuBluetooth} from 'react-icons/lu';
 import {IconButton} from '@chakra-ui/react';
 import {MenuContent, MenuItem, MenuRoot, MenuTrigger} from '../chakra-snippets/menu';
-import {CalibrationDialog} from './CalibrationDialog';
+import {CalibrationPanel} from './CalibrationPanel';
 import {WifiDialog} from './WifiDialog';
 import {useLautstaerkeCtx} from './context';
 
@@ -78,11 +78,10 @@ export function BluetoothMenu() {
           </MenuItem>
         </MenuContent>
       </MenuRoot>
-      <CalibrationDialog
+      <CalibrationPanel
         open={calibrating}
         onClose={() => setCalibrating(false)}
         bluetooth={bluetooth}
-        deviceName={bluetooth.deviceName}
       />
       <WifiDialog
         open={wifiOpen}

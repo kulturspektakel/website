@@ -23,16 +23,15 @@ import {
 } from '../components/lautstaerke/chartUtils';
 import {type NoiseRecording} from '../proto/noise';
 import {ChartTooltip} from '../components/lautstaerke/ChartTooltip';
+import {BAND_FREQUENCIES} from '../components/lautstaerke/bluetooth';
 
 export const Route = createFileRoute('/crew/lautstaerke/$device/')({
   component: DeviceLive,
 });
 
-const FREQS = [
-  20, 25, 31.5, 40, 50, 63, 80, 100, 125, 160, 200, 250, 315, 400, 500, 630,
-  800, 1000, 1250, 1600, 2000, 2500, 3150, 4000, 5000, 6300, 8000, 10000,
-  12500, 16000, 20000,
-];
+// The 31 IEC 1/3-octave band centers (16 Hz … 16 kHz), shared with the
+// calibration dialog so the bars line up with the device's band bytes.
+const FREQS = BAND_FREQUENCIES;
 
 const fmtHz = (f: number) =>
   f >= 1000 ? `${(f / 1000).toLocaleString('de-DE')}k` : `${f}`;

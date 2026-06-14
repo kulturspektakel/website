@@ -271,14 +271,18 @@ function LautstaerkeLayout() {
   }, [cleanupBle]);
 
   // Warn before navigating away or reloading while connected over Bluetooth —
-  // leaving the page tears down the BLE connection.
+  // leaving the page tears down the BLE connection. Navigating between pages
+  // under /crew/lautstaerke keeps the layout (and the connection) mounted, so
+  // those moves should not be blocked.
   useBlocker({
     disabled: !bleDeviceName,
     enableBeforeUnload: () => bleDeviceName != null,
-    shouldBlockFn: () =>
-      !window.confirm(
+    shouldBlockFn: ({next}) => {
+      if (next.fullPath.startsWith(Route.fullPath)) return false;
+      return !window.confirm(
         'Du bist über Bluetooth verbunden. Wenn du die Seite verlässt, wird die Verbindung getrennt. Trotzdem fortfahren?',
-      ),
+      );
+    },
   });
 
   const ctx = useMemo<LautstaerkeCtx>(
