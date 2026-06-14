@@ -41,7 +41,9 @@ import { Route as CrewLautstaerkeIndexRouteImport } from './routes/crew.lautstae
 import { Route as MainLineupIndexRouteImport } from './routes/_main.lineup.index'
 import { Route as CrewProdukteListIdRouteImport } from './routes/crew.produkte.$listId'
 import { Route as CrewLautstaerkeDeviceRouteImport } from './routes/crew.lautstaerke.$device'
+import { Route as CrewBookingEventIdRouteImport } from './routes/crew.booking.$eventId'
 import { Route as ApiTasksSpotifyListenersRouteImport } from './routes/api.tasks.spotify-listeners'
+import { Route as ApiTasksSpotifyImageRouteImport } from './routes/api.tasks.spotify-image'
 import { Route as ApiTasksSendEmailRouteImport } from './routes/api.tasks.send-email'
 import { Route as ApiTasksNuclinoUpdateMessageRouteImport } from './routes/api.tasks.nuclino-update-message'
 import { Route as ApiTasksNonceRequestInvalidateRouteImport } from './routes/api.tasks.nonce-request-invalidate'
@@ -246,12 +248,22 @@ const CrewLautstaerkeDeviceRoute = CrewLautstaerkeDeviceRouteImport.update({
   path: '/$device',
   getParentRoute: () => CrewLautstaerkeRoute,
 } as any)
+const CrewBookingEventIdRoute = CrewBookingEventIdRouteImport.update({
+  id: '/booking/$eventId',
+  path: '/booking/$eventId',
+  getParentRoute: () => CrewRoute,
+} as any)
 const ApiTasksSpotifyListenersRoute =
   ApiTasksSpotifyListenersRouteImport.update({
     id: '/spotify-listeners',
     path: '/spotify-listeners',
     getParentRoute: () => ApiTasksRoute,
   } as any)
+const ApiTasksSpotifyImageRoute = ApiTasksSpotifyImageRouteImport.update({
+  id: '/spotify-image',
+  path: '/spotify-image',
+  getParentRoute: () => ApiTasksRoute,
+} as any)
 const ApiTasksSendEmailRoute = ApiTasksSendEmailRouteImport.update({
   id: '/send-email',
   path: '/send-email',
@@ -552,7 +564,9 @@ export interface FileRoutesByFullPath {
   '/api/tasks/nonce-request-invalidate': typeof ApiTasksNonceRequestInvalidateRoute
   '/api/tasks/nuclino-update-message': typeof ApiTasksNuclinoUpdateMessageRoute
   '/api/tasks/send-email': typeof ApiTasksSendEmailRoute
+  '/api/tasks/spotify-image': typeof ApiTasksSpotifyImageRoute
   '/api/tasks/spotify-listeners': typeof ApiTasksSpotifyListenersRoute
+  '/crew/booking/$eventId': typeof CrewBookingEventIdRoute
   '/crew/lautstaerke/$device': typeof CrewLautstaerkeDeviceRouteWithChildren
   '/crew/produkte/$listId': typeof CrewProdukteListIdRoute
   '/lineup/': typeof MainLineupIndexRoute
@@ -626,7 +640,9 @@ export interface FileRoutesByTo {
   '/api/tasks/nonce-request-invalidate': typeof ApiTasksNonceRequestInvalidateRoute
   '/api/tasks/nuclino-update-message': typeof ApiTasksNuclinoUpdateMessageRoute
   '/api/tasks/send-email': typeof ApiTasksSendEmailRoute
+  '/api/tasks/spotify-image': typeof ApiTasksSpotifyImageRoute
   '/api/tasks/spotify-listeners': typeof ApiTasksSpotifyListenersRoute
+  '/crew/booking/$eventId': typeof CrewBookingEventIdRoute
   '/crew/produkte/$listId': typeof CrewProdukteListIdRoute
   '/lineup': typeof MainLineupIndexRoute
   '/crew/lautstaerke': typeof CrewLautstaerkeIndexRoute
@@ -705,7 +721,9 @@ export interface FileRoutesById {
   '/api/tasks/nonce-request-invalidate': typeof ApiTasksNonceRequestInvalidateRoute
   '/api/tasks/nuclino-update-message': typeof ApiTasksNuclinoUpdateMessageRoute
   '/api/tasks/send-email': typeof ApiTasksSendEmailRoute
+  '/api/tasks/spotify-image': typeof ApiTasksSpotifyImageRoute
   '/api/tasks/spotify-listeners': typeof ApiTasksSpotifyListenersRoute
+  '/crew/booking/$eventId': typeof CrewBookingEventIdRoute
   '/crew/lautstaerke/$device': typeof CrewLautstaerkeDeviceRouteWithChildren
   '/crew/produkte/$listId': typeof CrewProdukteListIdRoute
   '/_main/lineup/': typeof MainLineupIndexRoute
@@ -785,7 +803,9 @@ export interface FileRouteTypes {
     | '/api/tasks/nonce-request-invalidate'
     | '/api/tasks/nuclino-update-message'
     | '/api/tasks/send-email'
+    | '/api/tasks/spotify-image'
     | '/api/tasks/spotify-listeners'
+    | '/crew/booking/$eventId'
     | '/crew/lautstaerke/$device'
     | '/crew/produkte/$listId'
     | '/lineup/'
@@ -859,7 +879,9 @@ export interface FileRouteTypes {
     | '/api/tasks/nonce-request-invalidate'
     | '/api/tasks/nuclino-update-message'
     | '/api/tasks/send-email'
+    | '/api/tasks/spotify-image'
     | '/api/tasks/spotify-listeners'
+    | '/crew/booking/$eventId'
     | '/crew/produkte/$listId'
     | '/lineup'
     | '/crew/lautstaerke'
@@ -937,7 +959,9 @@ export interface FileRouteTypes {
     | '/api/tasks/nonce-request-invalidate'
     | '/api/tasks/nuclino-update-message'
     | '/api/tasks/send-email'
+    | '/api/tasks/spotify-image'
     | '/api/tasks/spotify-listeners'
+    | '/crew/booking/$eventId'
     | '/crew/lautstaerke/$device'
     | '/crew/produkte/$listId'
     | '/_main/lineup/'
@@ -1200,11 +1224,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrewLautstaerkeDeviceRouteImport
       parentRoute: typeof CrewLautstaerkeRoute
     }
+    '/crew/booking/$eventId': {
+      id: '/crew/booking/$eventId'
+      path: '/booking/$eventId'
+      fullPath: '/crew/booking/$eventId'
+      preLoaderRoute: typeof CrewBookingEventIdRouteImport
+      parentRoute: typeof CrewRoute
+    }
     '/api/tasks/spotify-listeners': {
       id: '/api/tasks/spotify-listeners'
       path: '/spotify-listeners'
       fullPath: '/api/tasks/spotify-listeners'
       preLoaderRoute: typeof ApiTasksSpotifyListenersRouteImport
+      parentRoute: typeof ApiTasksRoute
+    }
+    '/api/tasks/spotify-image': {
+      id: '/api/tasks/spotify-image'
+      path: '/spotify-image'
+      fullPath: '/api/tasks/spotify-image'
+      preLoaderRoute: typeof ApiTasksSpotifyImageRouteImport
       parentRoute: typeof ApiTasksRoute
     }
     '/api/tasks/send-email': {
@@ -1650,6 +1688,7 @@ interface CrewRouteChildren {
   CrewLautstaerkeRoute: typeof CrewLautstaerkeRouteWithChildren
   CrewProdukteRoute: typeof CrewProdukteRouteWithChildren
   CrewIndexRoute: typeof CrewIndexRoute
+  CrewBookingEventIdRoute: typeof CrewBookingEventIdRoute
 }
 
 const CrewRouteChildren: CrewRouteChildren = {
@@ -1657,6 +1696,7 @@ const CrewRouteChildren: CrewRouteChildren = {
   CrewLautstaerkeRoute: CrewLautstaerkeRouteWithChildren,
   CrewProdukteRoute: CrewProdukteRouteWithChildren,
   CrewIndexRoute: CrewIndexRoute,
+  CrewBookingEventIdRoute: CrewBookingEventIdRoute,
 }
 
 const CrewRouteWithChildren = CrewRoute._addFileChildren(CrewRouteChildren)
@@ -1716,6 +1756,7 @@ interface ApiTasksRouteChildren {
   ApiTasksNonceRequestInvalidateRoute: typeof ApiTasksNonceRequestInvalidateRoute
   ApiTasksNuclinoUpdateMessageRoute: typeof ApiTasksNuclinoUpdateMessageRoute
   ApiTasksSendEmailRoute: typeof ApiTasksSendEmailRoute
+  ApiTasksSpotifyImageRoute: typeof ApiTasksSpotifyImageRoute
   ApiTasksSpotifyListenersRoute: typeof ApiTasksSpotifyListenersRoute
 }
 
@@ -1737,6 +1778,7 @@ const ApiTasksRouteChildren: ApiTasksRouteChildren = {
   ApiTasksNonceRequestInvalidateRoute: ApiTasksNonceRequestInvalidateRoute,
   ApiTasksNuclinoUpdateMessageRoute: ApiTasksNuclinoUpdateMessageRoute,
   ApiTasksSendEmailRoute: ApiTasksSendEmailRoute,
+  ApiTasksSpotifyImageRoute: ApiTasksSpotifyImageRoute,
   ApiTasksSpotifyListenersRoute: ApiTasksSpotifyListenersRoute,
 }
 

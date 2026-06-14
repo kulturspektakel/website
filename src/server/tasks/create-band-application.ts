@@ -53,6 +53,7 @@ export async function handleCreateBandApplication(
   }
   if (application.spotifyArtist) {
     work.push(enqueueGcpTask('spotify-listeners', {id: application.id}));
+    work.push(enqueueGcpTask('spotify-image', {id: application.id}));
   }
 
   await Promise.all(work);

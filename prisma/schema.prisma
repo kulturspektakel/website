@@ -195,6 +195,7 @@ model BandApplication {
   repertoire              BandRepertoire?
   spotifyArtist           String?
   spotifyMonthlyListeners Int?
+  imageUrl                String?
   contactedByViewer       Viewer?                  @relation(fields: [contactedByViewerId], references: [id])
   event                   Event                    @relation(fields: [eventId], references: [id])
   bandApplicationComment  BandApplicationComment[]

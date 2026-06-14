@@ -17,6 +17,7 @@ import {InputGroup} from '../chakra-snippets/input-group';
 import {SpotifyCover} from './SpotifyCover';
 import {createServerFn, useServerFn} from '@tanstack/react-start';
 import {useTypeahead} from 'tomo-typeahead/react';
+import {getSpotifyToken} from '../../server/spotify.server';
 
 type SpotifyArtist = {
   id: string;
@@ -25,45 +26,17 @@ type SpotifyArtist = {
   image: string | null;
 };
 
-let TOKEN: {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
-} | null = null;
-
-async function getSpotifyToken() {
-  if (TOKEN && TOKEN.expires_in > Date.now() / 1000) {
-    return TOKEN;
-  }
-  const res = await fetch('https://accounts.spotify.com/api/token', {
-    method: 'POST',
-    headers: {
-      Authorization: `Basic ${Buffer.from(
-        `${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`,
-      ).toString('base64')}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: 'grant_type=client_credentials',
-  });
-
-  TOKEN = await res.json();
-  return TOKEN;
-}
-
 const getSpotifyArtists = createServerFn()
   .inputValidator((data: string) => data)
   .handler(async ({data: query}) => {
     const token = await getSpotifyToken();
-    if (!token) {
-      throw new Error('Could not get Spotify token');
-    }
     const res = await fetch(
       `https://api.spotify.com/v1/search?q=${encodeURIComponent(
         query,
       )}&type=artist&market=DE&limit=5`,
       {
         headers: {
-          Authorization: `Bearer ${token.access_token}`,
+          Authorization: `Bearer ${token}`,
         },
       },
     );

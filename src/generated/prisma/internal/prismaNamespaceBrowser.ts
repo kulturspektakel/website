@@ -291,7 +291,8 @@ export const BandApplicationScalarFieldEnum = {
   demoEmbedType: 'demoEmbedType',
   repertoire: 'repertoire',
   spotifyArtist: 'spotifyArtist',
-  spotifyMonthlyListeners: 'spotifyMonthlyListeners'
+  spotifyMonthlyListeners: 'spotifyMonthlyListeners',
+  imageUrl: 'imageUrl'
 } as const
 
 export type BandApplicationScalarFieldEnum = (typeof BandApplicationScalarFieldEnum)[keyof typeof BandApplicationScalarFieldEnum]
@@ -675,7 +676,8 @@ export const BandApplicationOrderByRelevanceFieldEnum = {
   eventId: 'eventId',
   demoEmbedUrl: 'demoEmbedUrl',
   demoEmbed: 'demoEmbed',
-  spotifyArtist: 'spotifyArtist'
+  spotifyArtist: 'spotifyArtist',
+  imageUrl: 'imageUrl'
 } as const
 
 export type BandApplicationOrderByRelevanceFieldEnum = (typeof BandApplicationOrderByRelevanceFieldEnum)[keyof typeof BandApplicationOrderByRelevanceFieldEnum]

@@ -13,6 +13,7 @@ import {Alert} from '../chakra-snippets/alert';
 import {ConnectedField} from '../forms/ConnectedField';
 import {z} from 'zod';
 import {BandRepertoire, GenreCategory} from '../../generated/prisma/browser';
+import {BAND_GENRE_CATEGORY_OPTIONS} from '../../utils/genreCategories';
 
 const baseSchema = z.object({
   bandname: z.string().trim().min(1, 'Bitte Name eingeben'),
@@ -45,21 +46,6 @@ export const schema = z.discriminatedUnion('genreCategory', [
   bandSchema,
 ]);
 
-const GENRE_CATEGORIES: Map<GenreCategory, string> = new Map([
-  [GenreCategory.Pop, 'Pop'],
-  [GenreCategory.Rock, 'Rock'],
-  [GenreCategory.Indie, 'Indie'],
-  [GenreCategory.Hardrock_Metal_Punk, 'Hardrock / Metal / Punk'],
-  [
-    GenreCategory.Folk_SingerSongwriter_Country,
-    'Folk / Singer/Songwriter / Country',
-  ],
-  [GenreCategory.Elektro_HipHop, 'Elektro / Hip-Hop'],
-  [GenreCategory.Blues_Funk_Jazz_Soul, 'Blues / Funk / Jazz / Soul'],
-  [GenreCategory.Reggae_Ska, 'Reggae / Ska'],
-  [GenreCategory.Other, 'andere Musikrichtung'],
-]);
-
 const REPERTOIRE: Map<BandRepertoire, string> = new Map([
   [BandRepertoire.ExclusivelyOwnSongs, 'ausschließlich eigene Songs'],
   [BandRepertoire.MostlyOwnSongs, 'hauptächlich eigene Songs'],
@@ -87,14 +73,7 @@ export default function Step1() {
           required={!isDJ}
           label="Musikrichtung"
           options={
-            isDJ
-              ? undefined
-              : Array.from(GENRE_CATEGORIES.entries()).map(
-                  ([value, label]) => ({
-                    value,
-                    label,
-                  }),
-                )
+            isDJ ? undefined : BAND_GENRE_CATEGORY_OPTIONS
           }
         />
         {values.genreCategory !== 'DJ' && (

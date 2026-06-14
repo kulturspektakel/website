@@ -105,6 +105,11 @@ export async function enqueueGcpTask(
   options?: EnqueueOptions,
 ): Promise<void>;
 export async function enqueueGcpTask(
+  task: 'spotify-image',
+  payload: import('./tasks/spotify-image').SpotifyImagePayload,
+  options?: EnqueueOptions,
+): Promise<void>;
+export async function enqueueGcpTask(
   task: string,
   payload: Record<string, unknown>,
   options?: EnqueueOptions,
@@ -185,6 +190,7 @@ const SCRAPER_TASKS = new Set<string>([
   'band-application-demo',
   'instagram-follower',
   'spotify-listeners',
+  'spotify-image',
 ]);
 
 function queuePathForTask(ctx: GcpContext, task: string): string {
