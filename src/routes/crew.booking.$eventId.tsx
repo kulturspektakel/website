@@ -1,5 +1,10 @@
-import {useEffect, useMemo, useRef, useState} from 'react';
-import {createFileRoute, notFound} from '@tanstack/react-router';
+import {memo, useEffect, useMemo, useRef, useState} from 'react';
+import {
+  createFileRoute,
+  notFound,
+  Outlet,
+  useParams,
+} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
 import {
   Box,
@@ -7,7 +12,6 @@ import {
   Flex,
   HStack,
   Icon,
-  Image,
   Span,
   Spinner,
   Text,
@@ -18,6 +22,7 @@ import {
   type Column,
   type ColumnFiltersState,
   type ColumnMeta,
+  type Row as TableRow,
   type SortingState,
   createColumnHelper,
   flexRender,
@@ -30,13 +35,11 @@ import {
 } from '@tanstack/react-table';
 import {useVirtualizer} from '@tanstack/react-virtual';
 import {GenreCategory} from '../generated/prisma/browser';
-import {
-  BAND_GENRE_CATEGORY_OPTIONS,
-  GENRE_CATEGORY_ICONS,
-} from '../utils/genreCategories';
+import {BAND_GENRE_CATEGORY_OPTIONS} from '../utils/genreCategories';
 import {prismaClient} from '../server/prismaClient.server';
 import {Tooltip} from '../components/chakra-snippets/tooltip';
 import {Avatar} from '../components/chakra-snippets/avatar';
+import {BandName} from '../components/booking/BandName';
 import {Tag} from '../components/chakra-snippets/tag';
 import {
   MenuCheckboxItem,
@@ -45,13 +48,8 @@ import {
   MenuTrigger,
 } from '../components/chakra-snippets/menu';
 import {seo} from '../utils/seo';
-
-const normalizeBandName = (name: string) =>
-  name
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}]+/gu, ' ')
-    .trim()
-    .replace(/\s+/g, ' ');
+import {normalizeBandName} from '../utils/normalizeBandName';
+import {BandSearch} from '../components/booking/BandSearch';
 
 // Event ids look like `kult2026`; the previous year's event is `kult2025`.
 // Returns null when the id has no trailing year to decrement.
@@ -186,7 +184,7 @@ const COMPUTED_TAGS: (ComputedTag & {applies: (r: BandApplicationRow) => boolean
     },
   ];
 
-function computedTagsFor(r: BandApplicationRow): ComputedTag[] {
+export function computedTagsFor(r: BandApplicationRow): ComputedTag[] {
   return COMPUTED_TAGS.filter((t) => t.applies(r)).map(
     ({label, colorPalette}) => ({label, colorPalette}),
   );
@@ -359,34 +357,12 @@ const columns = [
     filterFn: (row, _columnId, filterValue: string[]) =>
       !filterValue?.length || filterValue.includes(row.original.genreCategory),
     cell: ({row}) => (
-      <HStack gap="2" minW="0">
-        <Avatar
-          src={row.original.imageUrl ?? undefined}
-          fallback={
-            <Flex align="center" justify="center" boxSize="full">
-              <Image
-                src={GENRE_CATEGORY_ICONS.get(row.original.genreCategory)}
-                alt=""
-                boxSize="70%"
-              />
-            </Flex>
-          }
-          bg="bg.emphasized"
-          size="sm"
-          shape="rounded"
-          flexShrink="0"
-        />
-        <Box minW="0">
-          <Text fontWeight="bold" truncate>
-            {row.original.bandname}
-          </Text>
-          {row.original.genre && (
-            <Text fontSize="sm" color="fg.muted" truncate>
-              {row.original.genre}
-            </Text>
-          )}
-        </Box>
-      </HStack>
+      <BandName
+        bandname={row.original.bandname}
+        genre={row.original.genre}
+        genreCategory={row.original.genreCategory}
+        imageUrl={row.original.imageUrl}
+      />
     ),
     meta: {flex: '1 1 0'},
   }),
@@ -569,9 +545,33 @@ function SortArrows({sorted}: {sorted: false | 'asc' | 'desc'}) {
   );
 }
 
+// A row's cells are expensive to render (avatars, several tooltips per rating).
+// `row` identity is stable across scroll frames (TanStack memoizes the row
+// model), so memoizing here skips re-rendering rows that stay in view while
+// scrolling — only newly-entering rows do real work.
+const RowCells = memo(function RowCells({row}: {row: TableRow<Row>}) {
+  return (
+    <>
+      {row.getVisibleCells().map((cell) => (
+        <Box
+          key={cell.id}
+          {...cellLayout(cell.column.columnDef.meta)}
+          px="2"
+          py="1"
+          minW="0"
+        >
+          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+        </Box>
+      ))}
+    </>
+  );
+});
+
 function BookingPage() {
   const loaderData = Route.useLoaderData();
   const data = useMemo(() => decorateRows(loaderData), [loaderData]);
+  const {eventId} = Route.useParams();
+  const navigate = Route.useNavigate();
 
   const [sorting, setSorting] = useState<SortingState>([]);
   // The rating filter starts on, hiding effectively-rejected bands (see the
@@ -603,8 +603,23 @@ function BookingPage() {
     count: rows.length,
     getScrollElement: () => scrollRef.current,
     estimateSize: () => 56,
-    overscan: 12,
+    // Render a generous buffer above/below the viewport so fast scrolling
+    // doesn't outrun row rendering and flash empty rows.
+    overscan: 25,
   });
+
+  // When a detail modal is open (incl. deep-links and search selections),
+  // scroll the table to the corresponding row — but only if it isn't already
+  // visible (`align: 'auto'` is a no-op for in-view rows). `strict: false`
+  // reads the optional child-route param.
+  const {applicationId} = useParams({strict: false});
+  useEffect(() => {
+    if (!mounted || !applicationId) return;
+    const index = rows.findIndex((r) => r.original.id === applicationId);
+    if (index >= 0) {
+      virtualizer.scrollToIndex(index, {align: 'auto'});
+    }
+  }, [applicationId, mounted, rows, virtualizer]);
 
   return (
     <Box h="100dvh" display="flex" flexDirection="column">
@@ -661,6 +676,7 @@ function BookingPage() {
           <Box position="relative" h={`${virtualizer.getTotalSize()}px`}>
             {virtualizer.getVirtualItems().map((vItem) => {
               const row = rows[vItem.index];
+              const active = row.original.id === applicationId;
               return (
                 <Flex
                   key={row.id}
@@ -675,28 +691,27 @@ function BookingPage() {
                   align="center"
                   minH="14"
                   fontSize="sm"
-                  _hover={{bg: 'bg.muted'}}
+                  cursor="pointer"
+                  bg={active ? 'bg.emphasized' : undefined}
+                  _hover={active ? undefined : {bg: 'bg.muted'}}
+                  onClick={() =>
+                    navigate({
+                      to: '/crew/booking/$eventId/$applicationId',
+                      params: {eventId, applicationId: row.original.id},
+                    })
+                  }
                 >
-                  {row.getVisibleCells().map((cell) => (
-                    <Box
-                      key={cell.id}
-                      {...cellLayout(cell.column.columnDef.meta)}
-                      px="2"
-                      py="1"
-                      minW="0"
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </Box>
-                  ))}
+                  <RowCells row={row} />
                 </Flex>
               );
             })}
           </Box>
         )}
       </Box>
+
+      <Outlet />
+
+      <BandSearch bands={data} eventId={eventId} navigate={navigate} />
     </Box>
   );
 }

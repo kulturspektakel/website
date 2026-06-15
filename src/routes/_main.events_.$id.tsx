@@ -1,7 +1,7 @@
 import {Box, Heading, Link} from '@chakra-ui/react';
 import Card from '../components/Card';
 import DateString, {dateStringComponents} from '../components/DateString';
-import GoogleMaps from '../components/events/GoogleMaps';
+import GoogleMaps from '../components/GoogleMaps';
 import Headline from '../components/Headline';
 import Event from '../components/events/Event';
 import {createFileRoute, notFound} from '@tanstack/react-router';

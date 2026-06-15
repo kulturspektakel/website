@@ -1,4 +1,9 @@
-import {createSystem, defaultConfig, SystemConfig} from '@chakra-ui/react';
+import {
+  createSystem,
+  defaultConfig,
+  defineRecipe,
+  SystemConfig,
+} from '@chakra-ui/react';
 
 const overrides: SystemConfig = {
   theme: {
@@ -10,8 +15,10 @@ const overrides: SystemConfig = {
         },
       },
       fonts: {
-        heading: {value: "'Space Grotesk', sans-serif"},
-        body: {value: "'Space Grotesk', sans-serif"},
+        // The crew area uses the system-default UI font (rather than the
+        // marketing site's Space Grotesk) for a more native, legible feel.
+        heading: {value: 'system-ui, sans-serif'},
+        body: {value: 'system-ui, sans-serif'},
       },
     },
     semanticTokens: {
@@ -24,6 +31,18 @@ const overrides: SystemConfig = {
           inverted: {value: '{colors.gray.900}'},
         },
       },
+    },
+    recipes: {
+      // Links are blue by default across the crew area.
+      link: defineRecipe({
+        base: {color: 'blue.solid'},
+        variants: {
+          variant: {
+            plain: {color: 'blue.solid'},
+            underline: {color: 'blue.solid'},
+          },
+        },
+      }),
     },
     slotRecipes: {
       // Make the selected segment dark with light text so it's easy to spot.
