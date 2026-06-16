@@ -272,7 +272,6 @@ model BandPlaying {
   eventId           String
   slug              String
   photo             String?   @db.Uuid
-  announcementTime  DateTime?
   id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   spotifyTrackId    String?
   spotifyPreviewUrl String?
