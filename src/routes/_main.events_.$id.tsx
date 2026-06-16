@@ -6,12 +6,14 @@ import Headline from '../components/Headline';
 import Event from '../components/events/Event';
 import {createFileRoute, notFound} from '@tanstack/react-router';
 import {seo} from '../utils/seo';
+import {markdownToTxt} from 'markdown-to-txt';
 import {createServerFn} from '@tanstack/react-start';
 import {prismaClient} from '../server/prismaClient.server';
 import {
   directusImage,
   directusImageConnection,
 } from '../server/directusImage.server';
+import {markdownText} from '../server/markdownText.server';
 import {eventSelect} from '../components/events/Event';
 
 const loader = createServerFn()
@@ -39,6 +41,7 @@ const loader = createServerFn()
       event: {
         ...data,
         BandPlaying: lineupAnnounced ? data.BandPlaying : [],
+        description: data.description ? await markdownText(data.description) : null,
         poster: await directusImage(data.poster),
         media: await directusImageConnection('Event', eventId, 100),
       },
@@ -68,7 +71,9 @@ export const Route = createFileRoute('/_main/events_/$id')({
               to: loaderData?.event.end,
             }).to
           }`,
-          description: loaderData?.event.description ?? undefined,
+          description: loaderData?.event.description
+            ? markdownToTxt(loaderData.event.description.markdown)
+            : undefined,
           imageId: loaderData?.event.poster?.id,
         })
       : {},

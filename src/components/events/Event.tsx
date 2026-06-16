@@ -13,6 +13,8 @@ import Countdown from 'react-countdown';
 import {Link} from '@tanstack/react-router';
 import {DirectusImage, imageUrl} from '../../utils/directusImage';
 import {Prisma} from '../../generated/prisma/browser';
+import MarkdownText from '../MarkdownText';
+import {Markdown} from '../../utils/markdownText';
 
 export const eventSelect: Prisma.EventSelect = {
   id: true,
@@ -39,7 +41,7 @@ export default function Event({
     start: Date;
     end: Date;
     name: string;
-    description: string | null;
+    description: Markdown | null;
     location: string | null;
     poster: DirectusImage | null;
     BandPlaying: Array<{
@@ -145,7 +147,7 @@ export default function Event({
             </ClientOnly>
           </Flex>
         )}
-        {event.description && <Box>{event.description}</Box>}
+        {event.description && <MarkdownText {...event.description} />}
         {event.BandPlaying.length > 0 && (
           <>
             <Heading as="h3" size="md" mb="2">

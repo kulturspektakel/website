@@ -23,6 +23,7 @@ import {
   directusImage,
   directusImageConnection,
 } from '../server/directusImage.server';
+import {markdownText} from '../server/markdownText.server';
 import {eventSelect} from '../components/events/Event';
 
 const loader = createServerFn()
@@ -51,6 +52,7 @@ const loader = createServerFn()
         return {
           ...e,
           BandPlaying: lineupAnnounced ? e.BandPlaying : [],
+          description: e.description ? await markdownText(e.description) : null,
           poster: await directusImage(e.poster),
           media: await directusImageConnection('Event', e.id),
         };
