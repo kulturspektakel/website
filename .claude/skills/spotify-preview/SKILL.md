@@ -5,7 +5,7 @@ description: Given a Spotify track link and a band name (or slug), resolves the 
 
 # Spotify Preview URL Resolver
 
-Resolves a Spotify track URL to its preview MP3 and writes both the track ID and preview URL to the matching `BandPlaying` row.
+Resolves a Spotify track URL to its preview MP3 and writes the preview URL to the matching `BandPlaying` row.
 
 ## Inputs
 
@@ -29,6 +29,8 @@ If only one of the two is present, ask the user for the other before doing anyth
 ## Steps
 
 ### 1. Extract the Spotify track ID
+
+The track ID is needed only to build the embed URL in step 2; it is not stored.
 
 The URL pattern is `https://open.spotify.com/track/{ID}` (optionally followed by `?si=...` or other query params). The ID is 22 base62 characters.
 
@@ -68,18 +70,14 @@ Use `mcp__neon__run_sql`:
 
 ```sql
 UPDATE "BandPlaying"
-SET "spotifyTrackId" = '{TRACK_ID}',
-    "spotifyPreviewUrl" = '{PREVIEW_URL}'
+SET "spotifyPreviewUrl" = '{PREVIEW_URL}'
 WHERE id = '{ROW_ID}';
 ```
-
-Both columns get written so the data stays internally consistent (track ID + URL derived from it).
 
 ### 5. Confirm
 
 Report back:
 - The band name and event/year
-- The track ID
 - The preview URL (linkified so the user can click to verify)
 
 Keep the confirmation under 4 lines. No prose narration of the steps.

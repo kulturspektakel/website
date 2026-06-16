@@ -273,7 +273,6 @@ model BandPlaying {
   slug              String
   photo             String?   @db.Uuid
   id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  spotifyTrackId    String?
   spotifyPreviewUrl String?
   area              Area      @relation(fields: [areaId], references: [id])
   event             Event     @relation(fields: [eventId], references: [id])
