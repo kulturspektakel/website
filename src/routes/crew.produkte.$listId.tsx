@@ -236,8 +236,13 @@ function ProductListEditor() {
 
   const invalidate = async () => {
     await queryClient.invalidateQueries({queryKey: ['productList', listId]});
-    // The bude's updatedAt changed too, so refresh the overview list.
-    await queryClient.invalidateQueries({queryKey: ['productLists']});
+    // The bude's updatedAt/editor changed too, so refresh the overview list.
+    // refetchType 'all' is needed because the overview query is inactive while
+    // we're on the detail page, and refetchOnMount is disabled globally.
+    await queryClient.invalidateQueries({
+      queryKey: ['productLists'],
+      refetchType: 'all',
+    });
   };
 
   return <Products key={list.id} list={list} onSaved={invalidate} />;
