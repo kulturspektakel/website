@@ -33,6 +33,7 @@ import { Route as MainInfosRouteImport } from './routes/_main.infos'
 import { Route as MainEventsRouteImport } from './routes/_main.events'
 import { Route as MainBookingRouteImport } from './routes/_main.booking'
 import { Route as MainBadgesRouteImport } from './routes/_main.badges'
+import { Route as MainAwarenessRouteImport } from './routes/_main.awareness'
 import { Route as MainAngebotRouteImport } from './routes/_main.angebot'
 import { Route as MainRouteRouteImport } from './routes/_main.Route'
 import { Route as MainSlugRouteImport } from './routes/_main.$slug'
@@ -208,6 +209,11 @@ const MainBookingRoute = MainBookingRouteImport.update({
 const MainBadgesRoute = MainBadgesRouteImport.update({
   id: '/badges',
   path: '/badges',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainAwarenessRoute = MainAwarenessRouteImport.update({
+  id: '/awareness',
+  path: '/awareness',
   getParentRoute: () => MainRoute,
 } as any)
 const MainAngebotRoute = MainAngebotRouteImport.update({
@@ -523,6 +529,7 @@ export interface FileRoutesByFullPath {
   '/$slug': typeof MainSlugRoute
   '/Route': typeof MainRouteRoute
   '/angebot': typeof MainAngebotRoute
+  '/awareness': typeof MainAwarenessRoute
   '/badges': typeof MainBadgesRoute
   '/booking': typeof MainBookingRoute
   '/events': typeof MainEventsRoute
@@ -603,6 +610,7 @@ export interface FileRoutesByTo {
   '/$slug': typeof MainSlugRoute
   '/Route': typeof MainRouteRoute
   '/angebot': typeof MainAngebotRoute
+  '/awareness': typeof MainAwarenessRoute
   '/badges': typeof MainBadgesRoute
   '/booking': typeof MainBookingRoute
   '/events': typeof MainEventsRoute
@@ -683,6 +691,7 @@ export interface FileRoutesById {
   '/_main/$slug': typeof MainSlugRoute
   '/_main/Route': typeof MainRouteRoute
   '/_main/angebot': typeof MainAngebotRoute
+  '/_main/awareness': typeof MainAwarenessRoute
   '/_main/badges': typeof MainBadgesRoute
   '/_main/booking': typeof MainBookingRoute
   '/_main/events': typeof MainEventsRoute
@@ -768,6 +777,7 @@ export interface FileRouteTypes {
     | '/$slug'
     | '/Route'
     | '/angebot'
+    | '/awareness'
     | '/badges'
     | '/booking'
     | '/events'
@@ -848,6 +858,7 @@ export interface FileRouteTypes {
     | '/$slug'
     | '/Route'
     | '/angebot'
+    | '/awareness'
     | '/badges'
     | '/booking'
     | '/events'
@@ -927,6 +938,7 @@ export interface FileRouteTypes {
     | '/_main/$slug'
     | '/_main/Route'
     | '/_main/angebot'
+    | '/_main/awareness'
     | '/_main/badges'
     | '/_main/booking'
     | '/_main/events'
@@ -1192,6 +1204,13 @@ declare module '@tanstack/react-router' {
       path: '/badges'
       fullPath: '/badges'
       preLoaderRoute: typeof MainBadgesRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/awareness': {
+      id: '/_main/awareness'
+      path: '/awareness'
+      fullPath: '/awareness'
+      preLoaderRoute: typeof MainAwarenessRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/angebot': {
@@ -1630,6 +1649,7 @@ interface MainRouteChildren {
   MainSlugRoute: typeof MainSlugRoute
   MainRouteRoute: typeof MainRouteRoute
   MainAngebotRoute: typeof MainAngebotRoute
+  MainAwarenessRoute: typeof MainAwarenessRoute
   MainBadgesRoute: typeof MainBadgesRoute
   MainBookingRoute: typeof MainBookingRoute
   MainEventsRoute: typeof MainEventsRoute
@@ -1656,6 +1676,7 @@ const MainRouteChildren: MainRouteChildren = {
   MainSlugRoute: MainSlugRoute,
   MainRouteRoute: MainRouteRoute,
   MainAngebotRoute: MainAngebotRoute,
+  MainAwarenessRoute: MainAwarenessRoute,
   MainBadgesRoute: MainBadgesRoute,
   MainBookingRoute: MainBookingRoute,
   MainEventsRoute: MainEventsRoute,
