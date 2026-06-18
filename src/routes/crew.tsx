@@ -1,6 +1,6 @@
 import {createFileRoute, Outlet, redirect} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
-import {getCookie} from '@tanstack/react-start/server';
+import {getCookie, setResponseHeader} from '@tanstack/react-start/server';
 import {ChakraProvider} from '@chakra-ui/react';
 import crewTheme from '../theme-crew';
 import {verifyDirectusSession} from '../server/directusAuth.server';
@@ -24,6 +24,9 @@ import {verifyDirectusSession} from '../server/directusAuth.server';
 const crewLoginUrl = createServerFn()
   .inputValidator((to: string) => to)
   .handler(({data}) => {
+    // Crew pages render user-specific content; never let a CDN or proxy cache
+    // them. Set on every /crew/* request via this beforeLoad server fn.
+    setResponseHeader('Cache-Control', 'private, no-store');
     if (
       process.env.NODE_ENV !== 'production' ||
       verifyDirectusSession(getCookie('directus_session_token'))
