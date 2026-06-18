@@ -1,6 +1,5 @@
 import {createFileRoute, Link, notFound, useBlocker} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
-import {getCookie} from '@tanstack/react-start/server';
 import {
   Badge,
   Box,
@@ -43,7 +42,7 @@ import {CSS} from '@dnd-kit/utilities';
 import {FaChevronLeft} from 'react-icons/fa6';
 import {LuPencil} from 'react-icons/lu';
 import {prismaClient} from '../server/prismaClient.server';
-import {verifyDirectusSession} from '../server/directusAuth.server';
+import {crewAuth} from '../server/crewAuth.server';
 import {seo} from '../utils/seo';
 import {formatCents, parseEuroToCents} from '../utils/currency';
 import {listAdditives} from './crew.produkte';
@@ -146,15 +145,15 @@ const productFields = z.object({
  * where add/edit/delete/reorder are staged client-side and committed at once.
  */
 const saveProducts = createServerFn()
+  .middleware([crewAuth])
   .inputValidator(
     z.object({
       productListId: z.number().int(),
       products: z.array(productFields.extend({id: z.number().int().nullable()})),
     }),
   )
-  .handler(async ({data}) => {
-    const lastUpdatedBy =
-      verifyDirectusSession(getCookie('directus_session_token'))?.id ?? null;
+  .handler(async ({data, context}) => {
+    const lastUpdatedBy = context.user?.id ?? null;
     const existing = await prismaClient.product.findMany({
       where: {productListId: data.productListId},
       select: {id: true},

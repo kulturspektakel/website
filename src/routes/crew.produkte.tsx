@@ -1,10 +1,9 @@
 import {createFileRoute, Outlet} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
-import {getCookie} from '@tanstack/react-start/server';
 import {Container} from '@chakra-ui/react';
 import {z} from 'zod';
 import {prismaClient} from '../server/prismaClient.server';
-import {verifyDirectusSession} from '../server/directusAuth.server';
+import {crewAuth} from '../server/crewAuth.server';
 import {directusUsers} from '../server/directusUsers.server';
 import {seo} from '../utils/seo';
 
@@ -66,10 +65,9 @@ export const updateProductListInput = z.object({
 });
 
 export const updateProductList = createServerFn()
+  .middleware([crewAuth])
   .inputValidator(updateProductListInput)
-  .handler(async ({data}) => {
-    const lastUpdatedBy =
-      verifyDirectusSession(getCookie('directus_session_token'))?.id ?? null;
+  .handler(async ({data, context}) => {
     await prismaClient.productList.update({
       where: {id: data.id},
       data: {
@@ -77,7 +75,7 @@ export const updateProductList = createServerFn()
         emoji: data.emoji,
         active: data.active,
         updatedAt: new Date(),
-        lastUpdatedBy,
+        lastUpdatedBy: context.user?.id ?? null,
       },
     });
   });
