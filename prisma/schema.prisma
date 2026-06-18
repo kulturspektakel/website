@@ -61,6 +61,7 @@ model ProductList {
   emoji       String?
   active      Boolean     @default(true)
   updatedAt   DateTime?
+  lastUpdatedBy String?   @db.Uuid
   description String?
   Device      Device[]
   OrderItem   OrderItem[]

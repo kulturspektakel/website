@@ -40,6 +40,7 @@ export type ProductListMinAggregateOutputType = {
   emoji: string | null
   active: boolean | null
   updatedAt: Date | null
+  lastUpdatedBy: string | null
   description: string | null
 }
 
@@ -49,6 +50,7 @@ export type ProductListMaxAggregateOutputType = {
   emoji: string | null
   active: boolean | null
   updatedAt: Date | null
+  lastUpdatedBy: string | null
   description: string | null
 }
 
@@ -58,6 +60,7 @@ export type ProductListCountAggregateOutputType = {
   emoji: number
   active: number
   updatedAt: number
+  lastUpdatedBy: number
   description: number
   _all: number
 }
@@ -77,6 +80,7 @@ export type ProductListMinAggregateInputType = {
   emoji?: true
   active?: true
   updatedAt?: true
+  lastUpdatedBy?: true
   description?: true
 }
 
@@ -86,6 +90,7 @@ export type ProductListMaxAggregateInputType = {
   emoji?: true
   active?: true
   updatedAt?: true
+  lastUpdatedBy?: true
   description?: true
 }
 
@@ -95,6 +100,7 @@ export type ProductListCountAggregateInputType = {
   emoji?: true
   active?: true
   updatedAt?: true
+  lastUpdatedBy?: true
   description?: true
   _all?: true
 }
@@ -191,6 +197,7 @@ export type ProductListGroupByOutputType = {
   emoji: string | null
   active: boolean
   updatedAt: Date | null
+  lastUpdatedBy: string | null
   description: string | null
   _count: ProductListCountAggregateOutputType | null
   _avg: ProductListAvgAggregateOutputType | null
@@ -223,6 +230,7 @@ export type ProductListWhereInput = {
   emoji?: Prisma.StringNullableFilter<"ProductList"> | string | null
   active?: Prisma.BoolFilter<"ProductList"> | boolean
   updatedAt?: Prisma.DateTimeNullableFilter<"ProductList"> | Date | string | null
+  lastUpdatedBy?: Prisma.UuidNullableFilter<"ProductList"> | string | null
   description?: Prisma.StringNullableFilter<"ProductList"> | string | null
   Device?: Prisma.DeviceListRelationFilter
   OrderItem?: Prisma.OrderItemListRelationFilter
@@ -235,6 +243,7 @@ export type ProductListOrderByWithRelationInput = {
   emoji?: Prisma.SortOrderInput | Prisma.SortOrder
   active?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  lastUpdatedBy?: Prisma.SortOrderInput | Prisma.SortOrder
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   Device?: Prisma.DeviceOrderByRelationAggregateInput
   OrderItem?: Prisma.OrderItemOrderByRelationAggregateInput
@@ -251,6 +260,7 @@ export type ProductListWhereUniqueInput = Prisma.AtLeast<{
   emoji?: Prisma.StringNullableFilter<"ProductList"> | string | null
   active?: Prisma.BoolFilter<"ProductList"> | boolean
   updatedAt?: Prisma.DateTimeNullableFilter<"ProductList"> | Date | string | null
+  lastUpdatedBy?: Prisma.UuidNullableFilter<"ProductList"> | string | null
   description?: Prisma.StringNullableFilter<"ProductList"> | string | null
   Device?: Prisma.DeviceListRelationFilter
   OrderItem?: Prisma.OrderItemListRelationFilter
@@ -263,6 +273,7 @@ export type ProductListOrderByWithAggregationInput = {
   emoji?: Prisma.SortOrderInput | Prisma.SortOrder
   active?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  lastUpdatedBy?: Prisma.SortOrderInput | Prisma.SortOrder
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.ProductListCountOrderByAggregateInput
   _avg?: Prisma.ProductListAvgOrderByAggregateInput
@@ -280,6 +291,7 @@ export type ProductListScalarWhereWithAggregatesInput = {
   emoji?: Prisma.StringNullableWithAggregatesFilter<"ProductList"> | string | null
   active?: Prisma.BoolWithAggregatesFilter<"ProductList"> | boolean
   updatedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"ProductList"> | Date | string | null
+  lastUpdatedBy?: Prisma.UuidNullableWithAggregatesFilter<"ProductList"> | string | null
   description?: Prisma.StringNullableWithAggregatesFilter<"ProductList"> | string | null
 }
 
@@ -288,6 +300,7 @@ export type ProductListCreateInput = {
   emoji?: string | null
   active?: boolean
   updatedAt?: Date | string | null
+  lastUpdatedBy?: string | null
   description?: string | null
   Device?: Prisma.DeviceCreateNestedManyWithoutProductListInput
   OrderItem?: Prisma.OrderItemCreateNestedManyWithoutProductListInput
@@ -300,6 +313,7 @@ export type ProductListUncheckedCreateInput = {
   emoji?: string | null
   active?: boolean
   updatedAt?: Date | string | null
+  lastUpdatedBy?: string | null
   description?: string | null
   Device?: Prisma.DeviceUncheckedCreateNestedManyWithoutProductListInput
   OrderItem?: Prisma.OrderItemUncheckedCreateNestedManyWithoutProductListInput
@@ -311,6 +325,7 @@ export type ProductListUpdateInput = {
   emoji?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastUpdatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   Device?: Prisma.DeviceUpdateManyWithoutProductListNestedInput
   OrderItem?: Prisma.OrderItemUpdateManyWithoutProductListNestedInput
@@ -323,6 +338,7 @@ export type ProductListUncheckedUpdateInput = {
   emoji?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastUpdatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   Device?: Prisma.DeviceUncheckedUpdateManyWithoutProductListNestedInput
   OrderItem?: Prisma.OrderItemUncheckedUpdateManyWithoutProductListNestedInput
@@ -335,6 +351,7 @@ export type ProductListCreateManyInput = {
   emoji?: string | null
   active?: boolean
   updatedAt?: Date | string | null
+  lastUpdatedBy?: string | null
   description?: string | null
 }
 
@@ -343,6 +360,7 @@ export type ProductListUpdateManyMutationInput = {
   emoji?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastUpdatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
@@ -352,6 +370,7 @@ export type ProductListUncheckedUpdateManyInput = {
   emoji?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastUpdatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
@@ -367,6 +386,7 @@ export type ProductListCountOrderByAggregateInput = {
   emoji?: Prisma.SortOrder
   active?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  lastUpdatedBy?: Prisma.SortOrder
   description?: Prisma.SortOrder
 }
 
@@ -380,6 +400,7 @@ export type ProductListMaxOrderByAggregateInput = {
   emoji?: Prisma.SortOrder
   active?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  lastUpdatedBy?: Prisma.SortOrder
   description?: Prisma.SortOrder
 }
 
@@ -389,6 +410,7 @@ export type ProductListMinOrderByAggregateInput = {
   emoji?: Prisma.SortOrder
   active?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  lastUpdatedBy?: Prisma.SortOrder
   description?: Prisma.SortOrder
 }
 
@@ -465,6 +487,7 @@ export type ProductListCreateWithoutProductInput = {
   emoji?: string | null
   active?: boolean
   updatedAt?: Date | string | null
+  lastUpdatedBy?: string | null
   description?: string | null
   Device?: Prisma.DeviceCreateNestedManyWithoutProductListInput
   OrderItem?: Prisma.OrderItemCreateNestedManyWithoutProductListInput
@@ -476,6 +499,7 @@ export type ProductListUncheckedCreateWithoutProductInput = {
   emoji?: string | null
   active?: boolean
   updatedAt?: Date | string | null
+  lastUpdatedBy?: string | null
   description?: string | null
   Device?: Prisma.DeviceUncheckedCreateNestedManyWithoutProductListInput
   OrderItem?: Prisma.OrderItemUncheckedCreateNestedManyWithoutProductListInput
@@ -502,6 +526,7 @@ export type ProductListUpdateWithoutProductInput = {
   emoji?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastUpdatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   Device?: Prisma.DeviceUpdateManyWithoutProductListNestedInput
   OrderItem?: Prisma.OrderItemUpdateManyWithoutProductListNestedInput
@@ -513,6 +538,7 @@ export type ProductListUncheckedUpdateWithoutProductInput = {
   emoji?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastUpdatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   Device?: Prisma.DeviceUncheckedUpdateManyWithoutProductListNestedInput
   OrderItem?: Prisma.OrderItemUncheckedUpdateManyWithoutProductListNestedInput
@@ -523,6 +549,7 @@ export type ProductListCreateWithoutDeviceInput = {
   emoji?: string | null
   active?: boolean
   updatedAt?: Date | string | null
+  lastUpdatedBy?: string | null
   description?: string | null
   OrderItem?: Prisma.OrderItemCreateNestedManyWithoutProductListInput
   product?: Prisma.ProductCreateNestedManyWithoutProductListInput
@@ -534,6 +561,7 @@ export type ProductListUncheckedCreateWithoutDeviceInput = {
   emoji?: string | null
   active?: boolean
   updatedAt?: Date | string | null
+  lastUpdatedBy?: string | null
   description?: string | null
   OrderItem?: Prisma.OrderItemUncheckedCreateNestedManyWithoutProductListInput
   product?: Prisma.ProductUncheckedCreateNestedManyWithoutProductListInput
@@ -560,6 +588,7 @@ export type ProductListUpdateWithoutDeviceInput = {
   emoji?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastUpdatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   OrderItem?: Prisma.OrderItemUpdateManyWithoutProductListNestedInput
   product?: Prisma.ProductUpdateManyWithoutProductListNestedInput
@@ -571,6 +600,7 @@ export type ProductListUncheckedUpdateWithoutDeviceInput = {
   emoji?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastUpdatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   OrderItem?: Prisma.OrderItemUncheckedUpdateManyWithoutProductListNestedInput
   product?: Prisma.ProductUncheckedUpdateManyWithoutProductListNestedInput
@@ -581,6 +611,7 @@ export type ProductListCreateWithoutOrderItemInput = {
   emoji?: string | null
   active?: boolean
   updatedAt?: Date | string | null
+  lastUpdatedBy?: string | null
   description?: string | null
   Device?: Prisma.DeviceCreateNestedManyWithoutProductListInput
   product?: Prisma.ProductCreateNestedManyWithoutProductListInput
@@ -592,6 +623,7 @@ export type ProductListUncheckedCreateWithoutOrderItemInput = {
   emoji?: string | null
   active?: boolean
   updatedAt?: Date | string | null
+  lastUpdatedBy?: string | null
   description?: string | null
   Device?: Prisma.DeviceUncheckedCreateNestedManyWithoutProductListInput
   product?: Prisma.ProductUncheckedCreateNestedManyWithoutProductListInput
@@ -618,6 +650,7 @@ export type ProductListUpdateWithoutOrderItemInput = {
   emoji?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastUpdatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   Device?: Prisma.DeviceUpdateManyWithoutProductListNestedInput
   product?: Prisma.ProductUpdateManyWithoutProductListNestedInput
@@ -629,6 +662,7 @@ export type ProductListUncheckedUpdateWithoutOrderItemInput = {
   emoji?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastUpdatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   Device?: Prisma.DeviceUncheckedUpdateManyWithoutProductListNestedInput
   product?: Prisma.ProductUncheckedUpdateManyWithoutProductListNestedInput
@@ -689,6 +723,7 @@ export type ProductListSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   emoji?: boolean
   active?: boolean
   updatedAt?: boolean
+  lastUpdatedBy?: boolean
   description?: boolean
   Device?: boolean | Prisma.ProductList$DeviceArgs<ExtArgs>
   OrderItem?: boolean | Prisma.ProductList$OrderItemArgs<ExtArgs>
@@ -702,6 +737,7 @@ export type ProductListSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   emoji?: boolean
   active?: boolean
   updatedAt?: boolean
+  lastUpdatedBy?: boolean
   description?: boolean
 }, ExtArgs["result"]["productList"]>
 
@@ -711,6 +747,7 @@ export type ProductListSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   emoji?: boolean
   active?: boolean
   updatedAt?: boolean
+  lastUpdatedBy?: boolean
   description?: boolean
 }, ExtArgs["result"]["productList"]>
 
@@ -720,10 +757,11 @@ export type ProductListSelectScalar = {
   emoji?: boolean
   active?: boolean
   updatedAt?: boolean
+  lastUpdatedBy?: boolean
   description?: boolean
 }
 
-export type ProductListOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "emoji" | "active" | "updatedAt" | "description", ExtArgs["result"]["productList"]>
+export type ProductListOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "emoji" | "active" | "updatedAt" | "lastUpdatedBy" | "description", ExtArgs["result"]["productList"]>
 export type ProductListInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   Device?: boolean | Prisma.ProductList$DeviceArgs<ExtArgs>
   OrderItem?: boolean | Prisma.ProductList$OrderItemArgs<ExtArgs>
@@ -746,6 +784,7 @@ export type $ProductListPayload<ExtArgs extends runtime.Types.Extensions.Interna
     emoji: string | null
     active: boolean
     updatedAt: Date | null
+    lastUpdatedBy: string | null
     description: string | null
   }, ExtArgs["result"]["productList"]>
   composites: {}
@@ -1178,6 +1217,7 @@ export interface ProductListFieldRefs {
   readonly emoji: Prisma.FieldRef<"ProductList", 'String'>
   readonly active: Prisma.FieldRef<"ProductList", 'Boolean'>
   readonly updatedAt: Prisma.FieldRef<"ProductList", 'DateTime'>
+  readonly lastUpdatedBy: Prisma.FieldRef<"ProductList", 'String'>
   readonly description: Prisma.FieldRef<"ProductList", 'String'>
 }
     

@@ -2895,6 +2895,7 @@ export const ProductListScalarFieldEnum = {
   emoji: 'emoji',
   active: 'active',
   updatedAt: 'updatedAt',
+  lastUpdatedBy: 'lastUpdatedBy',
   description: 'description'
 } as const
 
@@ -3107,9 +3108,7 @@ export const BandPlayingScalarFieldEnum = {
   eventId: 'eventId',
   slug: 'slug',
   photo: 'photo',
-  announcementTime: 'announcementTime',
   id: 'id',
-  spotifyTrackId: 'spotifyTrackId',
   spotifyPreviewUrl: 'spotifyPreviewUrl'
 } as const
 
@@ -3331,6 +3330,7 @@ export type PageOrderByRelevanceFieldEnum = (typeof PageOrderByRelevanceFieldEnu
 export const ProductListOrderByRelevanceFieldEnum = {
   name: 'name',
   emoji: 'emoji',
+  lastUpdatedBy: 'lastUpdatedBy',
   description: 'description'
 } as const
 
@@ -3478,7 +3478,6 @@ export const BandPlayingOrderByRelevanceFieldEnum = {
   slug: 'slug',
   photo: 'photo',
   id: 'id',
-  spotifyTrackId: 'spotifyTrackId',
   spotifyPreviewUrl: 'spotifyPreviewUrl'
 } as const
 

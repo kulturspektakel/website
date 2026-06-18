@@ -98,6 +98,7 @@ function ListRow({list}: {list: ProductListItem}) {
                   addSuffix: true,
                   locale: de,
                 })}
+                {list.updatedByName && ` von ${list.updatedByName}`}
               </Text>
             )}
           </Box>

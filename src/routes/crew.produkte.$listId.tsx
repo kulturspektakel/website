@@ -1,5 +1,6 @@
 import {createFileRoute, Link, notFound, useBlocker} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
+import {getCookie} from '@tanstack/react-start/server';
 import {
   Badge,
   Box,
@@ -42,6 +43,7 @@ import {CSS} from '@dnd-kit/utilities';
 import {FaChevronLeft} from 'react-icons/fa6';
 import {LuPencil} from 'react-icons/lu';
 import {prismaClient} from '../server/prismaClient.server';
+import {verifyDirectusSession} from '../server/directusAuth.server';
 import {seo} from '../utils/seo';
 import {formatCents, parseEuroToCents} from '../utils/currency';
 import {listAdditives} from './crew.produkte';
@@ -151,6 +153,8 @@ const saveProducts = createServerFn()
     }),
   )
   .handler(async ({data}) => {
+    const lastUpdatedBy =
+      verifyDirectusSession(getCookie('directus_session_token'))?.id ?? null;
     const existing = await prismaClient.product.findMany({
       where: {productListId: data.productListId},
       select: {id: true},
@@ -196,7 +200,7 @@ const saveProducts = createServerFn()
       // Adding/editing/deleting/reordering products counts as editing the bude.
       prismaClient.productList.update({
         where: {id: data.productListId},
-        data: {updatedAt: new Date()},
+        data: {updatedAt: new Date(), lastUpdatedBy},
       }),
     ]);
   });
