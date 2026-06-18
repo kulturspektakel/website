@@ -6,6 +6,7 @@ import {
   useLoaderData,
 } from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
+import {crewAuth} from '../server/crewAuth';
 import {useQuery} from '@tanstack/react-query';
 import {
   Box,
@@ -61,6 +62,7 @@ const KULT = {latitude: 48.078143, longitude: 11.375518};
 // ---------------------------------------------------------------------------
 
 const loadBandApplicationDetail = createServerFn()
+  .middleware([crewAuth])
   .inputValidator((applicationId: string) => applicationId)
   .handler(async ({data: id}) => {
     const a = await prismaClient.bandApplication.findUnique({
@@ -126,14 +128,16 @@ const loadBandApplicationDetail = createServerFn()
 type DetailData = Awaited<ReturnType<typeof loadBandApplicationDetail>>;
 
 // All distinct tags ever assigned, for the tags combobox suggestions.
-const listBandApplicationTags = createServerFn().handler(async () => {
-  const rows = await prismaClient.bandApplicationTag.findMany({
-    distinct: ['tag'],
-    select: {tag: true},
-    orderBy: {tag: 'asc'},
+const listBandApplicationTags = createServerFn()
+  .middleware([crewAuth])
+  .handler(async () => {
+    const rows = await prismaClient.bandApplicationTag.findMany({
+      distinct: ['tag'],
+      select: {tag: true},
+      orderBy: {tag: 'asc'},
+    });
+    return rows.map((r) => r.tag);
   });
-  return rows.map((r) => r.tag);
-});
 
 // ---------------------------------------------------------------------------
 // Enum labels (German, copied from the legacy Ant-Design modal)
@@ -335,11 +339,7 @@ function LeftColumn({
           </Button>
         </Box>
         {/* Mutation stubbed: marking as contacted is not wired up yet. */}
-        <Checkbox
-          mt="2"
-          checked={data.contactedByViewerId != null}
-          disabled
-        >
+        <Checkbox mt="2" checked={data.contactedByViewerId != null} disabled>
           Kontaktiert
         </Checkbox>
       </Section>
@@ -420,7 +420,11 @@ function RightColumn({data}: {data: DetailData}) {
             <RatingGroup.HiddenInput />
             <RatingGroup.Control>
               {RATING_LABELS.map((label, i) => (
-                <Tooltip key={i} content={label} positioning={{placement: 'top'}}>
+                <Tooltip
+                  key={i}
+                  content={label}
+                  positioning={{placement: 'top'}}
+                >
                   <RatingGroup.Item index={i + 1}>
                     <RatingGroup.ItemIndicator />
                   </RatingGroup.Item>
@@ -433,31 +437,35 @@ function RightColumn({data}: {data: DetailData}) {
             <Text color="fg.muted">Noch keine Bewertungen</Text>
           ) : (
             <HStack gap="2">
-            <Text fontSize="lg" fontWeight="bold" color="blue.solid">
-              {averageRating.toFixed(1)}
-            </Text>
-            <HStack gap="0">
-              {ratings.map((r, i) => (
-                <Tooltip
-                  key={r.viewer.id}
-                  content={`${r.viewer.displayName}: ${'★'.repeat(
-                    r.rating,
-                  )}${'☆'.repeat(Math.max(0, 4 - r.rating))}`}
-                  positioning={{placement: 'top'}}
-                >
-                  <Box as="span" display="inline-flex" ml={i === 0 ? '0' : '-1.5'}>
-                    <Avatar
-                      name={r.viewer.displayName}
-                      src={r.viewer.profilePicture ?? undefined}
-                      size="2xs"
-                      borderWidth="2px"
-                      borderColor="bg"
-                    />
-                  </Box>
-                </Tooltip>
-              ))}
+              <Text fontSize="lg" fontWeight="bold" color="blue.solid">
+                {averageRating.toFixed(1)}
+              </Text>
+              <HStack gap="0">
+                {ratings.map((r, i) => (
+                  <Tooltip
+                    key={r.viewer.id}
+                    content={`${r.viewer.displayName}: ${'★'.repeat(
+                      r.rating,
+                    )}${'☆'.repeat(Math.max(0, 4 - r.rating))}`}
+                    positioning={{placement: 'top'}}
+                  >
+                    <Box
+                      as="span"
+                      display="inline-flex"
+                      ml={i === 0 ? '0' : '-1.5'}
+                    >
+                      <Avatar
+                        name={r.viewer.displayName}
+                        src={r.viewer.profilePicture ?? undefined}
+                        size="2xs"
+                        borderWidth="2px"
+                        borderColor="bg"
+                      />
+                    </Box>
+                  </Tooltip>
+                ))}
+              </HStack>
             </HStack>
-          </HStack>
           )}
         </HStack>
       </Section>
@@ -687,13 +695,28 @@ function StageMatrix() {
 
   const onCellKeyDown = (e: React.KeyboardEvent, r: number, c: number) => {
     switch (e.key) {
-      case 'ArrowRight': e.preventDefault(); moveSelect(r, c + 1); break;
-      case 'ArrowLeft': e.preventDefault(); moveSelect(r, c - 1); break;
-      case 'ArrowDown': e.preventDefault(); moveSelect(r + 1, c); break;
-      case 'ArrowUp': e.preventDefault(); moveSelect(r - 1, c); break;
+      case 'ArrowRight':
+        e.preventDefault();
+        moveSelect(r, c + 1);
+        break;
+      case 'ArrowLeft':
+        e.preventDefault();
+        moveSelect(r, c - 1);
+        break;
+      case 'ArrowDown':
+        e.preventDefault();
+        moveSelect(r + 1, c);
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        moveSelect(r - 1, c);
+        break;
       // Space/Enter toggles the current cell (clears it when already selected).
       case 'Enter':
-      case ' ': e.preventDefault(); toggle(r, c); break;
+      case ' ':
+        e.preventDefault();
+        toggle(r, c);
+        break;
     }
   };
 
@@ -758,67 +781,71 @@ function StageMatrix() {
       >
         {STAGE_ROWS.map((row, ri) => (
           <Box key={ri} role="row" display="contents">
-          {STAGE_COLS.map((_, ci) => {
-            const isSelected = selected === `${ri}:${ci}`;
-            // Boundary edges form a single border around the whole cell block.
-            const firstRow = ri === 0;
-            const lastRow = ri === STAGE_ROWS.length - 1;
-            const firstCol = ci === 0;
-            const lastCol = ci === STAGE_COLS.length - 1;
-            return (
-              <Flex
-                key={ci}
-                className="group"
-                role="gridcell"
-                aria-selected={isSelected}
-                aria-label={`${row.aria}, ${colLabel(ci)}`}
-                data-pos={`${ri}:${ci}`}
-                tabIndex={focus.r === ri && focus.c === ci ? 0 : -1}
-                justify="center"
-                align="center"
-                boxSize={STAGE_CELL}
-                cursor="pointer"
-                borderColor="border"
-                borderTopWidth={firstRow ? '1px' : undefined}
-                borderBottomWidth={lastRow ? '1px' : undefined}
-                borderLeftWidth={firstCol ? '1px' : undefined}
-                borderRightWidth={lastCol ? '1px' : undefined}
-                borderTopLeftRadius={firstRow && firstCol ? 'md' : undefined}
-                borderTopRightRadius={firstRow && lastCol ? 'md' : undefined}
-                borderBottomLeftRadius={lastRow && firstCol ? 'md' : undefined}
-                borderBottomRightRadius={lastRow && lastCol ? 'md' : undefined}
-                outline="none"
-                onClick={() => toggle(ri, ci)}
-                onKeyDown={(e) => onCellKeyDown(e, ri, ci)}
-              >
-                <Box
-                  boxSize={isSelected ? '3' : '1'}
-                  borderRadius="full"
-                  bg={isSelected ? 'blue.solid' : 'gray.300'}
-                  outline={isSelected ? '2px solid' : undefined}
-                  outlineColor="blue.solid"
-                  outlineOffset="2px"
-                  _groupHover={
-                    isSelected
-                      ? undefined
-                      : {
-                          boxSize: '2',
-                          bg: 'gray.400',
-                          // Fast grow on hover-in…
-                          transition:
-                            'width 0.15s ease, height 0.15s ease, background 0.15s ease',
-                        }
+            {STAGE_COLS.map((_, ci) => {
+              const isSelected = selected === `${ri}:${ci}`;
+              // Boundary edges form a single border around the whole cell block.
+              const firstRow = ri === 0;
+              const lastRow = ri === STAGE_ROWS.length - 1;
+              const firstCol = ci === 0;
+              const lastCol = ci === STAGE_COLS.length - 1;
+              return (
+                <Flex
+                  key={ci}
+                  className="group"
+                  role="gridcell"
+                  aria-selected={isSelected}
+                  aria-label={`${row.aria}, ${colLabel(ci)}`}
+                  data-pos={`${ri}:${ci}`}
+                  tabIndex={focus.r === ri && focus.c === ci ? 0 : -1}
+                  justify="center"
+                  align="center"
+                  boxSize={STAGE_CELL}
+                  cursor="pointer"
+                  borderColor="border"
+                  borderTopWidth={firstRow ? '1px' : undefined}
+                  borderBottomWidth={lastRow ? '1px' : undefined}
+                  borderLeftWidth={firstCol ? '1px' : undefined}
+                  borderRightWidth={lastCol ? '1px' : undefined}
+                  borderTopLeftRadius={firstRow && firstCol ? 'md' : undefined}
+                  borderTopRightRadius={firstRow && lastCol ? 'md' : undefined}
+                  borderBottomLeftRadius={
+                    lastRow && firstCol ? 'md' : undefined
                   }
-                  // Fast when selecting; slow shrink back on hover-out.
-                  transition={
-                    isSelected
-                      ? 'width 0.15s ease, height 0.15s ease, background 0.15s ease, outline-color 0.15s ease'
-                      : 'width 0.8s ease, height 0.8s ease, background 0.8s ease'
+                  borderBottomRightRadius={
+                    lastRow && lastCol ? 'md' : undefined
                   }
-                />
-              </Flex>
-            );
-          })}
+                  outline="none"
+                  onClick={() => toggle(ri, ci)}
+                  onKeyDown={(e) => onCellKeyDown(e, ri, ci)}
+                >
+                  <Box
+                    boxSize={isSelected ? '3' : '1'}
+                    borderRadius="full"
+                    bg={isSelected ? 'blue.solid' : 'gray.300'}
+                    outline={isSelected ? '2px solid' : undefined}
+                    outlineColor="blue.solid"
+                    outlineOffset="2px"
+                    _groupHover={
+                      isSelected
+                        ? undefined
+                        : {
+                            boxSize: '2',
+                            bg: 'gray.400',
+                            // Fast grow on hover-in…
+                            transition:
+                              'width 0.15s ease, height 0.15s ease, background 0.15s ease',
+                          }
+                    }
+                    // Fast when selecting; slow shrink back on hover-out.
+                    transition={
+                      isSelected
+                        ? 'width 0.15s ease, height 0.15s ease, background 0.15s ease, outline-color 0.15s ease'
+                        : 'width 0.8s ease, height 0.8s ease, background 0.8s ease'
+                    }
+                  />
+                </Flex>
+              );
+            })}
           </Box>
         ))}
       </Grid>
@@ -849,7 +876,11 @@ function ExpandableText({
 
   return (
     <Box>
-      <Text ref={ref} whiteSpace="pre-wrap" lineClamp={expanded ? undefined : lines}>
+      <Text
+        ref={ref}
+        whiteSpace="pre-wrap"
+        lineClamp={expanded ? undefined : lines}
+      >
         {children}
       </Text>
       {(overflows || expanded) && (

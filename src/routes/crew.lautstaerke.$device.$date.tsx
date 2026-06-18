@@ -1,10 +1,14 @@
 import {createFileRoute, notFound} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
+import {crewAuth} from '../server/crewAuth';
 import {useMemo, useState} from 'react';
 import {Box} from '@chakra-ui/react';
 import type uPlot from 'uplot';
 import {HISTORY_SERIES} from '../components/lautstaerke/context';
-import {BigNumberRow, useSeriesToggle} from '../components/lautstaerke/BigNumber';
+import {
+  BigNumberRow,
+  useSeriesToggle,
+} from '../components/lautstaerke/BigNumber';
 import {NoiseTimeChart} from '../components/lautstaerke/NoiseTimeChart';
 import {deviceTitle, useDeviceView} from '../components/lautstaerke/deviceView';
 import {fmtHourMinute} from '../components/lautstaerke/chartUtils';
@@ -18,6 +22,7 @@ import {seo} from '../utils/seo';
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 const loadHistory = createServerFn()
+  .middleware([crewAuth])
   .inputValidator((d: {device: string; date: string}) => d)
   .handler(async ({data}) => {
     if (!DATE_RE.test(data.date)) throw notFound();

@@ -1,10 +1,11 @@
 import {useMemo, useState} from 'react';
 import {createFileRoute, notFound} from '@tanstack/react-router';
-import {createServerFn} from '@tanstack/react-start';
 import {useMutation} from '@tanstack/react-query';
 import {z} from 'zod';
 import {Button, Input, Stack, Textarea} from '@chakra-ui/react';
 import {prismaClient} from '../server/prismaClient.server';
+import {createServerFn} from '@tanstack/react-start';
+import {crewAuth} from '../server/crewAuth';
 import {locale, timeZone} from '../utils/dateUtils';
 import {Field} from '../components/chakra-snippets/field';
 import {
@@ -28,6 +29,7 @@ import {
 // Everything the contact dialog needs, fetched from just the application id:
 // band data, the event's date window, and the list of stages.
 const loadContactData = createServerFn()
+  .middleware([crewAuth])
   .inputValidator((applicationId: string) => applicationId)
   .handler(async ({data: applicationId}) => {
     const application = await prismaClient.bandApplication.findUnique({
@@ -70,6 +72,7 @@ const loadContactData = createServerFn()
 
 // Stub: eventually this enqueues a task to actually send the email.
 const sendBandContactEmail = createServerFn()
+  .middleware([crewAuth])
   .inputValidator(
     z.object({
       applicationId: z.string(),

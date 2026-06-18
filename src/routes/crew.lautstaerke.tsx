@@ -25,35 +25,38 @@ import {
   type BleConnection,
 } from '../components/lautstaerke/bluetooth';
 import {createServerFn} from '@tanstack/react-start';
+import {crewAuth} from '../server/crewAuth';
 import {prismaClient} from '../server/prismaClient.server';
 import {Toaster, toaster} from '../components/chakra-snippets/toaster';
 
-const noiseDevices = createServerFn().handler(async () => {
-  const devices = await prismaClient.device.findMany({
-    where: {type: 'NOISE_MONITOR'},
-    select: {
-      id: true,
-      lastSeen: true,
-      DeviceLocation: {
-        orderBy: {createdAt: 'desc'},
-        take: 1,
-        select: {locationName: true},
+const noiseDevices = createServerFn()
+  .middleware([crewAuth])
+  .handler(async () => {
+    const devices = await prismaClient.device.findMany({
+      where: {type: 'NOISE_MONITOR'},
+      select: {
+        id: true,
+        lastSeen: true,
+        DeviceLocation: {
+          orderBy: {createdAt: 'desc'},
+          take: 1,
+          select: {locationName: true},
+        },
       },
-    },
+    });
+    const deviceIds = devices.map((d) => d.id).sort();
+    const deviceLocations = Object.fromEntries(
+      devices.flatMap((d) =>
+        d.DeviceLocation[0] ? [[d.id, d.DeviceLocation[0].locationName]] : [],
+      ),
+    );
+    const deviceLastSeen = Object.fromEntries(
+      devices.flatMap((d) =>
+        d.lastSeen ? [[d.id, d.lastSeen.getTime()]] : [],
+      ),
+    );
+    return {deviceIds, deviceLocations, deviceLastSeen};
   });
-  const deviceIds = devices.map((d) => d.id).sort();
-  const deviceLocations = Object.fromEntries(
-    devices.flatMap((d) =>
-      d.DeviceLocation[0] ? [[d.id, d.DeviceLocation[0].locationName]] : [],
-    ),
-  );
-  const deviceLastSeen = Object.fromEntries(
-    devices.flatMap((d) =>
-      d.lastSeen ? [[d.id, d.lastSeen.getTime()]] : [],
-    ),
-  );
-  return {deviceIds, deviceLocations, deviceLastSeen};
-});
 
 export const Route = createFileRoute('/crew/lautstaerke')({
   component: LautstaerkeLayout,
@@ -257,14 +260,11 @@ function LautstaerkeLayout() {
     await writeCalibration(conn, offsetsDb);
   }, []);
 
-  const writeWifiCreds = useCallback(
-    async (ssid: string, password: string) => {
-      const conn = bleConnRef.current;
-      if (!conn) throw new Error('Kein Gerät über Bluetooth verbunden.');
-      await writeWifi(conn, ssid, password);
-    },
-    [],
-  );
+  const writeWifiCreds = useCallback(async (ssid: string, password: string) => {
+    const conn = bleConnRef.current;
+    if (!conn) throw new Error('Kein Gerät über Bluetooth verbunden.');
+    await writeWifi(conn, ssid, password);
+  }, []);
 
   useEffect(() => {
     return () => cleanupBle();

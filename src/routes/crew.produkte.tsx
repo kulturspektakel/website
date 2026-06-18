@@ -1,40 +1,44 @@
 import {createFileRoute, Outlet} from '@tanstack/react-router';
-import {createServerFn} from '@tanstack/react-start';
 import {Container} from '@chakra-ui/react';
 import {z} from 'zod';
 import {prismaClient} from '../server/prismaClient.server';
-import {crewAuth} from '../server/crewAuth.server';
+import {createServerFn} from '@tanstack/react-start';
+import {crewAuth} from '../server/crewAuth';
 import {directusUsers} from '../server/directusUsers.server';
 import {seo} from '../utils/seo';
 
-export const listProductLists = createServerFn().handler(async () => {
-  const lists = await prismaClient.productList.findMany({
-    orderBy: {name: 'asc'},
-    select: {
-      id: true,
-      name: true,
-      emoji: true,
-      active: true,
-      updatedAt: true,
-      lastUpdatedBy: true,
-    },
+export const listProductLists = createServerFn()
+  .middleware([crewAuth])
+  .handler(async () => {
+    const lists = await prismaClient.productList.findMany({
+      orderBy: {name: 'asc'},
+      select: {
+        id: true,
+        name: true,
+        emoji: true,
+        active: true,
+        updatedAt: true,
+        lastUpdatedBy: true,
+      },
+    });
+    const users = await directusUsers(lists.map((l) => l.lastUpdatedBy));
+    return lists.map((l) => {
+      const u = l.lastUpdatedBy ? users[l.lastUpdatedBy] : undefined;
+      const updatedByName = u
+        ? [u.first_name, u.last_name].filter(Boolean).join(' ') || null
+        : null;
+      return {...l, updatedByName};
+    });
   });
-  const users = await directusUsers(lists.map((l) => l.lastUpdatedBy));
-  return lists.map((l) => {
-    const u = l.lastUpdatedBy ? users[l.lastUpdatedBy] : undefined;
-    const updatedByName = u
-      ? [u.first_name, u.last_name].filter(Boolean).join(' ') || null
-      : null;
-    return {...l, updatedByName};
-  });
-});
 
-export const listAdditives = createServerFn().handler(async () => {
-  return prismaClient.productAdditives.findMany({
-    orderBy: {displayName: 'asc'},
-    select: {id: true, displayName: true},
+export const listAdditives = createServerFn()
+  .middleware([crewAuth])
+  .handler(async () => {
+    return prismaClient.productAdditives.findMany({
+      orderBy: {displayName: 'asc'},
+      select: {id: true, displayName: true},
+    });
   });
-});
 
 const emoji = z
   .string()
@@ -49,6 +53,7 @@ export const createProductListInput = z.object({
 });
 
 export const createProductList = createServerFn()
+  .middleware([crewAuth])
   .inputValidator(createProductListInput)
   .handler(async ({data}) => {
     return prismaClient.productList.create({

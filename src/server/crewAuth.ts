@@ -14,6 +14,17 @@ import {verifyDirectusSession} from './directusAuth.server';
  * check is skipped (the cookie is scoped to `crew.kulturspektakel.de` and never
  * reaches localhost), so `context.user` is `null` there — mirroring the route
  * gate in `crew.tsx`.
+ *
+ * This module is intentionally NOT a `.server.ts`: a middleware built with
+ * `createMiddleware().server()` is referenced in the `.middleware([crewAuth])`
+ * chain of client-bundled route files, so it must clear `.server.*` import
+ * protection. The server-only bits (`verifyDirectusSession`, `getCookie`) are
+ * referenced only inside the `.server()` callback, which the compiler extracts
+ * server-side.
+ *
+ * Note: there is deliberately no `crewServerFn` factory wrapping `createServerFn`.
+ * The Start compiler only splits a literal `createServerFn().handler()` chain, so
+ * each crew fn must spell out `createServerFn().middleware([crewAuth])` itself.
  */
 export const crewAuth = createMiddleware({type: 'function'}).server(
   async ({next}) => {

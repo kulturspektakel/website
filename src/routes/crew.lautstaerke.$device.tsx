@@ -1,5 +1,6 @@
 import {createFileRoute, Outlet, useParams} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
+import {crewAuth} from '../server/crewAuth';
 import {useState} from 'react';
 import {Box} from '@chakra-ui/react';
 import {type Weighting} from '../components/lautstaerke/context';
@@ -13,6 +14,7 @@ import {deviceLocations, noiseDays} from '../server/noiseHistory.server';
 import {seo} from '../utils/seo';
 
 const loadDevice = createServerFn()
+  .middleware([crewAuth])
   .inputValidator((device: string) => device)
   .handler(async ({data: device}) => {
     const [days, locations] = await Promise.all([

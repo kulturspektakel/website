@@ -6,6 +6,7 @@ import {
   useParams,
 } from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
+import {crewAuth} from '../server/crewAuth';
 import {
   Box,
   Button,
@@ -59,6 +60,7 @@ const previousEventId = (eventId: string) => {
 };
 
 const loadBandApplications = createServerFn()
+  .middleware([crewAuth])
   .inputValidator((eventId: string) => eventId)
   .handler(async ({data: eventId}) => {
     const prevId = previousEventId(eventId);
@@ -160,29 +162,30 @@ type Row = BandApplicationRow & {
 
 // Tags derived from the application data (as opposed to the manually assigned
 // BandApplicationTags). Add new entries here to introduce more computed tags.
-const COMPUTED_TAGS: (ComputedTag & {applies: (r: BandApplicationRow) => boolean})[] =
-  [
-    {
-      label: 'FLINTA*',
-      colorPalette: 'pink',
-      applies: (r) => r.numberOfNonMaleArtists > 0,
-    },
-    {
-      label: 'letztes Jahr',
-      colorPalette: 'orange',
-      applies: (r) => r.playedLastYear,
-    },
-    {
-      label: 'kommentiert',
-      colorPalette: 'blue',
-      applies: (r) => r.hasComments,
-    },
-    {
-      label: 'kontaktiert',
-      colorPalette: 'green',
-      applies: (r) => r.wasContacted,
-    },
-  ];
+const COMPUTED_TAGS: (ComputedTag & {
+  applies: (r: BandApplicationRow) => boolean;
+})[] = [
+  {
+    label: 'FLINTA*',
+    colorPalette: 'pink',
+    applies: (r) => r.numberOfNonMaleArtists > 0,
+  },
+  {
+    label: 'letztes Jahr',
+    colorPalette: 'orange',
+    applies: (r) => r.playedLastYear,
+  },
+  {
+    label: 'kommentiert',
+    colorPalette: 'blue',
+    applies: (r) => r.hasComments,
+  },
+  {
+    label: 'kontaktiert',
+    colorPalette: 'green',
+    applies: (r) => r.wasContacted,
+  },
+];
 
 export function computedTagsFor(r: BandApplicationRow): ComputedTag[] {
   return COMPUTED_TAGS.filter((t) => t.applies(r)).map(

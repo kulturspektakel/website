@@ -1,5 +1,9 @@
-import {createFileRoute, Link, notFound, useBlocker} from '@tanstack/react-router';
-import {createServerFn} from '@tanstack/react-start';
+import {
+  createFileRoute,
+  Link,
+  notFound,
+  useBlocker,
+} from '@tanstack/react-router';
 import {
   Badge,
   Box,
@@ -42,7 +46,8 @@ import {CSS} from '@dnd-kit/utilities';
 import {FaChevronLeft} from 'react-icons/fa6';
 import {LuPencil} from 'react-icons/lu';
 import {prismaClient} from '../server/prismaClient.server';
-import {crewAuth} from '../server/crewAuth.server';
+import {createServerFn} from '@tanstack/react-start';
+import {crewAuth} from '../server/crewAuth';
 import {seo} from '../utils/seo';
 import {formatCents, parseEuroToCents} from '../utils/currency';
 import {listAdditives} from './crew.produkte';
@@ -94,6 +99,7 @@ const AGE_LABELS: Record<(typeof AGE_VALUES)[number], string> = {
 // ---------------------------------------------------------------------------
 
 const getProductList = createServerFn()
+  .middleware([crewAuth])
   .inputValidator((listId: string) => listId)
   .handler(async ({data: listId}) => {
     const id = Number(listId);
@@ -149,7 +155,9 @@ const saveProducts = createServerFn()
   .inputValidator(
     z.object({
       productListId: z.number().int(),
-      products: z.array(productFields.extend({id: z.number().int().nullable()})),
+      products: z.array(
+        productFields.extend({id: z.number().int().nullable()}),
+      ),
     }),
   )
   .handler(async ({data, context}) => {
@@ -161,9 +169,7 @@ const saveProducts = createServerFn()
     const keep = new Set(
       data.products.flatMap((p) => (p.id == null ? [] : [p.id])),
     );
-    const toDelete = existing
-      .filter((e) => !keep.has(e.id))
-      .map((e) => e.id);
+    const toDelete = existing.filter((e) => !keep.has(e.id)).map((e) => e.id);
 
     await prismaClient.$transaction([
       ...(toDelete.length
@@ -529,7 +535,9 @@ function ProductRow({
       <Box flex="1">
         <Text fontWeight="medium">{product.name}</Text>
         <HStack gap="2" mt="1" _empty={{display: 'none'}}>
-          {product.requiresDeposit && <Badge colorPalette="orange">Pfand</Badge>}
+          {product.requiresDeposit && (
+            <Badge colorPalette="orange">Pfand</Badge>
+          )}
           {product.diet && (
             <Badge colorPalette={DIET_COLORS[product.diet]}>
               {DIET_LABELS[product.diet]}
@@ -598,82 +606,85 @@ function ProductDialog({
         </DialogHeader>
         <DialogCloseTrigger />
         {open && (
-        <Formik
-          initialValues={{
-            name: product?.name ?? '',
-            price: product
-              ? (product.price / 100).toFixed(2).replace('.', ',')
-              : '',
-            requiresDeposit: product?.requiresDeposit ?? false,
-            diet: product?.diet ?? DIET_NONE,
-            minimumAge: product?.minimumAge ?? 'NONE',
-            additiveIds: product?.additiveIds ?? [],
-          }}
-          validate={toFormikValidate(productFormSchema)}
-          onSubmit={(values) =>
-            onSave({
-              name: values.name.trim(),
-              price: parseEuroToCents(values.price)!,
-              requiresDeposit: values.requiresDeposit,
-              diet:
-                values.diet === DIET_NONE
-                  ? null
-                  : (values.diet as (typeof DIET_VALUES)[number]),
-              minimumAge: values.minimumAge,
-              additiveIds: values.additiveIds,
-            })
-          }
-        >
-          <Form>
-            <DialogBody>
-              <Stack gap="4">
-                <HStack gap="4" align="flex-start">
-                  <Box flex="1">
-                    <ConnectedField name="name" label="Name" required />
-                  </Box>
-                  <Box w="28">
-                    <PriceField />
-                  </Box>
-                </HStack>
-                <ConnectedCheckbox
-                  name="requiresDeposit"
-                  label="Pfandpflichtig"
-                />
-                <FormSelect
-                  name="diet"
-                  label="vegetarisch/vegan"
-                  items={[
-                    {value: DIET_NONE, label: 'nein'},
-                    ...DIET_VALUES.map((v) => ({value: v, label: DIET_LABELS[v]})),
-                  ]}
-                />
-                <FormSelect
-                  name="minimumAge"
-                  label="Altersbeschränkung"
-                  items={AGE_VALUES.map((v) => ({
-                    value: v,
-                    label: AGE_LABELS[v],
-                  }))}
-                />
-                <AdditivesField additives={additives ?? []} />
-              </Stack>
-            </DialogBody>
-            <DialogFooter>
-              {onDelete && (
-                <Button
-                  colorPalette="red"
-                  variant="outline"
-                  type="button"
-                  mr="auto"
-                  onClick={onDelete}
-                >
-                  Löschen
-                </Button>
-              )}
-              <Button type="submit">Übernehmen</Button>
-            </DialogFooter>
-          </Form>
-        </Formik>
+          <Formik
+            initialValues={{
+              name: product?.name ?? '',
+              price: product
+                ? (product.price / 100).toFixed(2).replace('.', ',')
+                : '',
+              requiresDeposit: product?.requiresDeposit ?? false,
+              diet: product?.diet ?? DIET_NONE,
+              minimumAge: product?.minimumAge ?? 'NONE',
+              additiveIds: product?.additiveIds ?? [],
+            }}
+            validate={toFormikValidate(productFormSchema)}
+            onSubmit={(values) =>
+              onSave({
+                name: values.name.trim(),
+                price: parseEuroToCents(values.price)!,
+                requiresDeposit: values.requiresDeposit,
+                diet:
+                  values.diet === DIET_NONE
+                    ? null
+                    : (values.diet as (typeof DIET_VALUES)[number]),
+                minimumAge: values.minimumAge,
+                additiveIds: values.additiveIds,
+              })
+            }
+          >
+            <Form>
+              <DialogBody>
+                <Stack gap="4">
+                  <HStack gap="4" align="flex-start">
+                    <Box flex="1">
+                      <ConnectedField name="name" label="Name" required />
+                    </Box>
+                    <Box w="28">
+                      <PriceField />
+                    </Box>
+                  </HStack>
+                  <ConnectedCheckbox
+                    name="requiresDeposit"
+                    label="Pfandpflichtig"
+                  />
+                  <FormSelect
+                    name="diet"
+                    label="vegetarisch/vegan"
+                    items={[
+                      {value: DIET_NONE, label: 'nein'},
+                      ...DIET_VALUES.map((v) => ({
+                        value: v,
+                        label: DIET_LABELS[v],
+                      })),
+                    ]}
+                  />
+                  <FormSelect
+                    name="minimumAge"
+                    label="Altersbeschränkung"
+                    items={AGE_VALUES.map((v) => ({
+                      value: v,
+                      label: AGE_LABELS[v],
+                    }))}
+                  />
+                  <AdditivesField additives={additives ?? []} />
+                </Stack>
+              </DialogBody>
+              <DialogFooter>
+                {onDelete && (
+                  <Button
+                    colorPalette="red"
+                    variant="outline"
+                    type="button"
+                    mr="auto"
+                    onClick={onDelete}
+                  >
+                    Löschen
+                  </Button>
+                )}
+                <Button type="submit">Übernehmen</Button>
+              </DialogFooter>
+            </Form>
+          </Formik>
         )}
       </DialogContent>
     </DialogRoot>
