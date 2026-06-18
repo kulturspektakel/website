@@ -202,20 +202,32 @@ describe('bucketList', () => {
       time: new Date('2025-07-27 12:30:00+02:00'),
     }),
     order({
-      productList: 'Hot Dog',
+      productList: 'Hot Dogs',
       time: new Date('2025-07-27 12:00:00+02:00'),
     }),
     order({
-      productList: 'Italien',
+      productList: 'Wein & Italien',
       time: new Date('2025-07-27 13:30:00+02:00'),
     }),
     order({
-      productList: 'Waffel',
+      productList: 'Waffeln',
       time: new Date('2025-07-27 15:00:00+02:00'),
     }),
     order({
-      productList: 'Schokofrüchte',
+      productList: 'Burger',
       time: new Date('2025-07-27 15:20:00+02:00'),
+    }),
+    order({
+      productList: 'Crêpes',
+      time: new Date('2025-07-27 16:00:00+02:00'),
+    }),
+    order({
+      productList: 'Wraps',
+      time: new Date('2025-07-27 16:30:00+02:00'),
+    }),
+    order({
+      productList: 'Käsespätzle',
+      time: new Date('2025-07-27 17:00:00+02:00'),
     }),
   ];
 
@@ -241,15 +253,15 @@ describe('bucketList', () => {
     expect(badgeConfig.bucketlist.compute(orders, event)).toEqual({
       status: 'not awarded',
       progress: {
-        target: 9,
-        current: 8,
+        target: 12,
+        current: 11,
       },
     });
 
     expect(badgeConfig.bucketlist.compute(orders.slice(0, 6), event)).toEqual({
       status: 'not awarded',
       progress: {
-        target: 9,
+        target: 12,
         current: 6,
       },
     });
@@ -273,7 +285,7 @@ describe('bucketList', () => {
     ).toEqual({
       status: 'not awarded',
       progress: {
-        target: 9,
+        target: 12,
         current: 0,
       },
     });
@@ -499,7 +511,7 @@ describe('flash', () => {
       badgeConfig.flash.compute(
         [
           order({
-            productList: 'Italien',
+            productList: 'Wein & Italien',
             time: new Date('2025-07-26 18:00:00+02:00'),
           }),
         ],
@@ -519,7 +531,7 @@ describe('flash', () => {
       badgeConfig.flash.compute(
         [
           order({
-            productList: 'Italien',
+            productList: 'Wein & Italien',
             time: new Date('2025-07-26 18:58:00+02:00'),
           }),
         ],
@@ -539,7 +551,7 @@ describe('flash', () => {
       badgeConfig.flash.compute(
         [
           order({
-            productList: 'Hot Dog',
+            productList: 'Hot Dogs',
             time: new Date('2025-07-26 18:58:00+02:00'),
           }),
         ],
@@ -559,11 +571,11 @@ describe('flash', () => {
       badgeConfig.flash.compute(
         [
           order({
-            productList: 'Italien',
+            productList: 'Wein & Italien',
             time: new Date('2025-07-26 10:58:00+02:00'),
           }),
           order({
-            productList: 'Hot Dog',
+            productList: 'Hot Dogs',
             time: new Date('2025-07-26 10:57:00+02:00'),
           }),
         ],
@@ -580,11 +592,11 @@ describe('flash', () => {
       badgeConfig.flash.compute(
         [
           order({
-            productList: 'Italien',
+            productList: 'Wein & Italien',
             time: new Date('2025-07-26 10:55:00+02:00'),
           }),
           order({
-            productList: 'Hot Dog',
+            productList: 'Hot Dogs',
             time: new Date('2025-07-26 10:57:00+02:00'),
           }),
         ],
@@ -601,11 +613,11 @@ describe('flash', () => {
       badgeConfig.flash.compute(
         [
           order({
-            productList: 'Italien',
+            productList: 'Wein & Italien',
             time: new Date('2025-07-26 10:55:00+02:00'),
           }),
           order({
-            productList: 'Hot Dog',
+            productList: 'Hot Dogs',
             time: new Date('2025-07-26 11:00:01+02:00'),
           }),
         ],
