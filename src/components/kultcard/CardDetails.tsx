@@ -16,6 +16,7 @@ export function CardDetails({
   highscores,
   cardId,
   cardType,
+  footer,
   ...stackProps
 }: {
   cardId: string;
@@ -24,6 +25,7 @@ export function CardDetails({
   cardActivities: Array<CardActivity>;
   cardType: 'crew' | 'regular';
   highscores?: HighscoreProps;
+  footer?: React.ReactNode;
 } & StackProps) {
   const {event} = useRouteContext({
     from: '/_main/card/$hash',
@@ -68,6 +70,7 @@ export function CardDetails({
         )}
         <InfoText textAlign="center">{infoText}</InfoText>
       </VStack>
+      {footer}
     </VStack>
   );
 }

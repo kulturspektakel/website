@@ -1,3 +1,4 @@
+import {isPast, sub} from 'date-fns';
 import {CardActivity} from '../components/kultcard/CardActivities';
 import {prismaClient} from './prismaClient.server';
 
@@ -41,7 +42,7 @@ export async function queryCardTransactions(
       cardId,
       deviceLog: {
         deviceTime: {
-          gte: new Date('2025-07-20'), //isPast(event.end) ? event.start : sub(new Date(), {days: 7}),
+          gte: isPast(event.end) ? event.start : sub(new Date(), {days: 7}),
         },
       },
       counter: {

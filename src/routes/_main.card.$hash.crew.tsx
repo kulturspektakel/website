@@ -11,6 +11,7 @@ import {createFileRoute, notFound} from '@tanstack/react-router';
 import {seo} from '../utils/seo';
 import {useBadges} from '../utils/useBadges';
 import {CardDetails} from '../components/kultcard/CardDetails';
+import {CrewCardInfo} from '../components/kultcard/CrewCardInfo';
 import {createServerFn} from '@tanstack/react-start';
 import {prismaClient} from '../server/prismaClient.server';
 import {queryCrewCard, orderToCardActivity} from '../server/cardUtils.server';
@@ -114,7 +115,7 @@ export const Route = createFileRoute('/_main/card/$hash/crew')({
 
 const ringCss = defineStyle({
   outlineWidth: '3px',
-  outlineColor: 'blue.500',
+  outlineColor: 'brand.500',
   outlineOffset: '2px',
   outlineStyle: 'solid',
 });
@@ -142,6 +143,7 @@ function CrewCard() {
       cardId={cardId}
       highscores={highscores}
       cardType="crew"
+      footer={<CrewCardInfo />}
     >
       <Flex
         direction="column"
@@ -168,12 +170,13 @@ function CrewCard() {
           boxShadow="inset"
         />
         <Box w="50%" aspectRatio={1}>
-          <Avatar.Root css={ringCss} size="full" background="blue.500">
+          <Avatar.Root css={ringCss} size="full" background="brand.500">
             <Avatar.Fallback
               name={name ?? '?'}
               fontFamily="Shrimp"
               fontSize="7xl"
               color="white"
+              mt="4"
             />
             {crewCard.viewer?.profilePicture && (
               <Avatar.Image

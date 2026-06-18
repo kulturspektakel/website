@@ -1,5 +1,5 @@
 import {beforeAll, describe, expect, test, assert} from 'vitest';
-import {transformCardAvtivities} from './cardUtils';
+import {hasNewerTransactions, transformCardAvtivities} from './cardUtils';
 import {decodePayload} from './decodePayload';
 
 describe('decodePayload', () => {
@@ -253,5 +253,54 @@ describe('transformCardAvtivities', () => {
     expect(activites[0]).toMatchObject({
       type: 'order',
     });
+  });
+});
+
+describe('hasNewerTransactions', () => {
+  function order(o: Record<string, any> = {}) {
+    return {counter: 3, ...o};
+  }
+
+  test('no transactions', () => {
+    expect(hasNewerTransactions([], 3)).toBe(false);
+  });
+
+  test('newest transaction matches the card counter', () => {
+    expect(hasNewerTransactions([order({counter: 3})], 3)).toBe(false);
+  });
+
+  test('newest transaction is older than the card counter', () => {
+    expect(hasNewerTransactions([order({counter: 2})], 3)).toBe(false);
+  });
+
+  test('newest transaction is newer than the card counter', () => {
+    expect(hasNewerTransactions([order({counter: 4})], 3)).toBe(true);
+  });
+
+  test('detects newer transactions when older ones are also present', () => {
+    expect(
+      hasNewerTransactions(
+        [order({counter: 5}), order({counter: 4}), order({counter: 3})],
+        4,
+      ),
+    ).toBe(true);
+  });
+
+  // Regression: the loader must read the flag from the raw query result before
+  // transformCardAvtivities mutates the array. Computing it afterwards would
+  // wrongly report false because the newer entries get spliced off.
+  test('still true after transformCardAvtivities mutates the array', () => {
+    const transactions = [
+      order({counter: 5}),
+      order({counter: 4}),
+      order({counter: 3}),
+    ];
+
+    const flag = hasNewerTransactions(transactions, 4);
+    transformCardAvtivities(transactions as any, 4, 1000, 2);
+
+    expect(flag).toBe(true);
+    // the mutation removed the newer entry, so computing afterwards is wrong
+    expect(hasNewerTransactions(transactions, 4)).toBe(false);
   });
 });

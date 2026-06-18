@@ -143,8 +143,8 @@ const overrides: SystemConfig = {
           200: {value: '#AECECD' /*'#dbd8d3'*/},
           300: {value: '#90B5AF' /*'#d0cabc'*/},
           400: {value: '#459388' /*'#b6b39f'*/},
-          500: {value: '#9c9686'},
-          600: {value: '#5a574e'},
+          500: {value: '#459388' /*'#9c9686'*/},
+          600: {value: '#003638' /*'#5a574e'*/},
         },
         gray: {
           100: {value: '{colors.offwhite.100}'},

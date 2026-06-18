@@ -297,15 +297,18 @@ export const badgeConfig = createBadgeDefinitions({
     emoji: bucket,
     compute: (activities) => {
       const allProductLists = new Set<string>([
+        'Burger',
+        'Crêpes',
+        'Wraps',
+        'Käsespätzle',
+        'Waffeln',
+        'Hot Dogs',
+        'Wein & Italien',
         'Weißbiergarten',
-        'Hot Dog',
-        'Italien',
-        'Waffel',
-        'Frittiererei',
         'Pizza',
+        'Frittiererei',
         'Grill',
         'Empanadas',
-        'Schokofrüchte',
       ]);
       const allListsLength = allProductLists.size;
 
@@ -437,8 +440,14 @@ export const badgeConfig = createBadgeDefinitions({
     emoji: zap,
     compute: (activities) => {
       const maxSeconds = 5 * 60;
-      const gb = ['Hot Dog', 'Cocktail', 'Schokofrüchte', 'Ausschank'];
-      const wb = ['Italien', 'Kinder'];
+      const gb = [
+        'Hot Dogs',
+        'Burger',
+        'Frittiererei',
+        'Ausschank',
+        'Cocktail',
+      ];
+      const wb = ['Wein & Italien', 'Kinderbude'];
 
       let hasOne = false;
 

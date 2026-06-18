@@ -1,5 +1,5 @@
 import {Box, Button, Dialog, Text} from '@chakra-ui/react';
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import {Badge} from './Badges';
 import ConfettiClient from '../Confetti';
 import {badgeConfig} from '../../utils/badgeConfig';
@@ -12,29 +12,43 @@ function useNewlyAwardedBadge(
   const search = useSearch({
     from: '/_main/card/$hash',
   });
-  if (typeof window === 'undefined') {
-    return;
-  }
-  const key = `badges:${cardId}`;
-  const oldData = localStorage.getItem(key);
-  localStorage.setItem(key, JSON.stringify(awarded.map((b) => b.badgeKey)));
 
-  if (search?.badge && awarded.find((a) => a.badgeKey === search.badge)) {
-    return search.badge;
-  }
+  // Compute the newly awarded badge once, on mount. Reading localStorage must
+  // not happen on every render: the effect below overwrites the stored keys, so
+  // a re-render would read back the just-written value and find no new badge.
+  const [newlyAwarded] = useState<keyof typeof badgeConfig | undefined>(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    const oldData = localStorage.getItem(`badges:${cardId}`);
 
-  if (!oldData) {
-    // don't show modal on first visit
-    return;
-  }
+    if (search?.badge && awarded.find((a) => a.badgeKey === search.badge)) {
+      return search.badge;
+    }
 
-  try {
-    const oldBadges = JSON.parse(oldData) as Array<keyof typeof badgeConfig>;
-    return awarded.find(({badgeKey}) => !oldBadges.includes(badgeKey))
-      ?.badgeKey;
-  } catch (e) {
-    console.error(e);
-  }
+    if (!oldData) {
+      // don't show modal on first visit
+      return;
+    }
+
+    try {
+      const oldBadges = JSON.parse(oldData) as Array<keyof typeof badgeConfig>;
+      return awarded.find(({badgeKey}) => !oldBadges.includes(badgeKey))
+        ?.badgeKey;
+    } catch (e) {
+      console.error(e);
+    }
+  });
+
+  // Persist the current badges as the baseline for the next visit.
+  useEffect(() => {
+    localStorage.setItem(
+      `badges:${cardId}`,
+      JSON.stringify(awarded.map((b) => b.badgeKey)),
+    );
+  }, [cardId, awarded]);
+
+  return newlyAwarded;
 }
 
 export function NewBadge({

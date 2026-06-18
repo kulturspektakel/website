@@ -192,7 +192,7 @@ export function Cell(props: {
       borderBottomColor="offwhite.200"
       borderBottomStyle="solid"
       borderBottomWidth={1}
-      gap="1"
+      gap="3"
       _last={{
         borderBottomWidth: 0,
         mb: 0,

@@ -19,6 +19,17 @@ export function kultEpochToDate(epoch: number): Date {
   return addDays(START_OF_EPOCH, epoch);
 }
 
+// Whether the card's stored counter is behind the latest transaction in the
+// DB, i.e. bookings happened after the card was last scanned. Must be evaluated
+// on the raw query result (ordered by counter desc) before
+// transformCardAvtivities, which mutates the array and removes newer entries.
+export function hasNewerTransactions(
+  transactions: Array<{counter: number | null}>,
+  counter: number,
+): boolean {
+  return transactions.length > 0 && transactions[0].counter! > counter;
+}
+
 export function transformCardAvtivities(
   transactions: Array<{
     balanceAfter: number;

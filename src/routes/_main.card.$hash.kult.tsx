@@ -5,7 +5,10 @@ import {seo} from '../utils/seo';
 import {CardDetails} from '../components/kultcard/CardDetails';
 import {createServerFn} from '@tanstack/react-start';
 import {queryCardTransactions} from '../server/cardUtils.server';
-import {transformCardAvtivities} from '../utils/cardUtils';
+import {
+  hasNewerTransactions,
+  transformCardAvtivities,
+} from '../utils/cardUtils';
 import {decodePayload} from '../utils/decodePayload';
 
 const loader = createServerFn()
@@ -16,6 +19,10 @@ const loader = createServerFn()
     const {cardId, counter, balance, deposit} = decodePayload('kultcard', hash);
 
     const transactions = await queryCardTransactions(cardId, event);
+
+    // Compute this before transformCardAvtivities, which mutates `transactions`
+    // in place and splices off exactly the entries newer than `counter`.
+    const newerTransactions = hasNewerTransactions(transactions, counter);
 
     const cardActivities = transformCardAvtivities(
       transactions,
@@ -28,8 +35,7 @@ const loader = createServerFn()
       balance,
       deposit,
       cardId,
-      hasNewerTransactions:
-        transactions.length > 0 && transactions[0].counter! > counter,
+      hasNewerTransactions: newerTransactions,
     };
   });
 

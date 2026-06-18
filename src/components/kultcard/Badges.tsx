@@ -128,7 +128,7 @@ export function Badge(props: {
       filter={
         enabled
           ? 'drop-shadow(5px 5px 10px rgba(0, 0, 0, 0.15))'
-          : 'grayscale(1) sepia(0.1)'
+          : 'grayscale(1) sepia(0.5) hue-rotate(135deg) saturate(0.7)'
       }
     >
       <BadgeSVG type={props.type} ref={svgRef} />
@@ -187,17 +187,7 @@ export function BadgeActivity({
 }) {
   return (
     <>
-      <VStack
-        gap="4"
-        align="stretch"
-        separator={
-          <Box
-            borderTopColor="offwhite.200"
-            borderTopStyle="solid"
-            borderTopWidth={1}
-          />
-        }
-      >
+      <VStack gap="14" align="stretch" mt="5">
         {awardedBadges.length > 0 && (
           <SimpleGrid columns={[2, 2, 3]} gap="3">
             {awardedBadges.map(
@@ -205,8 +195,15 @@ export function BadgeActivity({
                 status && (
                   <VStack alignItems="center" w="100%">
                     <Badge type={badgeKey} width="50%" />
-                    <Heading mt="5">{badgeConfig[badgeKey].name}</Heading>
-                    <Text textAlign="center" fontSize="sm" color="offwhite.500">
+                    <Heading textAlign="center" mt="5">
+                      {badgeConfig[badgeKey].name}
+                    </Heading>
+                    <Text
+                      textAlign="center"
+                      fontSize="sm"
+                      color="offwhite.500"
+                      lineHeight="1.2"
+                    >
                       {badgeConfig[badgeKey].description}
                     </Text>
                   </VStack>
@@ -214,41 +211,50 @@ export function BadgeActivity({
             )}
           </SimpleGrid>
         )}
-        <ListRoot as="ol" m="0">
-          {unawardedBadges.map((badge) => (
-            <Cell
-              key={badge.badgeKey}
-              accessoryStart={<Badge enabled={false} type={badge.badgeKey} />}
-              title={
-                <Text color="offwhite.500">
-                  {badgeConfig[badge.badgeKey].name}
-                </Text>
-              }
-              description={badgeConfig[badge.badgeKey].description}
-              subtitle={
-                badge.status === 'not awarded' &&
-                badge.progress && (
-                  <Progress.Root
-                    defaultValue={
-                      (badge.progress.current / badge.progress.target) * 100
-                    }
-                    maxW="sm"
-                    my="1"
-                  >
-                    <HStack gap="2">
-                      <Progress.Track flex="1">
-                        <Progress.Range />
-                      </Progress.Track>
-                      <Progress.ValueText color="offwhite.500">
-                        {badge.progress.current}/{badge.progress.target}
-                      </Progress.ValueText>
-                    </HStack>
-                  </Progress.Root>
-                )
-              }
-            />
-          ))}
-        </ListRoot>
+        {unawardedBadges.length > 0 && (
+          <Box>
+            <Heading mb="8" textAlign="center">
+              Noch nicht freigspielt:
+            </Heading>
+            <ListRoot as="ol" m="0">
+              {unawardedBadges.map((badge) => (
+                <Cell
+                  key={badge.badgeKey}
+                  accessoryStart={
+                    <Badge enabled={false} type={badge.badgeKey} />
+                  }
+                  title={
+                    <Text color="brand.500">
+                      {badgeConfig[badge.badgeKey].name}
+                    </Text>
+                  }
+                  description={badgeConfig[badge.badgeKey].description}
+                  subtitle={
+                    badge.status === 'not awarded' &&
+                    badge.progress && (
+                      <Progress.Root
+                        defaultValue={
+                          (badge.progress.current / badge.progress.target) * 100
+                        }
+                        maxW="sm"
+                        my="1"
+                      >
+                        <HStack gap="2">
+                          <Progress.Track flex="1">
+                            <Progress.Range />
+                          </Progress.Track>
+                          <Progress.ValueText color="offwhite.500">
+                            {badge.progress.current}/{badge.progress.target}
+                          </Progress.ValueText>
+                        </HStack>
+                      </Progress.Root>
+                    )
+                  }
+                />
+              ))}
+            </ListRoot>
+          </Box>
+        )}
       </VStack>
     </>
   );
