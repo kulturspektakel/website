@@ -37,7 +37,10 @@ export const GMAIL_ACCOUNTS = Object.keys(GMAIL_REMINDERS);
  * where the PEM was stored with escaped newlines (e.g. some Vercel UI flows)
  * rather than literal ones.
  */
-export async function gmailClient(account: string): Promise<gmail_v1.Gmail> {
+export async function gmailClient(
+  account: string,
+  scopes: string[] = ['https://www.googleapis.com/auth/gmail.readonly'],
+): Promise<gmail_v1.Gmail> {
   const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
   const key = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(
     /\\n/g,
@@ -51,11 +54,65 @@ export async function gmailClient(account: string): Promise<gmail_v1.Gmail> {
   const auth = new google.auth.JWT({
     email,
     key,
-    scopes: ['https://www.googleapis.com/auth/gmail.readonly'],
+    scopes,
     subject: account,
   });
   await auth.authorize();
   return google.gmail({auth, version: 'v1'});
+}
+
+/**
+ * Mailboxes we're allowed to send as via the Gmail API, each mapped to the
+ * `From:` header used for its outgoing mail. The delegation grants send access
+ * to every mailbox in the domain, but we deliberately gate it to a typed
+ * allow-list — add an entry here to enable another account.
+ */
+const SEND_AS = {
+  'booking@kulturspektakel.de':
+    'Kulturspektakel Gauting Booking <booking@kulturspektakel.de>',
+} as const;
+
+export type SendAsAccount = keyof typeof SEND_AS;
+
+/**
+ * Send a plain-text email from one of our `@kulturspektakel.de` mailboxes via
+ * the Gmail API, so it lands in that account's Sent folder (unlike SES, which
+ * never touches the mailbox). Requires the `gmail.send` scope to be delegated
+ * to the SA.
+ */
+export async function sendGmail({
+  account,
+  to,
+  subject,
+  text,
+}: {
+  account: SendAsAccount;
+  to: string;
+  subject: string;
+  text: string;
+}) {
+  const from = SEND_AS[account];
+  const gmail = await gmailClient(account, [
+    'https://www.googleapis.com/auth/gmail.send',
+  ]);
+  // RFC 2822 message. Subject is RFC 2047-encoded and the body base64-encoded
+  // so umlauts / en-dashes survive intact.
+  const headers = [
+    `From: ${from}`,
+    `To: ${to}`,
+    `Subject: =?utf-8?B?${Buffer.from(subject).toString('base64')}?=`,
+    'MIME-Version: 1.0',
+    'Content-Type: text/plain; charset="utf-8"',
+    'Content-Transfer-Encoding: base64',
+  ].join('\r\n');
+  const raw = Buffer.from(
+    `${headers}\r\n\r\n${Buffer.from(text).toString('base64')}`,
+  )
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, ''); // base64url
+  await gmail.users.messages.send({userId: 'me', requestBody: {raw}});
 }
 
 export function getHeaderField(message: gmail_v1.Schema$Message, field: string) {

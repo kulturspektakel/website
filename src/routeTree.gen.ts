@@ -45,6 +45,7 @@ import { Route as CrewLautstaerkeDeviceRouteImport } from './routes/crew.lautsta
 import { Route as CrewBookingEventIdRouteImport } from './routes/crew.booking.$eventId'
 import { Route as ApiTasksSpotifyListenersRouteImport } from './routes/api.tasks.spotify-listeners'
 import { Route as ApiTasksSpotifyImageRouteImport } from './routes/api.tasks.spotify-image'
+import { Route as ApiTasksSendGmailRouteImport } from './routes/api.tasks.send-gmail'
 import { Route as ApiTasksSendEmailRouteImport } from './routes/api.tasks.send-email'
 import { Route as ApiTasksNuclinoUpdateMessageRouteImport } from './routes/api.tasks.nuclino-update-message'
 import { Route as ApiTasksNonceRequestInvalidateRouteImport } from './routes/api.tasks.nonce-request-invalidate'
@@ -270,6 +271,11 @@ const ApiTasksSpotifyListenersRoute =
 const ApiTasksSpotifyImageRoute = ApiTasksSpotifyImageRouteImport.update({
   id: '/spotify-image',
   path: '/spotify-image',
+  getParentRoute: () => ApiTasksRoute,
+} as any)
+const ApiTasksSendGmailRoute = ApiTasksSendGmailRouteImport.update({
+  id: '/send-gmail',
+  path: '/send-gmail',
   getParentRoute: () => ApiTasksRoute,
 } as any)
 const ApiTasksSendEmailRoute = ApiTasksSendEmailRouteImport.update({
@@ -585,6 +591,7 @@ export interface FileRoutesByFullPath {
   '/api/tasks/nonce-request-invalidate': typeof ApiTasksNonceRequestInvalidateRoute
   '/api/tasks/nuclino-update-message': typeof ApiTasksNuclinoUpdateMessageRoute
   '/api/tasks/send-email': typeof ApiTasksSendEmailRoute
+  '/api/tasks/send-gmail': typeof ApiTasksSendGmailRoute
   '/api/tasks/spotify-image': typeof ApiTasksSpotifyImageRoute
   '/api/tasks/spotify-listeners': typeof ApiTasksSpotifyListenersRoute
   '/crew/booking/$eventId': typeof CrewBookingEventIdRouteWithChildren
@@ -664,6 +671,7 @@ export interface FileRoutesByTo {
   '/api/tasks/nonce-request-invalidate': typeof ApiTasksNonceRequestInvalidateRoute
   '/api/tasks/nuclino-update-message': typeof ApiTasksNuclinoUpdateMessageRoute
   '/api/tasks/send-email': typeof ApiTasksSendEmailRoute
+  '/api/tasks/send-gmail': typeof ApiTasksSendGmailRoute
   '/api/tasks/spotify-image': typeof ApiTasksSpotifyImageRoute
   '/api/tasks/spotify-listeners': typeof ApiTasksSpotifyListenersRoute
   '/crew/booking/$eventId': typeof CrewBookingEventIdRouteWithChildren
@@ -748,6 +756,7 @@ export interface FileRoutesById {
   '/api/tasks/nonce-request-invalidate': typeof ApiTasksNonceRequestInvalidateRoute
   '/api/tasks/nuclino-update-message': typeof ApiTasksNuclinoUpdateMessageRoute
   '/api/tasks/send-email': typeof ApiTasksSendEmailRoute
+  '/api/tasks/send-gmail': typeof ApiTasksSendGmailRoute
   '/api/tasks/spotify-image': typeof ApiTasksSpotifyImageRoute
   '/api/tasks/spotify-listeners': typeof ApiTasksSpotifyListenersRoute
   '/crew/booking/$eventId': typeof CrewBookingEventIdRouteWithChildren
@@ -833,6 +842,7 @@ export interface FileRouteTypes {
     | '/api/tasks/nonce-request-invalidate'
     | '/api/tasks/nuclino-update-message'
     | '/api/tasks/send-email'
+    | '/api/tasks/send-gmail'
     | '/api/tasks/spotify-image'
     | '/api/tasks/spotify-listeners'
     | '/crew/booking/$eventId'
@@ -912,6 +922,7 @@ export interface FileRouteTypes {
     | '/api/tasks/nonce-request-invalidate'
     | '/api/tasks/nuclino-update-message'
     | '/api/tasks/send-email'
+    | '/api/tasks/send-gmail'
     | '/api/tasks/spotify-image'
     | '/api/tasks/spotify-listeners'
     | '/crew/booking/$eventId'
@@ -995,6 +1006,7 @@ export interface FileRouteTypes {
     | '/api/tasks/nonce-request-invalidate'
     | '/api/tasks/nuclino-update-message'
     | '/api/tasks/send-email'
+    | '/api/tasks/send-gmail'
     | '/api/tasks/spotify-image'
     | '/api/tasks/spotify-listeners'
     | '/crew/booking/$eventId'
@@ -1288,6 +1300,13 @@ declare module '@tanstack/react-router' {
       path: '/spotify-image'
       fullPath: '/api/tasks/spotify-image'
       preLoaderRoute: typeof ApiTasksSpotifyImageRouteImport
+      parentRoute: typeof ApiTasksRoute
+    }
+    '/api/tasks/send-gmail': {
+      id: '/api/tasks/send-gmail'
+      path: '/send-gmail'
+      fullPath: '/api/tasks/send-gmail'
+      preLoaderRoute: typeof ApiTasksSendGmailRouteImport
       parentRoute: typeof ApiTasksRoute
     }
     '/api/tasks/send-email': {
@@ -1844,6 +1863,7 @@ interface ApiTasksRouteChildren {
   ApiTasksNonceRequestInvalidateRoute: typeof ApiTasksNonceRequestInvalidateRoute
   ApiTasksNuclinoUpdateMessageRoute: typeof ApiTasksNuclinoUpdateMessageRoute
   ApiTasksSendEmailRoute: typeof ApiTasksSendEmailRoute
+  ApiTasksSendGmailRoute: typeof ApiTasksSendGmailRoute
   ApiTasksSpotifyImageRoute: typeof ApiTasksSpotifyImageRoute
   ApiTasksSpotifyListenersRoute: typeof ApiTasksSpotifyListenersRoute
 }
@@ -1866,6 +1886,7 @@ const ApiTasksRouteChildren: ApiTasksRouteChildren = {
   ApiTasksNonceRequestInvalidateRoute: ApiTasksNonceRequestInvalidateRoute,
   ApiTasksNuclinoUpdateMessageRoute: ApiTasksNuclinoUpdateMessageRoute,
   ApiTasksSendEmailRoute: ApiTasksSendEmailRoute,
+  ApiTasksSendGmailRoute: ApiTasksSendGmailRoute,
   ApiTasksSpotifyImageRoute: ApiTasksSpotifyImageRoute,
   ApiTasksSpotifyListenersRoute: ApiTasksSpotifyListenersRoute,
 }

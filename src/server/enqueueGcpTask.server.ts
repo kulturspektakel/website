@@ -65,6 +65,11 @@ export async function enqueueGcpTask(
   options?: EnqueueOptions,
 ): Promise<void>;
 export async function enqueueGcpTask(
+  task: 'send-gmail',
+  payload: import('./tasks/send-gmail').SendGmailPayload,
+  options?: EnqueueOptions,
+): Promise<void>;
+export async function enqueueGcpTask(
   task: 'create-membership-application',
   payload: import('./tasks/create-membership-application').CreateMembershipApplicationPayload,
   options?: EnqueueOptions,

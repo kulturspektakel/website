@@ -6,6 +6,7 @@ import {Button, Input, Stack, Textarea} from '@chakra-ui/react';
 import {prismaClient} from '../server/prismaClient.server';
 import {createServerFn} from '@tanstack/react-start';
 import {crewAuth} from '../server/crewAuth';
+import {enqueueGcpTask} from '../server/enqueueGcpTask.server';
 import {locale, timeZone} from '../utils/dateUtils';
 import {Field} from '../components/chakra-snippets/field';
 import {
@@ -70,22 +71,24 @@ const loadContactData = createServerFn()
     };
   });
 
-// Stub: eventually this enqueues a task to actually send the email.
+// Enqueues a Cloud Task that sends the email via the Gmail API (impersonating
+// booking@kulturspektakel.de) so it shows up in that account's Sent folder.
 const sendBandContactEmail = createServerFn()
   .middleware([crewAuth])
   .inputValidator(
     z.object({
-      applicationId: z.string(),
       to: z.string(),
       subject: z.string(),
       body: z.string(),
-      stage: z.string(),
-      date: z.string(),
-      time: z.string(),
     }),
   )
-  .handler(async () => {
-    // TODO: enqueue a task to send the email.
+  .handler(async ({data}) => {
+    await enqueueGcpTask('send-gmail', {
+      account: 'booking@kulturspektakel.de',
+      to: data.to,
+      subject: data.subject,
+      text: data.body,
+    });
   });
 
 // ---------------------------------------------------------------------------
@@ -209,7 +212,7 @@ function BandContactRoute() {
   const sendMutation = useMutation({
     mutationFn: () =>
       sendBandContactEmail({
-        data: {applicationId, to, subject, body, stage, date, time},
+        data: {to, subject, body},
       }),
     onSuccess: () => close(),
   });
