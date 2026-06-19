@@ -19,8 +19,11 @@ declare namespace NodeJS {
     GOOGLE_SERVICE_ACCOUNT_EMAIL: string;
     GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY: string;
     GOOGLE_SHEETS_KEY: string;
+    JWT_SECRET: string;
     NUCLINO_ANONYMOUS_PASSWORD: string;
+    NUCLINO_API_KEY: string;
     NUCLINO_TEAM_ID: string;
+    NUCLINO_WORKSPACE_ID: string;
     SAML_PRIVATE_KEY: string;
     SITE_URL: string;
     SLACK_BOT_TOKEN: string;
