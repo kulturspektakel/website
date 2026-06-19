@@ -7,9 +7,10 @@ import {
   useRouter,
 } from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
+import {z} from 'zod';
 import {crewAuth} from '../server/crewAuth';
 import {postBandApplicationComment} from '../server/postBandApplicationComment';
-import {useQuery} from '@tanstack/react-query';
+import {useQuery, useQueryClient} from '@tanstack/react-query';
 import {
   Box,
   Button,
@@ -42,7 +43,6 @@ import {prismaClient} from '../server/prismaClient.server';
 import {Avatar} from '../components/chakra-snippets/avatar';
 import {BandName} from '../components/booking/BandName';
 import {BandApplicationRating} from '../components/booking/BandApplicationRating';
-import {Checkbox} from '../components/chakra-snippets/checkbox';
 import {Tag} from '../components/chakra-snippets/tag';
 import {Tooltip} from '../components/chakra-snippets/tooltip';
 import DateString from '../components/DateString';
@@ -110,7 +110,7 @@ const loadBandApplicationDetail = createServerFn()
           },
         },
         bandApplicationComment: {
-          orderBy: {createdAt: 'desc'},
+          orderBy: {createdAt: 'asc'},
           select: {
             id: true,
             comment: true,
@@ -148,6 +148,48 @@ const listBandApplicationTags = createServerFn()
       orderBy: {tag: 'asc'},
     });
     return rows.map((r) => r.tag);
+  });
+
+// Add a tag to an application (idempotent — the [bandApplicationId, tag] pair is
+// unique, and `tag` is citext so case-insensitive). Attributed to the crew
+// member via context.viewer.
+const addBandApplicationTag = createServerFn()
+  .middleware([crewAuth])
+  .inputValidator(
+    z.object({applicationId: z.string(), tag: z.string().trim().min(1)}),
+  )
+  .handler(async ({data, context}) => {
+    const viewerId = context.viewer?.id;
+    if (!viewerId) {
+      throw new Error('Unauthorized');
+    }
+    await prismaClient.bandApplicationTag.upsert({
+      where: {
+        bandApplicationId_tag: {
+          bandApplicationId: data.applicationId,
+          tag: data.tag,
+        },
+      },
+      create: {
+        bandApplicationId: data.applicationId,
+        tag: data.tag,
+        createdByViewerId: viewerId,
+      },
+      update: {},
+    });
+  });
+
+const removeBandApplicationTag = createServerFn()
+  .middleware([crewAuth])
+  .inputValidator(z.object({applicationId: z.string(), tag: z.string()}))
+  .handler(async ({data, context}) => {
+    if (!context.viewer?.id) {
+      throw new Error('Unauthorized');
+    }
+    // deleteMany doesn't throw when the tag is already gone.
+    await prismaClient.bandApplicationTag.deleteMany({
+      where: {bandApplicationId: data.applicationId, tag: data.tag},
+    });
   });
 
 // ---------------------------------------------------------------------------
@@ -338,13 +380,9 @@ function LeftColumn({
         <Link href={`mailto:${data.email}`}>{data.email}</Link>
         <Box mt="3">
           <Button size="sm" variant="outline" onClick={onContact}>
-            Per E-Mail kontaktieren
+            Anfragen
           </Button>
         </Box>
-        {/* Mutation stubbed: marking as contacted is not wired up yet. */}
-        <Checkbox mt="2" checked={data.contactedByViewerId != null} disabled>
-          Kontaktiert
-        </Checkbox>
       </Section>
     </Stack>
   );
@@ -425,6 +463,7 @@ function RightColumn({data}: {data: DetailData}) {
 
       <Section title="Tags">
         <BandTags
+          applicationId={data.id}
           initialTags={data.BandApplicationTag.map((t) => t.tag)}
           dynamicTags={dynamicTags}
         />
@@ -435,9 +474,8 @@ function RightColumn({data}: {data: DetailData}) {
       </Section>
 
       <Section title="Kommentare">
-        <CommentForm applicationId={data.id} />
         {data.bandApplicationComment.length > 0 && (
-          <Stack gap="3" mt="4">
+          <Stack gap="3" mb="4">
             {data.bandApplicationComment.map((c) => (
               <HStack key={c.id} gap="2" align="flex-start">
                 <Avatar
@@ -473,6 +511,7 @@ function RightColumn({data}: {data: DetailData}) {
             ))}
           </Stack>
         )}
+        <CommentForm applicationId={data.id} />
       </Section>
     </Stack>
   );
@@ -484,20 +523,44 @@ function RightColumn({data}: {data: DetailData}) {
 
 // Tags combobox (Chakra TagsInput + Combobox). Suggests from the full set of
 // existing tags loaded from the backend; allows adding new ones too. Computed
-// `dynamicTags` are shown as non-deletable chips. Local state only for now —
-// not wired to a mutation.
+// `dynamicTags` are shown as non-deletable chips. Edits are persisted by
+// diffing each change against the previous value and calling the add/remove
+// server fns.
 function BandTags({
+  applicationId,
   initialTags,
   dynamicTags,
 }: {
+  applicationId: string;
   initialTags: string[];
   dynamicTags: {label: string; colorPalette: string}[];
 }) {
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const {data: options = []} = useQuery({
     queryKey: ['bandApplicationTags'],
     queryFn: () => listBandApplicationTags(),
   });
   const [value, setValue] = useState<string[]>(initialTags);
+
+  // Persist a single add/remove, then refresh the suggestion list (a brand-new
+  // tag should become suggestable) and the route (the booking table shows tags).
+  const persist = (next: string[]) => {
+    const added = next.filter((t) => !value.includes(t));
+    const removed = value.filter((t) => !next.includes(t));
+    setValue(next);
+    Promise.all([
+      ...added.map((tag) =>
+        addBandApplicationTag({data: {applicationId, tag}}),
+      ),
+      ...removed.map((tag) =>
+        removeBandApplicationTag({data: {applicationId, tag}}),
+      ),
+    ]).then(() => {
+      queryClient.invalidateQueries({queryKey: ['bandApplicationTags']});
+      router.invalidate();
+    });
+  };
 
   const {contains} = useFilter({sensitivity: 'base'});
   const {collection, filter, set} = useListCollection<{
@@ -519,7 +582,7 @@ function BandTags({
   const tags = useTagsInput({
     ids,
     value,
-    onValueChange: (e) => setValue(e.value),
+    onValueChange: (e) => persist(e.value),
     // Free-form: allow new tags, just no duplicates.
     validate: (e) => !e.value.includes(e.inputValue.trim()),
   });
@@ -621,20 +684,22 @@ function CommentForm({applicationId}: {applicationId: string}) {
         rows={3}
         pr="12"
       />
-      <Box position="absolute" bottom="3" right="3">
-        <IconButton
-          aria-label="Kommentar posten"
-          icon={<FaPaperPlane fontSize="16px" color="white" />}
-          onClick={handleSubmit}
-          disabled={!comment.trim() || isSubmitting}
-          loading={isSubmitting}
-          bg="blue.solid"
-          rounded="full"
-          size="sm"
-          _hover={{bg: 'blue.600'}}
-          _disabled={{bg: 'gray.300', cursor: 'not-allowed'}}
-        />
-      </Box>
+      {comment.trim() && (
+        <Box position="absolute" bottom="3" right="3">
+          <IconButton
+            aria-label="Kommentar posten"
+            onClick={handleSubmit}
+            loading={isSubmitting}
+            bg="blue.solid"
+            color="white"
+            rounded="full"
+            size="sm"
+            _hover={{bg: 'blue.600'}}
+          >
+            <FaPaperPlane />
+          </IconButton>
+        </Box>
+      )}
     </Box>
   );
 }
