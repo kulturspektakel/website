@@ -4,7 +4,6 @@ import {z} from 'zod';
 import {prismaClient} from '../server/prismaClient.server';
 import {createServerFn} from '@tanstack/react-start';
 import {crewAuth} from '../server/crewAuth';
-import {directusUsers} from '../server/directusUsers.server';
 import {seo} from '../utils/seo';
 
 export const listProductLists = createServerFn()
@@ -18,17 +17,13 @@ export const listProductLists = createServerFn()
         emoji: true,
         active: true,
         updatedAt: true,
-        lastUpdatedBy: true,
+        lastUpdatedByViewer: {select: {displayName: true}},
       },
     });
-    const users = await directusUsers(lists.map((l) => l.lastUpdatedBy));
-    return lists.map((l) => {
-      const u = l.lastUpdatedBy ? users[l.lastUpdatedBy] : undefined;
-      const updatedByName = u
-        ? [u.first_name, u.last_name].filter(Boolean).join(' ') || null
-        : null;
-      return {...l, updatedByName};
-    });
+    return lists.map(({lastUpdatedByViewer, ...l}) => ({
+      ...l,
+      updatedByName: lastUpdatedByViewer?.displayName ?? null,
+    }));
   });
 
 export const listAdditives = createServerFn()
@@ -80,7 +75,7 @@ export const updateProductList = createServerFn()
         emoji: data.emoji,
         active: data.active,
         updatedAt: new Date(),
-        lastUpdatedBy: context.user?.id ?? null,
+        lastUpdatedBy: context.viewer?.id ?? null,
       },
     });
   });

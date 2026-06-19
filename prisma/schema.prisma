@@ -25,6 +25,7 @@ model Viewer {
   Nonce                  Nonce[]
   NonceRequest           NonceRequest[]
   ViewerLocation         ViewerLocation[]
+  ProductList            ProductList[]
 }
 
 model Area {
@@ -61,11 +62,12 @@ model ProductList {
   emoji       String?
   active      Boolean     @default(true)
   updatedAt   DateTime?
-  lastUpdatedBy String?   @db.Uuid
+  lastUpdatedBy String?
   description String?
   Device      Device[]
   OrderItem   OrderItem[]
   product     Product[]
+  lastUpdatedByViewer Viewer? @relation(fields: [lastUpdatedBy], references: [id])
 }
 
 model Product {

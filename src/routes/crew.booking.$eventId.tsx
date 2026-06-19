@@ -39,8 +39,8 @@ import {GenreCategory} from '../generated/prisma/browser';
 import {BAND_GENRE_CATEGORY_OPTIONS} from '../utils/genreCategories';
 import {prismaClient} from '../server/prismaClient.server';
 import {Tooltip} from '../components/chakra-snippets/tooltip';
-import {Avatar} from '../components/chakra-snippets/avatar';
 import {BandName} from '../components/booking/BandName';
+import {BandApplicationRating} from '../components/booking/BandApplicationRating';
 import {Tag} from '../components/chakra-snippets/tag';
 import {
   MenuCheckboxItem,
@@ -62,7 +62,7 @@ const previousEventId = (eventId: string) => {
 const loadBandApplications = createServerFn()
   .middleware([crewAuth])
   .inputValidator((eventId: string) => eventId)
-  .handler(async ({data: eventId}) => {
+  .handler(async ({data: eventId, context}) => {
     const prevId = previousEventId(eventId);
     const lastYearBands = prevId
       ? await prismaClient.bandPlaying.findMany({
@@ -114,6 +114,8 @@ const loadBandApplications = createServerFn()
       }
     }
 
+    const myViewerId = context.viewer?.id ?? null;
+
     return applications.map((a) => {
       const ratings = a.bandApplicationRating;
       const averageRating =
@@ -133,6 +135,8 @@ const loadBandApplications = createServerFn()
         facebookLikes: a.facebookLikes ?? 0,
         spotifyMonthlyListeners: a.spotifyMonthlyListeners ?? 0,
         averageRating,
+        myRating:
+          ratings.find((r) => r.viewer.id === myViewerId)?.rating ?? 0,
         raters: ratings.map((r) => ({
           id: r.viewer.id,
           displayName: r.viewer.displayName,
@@ -436,62 +440,16 @@ const columns = [
     filterFn: (row, _columnId, filterValue: string[]) =>
       !filterValue?.includes(HIDE_REJECTED) ||
       !(row.original.averageRating === 1 && row.original.raters.length >= 2),
-    cell: ({row}) => {
-      const v = row.original.averageRating;
-      if (v == null) {
-        return <Span color="fg.muted">–</Span>;
-      }
-      return (
-        <HStack gap="2">
-          <Tooltip
-            positioning={{placement: 'top'}}
-            content={
-              <Box>
-                {row.original.raters.map((r) => (
-                  <Text key={r.id} whiteSpace="nowrap">
-                    {'★'.repeat(r.rating)}
-                    {'☆'.repeat(Math.max(0, 4 - r.rating))} {r.displayName}
-                  </Text>
-                ))}
-              </Box>
-            }
-          >
-            <Text
-              fontSize="lg"
-              fontWeight="bold"
-              lineHeight="1"
-              color="blue.solid"
-            >
-              {v.toFixed(1)}
-            </Text>
-          </Tooltip>
-          <HStack gap="0">
-            {row.original.raters.map((r, i) => (
-              <Tooltip
-                key={r.id}
-                content={r.displayName}
-                positioning={{placement: 'top'}}
-              >
-                <Box
-                  as="span"
-                  display="inline-flex"
-                  ml={i === 0 ? '0' : '-1.5'}
-                >
-                  <Avatar
-                    name={r.displayName}
-                    src={r.profilePicture ?? undefined}
-                    size="2xs"
-                    borderWidth="2px"
-                    borderColor="bg"
-                  />
-                </Box>
-              </Tooltip>
-            ))}
-          </HStack>
-        </HStack>
-      );
-    },
-    meta: {width: '180px'},
+    cell: ({row}) => (
+      <BandApplicationRating
+        applicationId={row.original.id}
+        myRating={row.original.myRating}
+        averageRating={row.original.averageRating}
+        raters={row.original.raters}
+        size="md"
+      />
+    ),
+    meta: {width: '260px'},
   }),
   col.accessor('tags', {
     header: ({column}) => <TagFilterHeader column={column} />,

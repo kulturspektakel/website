@@ -161,7 +161,7 @@ const saveProducts = createServerFn()
     }),
   )
   .handler(async ({data, context}) => {
-    const lastUpdatedBy = context.user?.id ?? null;
+    const lastUpdatedBy = context.viewer?.id ?? null;
     const existing = await prismaClient.product.findMany({
       where: {productListId: data.productListId},
       select: {id: true},

@@ -18,7 +18,6 @@ import {
   HStack,
   Link,
   Portal,
-  RatingGroup,
   SimpleGrid,
   Span,
   Stack,
@@ -38,6 +37,7 @@ import {
 import {prismaClient} from '../server/prismaClient.server';
 import {Avatar} from '../components/chakra-snippets/avatar';
 import {BandName} from '../components/booking/BandName';
+import {BandApplicationRating} from '../components/booking/BandApplicationRating';
 import {Checkbox} from '../components/chakra-snippets/checkbox';
 import {Tag} from '../components/chakra-snippets/tag';
 import {Tooltip} from '../components/chakra-snippets/tooltip';
@@ -64,7 +64,7 @@ const KULT = {latitude: 48.078143, longitude: 11.375518};
 const loadBandApplicationDetail = createServerFn()
   .middleware([crewAuth])
   .inputValidator((applicationId: string) => applicationId)
-  .handler(async ({data: id}) => {
+  .handler(async ({data: id, context}) => {
     const a = await prismaClient.bandApplication.findUnique({
       where: {id},
       select: {
@@ -122,7 +122,14 @@ const loadBandApplicationDetail = createServerFn()
     if (!a) {
       throw notFound();
     }
-    return {...a, apiKey: process.env.GOOGLE_MAPS_API_KEY};
+    const myViewerId = context.viewer?.id ?? null;
+    return {
+      ...a,
+      myRating:
+        a.bandApplicationRating.find((r) => r.viewer.id === myViewerId)
+          ?.rating ?? 0,
+      apiKey: process.env.GOOGLE_MAPS_API_KEY,
+    };
   });
 
 type DetailData = Awaited<ReturnType<typeof loadBandApplicationDetail>>;
@@ -148,14 +155,6 @@ const PREVIOUSLY_PLAYED_LABELS: Record<PreviouslyPlayed, string> = {
   [PreviouslyPlayed.OtherFormation]: 'In einer anderen Band',
   [PreviouslyPlayed.No]: 'Nein',
 };
-
-// Per-star tooltip labels for the 1–4 rating.
-const RATING_LABELS = [
-  'auf keinen Fall',
-  'eher nicht',
-  'eher schon',
-  'auf jeden Fall',
-];
 
 const REPERTOIRE_LABELS: Record<BandRepertoire, string> = {
   [BandRepertoire.ExclusivelyOwnSongs]: 'Nur eigene Songs',
@@ -352,8 +351,6 @@ function LeftColumn({
 // ---------------------------------------------------------------------------
 
 function RightColumn({data}: {data: DetailData}) {
-  // Viewer's own star rating — local only for now (no mutation).
-  const [myRating, setMyRating] = useState(0);
   const ratings = data.bandApplicationRating;
   const averageRating =
     ratings.length === 0
@@ -408,66 +405,18 @@ function RightColumn({data}: {data: DetailData}) {
       )}
 
       <Section title="Bewertung">
-        <HStack align="center" gap="4">
-          {/* Left: viewer's own rating (1–4 stars). Local state only for now. */}
-          <RatingGroup.Root
-            count={4}
-            size="lg"
-            colorPalette="blue"
-            value={myRating}
-            onValueChange={(e) => setMyRating(e.value)}
-          >
-            <RatingGroup.HiddenInput />
-            <RatingGroup.Control>
-              {RATING_LABELS.map((label, i) => (
-                <Tooltip
-                  key={i}
-                  content={label}
-                  positioning={{placement: 'top'}}
-                >
-                  <RatingGroup.Item index={i + 1}>
-                    <RatingGroup.ItemIndicator />
-                  </RatingGroup.Item>
-                </Tooltip>
-              ))}
-            </RatingGroup.Control>
-          </RatingGroup.Root>
-          {/* Right: aggregate average + rater avatars. */}
-          {averageRating == null ? (
-            <Text color="fg.muted">Noch keine Bewertungen</Text>
-          ) : (
-            <HStack gap="2">
-              <Text fontSize="lg" fontWeight="bold" color="blue.solid">
-                {averageRating.toFixed(1)}
-              </Text>
-              <HStack gap="0">
-                {ratings.map((r, i) => (
-                  <Tooltip
-                    key={r.viewer.id}
-                    content={`${r.viewer.displayName}: ${'★'.repeat(
-                      r.rating,
-                    )}${'☆'.repeat(Math.max(0, 4 - r.rating))}`}
-                    positioning={{placement: 'top'}}
-                  >
-                    <Box
-                      as="span"
-                      display="inline-flex"
-                      ml={i === 0 ? '0' : '-1.5'}
-                    >
-                      <Avatar
-                        name={r.viewer.displayName}
-                        src={r.viewer.profilePicture ?? undefined}
-                        size="2xs"
-                        borderWidth="2px"
-                        borderColor="bg"
-                      />
-                    </Box>
-                  </Tooltip>
-                ))}
-              </HStack>
-            </HStack>
-          )}
-        </HStack>
+        <BandApplicationRating
+          applicationId={data.id}
+          myRating={data.myRating}
+          averageRating={averageRating}
+          raters={ratings.map((r) => ({
+            id: r.viewer.id,
+            displayName: r.viewer.displayName,
+            profilePicture: r.viewer.profilePicture,
+            rating: r.rating,
+          }))}
+          size="lg"
+        />
       </Section>
 
       <Section title="Tags">

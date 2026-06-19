@@ -202,6 +202,7 @@ export type ViewerWhereInput = {
   Nonce?: Prisma.NonceListRelationFilter
   NonceRequest?: Prisma.NonceRequestListRelationFilter
   ViewerLocation?: Prisma.ViewerLocationListRelationFilter
+  ProductList?: Prisma.ProductListListRelationFilter
 }
 
 export type ViewerOrderByWithRelationInput = {
@@ -220,6 +221,7 @@ export type ViewerOrderByWithRelationInput = {
   Nonce?: Prisma.NonceOrderByRelationAggregateInput
   NonceRequest?: Prisma.NonceRequestOrderByRelationAggregateInput
   ViewerLocation?: Prisma.ViewerLocationOrderByRelationAggregateInput
+  ProductList?: Prisma.ProductListOrderByRelationAggregateInput
   _relevance?: Prisma.ViewerOrderByRelevanceInput
 }
 
@@ -242,6 +244,7 @@ export type ViewerWhereUniqueInput = Prisma.AtLeast<{
   Nonce?: Prisma.NonceListRelationFilter
   NonceRequest?: Prisma.NonceRequestListRelationFilter
   ViewerLocation?: Prisma.ViewerLocationListRelationFilter
+  ProductList?: Prisma.ProductListListRelationFilter
 }, "id">
 
 export type ViewerOrderByWithAggregationInput = {
@@ -286,6 +289,7 @@ export type ViewerCreateInput = {
   Nonce?: Prisma.NonceCreateNestedManyWithoutCreatedForInput
   NonceRequest?: Prisma.NonceRequestCreateNestedManyWithoutCreatedForInput
   ViewerLocation?: Prisma.ViewerLocationCreateNestedManyWithoutViewerInput
+  ProductList?: Prisma.ProductListCreateNestedManyWithoutLastUpdatedByViewerInput
 }
 
 export type ViewerUncheckedCreateInput = {
@@ -304,6 +308,7 @@ export type ViewerUncheckedCreateInput = {
   Nonce?: Prisma.NonceUncheckedCreateNestedManyWithoutCreatedForInput
   NonceRequest?: Prisma.NonceRequestUncheckedCreateNestedManyWithoutCreatedForInput
   ViewerLocation?: Prisma.ViewerLocationUncheckedCreateNestedManyWithoutViewerInput
+  ProductList?: Prisma.ProductListUncheckedCreateNestedManyWithoutLastUpdatedByViewerInput
 }
 
 export type ViewerUpdateInput = {
@@ -322,6 +327,7 @@ export type ViewerUpdateInput = {
   Nonce?: Prisma.NonceUpdateManyWithoutCreatedForNestedInput
   NonceRequest?: Prisma.NonceRequestUpdateManyWithoutCreatedForNestedInput
   ViewerLocation?: Prisma.ViewerLocationUpdateManyWithoutViewerNestedInput
+  ProductList?: Prisma.ProductListUpdateManyWithoutLastUpdatedByViewerNestedInput
 }
 
 export type ViewerUncheckedUpdateInput = {
@@ -340,6 +346,7 @@ export type ViewerUncheckedUpdateInput = {
   Nonce?: Prisma.NonceUncheckedUpdateManyWithoutCreatedForNestedInput
   NonceRequest?: Prisma.NonceRequestUncheckedUpdateManyWithoutCreatedForNestedInput
   ViewerLocation?: Prisma.ViewerLocationUncheckedUpdateManyWithoutViewerNestedInput
+  ProductList?: Prisma.ProductListUncheckedUpdateManyWithoutLastUpdatedByViewerNestedInput
 }
 
 export type ViewerCreateManyInput = {
@@ -443,6 +450,22 @@ export type ViewerUpdateslackScopesInput = {
 
 export type DateTimeFieldUpdateOperationsInput = {
   set?: Date | string
+}
+
+export type ViewerCreateNestedOneWithoutProductListInput = {
+  create?: Prisma.XOR<Prisma.ViewerCreateWithoutProductListInput, Prisma.ViewerUncheckedCreateWithoutProductListInput>
+  connectOrCreate?: Prisma.ViewerCreateOrConnectWithoutProductListInput
+  connect?: Prisma.ViewerWhereUniqueInput
+}
+
+export type ViewerUpdateOneWithoutProductListNestedInput = {
+  create?: Prisma.XOR<Prisma.ViewerCreateWithoutProductListInput, Prisma.ViewerUncheckedCreateWithoutProductListInput>
+  connectOrCreate?: Prisma.ViewerCreateOrConnectWithoutProductListInput
+  upsert?: Prisma.ViewerUpsertWithoutProductListInput
+  disconnect?: Prisma.ViewerWhereInput | boolean
+  delete?: Prisma.ViewerWhereInput | boolean
+  connect?: Prisma.ViewerWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ViewerUpdateToOneWithWhereWithoutProductListInput, Prisma.ViewerUpdateWithoutProductListInput>, Prisma.ViewerUncheckedUpdateWithoutProductListInput>
 }
 
 export type ViewerCreateNestedOneWithoutCrewCardInput = {
@@ -565,6 +588,94 @@ export type ViewerUpdateOneRequiredWithoutViewerLocationNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.ViewerUpdateToOneWithWhereWithoutViewerLocationInput, Prisma.ViewerUpdateWithoutViewerLocationInput>, Prisma.ViewerUncheckedUpdateWithoutViewerLocationInput>
 }
 
+export type ViewerCreateWithoutProductListInput = {
+  id?: string
+  displayName: string
+  email: string
+  profilePicture?: string | null
+  slackToken?: string | null
+  slackScopes?: Prisma.ViewerCreateslackScopesInput | string[]
+  updatedAt?: Date | string
+  BandApplication?: Prisma.BandApplicationCreateNestedManyWithoutContactedByViewerInput
+  BandApplicationComment?: Prisma.BandApplicationCommentCreateNestedManyWithoutViewerInput
+  BandApplicationRating?: Prisma.BandApplicationRatingCreateNestedManyWithoutViewerInput
+  BandApplicationTag?: Prisma.BandApplicationTagCreateNestedManyWithoutCreatedByViewerInput
+  CrewCard?: Prisma.CrewCardCreateNestedManyWithoutViewerInput
+  Nonce?: Prisma.NonceCreateNestedManyWithoutCreatedForInput
+  NonceRequest?: Prisma.NonceRequestCreateNestedManyWithoutCreatedForInput
+  ViewerLocation?: Prisma.ViewerLocationCreateNestedManyWithoutViewerInput
+}
+
+export type ViewerUncheckedCreateWithoutProductListInput = {
+  id?: string
+  displayName: string
+  email: string
+  profilePicture?: string | null
+  slackToken?: string | null
+  slackScopes?: Prisma.ViewerCreateslackScopesInput | string[]
+  updatedAt?: Date | string
+  BandApplication?: Prisma.BandApplicationUncheckedCreateNestedManyWithoutContactedByViewerInput
+  BandApplicationComment?: Prisma.BandApplicationCommentUncheckedCreateNestedManyWithoutViewerInput
+  BandApplicationRating?: Prisma.BandApplicationRatingUncheckedCreateNestedManyWithoutViewerInput
+  BandApplicationTag?: Prisma.BandApplicationTagUncheckedCreateNestedManyWithoutCreatedByViewerInput
+  CrewCard?: Prisma.CrewCardUncheckedCreateNestedManyWithoutViewerInput
+  Nonce?: Prisma.NonceUncheckedCreateNestedManyWithoutCreatedForInput
+  NonceRequest?: Prisma.NonceRequestUncheckedCreateNestedManyWithoutCreatedForInput
+  ViewerLocation?: Prisma.ViewerLocationUncheckedCreateNestedManyWithoutViewerInput
+}
+
+export type ViewerCreateOrConnectWithoutProductListInput = {
+  where: Prisma.ViewerWhereUniqueInput
+  create: Prisma.XOR<Prisma.ViewerCreateWithoutProductListInput, Prisma.ViewerUncheckedCreateWithoutProductListInput>
+}
+
+export type ViewerUpsertWithoutProductListInput = {
+  update: Prisma.XOR<Prisma.ViewerUpdateWithoutProductListInput, Prisma.ViewerUncheckedUpdateWithoutProductListInput>
+  create: Prisma.XOR<Prisma.ViewerCreateWithoutProductListInput, Prisma.ViewerUncheckedCreateWithoutProductListInput>
+  where?: Prisma.ViewerWhereInput
+}
+
+export type ViewerUpdateToOneWithWhereWithoutProductListInput = {
+  where?: Prisma.ViewerWhereInput
+  data: Prisma.XOR<Prisma.ViewerUpdateWithoutProductListInput, Prisma.ViewerUncheckedUpdateWithoutProductListInput>
+}
+
+export type ViewerUpdateWithoutProductListInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  displayName?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  slackToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  slackScopes?: Prisma.ViewerUpdateslackScopesInput | string[]
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  BandApplication?: Prisma.BandApplicationUpdateManyWithoutContactedByViewerNestedInput
+  BandApplicationComment?: Prisma.BandApplicationCommentUpdateManyWithoutViewerNestedInput
+  BandApplicationRating?: Prisma.BandApplicationRatingUpdateManyWithoutViewerNestedInput
+  BandApplicationTag?: Prisma.BandApplicationTagUpdateManyWithoutCreatedByViewerNestedInput
+  CrewCard?: Prisma.CrewCardUpdateManyWithoutViewerNestedInput
+  Nonce?: Prisma.NonceUpdateManyWithoutCreatedForNestedInput
+  NonceRequest?: Prisma.NonceRequestUpdateManyWithoutCreatedForNestedInput
+  ViewerLocation?: Prisma.ViewerLocationUpdateManyWithoutViewerNestedInput
+}
+
+export type ViewerUncheckedUpdateWithoutProductListInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  displayName?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  slackToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  slackScopes?: Prisma.ViewerUpdateslackScopesInput | string[]
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  BandApplication?: Prisma.BandApplicationUncheckedUpdateManyWithoutContactedByViewerNestedInput
+  BandApplicationComment?: Prisma.BandApplicationCommentUncheckedUpdateManyWithoutViewerNestedInput
+  BandApplicationRating?: Prisma.BandApplicationRatingUncheckedUpdateManyWithoutViewerNestedInput
+  BandApplicationTag?: Prisma.BandApplicationTagUncheckedUpdateManyWithoutCreatedByViewerNestedInput
+  CrewCard?: Prisma.CrewCardUncheckedUpdateManyWithoutViewerNestedInput
+  Nonce?: Prisma.NonceUncheckedUpdateManyWithoutCreatedForNestedInput
+  NonceRequest?: Prisma.NonceRequestUncheckedUpdateManyWithoutCreatedForNestedInput
+  ViewerLocation?: Prisma.ViewerLocationUncheckedUpdateManyWithoutViewerNestedInput
+}
+
 export type ViewerCreateWithoutCrewCardInput = {
   id?: string
   displayName: string
@@ -580,6 +691,7 @@ export type ViewerCreateWithoutCrewCardInput = {
   Nonce?: Prisma.NonceCreateNestedManyWithoutCreatedForInput
   NonceRequest?: Prisma.NonceRequestCreateNestedManyWithoutCreatedForInput
   ViewerLocation?: Prisma.ViewerLocationCreateNestedManyWithoutViewerInput
+  ProductList?: Prisma.ProductListCreateNestedManyWithoutLastUpdatedByViewerInput
 }
 
 export type ViewerUncheckedCreateWithoutCrewCardInput = {
@@ -597,6 +709,7 @@ export type ViewerUncheckedCreateWithoutCrewCardInput = {
   Nonce?: Prisma.NonceUncheckedCreateNestedManyWithoutCreatedForInput
   NonceRequest?: Prisma.NonceRequestUncheckedCreateNestedManyWithoutCreatedForInput
   ViewerLocation?: Prisma.ViewerLocationUncheckedCreateNestedManyWithoutViewerInput
+  ProductList?: Prisma.ProductListUncheckedCreateNestedManyWithoutLastUpdatedByViewerInput
 }
 
 export type ViewerCreateOrConnectWithoutCrewCardInput = {
@@ -630,6 +743,7 @@ export type ViewerUpdateWithoutCrewCardInput = {
   Nonce?: Prisma.NonceUpdateManyWithoutCreatedForNestedInput
   NonceRequest?: Prisma.NonceRequestUpdateManyWithoutCreatedForNestedInput
   ViewerLocation?: Prisma.ViewerLocationUpdateManyWithoutViewerNestedInput
+  ProductList?: Prisma.ProductListUpdateManyWithoutLastUpdatedByViewerNestedInput
 }
 
 export type ViewerUncheckedUpdateWithoutCrewCardInput = {
@@ -647,6 +761,7 @@ export type ViewerUncheckedUpdateWithoutCrewCardInput = {
   Nonce?: Prisma.NonceUncheckedUpdateManyWithoutCreatedForNestedInput
   NonceRequest?: Prisma.NonceRequestUncheckedUpdateManyWithoutCreatedForNestedInput
   ViewerLocation?: Prisma.ViewerLocationUncheckedUpdateManyWithoutViewerNestedInput
+  ProductList?: Prisma.ProductListUncheckedUpdateManyWithoutLastUpdatedByViewerNestedInput
 }
 
 export type ViewerCreateWithoutBandApplicationInput = {
@@ -664,6 +779,7 @@ export type ViewerCreateWithoutBandApplicationInput = {
   Nonce?: Prisma.NonceCreateNestedManyWithoutCreatedForInput
   NonceRequest?: Prisma.NonceRequestCreateNestedManyWithoutCreatedForInput
   ViewerLocation?: Prisma.ViewerLocationCreateNestedManyWithoutViewerInput
+  ProductList?: Prisma.ProductListCreateNestedManyWithoutLastUpdatedByViewerInput
 }
 
 export type ViewerUncheckedCreateWithoutBandApplicationInput = {
@@ -681,6 +797,7 @@ export type ViewerUncheckedCreateWithoutBandApplicationInput = {
   Nonce?: Prisma.NonceUncheckedCreateNestedManyWithoutCreatedForInput
   NonceRequest?: Prisma.NonceRequestUncheckedCreateNestedManyWithoutCreatedForInput
   ViewerLocation?: Prisma.ViewerLocationUncheckedCreateNestedManyWithoutViewerInput
+  ProductList?: Prisma.ProductListUncheckedCreateNestedManyWithoutLastUpdatedByViewerInput
 }
 
 export type ViewerCreateOrConnectWithoutBandApplicationInput = {
@@ -714,6 +831,7 @@ export type ViewerUpdateWithoutBandApplicationInput = {
   Nonce?: Prisma.NonceUpdateManyWithoutCreatedForNestedInput
   NonceRequest?: Prisma.NonceRequestUpdateManyWithoutCreatedForNestedInput
   ViewerLocation?: Prisma.ViewerLocationUpdateManyWithoutViewerNestedInput
+  ProductList?: Prisma.ProductListUpdateManyWithoutLastUpdatedByViewerNestedInput
 }
 
 export type ViewerUncheckedUpdateWithoutBandApplicationInput = {
@@ -731,6 +849,7 @@ export type ViewerUncheckedUpdateWithoutBandApplicationInput = {
   Nonce?: Prisma.NonceUncheckedUpdateManyWithoutCreatedForNestedInput
   NonceRequest?: Prisma.NonceRequestUncheckedUpdateManyWithoutCreatedForNestedInput
   ViewerLocation?: Prisma.ViewerLocationUncheckedUpdateManyWithoutViewerNestedInput
+  ProductList?: Prisma.ProductListUncheckedUpdateManyWithoutLastUpdatedByViewerNestedInput
 }
 
 export type ViewerCreateWithoutBandApplicationTagInput = {
@@ -748,6 +867,7 @@ export type ViewerCreateWithoutBandApplicationTagInput = {
   Nonce?: Prisma.NonceCreateNestedManyWithoutCreatedForInput
   NonceRequest?: Prisma.NonceRequestCreateNestedManyWithoutCreatedForInput
   ViewerLocation?: Prisma.ViewerLocationCreateNestedManyWithoutViewerInput
+  ProductList?: Prisma.ProductListCreateNestedManyWithoutLastUpdatedByViewerInput
 }
 
 export type ViewerUncheckedCreateWithoutBandApplicationTagInput = {
@@ -765,6 +885,7 @@ export type ViewerUncheckedCreateWithoutBandApplicationTagInput = {
   Nonce?: Prisma.NonceUncheckedCreateNestedManyWithoutCreatedForInput
   NonceRequest?: Prisma.NonceRequestUncheckedCreateNestedManyWithoutCreatedForInput
   ViewerLocation?: Prisma.ViewerLocationUncheckedCreateNestedManyWithoutViewerInput
+  ProductList?: Prisma.ProductListUncheckedCreateNestedManyWithoutLastUpdatedByViewerInput
 }
 
 export type ViewerCreateOrConnectWithoutBandApplicationTagInput = {
@@ -798,6 +919,7 @@ export type ViewerUpdateWithoutBandApplicationTagInput = {
   Nonce?: Prisma.NonceUpdateManyWithoutCreatedForNestedInput
   NonceRequest?: Prisma.NonceRequestUpdateManyWithoutCreatedForNestedInput
   ViewerLocation?: Prisma.ViewerLocationUpdateManyWithoutViewerNestedInput
+  ProductList?: Prisma.ProductListUpdateManyWithoutLastUpdatedByViewerNestedInput
 }
 
 export type ViewerUncheckedUpdateWithoutBandApplicationTagInput = {
@@ -815,6 +937,7 @@ export type ViewerUncheckedUpdateWithoutBandApplicationTagInput = {
   Nonce?: Prisma.NonceUncheckedUpdateManyWithoutCreatedForNestedInput
   NonceRequest?: Prisma.NonceRequestUncheckedUpdateManyWithoutCreatedForNestedInput
   ViewerLocation?: Prisma.ViewerLocationUncheckedUpdateManyWithoutViewerNestedInput
+  ProductList?: Prisma.ProductListUncheckedUpdateManyWithoutLastUpdatedByViewerNestedInput
 }
 
 export type ViewerCreateWithoutBandApplicationRatingInput = {
@@ -832,6 +955,7 @@ export type ViewerCreateWithoutBandApplicationRatingInput = {
   Nonce?: Prisma.NonceCreateNestedManyWithoutCreatedForInput
   NonceRequest?: Prisma.NonceRequestCreateNestedManyWithoutCreatedForInput
   ViewerLocation?: Prisma.ViewerLocationCreateNestedManyWithoutViewerInput
+  ProductList?: Prisma.ProductListCreateNestedManyWithoutLastUpdatedByViewerInput
 }
 
 export type ViewerUncheckedCreateWithoutBandApplicationRatingInput = {
@@ -849,6 +973,7 @@ export type ViewerUncheckedCreateWithoutBandApplicationRatingInput = {
   Nonce?: Prisma.NonceUncheckedCreateNestedManyWithoutCreatedForInput
   NonceRequest?: Prisma.NonceRequestUncheckedCreateNestedManyWithoutCreatedForInput
   ViewerLocation?: Prisma.ViewerLocationUncheckedCreateNestedManyWithoutViewerInput
+  ProductList?: Prisma.ProductListUncheckedCreateNestedManyWithoutLastUpdatedByViewerInput
 }
 
 export type ViewerCreateOrConnectWithoutBandApplicationRatingInput = {
@@ -882,6 +1007,7 @@ export type ViewerUpdateWithoutBandApplicationRatingInput = {
   Nonce?: Prisma.NonceUpdateManyWithoutCreatedForNestedInput
   NonceRequest?: Prisma.NonceRequestUpdateManyWithoutCreatedForNestedInput
   ViewerLocation?: Prisma.ViewerLocationUpdateManyWithoutViewerNestedInput
+  ProductList?: Prisma.ProductListUpdateManyWithoutLastUpdatedByViewerNestedInput
 }
 
 export type ViewerUncheckedUpdateWithoutBandApplicationRatingInput = {
@@ -899,6 +1025,7 @@ export type ViewerUncheckedUpdateWithoutBandApplicationRatingInput = {
   Nonce?: Prisma.NonceUncheckedUpdateManyWithoutCreatedForNestedInput
   NonceRequest?: Prisma.NonceRequestUncheckedUpdateManyWithoutCreatedForNestedInput
   ViewerLocation?: Prisma.ViewerLocationUncheckedUpdateManyWithoutViewerNestedInput
+  ProductList?: Prisma.ProductListUncheckedUpdateManyWithoutLastUpdatedByViewerNestedInput
 }
 
 export type ViewerCreateWithoutBandApplicationCommentInput = {
@@ -916,6 +1043,7 @@ export type ViewerCreateWithoutBandApplicationCommentInput = {
   Nonce?: Prisma.NonceCreateNestedManyWithoutCreatedForInput
   NonceRequest?: Prisma.NonceRequestCreateNestedManyWithoutCreatedForInput
   ViewerLocation?: Prisma.ViewerLocationCreateNestedManyWithoutViewerInput
+  ProductList?: Prisma.ProductListCreateNestedManyWithoutLastUpdatedByViewerInput
 }
 
 export type ViewerUncheckedCreateWithoutBandApplicationCommentInput = {
@@ -933,6 +1061,7 @@ export type ViewerUncheckedCreateWithoutBandApplicationCommentInput = {
   Nonce?: Prisma.NonceUncheckedCreateNestedManyWithoutCreatedForInput
   NonceRequest?: Prisma.NonceRequestUncheckedCreateNestedManyWithoutCreatedForInput
   ViewerLocation?: Prisma.ViewerLocationUncheckedCreateNestedManyWithoutViewerInput
+  ProductList?: Prisma.ProductListUncheckedCreateNestedManyWithoutLastUpdatedByViewerInput
 }
 
 export type ViewerCreateOrConnectWithoutBandApplicationCommentInput = {
@@ -966,6 +1095,7 @@ export type ViewerUpdateWithoutBandApplicationCommentInput = {
   Nonce?: Prisma.NonceUpdateManyWithoutCreatedForNestedInput
   NonceRequest?: Prisma.NonceRequestUpdateManyWithoutCreatedForNestedInput
   ViewerLocation?: Prisma.ViewerLocationUpdateManyWithoutViewerNestedInput
+  ProductList?: Prisma.ProductListUpdateManyWithoutLastUpdatedByViewerNestedInput
 }
 
 export type ViewerUncheckedUpdateWithoutBandApplicationCommentInput = {
@@ -983,6 +1113,7 @@ export type ViewerUncheckedUpdateWithoutBandApplicationCommentInput = {
   Nonce?: Prisma.NonceUncheckedUpdateManyWithoutCreatedForNestedInput
   NonceRequest?: Prisma.NonceRequestUncheckedUpdateManyWithoutCreatedForNestedInput
   ViewerLocation?: Prisma.ViewerLocationUncheckedUpdateManyWithoutViewerNestedInput
+  ProductList?: Prisma.ProductListUncheckedUpdateManyWithoutLastUpdatedByViewerNestedInput
 }
 
 export type ViewerCreateWithoutNonceInput = {
@@ -1000,6 +1131,7 @@ export type ViewerCreateWithoutNonceInput = {
   CrewCard?: Prisma.CrewCardCreateNestedManyWithoutViewerInput
   NonceRequest?: Prisma.NonceRequestCreateNestedManyWithoutCreatedForInput
   ViewerLocation?: Prisma.ViewerLocationCreateNestedManyWithoutViewerInput
+  ProductList?: Prisma.ProductListCreateNestedManyWithoutLastUpdatedByViewerInput
 }
 
 export type ViewerUncheckedCreateWithoutNonceInput = {
@@ -1017,6 +1149,7 @@ export type ViewerUncheckedCreateWithoutNonceInput = {
   CrewCard?: Prisma.CrewCardUncheckedCreateNestedManyWithoutViewerInput
   NonceRequest?: Prisma.NonceRequestUncheckedCreateNestedManyWithoutCreatedForInput
   ViewerLocation?: Prisma.ViewerLocationUncheckedCreateNestedManyWithoutViewerInput
+  ProductList?: Prisma.ProductListUncheckedCreateNestedManyWithoutLastUpdatedByViewerInput
 }
 
 export type ViewerCreateOrConnectWithoutNonceInput = {
@@ -1050,6 +1183,7 @@ export type ViewerUpdateWithoutNonceInput = {
   CrewCard?: Prisma.CrewCardUpdateManyWithoutViewerNestedInput
   NonceRequest?: Prisma.NonceRequestUpdateManyWithoutCreatedForNestedInput
   ViewerLocation?: Prisma.ViewerLocationUpdateManyWithoutViewerNestedInput
+  ProductList?: Prisma.ProductListUpdateManyWithoutLastUpdatedByViewerNestedInput
 }
 
 export type ViewerUncheckedUpdateWithoutNonceInput = {
@@ -1067,6 +1201,7 @@ export type ViewerUncheckedUpdateWithoutNonceInput = {
   CrewCard?: Prisma.CrewCardUncheckedUpdateManyWithoutViewerNestedInput
   NonceRequest?: Prisma.NonceRequestUncheckedUpdateManyWithoutCreatedForNestedInput
   ViewerLocation?: Prisma.ViewerLocationUncheckedUpdateManyWithoutViewerNestedInput
+  ProductList?: Prisma.ProductListUncheckedUpdateManyWithoutLastUpdatedByViewerNestedInput
 }
 
 export type ViewerCreateWithoutNonceRequestInput = {
@@ -1084,6 +1219,7 @@ export type ViewerCreateWithoutNonceRequestInput = {
   CrewCard?: Prisma.CrewCardCreateNestedManyWithoutViewerInput
   Nonce?: Prisma.NonceCreateNestedManyWithoutCreatedForInput
   ViewerLocation?: Prisma.ViewerLocationCreateNestedManyWithoutViewerInput
+  ProductList?: Prisma.ProductListCreateNestedManyWithoutLastUpdatedByViewerInput
 }
 
 export type ViewerUncheckedCreateWithoutNonceRequestInput = {
@@ -1101,6 +1237,7 @@ export type ViewerUncheckedCreateWithoutNonceRequestInput = {
   CrewCard?: Prisma.CrewCardUncheckedCreateNestedManyWithoutViewerInput
   Nonce?: Prisma.NonceUncheckedCreateNestedManyWithoutCreatedForInput
   ViewerLocation?: Prisma.ViewerLocationUncheckedCreateNestedManyWithoutViewerInput
+  ProductList?: Prisma.ProductListUncheckedCreateNestedManyWithoutLastUpdatedByViewerInput
 }
 
 export type ViewerCreateOrConnectWithoutNonceRequestInput = {
@@ -1134,6 +1271,7 @@ export type ViewerUpdateWithoutNonceRequestInput = {
   CrewCard?: Prisma.CrewCardUpdateManyWithoutViewerNestedInput
   Nonce?: Prisma.NonceUpdateManyWithoutCreatedForNestedInput
   ViewerLocation?: Prisma.ViewerLocationUpdateManyWithoutViewerNestedInput
+  ProductList?: Prisma.ProductListUpdateManyWithoutLastUpdatedByViewerNestedInput
 }
 
 export type ViewerUncheckedUpdateWithoutNonceRequestInput = {
@@ -1151,6 +1289,7 @@ export type ViewerUncheckedUpdateWithoutNonceRequestInput = {
   CrewCard?: Prisma.CrewCardUncheckedUpdateManyWithoutViewerNestedInput
   Nonce?: Prisma.NonceUncheckedUpdateManyWithoutCreatedForNestedInput
   ViewerLocation?: Prisma.ViewerLocationUncheckedUpdateManyWithoutViewerNestedInput
+  ProductList?: Prisma.ProductListUncheckedUpdateManyWithoutLastUpdatedByViewerNestedInput
 }
 
 export type ViewerCreateWithoutViewerLocationInput = {
@@ -1168,6 +1307,7 @@ export type ViewerCreateWithoutViewerLocationInput = {
   CrewCard?: Prisma.CrewCardCreateNestedManyWithoutViewerInput
   Nonce?: Prisma.NonceCreateNestedManyWithoutCreatedForInput
   NonceRequest?: Prisma.NonceRequestCreateNestedManyWithoutCreatedForInput
+  ProductList?: Prisma.ProductListCreateNestedManyWithoutLastUpdatedByViewerInput
 }
 
 export type ViewerUncheckedCreateWithoutViewerLocationInput = {
@@ -1185,6 +1325,7 @@ export type ViewerUncheckedCreateWithoutViewerLocationInput = {
   CrewCard?: Prisma.CrewCardUncheckedCreateNestedManyWithoutViewerInput
   Nonce?: Prisma.NonceUncheckedCreateNestedManyWithoutCreatedForInput
   NonceRequest?: Prisma.NonceRequestUncheckedCreateNestedManyWithoutCreatedForInput
+  ProductList?: Prisma.ProductListUncheckedCreateNestedManyWithoutLastUpdatedByViewerInput
 }
 
 export type ViewerCreateOrConnectWithoutViewerLocationInput = {
@@ -1218,6 +1359,7 @@ export type ViewerUpdateWithoutViewerLocationInput = {
   CrewCard?: Prisma.CrewCardUpdateManyWithoutViewerNestedInput
   Nonce?: Prisma.NonceUpdateManyWithoutCreatedForNestedInput
   NonceRequest?: Prisma.NonceRequestUpdateManyWithoutCreatedForNestedInput
+  ProductList?: Prisma.ProductListUpdateManyWithoutLastUpdatedByViewerNestedInput
 }
 
 export type ViewerUncheckedUpdateWithoutViewerLocationInput = {
@@ -1235,6 +1377,7 @@ export type ViewerUncheckedUpdateWithoutViewerLocationInput = {
   CrewCard?: Prisma.CrewCardUncheckedUpdateManyWithoutViewerNestedInput
   Nonce?: Prisma.NonceUncheckedUpdateManyWithoutCreatedForNestedInput
   NonceRequest?: Prisma.NonceRequestUncheckedUpdateManyWithoutCreatedForNestedInput
+  ProductList?: Prisma.ProductListUncheckedUpdateManyWithoutLastUpdatedByViewerNestedInput
 }
 
 
@@ -1251,6 +1394,7 @@ export type ViewerCountOutputType = {
   Nonce: number
   NonceRequest: number
   ViewerLocation: number
+  ProductList: number
 }
 
 export type ViewerCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1262,6 +1406,7 @@ export type ViewerCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions
   Nonce?: boolean | ViewerCountOutputTypeCountNonceArgs
   NonceRequest?: boolean | ViewerCountOutputTypeCountNonceRequestArgs
   ViewerLocation?: boolean | ViewerCountOutputTypeCountViewerLocationArgs
+  ProductList?: boolean | ViewerCountOutputTypeCountProductListArgs
 }
 
 /**
@@ -1330,6 +1475,13 @@ export type ViewerCountOutputTypeCountViewerLocationArgs<ExtArgs extends runtime
   where?: Prisma.ViewerLocationWhereInput
 }
 
+/**
+ * ViewerCountOutputType without action
+ */
+export type ViewerCountOutputTypeCountProductListArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ProductListWhereInput
+}
+
 
 export type ViewerSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1347,6 +1499,7 @@ export type ViewerSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   Nonce?: boolean | Prisma.Viewer$NonceArgs<ExtArgs>
   NonceRequest?: boolean | Prisma.Viewer$NonceRequestArgs<ExtArgs>
   ViewerLocation?: boolean | Prisma.Viewer$ViewerLocationArgs<ExtArgs>
+  ProductList?: boolean | Prisma.Viewer$ProductListArgs<ExtArgs>
   _count?: boolean | Prisma.ViewerCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["viewer"]>
 
@@ -1390,6 +1543,7 @@ export type ViewerInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   Nonce?: boolean | Prisma.Viewer$NonceArgs<ExtArgs>
   NonceRequest?: boolean | Prisma.Viewer$NonceRequestArgs<ExtArgs>
   ViewerLocation?: boolean | Prisma.Viewer$ViewerLocationArgs<ExtArgs>
+  ProductList?: boolean | Prisma.Viewer$ProductListArgs<ExtArgs>
   _count?: boolean | Prisma.ViewerCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type ViewerIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -1406,6 +1560,7 @@ export type $ViewerPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
     Nonce: Prisma.$NoncePayload<ExtArgs>[]
     NonceRequest: Prisma.$NonceRequestPayload<ExtArgs>[]
     ViewerLocation: Prisma.$ViewerLocationPayload<ExtArgs>[]
+    ProductList: Prisma.$ProductListPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1817,6 +1972,7 @@ export interface Prisma__ViewerClient<T, Null = never, ExtArgs extends runtime.T
   Nonce<T extends Prisma.Viewer$NonceArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Viewer$NonceArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NoncePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   NonceRequest<T extends Prisma.Viewer$NonceRequestArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Viewer$NonceRequestArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NonceRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   ViewerLocation<T extends Prisma.Viewer$ViewerLocationArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Viewer$ViewerLocationArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ViewerLocationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  ProductList<T extends Prisma.Viewer$ProductListArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Viewer$ProductListArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ProductListPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2435,6 +2591,30 @@ export type Viewer$ViewerLocationArgs<ExtArgs extends runtime.Types.Extensions.I
   take?: number
   skip?: number
   distinct?: Prisma.ViewerLocationScalarFieldEnum | Prisma.ViewerLocationScalarFieldEnum[]
+}
+
+/**
+ * Viewer.ProductList
+ */
+export type Viewer$ProductListArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ProductList
+   */
+  select?: Prisma.ProductListSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ProductList
+   */
+  omit?: Prisma.ProductListOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ProductListInclude<ExtArgs> | null
+  where?: Prisma.ProductListWhereInput
+  orderBy?: Prisma.ProductListOrderByWithRelationInput | Prisma.ProductListOrderByWithRelationInput[]
+  cursor?: Prisma.ProductListWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ProductListScalarFieldEnum | Prisma.ProductListScalarFieldEnum[]
 }
 
 /**

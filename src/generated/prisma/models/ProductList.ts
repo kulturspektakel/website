@@ -230,11 +230,12 @@ export type ProductListWhereInput = {
   emoji?: Prisma.StringNullableFilter<"ProductList"> | string | null
   active?: Prisma.BoolFilter<"ProductList"> | boolean
   updatedAt?: Prisma.DateTimeNullableFilter<"ProductList"> | Date | string | null
-  lastUpdatedBy?: Prisma.UuidNullableFilter<"ProductList"> | string | null
+  lastUpdatedBy?: Prisma.StringNullableFilter<"ProductList"> | string | null
   description?: Prisma.StringNullableFilter<"ProductList"> | string | null
   Device?: Prisma.DeviceListRelationFilter
   OrderItem?: Prisma.OrderItemListRelationFilter
   product?: Prisma.ProductListRelationFilter
+  lastUpdatedByViewer?: Prisma.XOR<Prisma.ViewerNullableScalarRelationFilter, Prisma.ViewerWhereInput> | null
 }
 
 export type ProductListOrderByWithRelationInput = {
@@ -248,6 +249,7 @@ export type ProductListOrderByWithRelationInput = {
   Device?: Prisma.DeviceOrderByRelationAggregateInput
   OrderItem?: Prisma.OrderItemOrderByRelationAggregateInput
   product?: Prisma.ProductOrderByRelationAggregateInput
+  lastUpdatedByViewer?: Prisma.ViewerOrderByWithRelationInput
   _relevance?: Prisma.ProductListOrderByRelevanceInput
 }
 
@@ -260,11 +262,12 @@ export type ProductListWhereUniqueInput = Prisma.AtLeast<{
   emoji?: Prisma.StringNullableFilter<"ProductList"> | string | null
   active?: Prisma.BoolFilter<"ProductList"> | boolean
   updatedAt?: Prisma.DateTimeNullableFilter<"ProductList"> | Date | string | null
-  lastUpdatedBy?: Prisma.UuidNullableFilter<"ProductList"> | string | null
+  lastUpdatedBy?: Prisma.StringNullableFilter<"ProductList"> | string | null
   description?: Prisma.StringNullableFilter<"ProductList"> | string | null
   Device?: Prisma.DeviceListRelationFilter
   OrderItem?: Prisma.OrderItemListRelationFilter
   product?: Prisma.ProductListRelationFilter
+  lastUpdatedByViewer?: Prisma.XOR<Prisma.ViewerNullableScalarRelationFilter, Prisma.ViewerWhereInput> | null
 }, "id">
 
 export type ProductListOrderByWithAggregationInput = {
@@ -291,7 +294,7 @@ export type ProductListScalarWhereWithAggregatesInput = {
   emoji?: Prisma.StringNullableWithAggregatesFilter<"ProductList"> | string | null
   active?: Prisma.BoolWithAggregatesFilter<"ProductList"> | boolean
   updatedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"ProductList"> | Date | string | null
-  lastUpdatedBy?: Prisma.UuidNullableWithAggregatesFilter<"ProductList"> | string | null
+  lastUpdatedBy?: Prisma.StringNullableWithAggregatesFilter<"ProductList"> | string | null
   description?: Prisma.StringNullableWithAggregatesFilter<"ProductList"> | string | null
 }
 
@@ -300,11 +303,11 @@ export type ProductListCreateInput = {
   emoji?: string | null
   active?: boolean
   updatedAt?: Date | string | null
-  lastUpdatedBy?: string | null
   description?: string | null
   Device?: Prisma.DeviceCreateNestedManyWithoutProductListInput
   OrderItem?: Prisma.OrderItemCreateNestedManyWithoutProductListInput
   product?: Prisma.ProductCreateNestedManyWithoutProductListInput
+  lastUpdatedByViewer?: Prisma.ViewerCreateNestedOneWithoutProductListInput
 }
 
 export type ProductListUncheckedCreateInput = {
@@ -325,11 +328,11 @@ export type ProductListUpdateInput = {
   emoji?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  lastUpdatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   Device?: Prisma.DeviceUpdateManyWithoutProductListNestedInput
   OrderItem?: Prisma.OrderItemUpdateManyWithoutProductListNestedInput
   product?: Prisma.ProductUpdateManyWithoutProductListNestedInput
+  lastUpdatedByViewer?: Prisma.ViewerUpdateOneWithoutProductListNestedInput
 }
 
 export type ProductListUncheckedUpdateInput = {
@@ -360,7 +363,6 @@ export type ProductListUpdateManyMutationInput = {
   emoji?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  lastUpdatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
@@ -372,6 +374,16 @@ export type ProductListUncheckedUpdateManyInput = {
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastUpdatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+}
+
+export type ProductListListRelationFilter = {
+  every?: Prisma.ProductListWhereInput
+  some?: Prisma.ProductListWhereInput
+  none?: Prisma.ProductListWhereInput
+}
+
+export type ProductListOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
 }
 
 export type ProductListOrderByRelevanceInput = {
@@ -428,6 +440,48 @@ export type ProductListNullableScalarRelationFilter = {
   isNot?: Prisma.ProductListWhereInput | null
 }
 
+export type ProductListCreateNestedManyWithoutLastUpdatedByViewerInput = {
+  create?: Prisma.XOR<Prisma.ProductListCreateWithoutLastUpdatedByViewerInput, Prisma.ProductListUncheckedCreateWithoutLastUpdatedByViewerInput> | Prisma.ProductListCreateWithoutLastUpdatedByViewerInput[] | Prisma.ProductListUncheckedCreateWithoutLastUpdatedByViewerInput[]
+  connectOrCreate?: Prisma.ProductListCreateOrConnectWithoutLastUpdatedByViewerInput | Prisma.ProductListCreateOrConnectWithoutLastUpdatedByViewerInput[]
+  createMany?: Prisma.ProductListCreateManyLastUpdatedByViewerInputEnvelope
+  connect?: Prisma.ProductListWhereUniqueInput | Prisma.ProductListWhereUniqueInput[]
+}
+
+export type ProductListUncheckedCreateNestedManyWithoutLastUpdatedByViewerInput = {
+  create?: Prisma.XOR<Prisma.ProductListCreateWithoutLastUpdatedByViewerInput, Prisma.ProductListUncheckedCreateWithoutLastUpdatedByViewerInput> | Prisma.ProductListCreateWithoutLastUpdatedByViewerInput[] | Prisma.ProductListUncheckedCreateWithoutLastUpdatedByViewerInput[]
+  connectOrCreate?: Prisma.ProductListCreateOrConnectWithoutLastUpdatedByViewerInput | Prisma.ProductListCreateOrConnectWithoutLastUpdatedByViewerInput[]
+  createMany?: Prisma.ProductListCreateManyLastUpdatedByViewerInputEnvelope
+  connect?: Prisma.ProductListWhereUniqueInput | Prisma.ProductListWhereUniqueInput[]
+}
+
+export type ProductListUpdateManyWithoutLastUpdatedByViewerNestedInput = {
+  create?: Prisma.XOR<Prisma.ProductListCreateWithoutLastUpdatedByViewerInput, Prisma.ProductListUncheckedCreateWithoutLastUpdatedByViewerInput> | Prisma.ProductListCreateWithoutLastUpdatedByViewerInput[] | Prisma.ProductListUncheckedCreateWithoutLastUpdatedByViewerInput[]
+  connectOrCreate?: Prisma.ProductListCreateOrConnectWithoutLastUpdatedByViewerInput | Prisma.ProductListCreateOrConnectWithoutLastUpdatedByViewerInput[]
+  upsert?: Prisma.ProductListUpsertWithWhereUniqueWithoutLastUpdatedByViewerInput | Prisma.ProductListUpsertWithWhereUniqueWithoutLastUpdatedByViewerInput[]
+  createMany?: Prisma.ProductListCreateManyLastUpdatedByViewerInputEnvelope
+  set?: Prisma.ProductListWhereUniqueInput | Prisma.ProductListWhereUniqueInput[]
+  disconnect?: Prisma.ProductListWhereUniqueInput | Prisma.ProductListWhereUniqueInput[]
+  delete?: Prisma.ProductListWhereUniqueInput | Prisma.ProductListWhereUniqueInput[]
+  connect?: Prisma.ProductListWhereUniqueInput | Prisma.ProductListWhereUniqueInput[]
+  update?: Prisma.ProductListUpdateWithWhereUniqueWithoutLastUpdatedByViewerInput | Prisma.ProductListUpdateWithWhereUniqueWithoutLastUpdatedByViewerInput[]
+  updateMany?: Prisma.ProductListUpdateManyWithWhereWithoutLastUpdatedByViewerInput | Prisma.ProductListUpdateManyWithWhereWithoutLastUpdatedByViewerInput[]
+  deleteMany?: Prisma.ProductListScalarWhereInput | Prisma.ProductListScalarWhereInput[]
+}
+
+export type ProductListUncheckedUpdateManyWithoutLastUpdatedByViewerNestedInput = {
+  create?: Prisma.XOR<Prisma.ProductListCreateWithoutLastUpdatedByViewerInput, Prisma.ProductListUncheckedCreateWithoutLastUpdatedByViewerInput> | Prisma.ProductListCreateWithoutLastUpdatedByViewerInput[] | Prisma.ProductListUncheckedCreateWithoutLastUpdatedByViewerInput[]
+  connectOrCreate?: Prisma.ProductListCreateOrConnectWithoutLastUpdatedByViewerInput | Prisma.ProductListCreateOrConnectWithoutLastUpdatedByViewerInput[]
+  upsert?: Prisma.ProductListUpsertWithWhereUniqueWithoutLastUpdatedByViewerInput | Prisma.ProductListUpsertWithWhereUniqueWithoutLastUpdatedByViewerInput[]
+  createMany?: Prisma.ProductListCreateManyLastUpdatedByViewerInputEnvelope
+  set?: Prisma.ProductListWhereUniqueInput | Prisma.ProductListWhereUniqueInput[]
+  disconnect?: Prisma.ProductListWhereUniqueInput | Prisma.ProductListWhereUniqueInput[]
+  delete?: Prisma.ProductListWhereUniqueInput | Prisma.ProductListWhereUniqueInput[]
+  connect?: Prisma.ProductListWhereUniqueInput | Prisma.ProductListWhereUniqueInput[]
+  update?: Prisma.ProductListUpdateWithWhereUniqueWithoutLastUpdatedByViewerInput | Prisma.ProductListUpdateWithWhereUniqueWithoutLastUpdatedByViewerInput[]
+  updateMany?: Prisma.ProductListUpdateManyWithWhereWithoutLastUpdatedByViewerInput | Prisma.ProductListUpdateManyWithWhereWithoutLastUpdatedByViewerInput[]
+  deleteMany?: Prisma.ProductListScalarWhereInput | Prisma.ProductListScalarWhereInput[]
+}
+
 export type BoolFieldUpdateOperationsInput = {
   set?: boolean
 }
@@ -482,15 +536,77 @@ export type ProductListUpdateOneWithoutOrderItemNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.ProductListUpdateToOneWithWhereWithoutOrderItemInput, Prisma.ProductListUpdateWithoutOrderItemInput>, Prisma.ProductListUncheckedUpdateWithoutOrderItemInput>
 }
 
+export type ProductListCreateWithoutLastUpdatedByViewerInput = {
+  name: string
+  emoji?: string | null
+  active?: boolean
+  updatedAt?: Date | string | null
+  description?: string | null
+  Device?: Prisma.DeviceCreateNestedManyWithoutProductListInput
+  OrderItem?: Prisma.OrderItemCreateNestedManyWithoutProductListInput
+  product?: Prisma.ProductCreateNestedManyWithoutProductListInput
+}
+
+export type ProductListUncheckedCreateWithoutLastUpdatedByViewerInput = {
+  id?: number
+  name: string
+  emoji?: string | null
+  active?: boolean
+  updatedAt?: Date | string | null
+  description?: string | null
+  Device?: Prisma.DeviceUncheckedCreateNestedManyWithoutProductListInput
+  OrderItem?: Prisma.OrderItemUncheckedCreateNestedManyWithoutProductListInput
+  product?: Prisma.ProductUncheckedCreateNestedManyWithoutProductListInput
+}
+
+export type ProductListCreateOrConnectWithoutLastUpdatedByViewerInput = {
+  where: Prisma.ProductListWhereUniqueInput
+  create: Prisma.XOR<Prisma.ProductListCreateWithoutLastUpdatedByViewerInput, Prisma.ProductListUncheckedCreateWithoutLastUpdatedByViewerInput>
+}
+
+export type ProductListCreateManyLastUpdatedByViewerInputEnvelope = {
+  data: Prisma.ProductListCreateManyLastUpdatedByViewerInput | Prisma.ProductListCreateManyLastUpdatedByViewerInput[]
+  skipDuplicates?: boolean
+}
+
+export type ProductListUpsertWithWhereUniqueWithoutLastUpdatedByViewerInput = {
+  where: Prisma.ProductListWhereUniqueInput
+  update: Prisma.XOR<Prisma.ProductListUpdateWithoutLastUpdatedByViewerInput, Prisma.ProductListUncheckedUpdateWithoutLastUpdatedByViewerInput>
+  create: Prisma.XOR<Prisma.ProductListCreateWithoutLastUpdatedByViewerInput, Prisma.ProductListUncheckedCreateWithoutLastUpdatedByViewerInput>
+}
+
+export type ProductListUpdateWithWhereUniqueWithoutLastUpdatedByViewerInput = {
+  where: Prisma.ProductListWhereUniqueInput
+  data: Prisma.XOR<Prisma.ProductListUpdateWithoutLastUpdatedByViewerInput, Prisma.ProductListUncheckedUpdateWithoutLastUpdatedByViewerInput>
+}
+
+export type ProductListUpdateManyWithWhereWithoutLastUpdatedByViewerInput = {
+  where: Prisma.ProductListScalarWhereInput
+  data: Prisma.XOR<Prisma.ProductListUpdateManyMutationInput, Prisma.ProductListUncheckedUpdateManyWithoutLastUpdatedByViewerInput>
+}
+
+export type ProductListScalarWhereInput = {
+  AND?: Prisma.ProductListScalarWhereInput | Prisma.ProductListScalarWhereInput[]
+  OR?: Prisma.ProductListScalarWhereInput[]
+  NOT?: Prisma.ProductListScalarWhereInput | Prisma.ProductListScalarWhereInput[]
+  id?: Prisma.IntFilter<"ProductList"> | number
+  name?: Prisma.StringFilter<"ProductList"> | string
+  emoji?: Prisma.StringNullableFilter<"ProductList"> | string | null
+  active?: Prisma.BoolFilter<"ProductList"> | boolean
+  updatedAt?: Prisma.DateTimeNullableFilter<"ProductList"> | Date | string | null
+  lastUpdatedBy?: Prisma.StringNullableFilter<"ProductList"> | string | null
+  description?: Prisma.StringNullableFilter<"ProductList"> | string | null
+}
+
 export type ProductListCreateWithoutProductInput = {
   name: string
   emoji?: string | null
   active?: boolean
   updatedAt?: Date | string | null
-  lastUpdatedBy?: string | null
   description?: string | null
   Device?: Prisma.DeviceCreateNestedManyWithoutProductListInput
   OrderItem?: Prisma.OrderItemCreateNestedManyWithoutProductListInput
+  lastUpdatedByViewer?: Prisma.ViewerCreateNestedOneWithoutProductListInput
 }
 
 export type ProductListUncheckedCreateWithoutProductInput = {
@@ -526,10 +642,10 @@ export type ProductListUpdateWithoutProductInput = {
   emoji?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  lastUpdatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   Device?: Prisma.DeviceUpdateManyWithoutProductListNestedInput
   OrderItem?: Prisma.OrderItemUpdateManyWithoutProductListNestedInput
+  lastUpdatedByViewer?: Prisma.ViewerUpdateOneWithoutProductListNestedInput
 }
 
 export type ProductListUncheckedUpdateWithoutProductInput = {
@@ -549,10 +665,10 @@ export type ProductListCreateWithoutDeviceInput = {
   emoji?: string | null
   active?: boolean
   updatedAt?: Date | string | null
-  lastUpdatedBy?: string | null
   description?: string | null
   OrderItem?: Prisma.OrderItemCreateNestedManyWithoutProductListInput
   product?: Prisma.ProductCreateNestedManyWithoutProductListInput
+  lastUpdatedByViewer?: Prisma.ViewerCreateNestedOneWithoutProductListInput
 }
 
 export type ProductListUncheckedCreateWithoutDeviceInput = {
@@ -588,10 +704,10 @@ export type ProductListUpdateWithoutDeviceInput = {
   emoji?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  lastUpdatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   OrderItem?: Prisma.OrderItemUpdateManyWithoutProductListNestedInput
   product?: Prisma.ProductUpdateManyWithoutProductListNestedInput
+  lastUpdatedByViewer?: Prisma.ViewerUpdateOneWithoutProductListNestedInput
 }
 
 export type ProductListUncheckedUpdateWithoutDeviceInput = {
@@ -611,10 +727,10 @@ export type ProductListCreateWithoutOrderItemInput = {
   emoji?: string | null
   active?: boolean
   updatedAt?: Date | string | null
-  lastUpdatedBy?: string | null
   description?: string | null
   Device?: Prisma.DeviceCreateNestedManyWithoutProductListInput
   product?: Prisma.ProductCreateNestedManyWithoutProductListInput
+  lastUpdatedByViewer?: Prisma.ViewerCreateNestedOneWithoutProductListInput
 }
 
 export type ProductListUncheckedCreateWithoutOrderItemInput = {
@@ -650,10 +766,10 @@ export type ProductListUpdateWithoutOrderItemInput = {
   emoji?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  lastUpdatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   Device?: Prisma.DeviceUpdateManyWithoutProductListNestedInput
   product?: Prisma.ProductUpdateManyWithoutProductListNestedInput
+  lastUpdatedByViewer?: Prisma.ViewerUpdateOneWithoutProductListNestedInput
 }
 
 export type ProductListUncheckedUpdateWithoutOrderItemInput = {
@@ -666,6 +782,47 @@ export type ProductListUncheckedUpdateWithoutOrderItemInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   Device?: Prisma.DeviceUncheckedUpdateManyWithoutProductListNestedInput
   product?: Prisma.ProductUncheckedUpdateManyWithoutProductListNestedInput
+}
+
+export type ProductListCreateManyLastUpdatedByViewerInput = {
+  id?: number
+  name: string
+  emoji?: string | null
+  active?: boolean
+  updatedAt?: Date | string | null
+  description?: string | null
+}
+
+export type ProductListUpdateWithoutLastUpdatedByViewerInput = {
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  emoji?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  Device?: Prisma.DeviceUpdateManyWithoutProductListNestedInput
+  OrderItem?: Prisma.OrderItemUpdateManyWithoutProductListNestedInput
+  product?: Prisma.ProductUpdateManyWithoutProductListNestedInput
+}
+
+export type ProductListUncheckedUpdateWithoutLastUpdatedByViewerInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  emoji?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  Device?: Prisma.DeviceUncheckedUpdateManyWithoutProductListNestedInput
+  OrderItem?: Prisma.OrderItemUncheckedUpdateManyWithoutProductListNestedInput
+  product?: Prisma.ProductUncheckedUpdateManyWithoutProductListNestedInput
+}
+
+export type ProductListUncheckedUpdateManyWithoutLastUpdatedByViewerInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  emoji?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 
@@ -728,6 +885,7 @@ export type ProductListSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   Device?: boolean | Prisma.ProductList$DeviceArgs<ExtArgs>
   OrderItem?: boolean | Prisma.ProductList$OrderItemArgs<ExtArgs>
   product?: boolean | Prisma.ProductList$productArgs<ExtArgs>
+  lastUpdatedByViewer?: boolean | Prisma.ProductList$lastUpdatedByViewerArgs<ExtArgs>
   _count?: boolean | Prisma.ProductListCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["productList"]>
 
@@ -739,6 +897,7 @@ export type ProductListSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   updatedAt?: boolean
   lastUpdatedBy?: boolean
   description?: boolean
+  lastUpdatedByViewer?: boolean | Prisma.ProductList$lastUpdatedByViewerArgs<ExtArgs>
 }, ExtArgs["result"]["productList"]>
 
 export type ProductListSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -749,6 +908,7 @@ export type ProductListSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   updatedAt?: boolean
   lastUpdatedBy?: boolean
   description?: boolean
+  lastUpdatedByViewer?: boolean | Prisma.ProductList$lastUpdatedByViewerArgs<ExtArgs>
 }, ExtArgs["result"]["productList"]>
 
 export type ProductListSelectScalar = {
@@ -766,10 +926,15 @@ export type ProductListInclude<ExtArgs extends runtime.Types.Extensions.Internal
   Device?: boolean | Prisma.ProductList$DeviceArgs<ExtArgs>
   OrderItem?: boolean | Prisma.ProductList$OrderItemArgs<ExtArgs>
   product?: boolean | Prisma.ProductList$productArgs<ExtArgs>
+  lastUpdatedByViewer?: boolean | Prisma.ProductList$lastUpdatedByViewerArgs<ExtArgs>
   _count?: boolean | Prisma.ProductListCountOutputTypeDefaultArgs<ExtArgs>
 }
-export type ProductListIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
-export type ProductListIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
+export type ProductListIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  lastUpdatedByViewer?: boolean | Prisma.ProductList$lastUpdatedByViewerArgs<ExtArgs>
+}
+export type ProductListIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  lastUpdatedByViewer?: boolean | Prisma.ProductList$lastUpdatedByViewerArgs<ExtArgs>
+}
 
 export type $ProductListPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "ProductList"
@@ -777,6 +942,7 @@ export type $ProductListPayload<ExtArgs extends runtime.Types.Extensions.Interna
     Device: Prisma.$DevicePayload<ExtArgs>[]
     OrderItem: Prisma.$OrderItemPayload<ExtArgs>[]
     product: Prisma.$ProductPayload<ExtArgs>[]
+    lastUpdatedByViewer: Prisma.$ViewerPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
@@ -1183,6 +1349,7 @@ export interface Prisma__ProductListClient<T, Null = never, ExtArgs extends runt
   Device<T extends Prisma.ProductList$DeviceArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ProductList$DeviceArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DevicePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   OrderItem<T extends Prisma.ProductList$OrderItemArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ProductList$OrderItemArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$OrderItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   product<T extends Prisma.ProductList$productArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ProductList$productArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ProductPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  lastUpdatedByViewer<T extends Prisma.ProductList$lastUpdatedByViewerArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ProductList$lastUpdatedByViewerArgs<ExtArgs>>): Prisma.Prisma__ViewerClient<runtime.Types.Result.GetResult<Prisma.$ViewerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1473,6 +1640,10 @@ export type ProductListCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Ext
    */
   data: Prisma.ProductListCreateManyInput | Prisma.ProductListCreateManyInput[]
   skipDuplicates?: boolean
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ProductListIncludeCreateManyAndReturn<ExtArgs> | null
 }
 
 /**
@@ -1543,6 +1714,10 @@ export type ProductListUpdateManyAndReturnArgs<ExtArgs extends runtime.Types.Ext
    * Limit how many ProductLists to update.
    */
   limit?: number
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ProductListIncludeUpdateManyAndReturn<ExtArgs> | null
 }
 
 /**
@@ -1681,6 +1856,25 @@ export type ProductList$productArgs<ExtArgs extends runtime.Types.Extensions.Int
   take?: number
   skip?: number
   distinct?: Prisma.ProductScalarFieldEnum | Prisma.ProductScalarFieldEnum[]
+}
+
+/**
+ * ProductList.lastUpdatedByViewer
+ */
+export type ProductList$lastUpdatedByViewerArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Viewer
+   */
+  select?: Prisma.ViewerSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Viewer
+   */
+  omit?: Prisma.ViewerOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ViewerInclude<ExtArgs> | null
+  where?: Prisma.ViewerWhereInput
 }
 
 /**
