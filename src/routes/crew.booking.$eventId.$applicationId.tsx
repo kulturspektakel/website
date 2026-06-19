@@ -623,12 +623,15 @@ function CommentForm({applicationId}: {applicationId: string}) {
       <Box position="absolute" bottom="2" right="2">
         <Button
           size="sm"
-          variant="ghost"
+          bg="blue.solid"
           rounded="full"
           onClick={handleSubmit}
           disabled={!comment.trim() || isSubmitting}
           loading={isSubmitting}
           aria-label="Kommentar posten"
+          color="white"
+          _hover={{bg: 'blue.600'}}
+          _disabled={{bg: 'gray.300', cursor: 'not-allowed'}}
         >
           <FaPaperPlane />
         </Button>
