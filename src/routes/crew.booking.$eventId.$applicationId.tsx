@@ -621,17 +621,17 @@ function CommentForm({applicationId}: {applicationId: string}) {
         rows={3}
         pr="12"
       />
-      <Box position="absolute" bottom="2" right="2">
+      <Box position="absolute" bottom="3" right="3">
         <IconButton
           aria-label="Kommentar posten"
-          icon={<FaPaperPlane />}
+          icon={<FaPaperPlane fontSize="16px" />}
           onClick={handleSubmit}
           disabled={!comment.trim() || isSubmitting}
           loading={isSubmitting}
           bg="blue.solid"
           color="white"
           rounded="full"
-          size="md"
+          size="sm"
           _hover={{bg: 'blue.600'}}
           _disabled={{bg: 'gray.300', cursor: 'not-allowed'}}
         />
