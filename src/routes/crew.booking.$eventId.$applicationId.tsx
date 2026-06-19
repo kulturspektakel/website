@@ -622,7 +622,11 @@ function CommentForm({applicationId}: {applicationId: string}) {
       />
       <Box position="absolute" bottom="2" right="2">
         <Button
-          size="sm"
+          w="10"
+          h="10"
+          minW="10"
+          minH="10"
+          p="0"
           bg="blue.solid"
           rounded="full"
           onClick={handleSubmit}
@@ -630,6 +634,9 @@ function CommentForm({applicationId}: {applicationId: string}) {
           loading={isSubmitting}
           aria-label="Kommentar posten"
           color="white"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
           _hover={{bg: 'blue.600'}}
           _disabled={{bg: 'gray.300', cursor: 'not-allowed'}}
         >
