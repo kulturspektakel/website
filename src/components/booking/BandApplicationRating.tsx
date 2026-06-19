@@ -81,23 +81,35 @@ export function BandApplicationRating({
               reserved so the avatars never shift when it appears. */}
           <Box minW="7" textAlign="end">
             {value > 0 && averageRating != null && (
-              <Text
-                fontSize="lg"
-                fontWeight="bold"
-                lineHeight="1"
-                color="blue.solid"
+              <Tooltip
+                positioning={{placement: 'top'}}
+                content={
+                  <Box>
+                    {raters.map((r) => (
+                      <Text key={r.id} whiteSpace="nowrap">
+                        {'★'.repeat(r.rating)}
+                        {'☆'.repeat(Math.max(0, 4 - r.rating))} {r.displayName}
+                      </Text>
+                    ))}
+                  </Box>
+                }
               >
-                {averageRating.toFixed(1)}
-              </Text>
+                <Text
+                  fontSize="lg"
+                  fontWeight="bold"
+                  lineHeight="1"
+                  color="blue.solid"
+                >
+                  {averageRating.toFixed(1)}
+                </Text>
+              </Tooltip>
             )}
           </Box>
           <HStack gap="0">
             {raters.map((r, i) => (
               <Tooltip
                 key={r.id}
-                content={`${r.displayName}: ${'★'.repeat(r.rating)}${'☆'.repeat(
-                  Math.max(0, 4 - r.rating),
-                )}`}
+                content={r.displayName}
                 positioning={{placement: 'top'}}
               >
                 <Box as="span" display="inline-flex" ml={i === 0 ? '0' : '-1.5'}>
