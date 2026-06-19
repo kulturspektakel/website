@@ -17,9 +17,11 @@ import {verifyDirectusSession} from '../server/directusAuth.server';
  * `AUTH_SLACK_REDIRECT_ALLOW_LIST` on the Directus side (it matches origin+path
  * exactly, ignoring the query string), or Directus refuses the redirect.
  *
- * In dev (`NODE_ENV !== 'production'`) the check is skipped so `/crew/*` is
- * reachable from a local dev server — the `directus_session_token` cookie is
- * scoped to `crew.kulturspektakel.de` and never reaches `localhost`.
+ * The session is required in dev too. The login redirect points back at the
+ * deployed crew app (via `SITE_URL`), so logging in from `localhost` isn't
+ * possible — instead copy a valid `directus_session_token` from the deployed
+ * crew app into a localhost cookie (the JWT verifies against the same
+ * `JWT_SECRET` regardless of origin).
  */
 const crewLoginUrl = createServerFn()
   .inputValidator((to: string) => to)
@@ -27,10 +29,7 @@ const crewLoginUrl = createServerFn()
     // Crew pages render user-specific content; never let a CDN or proxy cache
     // them. Set on every /crew/* request via this beforeLoad server fn.
     setResponseHeader('Cache-Control', 'private, no-store');
-    if (
-      process.env.NODE_ENV !== 'production' ||
-      verifyDirectusSession(getCookie('directus_session_token'))
-    ) {
+    if (verifyDirectusSession(getCookie('directus_session_token'))) {
       return null;
     }
     const returnUrl = new URL('/crew/auth-return', process.env.SITE_URL);
