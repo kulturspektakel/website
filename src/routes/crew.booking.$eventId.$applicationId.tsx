@@ -18,6 +18,7 @@ import {
   Grid,
   Heading,
   HStack,
+  IconButton,
   Link,
   Portal,
   SimpleGrid,
@@ -621,27 +622,19 @@ function CommentForm({applicationId}: {applicationId: string}) {
         pr="12"
       />
       <Box position="absolute" bottom="2" right="2">
-        <Button
-          w="10"
-          h="10"
-          minW="10"
-          minH="10"
-          p="0"
-          bg="blue.solid"
-          rounded="full"
+        <IconButton
+          aria-label="Kommentar posten"
+          icon={<FaPaperPlane />}
           onClick={handleSubmit}
           disabled={!comment.trim() || isSubmitting}
           loading={isSubmitting}
-          aria-label="Kommentar posten"
+          bg="blue.solid"
           color="white"
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
+          rounded="full"
+          size="md"
           _hover={{bg: 'blue.600'}}
           _disabled={{bg: 'gray.300', cursor: 'not-allowed'}}
-        >
-          <FaPaperPlane />
-        </Button>
+        />
       </Box>
     </Box>
   );
