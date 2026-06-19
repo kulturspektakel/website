@@ -435,10 +435,8 @@ function RightColumn({data}: {data: DetailData}) {
 
       <Section title="Kommentare">
         <CommentForm applicationId={data.id} />
-        {data.bandApplicationComment.length === 0 ? (
-          <Text color="fg.muted">Keine Kommentare</Text>
-        ) : (
-          <Stack gap="3">
+        {data.bandApplicationComment.length > 0 && (
+          <Stack gap="3" mt="4">
             {data.bandApplicationComment.map((c) => (
               <HStack key={c.id} gap="2" align="flex-start">
                 <Avatar
