@@ -31,7 +31,7 @@ import {
   useListCollection,
   useTagsInput,
 } from '@chakra-ui/react';
-import {FaFacebook, FaGlobe, FaInstagram, FaSpotify} from 'react-icons/fa6';
+import {FaFacebook, FaGlobe, FaInstagram, FaSpotify, FaPaperPlane} from 'react-icons/fa6';
 import {
   BandRepertoire,
   DemoEmbedType,
@@ -451,7 +451,17 @@ function RightColumn({data}: {data: DetailData}) {
                       {c.viewer.displayName}
                     </Text>
                     <Text fontSize="xs" color="fg.muted">
-                      <DateString date={c.createdAt} />
+                      <DateString 
+                        date={c.createdAt}
+                        options={{
+                          timeZone: 'Europe/Berlin',
+                          day: 'numeric',
+                          month: 'numeric',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        }}
+                      />
                     </Text>
                   </HStack>
                   <Text fontSize="sm" whiteSpace="pre-wrap">
@@ -592,24 +602,38 @@ function CommentForm({applicationId}: {applicationId: string}) {
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
+
   return (
-    <Stack gap="2" mb="3">
+    <Box mb="3" position="relative">
       <Textarea
         placeholder="Kommentar hinzufügen..."
         value={comment}
         onChange={(e) => setComment(e.target.value)}
+        onKeyDown={handleKeyDown}
         disabled={isSubmitting}
         rows={3}
+        pr="12"
       />
-      <Button
-        size="sm"
-        onClick={handleSubmit}
-        disabled={!comment.trim() || isSubmitting}
-        loading={isSubmitting}
-      >
-        Kommentar posten
-      </Button>
-    </Stack>
+      <Box position="absolute" bottom="2" right="2">
+        <Button
+          size="sm"
+          variant="ghost"
+          rounded="full"
+          onClick={handleSubmit}
+          disabled={!comment.trim() || isSubmitting}
+          loading={isSubmitting}
+          aria-label="Kommentar posten"
+        >
+          <FaPaperPlane />
+        </Button>
+      </Box>
+    </Box>
   );
 }
 
