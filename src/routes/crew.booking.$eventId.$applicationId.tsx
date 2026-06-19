@@ -4,9 +4,11 @@ import {
   notFound,
   Outlet,
   useLoaderData,
+  useRouter,
 } from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
 import {crewAuth} from '../server/crewAuth';
+import {postBandApplicationComment} from '../server/postBandApplicationComment';
 import {useQuery} from '@tanstack/react-query';
 import {
   Box,
@@ -23,6 +25,7 @@ import {
   Stack,
   TagsInput,
   Text,
+  Textarea,
   useCombobox,
   useFilter,
   useListCollection,
@@ -431,7 +434,7 @@ function RightColumn({data}: {data: DetailData}) {
       </Section>
 
       <Section title="Kommentare">
-        {/* Mutation stubbed: composing/deleting comments is not wired up yet. */}
+        <CommentForm applicationId={data.id} />
         {data.bandApplicationComment.length === 0 ? (
           <Text color="fg.muted">Keine Kommentare</Text>
         ) : (
@@ -569,6 +572,46 @@ function Fact({label, children}: {label: string; children: React.ReactNode}) {
         {children}
       </Span>
     </Text>
+  );
+}
+
+function CommentForm({applicationId}: {applicationId: string}) {
+  const router = useRouter();
+  const [comment, setComment] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!comment.trim()) return;
+    try {
+      setIsSubmitting(true);
+      await postBandApplicationComment({
+        data: {applicationId, comment: comment.trim()},
+      });
+      setComment('');
+      await router.invalidate();
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <Stack gap="2" mb="3">
+      <Textarea
+        placeholder="Kommentar hinzufügen..."
+        value={comment}
+        onChange={(e) => setComment(e.target.value)}
+        disabled={isSubmitting}
+        rows={3}
+      />
+      <Button
+        size="sm"
+        onClick={handleSubmit}
+        disabled={!comment.trim() || isSubmitting}
+        loading={isSubmitting}
+      >
+        Kommentar posten
+      </Button>
+    </Stack>
   );
 }
 
