@@ -1,7 +1,7 @@
 import {useState} from 'react';
-import {Button, HStack, Stack, Text, Textarea, Wrap} from '@chakra-ui/react';
-import {FaPhone, FaWhatsapp} from 'react-icons/fa6';
-import {LuHeartHandshake, LuMapPin, LuCheck} from 'react-icons/lu';
+import {Button, Stack, Text, Textarea} from '@chakra-ui/react';
+import {FaWhatsapp} from 'react-icons/fa6';
+import {LuMessageSquare, LuPhone} from 'react-icons/lu';
 import {Formik, Form, Field as FormikField, useFormikContext} from 'formik';
 import {toFormikValidationSchema} from 'zod-formik-adapter';
 import {z} from 'zod';
@@ -19,13 +19,12 @@ import {
 import {ConnectedField} from '../forms/ConnectedField';
 import {toaster} from '../chakra-snippets/toaster';
 import {requestAwarenessHelp} from '../../server/requestAwarenessHelp';
-
-// TODO: Awareness-Telefonnummer eintragen.
-// PHONE_TEL: internationales Format für tel:-Links.
-// PHONE_WHATSAPP: dieselbe Nummer ohne "+" und ohne Leerzeichen (wa.me-Format).
-const PHONE_DISPLAY = '+49 1525 1234567';
-const PHONE_TEL = '+4915251234567';
-const PHONE_WHATSAPP = '4915251234567';
+import {Switch} from '../chakra-snippets/switch';
+import DateString from '../DateString';
+import {
+  AWARENESS_PHONE,
+  AWARENESS_PHONE_WHATSAPP,
+} from '../../utils/awarenessContact';
 
 const helpSchema = z.object({
   name: z.string().trim().min(1, 'Bitte gib deinen Namen an.'),
@@ -36,13 +35,23 @@ const helpSchema = z.object({
 
 type HelpValues = z.infer<typeof helpSchema>;
 
-// Optional geolocation control. Writes a Google Maps link into the `location`
-// form field; the browser shows its own permission prompt on request.
+// Optional geolocation control. A switch that, when turned on, requests the
+// browser location and writes a Google Maps link into the `location` form
+// field. If the request is denied/fails, the switch flips back off.
 function LocationField() {
   const {values, setFieldValue} = useFormikContext<HelpValues>();
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle');
 
-  const requestLocation = () => {
+  // On while the location is set, and optimistically on during the request so
+  // the switch doesn't snap back until we know the outcome.
+  const checked = Boolean(values.location) || status === 'loading';
+
+  const onToggle = (next: boolean) => {
+    if (!next) {
+      setFieldValue('location', '');
+      setStatus('idle');
+      return;
+    }
     if (!('geolocation' in navigator)) {
       setStatus('error');
       return;
@@ -56,38 +65,17 @@ function LocationField() {
         );
         setStatus('idle');
       },
+      // Failure: leave `location` empty so the switch returns to off.
       () => setStatus('error'),
       {enableHighAccuracy: true, timeout: 10000},
     );
   };
 
-  if (values.location) {
-    return (
-      <HStack color="green.fg" fontSize="sm">
-        <LuCheck />
-        <Text>Standort hinzugefügt</Text>
-        <Button
-          size="xs"
-          variant="ghost"
-          onClick={() => setFieldValue('location', '')}
-        >
-          Entfernen
-        </Button>
-      </HStack>
-    );
-  }
-
   return (
     <Stack gap="1">
-      <Button
-        variant="outline"
-        alignSelf="flex-start"
-        onClick={requestLocation}
-        loading={status === 'loading'}
-      >
-        <LuMapPin />
-        Standort teilen
-      </Button>
+      <Switch checked={checked} onCheckedChange={(e) => onToggle(e.checked)}>
+        Meinen Standort teilen
+      </Switch>
       {status === 'error' && (
         <Text fontSize="sm" color="fg.error">
           Standort konnte nicht ermittelt werden.
@@ -97,7 +85,13 @@ function LocationField() {
   );
 }
 
-export function AwarenessBox() {
+export function AwarenessBox({
+  available,
+  nextOpen,
+}: {
+  available: boolean;
+  nextOpen: Date | null;
+}) {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const {mutate, isPending} = useMutation({
@@ -127,33 +121,77 @@ export function AwarenessBox() {
         status="info"
         variant="surface"
         title="Brauchst du Hilfe oder Unterstützung?"
-        icon={<LuHeartHandshake />}
+        mb="6"
       >
         <Stack gap="3" mt="1">
-          Unser Awareness-Team ist für dich da – vertraulich und jederzeit
-          ansprechbar. Melde dich auf dem Weg, der dir am angenehmsten ist.
-          <Wrap gap="2">
-            <Button asChild colorPalette="blue">
-              <a href={`tel:${PHONE_TEL}`}>
-                <FaPhone />
+          {available ? (
+            'Unser Awareness-Team ist für dich da – vertraulich und jederzeit ansprechbar. Melde dich auf dem Weg, der dir am angenehmsten ist.'
+          ) : (
+            <Text>
+              Unser Awareness-Team ist gerade nicht erreichbar.
+              {nextOpen && (
+                <>
+                  {' '}
+                  Wir sind ab{' '}
+                  <DateString
+                    date={nextOpen}
+                    options={{
+                      weekday: 'long',
+                      day: 'numeric',
+                      month: 'long',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    }}
+                  />{' '}
+                  Uhr wieder für dich da.
+                </>
+              )}
+            </Text>
+          )}
+          <Stack
+            direction={{base: 'column', sm: 'row'}}
+            align={{base: 'stretch', sm: 'flex-start'}}
+            gap="2"
+          >
+            {available ? (
+              <Button asChild variant="surface">
+                <a href={`tel:${AWARENESS_PHONE}`}>
+                  <LuPhone />
+                  Anrufen
+                </a>
+              </Button>
+            ) : (
+              <Button variant="surface" disabled>
+                <LuPhone />
                 Anrufen
-              </a>
-            </Button>
-            <Button asChild variant="outline" colorPalette="green">
-              <a
-                href={`https://web.whatsapp.com/send/?phone=${PHONE_WHATSAPP}&text&type=phone_number&app_absent=0`}
-                target="_blank"
-                rel="noreferrer"
-              >
+              </Button>
+            )}
+            {available ? (
+              <Button asChild variant="surface">
+                <a
+                  href={`https://wa.me/${AWARENESS_PHONE_WHATSAPP}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <FaWhatsapp />
+                  WhatsApp
+                </a>
+              </Button>
+            ) : (
+              <Button variant="surface" disabled>
                 <FaWhatsapp />
                 WhatsApp
-              </a>
+              </Button>
+            )}
+            <Button
+              variant="surface"
+              onClick={() => setDialogOpen(true)}
+              disabled={!available}
+            >
+              <LuMessageSquare />
+              Nachricht schreiben
             </Button>
-            <Button variant="outline" onClick={() => setDialogOpen(true)}>
-              <LuHeartHandshake />
-              Hilfe anfragen
-            </Button>
-          </Wrap>
+          </Stack>
         </Stack>
       </Alert>
 
@@ -162,7 +200,7 @@ export function AwarenessBox() {
         onOpenChange={(e) => !e.open && setDialogOpen(false)}
         placement="center"
       >
-        <DialogContent>
+        <DialogContent maxW={{base: 'calc(100% - 2rem)', sm: 'md'}}>
           <DialogHeader>
             <DialogTitle>Hilfe anfragen</DialogTitle>
           </DialogHeader>
@@ -205,13 +243,6 @@ export function AwarenessBox() {
                 </Stack>
               </DialogBody>
               <DialogFooter>
-                <Button
-                  variant="subtle"
-                  onClick={() => setDialogOpen(false)}
-                  type="button"
-                >
-                  Abbrechen
-                </Button>
                 <Button type="submit" loading={isPending}>
                   Anfrage senden
                 </Button>

@@ -62,6 +62,8 @@ import { Route as ApiTasksCreateBandApplicationRouteImport } from './routes/api.
 import { Route as ApiTasksBandApplicationDistanceRouteImport } from './routes/api.tasks.band-application-distance'
 import { Route as ApiTasksBandApplicationDemoRouteImport } from './routes/api.tasks.band-application-demo'
 import { Route as ApiTasksBadgeAwardedRouteImport } from './routes/api.tasks.badge-awarded'
+import { Route as ApiTasksAwarenessSlackRouteImport } from './routes/api.tasks.awareness-slack'
+import { Route as ApiTasksAwarenessCallRouteImport } from './routes/api.tasks.awareness-call'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api.stripe.webhook'
 import { Route as ApiSlackTwofactorRouteImport } from './routes/api.slack.twofactor'
 import { Route as ApiSlackTokenRouteImport } from './routes/api.slack.token'
@@ -369,6 +371,16 @@ const ApiTasksBadgeAwardedRoute = ApiTasksBadgeAwardedRouteImport.update({
   path: '/badge-awarded',
   getParentRoute: () => ApiTasksRoute,
 } as any)
+const ApiTasksAwarenessSlackRoute = ApiTasksAwarenessSlackRouteImport.update({
+  id: '/awareness-slack',
+  path: '/awareness-slack',
+  getParentRoute: () => ApiTasksRoute,
+} as any)
+const ApiTasksAwarenessCallRoute = ApiTasksAwarenessCallRouteImport.update({
+  id: '/awareness-call',
+  path: '/awareness-call',
+  getParentRoute: () => ApiTasksRoute,
+} as any)
 const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
   id: '/api/stripe/webhook',
   path: '/api/stripe/webhook',
@@ -575,6 +587,8 @@ export interface FileRoutesByFullPath {
   '/api/slack/token': typeof ApiSlackTokenRoute
   '/api/slack/twofactor': typeof ApiSlackTwofactorRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
+  '/api/tasks/awareness-call': typeof ApiTasksAwarenessCallRoute
+  '/api/tasks/awareness-slack': typeof ApiTasksAwarenessSlackRoute
   '/api/tasks/badge-awarded': typeof ApiTasksBadgeAwardedRoute
   '/api/tasks/band-application-demo': typeof ApiTasksBandApplicationDemoRoute
   '/api/tasks/band-application-distance': typeof ApiTasksBandApplicationDistanceRoute
@@ -655,6 +669,8 @@ export interface FileRoutesByTo {
   '/api/slack/token': typeof ApiSlackTokenRoute
   '/api/slack/twofactor': typeof ApiSlackTwofactorRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
+  '/api/tasks/awareness-call': typeof ApiTasksAwarenessCallRoute
+  '/api/tasks/awareness-slack': typeof ApiTasksAwarenessSlackRoute
   '/api/tasks/badge-awarded': typeof ApiTasksBadgeAwardedRoute
   '/api/tasks/band-application-demo': typeof ApiTasksBandApplicationDemoRoute
   '/api/tasks/band-application-distance': typeof ApiTasksBandApplicationDistanceRoute
@@ -740,6 +756,8 @@ export interface FileRoutesById {
   '/api/slack/token': typeof ApiSlackTokenRoute
   '/api/slack/twofactor': typeof ApiSlackTwofactorRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
+  '/api/tasks/awareness-call': typeof ApiTasksAwarenessCallRoute
+  '/api/tasks/awareness-slack': typeof ApiTasksAwarenessSlackRoute
   '/api/tasks/badge-awarded': typeof ApiTasksBadgeAwardedRoute
   '/api/tasks/band-application-demo': typeof ApiTasksBandApplicationDemoRoute
   '/api/tasks/band-application-distance': typeof ApiTasksBandApplicationDistanceRoute
@@ -826,6 +844,8 @@ export interface FileRouteTypes {
     | '/api/slack/token'
     | '/api/slack/twofactor'
     | '/api/stripe/webhook'
+    | '/api/tasks/awareness-call'
+    | '/api/tasks/awareness-slack'
     | '/api/tasks/badge-awarded'
     | '/api/tasks/band-application-demo'
     | '/api/tasks/band-application-distance'
@@ -906,6 +926,8 @@ export interface FileRouteTypes {
     | '/api/slack/token'
     | '/api/slack/twofactor'
     | '/api/stripe/webhook'
+    | '/api/tasks/awareness-call'
+    | '/api/tasks/awareness-slack'
     | '/api/tasks/badge-awarded'
     | '/api/tasks/band-application-demo'
     | '/api/tasks/band-application-distance'
@@ -990,6 +1012,8 @@ export interface FileRouteTypes {
     | '/api/slack/token'
     | '/api/slack/twofactor'
     | '/api/stripe/webhook'
+    | '/api/tasks/awareness-call'
+    | '/api/tasks/awareness-slack'
     | '/api/tasks/badge-awarded'
     | '/api/tasks/band-application-demo'
     | '/api/tasks/band-application-distance'
@@ -1421,6 +1445,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTasksBadgeAwardedRouteImport
       parentRoute: typeof ApiTasksRoute
     }
+    '/api/tasks/awareness-slack': {
+      id: '/api/tasks/awareness-slack'
+      path: '/awareness-slack'
+      fullPath: '/api/tasks/awareness-slack'
+      preLoaderRoute: typeof ApiTasksAwarenessSlackRouteImport
+      parentRoute: typeof ApiTasksRoute
+    }
+    '/api/tasks/awareness-call': {
+      id: '/api/tasks/awareness-call'
+      path: '/awareness-call'
+      fullPath: '/api/tasks/awareness-call'
+      preLoaderRoute: typeof ApiTasksAwarenessCallRouteImport
+      parentRoute: typeof ApiTasksRoute
+    }
     '/api/stripe/webhook': {
       id: '/api/stripe/webhook'
       path: '/api/stripe/webhook'
@@ -1847,6 +1885,8 @@ const ApiOwntracksRouteWithChildren = ApiOwntracksRoute._addFileChildren(
 )
 
 interface ApiTasksRouteChildren {
+  ApiTasksAwarenessCallRoute: typeof ApiTasksAwarenessCallRoute
+  ApiTasksAwarenessSlackRoute: typeof ApiTasksAwarenessSlackRoute
   ApiTasksBadgeAwardedRoute: typeof ApiTasksBadgeAwardedRoute
   ApiTasksBandApplicationDemoRoute: typeof ApiTasksBandApplicationDemoRoute
   ApiTasksBandApplicationDistanceRoute: typeof ApiTasksBandApplicationDistanceRoute
@@ -1869,6 +1909,8 @@ interface ApiTasksRouteChildren {
 }
 
 const ApiTasksRouteChildren: ApiTasksRouteChildren = {
+  ApiTasksAwarenessCallRoute: ApiTasksAwarenessCallRoute,
+  ApiTasksAwarenessSlackRoute: ApiTasksAwarenessSlackRoute,
   ApiTasksBadgeAwardedRoute: ApiTasksBadgeAwardedRoute,
   ApiTasksBandApplicationDemoRoute: ApiTasksBandApplicationDemoRoute,
   ApiTasksBandApplicationDistanceRoute: ApiTasksBandApplicationDistanceRoute,

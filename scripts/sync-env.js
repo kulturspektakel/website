@@ -69,6 +69,10 @@ const ENV_VARS = {
   SPOTIFY_CLIENT_SECRET: 'secret',
   STRIPE_API_KEY: 'secret',
   STRIPE_SIGNING_SECRET: 'secret',
+  TWILIO_ACCOUNT_SID: 'secret',
+  TWILIO_API_KEY: 'secret',
+  TWILIO_API_SECRET: 'secret',
+  TWILIO_FROM_NUMBER: 'secret',
   YOUTUBE_API_KEY: 'secret',
 };
 

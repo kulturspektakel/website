@@ -31,6 +31,10 @@ declare namespace NodeJS {
     SPOTIFY_CLIENT_SECRET: string;
     STRIPE_API_KEY: string;
     STRIPE_SIGNING_SECRET: string;
+    TWILIO_ACCOUNT_SID: string;
+    TWILIO_API_KEY: string;
+    TWILIO_API_SECRET: string;
+    TWILIO_FROM_NUMBER: string;
     YOUTUBE_API_KEY: string;
   }
 }

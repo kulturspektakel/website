@@ -231,6 +231,13 @@ const overrides: SystemConfig = {
       fontFeatureSettings: '"ss01"',
       lineHeight: '0.95 !important',
     },
+    // iOS Safari zooms the page when an input with font-size < 16px is focused.
+    // Force form controls to 16px on touch devices to suppress that zoom —
+    // without disabling pinch-to-zoom (we don't touch the viewport meta).
+    // `!important` wins over Chakra's per-size input recipe.
+    'input, textarea, select': {
+      '@media (pointer: coarse)': {fontSize: '16px !important'},
+    },
   },
 };
 

@@ -1,12 +1,12 @@
 import {createServerFn} from '@tanstack/react-start';
 import {z} from 'zod';
-import {sendMessage} from './slack.server';
-import {SlackChannel} from '../utils/slackChannels';
+import {enqueueGcpTask} from './enqueueGcpTask.server';
 
 /**
  * Help request submitted through the box on the public `/awareness` page.
- * Posts directly to the awareness Slack channel so the team is notified in
- * real time during the festival (low volume — no need for a background task).
+ * Enqueues two independent tasks — a Slack notification and a Twilio call that
+ * reads the request out to the on-call phone — so one failing (and retrying)
+ * never blocks the other.
  */
 export const requestAwarenessHelp = createServerFn()
   .inputValidator(
@@ -19,19 +19,11 @@ export const requestAwarenessHelp = createServerFn()
     }),
   )
   .handler(async ({data}) => {
-    await sendMessage({
-      // TODO: switch to SlackChannel.awareness once the real channel exists.
-      channel: SlackChannel.dev,
-      username: 'Awareness',
-      icon_emoji: ':sos:',
-      text: [
-        ':rotating_light: *Neue Hilfe-Anfrage über die Website*',
-        `*Name:* ${data.name}`,
-        `*Telefon:* ${data.phone}`,
-        data.message ? `*Anliegen:* ${data.message}` : undefined,
-        data.location ? `*Standort:* ${data.location}` : undefined,
-      ]
-        .filter(Boolean)
-        .join('\n'),
-    });
+    await Promise.all([
+      enqueueGcpTask('awareness-slack', data),
+      enqueueGcpTask('awareness-call', {
+        name: data.name,
+        message: data.message,
+      }),
+    ]);
   });

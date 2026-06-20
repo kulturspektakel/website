@@ -70,6 +70,16 @@ export async function enqueueGcpTask(
   options?: EnqueueOptions,
 ): Promise<void>;
 export async function enqueueGcpTask(
+  task: 'awareness-slack',
+  payload: import('./tasks/awareness-slack').AwarenessSlackPayload,
+  options?: EnqueueOptions,
+): Promise<void>;
+export async function enqueueGcpTask(
+  task: 'awareness-call',
+  payload: import('./tasks/awareness-call').AwarenessCallPayload,
+  options?: EnqueueOptions,
+): Promise<void>;
+export async function enqueueGcpTask(
   task: 'create-membership-application',
   payload: import('./tasks/create-membership-application').CreateMembershipApplicationPayload,
   options?: EnqueueOptions,
