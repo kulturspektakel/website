@@ -3085,7 +3085,8 @@ export const EventScalarFieldEnum = {
   latitude: 'latitude',
   location: 'location',
   longitude: 'longitude',
-  lineupAnnouncementTime: 'lineupAnnouncementTime'
+  lineupAnnouncementTime: 'lineupAnnouncementTime',
+  immichAlbumShareUrl: 'immichAlbumShareUrl'
 } as const
 
 export type EventScalarFieldEnum = (typeof EventScalarFieldEnum)[keyof typeof EventScalarFieldEnum]
@@ -3456,7 +3457,8 @@ export const EventOrderByRelevanceFieldEnum = {
   name: 'name',
   poster: 'poster',
   description: 'description',
-  location: 'location'
+  location: 'location',
+  immichAlbumShareUrl: 'immichAlbumShareUrl'
 } as const
 
 export type EventOrderByRelevanceFieldEnum = (typeof EventOrderByRelevanceFieldEnum)[keyof typeof EventOrderByRelevanceFieldEnum]

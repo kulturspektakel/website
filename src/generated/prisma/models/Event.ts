@@ -52,6 +52,7 @@ export type EventMinAggregateOutputType = {
   location: string | null
   longitude: number | null
   lineupAnnouncementTime: Date | null
+  immichAlbumShareUrl: string | null
 }
 
 export type EventMaxAggregateOutputType = {
@@ -70,6 +71,7 @@ export type EventMaxAggregateOutputType = {
   location: string | null
   longitude: number | null
   lineupAnnouncementTime: Date | null
+  immichAlbumShareUrl: string | null
 }
 
 export type EventCountAggregateOutputType = {
@@ -88,6 +90,7 @@ export type EventCountAggregateOutputType = {
   location: number
   longitude: number
   lineupAnnouncementTime: number
+  immichAlbumShareUrl: number
   _all: number
 }
 
@@ -118,6 +121,7 @@ export type EventMinAggregateInputType = {
   location?: true
   longitude?: true
   lineupAnnouncementTime?: true
+  immichAlbumShareUrl?: true
 }
 
 export type EventMaxAggregateInputType = {
@@ -136,6 +140,7 @@ export type EventMaxAggregateInputType = {
   location?: true
   longitude?: true
   lineupAnnouncementTime?: true
+  immichAlbumShareUrl?: true
 }
 
 export type EventCountAggregateInputType = {
@@ -154,6 +159,7 @@ export type EventCountAggregateInputType = {
   location?: true
   longitude?: true
   lineupAnnouncementTime?: true
+  immichAlbumShareUrl?: true
   _all?: true
 }
 
@@ -259,6 +265,7 @@ export type EventGroupByOutputType = {
   location: string | null
   longitude: number | null
   lineupAnnouncementTime: Date | null
+  immichAlbumShareUrl: string | null
   _count: EventCountAggregateOutputType | null
   _avg: EventAvgAggregateOutputType | null
   _sum: EventSumAggregateOutputType | null
@@ -300,6 +307,7 @@ export type EventWhereInput = {
   location?: Prisma.StringNullableFilter<"Event"> | string | null
   longitude?: Prisma.FloatNullableFilter<"Event"> | number | null
   lineupAnnouncementTime?: Prisma.DateTimeNullableFilter<"Event"> | Date | string | null
+  immichAlbumShareUrl?: Prisma.StringNullableFilter<"Event"> | string | null
   bandApplication?: Prisma.BandApplicationListRelationFilter
   BandPlaying?: Prisma.BandPlayingListRelationFilter
 }
@@ -320,6 +328,7 @@ export type EventOrderByWithRelationInput = {
   location?: Prisma.SortOrderInput | Prisma.SortOrder
   longitude?: Prisma.SortOrderInput | Prisma.SortOrder
   lineupAnnouncementTime?: Prisma.SortOrderInput | Prisma.SortOrder
+  immichAlbumShareUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   bandApplication?: Prisma.BandApplicationOrderByRelationAggregateInput
   BandPlaying?: Prisma.BandPlayingOrderByRelationAggregateInput
   _relevance?: Prisma.EventOrderByRelevanceInput
@@ -344,6 +353,7 @@ export type EventWhereUniqueInput = Prisma.AtLeast<{
   location?: Prisma.StringNullableFilter<"Event"> | string | null
   longitude?: Prisma.FloatNullableFilter<"Event"> | number | null
   lineupAnnouncementTime?: Prisma.DateTimeNullableFilter<"Event"> | Date | string | null
+  immichAlbumShareUrl?: Prisma.StringNullableFilter<"Event"> | string | null
   bandApplication?: Prisma.BandApplicationListRelationFilter
   BandPlaying?: Prisma.BandPlayingListRelationFilter
 }, "id">
@@ -364,6 +374,7 @@ export type EventOrderByWithAggregationInput = {
   location?: Prisma.SortOrderInput | Prisma.SortOrder
   longitude?: Prisma.SortOrderInput | Prisma.SortOrder
   lineupAnnouncementTime?: Prisma.SortOrderInput | Prisma.SortOrder
+  immichAlbumShareUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.EventCountOrderByAggregateInput
   _avg?: Prisma.EventAvgOrderByAggregateInput
   _max?: Prisma.EventMaxOrderByAggregateInput
@@ -390,6 +401,7 @@ export type EventScalarWhereWithAggregatesInput = {
   location?: Prisma.StringNullableWithAggregatesFilter<"Event"> | string | null
   longitude?: Prisma.FloatNullableWithAggregatesFilter<"Event"> | number | null
   lineupAnnouncementTime?: Prisma.DateTimeNullableWithAggregatesFilter<"Event"> | Date | string | null
+  immichAlbumShareUrl?: Prisma.StringNullableWithAggregatesFilter<"Event"> | string | null
 }
 
 export type EventCreateInput = {
@@ -408,6 +420,7 @@ export type EventCreateInput = {
   location?: string | null
   longitude?: number | null
   lineupAnnouncementTime?: Date | string | null
+  immichAlbumShareUrl?: string | null
   bandApplication?: Prisma.BandApplicationCreateNestedManyWithoutEventInput
   BandPlaying?: Prisma.BandPlayingCreateNestedManyWithoutEventInput
 }
@@ -428,6 +441,7 @@ export type EventUncheckedCreateInput = {
   location?: string | null
   longitude?: number | null
   lineupAnnouncementTime?: Date | string | null
+  immichAlbumShareUrl?: string | null
   bandApplication?: Prisma.BandApplicationUncheckedCreateNestedManyWithoutEventInput
   BandPlaying?: Prisma.BandPlayingUncheckedCreateNestedManyWithoutEventInput
 }
@@ -448,6 +462,7 @@ export type EventUpdateInput = {
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   lineupAnnouncementTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  immichAlbumShareUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bandApplication?: Prisma.BandApplicationUpdateManyWithoutEventNestedInput
   BandPlaying?: Prisma.BandPlayingUpdateManyWithoutEventNestedInput
 }
@@ -468,6 +483,7 @@ export type EventUncheckedUpdateInput = {
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   lineupAnnouncementTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  immichAlbumShareUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bandApplication?: Prisma.BandApplicationUncheckedUpdateManyWithoutEventNestedInput
   BandPlaying?: Prisma.BandPlayingUncheckedUpdateManyWithoutEventNestedInput
 }
@@ -488,6 +504,7 @@ export type EventCreateManyInput = {
   location?: string | null
   longitude?: number | null
   lineupAnnouncementTime?: Date | string | null
+  immichAlbumShareUrl?: string | null
 }
 
 export type EventUpdateManyMutationInput = {
@@ -506,6 +523,7 @@ export type EventUpdateManyMutationInput = {
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   lineupAnnouncementTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  immichAlbumShareUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type EventUncheckedUpdateManyInput = {
@@ -524,6 +542,7 @@ export type EventUncheckedUpdateManyInput = {
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   lineupAnnouncementTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  immichAlbumShareUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type EventScalarRelationFilter = {
@@ -553,6 +572,7 @@ export type EventCountOrderByAggregateInput = {
   location?: Prisma.SortOrder
   longitude?: Prisma.SortOrder
   lineupAnnouncementTime?: Prisma.SortOrder
+  immichAlbumShareUrl?: Prisma.SortOrder
 }
 
 export type EventAvgOrderByAggregateInput = {
@@ -576,6 +596,7 @@ export type EventMaxOrderByAggregateInput = {
   location?: Prisma.SortOrder
   longitude?: Prisma.SortOrder
   lineupAnnouncementTime?: Prisma.SortOrder
+  immichAlbumShareUrl?: Prisma.SortOrder
 }
 
 export type EventMinOrderByAggregateInput = {
@@ -594,6 +615,7 @@ export type EventMinOrderByAggregateInput = {
   location?: Prisma.SortOrder
   longitude?: Prisma.SortOrder
   lineupAnnouncementTime?: Prisma.SortOrder
+  immichAlbumShareUrl?: Prisma.SortOrder
 }
 
 export type EventSumOrderByAggregateInput = {
@@ -649,6 +671,7 @@ export type EventCreateWithoutBandApplicationInput = {
   location?: string | null
   longitude?: number | null
   lineupAnnouncementTime?: Date | string | null
+  immichAlbumShareUrl?: string | null
   BandPlaying?: Prisma.BandPlayingCreateNestedManyWithoutEventInput
 }
 
@@ -668,6 +691,7 @@ export type EventUncheckedCreateWithoutBandApplicationInput = {
   location?: string | null
   longitude?: number | null
   lineupAnnouncementTime?: Date | string | null
+  immichAlbumShareUrl?: string | null
   BandPlaying?: Prisma.BandPlayingUncheckedCreateNestedManyWithoutEventInput
 }
 
@@ -703,6 +727,7 @@ export type EventUpdateWithoutBandApplicationInput = {
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   lineupAnnouncementTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  immichAlbumShareUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   BandPlaying?: Prisma.BandPlayingUpdateManyWithoutEventNestedInput
 }
 
@@ -722,6 +747,7 @@ export type EventUncheckedUpdateWithoutBandApplicationInput = {
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   lineupAnnouncementTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  immichAlbumShareUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   BandPlaying?: Prisma.BandPlayingUncheckedUpdateManyWithoutEventNestedInput
 }
 
@@ -741,6 +767,7 @@ export type EventCreateWithoutBandPlayingInput = {
   location?: string | null
   longitude?: number | null
   lineupAnnouncementTime?: Date | string | null
+  immichAlbumShareUrl?: string | null
   bandApplication?: Prisma.BandApplicationCreateNestedManyWithoutEventInput
 }
 
@@ -760,6 +787,7 @@ export type EventUncheckedCreateWithoutBandPlayingInput = {
   location?: string | null
   longitude?: number | null
   lineupAnnouncementTime?: Date | string | null
+  immichAlbumShareUrl?: string | null
   bandApplication?: Prisma.BandApplicationUncheckedCreateNestedManyWithoutEventInput
 }
 
@@ -795,6 +823,7 @@ export type EventUpdateWithoutBandPlayingInput = {
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   lineupAnnouncementTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  immichAlbumShareUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bandApplication?: Prisma.BandApplicationUpdateManyWithoutEventNestedInput
 }
 
@@ -814,6 +843,7 @@ export type EventUncheckedUpdateWithoutBandPlayingInput = {
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   lineupAnnouncementTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  immichAlbumShareUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bandApplication?: Prisma.BandApplicationUncheckedUpdateManyWithoutEventNestedInput
 }
 
@@ -873,6 +903,7 @@ export type EventSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   location?: boolean
   longitude?: boolean
   lineupAnnouncementTime?: boolean
+  immichAlbumShareUrl?: boolean
   bandApplication?: boolean | Prisma.Event$bandApplicationArgs<ExtArgs>
   BandPlaying?: boolean | Prisma.Event$BandPlayingArgs<ExtArgs>
   _count?: boolean | Prisma.EventCountOutputTypeDefaultArgs<ExtArgs>
@@ -894,6 +925,7 @@ export type EventSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   location?: boolean
   longitude?: boolean
   lineupAnnouncementTime?: boolean
+  immichAlbumShareUrl?: boolean
 }, ExtArgs["result"]["event"]>
 
 export type EventSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -912,6 +944,7 @@ export type EventSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   location?: boolean
   longitude?: boolean
   lineupAnnouncementTime?: boolean
+  immichAlbumShareUrl?: boolean
 }, ExtArgs["result"]["event"]>
 
 export type EventSelectScalar = {
@@ -930,9 +963,10 @@ export type EventSelectScalar = {
   location?: boolean
   longitude?: boolean
   lineupAnnouncementTime?: boolean
+  immichAlbumShareUrl?: boolean
 }
 
-export type EventOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "start" | "end" | "eventType" | "bandApplicationStart" | "bandApplicationEnd" | "djApplicationEnd" | "poster" | "description" | "djApplicationStart" | "latitude" | "location" | "longitude" | "lineupAnnouncementTime", ExtArgs["result"]["event"]>
+export type EventOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "start" | "end" | "eventType" | "bandApplicationStart" | "bandApplicationEnd" | "djApplicationEnd" | "poster" | "description" | "djApplicationStart" | "latitude" | "location" | "longitude" | "lineupAnnouncementTime" | "immichAlbumShareUrl", ExtArgs["result"]["event"]>
 export type EventInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   bandApplication?: boolean | Prisma.Event$bandApplicationArgs<ExtArgs>
   BandPlaying?: boolean | Prisma.Event$BandPlayingArgs<ExtArgs>
@@ -963,6 +997,7 @@ export type $EventPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     location: string | null
     longitude: number | null
     lineupAnnouncementTime: Date | null
+    immichAlbumShareUrl: string | null
   }, ExtArgs["result"]["event"]>
   composites: {}
 }
@@ -1403,6 +1438,7 @@ export interface EventFieldRefs {
   readonly location: Prisma.FieldRef<"Event", 'String'>
   readonly longitude: Prisma.FieldRef<"Event", 'Float'>
   readonly lineupAnnouncementTime: Prisma.FieldRef<"Event", 'DateTime'>
+  readonly immichAlbumShareUrl: Prisma.FieldRef<"Event", 'String'>
 }
     
 

@@ -25,6 +25,7 @@ import {
 } from '../server/directusImage.server';
 import {markdownText} from '../server/markdownText.server';
 import {eventSelect} from '../components/events/Event';
+import {immichAlbumAssets} from '../server/immich.server';
 
 const loader = createServerFn()
   .inputValidator(
@@ -55,6 +56,9 @@ const loader = createServerFn()
           description: e.description ? await markdownText(e.description) : null,
           poster: await directusImage(e.poster),
           media: await directusImageConnection('Event', e.id),
+          immich: e.immichAlbumShareUrl
+            ? await immichAlbumAssets(e.immichAlbumShareUrl, 20)
+            : null,
         };
       }),
     );

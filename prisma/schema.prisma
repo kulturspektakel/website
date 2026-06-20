@@ -254,6 +254,7 @@ model Event {
   location               String?
   longitude              Float?
   lineupAnnouncementTime DateTime?
+  immichAlbumShareUrl    String?
   bandApplication        BandApplication[]
   BandPlaying            BandPlaying[]
 }

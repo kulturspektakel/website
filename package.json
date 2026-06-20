@@ -101,6 +101,7 @@
     "react-use-facebook-pixel": "^2.0.0",
     "samlify": "^2.10.1",
     "stripe": "^20.3.1",
+    "thumbhash": "^0.1.1",
     "tomo-typeahead": "^0.0.6",
     "ts-ics": "^2.4.3",
     "uplot": "^1.6.32",

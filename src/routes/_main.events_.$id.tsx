@@ -15,6 +15,7 @@ import {
 } from '../server/directusImage.server';
 import {markdownText} from '../server/markdownText.server';
 import {eventSelect} from '../components/events/Event';
+import {immichAlbumAssets} from '../server/immich.server';
 
 const loader = createServerFn()
   .inputValidator((eventId: string) => eventId)
@@ -44,6 +45,9 @@ const loader = createServerFn()
         description: data.description ? await markdownText(data.description) : null,
         poster: await directusImage(data.poster),
         media: await directusImageConnection('Event', eventId, 100),
+        immich: data.immichAlbumShareUrl
+          ? await immichAlbumAssets(data.immichAlbumShareUrl)
+          : null,
       },
       apiKey: process.env.GOOGLE_MAPS_API_KEY,
     };
