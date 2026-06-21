@@ -108,6 +108,7 @@ export async function assignCrewCard(
     where: {
       ...(viewerId ? {viewerId} : {nickname}),
       suspended: {not: true},
+      validUntil: {gt: new Date()},
       id: {not: cardIdBytes},
     },
     data: {suspended: true},
