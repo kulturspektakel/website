@@ -14,6 +14,5 @@ export enum SlackChannel {
   infomails = 'C08CGJ5BLAF',
   crewcards = 'C0965QS6763',
   zuschuesse = 'C030FV86XKR',
-  // TODO: replace with the real awareness channel ID (Slack → channel → "Copy channel ID")
-  awareness = 'CHANGE_ME_AWARENESS',
+  awareness = 'C0BBMK391F1',
 }

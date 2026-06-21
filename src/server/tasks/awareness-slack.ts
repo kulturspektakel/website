@@ -28,12 +28,11 @@ export async function handleAwarenessSlack(
     : null;
 
   await sendMessage({
-    // TODO: switch to SlackChannel.awareness once the real channel exists.
-    channel: SlackChannel.dev,
+    channel: SlackChannel.awareness,
     username: 'Awareness',
     icon_emoji: ':sos:',
     text: [
-      ':rotating_light: *Neue Hilfe-Anfrage über die Website*',
+      ':rotating_light: <!subteam^S0BBZMX1RB7> *Neue Hilfe-Anfrage über die Website*',
       `*Name:* ${data.name}`,
       `*Telefon:* ${data.phone}`,
       data.message ? `*Anliegen:* ${data.message}` : undefined,
