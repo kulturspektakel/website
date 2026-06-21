@@ -83,6 +83,7 @@ export function queryCrewCard(
         select: {
           id: true,
           createdAt: true,
+          notForMe: true,
           items: {
             select: {
               name: true,
@@ -110,6 +111,8 @@ export function orderToCardActivity(
 ): Array<CardActivity> {
   return order.map((o) => ({
     type: 'order' as const,
+    orderId: o.id,
+    notForMe: o.notForMe,
     productList: o.items[0].productList?.name!,
     emoji: o.items[0].productList?.emoji ?? null,
     items: o.items,

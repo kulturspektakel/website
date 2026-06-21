@@ -57,7 +57,10 @@ export function CardDetails({
       />
       <VStack gap="5" align="stretch" mt="3">
         {active === 'Buchungen' && (
-          <CardActivities newestToOldest={cardActivities} />
+          <CardActivities
+            newestToOldest={cardActivities}
+            crewCardId={cardType === 'crew' ? cardId : undefined}
+          />
         )}
         {active === 'Badges' && (
           <BadgeActivity

@@ -57,7 +57,7 @@ const loader = createServerFn()
           JOIN "Order" o ON o.id = oi."orderId"
           JOIN "CrewCard" c ON o."crewCardId" = c.id
           JOIN "Viewer" v ON c."viewerId" = v.id
-          WHERE pl.active AND o."crewCardId" IS NOT NULL AND o."createdAt" > ${event.start} AND o."createdAt" < ${event.end}
+          WHERE pl.active AND o."crewCardId" IS NOT NULL AND o."notForMe" IS NOT TRUE AND o."createdAt" > ${event.start} AND o."createdAt" < ${event.end}
           GROUP BY 1, 2, 3, 4, 5, 6
         ) ranked
         WHERE rnk <= 3
@@ -196,7 +196,7 @@ function CrewCard() {
         </Box>
         {(crewCard.suspended || validUntil < new Date()) && (
           <Box
-            background="brand.500"
+            background="red.500"
             color="white"
             position="absolute"
             fontWeight="bold"

@@ -442,10 +442,6 @@ export type BytesFieldUpdateOperationsInput = {
   set?: runtime.Bytes
 }
 
-export type NullableBoolFieldUpdateOperationsInput = {
-  set?: boolean | null
-}
-
 export type CrewCardCreateWithoutViewerInput = {
   id: runtime.Bytes
   nickname?: string | null

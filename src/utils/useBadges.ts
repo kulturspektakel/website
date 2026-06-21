@@ -12,7 +12,12 @@ export function computeBadges(
     .map(
       ([badgeKey, {compute}]) => ({
         badgeKey,
-        ...compute([...cardActivities].reverse(), event),
+        ...compute(
+          [...cardActivities]
+            .reverse()
+            .filter((a) => !(a.type === 'order' && a.notForMe)),
+          event,
+        ),
       }),
     );
 }

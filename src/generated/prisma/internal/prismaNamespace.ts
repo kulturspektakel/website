@@ -2941,7 +2941,8 @@ export const OrderScalarFieldEnum = {
   payment: 'payment',
   deposit: 'deposit',
   deviceId: 'deviceId',
-  crewCardId: 'crewCardId'
+  crewCardId: 'crewCardId',
+  notForMe: 'notForMe'
 } as const
 
 export type OrderScalarFieldEnum = (typeof OrderScalarFieldEnum)[keyof typeof OrderScalarFieldEnum]

@@ -43,6 +43,7 @@ export type OrderMinAggregateOutputType = {
   deposit: number | null
   deviceId: string | null
   crewCardId: runtime.Bytes | null
+  notForMe: boolean | null
 }
 
 export type OrderMaxAggregateOutputType = {
@@ -52,6 +53,7 @@ export type OrderMaxAggregateOutputType = {
   deposit: number | null
   deviceId: string | null
   crewCardId: runtime.Bytes | null
+  notForMe: boolean | null
 }
 
 export type OrderCountAggregateOutputType = {
@@ -61,6 +63,7 @@ export type OrderCountAggregateOutputType = {
   deposit: number
   deviceId: number
   crewCardId: number
+  notForMe: number
   _all: number
 }
 
@@ -82,6 +85,7 @@ export type OrderMinAggregateInputType = {
   deposit?: true
   deviceId?: true
   crewCardId?: true
+  notForMe?: true
 }
 
 export type OrderMaxAggregateInputType = {
@@ -91,6 +95,7 @@ export type OrderMaxAggregateInputType = {
   deposit?: true
   deviceId?: true
   crewCardId?: true
+  notForMe?: true
 }
 
 export type OrderCountAggregateInputType = {
@@ -100,6 +105,7 @@ export type OrderCountAggregateInputType = {
   deposit?: true
   deviceId?: true
   crewCardId?: true
+  notForMe?: true
   _all?: true
 }
 
@@ -196,6 +202,7 @@ export type OrderGroupByOutputType = {
   deposit: number
   deviceId: string | null
   crewCardId: runtime.Bytes | null
+  notForMe: boolean | null
   _count: OrderCountAggregateOutputType | null
   _avg: OrderAvgAggregateOutputType | null
   _sum: OrderSumAggregateOutputType | null
@@ -228,6 +235,7 @@ export type OrderWhereInput = {
   deposit?: Prisma.IntFilter<"Order"> | number
   deviceId?: Prisma.StringNullableFilter<"Order"> | string | null
   crewCardId?: Prisma.BytesNullableFilter<"Order"> | runtime.Bytes | null
+  notForMe?: Prisma.BoolNullableFilter<"Order"> | boolean | null
   CardTransaction?: Prisma.CardTransactionListRelationFilter
   crewCard?: Prisma.XOR<Prisma.CrewCardNullableScalarRelationFilter, Prisma.CrewCardWhereInput> | null
   device?: Prisma.XOR<Prisma.DeviceNullableScalarRelationFilter, Prisma.DeviceWhereInput> | null
@@ -241,6 +249,7 @@ export type OrderOrderByWithRelationInput = {
   deposit?: Prisma.SortOrder
   deviceId?: Prisma.SortOrderInput | Prisma.SortOrder
   crewCardId?: Prisma.SortOrderInput | Prisma.SortOrder
+  notForMe?: Prisma.SortOrderInput | Prisma.SortOrder
   CardTransaction?: Prisma.CardTransactionOrderByRelationAggregateInput
   crewCard?: Prisma.CrewCardOrderByWithRelationInput
   device?: Prisma.DeviceOrderByWithRelationInput
@@ -258,6 +267,7 @@ export type OrderWhereUniqueInput = Prisma.AtLeast<{
   deposit?: Prisma.IntFilter<"Order"> | number
   deviceId?: Prisma.StringNullableFilter<"Order"> | string | null
   crewCardId?: Prisma.BytesNullableFilter<"Order"> | runtime.Bytes | null
+  notForMe?: Prisma.BoolNullableFilter<"Order"> | boolean | null
   CardTransaction?: Prisma.CardTransactionListRelationFilter
   crewCard?: Prisma.XOR<Prisma.CrewCardNullableScalarRelationFilter, Prisma.CrewCardWhereInput> | null
   device?: Prisma.XOR<Prisma.DeviceNullableScalarRelationFilter, Prisma.DeviceWhereInput> | null
@@ -271,6 +281,7 @@ export type OrderOrderByWithAggregationInput = {
   deposit?: Prisma.SortOrder
   deviceId?: Prisma.SortOrderInput | Prisma.SortOrder
   crewCardId?: Prisma.SortOrderInput | Prisma.SortOrder
+  notForMe?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.OrderCountOrderByAggregateInput
   _avg?: Prisma.OrderAvgOrderByAggregateInput
   _max?: Prisma.OrderMaxOrderByAggregateInput
@@ -288,12 +299,14 @@ export type OrderScalarWhereWithAggregatesInput = {
   deposit?: Prisma.IntWithAggregatesFilter<"Order"> | number
   deviceId?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
   crewCardId?: Prisma.BytesNullableWithAggregatesFilter<"Order"> | runtime.Bytes | null
+  notForMe?: Prisma.BoolNullableWithAggregatesFilter<"Order"> | boolean | null
 }
 
 export type OrderCreateInput = {
   createdAt?: Date | string
   payment: $Enums.OrderPayment
   deposit?: number
+  notForMe?: boolean | null
   CardTransaction?: Prisma.CardTransactionCreateNestedManyWithoutOrderInput
   crewCard?: Prisma.CrewCardCreateNestedOneWithoutOrderInput
   device?: Prisma.DeviceCreateNestedOneWithoutOrderInput
@@ -307,6 +320,7 @@ export type OrderUncheckedCreateInput = {
   deposit?: number
   deviceId?: string | null
   crewCardId?: runtime.Bytes | null
+  notForMe?: boolean | null
   CardTransaction?: Prisma.CardTransactionUncheckedCreateNestedManyWithoutOrderInput
   items?: Prisma.OrderItemUncheckedCreateNestedManyWithoutOrderInput
 }
@@ -315,6 +329,7 @@ export type OrderUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   payment?: Prisma.EnumOrderPaymentFieldUpdateOperationsInput | $Enums.OrderPayment
   deposit?: Prisma.IntFieldUpdateOperationsInput | number
+  notForMe?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   CardTransaction?: Prisma.CardTransactionUpdateManyWithoutOrderNestedInput
   crewCard?: Prisma.CrewCardUpdateOneWithoutOrderNestedInput
   device?: Prisma.DeviceUpdateOneWithoutOrderNestedInput
@@ -328,6 +343,7 @@ export type OrderUncheckedUpdateInput = {
   deposit?: Prisma.IntFieldUpdateOperationsInput | number
   deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   crewCardId?: Prisma.NullableBytesFieldUpdateOperationsInput | runtime.Bytes | null
+  notForMe?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   CardTransaction?: Prisma.CardTransactionUncheckedUpdateManyWithoutOrderNestedInput
   items?: Prisma.OrderItemUncheckedUpdateManyWithoutOrderNestedInput
 }
@@ -339,12 +355,14 @@ export type OrderCreateManyInput = {
   deposit?: number
   deviceId?: string | null
   crewCardId?: runtime.Bytes | null
+  notForMe?: boolean | null
 }
 
 export type OrderUpdateManyMutationInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   payment?: Prisma.EnumOrderPaymentFieldUpdateOperationsInput | $Enums.OrderPayment
   deposit?: Prisma.IntFieldUpdateOperationsInput | number
+  notForMe?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
 }
 
 export type OrderUncheckedUpdateManyInput = {
@@ -354,6 +372,7 @@ export type OrderUncheckedUpdateManyInput = {
   deposit?: Prisma.IntFieldUpdateOperationsInput | number
   deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   crewCardId?: Prisma.NullableBytesFieldUpdateOperationsInput | runtime.Bytes | null
+  notForMe?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
 }
 
 export type OrderListRelationFilter = {
@@ -379,6 +398,7 @@ export type OrderCountOrderByAggregateInput = {
   deposit?: Prisma.SortOrder
   deviceId?: Prisma.SortOrder
   crewCardId?: Prisma.SortOrder
+  notForMe?: Prisma.SortOrder
 }
 
 export type OrderAvgOrderByAggregateInput = {
@@ -393,6 +413,7 @@ export type OrderMaxOrderByAggregateInput = {
   deposit?: Prisma.SortOrder
   deviceId?: Prisma.SortOrder
   crewCardId?: Prisma.SortOrder
+  notForMe?: Prisma.SortOrder
 }
 
 export type OrderMinOrderByAggregateInput = {
@@ -402,6 +423,7 @@ export type OrderMinOrderByAggregateInput = {
   deposit?: Prisma.SortOrder
   deviceId?: Prisma.SortOrder
   crewCardId?: Prisma.SortOrder
+  notForMe?: Prisma.SortOrder
 }
 
 export type OrderSumOrderByAggregateInput = {
@@ -463,6 +485,10 @@ export type OrderUncheckedUpdateManyWithoutDeviceNestedInput = {
 
 export type EnumOrderPaymentFieldUpdateOperationsInput = {
   set?: $Enums.OrderPayment
+}
+
+export type NullableBoolFieldUpdateOperationsInput = {
+  set?: boolean | null
 }
 
 export type NullableBytesFieldUpdateOperationsInput = {
@@ -545,6 +571,7 @@ export type OrderCreateWithoutDeviceInput = {
   createdAt?: Date | string
   payment: $Enums.OrderPayment
   deposit?: number
+  notForMe?: boolean | null
   CardTransaction?: Prisma.CardTransactionCreateNestedManyWithoutOrderInput
   crewCard?: Prisma.CrewCardCreateNestedOneWithoutOrderInput
   items?: Prisma.OrderItemCreateNestedManyWithoutOrderInput
@@ -556,6 +583,7 @@ export type OrderUncheckedCreateWithoutDeviceInput = {
   payment: $Enums.OrderPayment
   deposit?: number
   crewCardId?: runtime.Bytes | null
+  notForMe?: boolean | null
   CardTransaction?: Prisma.CardTransactionUncheckedCreateNestedManyWithoutOrderInput
   items?: Prisma.OrderItemUncheckedCreateNestedManyWithoutOrderInput
 }
@@ -596,12 +624,14 @@ export type OrderScalarWhereInput = {
   deposit?: Prisma.IntFilter<"Order"> | number
   deviceId?: Prisma.StringNullableFilter<"Order"> | string | null
   crewCardId?: Prisma.BytesNullableFilter<"Order"> | runtime.Bytes | null
+  notForMe?: Prisma.BoolNullableFilter<"Order"> | boolean | null
 }
 
 export type OrderCreateWithoutItemsInput = {
   createdAt?: Date | string
   payment: $Enums.OrderPayment
   deposit?: number
+  notForMe?: boolean | null
   CardTransaction?: Prisma.CardTransactionCreateNestedManyWithoutOrderInput
   crewCard?: Prisma.CrewCardCreateNestedOneWithoutOrderInput
   device?: Prisma.DeviceCreateNestedOneWithoutOrderInput
@@ -614,6 +644,7 @@ export type OrderUncheckedCreateWithoutItemsInput = {
   deposit?: number
   deviceId?: string | null
   crewCardId?: runtime.Bytes | null
+  notForMe?: boolean | null
   CardTransaction?: Prisma.CardTransactionUncheckedCreateNestedManyWithoutOrderInput
 }
 
@@ -637,6 +668,7 @@ export type OrderUpdateWithoutItemsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   payment?: Prisma.EnumOrderPaymentFieldUpdateOperationsInput | $Enums.OrderPayment
   deposit?: Prisma.IntFieldUpdateOperationsInput | number
+  notForMe?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   CardTransaction?: Prisma.CardTransactionUpdateManyWithoutOrderNestedInput
   crewCard?: Prisma.CrewCardUpdateOneWithoutOrderNestedInput
   device?: Prisma.DeviceUpdateOneWithoutOrderNestedInput
@@ -649,6 +681,7 @@ export type OrderUncheckedUpdateWithoutItemsInput = {
   deposit?: Prisma.IntFieldUpdateOperationsInput | number
   deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   crewCardId?: Prisma.NullableBytesFieldUpdateOperationsInput | runtime.Bytes | null
+  notForMe?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   CardTransaction?: Prisma.CardTransactionUncheckedUpdateManyWithoutOrderNestedInput
 }
 
@@ -656,6 +689,7 @@ export type OrderCreateWithoutCardTransactionInput = {
   createdAt?: Date | string
   payment: $Enums.OrderPayment
   deposit?: number
+  notForMe?: boolean | null
   crewCard?: Prisma.CrewCardCreateNestedOneWithoutOrderInput
   device?: Prisma.DeviceCreateNestedOneWithoutOrderInput
   items?: Prisma.OrderItemCreateNestedManyWithoutOrderInput
@@ -668,6 +702,7 @@ export type OrderUncheckedCreateWithoutCardTransactionInput = {
   deposit?: number
   deviceId?: string | null
   crewCardId?: runtime.Bytes | null
+  notForMe?: boolean | null
   items?: Prisma.OrderItemUncheckedCreateNestedManyWithoutOrderInput
 }
 
@@ -691,6 +726,7 @@ export type OrderUpdateWithoutCardTransactionInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   payment?: Prisma.EnumOrderPaymentFieldUpdateOperationsInput | $Enums.OrderPayment
   deposit?: Prisma.IntFieldUpdateOperationsInput | number
+  notForMe?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   crewCard?: Prisma.CrewCardUpdateOneWithoutOrderNestedInput
   device?: Prisma.DeviceUpdateOneWithoutOrderNestedInput
   items?: Prisma.OrderItemUpdateManyWithoutOrderNestedInput
@@ -703,6 +739,7 @@ export type OrderUncheckedUpdateWithoutCardTransactionInput = {
   deposit?: Prisma.IntFieldUpdateOperationsInput | number
   deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   crewCardId?: Prisma.NullableBytesFieldUpdateOperationsInput | runtime.Bytes | null
+  notForMe?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   items?: Prisma.OrderItemUncheckedUpdateManyWithoutOrderNestedInput
 }
 
@@ -710,6 +747,7 @@ export type OrderCreateWithoutCrewCardInput = {
   createdAt?: Date | string
   payment: $Enums.OrderPayment
   deposit?: number
+  notForMe?: boolean | null
   CardTransaction?: Prisma.CardTransactionCreateNestedManyWithoutOrderInput
   device?: Prisma.DeviceCreateNestedOneWithoutOrderInput
   items?: Prisma.OrderItemCreateNestedManyWithoutOrderInput
@@ -721,6 +759,7 @@ export type OrderUncheckedCreateWithoutCrewCardInput = {
   payment: $Enums.OrderPayment
   deposit?: number
   deviceId?: string | null
+  notForMe?: boolean | null
   CardTransaction?: Prisma.CardTransactionUncheckedCreateNestedManyWithoutOrderInput
   items?: Prisma.OrderItemUncheckedCreateNestedManyWithoutOrderInput
 }
@@ -757,12 +796,14 @@ export type OrderCreateManyDeviceInput = {
   payment: $Enums.OrderPayment
   deposit?: number
   crewCardId?: runtime.Bytes | null
+  notForMe?: boolean | null
 }
 
 export type OrderUpdateWithoutDeviceInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   payment?: Prisma.EnumOrderPaymentFieldUpdateOperationsInput | $Enums.OrderPayment
   deposit?: Prisma.IntFieldUpdateOperationsInput | number
+  notForMe?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   CardTransaction?: Prisma.CardTransactionUpdateManyWithoutOrderNestedInput
   crewCard?: Prisma.CrewCardUpdateOneWithoutOrderNestedInput
   items?: Prisma.OrderItemUpdateManyWithoutOrderNestedInput
@@ -774,6 +815,7 @@ export type OrderUncheckedUpdateWithoutDeviceInput = {
   payment?: Prisma.EnumOrderPaymentFieldUpdateOperationsInput | $Enums.OrderPayment
   deposit?: Prisma.IntFieldUpdateOperationsInput | number
   crewCardId?: Prisma.NullableBytesFieldUpdateOperationsInput | runtime.Bytes | null
+  notForMe?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   CardTransaction?: Prisma.CardTransactionUncheckedUpdateManyWithoutOrderNestedInput
   items?: Prisma.OrderItemUncheckedUpdateManyWithoutOrderNestedInput
 }
@@ -784,6 +826,7 @@ export type OrderUncheckedUpdateManyWithoutDeviceInput = {
   payment?: Prisma.EnumOrderPaymentFieldUpdateOperationsInput | $Enums.OrderPayment
   deposit?: Prisma.IntFieldUpdateOperationsInput | number
   crewCardId?: Prisma.NullableBytesFieldUpdateOperationsInput | runtime.Bytes | null
+  notForMe?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
 }
 
 export type OrderCreateManyCrewCardInput = {
@@ -792,12 +835,14 @@ export type OrderCreateManyCrewCardInput = {
   payment: $Enums.OrderPayment
   deposit?: number
   deviceId?: string | null
+  notForMe?: boolean | null
 }
 
 export type OrderUpdateWithoutCrewCardInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   payment?: Prisma.EnumOrderPaymentFieldUpdateOperationsInput | $Enums.OrderPayment
   deposit?: Prisma.IntFieldUpdateOperationsInput | number
+  notForMe?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   CardTransaction?: Prisma.CardTransactionUpdateManyWithoutOrderNestedInput
   device?: Prisma.DeviceUpdateOneWithoutOrderNestedInput
   items?: Prisma.OrderItemUpdateManyWithoutOrderNestedInput
@@ -809,6 +854,7 @@ export type OrderUncheckedUpdateWithoutCrewCardInput = {
   payment?: Prisma.EnumOrderPaymentFieldUpdateOperationsInput | $Enums.OrderPayment
   deposit?: Prisma.IntFieldUpdateOperationsInput | number
   deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  notForMe?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   CardTransaction?: Prisma.CardTransactionUncheckedUpdateManyWithoutOrderNestedInput
   items?: Prisma.OrderItemUncheckedUpdateManyWithoutOrderNestedInput
 }
@@ -819,6 +865,7 @@ export type OrderUncheckedUpdateManyWithoutCrewCardInput = {
   payment?: Prisma.EnumOrderPaymentFieldUpdateOperationsInput | $Enums.OrderPayment
   deposit?: Prisma.IntFieldUpdateOperationsInput | number
   deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  notForMe?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
 }
 
 
@@ -868,6 +915,7 @@ export type OrderSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   deposit?: boolean
   deviceId?: boolean
   crewCardId?: boolean
+  notForMe?: boolean
   CardTransaction?: boolean | Prisma.Order$CardTransactionArgs<ExtArgs>
   crewCard?: boolean | Prisma.Order$crewCardArgs<ExtArgs>
   device?: boolean | Prisma.Order$deviceArgs<ExtArgs>
@@ -882,6 +930,7 @@ export type OrderSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   deposit?: boolean
   deviceId?: boolean
   crewCardId?: boolean
+  notForMe?: boolean
   crewCard?: boolean | Prisma.Order$crewCardArgs<ExtArgs>
   device?: boolean | Prisma.Order$deviceArgs<ExtArgs>
 }, ExtArgs["result"]["order"]>
@@ -893,6 +942,7 @@ export type OrderSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   deposit?: boolean
   deviceId?: boolean
   crewCardId?: boolean
+  notForMe?: boolean
   crewCard?: boolean | Prisma.Order$crewCardArgs<ExtArgs>
   device?: boolean | Prisma.Order$deviceArgs<ExtArgs>
 }, ExtArgs["result"]["order"]>
@@ -904,9 +954,10 @@ export type OrderSelectScalar = {
   deposit?: boolean
   deviceId?: boolean
   crewCardId?: boolean
+  notForMe?: boolean
 }
 
-export type OrderOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "createdAt" | "payment" | "deposit" | "deviceId" | "crewCardId", ExtArgs["result"]["order"]>
+export type OrderOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "createdAt" | "payment" | "deposit" | "deviceId" | "crewCardId" | "notForMe", ExtArgs["result"]["order"]>
 export type OrderInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   CardTransaction?: boolean | Prisma.Order$CardTransactionArgs<ExtArgs>
   crewCard?: boolean | Prisma.Order$crewCardArgs<ExtArgs>
@@ -938,6 +989,7 @@ export type $OrderPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     deposit: number
     deviceId: string | null
     crewCardId: runtime.Bytes | null
+    notForMe: boolean | null
   }, ExtArgs["result"]["order"]>
   composites: {}
 }
@@ -1371,6 +1423,7 @@ export interface OrderFieldRefs {
   readonly deposit: Prisma.FieldRef<"Order", 'Int'>
   readonly deviceId: Prisma.FieldRef<"Order", 'String'>
   readonly crewCardId: Prisma.FieldRef<"Order", 'Bytes'>
+  readonly notForMe: Prisma.FieldRef<"Order", 'Boolean'>
 }
     
 

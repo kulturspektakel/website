@@ -1,10 +1,40 @@
 import {currencyFormatter} from './Card';
-import {Box, Flex, Heading, ListItem, ListRoot, Text} from '@chakra-ui/react';
+import {
+  Badge,
+  Box,
+  Flex,
+  Heading,
+  IconButton,
+  ListItem,
+  ListRoot,
+  Text,
+} from '@chakra-ui/react';
 import InfoText from './InfoText';
 import {CardTransactionType} from '../../generated/prisma/browser';
-import {FaBan} from 'react-icons/fa6';
+import {FaBan, FaXmark} from 'react-icons/fa6';
+import {useState} from 'react';
+import {useRouter} from '@tanstack/react-router';
+import {createServerFn} from '@tanstack/react-start';
+import {z} from 'zod';
+import {prismaClient} from '../../server/prismaClient.server';
+import {stringToByteArray} from '../../utils/cardUtils';
 
 const DEPOSIT_VALUE = 200;
+
+const setOrderNotForMe = createServerFn({method: 'POST'})
+  .inputValidator(
+    z.object({
+      cardId: z.string(),
+      orderId: z.number().int(),
+      notForMe: z.boolean(),
+    }),
+  )
+  .handler(async ({data: {cardId, orderId, notForMe}}) => {
+    await prismaClient.order.updateMany({
+      where: {id: orderId, crewCardId: stringToByteArray(cardId)},
+      data: {notForMe},
+    });
+  });
 
 type CardChange = {
   balanceBefore: number;
@@ -20,6 +50,8 @@ type MissingTransaction = CardChange & {
 
 type Order = {
   type: 'order';
+  orderId?: number;
+  notForMe?: boolean | null;
   productList: string;
   emoji: string | null;
   items: Array<{amount: number; name: string}>;
@@ -37,8 +69,10 @@ export type CardActivity = MissingTransaction | Order | GenericTransaction;
 
 export function CardActivities({
   newestToOldest: data,
+  crewCardId,
 }: {
   newestToOldest?: Array<CardActivity>;
+  crewCardId?: string;
 }) {
   if (data?.length === 0) {
     return (
@@ -57,7 +91,7 @@ export function CardActivities({
   return (
     <ListRoot as="ol" m="0">
       {data?.map((t, i) => (
-        <ActivityItem key={i} data={t} />
+        <ActivityItem key={i} data={t} crewCardId={crewCardId} />
       ))}
     </ListRoot>
   );
@@ -84,7 +118,13 @@ function genericTitle(data: CardChange) {
   }
 }
 
-function ActivityItem({data}: {data: CardActivity}) {
+function ActivityItem({
+  data,
+  crewCardId,
+}: {
+  data: CardActivity;
+  crewCardId?: string;
+}) {
   switch (data.type) {
     case 'missing':
       return (
@@ -126,10 +166,19 @@ function ActivityItem({data}: {data: CardActivity}) {
         <Cell
           title={data.productList}
           accessoryStart={data.emoji}
-          subtitle={products.join(', ')}
+          subtitle={
+            <Flex align="center" gap="2" display="inline-flex">
+              {data.notForMe && crewCardId && data.orderId != null && (
+                <NotForMeBadge cardId={crewCardId} orderId={data.orderId} />
+              )}
+              {products.join(', ')}
+            </Flex>
+          }
           description={<CellDateTime time={data.time} />}
           accessoryEnd={
-            data.cardChange ? (
+            !data.notForMe && crewCardId && data.orderId != null ? (
+              <NotForMeButton cardId={crewCardId} orderId={data.orderId} />
+            ) : data.cardChange ? (
               <CellTotal
                 total={
                   data.cardChange.balanceAfter - data.cardChange.balanceBefore
@@ -140,6 +189,68 @@ function ActivityItem({data}: {data: CardActivity}) {
         />
       );
   }
+}
+
+function NotForMeBadge({cardId, orderId}: {cardId: string; orderId: number}) {
+  const router = useRouter();
+  const [pending, setPending] = useState(false);
+  return (
+    <Badge colorPalette="red" gap="1">
+      Nicht für mich
+      <Box
+        as="button"
+        display="inline-flex"
+        alignItems="center"
+        cursor="pointer"
+        aria-label="Markierung entfernen"
+        onClick={async () => {
+          if (pending) {
+            return;
+          }
+          setPending(true);
+          try {
+            await setOrderNotForMe({data: {cardId, orderId, notForMe: false}});
+            await router.invalidate();
+          } finally {
+            setPending(false);
+          }
+        }}
+      >
+        <FaXmark />
+      </Box>
+    </Badge>
+  );
+}
+
+function NotForMeButton({cardId, orderId}: {cardId: string; orderId: number}) {
+  const router = useRouter();
+  const [pending, setPending] = useState(false);
+  return (
+    <IconButton
+      size="xs"
+      variant="outline"
+      aria-label="Als „nicht für mich“ markieren"
+      loading={pending}
+      onClick={async () => {
+        if (
+          !window.confirm(
+            'Diese Buchung als „nicht für mich“ markieren? Sie zählt dann nicht für Badges und Highscores.',
+          )
+        ) {
+          return;
+        }
+        setPending(true);
+        try {
+          await setOrderNotForMe({data: {cardId, orderId, notForMe: true}});
+          await router.invalidate();
+        } finally {
+          setPending(false);
+        }
+      }}
+    >
+      <FaXmark />
+    </IconButton>
+  );
 }
 
 function CellDateTime(props: {time: Date}) {
