@@ -34,7 +34,7 @@ export async function handleAwarenessSlack(
     text: [
       ':rotating_light: <!subteam^S0BBZMX1RB7> *Neue Hilfe-Anfrage über die Website*',
       `*Name:* ${data.name}`,
-      `*Telefon:* ${data.phone}`,
+      `*Telefon:* <tel:${data.phone.replace(/\s/g, '')}|${data.phone}>`,
       data.message ? `*Anliegen:* ${data.message}` : undefined,
       mapsLink ? `*Standort:* <${mapsLink}|Auf Karte öffnen>` : undefined,
     ]

@@ -35,9 +35,17 @@ const helpSchema = z.object({
 
 type HelpValues = z.infer<typeof helpSchema>;
 
+// Reject geolocation fixes coarser than this (in meters). `enableHighAccuracy`
+// is only a hint — without a real GPS fix the browser falls back to IP/WiFi
+// positioning that can be kilometers off, which would send the awareness team
+// to the wrong place. `coords.accuracy` is the radius of confidence, so a value
+// above this threshold means we don't trust the position.
+const MAX_ACCURACY_METERS = 50;
+
 // Optional geolocation control. A switch that, when turned on, requests the
 // browser location and writes a Google Maps link into the `location` form
-// field. If the request is denied/fails, the switch flips back off.
+// field. If the request is denied/fails/too imprecise, the switch flips back
+// off.
 function LocationField() {
   const {values, setFieldValue} = useFormikContext<HelpValues>();
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle');
@@ -59,6 +67,12 @@ function LocationField() {
     setStatus('loading');
     navigator.geolocation.getCurrentPosition(
       ({coords}) => {
+        // Too coarse to be useful (IP/WiFi fallback rather than GPS): treat it
+        // like a failure so we never send the team to a wrong location.
+        if (coords.accuracy > MAX_ACCURACY_METERS) {
+          setStatus('error');
+          return;
+        }
         setFieldValue(
           'location',
           `https://www.google.com/maps?q=${coords.latitude},${coords.longitude}`,
