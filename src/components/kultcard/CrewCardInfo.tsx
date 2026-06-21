@@ -44,7 +44,8 @@ export function CrewCardInfo() {
               <Text>
                 Egal ob du etwas für dich, deine Helfer:inenn, Bands oder andere
                 Orgas holst, alles was du holst <strong>muss</strong> auf deine
-                CrewCard gebucht werden!
+                CrewCard gebucht werden! Für deine Statistik kannst du hier im
+                Nachhinein einzelne Buchungen als "nicht für mich" markieren.
               </Text>
             </Dialog.Body>
             <Dialog.Footer>
