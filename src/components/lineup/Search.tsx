@@ -17,19 +17,23 @@ const serverFn = createServerFn()
       .replace(/[^\p{L}0-9- ]/gu, ' ')
       .trim()
       .replace(/\s\s*/g, '<->');
+    if (!q) return [];
     q += ':*';
 
-    return prismaClient.bandPlaying.findMany({
-      where: {
-        name: {
-          search: q,
-        },
-      },
-      orderBy: {
-        startTime: 'desc',
-      },
-      take: 10,
-    });
+    // The DB runs under a C locale, so the `simple` text-search config only
+    // lowercases ASCII — umlauts in band names keep their case and never match
+    // what the user types. Normalise both sides with unaccent(lower(...)) so
+    // "über"/"uber"/"Übertreibhaus" all find "Übertreibhaus".
+    return prismaClient.$queryRaw<
+      Array<{id: string; name: string; slug: string; startTime: Date}>
+    >`
+      SELECT id, name, slug, "startTime"
+      FROM "BandPlaying"
+      WHERE to_tsvector('simple', unaccent(lower(name)))
+            @@ to_tsquery('simple', unaccent(lower(${q})))
+      ORDER BY "startTime" DESC
+      LIMIT 10
+    `;
   });
 
 export default function Search(props: BoxProps) {
