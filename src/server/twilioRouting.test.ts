@@ -23,8 +23,8 @@ describe('parseDialNumbers', () => {
     expect(parseDialNumbers()).toEqual(['+491111', '+492222']);
   });
 
-  test('throws when unset', () => {
-    delete process.env.TWILIO_DIAL_NUMBERS;
+  test('throws when empty', () => {
+    process.env.TWILIO_DIAL_NUMBERS = '';
     expect(() => parseDialNumbers()).toThrow();
   });
 });
