@@ -126,6 +126,9 @@ export default function Footer() {
               href="https://www.bundesregierung.de/breg-de/bundesregierung/staatsministerin-fuer-kultur-und-medien"
               target="_blank"
               title="Die Beauftragte der Bundesregierung für Kultur und Medien"
+              bgColor="white"
+              borderRadius="md"
+              p="2"
             >
               <Image
                 src={bkm}
