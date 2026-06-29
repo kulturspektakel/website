@@ -34,6 +34,8 @@ declare namespace NodeJS {
     TWILIO_ACCOUNT_SID: string;
     TWILIO_API_KEY: string;
     TWILIO_API_SECRET: string;
+    TWILIO_AUTH_TOKEN: string;
+    TWILIO_DIAL_NUMBERS: string;
     TWILIO_FROM_NUMBER: string;
     YOUTUBE_API_KEY: string;
   }

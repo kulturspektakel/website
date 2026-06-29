@@ -72,6 +72,8 @@ const ENV_VARS = {
   TWILIO_ACCOUNT_SID: 'secret',
   TWILIO_API_KEY: 'secret',
   TWILIO_API_SECRET: 'secret',
+  TWILIO_AUTH_TOKEN: 'secret',
+  TWILIO_DIAL_NUMBERS: 'secret',
   TWILIO_FROM_NUMBER: 'secret',
   YOUTUBE_API_KEY: 'secret',
 };

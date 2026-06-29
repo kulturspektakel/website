@@ -43,6 +43,10 @@ import { Route as MainLineupIndexRouteImport } from './routes/_main.lineup.index
 import { Route as CrewProdukteListIdRouteImport } from './routes/crew.produkte.$listId'
 import { Route as CrewLautstaerkeDeviceRouteImport } from './routes/crew.lautstaerke.$device'
 import { Route as CrewBookingEventIdRouteImport } from './routes/crew.booking.$eventId'
+import { Route as ApiTwilioScreenRouteImport } from './routes/api.twilio.screen'
+import { Route as ApiTwilioLegStatusRouteImport } from './routes/api.twilio.leg-status'
+import { Route as ApiTwilioIncomingRouteImport } from './routes/api.twilio.incoming'
+import { Route as ApiTwilioAcceptRouteImport } from './routes/api.twilio.accept'
 import { Route as ApiTasksSpotifyListenersRouteImport } from './routes/api.tasks.spotify-listeners'
 import { Route as ApiTasksSpotifyImageRouteImport } from './routes/api.tasks.spotify-image'
 import { Route as ApiTasksSendGmailRouteImport } from './routes/api.tasks.send-gmail'
@@ -263,6 +267,26 @@ const CrewBookingEventIdRoute = CrewBookingEventIdRouteImport.update({
   id: '/booking/$eventId',
   path: '/booking/$eventId',
   getParentRoute: () => CrewRoute,
+} as any)
+const ApiTwilioScreenRoute = ApiTwilioScreenRouteImport.update({
+  id: '/api/twilio/screen',
+  path: '/api/twilio/screen',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTwilioLegStatusRoute = ApiTwilioLegStatusRouteImport.update({
+  id: '/api/twilio/leg-status',
+  path: '/api/twilio/leg-status',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTwilioIncomingRoute = ApiTwilioIncomingRouteImport.update({
+  id: '/api/twilio/incoming',
+  path: '/api/twilio/incoming',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTwilioAcceptRoute = ApiTwilioAcceptRouteImport.update({
+  id: '/api/twilio/accept',
+  path: '/api/twilio/accept',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiTasksSpotifyListenersRoute =
   ApiTasksSpotifyListenersRouteImport.update({
@@ -608,6 +632,10 @@ export interface FileRoutesByFullPath {
   '/api/tasks/send-gmail': typeof ApiTasksSendGmailRoute
   '/api/tasks/spotify-image': typeof ApiTasksSpotifyImageRoute
   '/api/tasks/spotify-listeners': typeof ApiTasksSpotifyListenersRoute
+  '/api/twilio/accept': typeof ApiTwilioAcceptRoute
+  '/api/twilio/incoming': typeof ApiTwilioIncomingRoute
+  '/api/twilio/leg-status': typeof ApiTwilioLegStatusRoute
+  '/api/twilio/screen': typeof ApiTwilioScreenRoute
   '/crew/booking/$eventId': typeof CrewBookingEventIdRouteWithChildren
   '/crew/lautstaerke/$device': typeof CrewLautstaerkeDeviceRouteWithChildren
   '/crew/produkte/$listId': typeof CrewProdukteListIdRoute
@@ -690,6 +718,10 @@ export interface FileRoutesByTo {
   '/api/tasks/send-gmail': typeof ApiTasksSendGmailRoute
   '/api/tasks/spotify-image': typeof ApiTasksSpotifyImageRoute
   '/api/tasks/spotify-listeners': typeof ApiTasksSpotifyListenersRoute
+  '/api/twilio/accept': typeof ApiTwilioAcceptRoute
+  '/api/twilio/incoming': typeof ApiTwilioIncomingRoute
+  '/api/twilio/leg-status': typeof ApiTwilioLegStatusRoute
+  '/api/twilio/screen': typeof ApiTwilioScreenRoute
   '/crew/booking/$eventId': typeof CrewBookingEventIdRouteWithChildren
   '/crew/produkte/$listId': typeof CrewProdukteListIdRoute
   '/lineup': typeof MainLineupIndexRoute
@@ -777,6 +809,10 @@ export interface FileRoutesById {
   '/api/tasks/send-gmail': typeof ApiTasksSendGmailRoute
   '/api/tasks/spotify-image': typeof ApiTasksSpotifyImageRoute
   '/api/tasks/spotify-listeners': typeof ApiTasksSpotifyListenersRoute
+  '/api/twilio/accept': typeof ApiTwilioAcceptRoute
+  '/api/twilio/incoming': typeof ApiTwilioIncomingRoute
+  '/api/twilio/leg-status': typeof ApiTwilioLegStatusRoute
+  '/api/twilio/screen': typeof ApiTwilioScreenRoute
   '/crew/booking/$eventId': typeof CrewBookingEventIdRouteWithChildren
   '/crew/lautstaerke/$device': typeof CrewLautstaerkeDeviceRouteWithChildren
   '/crew/produkte/$listId': typeof CrewProdukteListIdRoute
@@ -865,6 +901,10 @@ export interface FileRouteTypes {
     | '/api/tasks/send-gmail'
     | '/api/tasks/spotify-image'
     | '/api/tasks/spotify-listeners'
+    | '/api/twilio/accept'
+    | '/api/twilio/incoming'
+    | '/api/twilio/leg-status'
+    | '/api/twilio/screen'
     | '/crew/booking/$eventId'
     | '/crew/lautstaerke/$device'
     | '/crew/produkte/$listId'
@@ -947,6 +987,10 @@ export interface FileRouteTypes {
     | '/api/tasks/send-gmail'
     | '/api/tasks/spotify-image'
     | '/api/tasks/spotify-listeners'
+    | '/api/twilio/accept'
+    | '/api/twilio/incoming'
+    | '/api/twilio/leg-status'
+    | '/api/twilio/screen'
     | '/crew/booking/$eventId'
     | '/crew/produkte/$listId'
     | '/lineup'
@@ -1033,6 +1077,10 @@ export interface FileRouteTypes {
     | '/api/tasks/send-gmail'
     | '/api/tasks/spotify-image'
     | '/api/tasks/spotify-listeners'
+    | '/api/twilio/accept'
+    | '/api/twilio/incoming'
+    | '/api/twilio/leg-status'
+    | '/api/twilio/screen'
     | '/crew/booking/$eventId'
     | '/crew/lautstaerke/$device'
     | '/crew/produkte/$listId'
@@ -1069,6 +1117,10 @@ export interface RootRouteChildren {
   ApiSlackTokenRoute: typeof ApiSlackTokenRoute
   ApiSlackTwofactorRoute: typeof ApiSlackTwofactorRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
+  ApiTwilioAcceptRoute: typeof ApiTwilioAcceptRoute
+  ApiTwilioIncomingRoute: typeof ApiTwilioIncomingRoute
+  ApiTwilioLegStatusRoute: typeof ApiTwilioLegStatusRoute
+  ApiTwilioScreenRoute: typeof ApiTwilioScreenRoute
   ApiSpendenQuittungIdRoute: typeof ApiSpendenQuittungIdRoute
 }
 
@@ -1311,6 +1363,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/crew/booking/$eventId'
       preLoaderRoute: typeof CrewBookingEventIdRouteImport
       parentRoute: typeof CrewRoute
+    }
+    '/api/twilio/screen': {
+      id: '/api/twilio/screen'
+      path: '/api/twilio/screen'
+      fullPath: '/api/twilio/screen'
+      preLoaderRoute: typeof ApiTwilioScreenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/twilio/leg-status': {
+      id: '/api/twilio/leg-status'
+      path: '/api/twilio/leg-status'
+      fullPath: '/api/twilio/leg-status'
+      preLoaderRoute: typeof ApiTwilioLegStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/twilio/incoming': {
+      id: '/api/twilio/incoming'
+      path: '/api/twilio/incoming'
+      fullPath: '/api/twilio/incoming'
+      preLoaderRoute: typeof ApiTwilioIncomingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/twilio/accept': {
+      id: '/api/twilio/accept'
+      path: '/api/twilio/accept'
+      fullPath: '/api/twilio/accept'
+      preLoaderRoute: typeof ApiTwilioAcceptRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/tasks/spotify-listeners': {
       id: '/api/tasks/spotify-listeners'
@@ -1955,6 +2035,10 @@ const rootRouteChildren: RootRouteChildren = {
   ApiSlackTokenRoute: ApiSlackTokenRoute,
   ApiSlackTwofactorRoute: ApiSlackTwofactorRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
+  ApiTwilioAcceptRoute: ApiTwilioAcceptRoute,
+  ApiTwilioIncomingRoute: ApiTwilioIncomingRoute,
+  ApiTwilioLegStatusRoute: ApiTwilioLegStatusRoute,
+  ApiTwilioScreenRoute: ApiTwilioScreenRoute,
   ApiSpendenQuittungIdRoute: ApiSpendenQuittungIdRoute,
 }
 export const routeTree = rootRouteImport
