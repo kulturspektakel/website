@@ -61,7 +61,7 @@ export async function handleGmailReminder(request: Request): Promise<Response> {
   await slackApiRequest('chat.postMessage', {
     channel: config.channel,
     text: `Folgende E-Mail ist seit ${age} Tag${age === 1 ? '' : 'en'} unbeantwortet im Posteingang von ${account}. Kann sie bitte jemand beantworten oder sie archivieren, wenn keine Antwort notwendig ist.`,
-    attachments: [slackAttachment(message.data, account, 'warning')],
+    attachments: [slackAttachment(message.data, account, {color: 'warning'})],
   });
 
   return new Response(null, {status: 204});

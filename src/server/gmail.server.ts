@@ -115,6 +115,22 @@ export async function sendGmail({
   await gmail.users.messages.send({userId: 'me', requestBody: {raw}});
 }
 
+/**
+ * Archive a message — Gmail's "archive" is simply removing the `INBOX` label.
+ * Requires the `gmail.modify` scope to be delegated to the SA (broader than the
+ * default `gmail.readonly`).
+ */
+export async function archiveGmailMessage(account: string, messageId: string) {
+  const gmail = await gmailClient(account, [
+    'https://www.googleapis.com/auth/gmail.modify',
+  ]);
+  await gmail.users.messages.modify({
+    userId: 'me',
+    id: messageId,
+    requestBody: {removeLabelIds: ['INBOX']},
+  });
+}
+
 export function getHeaderField(message: gmail_v1.Schema$Message, field: string) {
   const header = message.payload?.headers?.find(
     (h) => h.name?.toLowerCase() === field.toLowerCase(),
@@ -127,23 +143,64 @@ export function parseInternalDate(message: gmail_v1.Schema$Message): Date {
 }
 
 /**
- * Format a Gmail message as a Slack message attachment with an "Open" link
- * back to the message in the inbox.
+ * Format a Gmail message as a Slack message attachment. Uses Block Kit blocks
+ * (rather than legacy attachment `actions`) so the "Archivieren" button arrives
+ * as a `block_actions` interaction — see `slack/interaction.ts`.
+ *
+ * Once the mail has been archived, pass `archivedBy` (a Slack user id) to swap
+ * the buttons for a "Archiviert von …" note when re-rendering the message.
  */
 export function slackAttachment(
   message: gmail_v1.Schema$Message,
   account: string,
-  color?: string,
+  {color, archivedBy}: {color?: string; archivedBy?: string} = {},
 ) {
   const url = `https://mail.google.com/mail/u/${account}/#inbox/${message.threadId}`;
+  const from = getHeaderField(message, 'from');
+  const subject = getHeaderField(message, 'subject');
+
+  const footerBlock = archivedBy
+    ? {
+        type: 'context',
+        elements: [
+          {type: 'mrkdwn', text: `🗄️ Archiviert von <@${archivedBy}>`},
+        ],
+      }
+    : {
+        type: 'actions',
+        elements: [
+          {
+            type: 'button',
+            text: {type: 'plain_text', text: 'Öffnen'},
+            url,
+          },
+          {
+            type: 'button',
+            text: {type: 'plain_text', text: 'Archivieren'},
+            action_id: 'archive-gmail',
+            value: JSON.stringify({account, messageId: message.id}),
+          },
+        ],
+      };
+
   return {
-    author_name: getHeaderField(message, 'from'),
-    callback_id: message.threadId,
     fallback: url,
-    title: getHeaderField(message, 'subject'),
-    text: message.snippet,
     color,
-    ts: Math.round(parseInternalDate(message).getTime() / 1000),
-    actions: [{type: 'button', text: 'Öffnen', url}],
+    blocks: [
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: [
+            from && `*${from}*`,
+            subject && `*${subject}*`,
+            message.snippet,
+          ]
+            .filter(Boolean)
+            .join('\n'),
+        },
+      },
+      footerBlock,
+    ],
   };
 }

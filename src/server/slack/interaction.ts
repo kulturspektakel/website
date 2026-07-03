@@ -1,6 +1,7 @@
 import {prismaClient} from '../prismaClient.server';
 import {ApiError} from '../apiError.server';
 import {postResponseUrl} from '../slack.server';
+import {archiveGmailMessage, gmailClient, slackAttachment} from '../gmail.server';
 import {generateTwoFactorCodeResponse} from './twofactor';
 import {
   assignCrewCard,
@@ -29,7 +30,8 @@ type SlackButtonAction = {
     | 'two-factor-code'
     | 'assign-crew-card-modal'
     | 'nuclino-login-generation'
-    | 'nuclino-login-open';
+    | 'nuclino-login-open'
+    | 'archive-gmail';
   value?: string;
 };
 
@@ -136,6 +138,33 @@ export async function handleSlackInteraction(
             payload.trigger_id,
             action.value,
           );
+          return ok();
+        }
+        case 'archive-gmail': {
+          if (!action.value) {
+            throw new ApiError(400, 'Invalid input');
+          }
+          const {account, messageId} = JSON.parse(action.value) as {
+            account: string;
+            messageId: string;
+          };
+          // Archive first — only rewrite the Slack message once the mail has
+          // actually left the inbox, so a failed modify surfaces as an error
+          // rather than a false "archiviert" note.
+          await archiveGmailMessage(account, messageId);
+
+          const gmail = await gmailClient(account);
+          const message = await gmail.users.messages
+            .get({id: messageId, userId: 'me'})
+            .catch(() => null);
+
+          await postResponseUrl(payload.response_url, {
+            replace_original: 'true',
+            text: '',
+            attachments: message?.data
+              ? [slackAttachment(message.data, account, {archivedBy: payload.user.id})]
+              : [],
+          });
           return ok();
         }
         // The /nuclino modal button is a url button; clicking it also fires an
