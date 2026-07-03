@@ -1,7 +1,12 @@
 import {prismaClient} from '../prismaClient.server';
 import {ApiError} from '../apiError.server';
 import {postResponseUrl} from '../slack.server';
-import {archiveGmailMessage, gmailClient, slackAttachment} from '../gmail.server';
+import {
+  archiveGmailMessage,
+  gmailClient,
+  GMAIL_REMINDERS,
+  slackAttachment,
+} from '../gmail.server';
 import {generateTwoFactorCodeResponse} from './twofactor';
 import {
   assignCrewCard,
@@ -148,6 +153,12 @@ export async function handleSlackInteraction(
             account: string;
             messageId: string;
           };
+          // `account` becomes the delegation `subject`, i.e. which mailbox we
+          // impersonate — so gate it to our known shared inboxes rather than
+          // trusting the button payload (the interaction endpoint is unsigned).
+          if (!(account in GMAIL_REMINDERS)) {
+            throw new ApiError(400, 'Unknown account');
+          }
           // Archive first — only rewrite the Slack message once the mail has
           // actually left the inbox, so a failed modify surfaces as an error
           // rather than a false "archiviert" note.

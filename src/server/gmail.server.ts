@@ -143,6 +143,19 @@ export function parseInternalDate(message: gmail_v1.Schema$Message): Date {
 }
 
 /**
+ * Escape a string for safe interpolation into a Slack `mrkdwn` field. Per
+ * Slack's guidance, escaping `&`, `<` and `>` is sufficient — it also defuses
+ * mention/link injection (`<!channel>`, `<@U…>`, `<url|text>`), since all of
+ * those require a literal `<`.
+ */
+function escapeSlack(value: string | null): string | null {
+  return value
+    ?.replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;') ?? null;
+}
+
+/**
  * Format a Gmail message as a Slack message attachment. Uses Block Kit blocks
  * (rather than legacy attachment `actions`) so the "Archivieren" button arrives
  * as a `block_actions` interaction — see `slack/interaction.ts`.
@@ -156,8 +169,13 @@ export function slackAttachment(
   {color, archivedBy}: {color?: string; archivedBy?: string} = {},
 ) {
   const url = `https://mail.google.com/mail/u/${account}/#inbox/${message.threadId}`;
-  const from = getHeaderField(message, 'from');
-  const subject = getHeaderField(message, 'subject');
+  // The header/snippet values are attacker-controlled (they come straight from
+  // the inbound email), so escape them per Slack's mrkdwn rules before we drop
+  // them into a `mrkdwn` block. Escaping `<` neutralizes `<!channel>`, `<@U…>`,
+  // and `<url|text>` link injection too.
+  const from = escapeSlack(getHeaderField(message, 'from'));
+  const subject = escapeSlack(getHeaderField(message, 'subject'));
+  const snippet = escapeSlack(message.snippet ?? null);
 
   const footerBlock = archivedBy
     ? {
@@ -191,11 +209,7 @@ export function slackAttachment(
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: [
-            from && `*${from}*`,
-            subject && `*${subject}*`,
-            message.snippet,
-          ]
+          text: [from && `*${from}*`, subject && `*${subject}*`, snippet]
             .filter(Boolean)
             .join('\n'),
         },
