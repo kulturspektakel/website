@@ -448,6 +448,14 @@ function decorateRows(rows: BandApplicationRow[]): Row[] {
   });
 }
 
+// Rows are a fixed height so the virtualizer can position them by pure math
+// (estimateSize is exact — no per-row measurement/ResizeObserver). Both the
+// virtualizer estimate and the row's `h` read this constant, so the DOM row
+// (box-sizing: border-box) is exactly ROW_HEIGHT — keep it that way (don't add
+// margins or a taller border). Every cell's content must fit; the tags cell
+// clips to a single row (see below).
+const ROW_HEIGHT = 56;
+
 const col = createColumnHelper<Row>();
 
 const columns = [
@@ -594,7 +602,7 @@ const columns = [
       filterValue.some((f) => row.original.tagLabels.includes(f)),
     getUniqueValues: (row) => row.tagLabels,
     cell: ({row}) => (
-      <HStack gap="1" wrap="wrap">
+      <HStack gap="1" overflow="hidden">
         {row.original.computedTags.map((t) => (
           <Tag key={t.label} colorPalette={t.colorPalette} size="sm">
             {t.label}
@@ -695,7 +703,9 @@ function BookingPage() {
   const virtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => scrollRef.current,
-    estimateSize: () => 56,
+    // Rows are fixed height, so this is exact — the virtualizer never needs to
+    // measure a rendered row (no ResizeObserver / offsetHeight reads).
+    estimateSize: () => ROW_HEIGHT,
     // Render a generous buffer above/below the viewport so fast scrolling
     // doesn't outrun row rendering and flash empty rows. Rows are expensive
     // (several tooltips + avatars each), so this only softens the gap on a hard
@@ -808,8 +818,6 @@ function BookingPage() {
               return (
                 <Flex
                   key={row.id}
-                  data-index={vItem.index}
-                  ref={virtualizer.measureElement}
                   position="absolute"
                   top="0"
                   left="0"
@@ -817,7 +825,8 @@ function BookingPage() {
                   transform={`translateY(${vItem.start}px)`}
                   borderBottomWidth="1px"
                   align="center"
-                  minH="14"
+                  h={`${ROW_HEIGHT}px`}
+                  overflow="hidden"
                   fontSize="sm"
                   cursor="pointer"
                   bg={active ? 'bg.emphasized' : undefined}
