@@ -274,14 +274,22 @@ function BandContactRoute() {
         <DialogBody>
           {step === 1 ? (
             <Stack gap="4">
-              {data.lastContactedAt && (
+              {data.contactedBy && (
                 <Alert status="warning" title="Bereits kontaktiert">
-                  Diese Band wurde am{' '}
-                  <DateString
-                    date={new Date(data.lastContactedAt)}
-                    options={{day: 'numeric', month: 'long', year: 'numeric'}}
-                  />
-                  {data.contactedBy ? ` von ${data.contactedBy}` : ''} bereits
+                  Diese Band wurde bereits von {data.contactedBy}
+                  {data.lastContactedAt && (
+                    <>
+                      {' '}am{' '}
+                      <DateString
+                        date={new Date(data.lastContactedAt)}
+                        options={{
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric',
+                        }}
+                      />
+                    </>
+                  )}{' '}
                   kontaktiert.
                 </Alert>
               )}
