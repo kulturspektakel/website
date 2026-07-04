@@ -30,6 +30,12 @@ const overrides: SystemConfig = {
           emphasized: {value: '{colors.gray.200}'},
           inverted: {value: '{colors.gray.900}'},
         },
+        // Focus rings/outlines are blue across the crew area. Components use the
+        // (default) gray colorPalette, whose `focusRing` token drives
+        // `--focus-ring-color`, so overriding it here recolors every focus ring.
+        gray: {
+          focusRing: {value: '{colors.blue.focusRing}'},
+        },
       },
     },
     recipes: {

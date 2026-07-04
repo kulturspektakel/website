@@ -766,6 +766,7 @@ function BandTimeline({timeline}: {timeline: TimelineEntry[]}) {
                   <DateString
                     date={e.date}
                     options={{
+                      weekday: 'short',
                       day: 'numeric',
                       month: 'numeric',
                       year: 'numeric',
@@ -874,9 +875,20 @@ function BandTags({
           ))}
           {tags.value.map((tag, index) => (
             <TagsInput.Item key={tag} index={index} value={tag}>
-              <TagsInput.ItemPreview>
-                <TagsInput.ItemText>{tag}</TagsInput.ItemText>
-                <TagsInput.ItemDeleteTrigger />
+              {/* Render the chip identical to the computed-tag chips above.
+                  `unstyled` drops the tags-input preview recipe (its own
+                  radius/height) so only the Tag styling applies; the close
+                  button removes via the machine. */}
+              <TagsInput.ItemPreview asChild unstyled>
+                <Tag
+                  colorPalette="gray"
+                  size="md"
+                  onClose={() =>
+                    tags.setValue(tags.value.filter((v) => v !== tag))
+                  }
+                >
+                  {tag}
+                </Tag>
               </TagsInput.ItemPreview>
             </TagsInput.Item>
           ))}
