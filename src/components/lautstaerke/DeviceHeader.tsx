@@ -3,6 +3,8 @@ import {LuArrowLeft} from 'react-icons/lu';
 import {Box, Button, HStack, Heading, IconButton, Text, VStack} from '@chakra-ui/react';
 import {DayPicker} from './DayPicker';
 import {BatteryChip} from './BatteryChip';
+import {UploadsChip} from './UploadsChip';
+import {WifiStatusIcon} from './WifiStatusIcon';
 import {BluetoothMenu} from './BluetoothMenu';
 import {isFresh, useLautstaerkeCtx, useTick} from './context';
 import {useDeviceView} from './deviceView';
@@ -44,6 +46,9 @@ export function DeviceHeader({
   const {weighting, toggleWeighting} = useDeviceView();
   const deviceState = ctx.devices[device];
   const bleConnected = ctx.bluetooth.deviceName === device;
+  // Pending uploads and WiFi status only make sense for the BLE-connected device.
+  const pendingUploads = bleConnected ? ctx.bluetooth.pendingUploads : null;
+  const wifiStatus = bleConnected ? ctx.bluetooth.wifiStatus : null;
 
   return (
     <HStack mb="4" align="center">
@@ -77,6 +82,10 @@ export function DeviceHeader({
           {deviceState?.batteryMv != null && (
             <BatteryChip mv={deviceState.batteryMv} />
           )}
+          {pendingUploads != null && pendingUploads > 0 && (
+            <UploadsChip count={pendingUploads} />
+          )}
+          {wifiStatus && <WifiStatusIcon status={wifiStatus} />}
         </HStack>
       </VStack>
       <BluetoothMenu />

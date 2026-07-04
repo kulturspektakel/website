@@ -18,11 +18,15 @@ import {
 } from '../components/lautstaerke/context';
 import {
   connectBleDevice,
+  decodePendingUploads,
+  decodeWifiStatus,
   isWebBluetoothSupported,
   readCalibration,
+  subscribeCharacteristic,
   writeCalibration,
   writeWifi,
   type BleConnection,
+  type WifiStatus,
 } from '../components/lautstaerke/bluetooth';
 import {createServerFn} from '@tanstack/react-start';
 import {crewAuth} from '../server/crewAuth';
@@ -77,15 +81,18 @@ function LautstaerkeLayout() {
   const [bleDeviceName, setBleDeviceName] = useState<string | null>(null);
   const [bleConnecting, setBleConnecting] = useState(false);
   const [bleSupported, setBleSupported] = useState(false);
+  const [blePendingUploads, setBlePendingUploads] = useState<number | null>(
+    null,
+  );
+  const [bleWifiStatus, setBleWifiStatus] = useState<WifiStatus | null>(null);
 
   useEffect(() => {
     setBleSupported(isWebBluetoothSupported());
   }, []);
   const bleConnRef = useRef<BleConnection | null>(null);
-  const bleHandlersRef = useRef<{
-    onValue?: (e: Event) => void;
-    onDisconnect?: (e: Event) => void;
-  }>({});
+  // Teardown callbacks registered while connecting (one per characteristic
+  // subscription plus the disconnect listener); cleanupBle runs them all.
+  const bleCleanupsRef = useRef<Array<() => void>>([]);
 
   const ingest = useCallback(
     (deviceName: string, payload: Uint8Array, receiveTime: number) => {
@@ -166,31 +173,21 @@ function LautstaerkeLayout() {
   }, [ingest]);
 
   const cleanupBle = useCallback(() => {
-    const conn = bleConnRef.current;
-    const handlers = bleHandlersRef.current;
-    if (conn) {
-      if (handlers.onValue) {
-        conn.characteristic.removeEventListener(
-          'characteristicvaluechanged',
-          handlers.onValue,
-        );
-      }
-      if (handlers.onDisconnect) {
-        conn.device.removeEventListener(
-          'gattserverdisconnected',
-          handlers.onDisconnect,
-        );
-      }
+    // Detach every characteristic listener + the disconnect listener, then drop
+    // the GATT link.
+    for (const cleanup of bleCleanupsRef.current) {
       try {
-        conn.characteristic.stopNotifications().catch(() => {});
-      } catch {}
-      try {
-        conn.device.gatt?.disconnect();
+        cleanup();
       } catch {}
     }
+    bleCleanupsRef.current = [];
+    try {
+      bleConnRef.current?.device.gatt?.disconnect();
+    } catch {}
     bleConnRef.current = null;
-    bleHandlersRef.current = {};
     setBleDeviceName(null);
+    setBlePendingUploads(null);
+    setBleWifiStatus(null);
   }, []);
 
   const disconnectBle = useCallback(async () => {
@@ -203,17 +200,6 @@ function LautstaerkeLayout() {
     setBleConnecting(true);
     try {
       const conn = await connectBleDevice();
-      const onValue = (e: Event) => {
-        const target = e.target as BluetoothRemoteGATTCharacteristic;
-        const value = target.value;
-        if (!value) return;
-        const bytes = new Uint8Array(
-          value.buffer,
-          value.byteOffset,
-          value.byteLength,
-        );
-        ingest(conn.deviceName, bytes, Date.now());
-      };
       const onDisconnect = () => {
         cleanupBle();
         toaster.create({
@@ -221,13 +207,36 @@ function LautstaerkeLayout() {
           title: 'Bluetooth-Verbindung getrennt',
         });
       };
-      conn.characteristic.addEventListener(
-        'characteristicvaluechanged',
-        onValue,
-      );
       conn.device.addEventListener('gattserverdisconnected', onDisconnect);
+      // Each subscription reads its current value on connect and updates on
+      // notify; the record stream is live-only (no initial read) so we don't
+      // plot a stale sample. Every registered cleanup runs in cleanupBle.
+      bleCleanupsRef.current = [
+        subscribeCharacteristic(
+          conn.characteristic,
+          (value) =>
+            ingest(
+              conn.deviceName,
+              new Uint8Array(value.buffer, value.byteOffset, value.byteLength),
+              Date.now(),
+            ),
+          {readInitial: false},
+        ),
+        subscribeCharacteristic(conn.uploadsCharacteristic, (value) =>
+          setBlePendingUploads(decodePendingUploads(value)),
+        ),
+        subscribeCharacteristic(conn.wifiStatusCharacteristic, (value) => {
+          // Ignore the 0xff subscribe sentinel / unknown values (decode → null).
+          const status = decodeWifiStatus(value);
+          if (status) setBleWifiStatus(status);
+        }),
+        () =>
+          conn.device.removeEventListener(
+            'gattserverdisconnected',
+            onDisconnect,
+          ),
+      ];
       bleConnRef.current = conn;
-      bleHandlersRef.current = {onValue, onDisconnect};
       setBleDeviceName(conn.deviceName);
       return conn.deviceName;
     } catch (e) {
@@ -297,6 +306,8 @@ function LautstaerkeLayout() {
         deviceName: bleDeviceName,
         connecting: bleConnecting,
         supported: bleSupported,
+        pendingUploads: blePendingUploads,
+        wifiStatus: bleWifiStatus,
         connect: connectBle,
         disconnect: disconnectBle,
         readCalibration: readCal,
@@ -313,6 +324,8 @@ function LautstaerkeLayout() {
       bleDeviceName,
       bleConnecting,
       bleSupported,
+      blePendingUploads,
+      bleWifiStatus,
       connectBle,
       disconnectBle,
       readCal,

@@ -11,6 +11,18 @@ export const BLE_CALIBRATION_CHAR_UUID =
   '7ed2f2c4-69e8-4f7c-9c93-7a3b1e5d0a02';
 // WRITE-ONLY characteristic that pushes WiFi credentials to the device.
 export const BLE_WIFI_CHAR_UUID = '7ed2f2c4-69e8-4f7c-9c93-7a3b1e5d0a03';
+// READ + NOTIFY characteristic: uint16 (little-endian) count of log files still
+// waiting to upload. On subscribe the device sends one immediate notify, then a
+// notify only when the count changes.
+export const BLE_UPLOADS_CHAR_UUID = '7ed2f2c4-69e8-4f7c-9c93-7a3b1e5d0a04';
+// READ + NOTIFY characteristic: uint8 mirroring the device's wifi_status enum.
+// Same notify convention as the other characteristics (one immediate push, then
+// on change). A very short (<~1 s) "connecting" phase can be skipped in the
+// notify stream, but a read always returns the exact current value.
+export const BLE_WIFI_STATUS_CHAR_UUID =
+  '7ed2f2c4-69e8-4f7c-9c93-7a3b1e5d0a05';
+
+export type WifiStatus = 'disconnected' | 'connecting' | 'connected';
 
 // WiFi credential byte-length limits, per the firmware. SSID is mandatory; an
 // empty password means an open network.
@@ -92,8 +104,66 @@ export function encodeWifiCredentials(
 export type BleConnection = {
   device: BluetoothDevice;
   characteristic: BluetoothRemoteGATTCharacteristic;
+  // Pending-uploads characteristic (Read + Notify). Absent on older firmware
+  // that predates the log-upload counter, so callers must null-check it.
+  uploadsCharacteristic: BluetoothRemoteGATTCharacteristic | null;
+  // WiFi-status characteristic (Read + Notify). Absent on older firmware, so
+  // callers must null-check it.
+  wifiStatusCharacteristic: BluetoothRemoteGATTCharacteristic | null;
   deviceName: string;
 };
+
+// Decode the little-endian uint16 pending-uploads value. Matches the ESP32's
+// byte order (getUint16 with littleEndian = true).
+export function decodePendingUploads(value: DataView): number {
+  return value.getUint16(0, true);
+}
+
+// Subscribe to a Read+Notify characteristic: attach a value-changed listener,
+// optionally do one immediate read so the current value shows without waiting
+// for the first notify, and return a cleanup that detaches the listener and
+// stops notifications. A null characteristic (absent on older firmware) yields a
+// no-op cleanup, so callers don't have to null-check. Errors from the initial
+// read and stopNotifications are swallowed — teardown must never throw.
+export function subscribeCharacteristic(
+  characteristic: BluetoothRemoteGATTCharacteristic | null,
+  onValue: (value: DataView) => void,
+  {readInitial = true}: {readInitial?: boolean} = {},
+): () => void {
+  if (!characteristic) return () => {};
+  const handler = (e: Event) => {
+    const value = (e.target as BluetoothRemoteGATTCharacteristic).value;
+    if (value) onValue(value);
+  };
+  characteristic.addEventListener('characteristicvaluechanged', handler);
+  if (readInitial) {
+    characteristic
+      .readValue()
+      .then(onValue)
+      .catch(() => {});
+  }
+  return () => {
+    characteristic.removeEventListener('characteristicvaluechanged', handler);
+    try {
+      characteristic.stopNotifications().catch(() => {});
+    } catch {}
+  };
+}
+
+// Decode the uint8 wifi_status enum. Returns null for the 0xff subscribe
+// sentinel or any unknown value, so callers can ignore non-states.
+export function decodeWifiStatus(value: DataView): WifiStatus | null {
+  switch (value.getUint8(0)) {
+    case 0:
+      return 'disconnected';
+    case 1:
+      return 'connecting';
+    case 2:
+      return 'connected';
+    default:
+      return null;
+  }
+}
 
 async function getCharacteristic(
   device: BluetoothDevice,
@@ -105,6 +175,21 @@ async function getCharacteristic(
   // all its characteristics, so no optionalServices entry is needed.
   const service = await server.getPrimaryService(BLE_SERVICE_UUID);
   return service.getCharacteristic(uuid);
+}
+
+// Fetch a Read+Notify characteristic and start its notifications, resolving to
+// null instead of throwing when the firmware doesn't expose it.
+async function startOptionalNotify(
+  service: BluetoothRemoteGATTService,
+  uuid: string,
+): Promise<BluetoothRemoteGATTCharacteristic | null> {
+  try {
+    const characteristic = await service.getCharacteristic(uuid);
+    await characteristic.startNotifications();
+    return characteristic;
+  } catch {
+    return null;
+  }
 }
 
 export async function readCalibration(conn: BleConnection): Promise<number[]> {
@@ -165,6 +250,18 @@ export async function connectBleDevice(): Promise<BleConnection> {
   const service = await server.getPrimaryService(BLE_SERVICE_UUID);
   const characteristic = await service.getCharacteristic(BLE_CHAR_UUID);
   await characteristic.startNotifications();
+  // Optional on older firmware — resolve to null (rather than throw) so the
+  // connection and the live spectrum still work without these characteristics.
+  const [uploadsCharacteristic, wifiStatusCharacteristic] = await Promise.all([
+    startOptionalNotify(service, BLE_UPLOADS_CHAR_UUID),
+    startOptionalNotify(service, BLE_WIFI_STATUS_CHAR_UUID),
+  ]);
   const deviceName = device.name ?? device.id;
-  return {device, characteristic, deviceName};
+  return {
+    device,
+    characteristic,
+    uploadsCharacteristic,
+    wifiStatusCharacteristic,
+    deviceName,
+  };
 }

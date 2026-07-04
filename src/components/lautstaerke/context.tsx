@@ -9,6 +9,7 @@ import {
   type NoiseRecording,
   type NoiseRecording_Record as NoiseRecord,
 } from '../../proto/noise';
+import {type WifiStatus} from './bluetooth';
 
 export const TOPIC = 'noise/+/record';
 // A device counts as online — and its live spectrum keeps showing — while its
@@ -162,6 +163,14 @@ export type BluetoothSlice = {
   deviceName: string | null;
   connecting: boolean;
   supported: boolean;
+  // Count of log files the connected device still has to upload, from the
+  // Read+Notify uploads characteristic. null when disconnected or when the
+  // firmware doesn't expose the counter.
+  pendingUploads: number | null;
+  // The connected device's WiFi state, from the Read+Notify wifi-status
+  // characteristic. null when disconnected or when the firmware doesn't expose
+  // it.
+  wifiStatus: WifiStatus | null;
   // Resolves to the connected device's name, or null if the user cancelled or
   // the connection failed (the error is exposed via `error`).
   connect: () => Promise<string | null>;
