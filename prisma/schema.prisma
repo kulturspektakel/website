@@ -200,6 +200,8 @@ model BandApplication {
   spotifyArtist           String?
   spotifyMonthlyListeners Int?
   imageUrl                String?
+  stageRow                Int?
+  stageColumn             Int?
   contactedByViewer       Viewer?                  @relation(fields: [contactedByViewerId], references: [id])
   event                   Event                    @relation(fields: [eventId], references: [id])
   bandApplicationComment  BandApplicationComment[]

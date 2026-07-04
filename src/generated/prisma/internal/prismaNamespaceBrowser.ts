@@ -294,7 +294,9 @@ export const BandApplicationScalarFieldEnum = {
   repertoire: 'repertoire',
   spotifyArtist: 'spotifyArtist',
   spotifyMonthlyListeners: 'spotifyMonthlyListeners',
-  imageUrl: 'imageUrl'
+  imageUrl: 'imageUrl',
+  stageRow: 'stageRow',
+  stageColumn: 'stageColumn'
 } as const
 
 export type BandApplicationScalarFieldEnum = (typeof BandApplicationScalarFieldEnum)[keyof typeof BandApplicationScalarFieldEnum]

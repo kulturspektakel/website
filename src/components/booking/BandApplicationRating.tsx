@@ -1,7 +1,8 @@
-import {useEffect, useState} from 'react';
+import {useEffect, useMemo, useState} from 'react';
 import {useRouter} from '@tanstack/react-router';
 import {Box, HStack, RatingGroup, Text} from '@chakra-ui/react';
 import {rateBandApplication} from '../../server/rateBandApplication';
+import {meanRating} from '../../utils/meanRating';
 import {Avatar} from '../chakra-snippets/avatar';
 import {Tooltip} from '../chakra-snippets/tooltip';
 
@@ -30,17 +31,38 @@ export function BandApplicationRating({
   averageRating,
   raters,
   size = 'md',
+  myViewer,
 }: {
   applicationId: string;
   myRating: number;
   averageRating: number | null;
   raters: Rater[];
   size?: RatingGroup.RootProps['size'];
+  // The current viewer, when known. Enables the average + rater avatars to
+  // update optimistically (not just the viewer's own stars) before the loader
+  // refetches. Omit it (e.g. the dense table) to fall back to prop-driven
+  // aggregates.
+  myViewer?: {id: string; displayName: string; profilePicture: string | null} | null;
 }) {
   const router = useRouter();
   // Optimistic local value; re-synced when the loader-driven prop changes.
   const [value, setValue] = useState(myRating);
   useEffect(() => setValue(myRating), [myRating]);
+
+  // Fold the viewer's optimistic `value` into the aggregate so the average and
+  // their own avatar reflect the click immediately. Without `myViewer` we can't
+  // author the avatar, so the props stand as-is.
+  const {optimisticRaters, optimisticAverage} = useMemo(() => {
+    if (!myViewer) {
+      return {optimisticRaters: raters, optimisticAverage: averageRating};
+    }
+    const others = raters.filter((r) => r.id !== myViewer.id);
+    const next =
+      value > 0
+        ? [...others, {...myViewer, rating: value}]
+        : others;
+    return {optimisticRaters: next, optimisticAverage: meanRating(next)};
+  }, [raters, averageRating, value, myViewer]);
 
   const onValueChange = async (next: number) => {
     setValue(next);
@@ -74,18 +96,18 @@ export function BandApplicationRating({
         </RatingGroup.Control>
       </RatingGroup.Root>
 
-      {(value > 0 || raters.length > 0) && (
+      {(value > 0 || optimisticRaters.length > 0) && (
         <>
           {/* Fixed-width slot for the average. The number is revealed only once
               the viewer has cast their own rating, but the slot is always
               reserved so the avatars never shift when it appears. */}
           <Box minW="7" textAlign="end">
-            {value > 0 && averageRating != null && (
+            {value > 0 && optimisticAverage != null && (
               <Tooltip
                 positioning={{placement: 'top'}}
                 content={
                   <Box>
-                    {raters.map((r) => (
+                    {optimisticRaters.map((r) => (
                       <Text key={r.id} whiteSpace="nowrap">
                         {'★'.repeat(r.rating)}
                         {'☆'.repeat(Math.max(0, 4 - r.rating))} {r.displayName}
@@ -100,13 +122,13 @@ export function BandApplicationRating({
                   lineHeight="1"
                   color="blue.solid"
                 >
-                  {averageRating.toFixed(1)}
+                  {optimisticAverage.toFixed(1)}
                 </Text>
               </Tooltip>
             )}
           </Box>
           <HStack gap="0">
-            {raters.map((r, i) => (
+            {optimisticRaters.map((r, i) => (
               <Tooltip
                 key={r.id}
                 content={r.displayName}

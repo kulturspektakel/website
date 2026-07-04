@@ -4,6 +4,7 @@ import {getCookie, setResponseHeader} from '@tanstack/react-start/server';
 import {ChakraProvider} from '@chakra-ui/react';
 import crewTheme from '../theme-crew';
 import {verifyDirectusSession} from '../server/directusAuth.server';
+import {crewAuth} from '../server/crewAuth';
 
 /**
  * Build the Directus Slack-SSO login URL for an unauthenticated visitor, or
@@ -39,6 +40,15 @@ const crewLoginUrl = createServerFn()
     return login.toString();
   });
 
+// The current Slack-keyed Viewer, resolved once at the crew boundary. Exposed as
+// loader data (cached, dehydrated on SSR, not re-run when navigating between
+// child pages) so any crew component can read it via
+// `useLoaderData({from: '/crew'})` — e.g. to author optimistic ratings/comments.
+// `null` for a Directus account with no Slack-keyed Viewer.
+const loadCrewViewer = createServerFn()
+  .middleware([crewAuth])
+  .handler(({context}) => context.viewer);
+
 export const Route = createFileRoute('/crew')({
   beforeLoad: async ({location}) => {
     const login = await crewLoginUrl({data: location.href});
@@ -46,6 +56,7 @@ export const Route = createFileRoute('/crew')({
       throw redirect({href: login});
     }
   },
+  loader: () => loadCrewViewer(),
   component: CrewLayout,
 });
 

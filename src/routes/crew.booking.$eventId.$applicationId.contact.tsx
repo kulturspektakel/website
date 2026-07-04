@@ -8,6 +8,8 @@ import {createServerFn} from '@tanstack/react-start';
 import {crewAuth} from '../server/crewAuth';
 import {enqueueGcpTask} from '../server/enqueueGcpTask.server';
 import {locale, timeZone} from '../utils/dateUtils';
+import DateString from '../components/DateString';
+import {Alert} from '../components/chakra-snippets/alert';
 import {Field} from '../components/chakra-snippets/field';
 import {
   NativeSelectField,
@@ -41,6 +43,8 @@ const loadContactData = createServerFn()
         contactName: true,
         email: true,
         eventId: true,
+        lastContactedAt: true,
+        contactedByViewer: {select: {displayName: true}},
       },
     });
     if (!application) {
@@ -68,6 +72,8 @@ const loadContactData = createServerFn()
       start: event.start,
       end: event.end,
       stages,
+      lastContactedAt: application.lastContactedAt,
+      contactedBy: application.contactedByViewer?.displayName ?? null,
     };
   });
 
@@ -77,17 +83,25 @@ const sendBandContactEmail = createServerFn()
   .middleware([crewAuth])
   .inputValidator(
     z.object({
+      applicationId: z.string(),
       to: z.string(),
       subject: z.string(),
       body: z.string(),
     }),
   )
-  .handler(async ({data}) => {
+  .handler(async ({data, context}) => {
     await enqueueGcpTask('send-gmail', {
       account: 'booking@kulturspektakel.de',
       to: data.to,
       subject: data.subject,
       text: data.body,
+    });
+    await prismaClient.bandApplication.update({
+      where: {id: data.applicationId},
+      data: {
+        lastContactedAt: new Date(),
+        contactedByViewerId: context.viewer?.id ?? null,
+      },
     });
   });
 
@@ -101,11 +115,27 @@ const TEMPLATE = {
 
 wir würden euch ({{bandname}}) sehr gerne beim Kulturspektakel auf der {{stage}} am {{date}} um {{time}} Uhr spielen lassen.
 
-Passt das bei euch? Dann freuen wir uns auf eure Rückmeldung.
+{{payment}}Passt das bei euch? Dann freuen wir uns auf eure Rückmeldung.
 
 Viele Grüße
 Das Booking-Team`,
 };
+
+// `label` is the dropdown option; `text` is the sentence inserted before the
+// closing question in the body (empty for "nichts", so it leaves no artifact).
+const PAYMENT_OPTIONS = [
+  {value: 'nichts', label: 'Keine', text: ''},
+  {
+    value: 'fahrtkosten',
+    label: 'Fahrtkosten',
+    text: 'Eure Fahrtkosten übernehmen wir selbstverständlich. ',
+  },
+  {
+    value: 'gage',
+    label: 'Gage',
+    text: 'Für euren Auftritt zahlen wir euch eine Gage. ',
+  },
+];
 
 type Vars = {
   stage: string;
@@ -113,17 +143,26 @@ type Vars = {
   time: string;
   bandname: string;
   contact: string;
+  payment: string;
 };
 
 function fillTemplate(text: string, vars: Vars): string {
   return text.replace(
-    /\{\{(stage|date|time|bandname|contact)\}\}/g,
+    /\{\{(stage|date|time|bandname|contact|payment)\}\}/g,
     (_, key: keyof Vars) => vars[key] ?? '',
   );
 }
 
 // Inclusive list of every day in the event window. `value` is a locale-free
 // ISO date (stable for state), `label` is the German day string shown.
+// Half-hour slots from 10:00 to 22:00 (inclusive).
+const TIME_OPTIONS = Array.from({length: 25}, (_, i) => {
+  const h = 10 + Math.floor(i / 2);
+  const m = i % 2 === 0 ? '00' : '30';
+  const value = `${String(h).padStart(2, '0')}:${m}`;
+  return {value, label: value};
+});
+
 function buildDayOptions(start: Date, end: Date) {
   const days: {value: string; label: string}[] = [];
   const cur = new Date(start);
@@ -174,6 +213,7 @@ function BandContactRoute() {
   // Step 1 — selection.
   const [step, setStep] = useState<1 | 2>(1);
   const [to, setTo] = useState(data.email);
+  const [payment, setPayment] = useState('');
   const [stage, setStage] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
@@ -185,7 +225,7 @@ function BandContactRoute() {
   // would discard their changes, so we lock the "Zurück" button.
   const [generated, setGenerated] = useState({subject: '', body: ''});
 
-  const canProceed = Boolean(stage && date && time.trim());
+  const canProceed = Boolean(payment && stage && date && time.trim());
   const canSend = Boolean(to.trim() && subject.trim() && body.trim());
   const edited = subject !== generated.subject || body !== generated.body;
 
@@ -198,6 +238,7 @@ function BandContactRoute() {
       bandname: data.bandname,
       // Use the first name only (split on space) for a friendlier greeting.
       contact: data.contactName.split(' ')[0],
+      payment: PAYMENT_OPTIONS.find((o) => o.value === payment)?.text ?? '',
     };
     const gen = {
       subject: fillTemplate(TEMPLATE.subject, vars),
@@ -212,7 +253,7 @@ function BandContactRoute() {
   const sendMutation = useMutation({
     mutationFn: () =>
       sendBandContactEmail({
-        data: {to, subject, body},
+        data: {applicationId, to, subject, body},
       }),
     onSuccess: () => close(),
   });
@@ -233,6 +274,17 @@ function BandContactRoute() {
         <DialogBody>
           {step === 1 ? (
             <Stack gap="4">
+              {data.lastContactedAt && (
+                <Alert status="warning" title="Bereits kontaktiert">
+                  Diese Band wurde am{' '}
+                  <DateString
+                    date={new Date(data.lastContactedAt)}
+                    options={{day: 'numeric', month: 'long', year: 'numeric'}}
+                  />
+                  {data.contactedBy ? ` von ${data.contactedBy}` : ''} bereits
+                  kontaktiert.
+                </Alert>
+              )}
               <Field label="Bühne">
                 <NativeSelectRoot>
                   <NativeSelectField
@@ -264,11 +316,30 @@ function BandContactRoute() {
                 </NativeSelectRoot>
               </Field>
               <Field label="Uhrzeit">
-                <Input
-                  placeholder="z. B. 20:30"
-                  value={time}
-                  onChange={(e) => setTime(e.target.value)}
-                />
+                <NativeSelectRoot>
+                  <NativeSelectField
+                    value={time}
+                    items={TIME_OPTIONS}
+                    onChange={(e) => setTime(e.currentTarget.value)}
+                  >
+                    <option value="" hidden>
+                      Uhrzeit wählen…
+                    </option>
+                  </NativeSelectField>
+                </NativeSelectRoot>
+              </Field>
+              <Field label="Bezahlung">
+                <NativeSelectRoot>
+                  <NativeSelectField
+                    value={payment}
+                    items={PAYMENT_OPTIONS}
+                    onChange={(e) => setPayment(e.currentTarget.value)}
+                  >
+                    <option value="" hidden>
+                      Bezahlung wählen…
+                    </option>
+                  </NativeSelectField>
+                </NativeSelectRoot>
               </Field>
             </Stack>
           ) : (

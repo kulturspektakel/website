@@ -24,6 +24,7 @@ import {
   Portal,
   SimpleGrid,
   Span,
+  Spinner,
   Stack,
   TagsInput,
   Text,
@@ -33,7 +34,15 @@ import {
   useListCollection,
   useTagsInput,
 } from '@chakra-ui/react';
-import {FaFacebook, FaGlobe, FaInstagram, FaSpotify, FaPaperPlane} from 'react-icons/fa6';
+import {
+  FaFacebook,
+  FaGlobe,
+  FaInstagram,
+  FaSpotify,
+  FaPaperPlane,
+  FaStar,
+  FaMusic,
+} from 'react-icons/fa6';
 import {
   BandRepertoire,
   DemoEmbedType,
@@ -48,13 +57,24 @@ import {Tooltip} from '../components/chakra-snippets/tooltip';
 import DateString from '../components/DateString';
 import {
   DialogBody,
-  DialogCloseTrigger,
-  DialogContent,
   DialogHeader,
-  DialogRoot,
   DialogTitle,
 } from '../components/chakra-snippets/dialog';
+import {
+  TimelineConnector,
+  TimelineContent,
+  TimelineDescription,
+  TimelineItem,
+  TimelineRoot,
+  TimelineTitle,
+} from '../components/chakra-snippets/timeline';
 import GoogleMaps from '../components/GoogleMaps';
+import {CopyToClipboard} from '../components/CopyToClipboard';
+import {StageMatrix} from '../components/booking/StageMatrix';
+import {toStageValue, type StageValue} from '../components/booking/stageMatrixShared';
+import {setBandApplicationStage} from '../server/setBandApplicationStage';
+import {meanRating} from '../utils/meanRating';
+import {normalizeBandName} from '../utils/normalizeBandName';
 import {computedTagsFor} from './crew.booking.$eventId';
 
 // Kulturspektakel venue — second marker on the band-location map, so the map
@@ -100,6 +120,8 @@ const loadBandApplicationDetail = createServerFn()
         hasPreviouslyPlayed: true,
         repertoire: true,
         imageUrl: true,
+        stageRow: true,
+        stageColumn: true,
         contactedByViewerId: true,
         bandApplicationRating: {
           select: {
@@ -126,15 +148,114 @@ const loadBandApplicationDetail = createServerFn()
     if (!a) {
       throw notFound();
     }
+
+    // Build the band's history timeline. A band has no stable id — it's matched
+    // across events by its normalized name (same approach as the booking
+    // table's `playedLastYear`). Fetch all applications + performances with a
+    // lean select and filter in JS so the exact normalization is reused.
+    const norm = normalizeBandName(a.bandname);
+    const [allApplications, allPerformances] = await Promise.all([
+      prismaClient.bandApplication.findMany({
+        select: {
+          id: true,
+          bandname: true,
+          createdAt: true,
+          lastContactedAt: true,
+          event: {select: {name: true}},
+          contactedByViewer: {select: {displayName: true}},
+          bandApplicationRating: {select: {rating: true}},
+        },
+      }),
+      prismaClient.bandPlaying.findMany({
+        select: {
+          name: true,
+          startTime: true,
+          endTime: true,
+          area: {select: {displayName: true}},
+          event: {select: {name: true}},
+        },
+      }),
+    ]);
+
+    const timeline: TimelineEntry[] = [];
+    for (const x of allApplications) {
+      if (normalizeBandName(x.bandname) !== norm) {
+        continue;
+      }
+      // The current application is already the subject of the dialog — only
+      // show applications from other events in the history.
+      if (x.id !== id) {
+        const ratings = x.bandApplicationRating.map((r) => r.rating);
+        timeline.push({
+          kind: 'application',
+          date: x.createdAt,
+          eventName: x.event.name,
+          ratingAvg: ratings.length ? meanRating(x.bandApplicationRating) : null,
+          ratingCount: ratings.length,
+        });
+      }
+      // Mark as contacted when the contacting person is known (same signal as
+      // the "contacted" tag: `contactedByViewerId != null`). Older rows have no
+      // `lastContactedAt` timestamp, so fall back to the application date for
+      // ordering and hide the date in the UI when it's missing.
+      if (x.contactedByViewer) {
+        timeline.push({
+          kind: 'contact',
+          date: x.lastContactedAt ?? x.createdAt,
+          contactedAt: x.lastContactedAt,
+          eventName: x.event.name,
+          contactedBy: x.contactedByViewer.displayName,
+        });
+      }
+    }
+    for (const x of allPerformances) {
+      if (normalizeBandName(x.name) !== norm) {
+        continue;
+      }
+      timeline.push({
+        kind: 'performance',
+        date: x.startTime,
+        endTime: x.endTime,
+        eventName: x.event.name,
+        stage: x.area.displayName,
+      });
+    }
+    // Newest first.
+    timeline.sort((a, b) => b.date.getTime() - a.date.getTime());
+
     const myViewerId = context.viewer?.id ?? null;
     return {
       ...a,
       myRating:
         a.bandApplicationRating.find((r) => r.viewer.id === myViewerId)
           ?.rating ?? 0,
+      timeline,
       apiKey: process.env.GOOGLE_MAPS_API_KEY,
     };
   });
+
+type TimelineEntry =
+  | {
+      kind: 'application';
+      date: Date;
+      eventName: string;
+      ratingAvg: number | null;
+      ratingCount: number;
+    }
+  | {
+      kind: 'contact';
+      date: Date;
+      contactedAt: Date | null;
+      eventName: string;
+      contactedBy: string;
+    }
+  | {
+      kind: 'performance';
+      date: Date;
+      endTime: Date;
+      eventName: string;
+      stage: string;
+    };
 
 type DetailData = Awaited<ReturnType<typeof loadBandApplicationDetail>>;
 
@@ -215,67 +336,56 @@ const REPERTOIRE_LABELS: Record<BandRepertoire, string> = {
 
 export const Route = createFileRoute('/crew/booking/$eventId/$applicationId')({
   component: BandApplicationDetailRoute,
+  pendingComponent: BandApplicationDetailPending,
+  // Pop the modal open (almost) immediately with a spinner rather than blocking
+  // navigation until the detail query resolves.
+  pendingMs: 100,
   loader: ({params}) => loadBandApplicationDetail({data: params.applicationId}),
 });
 
-// ---------------------------------------------------------------------------
-// Dialog shell (shared by the loaded view and the pending skeleton)
-// ---------------------------------------------------------------------------
-
-function DialogShell({
-  title,
-  children,
-  onClose,
-}: {
-  title: React.ReactNode;
-  children: React.ReactNode;
-  onClose: () => void;
-}) {
+// Loading state: rendered into the parent route's persistent dialog, so the
+// shell is already on screen — just a centered spinner filling the dialog's max
+// height while the detail loader is pending.
+function BandApplicationDetailPending() {
   return (
-    <DialogRoot
-      open
-      onOpenChange={(e) => !e.open && onClose()}
-      placement="center"
-      size="xl"
-      scrollBehavior="inside"
-    >
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-        </DialogHeader>
-        <DialogCloseTrigger />
-        <DialogBody>{children}</DialogBody>
-      </DialogContent>
-    </DialogRoot>
+    <>
+      <DialogHeader>
+        <DialogTitle />
+      </DialogHeader>
+      <DialogBody>
+        <Flex justify="center" align="center" h="calc(100vh - 120px)">
+          <Spinner size="xl" />
+        </Flex>
+      </DialogBody>
+    </>
   );
 }
 
-function useClose() {
-  const {eventId} = Route.useParams();
-  const navigate = Route.useNavigate();
-  return () => navigate({to: '/crew/booking/$eventId', params: {eventId}});
-}
+// ---------------------------------------------------------------------------
+// Loaded view — renders bare DialogHeader/DialogBody into the DialogContent the
+// parent route ($eventId) keeps mounted; it has no dialog shell of its own.
+// ---------------------------------------------------------------------------
 
 function BandApplicationDetailRoute() {
   const data = Route.useLoaderData();
   const {eventId, applicationId} = Route.useParams();
   const navigate = Route.useNavigate();
-  const onClose = useClose();
 
   return (
     <>
-      <DialogShell
-        onClose={onClose}
-        title={
+      <DialogHeader>
+        <DialogTitle>
           <BandName
             bandname={data.bandname}
             genre={data.genre}
             genreCategory={data.genreCategory}
             imageUrl={data.imageUrl}
             size="md"
+            copyableName
           />
-        }
-      >
+        </DialogTitle>
+      </DialogHeader>
+      <DialogBody>
         <SimpleGrid columns={{base: 1, md: 2}} gap="6">
           <LeftColumn
             data={data}
@@ -288,7 +398,7 @@ function BandApplicationDetailRoute() {
           />
           <RightColumn data={data} />
         </SimpleGrid>
-      </DialogShell>
+      </DialogBody>
 
       {/* Stacked contact dialog (child route); portalled, so placement here is
           irrelevant. */}
@@ -374,10 +484,15 @@ function LeftColumn({
 
       <Section title="Kontakt">
         <Text>{data.contactName}</Text>
-        {data.contactPhone && (
-          <Link href={`tel:${data.contactPhone}`}>{data.contactPhone}</Link>
-        )}
-        <Link href={`mailto:${data.email}`}>{data.email}</Link>
+        {data.contactPhone && <Text>{data.contactPhone}</Text>}
+        <CopyToClipboard
+          text={data.email}
+          display="block"
+          color="blue.solid"
+          _hover={{textDecoration: 'underline'}}
+        >
+          {data.email}
+        </CopyToClipboard>
         <Box mt="3">
           <Button size="sm" variant="outline" onClick={onContact}>
             Anfragen
@@ -393,11 +508,31 @@ function LeftColumn({
 // ---------------------------------------------------------------------------
 
 function RightColumn({data}: {data: DetailData}) {
+  const router = useRouter();
+  const myViewer = useLoaderData({from: '/crew'});
   const ratings = data.bandApplicationRating;
-  const averageRating =
-    ratings.length === 0
-      ? null
-      : ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length;
+  const averageRating = meanRating(ratings);
+
+  // Optimistic stage selection, seeded from the loader and re-synced when the
+  // band changes (the modal shell is reused across bands, so this component can
+  // stay mounted while `data` swaps).
+  const [stage, setStage] = useState<StageValue>(() =>
+    toStageValue(data.stageRow, data.stageColumn),
+  );
+  useEffect(() => {
+    setStage(toStageValue(data.stageRow, data.stageColumn));
+  }, [data.stageRow, data.stageColumn]);
+
+  const onStageChange = (next: StageValue) => {
+    setStage(next);
+    setBandApplicationStage({
+      data: {
+        applicationId: data.id,
+        row: next?.row ?? null,
+        col: next?.col ?? null,
+      },
+    }).then(() => router.invalidate());
+  };
 
   const hasSocial =
     data.website || data.facebook || data.instagram || data.spotifyArtist;
@@ -408,10 +543,54 @@ function RightColumn({data}: {data: DetailData}) {
   const row = rows.find((r) => r.id === data.id);
   const dynamicTags = row ? computedTagsFor(row) : [];
 
+  // Optimistic comments awaiting the loader refetch. Each carries its
+  // applicationId: the modal shell is reused across bands, so this component can
+  // stay mounted while `data.id` changes — scoping to the current band keeps a
+  // pending comment from bleeding onto another. Merged after the loaded ones and
+  // de-duped against them (same author + text) so the temporary entry never
+  // briefly doubles up with the real one the refetch brings in.
+  const loadedComments = data.bandApplicationComment;
+  const [pendingComments, setPendingComments] = useState<
+    ((typeof loadedComments)[number] & {applicationId: string})[]
+  >([]);
+  const comments = [
+    ...loadedComments,
+    ...pendingComments.filter(
+      (p) =>
+        p.applicationId === data.id &&
+        !loadedComments.some(
+          (c) => c.viewer.id === p.viewer.id && c.comment === p.comment,
+        ),
+    ),
+  ];
+
+  const postComment = async (comment: string) => {
+    // Author an optimistic entry when we know the viewer (null in dev / for a
+    // non-Slack account — then we just post and let the refetch reveal it).
+    const optimistic = myViewer
+      ? {
+          id: `optimistic-${Date.now()}`,
+          applicationId: data.id,
+          comment,
+          createdAt: new Date(),
+          viewer: myViewer,
+        }
+      : null;
+    if (optimistic) setPendingComments((p) => [...p, optimistic]);
+    try {
+      await postBandApplicationComment({data: {applicationId: data.id, comment}});
+      await router.invalidate();
+    } finally {
+      if (optimistic) {
+        setPendingComments((p) => p.filter((c) => c.id !== optimistic.id));
+      }
+    }
+  };
+
   return (
     <Stack gap="5">
       {hasSocial && (
-        <HStack gap="2" w="full" align="stretch">
+        <HStack gap="6" justify="flex-start" align="flex-start">
           {data.website && (
             <SocialStat
               href={data.website}
@@ -458,6 +637,7 @@ function RightColumn({data}: {data: DetailData}) {
             rating: r.rating,
           }))}
           size="lg"
+          myViewer={myViewer}
         />
       </Section>
 
@@ -470,13 +650,13 @@ function RightColumn({data}: {data: DetailData}) {
       </Section>
 
       <Section title="Bühne">
-        <StageMatrix />
+        <StageMatrix value={stage} onChange={onStageChange} />
       </Section>
 
       <Section title="Kommentare">
-        {data.bandApplicationComment.length > 0 && (
+        {comments.length > 0 && (
           <Stack gap="3" mb="4">
-            {data.bandApplicationComment.map((c) => (
+            {comments.map((c) => (
               <HStack key={c.id} gap="2" align="flex-start">
                 <Avatar
                   name={c.viewer.displayName}
@@ -511,9 +691,95 @@ function RightColumn({data}: {data: DetailData}) {
             ))}
           </Stack>
         )}
-        <CommentForm applicationId={data.id} />
+        <CommentForm onPost={postComment} />
       </Section>
+
+      {data.timeline.length > 0 && (
+        <Section title="Verlauf">
+          <BandTimeline timeline={data.timeline} />
+        </Section>
+      )}
     </Stack>
+  );
+}
+
+// The band's history across all events (applications with rating, contacts, and
+// performances), newest first. Assembled server-side in the detail loader.
+function BandTimeline({timeline}: {timeline: TimelineEntry[]}) {
+  return (
+    <TimelineRoot size="lg" variant="solid">
+      {timeline.map((e, i) => (
+        <TimelineItem
+          key={i}
+          colorPalette={
+            e.kind === 'application'
+              ? 'blue'
+              : e.kind === 'contact'
+                ? 'green'
+                : 'red'
+          }
+        >
+          <TimelineConnector outline="none">
+            {e.kind === 'application' ? (
+              <FaStar />
+            ) : e.kind === 'contact' ? (
+              <FaPaperPlane />
+            ) : (
+              <FaMusic />
+            )}
+          </TimelineConnector>
+          <TimelineContent gap="0">
+            <TimelineTitle>
+              {e.kind === 'application'
+                ? `Bewerbung: ${e.eventName}`
+                : e.kind === 'contact'
+                  ? `Anfrage: ${e.eventName}`
+                  : `Auftritt: ${e.eventName}`}
+            </TimelineTitle>
+            <TimelineDescription>
+              {e.kind === 'application' && (
+                <>
+                  {e.ratingAvg != null
+                    ? `${'★'.repeat(Math.round(e.ratingAvg))}${'☆'.repeat(
+                        Math.max(0, 4 - Math.round(e.ratingAvg)),
+                      )} (${e.ratingCount})`
+                    : 'keine Bewertung'}{' '}
+                  · <DateString date={e.date} />
+                </>
+              )}
+              {e.kind === 'contact' && (
+                <>
+                  von {e.contactedBy}
+                  {e.contactedAt ? (
+                    <>
+                      {' '}
+                      · <DateString date={e.contactedAt} />
+                    </>
+                  ) : (
+                    ''
+                  )}
+                </>
+              )}
+              {e.kind === 'performance' && (
+                <>
+                  {e.stage} ·{' '}
+                  <DateString
+                    date={e.date}
+                    options={{
+                      day: 'numeric',
+                      month: 'numeric',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    }}
+                  />
+                </>
+              )}
+            </TimelineDescription>
+          </TimelineContent>
+        </TimelineItem>
+      ))}
+    </TimelineRoot>
   );
 }
 
@@ -647,23 +913,16 @@ function Fact({label, children}: {label: string; children: React.ReactNode}) {
   );
 }
 
-function CommentForm({applicationId}: {applicationId: string}) {
-  const router = useRouter();
+function CommentForm({onPost}: {onPost: (comment: string) => void}) {
   const [comment, setComment] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async () => {
-    if (!comment.trim()) return;
-    try {
-      setIsSubmitting(true);
-      await postBandApplicationComment({
-        data: {applicationId, comment: comment.trim()},
-      });
-      setComment('');
-      await router.invalidate();
-    } finally {
-      setIsSubmitting(false);
-    }
+  // Clear the textarea immediately — the comment shows up optimistically in the
+  // list — and hand the post off to the parent (fire-and-forget).
+  const handleSubmit = () => {
+    const trimmed = comment.trim();
+    if (!trimmed) return;
+    setComment('');
+    onPost(trimmed);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -680,7 +939,6 @@ function CommentForm({applicationId}: {applicationId: string}) {
         value={comment}
         onChange={(e) => setComment(e.target.value)}
         onKeyDown={handleKeyDown}
-        disabled={isSubmitting}
         rows={3}
         pr="12"
       />
@@ -689,7 +947,6 @@ function CommentForm({applicationId}: {applicationId: string}) {
           <IconButton
             aria-label="Kommentar posten"
             onClick={handleSubmit}
-            loading={isSubmitting}
             bg="blue.solid"
             color="white"
             rounded="full"
@@ -718,219 +975,6 @@ function Section({
       </Heading>
       {children}
     </Box>
-  );
-}
-
-// Stage-assignment grid: rows are time slots (early/mid/late-headliner), columns
-// are the three stages with an "either of the two" column between each pair.
-// Single-select; clicking the selected cell clears it. State is local-only for
-// now (no mutation wired up yet). Implemented as an ARIA grid: cells use
-// aria-selected, focus rove with arrow keys, Enter/Space toggles.
-// Only the first/last slots are labelled; the middle one is left blank. `aria`
-// keeps an accessible name for every row regardless of the visible label.
-const STAGE_ROWS = [
-  {label: 'früh', aria: 'Früh'},
-  {label: '', aria: 'Mitte'},
-  {label: 'spät', aria: 'Spät (Headliner)'},
-];
-// '' columns sit between two stages and mean "either of the neighbours".
-// Soft hyphens (­) let the long names break across two lines in the narrow
-// column headers.
-const STAGE_COLS = ['Große Bühne', '', 'Kult­bühne', '', 'Wald­bühne'];
-
-// Accessible label for a column, spelling out the "between" columns.
-function colLabel(ci: number): string {
-  return STAGE_COLS[ci] || `${STAGE_COLS[ci - 1]} oder ${STAGE_COLS[ci + 1]}`;
-}
-
-const clamp = (v: number, max: number) => Math.max(0, Math.min(v, max));
-
-// Square cell size: equal column width and row height makes the dot-to-dot
-// pitch identical horizontally and vertically.
-const STAGE_CELL = '2.75rem';
-
-function StageMatrix() {
-  const [selected, setSelected] = useState<string | null>(null);
-  // Roving-tabindex focus position: only this cell is in the tab order.
-  const [focus, setFocus] = useState({r: 0, c: 0});
-  const gridRef = useRef<HTMLDivElement>(null);
-
-  // Arrow keys move the selection directly (and the focus with it).
-  const moveSelect = (r: number, c: number) => {
-    const next = {
-      r: clamp(r, STAGE_ROWS.length - 1),
-      c: clamp(c, STAGE_COLS.length - 1),
-    };
-    setFocus(next);
-    setSelected(`${next.r}:${next.c}`);
-    gridRef.current
-      ?.querySelector<HTMLElement>(`[data-pos="${next.r}:${next.c}"]`)
-      ?.focus();
-  };
-
-  const toggle = (r: number, c: number) => {
-    const key = `${r}:${c}`;
-    setSelected((s) => (s === key ? null : key));
-    setFocus({r, c});
-  };
-
-  const onCellKeyDown = (e: React.KeyboardEvent, r: number, c: number) => {
-    switch (e.key) {
-      case 'ArrowRight':
-        e.preventDefault();
-        moveSelect(r, c + 1);
-        break;
-      case 'ArrowLeft':
-        e.preventDefault();
-        moveSelect(r, c - 1);
-        break;
-      case 'ArrowDown':
-        e.preventDefault();
-        moveSelect(r + 1, c);
-        break;
-      case 'ArrowUp':
-        e.preventDefault();
-        moveSelect(r - 1, c);
-        break;
-      // Space/Enter toggles the current cell (clears it when already selected).
-      case 'Enter':
-      case ' ':
-        e.preventDefault();
-        toggle(r, c);
-        break;
-    }
-  };
-
-  return (
-    // Outer 2×2 layout: (0,0) empty · (0,1) column legend · (1,0) row legend ·
-    // (1,1) the dot grid. Legends live here (flex) instead of inside the grid.
-    <Grid templateColumns="auto auto" w="fit-content" columnGap="2" rowGap="1">
-      {/* (0,0) empty corner */}
-      <Box />
-
-      {/* (0,1) column legend — one slot per grid column (empty slots sit over
-          the "between" columns). Confining each label to a single column width
-          lets the soft hyphens wrap Kult/Waldbühne automatically. Pinned to the
-          grid's width so the labels can't widen the shared column. */}
-      <Flex aria-hidden w={`calc(${STAGE_CELL} * 5)`}>
-        {STAGE_COLS.map((label, i) => (
-          <Text
-            key={i}
-            flex="1"
-            minW="0"
-            textAlign="center"
-            fontSize="xs"
-            fontWeight="medium"
-            color="fg.muted"
-            lineHeight="1.2"
-          >
-            {label}
-          </Text>
-        ))}
-      </Flex>
-
-      {/* (1,0) row legend — right-aligned against the grid. */}
-      <Flex direction="column" align="stretch" aria-hidden>
-        {STAGE_ROWS.map((row, ri) => (
-          <Flex key={ri} h={STAGE_CELL} align="center" pr="2">
-            <Text
-              w="full"
-              textAlign="right"
-              fontSize="xs"
-              color="fg.muted"
-              whiteSpace="nowrap"
-            >
-              {row.label}
-            </Text>
-          </Flex>
-        ))}
-      </Flex>
-
-      {/* (1,1) the dot grid */}
-      <Grid
-        ref={gridRef}
-        role="grid"
-        aria-label="Bühne und Slot"
-        templateColumns={`repeat(5, ${STAGE_CELL})`}
-        gap="0"
-        borderRadius="md"
-        _focusWithin={{
-          outline: '2px solid',
-          outlineColor: 'blue.solid',
-          outlineOffset: '-1px',
-        }}
-      >
-        {STAGE_ROWS.map((row, ri) => (
-          <Box key={ri} role="row" display="contents">
-            {STAGE_COLS.map((_, ci) => {
-              const isSelected = selected === `${ri}:${ci}`;
-              // Boundary edges form a single border around the whole cell block.
-              const firstRow = ri === 0;
-              const lastRow = ri === STAGE_ROWS.length - 1;
-              const firstCol = ci === 0;
-              const lastCol = ci === STAGE_COLS.length - 1;
-              return (
-                <Flex
-                  key={ci}
-                  className="group"
-                  role="gridcell"
-                  aria-selected={isSelected}
-                  aria-label={`${row.aria}, ${colLabel(ci)}`}
-                  data-pos={`${ri}:${ci}`}
-                  tabIndex={focus.r === ri && focus.c === ci ? 0 : -1}
-                  justify="center"
-                  align="center"
-                  boxSize={STAGE_CELL}
-                  cursor="pointer"
-                  borderColor="border"
-                  borderTopWidth={firstRow ? '1px' : undefined}
-                  borderBottomWidth={lastRow ? '1px' : undefined}
-                  borderLeftWidth={firstCol ? '1px' : undefined}
-                  borderRightWidth={lastCol ? '1px' : undefined}
-                  borderTopLeftRadius={firstRow && firstCol ? 'md' : undefined}
-                  borderTopRightRadius={firstRow && lastCol ? 'md' : undefined}
-                  borderBottomLeftRadius={
-                    lastRow && firstCol ? 'md' : undefined
-                  }
-                  borderBottomRightRadius={
-                    lastRow && lastCol ? 'md' : undefined
-                  }
-                  outline="none"
-                  onClick={() => toggle(ri, ci)}
-                  onKeyDown={(e) => onCellKeyDown(e, ri, ci)}
-                >
-                  <Box
-                    boxSize={isSelected ? '3' : '1'}
-                    borderRadius="full"
-                    bg={isSelected ? 'blue.solid' : 'gray.300'}
-                    outline={isSelected ? '2px solid' : undefined}
-                    outlineColor="blue.solid"
-                    outlineOffset="2px"
-                    _groupHover={
-                      isSelected
-                        ? undefined
-                        : {
-                            boxSize: '2',
-                            bg: 'gray.400',
-                            // Fast grow on hover-in…
-                            transition:
-                              'width 0.15s ease, height 0.15s ease, background 0.15s ease',
-                          }
-                    }
-                    // Fast when selecting; slow shrink back on hover-out.
-                    transition={
-                      isSelected
-                        ? 'width 0.15s ease, height 0.15s ease, background 0.15s ease, outline-color 0.15s ease'
-                        : 'width 0.8s ease, height 0.8s ease, background 0.8s ease'
-                    }
-                  />
-                </Flex>
-              );
-            })}
-          </Box>
-        ))}
-      </Grid>
-    </Grid>
   );
 }
 
@@ -992,10 +1036,10 @@ function SocialStat({
   value?: number | null;
 }) {
   return (
-    <Link href={href} target="_blank" rel="noreferrer" flex="1" minW="0">
+    <Link href={href} target="_blank" rel="noreferrer" w="20">
       <Flex direction="column" align="center" gap="1" w="full">
         <Box fontSize="2xl">{icon}</Box>
-        <Text fontSize="md" fontWeight="bold" truncate maxW="full">
+        <Text fontWeight="bold" whiteSpace="nowrap">
           {value != null ? value.toLocaleString('de-DE') : label}
         </Text>
       </Flex>

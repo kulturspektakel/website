@@ -1,4 +1,12 @@
-import {memo, useEffect, useMemo, useRef, useState} from 'react';
+import {
+  forwardRef,
+  memo,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from 'react';
 import {
   createFileRoute,
   notFound,
@@ -10,6 +18,7 @@ import {crewAuth} from '../server/crewAuth';
 import {
   Box,
   Button,
+  type ButtonProps,
   Flex,
   HStack,
   Icon,
@@ -41,6 +50,19 @@ import {prismaClient} from '../server/prismaClient.server';
 import {Tooltip} from '../components/chakra-snippets/tooltip';
 import {BandName} from '../components/booking/BandName';
 import {BandApplicationRating} from '../components/booking/BandApplicationRating';
+import {StageMatrixReadonly} from '../components/booking/StageMatrixReadonly';
+import {StageMatrix} from '../components/booking/StageMatrix';
+import {
+  ALL_STAGE_CELLS,
+  toStageValue,
+  type StageCell,
+} from '../components/booking/stageMatrixShared';
+import {
+  PopoverBody,
+  PopoverContent,
+  PopoverRoot,
+  PopoverTrigger,
+} from '../components/chakra-snippets/popover';
 import {Tag} from '../components/chakra-snippets/tag';
 import {
   MenuCheckboxItem,
@@ -50,7 +72,13 @@ import {
 } from '../components/chakra-snippets/menu';
 import {seo} from '../utils/seo';
 import {normalizeBandName} from '../utils/normalizeBandName';
+import {meanRating} from '../utils/meanRating';
 import {BandSearch} from '../components/booking/BandSearch';
+import {
+  DialogCloseTrigger,
+  DialogContent,
+  DialogRoot,
+} from '../components/chakra-snippets/dialog';
 
 // Event ids look like `kult2026`; the previous year's event is `kult2025`.
 // Returns null when the id has no trailing year to decrement.
@@ -90,6 +118,8 @@ const loadBandApplications = createServerFn()
         facebookLikes: true,
         spotifyMonthlyListeners: true,
         contactedByViewerId: true,
+        stageRow: true,
+        stageColumn: true,
         _count: {select: {bandApplicationComment: true}},
         bandApplicationRating: {
           select: {
@@ -118,10 +148,7 @@ const loadBandApplications = createServerFn()
 
     return applications.map((a) => {
       const ratings = a.bandApplicationRating;
-      const averageRating =
-        ratings.length === 0
-          ? null
-          : ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length;
+      const averageRating = meanRating(ratings);
       return {
         id: a.id,
         bandname: a.bandname,
@@ -147,6 +174,8 @@ const loadBandApplications = createServerFn()
         playedLastYear: playedLastYear.has(normalizeBandName(a.bandname)),
         hasComments: a._count.bandApplicationComment > 0,
         wasContacted: a.contactedByViewerId != null,
+        stageRow: a.stageRow,
+        stageColumn: a.stageColumn,
       };
     });
   });
@@ -185,7 +214,7 @@ const COMPUTED_TAGS: (ComputedTag & {
     applies: (r) => r.hasComments,
   },
   {
-    label: 'kontaktiert',
+    label: 'angefragt',
     colorPalette: 'green',
     applies: (r) => r.wasContacted,
   },
@@ -203,11 +232,65 @@ export const Route = createFileRoute('/crew/booking/$eventId')({
   head: () => seo({title: 'Bandbewerbungen'}),
 });
 
+// The trigger shared by every column filter (checkbox menus and the stage
+// popover): a filter icon that turns blue when active, muted otherwise. `iconOnly`
+// shrinks it to just the icon for headers that also sort. Stops click
+// propagation so opening the filter never toggles the column's sort, then runs
+// the open handler that MenuTrigger/PopoverTrigger inject via `asChild`.
+const FilterTriggerButton = forwardRef<
+  HTMLButtonElement,
+  ButtonProps & {title?: string; active: boolean; iconOnly?: boolean}
+>(function FilterTriggerButton({title, active, iconOnly, onClick, ...rest}, ref) {
+  return (
+    <Button
+      ref={ref}
+      variant="ghost"
+      size="xs"
+      px="1"
+      minW="auto"
+      w={iconOnly ? 'auto' : 'full'}
+      color="inherit"
+      fontWeight="inherit"
+      fontSize="inherit"
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick?.(e);
+      }}
+      {...rest}
+    >
+      {title}
+      <Icon
+        as={LuFilter}
+        boxSize="3.5"
+        ml={iconOnly ? undefined : 'auto'}
+        color={active ? 'blue.solid' : 'fg.subtle'}
+        _groupHover={active ? undefined : {color: 'fg.muted'}}
+      />
+    </Button>
+  );
+});
+
+// Shared filter state for every column filter. Mirrors the committed value in
+// local state so the control (checkbox / matrix dot / active icon) updates
+// instantly, and commits the actual column filter — whose recompute re-filters
+// and re-facets all rows — inside a transition so it never blocks the click. One
+// place, so all filters stay responsive on large lists.
+function useColumnFilter<T>(column: Column<Row, unknown>) {
+  const [value, setValue] = useState<T | undefined>(
+    () => column.getFilterValue() as T | undefined,
+  );
+  const [, startTransition] = useTransition();
+  const setFilter = (next: T | undefined) => {
+    setValue(next);
+    startTransition(() => column.setFilterValue(next));
+  };
+  return [value, setFilter] as const;
+}
+
 // Multi-select filter rendered inside a column header. A column with no active
 // selection shows a muted filter icon; once values are picked the icon turns
 // blue. Pass `iconOnly` when the header also sorts — the trigger then shrinks to
-// just the icon and stops click propagation so opening the menu never toggles
-// the column's sort.
+// just the icon.
 function FilterMenu({
   column,
   options,
@@ -219,36 +302,22 @@ function FilterMenu({
   title?: string;
   iconOnly?: boolean;
 }) {
-  const selected = (column.getFilterValue() as string[] | undefined) ?? [];
-  const toggle = (value: string) => {
-    const next = selected.includes(value)
-      ? selected.filter((v) => v !== value)
-      : [...selected, value];
-    column.setFilterValue(next.length ? next : undefined);
+  const [value, setFilter] = useColumnFilter<string[]>(column);
+  const selected = value ?? [];
+  const toggle = (v: string) => {
+    const next = selected.includes(v)
+      ? selected.filter((x) => x !== v)
+      : [...selected, v];
+    setFilter(next.length ? next : undefined);
   };
   return (
     <MenuRoot closeOnSelect={false} positioning={{placement: 'bottom-end'}}>
       <MenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="xs"
-          px="1"
-          minW="auto"
-          w={iconOnly ? 'auto' : 'full'}
-          color="inherit"
-          fontWeight="inherit"
-          fontSize="inherit"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {title}
-          <Icon
-            as={LuFilter}
-            boxSize="3.5"
-            ml={iconOnly ? undefined : 'auto'}
-            color={selected.length ? 'blue.solid' : 'fg.subtle'}
-            _groupHover={selected.length ? undefined : {color: 'fg.muted'}}
-          />
-        </Button>
+        <FilterTriggerButton
+          title={title}
+          active={selected.length > 0}
+          iconOnly={iconOnly}
+        />
       </MenuTrigger>
       <MenuContent maxH="xs" overflowY="auto">
         {options.map((o) => (
@@ -279,6 +348,48 @@ function TagFilterHeader({column}: {column: Column<Row, unknown>}) {
     [facetedValues],
   );
   return <FilterMenu title="Tags" column={column} options={options} />;
+}
+
+// "Bühne" header + filter. Unlike the other filters (checkbox menus), the stage
+// filter is a cell picker: it opens a Popover (not a Menu — the matrix owns arrow
+// keys) holding the multi-select StageMatrix bound to the column's filter value
+// (an array of {row, col} cells).
+function StageFilterHeader({column}: {column: Column<Row, unknown>}) {
+  const [value, setFilter] = useColumnFilter<StageCell[]>(column);
+  const selected = value ?? [];
+  const onChange = (cells: StageCell[]) =>
+    setFilter(cells.length ? cells : undefined);
+
+  return (
+    <PopoverRoot positioning={{placement: 'bottom-end'}}>
+      <PopoverTrigger asChild>
+        <FilterTriggerButton title="Bühne" active={selected.length > 0} />
+      </PopoverTrigger>
+      <PopoverContent w="auto">
+        <PopoverBody>
+          <StageMatrix multiple value={selected} onChange={onChange} />
+          <HStack gap="2" mt="3">
+            <Button
+              flex="1"
+              size="xs"
+              variant="outline"
+              onClick={() => onChange(ALL_STAGE_CELLS)}
+            >
+              Alle
+            </Button>
+            <Button
+              flex="1"
+              size="xs"
+              variant="outline"
+              onClick={() => onChange([])}
+            >
+              Keine
+            </Button>
+          </HStack>
+        </PopoverBody>
+      </PopoverContent>
+    </PopoverRoot>
+  );
 }
 
 // Header for a column that both sorts and filters: a truncating label plus the
@@ -451,6 +562,27 @@ const columns = [
     ),
     meta: {width: '260px'},
   }),
+  col.display({
+    id: 'stage',
+    header: ({column}) => <StageFilterHeader column={column} />,
+    enableSorting: false,
+    // Exact-cell match: a row matches if its assigned (row, col) is among the
+    // picked cells. Unassigned rows (null) match nothing, so they drop out when a
+    // filter is active; "between" cells are their own selectable cells.
+    filterFn: (row, _columnId, filterValue: StageCell[]) =>
+      !filterValue?.length ||
+      filterValue.some(
+        (c) =>
+          c.row === row.original.stageRow &&
+          c.col === row.original.stageColumn,
+      ),
+    cell: ({row}) => (
+      <StageMatrixReadonly
+        value={toStageValue(row.original.stageRow, row.original.stageColumn)}
+      />
+    ),
+    meta: {width: '90px', align: 'center'},
+  }),
   col.accessor('tags', {
     header: ({column}) => <TagFilterHeader column={column} />,
     enableSorting: false,
@@ -565,8 +697,10 @@ function BookingPage() {
     getScrollElement: () => scrollRef.current,
     estimateSize: () => 56,
     // Render a generous buffer above/below the viewport so fast scrolling
-    // doesn't outrun row rendering and flash empty rows.
-    overscan: 25,
+    // doesn't outrun row rendering and flash empty rows. Rows are expensive
+    // (several tooltips + avatars each), so this only softens the gap on a hard
+    // fling rather than eliminating it.
+    overscan: 40,
   });
 
   // When a detail modal is open (incl. deep-links and search selections),
@@ -581,6 +715,39 @@ function BookingPage() {
       virtualizer.scrollToIndex(index, {align: 'auto'});
     }
   }, [applicationId, mounted, rows, virtualizer]);
+
+  // `rows` gets a fresh identity on every render/filter; read it through a ref
+  // so the keydown listener below subscribes once per open modal, not on every
+  // row change.
+  const rowsRef = useRef(rows);
+  rowsRef.current = rows;
+
+  // While a detail modal is open, Arrow Up/Down step to the previous/next row in
+  // the current (filtered + sorted) order. Skip when a nested control already
+  // handled the key (stage grid, combobox — they call preventDefault) or when
+  // the user is typing/moving a caret in a text field.
+  useEffect(() => {
+    if (!applicationId) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+      if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
+      const target = e.target as HTMLElement | null;
+      if (target?.closest('input, textarea, [contenteditable="true"]')) return;
+      const current = rowsRef.current.findIndex(
+        (r) => r.original.id === applicationId,
+      );
+      if (current < 0) return;
+      const next = current + (e.key === 'ArrowDown' ? 1 : -1);
+      if (next < 0 || next >= rowsRef.current.length) return;
+      e.preventDefault();
+      navigate({
+        to: '/crew/booking/$eventId/$applicationId',
+        params: {eventId, applicationId: rowsRef.current[next].original.id},
+      });
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [applicationId, navigate, eventId]);
 
   return (
     <Box h="100dvh" display="flex" flexDirection="column">
@@ -670,7 +837,27 @@ function BookingPage() {
         )}
       </Box>
 
-      <Outlet />
+      {/* Persistent detail dialog: the shell stays mounted across
+          $applicationId changes so navigating between bands (and the loading
+          spinner in between) swaps only the body — no open/close animation.
+          The enter/exit animation plays only when opening from / closing to the
+          table. */}
+      <DialogRoot
+        open={!!applicationId}
+        onOpenChange={(e) => {
+          if (!e.open) {
+            navigate({to: '/crew/booking/$eventId', params: {eventId}});
+          }
+        }}
+        placement="center"
+        size="xl"
+        scrollBehavior="inside"
+      >
+        <DialogContent>
+          <DialogCloseTrigger />
+          <Outlet />
+        </DialogContent>
+      </DialogRoot>
 
       <BandSearch bands={data} eventId={eventId} navigate={navigate} />
     </Box>
