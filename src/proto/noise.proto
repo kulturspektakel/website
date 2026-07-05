@@ -1,20 +1,22 @@
 syntax = "proto3";
 
+// One noise measurement over a fixed interval. Carried bare over MQTT
+// (noise/<id>/record) and BLE at ~1 Hz (record_interval_seconds = 1), and
+// wrapped in a LogMessage for the ~1/minute HTTP file upload as a 60-second
+// energy aggregate (record_interval_seconds = 60). Same fields and encoding
+// either way; only the span differs.
 message NoiseRecording {
-  message Record {
-    uint32 seq_no = 1; // monotonic; gap detection
-    bytes bands = 2; // 31 bytes; (dB - 20) * 2 per band
-    uint32 laeq_1s = 3; // same encoding as bands
-    uint32 lceq_1s = 4;
-    uint32 lafmax_1s = 5;
-    uint32 lcfmax_1s = 6;
-    uint32 lcpeak_1s = 7;
-  }
-  repeated Record records = 2; // 1 (MQTT/BLE live) or up to 300 (5-min file batch)
-  reserved 3, 4; // previously laeq_15m / lceq_15m
-  optional uint32 battery_mv = 5; // millivolts; only set on live messages when on battery
-  optional uint32 laeq_5m = 6; // last 5 min (same encoding); only set when ring is full
-  optional uint32 lceq_5m = 7;
-  optional uint32 laeq_30m = 8; // last 30 min; only set when ring is full
-  optional uint32 lceq_30m = 9;
+  uint32 seq_no = 1; // monotonic gap-detection counter. Per-second for live, per-minute for on-disk uploads — don't compare across the two streams.
+  bytes bands = 2; // exactly 31 bytes, low → high 1/3-octave band; (dB - 20) * 2 per band
+  uint32 laeq = 3; // LAeq over the interval (same encoding as bands)
+  uint32 lceq = 4; // LCeq over the interval
+  uint32 lafmax = 5; // LAFmax — max over the interval
+  uint32 lcfmax = 6; // LCFmax — max over the interval
+  uint32 lcpeak = 7; // LCpeak — max over the interval
+  uint32 record_interval_seconds = 8; // 1 = live 1 Hz sample, 60 = disk minute aggregate
+  optional uint32 battery_mv = 9; // millivolts; live messages only, and only on battery
+  optional uint32 laeq_5m = 10; // trailing 5-min LAeq; present only once populated
+  optional uint32 lceq_5m = 11;
+  optional uint32 laeq_30m = 12; // trailing 30-min LAeq; present only once populated
+  optional uint32 lceq_30m = 13;
 }

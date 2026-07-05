@@ -79,8 +79,8 @@ export function DeviceHeader({
               {device}
             </Heading>
           )}
-          {deviceState?.batteryMv != null && (
-            <BatteryChip mv={deviceState.batteryMv} />
+          {deviceState?.latest.batteryMv != null && (
+            <BatteryChip mv={deviceState.latest.batteryMv} />
           )}
           {pendingUploads != null && pendingUploads > 0 && (
             <UploadsChip count={pendingUploads} />

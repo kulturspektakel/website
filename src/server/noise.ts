@@ -8,18 +8,20 @@ import {tzOffset} from '@date-fns/tz';
 /**
  * POST /api/noise/log — ingests a protobuf `LogMessage` from a noise monitor.
  * Uses the same device authentication as KultCash, but requires the
- * `noise_recording` field: every `Record` it carries becomes one `NoiseLog`
- * row (one measurement per second).
+ * `noise_recording` field. Each upload is one file holding a single
+ * `NoiseRecording`: a 60-second energy aggregate (`recordIntervalSeconds` = 60)
+ * that becomes one `NoiseLog` row.
  *
- * A message can hold a single live record (MQTT/BLE) or up to ~300 records
- * uploaded as a 5-minute batch. The first record is assumed to be at the
- * reference time; every other record's `measuredAt` is offset forward by its
- * `seqNo` distance (in seconds) from that first record — gap-aware because it
- * keys off `seqNo` rather than array position. The reference is the device
- * clock (`deviceTime`, same handling as KultCash) so re-uploading a batch
- * produces identical `measuredAt`s and is deduplicated via the
- * `@@unique([deviceId, measuredAt])` constraint; it falls back to server
+ * `deviceTime` marks the START of the aggregate's 60-second window and is
+ * captured on-device at the first second of that window, so it's accurate
+ * regardless of upload delay; it becomes the row's `measuredAt` (same
+ * device-clock handling as KultCash). Re-uploading a file therefore produces an
+ * identical `measuredAt` and is deduplicated via the
+ * `@@unique([deviceId, measuredAt])` constraint. It falls back to server
  * receipt time only when the device sends no clock.
+ *
+ * Live 1 Hz records (`recordIntervalSeconds` = 1) arrive over MQTT/BLE and are
+ * consumed in the browser; they are never uploaded here.
  */
 export async function handleNoiseLog(
   request: Request,
@@ -37,41 +39,52 @@ export async function handleNoiseLog(
   }
 
   const recording = message.noiseRecording;
-  if (!recording || recording.records.length === 0) {
+  if (!recording) {
+    throw new ApiError(400, 'Bad Request', new Error('Missing noiseRecording'));
+  }
+
+  // Only 60-second disk aggregates belong on the HTTP path — live 1 Hz records
+  // travel over MQTT/BLE and are never uploaded. Reject anything else with 400
+  // so the device discards the (malformed / wrong-transport) file rather than
+  // retrying it forever. If the on-disk aggregation interval ever changes, this
+  // guard and the minute-bucketed history query must change together.
+  if (recording.recordIntervalSeconds !== 60) {
     throw new ApiError(
       400,
       'Bad Request',
-      new Error('Missing noiseRecording'),
+      new Error(
+        `Expected recordIntervalSeconds=60, got ${recording.recordIntervalSeconds}`,
+      ),
     );
   }
 
-  let referenceTime: number;
+  let measuredAt: number;
   if (message.deviceTime) {
     let deviceTime = new Date(message.deviceTime * 1000);
     if (!message.deviceTimeIsUtc) {
-      deviceTime = subMinutes(
-        deviceTime,
-        tzOffset('Europe/Berlin', deviceTime),
-      );
+      deviceTime = subMinutes(deviceTime, tzOffset('Europe/Berlin', deviceTime));
     }
-    referenceTime = deviceTime.getTime();
+    measuredAt = deviceTime.getTime();
   } else {
-    referenceTime = Date.now();
+    measuredAt = Date.now();
   }
 
-  const firstSeqNo = recording.records[0].seqNo;
-
+  // `createMany` with `skipDuplicates` keeps re-uploads idempotent (they return
+  // 201 with no new row rather than a unique-constraint error), so the device
+  // can safely retry and then delete the file.
   await prismaClient.noiseLog.createMany({
-    data: recording.records.map((r) => ({
-      deviceId,
-      measuredAt: new Date(referenceTime + (r.seqNo - firstSeqNo) * 1000),
-      bands: Uint8Array.from(r.bands),
-      laeq_1s: r.laeq1s,
-      lceq_1s: r.lceq1s,
-      lafmax_1s: r.lafmax1s,
-      lcfmax_1s: r.lcfmax1s,
-      lcpeak_1s: r.lcpeak1s,
-    })),
+    data: [
+      {
+        deviceId,
+        measuredAt: new Date(measuredAt),
+        bands: Uint8Array.from(recording.bands),
+        laeq: recording.laeq,
+        lceq: recording.lceq,
+        lafmax: recording.lafmax,
+        lcfmax: recording.lcfmax,
+        lcpeak: recording.lcpeak,
+      },
+    ],
     skipDuplicates: true,
   });
 

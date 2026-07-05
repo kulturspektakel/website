@@ -102,7 +102,7 @@ function DeviceList() {
                     <DeviceTitle
                       deviceName={name}
                       locationName={ctx.deviceLocations[name]}
-                      batteryMv={state?.batteryMv}
+                      batteryMv={state?.latest.batteryMv}
                     />
                     <VStack gap="1" align="end" minW="0">
                       {active ? (
@@ -112,7 +112,7 @@ function DeviceList() {
                             fontWeight="bold"
                             lineHeight="1"
                           >
-                            {decodeDb(state!.latest.laeq1s).toFixed(1)} dB(A)
+                            {decodeDb(state!.latest.laeq).toFixed(1)} dB(A)
                           </Text>
                           <Text
                             fontFamily="mono"
@@ -120,9 +120,9 @@ function DeviceList() {
                             color="gray.500"
                             lineHeight="1"
                           >
-                            {state!.laeq5m == null
+                            {state!.latest.laeq5m == null
                               ? '— dB(A) 5m'
-                              : `${decodeDb(state!.laeq5m).toFixed(1)} dB(A) 5m`}
+                              : `${decodeDb(state!.latest.laeq5m).toFixed(1)} dB(A) 5m`}
                           </Text>
                         </>
                       ) : (

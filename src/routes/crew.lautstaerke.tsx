@@ -103,27 +103,19 @@ function LautstaerkeLayout() {
         console.error('[lautstärke] decode error', e);
         return;
       }
-      const record = decoded.records[0];
-      if (!record) return;
-
       let data = deviceDataRef.current[deviceName];
       if (!data) {
         data = [[], ...SERIES.map(() => [] as number[])];
         deviceDataRef.current[deviceName] = data;
       }
       data[0].push(receiveTime / 1000);
-      SERIES.forEach((s, j) => data[j + 1].push(s.get(record, decoded)));
+      SERIES.forEach((s, j) => data[j + 1].push(s.get(decoded)));
 
       setDevices((prev) => ({
         ...prev,
         [deviceName]: {
           lastSeen: receiveTime,
-          latest: record,
-          laeq5m: decoded.laeq5m ?? null,
-          lceq5m: decoded.lceq5m ?? null,
-          laeq30m: decoded.laeq30m ?? null,
-          lceq30m: decoded.lceq30m ?? null,
-          batteryMv: decoded.batteryMv,
+          latest: decoded,
         },
       }));
     },

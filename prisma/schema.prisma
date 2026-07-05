@@ -386,20 +386,21 @@ model DeviceLocation {
   Device       Device   @relation(fields: [deviceId], references: [id])
 }
 
-// One row per protobuf `Record` (one measurement per second).
+// One row per uploaded `NoiseRecording` — a 60-second energy aggregate
+// (record_interval_seconds = 60). `measuredAt` is the start of that window.
 model NoiseLog {
   id         String   @id @default(cuid())
   deviceId   String
   device     Device   @relation(fields: [deviceId], references: [id])
-  measuredAt DateTime // derived per record from upload time + seqNo offset (gap-aware)
+  measuredAt DateTime // start of the aggregate's 60s window (device clock)
 
   // 31 bands, one uint8 byte each; (dB - 20) * 2 per band
-  bands     Bytes
-  laeq_1s   Int   @db.SmallInt // same encoding as bands (uint8 on wire via int_size:IS_8)
-  lceq_1s   Int   @db.SmallInt // C-weighted, per-bin
-  lafmax_1s Int   @db.SmallInt // max A-weighted FFT energy in the second
-  lcfmax_1s Int   @db.SmallInt // max C-weighted FFT energy in the second
-  lcpeak_1s Int   @db.SmallInt // unweighted abs sample peak (v1 approximation)
+  bands  Bytes
+  laeq   Int @db.SmallInt // A-weighted Leq over the interval (same encoding as bands)
+  lceq   Int @db.SmallInt // C-weighted Leq over the interval
+  lafmax Int @db.SmallInt // LAFmax — max over the interval
+  lcfmax Int @db.SmallInt // LCFmax — max over the interval
+  lcpeak Int @db.SmallInt // LCpeak — max over the interval
 
   @@unique([deviceId, measuredAt])
 }

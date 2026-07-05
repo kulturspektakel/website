@@ -21,17 +21,19 @@ export function localDayRange(date: string): {start: Date; end: Date} {
   };
 }
 
-// Aggregate NoiseLog (one row per second) into per-minute buckets for one
+// NoiseLog already holds one 60-second aggregate per row (measuredAt = the start
+// of that minute). This projects those rows into the per-minute series for one
 // device and one local day, entirely in SQL. Stored ints are encoded as
 // (dB - 20) * 2, so dB = 20 + val/2 and energy = 10^(dB/10).
 //
-//  - Leq,1m: count-weighted mean power of the second-level Leq, back to dB.
-//  - Leq,5m / Leq,30m: same, but over a time-RANGE window so missing minutes
-//    simply contribute nothing (gap-tolerant) rather than skewing the span.
+//  - Leq,1m: the row's own Leq, decoded to dB (one row per minute group).
+//  - Leq,5m / Leq,30m: energy mean over a time-RANGE window of minutes, so
+//    missing minutes simply contribute nothing (gap-tolerant) rather than
+//    skewing the span.
 //  - max/peak: per-minute MAX, decoded to dB.
 //
 // The WHERE clause is a single range scan on the @@unique([deviceId, measuredAt])
-// index (~86k rows/day → 1440 minute groups), so this stays cheap.
+// index (~1440 rows/day → 1440 minute groups), so this stays cheap.
 export async function noiseHistory(
   deviceId: string,
   date: string,
@@ -41,12 +43,12 @@ export async function noiseHistory(
     WITH per_min AS (
       SELECT
         date_trunc('minute', "measuredAt") AS minute,
-        sum(power(10, (20 + laeq_1s / 2.0) / 10))::float8 AS a_energy,
-        sum(power(10, (20 + lceq_1s / 2.0) / 10))::float8 AS c_energy,
+        sum(power(10, (20 + laeq / 2.0) / 10))::float8 AS a_energy,
+        sum(power(10, (20 + lceq / 2.0) / 10))::float8 AS c_energy,
         count(*)::float8 AS n,
-        max(lafmax_1s) AS a_fmax,
-        max(lcfmax_1s) AS c_fmax,
-        max(lcpeak_1s) AS c_peak
+        max(lafmax) AS a_fmax,
+        max(lcfmax) AS c_fmax,
+        max(lcpeak) AS c_peak
       FROM "NoiseLog"
       WHERE "deviceId" = ${deviceId}
         AND "measuredAt" >= ${start}

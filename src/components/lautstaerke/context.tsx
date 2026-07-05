@@ -5,10 +5,7 @@ import {
   useState,
   type MutableRefObject,
 } from 'react';
-import {
-  type NoiseRecording,
-  type NoiseRecording_Record as NoiseRecord,
-} from '../../proto/noise';
+import {type NoiseRecording} from '../../proto/noise';
 import {type WifiStatus} from './bluetooth';
 
 export const TOPIC = 'noise/+/record';
@@ -34,62 +31,58 @@ export const SERIES = [
     label: 'LAeq,1s',
     weighting: 'A',
     stroke: '#fef08a',
-    get: (r: NoiseRecord) => decodeDb(r.laeq1s),
+    get: (d: NoiseRecording) => decodeDb(d.laeq),
   },
   {
     label: 'LAeq,5m',
     weighting: 'A',
     stroke: '#eab308',
-    get: (_r: NoiseRecord, d: NoiseRecording) =>
-      d.laeq5m == null ? null : decodeDb(d.laeq5m),
+    get: (d: NoiseRecording) => (d.laeq5m == null ? null : decodeDb(d.laeq5m)),
   },
   {
     label: 'LAeq,30m',
     weighting: 'A',
     stroke: '#a16207',
-    get: (_r: NoiseRecord, d: NoiseRecording) =>
-      d.laeq30m == null ? null : decodeDb(d.laeq30m),
+    get: (d: NoiseRecording) => (d.laeq30m == null ? null : decodeDb(d.laeq30m)),
   },
   {
     label: 'LAFmax',
     weighting: 'A',
     stroke: '#f87171',
     hidden: true,
-    get: (r: NoiseRecord) => decodeDb(r.lafmax1s),
+    get: (d: NoiseRecording) => decodeDb(d.lafmax),
   },
   {
     label: 'LCeq,1s',
     weighting: 'C',
     stroke: '#fef08a',
-    get: (r: NoiseRecord) => decodeDb(r.lceq1s),
+    get: (d: NoiseRecording) => decodeDb(d.lceq),
   },
   {
     label: 'LCeq,5m',
     weighting: 'C',
     stroke: '#eab308',
-    get: (_r: NoiseRecord, d: NoiseRecording) =>
-      d.lceq5m == null ? null : decodeDb(d.lceq5m),
+    get: (d: NoiseRecording) => (d.lceq5m == null ? null : decodeDb(d.lceq5m)),
   },
   {
     label: 'LCeq,30m',
     weighting: 'C',
     stroke: '#a16207',
-    get: (_r: NoiseRecord, d: NoiseRecording) =>
-      d.lceq30m == null ? null : decodeDb(d.lceq30m),
+    get: (d: NoiseRecording) => (d.lceq30m == null ? null : decodeDb(d.lceq30m)),
   },
   {
     label: 'LCFmax',
     weighting: 'C',
     stroke: '#f87171',
     hidden: true,
-    get: (r: NoiseRecord) => decodeDb(r.lcfmax1s),
+    get: (d: NoiseRecording) => decodeDb(d.lcfmax),
   },
   {
     label: 'LCpeak',
     weighting: 'C',
     stroke: '#b91c1c',
     hidden: true,
-    get: (r: NoiseRecord) => decodeDb(r.lcpeak1s),
+    get: (d: NoiseRecording) => decodeDb(d.lcpeak),
   },
 ] as const satisfies ReadonlyArray<{
   label: string;
@@ -97,7 +90,7 @@ export const SERIES = [
   stroke: string;
   // hidden from the chart by default; still toggleable via the legend.
   hidden?: boolean;
-  get: (r: NoiseRecord, d: NoiseRecording) => number | null;
+  get: (d: NoiseRecording) => number | null;
 }>;
 
 // A device's location history; `createdAt` is epoch ms. Fetched by
@@ -148,14 +141,10 @@ export const HISTORY_SERIES = [
 
 export type DeviceState = {
   lastSeen: number;
-  latest: NoiseRecord;
-  // null until the device's 5-minute ring buffer is full (no data yet).
-  laeq5m: number | null;
-  lceq5m: number | null;
-  // null until the device's 30-minute ring buffer is full.
-  laeq30m: number | null;
-  lceq30m: number | null;
-  batteryMv?: number;
+  // The most recent live (1 Hz) record. Being flat, it also carries the
+  // trailing 5m/30m Leq (null until the device's ring buffer is full) and
+  // batteryMv (only when on battery), so no separate fields are needed here.
+  latest: NoiseRecording;
 };
 export type DeviceBuffer = (number | null)[][];
 

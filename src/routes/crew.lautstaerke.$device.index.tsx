@@ -21,7 +21,6 @@ import {
   fmtTime,
   resolveCssVar,
 } from '../components/lautstaerke/chartUtils';
-import {type NoiseRecording} from '../proto/noise';
 import {ChartTooltip} from '../components/lautstaerke/ChartTooltip';
 import {BAND_FREQUENCIES} from '../components/lautstaerke/bluetooth';
 
@@ -186,14 +185,6 @@ function DeviceLive() {
     return () => clearInterval(id);
   }, [bandXs]);
 
-  // The 5m/30m getters read these off a NoiseRecording; reconstruct a minimal
-  // one from the persisted device state so the same getters feed the numbers.
-  const decodedLike = {
-    laeq5m: deviceState?.laeq5m ?? undefined,
-    lceq5m: deviceState?.lceq5m ?? undefined,
-    laeq30m: deviceState?.laeq30m ?? undefined,
-    lceq30m: deviceState?.lceq30m ?? undefined,
-  } as NoiseRecording;
   const data = ctx.deviceData.current[device] as uPlot.AlignedData;
 
   return (
@@ -205,7 +196,7 @@ function DeviceLive() {
         toggle={toggle}
         cursorIdx={cursorIdx}
         data={data}
-        liveValue={(s) => (latest ? s.get(latest, decodedLike) : null)}
+        liveValue={(s) => (latest ? s.get(latest) : null)}
       />
       <Flex flex="1" minH="0" direction={{base: 'column', lg: 'row'}} gap="2">
         <NoiseTimeChart

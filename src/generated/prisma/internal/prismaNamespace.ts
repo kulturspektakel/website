@@ -3250,11 +3250,11 @@ export const NoiseLogScalarFieldEnum = {
   deviceId: 'deviceId',
   measuredAt: 'measuredAt',
   bands: 'bands',
-  laeq_1s: 'laeq_1s',
-  lceq_1s: 'lceq_1s',
-  lafmax_1s: 'lafmax_1s',
-  lcfmax_1s: 'lcfmax_1s',
-  lcpeak_1s: 'lcpeak_1s'
+  laeq: 'laeq',
+  lceq: 'lceq',
+  lafmax: 'lafmax',
+  lcfmax: 'lcfmax',
+  lcpeak: 'lcpeak'
 } as const
 
 export type NoiseLogScalarFieldEnum = (typeof NoiseLogScalarFieldEnum)[keyof typeof NoiseLogScalarFieldEnum]
