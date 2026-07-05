@@ -102,6 +102,7 @@ export const MenuTriggerItem = React.forwardRef<
 })
 
 export const MenuRadioItemGroup = ChakraMenu.RadioItemGroup
+export const MenuItemGroupLabel = ChakraMenu.ItemGroupLabel
 export const MenuContextTrigger = ChakraMenu.ContextTrigger
 export const MenuRoot = ChakraMenu.Root
 export const MenuSeparator = ChakraMenu.Separator

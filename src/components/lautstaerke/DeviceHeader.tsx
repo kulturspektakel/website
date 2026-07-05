@@ -1,13 +1,11 @@
 import {Link} from '@tanstack/react-router';
 import {LuArrowLeft} from 'react-icons/lu';
-import {Box, Button, HStack, Heading, IconButton, Text, VStack} from '@chakra-ui/react';
-import {DayPicker} from './DayPicker';
+import {Box, HStack, Heading, IconButton, Text, VStack} from '@chakra-ui/react';
 import {BatteryChip} from './BatteryChip';
 import {UploadsChip} from './UploadsChip';
 import {WifiStatusIcon} from './WifiStatusIcon';
-import {BluetoothMenu} from './BluetoothMenu';
+import {DeviceMenu} from './DeviceMenu';
 import {isFresh, useLautstaerkeCtx, useTick} from './context';
-import {useDeviceView} from './deviceView';
 
 // Online dot. Ticks internally so only it (not the whole header) re-renders each
 // second. Driven by live MQTT state, which is "is the device alive now" —
@@ -43,7 +41,6 @@ export function DeviceHeader({
   dayValue: string;
 }) {
   const ctx = useLautstaerkeCtx();
-  const {weighting, toggleWeighting} = useDeviceView();
   const deviceState = ctx.devices[device];
   const bleConnected = ctx.bluetooth.deviceName === device;
   // Pending uploads and WiFi status only make sense for the BLE-connected device.
@@ -88,25 +85,12 @@ export function DeviceHeader({
           {wifiStatus && <WifiStatusIcon status={wifiStatus} />}
         </HStack>
       </VStack>
-      <BluetoothMenu />
-      <DayPicker device={device} days={days} value={dayValue} />
-      <Button
-        size="sm"
-        flexShrink="0"
-        variant="outline"
-        fontFamily="mono"
-        minW={{base: 'auto', md: '20'}}
-        onClick={toggleWeighting}
-        aria-label={`Frequenzbewertung umschalten (aktuell dB(${weighting}))`}
-      >
-        {/* Just the weighting letter on mobile to save header space. */}
-        <Text as="span" hideFrom="md">
-          {weighting}
-        </Text>
-        <Text as="span" hideBelow="md">
-          dB({weighting})
-        </Text>
-      </Button>
+      <DeviceMenu
+        device={device}
+        currentLocation={location}
+        days={days}
+        dayValue={dayValue}
+      />
     </HStack>
   );
 }
