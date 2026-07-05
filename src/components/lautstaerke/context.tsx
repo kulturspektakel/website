@@ -99,19 +99,20 @@ export const SERIES = [
 // other shared shapes rather than in a client- or server-only module.
 export type DeviceLocationRecord = {name: string; createdAt: number};
 
-// One per-minute aggregate row from the historical query; every level is
-// already decoded to dB. Lives here next to HISTORY_SERIES so the `col` mapping
-// below can be checked against it; the query that produces it is in
-// noiseHistory.server.ts.
+// One row (one 60s aggregate) from the historical query; every level is already
+// decoded to dB. Lives here next to HISTORY_SERIES so the `col` mapping below can
+// be checked against it; the query that produces it is in noiseHistory.server.ts.
 export type HistoryRow = {
   minute_epoch: number;
   laeq_1m: number;
-  laeq_5m: number;
-  laeq_30m: number;
+  // Read from the device's stored trailing-window columns, so null until its
+  // buffer filled (and for rows predating those columns).
+  laeq_5m: number | null;
+  laeq_30m: number | null;
   lafmax: number;
   lceq_1m: number;
-  lceq_5m: number;
-  lceq_30m: number;
+  lceq_5m: number | null;
+  lceq_30m: number | null;
   lcfmax: number;
   lcpeak: number;
 };
@@ -119,8 +120,8 @@ export type HistoryRow = {
 // Parallel to SERIES, for the historical (per-day) page. Same order, strokes,
 // weightings and hidden flags — the only difference is the "fast" window is one
 // minute instead of one second (Leq,1m vs Leq,1s). `col` maps each series to a
-// column of the per-minute SQL aggregation (see noiseHistory.server.ts); values
-// come back already decoded to dB, so no `get`/decodeDb is needed here.
+// column the query decodes per row (see noiseHistory.server.ts); values come
+// back already decoded to dB, so no `get`/decodeDb is needed here.
 export const HISTORY_SERIES = [
   {label: 'LAeq,1m', weighting: 'A', stroke: '#fef08a', col: 'laeq_1m'},
   {label: 'LAeq,5m', weighting: 'A', stroke: '#eab308', col: 'laeq_5m'},

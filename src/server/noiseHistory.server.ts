@@ -22,62 +22,38 @@ export function localDayRange(date: string): {start: Date; end: Date} {
 }
 
 // NoiseLog already holds one 60-second aggregate per row (measuredAt = the start
-// of that minute). This projects those rows into the per-minute series for one
-// device and one local day, entirely in SQL. Stored ints are encoded as
-// (dB - 20) * 2, so dB = 20 + val/2 and energy = 10^(dB/10).
-//
-//  - Leq,1m: the row's own Leq, decoded to dB (one row per minute group).
-//  - Leq,5m / Leq,30m: energy mean over a time-RANGE window of minutes, so
-//    missing minutes simply contribute nothing (gap-tolerant) rather than
-//    skewing the span.
-//  - max/peak: per-minute MAX, decoded to dB.
+// of that minute), and every level — the 1m Leq, the device's trailing 5m/30m
+// windows, and the max/peak values — is stored per row. So this is a straight
+// per-row decode for one device and one local day: no aggregation, since each
+// row is already the minute. Stored ints are encoded as (dB - 20) * 2, so
+// dB = 20 + val/2; the 5m/30m columns are null until the device's buffer has
+// filled (and for rows ingested before those columns existed), which decodes to
+// null and simply leaves a gap in that line.
 //
 // The WHERE clause is a single range scan on the @@unique([deviceId, measuredAt])
-// index (~1440 rows/day → 1440 minute groups), so this stays cheap.
+// index (~1440 rows/day), so this stays cheap.
 export async function noiseHistory(
   deviceId: string,
   date: string,
 ): Promise<HistoryRow[]> {
   const {start, end} = localDayRange(date);
   return prismaClient.$queryRaw<HistoryRow[]>`
-    WITH per_min AS (
-      SELECT
-        date_trunc('minute', "measuredAt") AS minute,
-        sum(power(10, (20 + laeq / 2.0) / 10))::float8 AS a_energy,
-        sum(power(10, (20 + lceq / 2.0) / 10))::float8 AS c_energy,
-        count(*)::float8 AS n,
-        max(lafmax) AS a_fmax,
-        max(lcfmax) AS c_fmax,
-        max(lcpeak) AS c_peak
-      FROM "NoiseLog"
-      WHERE "deviceId" = ${deviceId}
-        AND "measuredAt" >= ${start}
-        AND "measuredAt" < ${end}
-      GROUP BY 1
-    ), windowed AS (
-      SELECT
-        minute,
-        10 * log(a_energy / n) AS laeq_1m,
-        10 * log(c_energy / n) AS lceq_1m,
-        10 * log(sum(a_energy) OVER w5 / NULLIF(sum(n) OVER w5, 0)) AS laeq_5m,
-        10 * log(sum(c_energy) OVER w5 / NULLIF(sum(n) OVER w5, 0)) AS lceq_5m,
-        10 * log(sum(a_energy) OVER w30 / NULLIF(sum(n) OVER w30, 0)) AS laeq_30m,
-        10 * log(sum(c_energy) OVER w30 / NULLIF(sum(n) OVER w30, 0)) AS lceq_30m,
-        20 + a_fmax / 2.0 AS lafmax,
-        20 + c_fmax / 2.0 AS lcfmax,
-        20 + c_peak / 2.0 AS lcpeak
-      FROM per_min
-      WINDOW
-        w5 AS (ORDER BY minute RANGE BETWEEN INTERVAL '4 minutes' PRECEDING AND CURRENT ROW),
-        w30 AS (ORDER BY minute RANGE BETWEEN INTERVAL '29 minutes' PRECEDING AND CURRENT ROW)
-    )
     SELECT
-      extract(epoch FROM minute)::float8 AS minute_epoch,
-      laeq_1m::float8, laeq_5m::float8, laeq_30m::float8, lafmax::float8,
-      lceq_1m::float8, lceq_5m::float8, lceq_30m::float8,
-      lcfmax::float8, lcpeak::float8
-    FROM windowed
-    ORDER BY minute
+      extract(epoch FROM "measuredAt")::float8 AS minute_epoch,
+      (20 + laeq / 2.0)::float8 AS laeq_1m,
+      (20 + lceq / 2.0)::float8 AS lceq_1m,
+      (20 + laeq5m / 2.0)::float8 AS laeq_5m,
+      (20 + lceq5m / 2.0)::float8 AS lceq_5m,
+      (20 + laeq30m / 2.0)::float8 AS laeq_30m,
+      (20 + lceq30m / 2.0)::float8 AS lceq_30m,
+      (20 + lafmax / 2.0)::float8 AS lafmax,
+      (20 + lcfmax / 2.0)::float8 AS lcfmax,
+      (20 + lcpeak / 2.0)::float8 AS lcpeak
+    FROM "NoiseLog"
+    WHERE "deviceId" = ${deviceId}
+      AND "measuredAt" >= ${start}
+      AND "measuredAt" < ${end}
+    ORDER BY "measuredAt"
   `;
 }
 
@@ -117,9 +93,10 @@ export async function deviceLocations(
 // Project the aggregate rows into the [x, ...columns] layout uPlot wants, with
 // one column per HISTORY_SERIES entry in order. The SQL only emits minutes that
 // had data, so gaps are rendered by NoiseTimeChart's gap refiner (a > threshold
-// jump between consecutive x values), no explicit null rows needed. Returned as
-// plain number[][]; the view casts it to uPlot.AlignedData at the chart edge.
-export function rowsToAligned(rows: HistoryRow[]): number[][] {
+// jump between consecutive x values), no explicit null rows needed. Individual
+// nulls (a missing 5m/30m value on an otherwise-present minute) break just that
+// line. The view casts the result to uPlot.AlignedData at the chart edge.
+export function rowsToAligned(rows: HistoryRow[]): (number | null)[][] {
   const xs = rows.map((r) => r.minute_epoch);
   const cols = HISTORY_SERIES.map((s) => rows.map((r) => r[s.col]));
   return [xs, ...cols];

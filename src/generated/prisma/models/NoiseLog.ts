@@ -32,6 +32,10 @@ export type NoiseLogAvgAggregateOutputType = {
   lafmax: number | null
   lcfmax: number | null
   lcpeak: number | null
+  laeq5m: number | null
+  lceq5m: number | null
+  laeq30m: number | null
+  lceq30m: number | null
 }
 
 export type NoiseLogSumAggregateOutputType = {
@@ -40,6 +44,10 @@ export type NoiseLogSumAggregateOutputType = {
   lafmax: number | null
   lcfmax: number | null
   lcpeak: number | null
+  laeq5m: number | null
+  lceq5m: number | null
+  laeq30m: number | null
+  lceq30m: number | null
 }
 
 export type NoiseLogMinAggregateOutputType = {
@@ -52,6 +60,10 @@ export type NoiseLogMinAggregateOutputType = {
   lafmax: number | null
   lcfmax: number | null
   lcpeak: number | null
+  laeq5m: number | null
+  lceq5m: number | null
+  laeq30m: number | null
+  lceq30m: number | null
 }
 
 export type NoiseLogMaxAggregateOutputType = {
@@ -64,6 +76,10 @@ export type NoiseLogMaxAggregateOutputType = {
   lafmax: number | null
   lcfmax: number | null
   lcpeak: number | null
+  laeq5m: number | null
+  lceq5m: number | null
+  laeq30m: number | null
+  lceq30m: number | null
 }
 
 export type NoiseLogCountAggregateOutputType = {
@@ -76,6 +92,10 @@ export type NoiseLogCountAggregateOutputType = {
   lafmax: number
   lcfmax: number
   lcpeak: number
+  laeq5m: number
+  lceq5m: number
+  laeq30m: number
+  lceq30m: number
   _all: number
 }
 
@@ -86,6 +106,10 @@ export type NoiseLogAvgAggregateInputType = {
   lafmax?: true
   lcfmax?: true
   lcpeak?: true
+  laeq5m?: true
+  lceq5m?: true
+  laeq30m?: true
+  lceq30m?: true
 }
 
 export type NoiseLogSumAggregateInputType = {
@@ -94,6 +118,10 @@ export type NoiseLogSumAggregateInputType = {
   lafmax?: true
   lcfmax?: true
   lcpeak?: true
+  laeq5m?: true
+  lceq5m?: true
+  laeq30m?: true
+  lceq30m?: true
 }
 
 export type NoiseLogMinAggregateInputType = {
@@ -106,6 +134,10 @@ export type NoiseLogMinAggregateInputType = {
   lafmax?: true
   lcfmax?: true
   lcpeak?: true
+  laeq5m?: true
+  lceq5m?: true
+  laeq30m?: true
+  lceq30m?: true
 }
 
 export type NoiseLogMaxAggregateInputType = {
@@ -118,6 +150,10 @@ export type NoiseLogMaxAggregateInputType = {
   lafmax?: true
   lcfmax?: true
   lcpeak?: true
+  laeq5m?: true
+  lceq5m?: true
+  laeq30m?: true
+  lceq30m?: true
 }
 
 export type NoiseLogCountAggregateInputType = {
@@ -130,6 +166,10 @@ export type NoiseLogCountAggregateInputType = {
   lafmax?: true
   lcfmax?: true
   lcpeak?: true
+  laeq5m?: true
+  lceq5m?: true
+  laeq30m?: true
+  lceq30m?: true
   _all?: true
 }
 
@@ -229,6 +269,10 @@ export type NoiseLogGroupByOutputType = {
   lafmax: number
   lcfmax: number
   lcpeak: number
+  laeq5m: number | null
+  lceq5m: number | null
+  laeq30m: number | null
+  lceq30m: number | null
   _count: NoiseLogCountAggregateOutputType | null
   _avg: NoiseLogAvgAggregateOutputType | null
   _sum: NoiseLogSumAggregateOutputType | null
@@ -264,6 +308,10 @@ export type NoiseLogWhereInput = {
   lafmax?: Prisma.IntFilter<"NoiseLog"> | number
   lcfmax?: Prisma.IntFilter<"NoiseLog"> | number
   lcpeak?: Prisma.IntFilter<"NoiseLog"> | number
+  laeq5m?: Prisma.IntNullableFilter<"NoiseLog"> | number | null
+  lceq5m?: Prisma.IntNullableFilter<"NoiseLog"> | number | null
+  laeq30m?: Prisma.IntNullableFilter<"NoiseLog"> | number | null
+  lceq30m?: Prisma.IntNullableFilter<"NoiseLog"> | number | null
   device?: Prisma.XOR<Prisma.DeviceScalarRelationFilter, Prisma.DeviceWhereInput>
 }
 
@@ -277,6 +325,10 @@ export type NoiseLogOrderByWithRelationInput = {
   lafmax?: Prisma.SortOrder
   lcfmax?: Prisma.SortOrder
   lcpeak?: Prisma.SortOrder
+  laeq5m?: Prisma.SortOrderInput | Prisma.SortOrder
+  lceq5m?: Prisma.SortOrderInput | Prisma.SortOrder
+  laeq30m?: Prisma.SortOrderInput | Prisma.SortOrder
+  lceq30m?: Prisma.SortOrderInput | Prisma.SortOrder
   device?: Prisma.DeviceOrderByWithRelationInput
   _relevance?: Prisma.NoiseLogOrderByRelevanceInput
 }
@@ -295,6 +347,10 @@ export type NoiseLogWhereUniqueInput = Prisma.AtLeast<{
   lafmax?: Prisma.IntFilter<"NoiseLog"> | number
   lcfmax?: Prisma.IntFilter<"NoiseLog"> | number
   lcpeak?: Prisma.IntFilter<"NoiseLog"> | number
+  laeq5m?: Prisma.IntNullableFilter<"NoiseLog"> | number | null
+  lceq5m?: Prisma.IntNullableFilter<"NoiseLog"> | number | null
+  laeq30m?: Prisma.IntNullableFilter<"NoiseLog"> | number | null
+  lceq30m?: Prisma.IntNullableFilter<"NoiseLog"> | number | null
   device?: Prisma.XOR<Prisma.DeviceScalarRelationFilter, Prisma.DeviceWhereInput>
 }, "id" | "deviceId_measuredAt">
 
@@ -308,6 +364,10 @@ export type NoiseLogOrderByWithAggregationInput = {
   lafmax?: Prisma.SortOrder
   lcfmax?: Prisma.SortOrder
   lcpeak?: Prisma.SortOrder
+  laeq5m?: Prisma.SortOrderInput | Prisma.SortOrder
+  lceq5m?: Prisma.SortOrderInput | Prisma.SortOrder
+  laeq30m?: Prisma.SortOrderInput | Prisma.SortOrder
+  lceq30m?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.NoiseLogCountOrderByAggregateInput
   _avg?: Prisma.NoiseLogAvgOrderByAggregateInput
   _max?: Prisma.NoiseLogMaxOrderByAggregateInput
@@ -328,6 +388,10 @@ export type NoiseLogScalarWhereWithAggregatesInput = {
   lafmax?: Prisma.IntWithAggregatesFilter<"NoiseLog"> | number
   lcfmax?: Prisma.IntWithAggregatesFilter<"NoiseLog"> | number
   lcpeak?: Prisma.IntWithAggregatesFilter<"NoiseLog"> | number
+  laeq5m?: Prisma.IntNullableWithAggregatesFilter<"NoiseLog"> | number | null
+  lceq5m?: Prisma.IntNullableWithAggregatesFilter<"NoiseLog"> | number | null
+  laeq30m?: Prisma.IntNullableWithAggregatesFilter<"NoiseLog"> | number | null
+  lceq30m?: Prisma.IntNullableWithAggregatesFilter<"NoiseLog"> | number | null
 }
 
 export type NoiseLogCreateInput = {
@@ -339,6 +403,10 @@ export type NoiseLogCreateInput = {
   lafmax: number
   lcfmax: number
   lcpeak: number
+  laeq5m?: number | null
+  lceq5m?: number | null
+  laeq30m?: number | null
+  lceq30m?: number | null
   device: Prisma.DeviceCreateNestedOneWithoutNoiseLogsInput
 }
 
@@ -352,6 +420,10 @@ export type NoiseLogUncheckedCreateInput = {
   lafmax: number
   lcfmax: number
   lcpeak: number
+  laeq5m?: number | null
+  lceq5m?: number | null
+  laeq30m?: number | null
+  lceq30m?: number | null
 }
 
 export type NoiseLogUpdateInput = {
@@ -363,6 +435,10 @@ export type NoiseLogUpdateInput = {
   lafmax?: Prisma.IntFieldUpdateOperationsInput | number
   lcfmax?: Prisma.IntFieldUpdateOperationsInput | number
   lcpeak?: Prisma.IntFieldUpdateOperationsInput | number
+  laeq5m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lceq5m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  laeq30m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lceq30m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   device?: Prisma.DeviceUpdateOneRequiredWithoutNoiseLogsNestedInput
 }
 
@@ -376,6 +452,10 @@ export type NoiseLogUncheckedUpdateInput = {
   lafmax?: Prisma.IntFieldUpdateOperationsInput | number
   lcfmax?: Prisma.IntFieldUpdateOperationsInput | number
   lcpeak?: Prisma.IntFieldUpdateOperationsInput | number
+  laeq5m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lceq5m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  laeq30m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lceq30m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type NoiseLogCreateManyInput = {
@@ -388,6 +468,10 @@ export type NoiseLogCreateManyInput = {
   lafmax: number
   lcfmax: number
   lcpeak: number
+  laeq5m?: number | null
+  lceq5m?: number | null
+  laeq30m?: number | null
+  lceq30m?: number | null
 }
 
 export type NoiseLogUpdateManyMutationInput = {
@@ -399,6 +483,10 @@ export type NoiseLogUpdateManyMutationInput = {
   lafmax?: Prisma.IntFieldUpdateOperationsInput | number
   lcfmax?: Prisma.IntFieldUpdateOperationsInput | number
   lcpeak?: Prisma.IntFieldUpdateOperationsInput | number
+  laeq5m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lceq5m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  laeq30m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lceq30m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type NoiseLogUncheckedUpdateManyInput = {
@@ -411,6 +499,10 @@ export type NoiseLogUncheckedUpdateManyInput = {
   lafmax?: Prisma.IntFieldUpdateOperationsInput | number
   lcfmax?: Prisma.IntFieldUpdateOperationsInput | number
   lcpeak?: Prisma.IntFieldUpdateOperationsInput | number
+  laeq5m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lceq5m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  laeq30m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lceq30m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type NoiseLogListRelationFilter = {
@@ -444,6 +536,10 @@ export type NoiseLogCountOrderByAggregateInput = {
   lafmax?: Prisma.SortOrder
   lcfmax?: Prisma.SortOrder
   lcpeak?: Prisma.SortOrder
+  laeq5m?: Prisma.SortOrder
+  lceq5m?: Prisma.SortOrder
+  laeq30m?: Prisma.SortOrder
+  lceq30m?: Prisma.SortOrder
 }
 
 export type NoiseLogAvgOrderByAggregateInput = {
@@ -452,6 +548,10 @@ export type NoiseLogAvgOrderByAggregateInput = {
   lafmax?: Prisma.SortOrder
   lcfmax?: Prisma.SortOrder
   lcpeak?: Prisma.SortOrder
+  laeq5m?: Prisma.SortOrder
+  lceq5m?: Prisma.SortOrder
+  laeq30m?: Prisma.SortOrder
+  lceq30m?: Prisma.SortOrder
 }
 
 export type NoiseLogMaxOrderByAggregateInput = {
@@ -464,6 +564,10 @@ export type NoiseLogMaxOrderByAggregateInput = {
   lafmax?: Prisma.SortOrder
   lcfmax?: Prisma.SortOrder
   lcpeak?: Prisma.SortOrder
+  laeq5m?: Prisma.SortOrder
+  lceq5m?: Prisma.SortOrder
+  laeq30m?: Prisma.SortOrder
+  lceq30m?: Prisma.SortOrder
 }
 
 export type NoiseLogMinOrderByAggregateInput = {
@@ -476,6 +580,10 @@ export type NoiseLogMinOrderByAggregateInput = {
   lafmax?: Prisma.SortOrder
   lcfmax?: Prisma.SortOrder
   lcpeak?: Prisma.SortOrder
+  laeq5m?: Prisma.SortOrder
+  lceq5m?: Prisma.SortOrder
+  laeq30m?: Prisma.SortOrder
+  lceq30m?: Prisma.SortOrder
 }
 
 export type NoiseLogSumOrderByAggregateInput = {
@@ -484,6 +592,10 @@ export type NoiseLogSumOrderByAggregateInput = {
   lafmax?: Prisma.SortOrder
   lcfmax?: Prisma.SortOrder
   lcpeak?: Prisma.SortOrder
+  laeq5m?: Prisma.SortOrder
+  lceq5m?: Prisma.SortOrder
+  laeq30m?: Prisma.SortOrder
+  lceq30m?: Prisma.SortOrder
 }
 
 export type NoiseLogCreateNestedManyWithoutDeviceInput = {
@@ -537,6 +649,10 @@ export type NoiseLogCreateWithoutDeviceInput = {
   lafmax: number
   lcfmax: number
   lcpeak: number
+  laeq5m?: number | null
+  lceq5m?: number | null
+  laeq30m?: number | null
+  lceq30m?: number | null
 }
 
 export type NoiseLogUncheckedCreateWithoutDeviceInput = {
@@ -548,6 +664,10 @@ export type NoiseLogUncheckedCreateWithoutDeviceInput = {
   lafmax: number
   lcfmax: number
   lcpeak: number
+  laeq5m?: number | null
+  lceq5m?: number | null
+  laeq30m?: number | null
+  lceq30m?: number | null
 }
 
 export type NoiseLogCreateOrConnectWithoutDeviceInput = {
@@ -589,6 +709,10 @@ export type NoiseLogScalarWhereInput = {
   lafmax?: Prisma.IntFilter<"NoiseLog"> | number
   lcfmax?: Prisma.IntFilter<"NoiseLog"> | number
   lcpeak?: Prisma.IntFilter<"NoiseLog"> | number
+  laeq5m?: Prisma.IntNullableFilter<"NoiseLog"> | number | null
+  lceq5m?: Prisma.IntNullableFilter<"NoiseLog"> | number | null
+  laeq30m?: Prisma.IntNullableFilter<"NoiseLog"> | number | null
+  lceq30m?: Prisma.IntNullableFilter<"NoiseLog"> | number | null
 }
 
 export type NoiseLogCreateManyDeviceInput = {
@@ -600,6 +724,10 @@ export type NoiseLogCreateManyDeviceInput = {
   lafmax: number
   lcfmax: number
   lcpeak: number
+  laeq5m?: number | null
+  lceq5m?: number | null
+  laeq30m?: number | null
+  lceq30m?: number | null
 }
 
 export type NoiseLogUpdateWithoutDeviceInput = {
@@ -611,6 +739,10 @@ export type NoiseLogUpdateWithoutDeviceInput = {
   lafmax?: Prisma.IntFieldUpdateOperationsInput | number
   lcfmax?: Prisma.IntFieldUpdateOperationsInput | number
   lcpeak?: Prisma.IntFieldUpdateOperationsInput | number
+  laeq5m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lceq5m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  laeq30m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lceq30m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type NoiseLogUncheckedUpdateWithoutDeviceInput = {
@@ -622,6 +754,10 @@ export type NoiseLogUncheckedUpdateWithoutDeviceInput = {
   lafmax?: Prisma.IntFieldUpdateOperationsInput | number
   lcfmax?: Prisma.IntFieldUpdateOperationsInput | number
   lcpeak?: Prisma.IntFieldUpdateOperationsInput | number
+  laeq5m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lceq5m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  laeq30m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lceq30m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type NoiseLogUncheckedUpdateManyWithoutDeviceInput = {
@@ -633,6 +769,10 @@ export type NoiseLogUncheckedUpdateManyWithoutDeviceInput = {
   lafmax?: Prisma.IntFieldUpdateOperationsInput | number
   lcfmax?: Prisma.IntFieldUpdateOperationsInput | number
   lcpeak?: Prisma.IntFieldUpdateOperationsInput | number
+  laeq5m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lceq5m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  laeq30m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lceq30m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 
@@ -647,6 +787,10 @@ export type NoiseLogSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   lafmax?: boolean
   lcfmax?: boolean
   lcpeak?: boolean
+  laeq5m?: boolean
+  lceq5m?: boolean
+  laeq30m?: boolean
+  lceq30m?: boolean
   device?: boolean | Prisma.DeviceDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["noiseLog"]>
 
@@ -660,6 +804,10 @@ export type NoiseLogSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   lafmax?: boolean
   lcfmax?: boolean
   lcpeak?: boolean
+  laeq5m?: boolean
+  lceq5m?: boolean
+  laeq30m?: boolean
+  lceq30m?: boolean
   device?: boolean | Prisma.DeviceDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["noiseLog"]>
 
@@ -673,6 +821,10 @@ export type NoiseLogSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   lafmax?: boolean
   lcfmax?: boolean
   lcpeak?: boolean
+  laeq5m?: boolean
+  lceq5m?: boolean
+  laeq30m?: boolean
+  lceq30m?: boolean
   device?: boolean | Prisma.DeviceDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["noiseLog"]>
 
@@ -686,9 +838,13 @@ export type NoiseLogSelectScalar = {
   lafmax?: boolean
   lcfmax?: boolean
   lcpeak?: boolean
+  laeq5m?: boolean
+  lceq5m?: boolean
+  laeq30m?: boolean
+  lceq30m?: boolean
 }
 
-export type NoiseLogOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "deviceId" | "measuredAt" | "bands" | "laeq" | "lceq" | "lafmax" | "lcfmax" | "lcpeak", ExtArgs["result"]["noiseLog"]>
+export type NoiseLogOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "deviceId" | "measuredAt" | "bands" | "laeq" | "lceq" | "lafmax" | "lcfmax" | "lcpeak" | "laeq5m" | "lceq5m" | "laeq30m" | "lceq30m", ExtArgs["result"]["noiseLog"]>
 export type NoiseLogInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   device?: boolean | Prisma.DeviceDefaultArgs<ExtArgs>
 }
@@ -714,6 +870,10 @@ export type $NoiseLogPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     lafmax: number
     lcfmax: number
     lcpeak: number
+    laeq5m: number | null
+    lceq5m: number | null
+    laeq30m: number | null
+    lceq30m: number | null
   }, ExtArgs["result"]["noiseLog"]>
   composites: {}
 }
@@ -1147,6 +1307,10 @@ export interface NoiseLogFieldRefs {
   readonly lafmax: Prisma.FieldRef<"NoiseLog", 'Int'>
   readonly lcfmax: Prisma.FieldRef<"NoiseLog", 'Int'>
   readonly lcpeak: Prisma.FieldRef<"NoiseLog", 'Int'>
+  readonly laeq5m: Prisma.FieldRef<"NoiseLog", 'Int'>
+  readonly lceq5m: Prisma.FieldRef<"NoiseLog", 'Int'>
+  readonly laeq30m: Prisma.FieldRef<"NoiseLog", 'Int'>
+  readonly lceq30m: Prisma.FieldRef<"NoiseLog", 'Int'>
 }
     
 

@@ -47,7 +47,8 @@ export async function handleNoiseLog(
   // travel over MQTT/BLE and are never uploaded. Reject anything else with 400
   // so the device discards the (malformed / wrong-transport) file rather than
   // retrying it forever. If the on-disk aggregation interval ever changes, this
-  // guard and the minute-bucketed history query must change together.
+  // guard and the history query (which treats each row as one 60s aggregate)
+  // must change together.
   if (recording.recordIntervalSeconds !== 60) {
     throw new ApiError(
       400,
@@ -83,6 +84,11 @@ export async function handleNoiseLog(
         lafmax: recording.lafmax,
         lcfmax: recording.lcfmax,
         lcpeak: recording.lcpeak,
+        // Absent until the device's rolling window has filled → stored as null.
+        laeq5m: recording.laeq5m ?? null,
+        lceq5m: recording.lceq5m ?? null,
+        laeq30m: recording.laeq30m ?? null,
+        lceq30m: recording.lceq30m ?? null,
       },
     ],
     skipDuplicates: true,

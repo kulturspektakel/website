@@ -402,6 +402,15 @@ model NoiseLog {
   lcfmax Int @db.SmallInt // LCFmax — max over the interval
   lcpeak Int @db.SmallInt // LCpeak — max over the interval
 
+  // Device-computed trailing Leq windows, same encoding. Nullable: the device
+  // only sends them once its rolling buffer has filled (5/30 min after boot),
+  // and rows ingested before these columns existed have none. The history view
+  // reads these directly rather than recomputing the windows in SQL.
+  laeq5m  Int? @db.SmallInt // trailing 5-min LAeq
+  lceq5m  Int? @db.SmallInt // trailing 5-min LCeq
+  laeq30m Int? @db.SmallInt // trailing 30-min LAeq
+  lceq30m Int? @db.SmallInt // trailing 30-min LCeq
+
   @@unique([deviceId, measuredAt])
 }
 
