@@ -1,5 +1,5 @@
 import {useMemo, useState} from 'react';
-import {createFileRoute, notFound} from '@tanstack/react-router';
+import {createFileRoute, notFound, useRouter} from '@tanstack/react-router';
 import {useMutation} from '@tanstack/react-query';
 import {z} from 'zod';
 import {Button, Input, Stack, Textarea} from '@chakra-ui/react';
@@ -199,6 +199,7 @@ function BandContactRoute() {
   const data = Route.useLoaderData();
   const {eventId, applicationId} = Route.useParams();
   const navigate = Route.useNavigate();
+  const router = useRouter();
   const close = () =>
     navigate({
       to: '/crew/booking/$eventId/$applicationId',
@@ -255,7 +256,12 @@ function BandContactRoute() {
       sendBandContactEmail({
         data: {applicationId, to, subject, body},
       }),
-    onSuccess: () => close(),
+    // Sending stamps contactedBy + lastContactedAt on the application; invalidate
+    // so the reopened detail and the booking list recompute and show "angefragt".
+    onSuccess: async () => {
+      await router.invalidate();
+      close();
+    },
   });
 
   return (
