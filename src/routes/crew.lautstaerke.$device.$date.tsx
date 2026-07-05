@@ -1,7 +1,7 @@
 import {createFileRoute, notFound} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
 import {crewAuth} from '../server/crewAuth';
-import {useMemo, useState} from 'react';
+import {useEffect, useMemo, useState} from 'react';
 import {Box} from '@chakra-ui/react';
 import type uPlot from 'uplot';
 import {HISTORY_SERIES} from '../components/lautstaerke/context';
@@ -10,7 +10,11 @@ import {
   useSeriesToggle,
 } from '../components/lautstaerke/BigNumber';
 import {NoiseTimeChart} from '../components/lautstaerke/NoiseTimeChart';
-import {deviceTitle, useDeviceView} from '../components/lautstaerke/deviceView';
+import {
+  deviceTitle,
+  todayDayKey,
+  useDeviceView,
+} from '../components/lautstaerke/deviceView';
 import {fmtHourMinute} from '../components/lautstaerke/chartUtils';
 import {
   localDayRange,
@@ -46,12 +50,36 @@ export const Route = createFileRoute('/crew/lautstaerke/$device/$date')({
 });
 
 function DeviceHistory() {
-  const {aligned, start, end} = Route.useLoaderData();
+  const {device, date} = Route.useParams();
+  const loaderData = Route.useLoaderData();
   const {weighting} = useDeviceView();
   const [cursorIdx, setCursorIdx] = useState<number | 'gap' | null>(null);
   const {shown, toggle} = useSeriesToggle(HISTORY_SERIES);
 
-  // Stable per loaded day, so NoiseTimeChart re-pushes only when the day changes.
+  // The current day keeps accumulating minute-aggregates as they upload; poll for
+  // them so the chart fills in without a manual reload (past days never change).
+  // The result is tagged with its day, so a poll that lands after we've navigated
+  // to another day is ignored and the fresh loader data wins instead.
+  const [polled, setPolled] = useState<{
+    date: string;
+    data: typeof loaderData;
+  } | null>(null);
+  useEffect(() => {
+    if (date !== todayDayKey()) return;
+    const id = setInterval(() => {
+      loadHistory({data: {device, date}})
+        .then((fresh) => setPolled({date, data: fresh}))
+        // Transient failure: keep the current data and try again next tick.
+        .catch(() => {});
+    }, 60_000);
+    return () => clearInterval(id);
+  }, [device, date]);
+
+  const {aligned, start, end} =
+    polled?.date === date ? polled.data : loaderData;
+
+  // New identity whenever the samples change (a poll updates it), so the chart
+  // re-pushes; `date` drives the zoom reset separately so a poll keeps the zoom.
   const data = useMemo(
     () => aligned as unknown as uPlot.AlignedData,
     [aligned],
@@ -78,6 +106,7 @@ function DeviceHistory() {
           xAxisFormat={fmtHourMinute}
           gapThresholdX={120}
           zoomable
+          zoomResetKey={date}
           onCursorIdx={setCursorIdx}
         />
       </Box>

@@ -28,6 +28,7 @@ export function NoiseTimeChart({
   gapThresholdX,
   live,
   zoomable,
+  zoomResetKey,
   onCursorIdx,
 }: {
   // [xEpochSeconds[], ...one column per entry in `series`, in order]. In live
@@ -50,6 +51,10 @@ export function NoiseTimeChart({
   // Enables drag-to-zoom on the x-axis (historical view only). The rolling live
   // window would fight an active zoom, so live callers leave this off.
   zoomable?: boolean;
+  // Changing this clears any active zoom — it marks a genuinely different
+  // dataset (e.g. another day). Kept separate from `data` identity so a same-day
+  // refetch can push newly-arrived samples without resetting the user's zoom.
+  zoomResetKey?: unknown;
   onCursorIdx: (idx: number | 'gap' | null) => void;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -236,13 +241,12 @@ export function NoiseTimeChart({
     };
   }, [visible, gapThresholdX, zoomable]);
 
-  // A new day's data invalidates any active zoom — clear it before the data
-  // push below re-ranges the x-scale, so the new day opens at full extent.
-  // Keyed on `data` only: a weighting toggle keeps `data` identity and so keeps
-  // the zoom.
+  // A new dataset (e.g. a different day) invalidates any active zoom — clear it
+  // so the new range opens at full extent. Keyed on `zoomResetKey`, not `data`:
+  // a weighting toggle or a same-day refetch keeps the key and so keeps the zoom.
   useEffect(() => {
     resetZoom();
-  }, [data, resetZoom]);
+  }, [zoomResetKey, resetZoom]);
 
   // Push data into the plot. Historical: once, and again whenever `data`
   // changes identity (e.g. a new day). Live: re-project the rolling buffer

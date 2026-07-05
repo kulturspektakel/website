@@ -23,6 +23,10 @@ export function useDeviceView() {
 const dayKeyFmt = new Intl.DateTimeFormat('sv-SE', {timeZone});
 const dayKey = (ms: number) => dayKeyFmt.format(new Date(ms));
 
+// Today's day key (yyyy-mm-dd, festival timezone). A historical view whose date
+// equals this is still accumulating data and worth polling for new samples.
+export const todayDayKey = () => dayKey(Date.now());
+
 // The location in effect on `date` (yyyy-mm-dd), or the latest known location
 // for the live view (`date` null): the most recent placement on or before the
 // selected day. `locations` must be oldest-first (as deviceLocations returns
