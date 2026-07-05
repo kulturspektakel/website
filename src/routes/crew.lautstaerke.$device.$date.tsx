@@ -77,6 +77,7 @@ function DeviceHistory() {
           xRange={() => [start / 1000, end / 1000]}
           xAxisFormat={fmtHourMinute}
           gapThresholdX={120}
+          zoomable
           onCursorIdx={setCursorIdx}
         />
       </Box>

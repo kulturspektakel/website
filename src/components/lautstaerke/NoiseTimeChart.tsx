@@ -1,5 +1,5 @@
-import {useEffect, useMemo, useRef, useState} from 'react';
-import {Box, Text} from '@chakra-ui/react';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {Box, Button, Text} from '@chakra-ui/react';
 import uPlot from 'uplot';
 import {
   AXIS_STROKE_VAR,
@@ -27,6 +27,7 @@ export function NoiseTimeChart({
   xAxisFormat,
   gapThresholdX,
   live,
+  zoomable,
   onCursorIdx,
 }: {
   // [xEpochSeconds[], ...one column per entry in `series`, in order]. In live
@@ -46,6 +47,9 @@ export function NoiseTimeChart({
   xAxisFormat: (ts: number) => string;
   gapThresholdX: number;
   live?: boolean;
+  // Enables drag-to-zoom on the x-axis (historical view only). The rolling live
+  // window would fight an active zoom, so live callers leave this off.
+  zoomable?: boolean;
   onCursorIdx: (idx: number | 'gap' | null) => void;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -69,6 +73,21 @@ export function NoiseTimeChart({
   xAxisFormatRef.current = xAxisFormat;
   const onCursorRef = useRef(onCursorIdx);
   onCursorRef.current = onCursorIdx;
+
+  // Active zoom x-window (epoch seconds), or null for the full/default range.
+  // Read by the long-lived x-scale range closure so a zoom survives redraws and
+  // resizes; `zoomed` mirrors it into React state to toggle the reset button.
+  const zoomRef = useRef<[number, number] | null>(null);
+  const [zoomed, setZoomed] = useState(false);
+
+  const resetZoom = useCallback(() => {
+    const plot = plotRef.current;
+    if (!plot || !zoomRef.current) return;
+    zoomRef.current = null;
+    setZoomed(false);
+    const [min, max] = xRangeRef.current();
+    plot.setScale('x', {min, max});
+  }, []);
 
   // Only the selected weighting's series are plotted. The buffer always carries
   // every column, so project it down to [time, ...visible].
@@ -97,11 +116,22 @@ export function NoiseTimeChart({
       height: canvasHeight(),
       legend: {show: false},
       // Only the vertical guide line — no horizontal line, no snapped points.
-      cursor: {y: false, points: {show: false}},
+      // When zoomable, allow an x-only drag selection but capture it ourselves
+      // (setScale:false) via the setSelect hook rather than letting uPlot zoom
+      // through the range fn, which we keep authoritative.
+      cursor: {
+        y: false,
+        points: {show: false},
+        drag: zoomable
+          ? {x: true, y: false, setScale: false}
+          : {x: false, y: false},
+      },
       // Place time ticks on `timeZone` boundaries, independent of viewer TZ.
       tzDate: (ts) => zonedDate(ts),
       scales: {
-        x: {time: true, range: () => xRangeRef.current()},
+        // An active zoom wins over the default range, and survives redraws
+        // because uPlot re-invokes this on every non-explicit rescale.
+        x: {time: true, range: () => zoomRef.current ?? xRangeRef.current()},
         y: {range: () => [30, 110]},
       },
       axes: [
@@ -169,6 +199,25 @@ export function NoiseTimeChart({
             }
           },
         ],
+        // Fires once on drag release (only when a real selection exists). Turn
+        // the dragged pixel region into an x-value window and apply it as the
+        // active zoom, then clear the rubber band without re-firing the hook.
+        setSelect: [
+          (u) => {
+            if (!zoomable) return;
+            const {left, width} = u.select;
+            if (width < 8) {
+              u.setSelect({left: 0, top: 0, width: 0, height: 0}, false);
+              return;
+            }
+            const min = u.posToVal(left, 'x');
+            const max = u.posToVal(left + width, 'x');
+            zoomRef.current = [min, max];
+            setZoomed(true);
+            u.setScale('x', {min, max});
+            u.setSelect({left: 0, top: 0, width: 0, height: 0}, false);
+          },
+        ],
       },
     };
 
@@ -185,7 +234,15 @@ export function NoiseTimeChart({
       plot.destroy();
       plotRef.current = null;
     };
-  }, [visible, gapThresholdX]);
+  }, [visible, gapThresholdX, zoomable]);
+
+  // A new day's data invalidates any active zoom — clear it before the data
+  // push below re-ranges the x-scale, so the new day opens at full extent.
+  // Keyed on `data` only: a weighting toggle keeps `data` identity and so keeps
+  // the zoom.
+  useEffect(() => {
+    resetZoom();
+  }, [data, resetZoom]);
 
   // Push data into the plot. Historical: once, and again whenever `data`
   // changes identity (e.g. a new day). Live: re-project the rolling buffer
@@ -226,6 +283,10 @@ export function NoiseTimeChart({
           '& .u-cursor-x': {
             borderColor: 'var(--chakra-colors-white)',
           },
+          // Translucent light fill so the drag region reads on the dark chart.
+          '& .u-select': {
+            background: 'rgba(255, 255, 255, 0.15)',
+          },
         }}
       />
       {tip && (
@@ -234,6 +295,19 @@ export function NoiseTimeChart({
             {tip.label}
           </Text>
         </ChartTooltip>
+      )}
+      {zoomed && (
+        <Button
+          position="absolute"
+          top="2"
+          right="2"
+          size="xs"
+          variant="subtle"
+          colorPalette="gray"
+          onClick={resetZoom}
+        >
+          Zoom zurücksetzen
+        </Button>
       )}
     </Box>
   );
