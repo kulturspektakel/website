@@ -229,6 +229,78 @@ export function NoiseTimeChart({
     const plot = new uPlot(opts, project(), container);
     plotRef.current = plot;
 
+    // uPlot's mouse drag-to-select zoom doesn't fire on touch, so give touch
+    // devices a one-finger pan / two-finger pinch on the x-axis instead (adapted
+    // from uPlot's zoom-touch demo, x-only). We drive it through the same
+    // `zoomRef` the mouse selection uses, so a touch zoom survives redraws and
+    // the reset button appears. Scoped to zoomable (historical view); the live
+    // view keeps normal page scrolling. touch-action:none stops the browser from
+    // claiming the gesture for scroll.
+    let removeTouch: (() => void) | undefined;
+    if (zoomable) {
+      const over = plot.over;
+      over.style.touchAction = 'none';
+
+      // Finger midpoint x (px, relative to the plot) and spread `d` between the
+      // two fingers (1 for a single finger, so xFactor stays 1 → pure pan).
+      const fr = {x: 0, d: 1};
+      const to = {x: 0, d: 1};
+      let rect = over.getBoundingClientRect();
+      let oxRange = 0;
+      let xVal = 0;
+
+      const storePos = (t: {x: number; d: number}, e: TouchEvent) => {
+        const t0 = e.touches[0];
+        const t0x = t0.clientX - rect.left;
+        if (e.touches.length === 1) {
+          t.x = t0x;
+          t.d = 1;
+        } else {
+          const t1x = e.touches[1].clientX - rect.left;
+          t.x = (t0x + t1x) / 2;
+          t.d = Math.max(Math.abs(t1x - t0x), 1);
+        }
+      };
+
+      let rafPending = false;
+      const applyZoom = () => {
+        rafPending = false;
+        const xFactor = fr.d / to.d;
+        const leftPct = to.x / rect.width;
+        const nxRange = oxRange * xFactor;
+        const nxMin = xVal - leftPct * nxRange;
+        const nxMax = nxMin + nxRange;
+        zoomRef.current = [nxMin, nxMax];
+        setZoomed(true);
+        plot.setScale('x', {min: nxMin, max: nxMax});
+      };
+
+      const onMove = (e: TouchEvent) => {
+        e.preventDefault();
+        storePos(to, e);
+        if (!rafPending) {
+          rafPending = true;
+          requestAnimationFrame(applyZoom);
+        }
+      };
+      // Fires again when a second finger lands, so re-anchor to the current
+      // scale and finger positions — avoids a jump when pan turns into pinch.
+      const onStart = (e: TouchEvent) => {
+        rect = over.getBoundingClientRect();
+        storePos(fr, e);
+        const {min, max} = plot.scales.x;
+        oxRange = (max ?? 0) - (min ?? 0);
+        xVal = plot.posToVal(fr.x, 'x');
+      };
+
+      over.addEventListener('touchstart', onStart, {passive: true});
+      over.addEventListener('touchmove', onMove, {passive: false});
+      removeTouch = () => {
+        over.removeEventListener('touchstart', onStart);
+        over.removeEventListener('touchmove', onMove);
+      };
+    }
+
     const ro = new ResizeObserver(() => {
       plot.setSize({width: container.clientWidth, height: canvasHeight()});
     });
@@ -236,6 +308,7 @@ export function NoiseTimeChart({
 
     return () => {
       ro.disconnect();
+      removeTouch?.();
       plot.destroy();
       plotRef.current = null;
     };
