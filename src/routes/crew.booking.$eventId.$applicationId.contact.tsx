@@ -264,6 +264,10 @@ function BandContactRoute() {
     },
   });
 
+  // In-flight until the modal closes: covers the enqueue+DB call (isPending)
+  // and the onSuccess invalidate→close gap (isSuccess), so Senden can't fire twice.
+  const sending = sendMutation.isPending || sendMutation.isSuccess;
+
   return (
     <DialogRoot
       open
@@ -401,9 +405,16 @@ function BandContactRoute() {
                 Zurück
               </Button>
               <Button
-                onClick={() => sendMutation.mutate()}
-                loading={sendMutation.isPending}
-                disabled={!canSend}
+                onClick={() => {
+                  // Guard against a second send: the mutation resolves quickly
+                  // (it only enqueues the mail task), but onSuccess then awaits
+                  // router.invalidate() before close() — a window in which the
+                  // modal is still open. Stay loading through isSuccess so the
+                  // button never re-enables in that gap.
+                  if (!sending) sendMutation.mutate();
+                }}
+                loading={sending}
+                disabled={!canSend || sending}
               >
                 Senden
               </Button>

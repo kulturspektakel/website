@@ -7,7 +7,6 @@ import {z} from 'zod';
 import {
   MenuContent,
   MenuItem,
-  MenuItemGroupLabel,
   MenuRadioItem,
   MenuRadioItemGroup,
   MenuRoot,
@@ -144,7 +143,7 @@ export function DeviceMenu({
           {/* View: live or one of the recent days with data. */}
           <MenuRoot positioning={{placement: 'left-start', gutter: 2}}>
             <MenuTriggerItem value="view">
-              Ansicht: {dayValue === 'live' ? 'Live' : fmtDay(dayValue)}
+              Zeitraum: {dayValue === 'live' ? 'Live' : fmtDay(dayValue)}
             </MenuTriggerItem>
             <MenuContent>
               <MenuRadioItemGroup
@@ -162,16 +161,22 @@ export function DeviceMenu({
           </MenuRoot>
 
           {/* Frequency weighting (A/C). */}
-          <MenuRadioItemGroup
-            value={weighting}
-            onValueChange={(e) => {
-              if (e.value !== weighting) toggleWeighting();
-            }}
-          >
-            <MenuItemGroupLabel>Frequenzbewertung</MenuItemGroupLabel>
-            <MenuRadioItem value="A">dB(A)</MenuRadioItem>
-            <MenuRadioItem value="C">dB(C)</MenuRadioItem>
-          </MenuRadioItemGroup>
+          <MenuRoot positioning={{placement: 'left-start', gutter: 2}}>
+            <MenuTriggerItem value="weighting">
+              Frequenzbewertung: {weighting === 'A' ? 'dB(A)' : 'dB(C)'}
+            </MenuTriggerItem>
+            <MenuContent>
+              <MenuRadioItemGroup
+                value={weighting}
+                onValueChange={(e) => {
+                  if (e.value !== weighting) toggleWeighting();
+                }}
+              >
+                <MenuRadioItem value="A">dB(A)</MenuRadioItem>
+                <MenuRadioItem value="C">dB(C)</MenuRadioItem>
+              </MenuRadioItemGroup>
+            </MenuContent>
+          </MenuRoot>
 
           <MenuSeparator />
 
@@ -186,37 +191,40 @@ export function DeviceMenu({
 
           <MenuSeparator />
 
-          {/* Bluetooth: connect while disconnected, else calibrate/WLAN/trennen. */}
-          {bluetooth.supported &&
-            (bleConnected ? (
-              <>
-                <MenuItem value="calibrate" onClick={() => setCalibrating(true)}>
-                  Kalibrieren
-                </MenuItem>
-                <MenuItem value="wifi" onClick={() => setWifiOpen(true)}>
-                  WLAN einrichten
-                </MenuItem>
-                <MenuItem
-                  value="disconnect"
-                  color="red.400"
-                  _hover={{bg: 'red.950', color: 'red.300'}}
-                  onClick={() => {
-                    void bluetooth.disconnect();
-                  }}
-                >
-                  Bluetooth trennen
-                </MenuItem>
-              </>
-            ) : (
+          {/* Bluetooth: connect while disconnected, else calibrate/WLAN/trennen.
+              The connect item always shows, but is disabled when the browser
+              lacks Web Bluetooth support. Being connected implies support, so
+              the calibrate/WLAN/disconnect branch needs no extra guard. */}
+          {bleConnected ? (
+            <>
+              <MenuItem value="calibrate" onClick={() => setCalibrating(true)}>
+                Kalibrieren
+              </MenuItem>
+              <MenuItem value="wifi" onClick={() => setWifiOpen(true)}>
+                WLAN einrichten
+              </MenuItem>
               <MenuItem
-                value="connect"
+                value="disconnect"
+                color="red.400"
+                _hover={{bg: 'red.950', color: 'red.300'}}
                 onClick={() => {
-                  void connectBle();
+                  void bluetooth.disconnect();
                 }}
               >
-                Bluetooth verbinden
+                Bluetooth trennen
               </MenuItem>
-            ))}
+            </>
+          ) : (
+            <MenuItem
+              value="connect"
+              disabled={!bluetooth.supported}
+              onClick={() => {
+                void connectBle();
+              }}
+            >
+              Bluetooth verbinden
+            </MenuItem>
+          )}
         </MenuContent>
       </MenuRoot>
       <CalibrationPanel

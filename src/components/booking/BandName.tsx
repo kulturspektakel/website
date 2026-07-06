@@ -24,6 +24,8 @@ export function BandName({
 }) {
   const name = (
     <Text
+      as="span"
+      display="block"
       fontWeight="bold"
       truncate
       fontSize={size === 'md' ? 'lg' : 'md'}
@@ -52,7 +54,7 @@ export function BandName({
       />
       <Flex direction="column" minW="0" gap="0.5">
         {copyableName ? (
-          <CopyToClipboard text={bandname} maxW="full">
+          <CopyToClipboard text={bandname} maxW="full" w="fit-content">
             {name}
           </CopyToClipboard>
         ) : (
