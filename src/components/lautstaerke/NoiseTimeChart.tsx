@@ -262,39 +262,64 @@ export function NoiseTimeChart({
         }
       };
 
+      // Re-anchor the gesture to the current scale and finger positions. Called
+      // on touchstart and whenever the finger count changes mid-gesture, so
+      // `fr.d` and `to.d` are always measured with the same number of fingers —
+      // otherwise lifting a finger collapses `to.d` to 1 and zooms way out.
+      let anchoredCount = 0;
+      const anchor = (e: TouchEvent) => {
+        rect = over.getBoundingClientRect();
+        storePos(fr, e);
+        anchoredCount = e.touches.length;
+        const {min, max} = plot.scales.x;
+        oxRange = (max ?? 0) - (min ?? 0);
+        xVal = plot.posToVal(fr.x, 'x');
+      };
+
       let rafPending = false;
       const applyZoom = () => {
         rafPending = false;
-        const xFactor = fr.d / to.d;
+        const [fullMin, fullMax] = xRangeRef.current();
+        const fullRange = fullMax - fullMin;
         const leftPct = to.x / rect.width;
-        const nxRange = oxRange * xFactor;
-        const nxMin = xVal - leftPct * nxRange;
-        const nxMax = nxMin + nxRange;
-        zoomRef.current = [nxMin, nxMax];
-        setZoomed(true);
+        // Never zoom out past the full day; keep a 60s floor when zooming in.
+        let nxRange = oxRange * (fr.d / to.d);
+        nxRange = Math.min(Math.max(nxRange, 60), fullRange);
+        let nxMin = xVal - leftPct * nxRange;
+        let nxMax = nxMin + nxRange;
+        // Keep the window inside the day's bounds, preserving its width.
+        if (nxMin < fullMin) [nxMin, nxMax] = [fullMin, fullMin + nxRange];
+        if (nxMax > fullMax) [nxMin, nxMax] = [fullMax - nxRange, fullMax];
+        // At full extent there's no zoom to persist — clear it so the reset
+        // button hides and the default range takes over.
+        if (nxRange >= fullRange) {
+          zoomRef.current = null;
+          setZoomed(false);
+        } else {
+          zoomRef.current = [nxMin, nxMax];
+          setZoomed(true);
+        }
         plot.setScale('x', {min: nxMin, max: nxMax});
       };
 
       const onMove = (e: TouchEvent) => {
         e.preventDefault();
+        if (e.touches.length !== anchoredCount) {
+          anchor(e);
+          return;
+        }
         storePos(to, e);
         if (!rafPending) {
           rafPending = true;
           requestAnimationFrame(applyZoom);
         }
       };
-      // Fires again when a second finger lands, so re-anchor to the current
-      // scale and finger positions — avoids a jump when pan turns into pinch.
       // preventDefault stops the browser's compatibility mouse events, which
       // would otherwise trigger uPlot's own drag-select and zoom to an empty
       // region when the touch ends.
       const onStart = (e: TouchEvent) => {
         e.preventDefault();
-        rect = over.getBoundingClientRect();
-        storePos(fr, e);
-        const {min, max} = plot.scales.x;
-        oxRange = (max ?? 0) - (min ?? 0);
-        xVal = plot.posToVal(fr.x, 'x');
+        anchor(e);
       };
 
       over.addEventListener('touchstart', onStart, {passive: false});
