@@ -45,9 +45,13 @@ const ENV_VARS = {
   GCP_TASKS_QUEUE: 'terraform',
   GCP_TASKS_SCRAPER_QUEUE: 'terraform',
   GCP_TASKS_SERVICE_ACCOUNT_EMAIL: 'terraform',
+  // Sentry DSN is public (client + server), so it's non-secret config.
+  VITE_SENTRY_DSN: 'terraform',
 
   // Secrets — Google Secret Manager.
   AWS_ACCESS_KEY_ID: 'secret',
+  // Build-time only: the Sentry Vite plugin uses this to upload source maps.
+  SENTRY_AUTH_TOKEN: 'secret',
   AWS_SECRET_ACCESS_KEY: 'secret',
   CONTACTLESS_SALT: 'secret',
   DATABASE_URL: 'secret',

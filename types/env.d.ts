@@ -25,6 +25,7 @@ declare namespace NodeJS {
     NUCLINO_TEAM_ID: string;
     NUCLINO_WORKSPACE_ID: string;
     SAML_PRIVATE_KEY: string;
+    SENTRY_AUTH_TOKEN: string;
     SITE_URL: string;
     SLACK_BOT_TOKEN: string;
     SPOTIFY_CLIENT_ID: string;
@@ -37,6 +38,7 @@ declare namespace NodeJS {
     TWILIO_AUTH_TOKEN: string;
     TWILIO_DIAL_NUMBERS: string;
     TWILIO_FROM_NUMBER: string;
+    VITE_SENTRY_DSN: string;
     YOUTUBE_API_KEY: string;
   }
 }

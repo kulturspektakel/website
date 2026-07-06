@@ -1,4 +1,5 @@
 import {createMiddleware} from '@tanstack/react-start';
+import * as Sentry from '@sentry/tanstackstart-react';
 
 /**
  * Error shared by all `/api/*` route handlers.
@@ -33,10 +34,15 @@ export const apiErrorBoundary = createMiddleware({type: 'request'}).server(
     } catch (e) {
       if (e instanceof ApiError) {
         if (e.originalError) {
+          Sentry.captureException(e.originalError);
           console.error(e.originalError);
         }
         return new Response(e.message, {status: e.code});
       }
+      // Central capture point for API + task/cron execution errors: this
+      // boundary swallows them into HTTP responses before the global request
+      // middleware could see them.
+      Sentry.captureException(e);
       console.error(e);
       return new Response('Internal Server Error', {status: 500});
     }

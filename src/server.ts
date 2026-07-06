@@ -1,15 +1,16 @@
+// Sentry must initialize before the request handler is created.
+import './instrument.server';
 import {
   createStartHandler,
   defaultStreamHandler,
 } from '@tanstack/react-start/server';
+import {wrapFetchWithSentry} from '@sentry/tanstackstart-react';
 import {shortUrlRedirect} from './server/shortUrlRedirect';
 
 const handler = createStartHandler(defaultStreamHandler);
 
-export default {
-  fetch: async (...args: Parameters<typeof handler>) => {
-    const [request] = args;
-
+export default wrapFetchWithSentry({
+  fetch: async (request: Request) => {
     // kult.wiki short-URL redirects (no-op for every other host)
     const shortUrl = await shortUrlRedirect(request);
     if (shortUrl) {
@@ -29,6 +30,6 @@ export default {
       });
     }
 
-    return handler(...args);
+    return handler(request);
   },
-};
+});

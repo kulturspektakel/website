@@ -122,6 +122,7 @@ output "env_vars" {
     GCP_TASKS_QUEUE                 = google_cloud_tasks_queue.default.name
     GCP_TASKS_SCRAPER_QUEUE         = google_cloud_tasks_queue.scrapers.name
     GCP_TASKS_SERVICE_ACCOUNT_EMAIL = google_service_account.tasks.email
+    VITE_SENTRY_DSN                 = local.sentry_dsn
   }
 }
 
