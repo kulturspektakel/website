@@ -285,7 +285,11 @@ export function NoiseTimeChart({
       };
       // Fires again when a second finger lands, so re-anchor to the current
       // scale and finger positions — avoids a jump when pan turns into pinch.
+      // preventDefault stops the browser's compatibility mouse events, which
+      // would otherwise trigger uPlot's own drag-select and zoom to an empty
+      // region when the touch ends.
       const onStart = (e: TouchEvent) => {
+        e.preventDefault();
         rect = over.getBoundingClientRect();
         storePos(fr, e);
         const {min, max} = plot.scales.x;
@@ -293,7 +297,7 @@ export function NoiseTimeChart({
         xVal = plot.posToVal(fr.x, 'x');
       };
 
-      over.addEventListener('touchstart', onStart, {passive: true});
+      over.addEventListener('touchstart', onStart, {passive: false});
       over.addEventListener('touchmove', onMove, {passive: false});
       removeTouch = () => {
         over.removeEventListener('touchstart', onStart);
