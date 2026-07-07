@@ -1,10 +1,11 @@
 import {prismaClient} from '../prismaClient.server';
 import {ApiError} from '../apiError.server';
-import {postResponseUrl} from '../slack.server';
+import {postResponseUrl, slackApiRequest} from '../slack.server';
 import {
   archiveGmailMessage,
   gmailClient,
   GMAIL_REMINDERS,
+  showGmailModal,
   slackAttachment,
 } from '../gmail.server';
 import {generateTwoFactorCodeResponse} from './twofactor';
@@ -36,6 +37,7 @@ type SlackButtonAction = {
     | 'assign-crew-card-modal'
     | 'nuclino-login-generation'
     | 'nuclino-login-open'
+    | 'show-gmail'
     | 'archive-gmail';
   value?: string;
 };
@@ -50,6 +52,10 @@ type SlackBlockActionPayload = SlackInteractionPayload & {
   type: 'block_actions';
   actions: Array<SlackButtonAction | SlackUserSelectAction>;
   response_url: string;
+  // Present when the action fired from a channel message …
+  container?: {type: string; message_ts?: string; channel_id?: string};
+  // … or from within an open modal.
+  view?: {id: string; private_metadata?: string};
 };
 
 type SlackViewSubmissionPayload = SlackInteractionPayload & {
@@ -145,13 +151,40 @@ export async function handleSlackInteraction(
           );
           return ok();
         }
-        case 'archive-gmail': {
+        case 'show-gmail': {
           if (!action.value) {
             throw new ApiError(400, 'Invalid input');
           }
           const {account, messageId} = JSON.parse(action.value) as {
             account: string;
             messageId: string;
+          };
+          // `account` becomes the delegation `subject` — gate to known inboxes
+          // rather than trusting the (unsigned) button payload.
+          if (!(account in GMAIL_REMINDERS)) {
+            throw new ApiError(400, 'Unknown account');
+          }
+          // Stash the originating channel message so the modal's "Archivieren"
+          // button can rewrite it after archiving.
+          await showGmailModal(account, messageId, payload.trigger_id, {
+            channel: payload.container?.channel_id ?? '',
+            ts: payload.container?.message_ts ?? '',
+          });
+          return ok();
+        }
+        case 'archive-gmail': {
+          // Fired either from the in-modal button (context in
+          // `view.private_metadata`) or, for messages posted before the modal
+          // rollout, from the legacy channel button (`action.value` +
+          // `response_url`).
+          const fromModal = Boolean(payload.view?.private_metadata);
+          const {account, messageId, channel, ts} = JSON.parse(
+            payload.view?.private_metadata ?? action.value ?? '{}',
+          ) as {
+            account: string;
+            messageId: string;
+            channel?: string;
+            ts?: string;
           };
           // `account` becomes the delegation `subject`, i.e. which mailbox we
           // impersonate — so gate it to our known shared inboxes rather than
@@ -168,14 +201,42 @@ export async function handleSlackInteraction(
           const message = await gmail.users.messages
             .get({id: messageId, userId: 'me'})
             .catch(() => null);
+          const attachments = message?.data
+            ? [slackAttachment(message.data, account, {archivedBy: payload.user.id})]
+            : [];
 
-          await postResponseUrl(payload.response_url, {
-            replace_original: 'true',
-            text: '',
-            attachments: message?.data
-              ? [slackAttachment(message.data, account, {archivedBy: payload.user.id})]
-              : [],
-          });
+          if (fromModal) {
+            // Rewrite the originating channel message, then swap the modal for a
+            // short confirmation.
+            if (channel && ts) {
+              await slackApiRequest('chat.update', {
+                channel,
+                ts,
+                text: '',
+                attachments,
+              });
+            }
+            await slackApiRequest('views.update', {
+              view_id: payload.view!.id,
+              view: {
+                type: 'modal',
+                title: {type: 'plain_text', text: 'E-Mail'},
+                close: {type: 'plain_text', text: 'Schließen'},
+                blocks: [
+                  {
+                    type: 'section',
+                    text: {type: 'mrkdwn', text: '🗄️ E-Mail archiviert.'},
+                  },
+                ],
+              },
+            });
+          } else {
+            await postResponseUrl(payload.response_url, {
+              replace_original: 'true',
+              text: '',
+              attachments,
+            });
+          }
           return ok();
         }
         // The /nuclino modal button is a url button; clicking it also fires an

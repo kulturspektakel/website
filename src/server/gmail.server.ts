@@ -1,4 +1,8 @@
 import {gmail_v1, google} from 'googleapis';
+import TurndownService from 'turndown';
+import {slackifyMarkdown} from 'slackify-markdown';
+import {ApiError} from './apiError.server';
+import {slackApiRequest} from './slack.server';
 
 /**
  * Slack channels that receive new-mail + reminder pings, keyed by the Gmail
@@ -131,6 +135,116 @@ export async function archiveGmailMessage(account: string, messageId: string) {
   });
 }
 
+/**
+ * Extract a readable body from a Gmail message as Slack `mrkdwn`. Walks the MIME
+ * tree and prefers the `text/plain` alternative (escaped, since Slack would
+ * otherwise interpret literal `*`/`_`/`<…>` in the mail); falls back to
+ * converting the `text/html` part to Slack mrkdwn when that's all the sender
+ * provided. Returns `null` if no textual part is found.
+ */
+export function getMessageBody(
+  message: gmail_v1.Schema$Message,
+): {text: string; quoteStripped: boolean} | null {
+  let plain: string | null = null;
+  let html: string | null = null;
+
+  const walk = (part?: gmail_v1.Schema$MessagePart) => {
+    if (!part) return;
+    const data = part.body?.data;
+    if (data) {
+      const decoded = Buffer.from(data, 'base64url').toString('utf-8');
+      if (part.mimeType === 'text/plain' && plain === null) {
+        plain = decoded;
+      } else if (part.mimeType === 'text/html' && html === null) {
+        html = decoded;
+      }
+    }
+    part.parts?.forEach(walk);
+  };
+  walk(message.payload);
+
+  if (plain !== null) {
+    const {text, quoteStripped} = stripPlainTextQuote(plain);
+    return {text: escapeSlack(text) ?? '', quoteStripped};
+  }
+  if (html !== null) return htmlToSlackMarkdown(html);
+  return null;
+}
+
+/**
+ * Drop the quoted reply history from a plain-text body — everything from the
+ * first attribution line ("Am … schrieb:", "On … wrote:", Outlook markers) or
+ * the first run of `>`-quoted lines onward. Keeps just the new message; the full
+ * thread stays one click away in Gmail.
+ */
+function stripPlainTextQuote(text: string): {
+  text: string;
+  quoteStripped: boolean;
+} {
+  const attribution = [
+    /^\s*Am\s.+\sschrieb.*:\s*$/, // German Gmail
+    /^\s*On\s.+\swrote:\s*$/, // English Gmail
+    /^\s*-{2,}\s*Original(?:\s|-)Message\s*-{2,}/i, // Outlook
+    /^\s*Von:\s.+/, // Outlook (de) forwarded header
+    /^_{5,}\s*$/, // Outlook divider
+  ];
+  const lines = text.split('\n');
+  const cut = lines.findIndex(
+    (l) => attribution.some((p) => p.test(l)) || /^\s*>/.test(l),
+  );
+  if (cut === -1) return {text, quoteStripped: false};
+  return {text: lines.slice(0, cut).join('\n').trimEnd(), quoteStripped: true};
+}
+
+/**
+ * Turndown configured for *basic* markdown only — bold, italic, links, lists,
+ * headings, blockquotes, code. Images and figures are dropped (Slack mrkdwn
+ * can't render them inline anyway and they'd just leave noisy alt-text/URLs).
+ */
+const turndown = new TurndownService({
+  headingStyle: 'atx',
+  bulletListMarker: '-',
+  codeBlockStyle: 'fenced',
+});
+turndown.remove(['figure', 'style', 'script', 'head']);
+// `remove` doesn't drop void elements like <img>, so blank them with a rule.
+turndown.addRule('noImages', {filter: ['img'], replacement: () => ''});
+
+// Set by the quote-stripping rule below during a `turndown()` call. Safe as a
+// module-level flag because `turndown()` runs synchronously (no interleaving).
+let quoteWasStripped = false;
+// Drop quoted reply history — Gmail wraps it in `.gmail_quote`/`.gmail_extra`,
+// Apple Mail in `<blockquote type="cite">`. Class-targeted so genuine inline
+// quotes in the new message survive.
+turndown.addRule('stripQuotes', {
+  filter: (node) => {
+    const cls = node.getAttribute?.('class') ?? '';
+    if (node.nodeName === 'BLOCKQUOTE') {
+      return /gmail_quote/.test(cls) || node.getAttribute?.('type') === 'cite';
+    }
+    if (node.nodeName === 'DIV') return /gmail_quote|gmail_extra/.test(cls);
+    return false;
+  },
+  replacement: () => {
+    quoteWasStripped = true;
+    return '';
+  },
+});
+
+/**
+ * HTML → Slack mrkdwn: first to CommonMark via Turndown, then to Slack's mrkdwn
+ * flavour (`*bold*`, `_italic_`, `<url|text>`, `•` lists) via slackify-markdown.
+ * Also reports whether quoted reply history was dropped.
+ */
+function htmlToSlackMarkdown(html: string): {
+  text: string;
+  quoteStripped: boolean;
+} {
+  quoteWasStripped = false;
+  const text = slackifyMarkdown(turndown.turndown(html)).trim();
+  return {text, quoteStripped: quoteWasStripped};
+}
+
 export function getHeaderField(message: gmail_v1.Schema$Message, field: string) {
   const header = message.payload?.headers?.find(
     (h) => h.name?.toLowerCase() === field.toLowerCase(),
@@ -189,14 +303,14 @@ export function slackAttachment(
         elements: [
           {
             type: 'button',
-            text: {type: 'plain_text', text: 'Öffnen'},
-            url,
+            text: {type: 'plain_text', text: 'Lesen'},
+            action_id: 'show-gmail',
+            value: JSON.stringify({account, messageId: message.id}),
           },
           {
             type: 'button',
-            text: {type: 'plain_text', text: 'Archivieren'},
-            action_id: 'archive-gmail',
-            value: JSON.stringify({account, messageId: message.id}),
+            text: {type: 'plain_text', text: 'In GMail öffnen'},
+            url,
           },
         ],
       };
@@ -217,4 +331,127 @@ export function slackAttachment(
       footerBlock,
     ],
   };
+}
+
+// Slack limits: a section `plain_text` field caps at 3000 chars and a modal at
+// 100 blocks. Chunk the body on line boundaries, staying under both.
+const MAX_CHARS = 2900;
+const MAX_BLOCKS = 90;
+
+function chunkBody(body: string): string[] {
+  const chunks: string[] = [];
+  let current = '';
+  for (const line of body.split('\n')) {
+    // A single line longer than the limit is hard-split.
+    const pieces =
+      line.length > MAX_CHARS
+        ? (line.match(new RegExp(`.{1,${MAX_CHARS}}`, 'g')) ?? [line])
+        : [line];
+    for (const piece of pieces) {
+      if (current.length + piece.length + 1 > MAX_CHARS) {
+        chunks.push(current);
+        current = piece;
+      } else {
+        current = current ? `${current}\n${piece}` : piece;
+      }
+    }
+  }
+  if (current) chunks.push(current);
+  return chunks;
+}
+
+/**
+ * Build the Block Kit view for the "read email" modal. `origin` is the channel
+ * message the modal was opened from — stashed in `private_metadata` so the
+ * in-modal "Archivieren" button can archive the mail and rewrite that message.
+ */
+function gmailModalView(
+  message: gmail_v1.Schema$Message,
+  account: string,
+  origin: {channel: string; ts: string},
+) {
+  const url = `https://mail.google.com/mail/u/${account}/#inbox/${message.threadId}`;
+  const subject = escapeSlack(getHeaderField(message, 'subject')) ?? '(kein Betreff)';
+  const from = escapeSlack(getHeaderField(message, 'from')) ?? '';
+  const parsed = getMessageBody(message);
+  const body = parsed?.text || '(kein Textinhalt gefunden)';
+
+  const allChunks = chunkBody(body);
+  const chunks = allChunks.slice(0, MAX_BLOCKS);
+  const truncated = allChunks.length > MAX_BLOCKS;
+
+  const notes = [
+    parsed?.quoteStripped && 'Zitierter Verlauf ausgeblendet.',
+    truncated && 'E-Mail gekürzt.',
+    (parsed?.quoteStripped || truncated) &&
+      'Vollständig über „In GMail öffnen".',
+  ].filter(Boolean) as string[];
+
+  return {
+    type: 'modal',
+    callback_id: 'show-gmail',
+    private_metadata: JSON.stringify({account, messageId: message.id, ...origin}),
+    // Slack truncates modal titles at 24 chars.
+    title: {type: 'plain_text', text: 'E-Mail'},
+    close: {type: 'plain_text', text: 'Schließen'},
+    blocks: [
+      {type: 'section', text: {type: 'mrkdwn', text: `*${from}*\n*${subject}*`}},
+      {
+        type: 'actions',
+        elements: [
+          {
+            type: 'button',
+            text: {type: 'plain_text', text: 'In GMail öffnen'},
+            url,
+          },
+          {
+            type: 'button',
+            style: 'danger',
+            text: {type: 'plain_text', text: 'Archivieren'},
+            action_id: 'archive-gmail',
+          },
+        ],
+      },
+      {type: 'divider'},
+      ...chunks.map((text) => ({
+        type: 'section',
+        text: {type: 'mrkdwn', text},
+      })),
+      ...(notes.length
+        ? [
+            {
+              type: 'context',
+              elements: [{type: 'mrkdwn', text: `_${notes.join(' ')}_`}],
+            },
+          ]
+        : []),
+    ],
+  };
+}
+
+/**
+ * Open the "read email" modal. Re-fetches the message from Gmail at click time
+ * (rather than stuffing the body into the button's 2000-char value). Called from
+ * the `show-gmail` block action; `origin` is the channel message it fired from.
+ */
+export async function showGmailModal(
+  account: string,
+  messageId: string,
+  triggerId: string,
+  origin: {channel: string; ts: string},
+): Promise<void> {
+  const gmail = await gmailClient(account);
+  const {data: message} = await gmail.users.messages.get({
+    id: messageId,
+    userId: 'me',
+  });
+
+  const response = await slackApiRequest('views.open', {
+    trigger_id: triggerId,
+    view: gmailModalView(message, account, origin),
+  });
+
+  if (!response.ok) {
+    throw new ApiError(502, 'views.open failed', new Error(response.error));
+  }
 }
