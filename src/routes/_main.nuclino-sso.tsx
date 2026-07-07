@@ -21,9 +21,15 @@ import {enqueueGcpTask} from '../server/enqueueGcpTask.server';
 
 const NONCE_LIFETIME_MINUTES = 5;
 
-const beforeLoad = createServerFn()
+// Returns the URL to redirect an incoming SSO request to, or `null` to render
+// the login page. Runs server-side (SSR + as an RPC during client navigation)
+// so it can read the httpOnly `nonce` cookie. The `redirect()` itself is thrown
+// from the route's `beforeLoad` — throwing it inside the server fn would
+// serialize it to a Response that Sentry's function middleware logs as an error
+// (`Error: [object Response]`).
+const resolveRedirect = createServerFn()
   .inputValidator((query: Record<string, any>) => query)
-  .handler(({data}) => {
+  .handler(({data}): string | null => {
     const nonce = getCookie('nonce');
     if (nonce) {
       const url = new URL(LOGIN_URL, process.env.SITE_URL);
@@ -31,15 +37,12 @@ const beforeLoad = createServerFn()
         url.searchParams.set(key, value),
       );
       url.searchParams.set('nonce', nonce);
-      throw redirect({
-        href: url.toString(),
-      });
+      return url.toString();
     }
     if (!data['SAMLRequest']) {
-      throw redirect({
-        href: 'https://app.nuclino.com/Kulturspektakel/login',
-      });
+      return 'https://app.nuclino.com/Kulturspektakel/login';
     }
+    return null;
   });
 
 const createNonceRequest = createServerFn()
@@ -101,7 +104,12 @@ const checkNonceRequest = createServerFn()
 export const Route = createFileRoute('/_main/nuclino-sso')({
   component: Sso,
   validateSearch: (search): Record<string, any> => search,
-  beforeLoad: async ({search}) => await beforeLoad({data: search}),
+  beforeLoad: async ({search}) => {
+    const href = await resolveRedirect({data: search});
+    if (href) {
+      throw redirect({href});
+    }
+  },
   head: () =>
     seo({
       title: 'Nuclino Login',
