@@ -7,6 +7,7 @@ import {
   Flex,
   ClientOnly,
 } from '@chakra-ui/react';
+import {Gallery} from 'react-photoswipe-gallery';
 import Image from '../Image';
 import Photos from './Photos';
 import ImmichPhotos from './ImmichPhotos';
@@ -70,20 +71,22 @@ export default function Event({
         align={['center', 'flex-start']}
       >
         {event.poster && (
-          <Image
-            w="200px"
-            flexShrink="0"
-            src={imageUrl(event.poster.id, {width: 200})}
-            original={imageUrl(event.poster.id, {width: 1600})}
-            originalHeight={event.poster.height}
-            originalWidth={event.poster.width}
-            alt={`${event.name} Poster`}
-            caption={
-              event.poster.copyright
-                ? `Gestaltung: ${event.poster.copyright}`
-                : undefined
-            }
-          />
+          <Gallery withCaption>
+            <Image
+              w="200px"
+              flexShrink="0"
+              src={imageUrl(event.poster.id, {width: 200})}
+              original={imageUrl(event.poster.id, {width: 1600})}
+              originalHeight={event.poster.height}
+              originalWidth={event.poster.width}
+              alt={`${event.name} Poster`}
+              caption={
+                event.poster.copyright
+                  ? `Gestaltung: ${event.poster.copyright}`
+                  : undefined
+              }
+            />
+          </Gallery>
         )}
         <Box w="100%">
           {event.start.getTime() > new Date().getTime() && (
