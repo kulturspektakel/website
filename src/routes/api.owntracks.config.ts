@@ -10,7 +10,11 @@ export const Route = createFileRoute('/api/owntracks/config')({
         const config = new URL(request.url).searchParams.get('config') ?? '';
         return new Response(null, {
           status: 302,
-          headers: {location: `owntracks:///config?inline=${config}`},
+          // Percent-encode: standard base64 can contain +, / and = which are
+          // ambiguous unescaped in a URL query (OwnTracks decodes them back).
+          headers: {
+            location: `owntracks:///config?inline=${encodeURIComponent(config)}`,
+          },
         });
       },
     },

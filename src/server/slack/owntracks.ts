@@ -26,7 +26,7 @@ export async function handleOwnTracksCommand(
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `\n1. *OwnTracks* herunterladen: <https://apps.apple.com/de/app/owntracks/id692424691|iPhone> oder <https://play.google.com/store/apps/details?id=org.owntracks.android|Android>\n2. Diesen <${configUrl}|Link> anklicken um die App zu konfigurieren`,
+          text: `\n1. *OwnTracks* herunterladen: <https://apps.apple.com/de/app/owntracks/id692424691|iPhone> oder <https://play.google.com/store/apps/details?id=org.owntracks.android|Android>\n2. In der App unter *ℹ️ → Settings → Remote control* die Option _„Allow external configuration“_ aktivieren (seit iOS-App-Version 26.2.3 standardmäßig aus)\n3. Diesen <${configUrl}|Link> anklicken um die App zu konfigurieren`,
         },
       },
     ],
