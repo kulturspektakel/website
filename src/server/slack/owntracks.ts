@@ -31,7 +31,7 @@ export async function handleOwnTracksCommand(
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `*Standort mit OwnTracks teilen*\n\n*1.* App installieren: <https://apps.apple.com/de/app/owntracks/id692424691|iPhone> oder <https://play.google.com/store/apps/details?id=org.owntracks.android|Android>\n*2.* _Einmalig (iPhone):_ Konfiguration per Link erlauben – in der App auf *ℹ️* → *Settings* → *Remote control* tippen und „*Allow external configuration*" einschalten (die Warnung mit *OK* bestätigen).\n*3.* Diesen <${configUrl}|Link> antippen – fertig! ✅`,
+          text: `*Standort mit OwnTracks teilen*\n\n*1.* App installieren: <https://apps.apple.com/de/app/owntracks/id692424691|iPhone> oder <https://play.google.com/store/apps/details?id=org.owntracks.android|Android>\n*2.* _Einmalig (iPhone):_ Konfiguration per Link erlauben – in der App auf *ℹ️* → *Settings* → *Remote control* tippen und „*Allow external configuration*" einschalten (die Warnung mit *OK* bestätigen).\n*3.* Diesen <${configUrl}|Link> antippen, um OwnTracks zu konfigurieren.\n*4.* Nach dem Standort fragt die App automatisch – damit dein Standort auch im Hintergrund geteilt wird, unter *Einstellungen → OwnTracks → Standort* auf *„Immer"* stellen und *„Genauer Standort"* aktivieren. Fertig! ✅`,
         },
       },
     ],
