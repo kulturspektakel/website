@@ -6,6 +6,11 @@ import {configString} from '../owntracks';
  * Migrated from `~/api.kulturspektakel.de/src/routes/slack/owntracks.ts`.
  * The `/owntracks` slash command: returns install instructions + a deep-link
  * that imports the per-user OwnTracks device config.
+ *
+ * Step 2 (enable "Allow external configuration") is unavoidable: OwnTracks iOS
+ * ≥26.2.3 disables config import via URL/file by default (security advisory),
+ * and gates every import path behind that one setting. It's a one-time,
+ * per-device toggle, so we spell out the exact path rather than work around it.
  */
 export async function handleOwnTracksCommand(
   request: Request,
@@ -26,7 +31,7 @@ export async function handleOwnTracksCommand(
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `\n1. *OwnTracks* herunterladen: <https://apps.apple.com/de/app/owntracks/id692424691|iPhone> oder <https://play.google.com/store/apps/details?id=org.owntracks.android|Android>\n2. In der App unter *ℹ️ → Settings → Remote control* die Option _„Allow external configuration“_ aktivieren (seit iOS-App-Version 26.2.3 standardmäßig aus)\n3. Diesen <${configUrl}|Link> anklicken um die App zu konfigurieren`,
+          text: `*Standort mit OwnTracks teilen*\n\n*1.* App installieren: <https://apps.apple.com/de/app/owntracks/id692424691|iPhone> oder <https://play.google.com/store/apps/details?id=org.owntracks.android|Android>\n*2.* _Einmalig (iPhone):_ Konfiguration per Link erlauben – in der App auf *ℹ️* → *Settings* → *Remote control* tippen und „*Allow external configuration*" einschalten (die Warnung mit *OK* bestätigen).\n*3.* Diesen <${configUrl}|Link> antippen – fertig! ✅`,
         },
       },
     ],
