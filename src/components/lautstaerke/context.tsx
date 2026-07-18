@@ -1,5 +1,6 @@
 import {
   createContext,
+  startTransition,
   useContext,
   useEffect,
   useState,
@@ -203,7 +204,12 @@ export function useLautstaerkeCtx() {
 export function useTick(intervalMs = 1000): number {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), intervalMs);
+    // Non-urgent: a freshness tick must never preempt (and thereby starve) an
+    // in-flight route transition — see the setDevices note in the layout.
+    const id = setInterval(
+      () => startTransition(() => setNow(Date.now())),
+      intervalMs,
+    );
     return () => clearInterval(id);
   }, [intervalMs]);
   return now;

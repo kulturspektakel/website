@@ -2,7 +2,14 @@
 import {createFileRoute, Outlet, useBlocker} from '@tanstack/react-router';
 import {Box} from '@chakra-ui/react';
 import {DarkMode} from '../components/chakra-snippets/color-mode';
-import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import mqtt from 'mqtt';
 import 'uplot/dist/uPlot.min.css';
 import {NoiseRecording} from '../proto/noise';
@@ -111,13 +118,20 @@ function LautstaerkeLayout() {
       data[0].push(receiveTime / 1000);
       SERIES.forEach((s, j) => data[j + 1].push(s.get(decoded)));
 
-      setDevices((prev) => ({
-        ...prev,
-        [deviceName]: {
-          lastSeen: receiveTime,
-          latest: decoded,
-        },
-      }));
+      // Non-urgent: MQTT records arrive several times a second. As an *urgent*
+      // update this preempts (and, on slower/mobile renders, permanently
+      // starves) TanStack Router's route transition — the URL commits but the
+      // detail view never swaps in. Demoting it to a transition lets navigation
+      // win; the live values lag at most a frame, which is imperceptible here.
+      startTransition(() =>
+        setDevices((prev) => ({
+          ...prev,
+          [deviceName]: {
+            lastSeen: receiveTime,
+            latest: decoded,
+          },
+        })),
+      );
     },
     [],
   );
