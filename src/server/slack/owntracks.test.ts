@@ -12,6 +12,8 @@ vi.mock('../slack.server', () => ({fetchUser}));
 vi.mock('../upsertViewer.server', () => ({upsertViewer}));
 
 process.env.SITE_URL = 'https://www.kulturspektakel.de';
+// The no-mention path builds the OwnTracks config, which signs with JWT_SECRET.
+process.env.JWT_SECRET = 'test-jwt-secret';
 const {handleOwnTracksCommand} = await import('./owntracks');
 
 beforeEach(() => vi.clearAllMocks());

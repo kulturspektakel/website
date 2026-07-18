@@ -1,4 +1,4 @@
-import {beforeEach, describe, expect, test, vi} from 'vitest';
+import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
 import {slackSignature, verifySlackRequest} from './slackAuth.server';
 
 const SECRET = 'test-signing-secret';
@@ -27,6 +27,10 @@ beforeEach(() => {
   // Freeze time so timestamp-skew checks are deterministic.
   vi.useFakeTimers();
   vi.setSystemTime(new Date('2026-07-19T12:00:00Z'));
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 const NOW = Math.floor(new Date('2026-07-19T12:00:00Z').getTime() / 1000);
