@@ -69,6 +69,7 @@ const ENV_VARS = {
   NUCLINO_WORKSPACE_ID: 'secret',
   SAML_PRIVATE_KEY: 'secret',
   SLACK_BOT_TOKEN: 'secret',
+  SLACK_SIGNING_SECRET: 'secret',
   SPOTIFY_CLIENT_ID: 'secret',
   SPOTIFY_CLIENT_SECRET: 'secret',
   STRIPE_API_KEY: 'secret',
