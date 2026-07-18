@@ -1,11 +1,66 @@
+import {formatDistanceToNow, sub} from 'date-fns';
+import {de} from 'date-fns/locale';
 import {fetchUser} from '../slack.server';
 import {upsertViewer} from '../upsertViewer.server';
 import {configString} from '../owntracks';
+import {prismaClient} from '../prismaClient.server';
+
+/** Extracts a Slack user id from an escaped mention like `<@U012ABC|name>`. */
+function taggedUserId(text: string): string | undefined {
+  return text.match(/<@([A-Z0-9]+)(?:\|[^>]*)?>/)?.[1];
+}
+
+/**
+ * Reply for `/location @user`: the tagged user's most recent shared location
+ * (within the last 24h) as a Google Maps link plus a relative "last seen" time.
+ * `ViewerLocation.viewerId` is the Slack user id, so we can look it up directly.
+ * Slack renders `<@id>` as the display name, so no `fetchUser` is needed.
+ */
+async function locationResponse(userId: string): Promise<Response> {
+  const loc = await prismaClient.viewerLocation.findFirst({
+    where: {viewerId: userId, createdAt: {gt: sub(new Date(), {days: 1})}},
+    orderBy: {createdAt: 'desc'},
+  });
+
+  if (!loc) {
+    return Response.json({
+      blocks: [
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `<@${userId}> hat in den letzten 24 Stunden keinen Standort geteilt.`,
+          },
+        },
+      ],
+    });
+  }
+
+  const mapsUrl = `https://www.google.com/maps?q=${loc.latitude},${loc.longitude}`;
+  const relative = formatDistanceToNow(loc.createdAt, {
+    addSuffix: true,
+    locale: de,
+  });
+
+  return Response.json({
+    blocks: [
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `📍 <@${userId}> war <${mapsUrl}|hier> – zuletzt gesehen ${relative}.`,
+        },
+      },
+    ],
+  });
+}
 
 /**
  * Migrated from `~/api.kulturspektakel.de/src/routes/slack/owntracks.ts`.
- * The `/owntracks` slash command: returns install instructions + a deep-link
- * that imports the per-user OwnTracks device config.
+ * Handles the `/owntracks` and `/location` slash commands (both post here):
+ * with a tagged user (`/location @user`) it returns that user's most recent
+ * location; otherwise it returns install instructions + a deep-link that
+ * imports the per-user OwnTracks device config.
  *
  * Step 2 (enable "Allow external configuration") is unavoidable: OwnTracks iOS
  * ≥26.2.3 disables config import via URL/file by default (security advisory),
@@ -17,6 +72,13 @@ export async function handleOwnTracksCommand(
 ): Promise<Response> {
   const form = await request.formData();
   const userId = String(form.get('user_id') ?? '');
+
+  // `/location @user` (and `/owntracks @user`) look up the tagged user's
+  // location; without a mention we fall through to the setup instructions.
+  const tagged = taggedUserId(String(form.get('text') ?? ''));
+  if (tagged) {
+    return locationResponse(tagged);
+  }
 
   const slackUser = await fetchUser(userId);
   if (!slackUser) {
