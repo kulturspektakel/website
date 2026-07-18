@@ -66,7 +66,7 @@ function DeviceList() {
       ) : names.length === 0 ? (
         <Text color="gray.500">Keine Lärmmessgeräte registriert.</Text>
       ) : (
-        <VStack align="stretch" gap="2">
+        <VStack align="stretch" gap="2" pb="4">
           {names.map((name) => {
             const state = ctx.devices[name];
             const active = isFresh(state?.lastSeen, now);
