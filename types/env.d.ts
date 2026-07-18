@@ -28,6 +28,7 @@ declare namespace NodeJS {
     SENTRY_AUTH_TOKEN: string;
     SITE_URL: string;
     SLACK_BOT_TOKEN: string;
+    SLACK_SIGNING_SECRET: string;
     SPOTIFY_CLIENT_ID: string;
     SPOTIFY_CLIENT_SECRET: string;
     STRIPE_API_KEY: string;
