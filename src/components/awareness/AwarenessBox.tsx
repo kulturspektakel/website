@@ -142,7 +142,8 @@ export function AwarenessBox({
             'Unser Awareness-Team ist für dich da – vertraulich und jederzeit ansprechbar. Melde dich auf dem Weg, der dir am angenehmsten ist.'
           ) : (
             <Text>
-              Unser Awareness-Team ist gerade nicht erreichbar.
+              Unser Awareness-Team ist gerade nicht aktiv erreichbar. Du kannst
+              uns aber eine Nachricht schreiben – wir melden uns bei dir.
               {nextOpen && (
                 <>
                   {' '}
@@ -180,28 +181,17 @@ export function AwarenessBox({
                 Anrufen
               </Button>
             )}
-            {available ? (
-              <Button asChild variant="surface">
-                <a
-                  href={`https://wa.me/${AWARENESS_PHONE_WHATSAPP}`}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <FaWhatsapp />
-                  WhatsApp
-                </a>
-              </Button>
-            ) : (
-              <Button variant="surface" disabled>
+            <Button asChild variant="surface">
+              <a
+                href={`https://wa.me/${AWARENESS_PHONE_WHATSAPP}`}
+                target="_blank"
+                rel="noreferrer"
+              >
                 <FaWhatsapp />
                 WhatsApp
-              </Button>
-            )}
-            <Button
-              variant="surface"
-              onClick={() => setDialogOpen(true)}
-              disabled={!available}
-            >
+              </a>
+            </Button>
+            <Button variant="surface" onClick={() => setDialogOpen(true)}>
               <LuMessageSquare />
               Nachricht schreiben
             </Button>

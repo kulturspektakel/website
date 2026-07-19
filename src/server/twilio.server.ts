@@ -1,6 +1,6 @@
 // Places an outbound voice call that reads `text` aloud (German TTS) via the
 // Twilio REST API — used to escalate an awareness help request to the on-call
-// phone. Raw REST (no SDK dependency); the spoken message is passed as inline
+// phones. Raw REST (no SDK dependency); the spoken message is passed as inline
 // TwiML so we don't need to host a TwiML webhook.
 //
 // Auth via a Twilio API Key (recommended over the account auth token). The
@@ -10,8 +10,7 @@
 //   TWILIO_API_KEY      — API key SID (SK…), Basic-Auth username
 //   TWILIO_API_SECRET   — API key secret, Basic-Auth password
 //   TWILIO_FROM_NUMBER  — a Twilio voice number to call from
-// The call destination is the public awareness number (AWARENESS_PHONE).
-import {AWARENESS_PHONE} from '../utils/awarenessContact';
+// The destination number(s) are supplied by the caller (see awareness-call).
 
 const XML_ESCAPES: Record<string, string> = {
   '&': '&amp;',
@@ -49,7 +48,7 @@ function twilioCreds(): TwilioCreds {
   };
 }
 
-export async function placeAwarenessCall(text: string): Promise<void> {
+export async function placeAwarenessCall(text: string, to: string): Promise<void> {
   const creds = twilioCreds();
   const twiml = `<Response><Say voice="Polly.Vicki" language="de-DE">${escapeXml(
     text,
@@ -61,7 +60,7 @@ export async function placeAwarenessCall(text: string): Promise<void> {
       Authorization: creds.authHeader,
       'Content-Type': 'application/x-www-form-urlencoded',
     },
-    body: new URLSearchParams({To: AWARENESS_PHONE, From: creds.from, Twiml: twiml}),
+    body: new URLSearchParams({To: to, From: creds.from, Twiml: twiml}),
   });
 
   if (!res.ok) {
