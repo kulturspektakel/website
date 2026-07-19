@@ -5,8 +5,14 @@ import {timeZone} from '../../utils/dateUtils';
 // The weighting toggle lives in the shared header (the $device layout route),
 // but drives the charts in the child views. Share it through this context so the
 // header and the live/historical views stay in sync, and the choice persists
-// when navigating between them.
-export type DeviceViewCtx = {weighting: Weighting; toggleWeighting: () => void};
+// when navigating between them. `peaks` similarly toggles the live band chart's
+// peak-hold overlay from the header menu.
+export type DeviceViewCtx = {
+  weighting: Weighting;
+  toggleWeighting: () => void;
+  peaks: boolean;
+  togglePeaks: () => void;
+};
 
 export const DeviceViewContext = createContext<DeviceViewCtx | null>(null);
 

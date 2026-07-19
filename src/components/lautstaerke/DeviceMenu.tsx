@@ -5,6 +5,7 @@ import {IconButton} from '@chakra-ui/react';
 import {createServerFn} from '@tanstack/react-start';
 import {z} from 'zod';
 import {
+  MenuCheckboxItem,
   MenuContent,
   MenuItem,
   MenuRadioItem,
@@ -69,7 +70,7 @@ export function DeviceMenu({
   dayValue: string;
 }) {
   const {bluetooth} = useLautstaerkeCtx();
-  const {weighting, toggleWeighting} = useDeviceView();
+  const {weighting, toggleWeighting, peaks, togglePeaks} = useDeviceView();
   const navigate = useNavigate();
   const router = useRouter();
   const [calibrating, setCalibrating] = useState(false);
@@ -177,6 +178,19 @@ export function DeviceMenu({
               </MenuRadioItemGroup>
             </MenuContent>
           </MenuRoot>
+
+          {/* Peak-hold overlay on the live frequency chart. Only the live view
+              has that chart, so the toggle is hidden on historical days. */}
+          {dayValue === 'live' && (
+            <MenuCheckboxItem
+              value="peaks"
+              checked={peaks}
+              onCheckedChange={togglePeaks}
+              closeOnSelect={false}
+            >
+              Peaks anzeigen
+            </MenuCheckboxItem>
+          )}
 
           <MenuSeparator />
 

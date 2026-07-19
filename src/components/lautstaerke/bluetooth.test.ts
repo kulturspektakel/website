@@ -23,12 +23,12 @@ describe('calibration codec', () => {
     expect(decodeCalibration(bytes)).toEqual(new Array(CAL_BAND_COUNT).fill(0));
   });
 
-  test('clamps to ±16 dB and never emits the −128 sentinel', () => {
-    expect(encodeCalibration([16])[0]).toBe(32);
-    expect(encodeCalibration([-16])[0]).toBe(0xe0); // −32 two's complement
+  test('clamps to ±24 dB and never emits the −128 sentinel', () => {
+    expect(encodeCalibration([24])[0]).toBe(48);
+    expect(encodeCalibration([-24])[0]).toBe(0xd0); // −48 two's complement
     // Out-of-range input is clamped, not wrapped.
-    expect(encodeCalibration([100])[0]).toBe(32);
-    expect(encodeCalibration([-100])[0]).toBe(0xe0);
+    expect(encodeCalibration([100])[0]).toBe(48);
+    expect(encodeCalibration([-100])[0]).toBe(0xd0);
   });
 });
 

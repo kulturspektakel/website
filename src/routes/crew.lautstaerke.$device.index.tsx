@@ -35,13 +35,41 @@ const FREQS = BAND_FREQUENCIES;
 const fmtHz = (f: number) =>
   f >= 1000 ? `${(f / 1000).toLocaleString('de-DE')}k` : `${f}`;
 
+// Orange for the peak-hold overlay — shared by the chart cap line and the
+// tooltip readout so they stay in sync.
+const PEAK_COLOR = '#f97316';
+
+// Peak-hold renderer: a short horizontal cap centered on each band at its held
+// max, spanning the bar's width (0.85 x-units, matching the Pegel bars). uPlot
+// strokes the returned path with the series' stroke color and width.
+const peakCaps: uPlot.Series.PathBuilder = (u, sIdx) => {
+  const xs = u.data[0];
+  const ys = u.data[sIdx];
+  const half = Math.abs(u.valToPos(0.425, 'x', true) - u.valToPos(0, 'x', true));
+  const stroke = new Path2D();
+  for (let i = 0; i < xs.length; i++) {
+    const y = ys[i];
+    if (y == null || Number.isNaN(y)) continue;
+    const cx = u.valToPos(xs[i]!, 'x', true);
+    const cy = u.valToPos(y, 'y', true);
+    stroke.moveTo(cx - half, cy);
+    stroke.lineTo(cx + half, cy);
+  }
+  return {stroke};
+};
+
 function DeviceLive() {
   const {device} = Route.useParams();
   const ctx = useLautstaerkeCtx();
-  const {weighting} = useDeviceView();
+  const {weighting, peaks} = useDeviceView();
   const bandRef = useRef<HTMLDivElement | null>(null);
   const bandPlotRef = useRef<uPlot | null>(null);
   const bandXs = useMemo(() => FREQS.map((_, i) => i), []);
+  // Running per-band maximum for the peak-hold overlay. Mutated in place by the
+  // 1 Hz tick; NaN entries are bands not yet seen (drawn as no cap). Dropped by
+  // the tick when the device goes stale, and reset by the effect below on
+  // enable / weighting / device change.
+  const peaksRef = useRef<number[]>(new Array(FREQS.length).fill(NaN));
   // Hovered frequency band: which bar (index into FREQS) and where to anchor the
   // tooltip, in container-relative CSS pixels. null when not hovering a bar.
   const [bandHover, setBandHover] = useState<{
@@ -124,6 +152,17 @@ function DeviceLive() {
           points: {show: false},
           value: (_u, v) => (v == null ? '' : `${v.toFixed(1)} dB`),
         },
+        {
+          // Peak-hold: an orange cap line at each band's running max (see
+          // peakCaps). Its visibility follows the `peaks` toggle via setSeries.
+          label: 'Peak',
+          stroke: PEAK_COLOR,
+          width: 2,
+          show: false,
+          paths: peakCaps,
+          points: {show: false},
+          value: (_u, v) => (v == null ? '' : `${v.toFixed(1)} dB`),
+        },
       ],
       hooks: {
         setCursor: [
@@ -149,7 +188,11 @@ function DeviceLive() {
 
     const plot = new uPlot(
       opts,
-      [bandXs, new Array(FREQS.length).fill(NaN)] as uPlot.AlignedData,
+      [
+        bandXs,
+        new Array(FREQS.length).fill(NaN),
+        new Array(FREQS.length).fill(NaN),
+      ] as uPlot.AlignedData,
       container,
     );
     bandPlotRef.current = plot;
@@ -175,15 +218,34 @@ function DeviceLive() {
       const bandPlot = bandPlotRef.current;
       if (!bandPlot) return;
       const st = deviceStateRef.current;
-      const ys = isFresh(st?.lastSeen, Date.now())
+      const fresh = isFresh(st?.lastSeen, Date.now());
+      const ys = fresh
         ? Array.from(st!.latest.bands, (b) => decodeDb(b))
         : emptyBands;
-      bandPlot.setData([bandXs, ys] as uPlot.AlignedData);
+      // Hold the per-band max while the device is live; drop it once stale so
+      // the caps don't linger over empty bars.
+      const held = peaksRef.current;
+      if (fresh) {
+        for (let i = 0; i < ys.length; i++) {
+          held[i] = Number.isNaN(held[i]) ? ys[i] : Math.max(held[i], ys[i]);
+        }
+      } else {
+        held.fill(NaN);
+      }
+      bandPlot.setData([bandXs, ys, held.slice()] as uPlot.AlignedData);
     };
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, [bandXs]);
+
+  // Show/hide the peak-hold overlay and clear the held maxima. Resetting on a
+  // weighting or device change keeps the caps meaningful — they start fresh from
+  // the current spectrum rather than carrying over unrelated peaks.
+  useEffect(() => {
+    peaksRef.current.fill(NaN);
+    bandPlotRef.current?.setSeries(2, {show: peaks});
+  }, [peaks, weighting, device]);
 
   const data = ctx.deviceData.current[device] as uPlot.AlignedData;
 
@@ -225,7 +287,18 @@ function DeviceLive() {
               },
             }}
           />
-          {bandHover && <BandTooltip hover={bandHover} state={deviceState} now={now} />}
+          {bandHover && (
+            <BandTooltip
+              hover={bandHover}
+              state={deviceState}
+              now={now}
+              peakDb={
+                peaks && !Number.isNaN(peaksRef.current[bandHover.idx])
+                  ? peaksRef.current[bandHover.idx]!
+                  : null
+              }
+            />
+          )}
         </Box>
       </Flex>
     </>
@@ -239,10 +312,13 @@ function BandTooltip({
   hover,
   state,
   now,
+  peakDb,
 }: {
   hover: {idx: number; left: number; top: number};
   state: DeviceState | undefined;
   now: number;
+  // Held peak for the hovered band, or null when the overlay is off / unseen.
+  peakDb: number | null;
 }) {
   const band = isFresh(state?.lastSeen, now)
     ? state!.latest.bands[hover.idx]
@@ -256,6 +332,11 @@ function BandTooltip({
       <Text fontFamily="mono" fontWeight="bold" lineHeight="1.2">
         {db == null ? '—' : `${db.toFixed(1)} dB`}
       </Text>
+      {peakDb != null && (
+        <Text fontFamily="mono" fontSize="xs" color={PEAK_COLOR} lineHeight="1.2">
+          Peak {peakDb.toFixed(1)} dB
+        </Text>
+      )}
     </ChartTooltip>
   );
 }

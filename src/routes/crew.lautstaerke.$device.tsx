@@ -41,12 +41,16 @@ function DeviceLayout() {
   const {days, locations} = Route.useLoaderData();
   const [weighting, setWeighting] = useState<Weighting>('A');
   const toggleWeighting = () => setWeighting((w) => (w === 'A' ? 'C' : 'A'));
+  const [peaks, setPeaks] = useState(false);
+  const togglePeaks = () => setPeaks((p) => !p);
 
   // Day-aware: the historical view shows where the device stood on that day.
   const location = resolveLocation(locations, date ?? null);
 
   return (
-    <DeviceViewContext.Provider value={{weighting, toggleWeighting}}>
+    <DeviceViewContext.Provider
+      value={{weighting, toggleWeighting, peaks, togglePeaks}}
+    >
       <Box display="flex" flexDirection="column" flex="1" minH="0">
         <DeviceHeader
           device={device}

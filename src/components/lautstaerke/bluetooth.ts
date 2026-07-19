@@ -39,8 +39,8 @@ export const BAND_FREQUENCIES = [
 
 export const CAL_BAND_COUNT = BAND_FREQUENCIES.length;
 // UI slider bounds. The wire byte allows ±63.5 dB, but realistic trims stay
-// within ±16 dB, so we clamp to that and never emit the −128 sentinel.
-export const CAL_MAX_DB = 16;
+// within ±24 dB, so we clamp to that and never emit the −128 sentinel.
+export const CAL_MAX_DB = 24;
 export const CAL_STEP_DB = 0.5;
 
 // "31.5 Hz" / "1.25 kHz" / "16 kHz" — Hz below 1 kHz, kHz above.
@@ -49,13 +49,13 @@ export function formatBandFrequency(hz: number): string {
 }
 
 // Each byte is a signed 8-bit offset in 0.5 dB steps (offset_dB = byte × 0.5).
-// Clamping to ±32 enforces the ±16 dB UI range and guarantees we never send the
+// Clamping to ±48 enforces the ±24 dB UI range and guarantees we never send the
 // −128 sentinel. Output is always exactly CAL_BAND_COUNT bytes.
 export function encodeCalibration(offsetsDb: number[]): Uint8Array<ArrayBuffer> {
   const bytes = new Uint8Array(new ArrayBuffer(CAL_BAND_COUNT));
   for (let i = 0; i < CAL_BAND_COUNT; i++) {
     const step = Math.round((offsetsDb[i] ?? 0) / CAL_STEP_DB);
-    const clamped = Math.max(-32, Math.min(32, step));
+    const clamped = Math.max(-48, Math.min(48, step));
     bytes[i] = clamped & 0xff; // two's complement into the unsigned byte
   }
   return bytes;
