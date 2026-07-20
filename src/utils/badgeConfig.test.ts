@@ -317,185 +317,6 @@ describe('tierfreundin', () => {
   });
 });
 
-describe('kalle', () => {
-  test('awards if purchased "Weißbier" and "Vodka Bull" in sixty minutes or less', () => {
-    expect(
-      badgeConfig.kalle.compute(
-        [
-          order({
-            productList: 'Weißbiergarten',
-            time: new Date('2025-07-27 11:00:00+02:00'),
-            items: [{name: 'Weißbier', amount: 1}],
-          }),
-          order({
-            productList: 'Cocktail',
-            time: new Date('2025-07-27 11:30:00+02:00'),
-            items: [{name: 'Vodka Bull', amount: 1}],
-          }),
-        ],
-        event,
-      ),
-    ).toEqual({
-      status: 'awarded',
-      awardedAt: new Date('2025-07-27 11:30:00+02:00'),
-    });
-
-    expect(
-      badgeConfig.kalle.compute(
-        [
-          order({
-            productList: 'Cocktail',
-            time: new Date('2025-07-27 10:00:00+02:00'),
-            items: [{name: 'Vodka Bull', amount: 1}],
-          }),
-          order({
-            productList: 'Weißbiergarten',
-            time: new Date('2025-07-27 11:05:00+02:00'),
-            items: [{name: 'Weißbier', amount: 1}],
-          }),
-          order({
-            productList: 'Cocktail',
-            time: new Date('2025-07-27 11:30:00+02:00'),
-            items: [{name: 'Vodka Bull', amount: 1}],
-          }),
-        ],
-        event,
-      ),
-    ).toEqual({
-      status: 'awarded',
-      awardedAt: new Date('2025-07-27 11:30:00+02:00'),
-    });
-  });
-
-  test('does not award for if none of the two products have been purchased', () => {
-    expect(
-      badgeConfig.kalle.compute(
-        [
-          order({
-            productList: 'Weißbiergarten',
-            time: new Date('2025-07-27 11:00:00+02:00'),
-            items: [{name: 'Obstler', amount: 1}],
-          }),
-        ],
-        event,
-      ),
-    ).toEqual({
-      status: 'not awarded',
-      progress: {
-        target: 2,
-        current: 0,
-      },
-    });
-  });
-
-  test('correctly shows progress if one has been purchased in the last 60mins', () => {
-    expect(
-      badgeConfig.kalle.compute(
-        [
-          order({
-            productList: 'Weißbiergarten',
-            time: sub(new Date(), {minutes: 30}),
-            items: [{name: 'Weißbier', amount: 1}],
-          }),
-        ],
-        event,
-      ),
-    ).toEqual({
-      status: 'not awarded',
-      progress: {
-        target: 2,
-        current: 1,
-      },
-    });
-
-    expect(
-      badgeConfig.kalle.compute(
-        [
-          order({
-            productList: 'Cocktail',
-            time: sub(new Date(), {minutes: 20}),
-            items: [{name: 'Vodka Bull', amount: 1}],
-          }),
-          order({
-            productList: 'Weißbiergarten',
-            time: sub(new Date(), {hours: 3}),
-            items: [{name: 'Weißbier', amount: 1}],
-          }),
-        ],
-        event,
-      ),
-    ).toEqual({
-      status: 'not awarded',
-      progress: {
-        target: 2,
-        current: 1,
-      },
-    });
-  });
-
-  test('does not show progress if one has been purchased, but not in the last 60 minutes', () => {
-    expect(
-      badgeConfig.kalle.compute(
-        [
-          order({
-            productList: 'Weißbiergarten',
-            time: sub(new Date(), {hours: 3}),
-            items: [{name: 'Weißbier', amount: 1}],
-          }),
-        ],
-        event,
-      ),
-    ).toEqual({
-      status: 'not awarded',
-      progress: {
-        target: 2,
-        current: 0,
-      },
-    });
-  });
-});
-
-describe('rothy', () => {
-  test('none', () => {
-    expect(
-      badgeConfig.rothy.compute(
-        [
-          order({
-            productList: 'Ausschank',
-            time: new Date(),
-            items: [{name: 'Wasser', amount: 1}],
-          }),
-        ],
-        event,
-      ),
-    ).toEqual({
-      status: 'not awarded',
-    });
-  });
-
-  test('awarded', () => {
-    expect(
-      badgeConfig.rothy.compute(
-        [
-          order({
-            productList: 'Ausschank',
-            time: new Date('2000-01-01 00:00:01'),
-            items: [
-              {name: 'Spezi', amount: 1},
-              {name: 'Zitronenlimo', amount: 1},
-              {name: 'Helles', amount: 1},
-            ],
-          }),
-        ],
-        event,
-      ),
-    ).toEqual({
-      status: 'awarded',
-      awardedAt: new Date('2000-01-01 00:00:01'),
-    });
-  });
-});
-
 describe('flash', () => {
   beforeAll(() => {
     vi.setSystemTime(new Date('2025-07-26 19:00:00+02:00'));
@@ -1071,7 +892,7 @@ describe('globetrotter', () => {
             time: new Date('2025-07-25 23:59:59+02:00'),
           }),
           order({
-            productList: 'Italien',
+            productList: 'Wein & Italien',
             time: new Date('2025-07-25 23:59:59+02:00'),
           }),
           order({
@@ -1107,5 +928,192 @@ test('bleifrei', () => {
   ).toEqual({
     status: 'awarded',
     awardedAt: new Date('2025-07-25 23:59:59+02:00'),
+  });
+});
+
+describe('feierabendbier', () => {
+  test('awarded when the first beer of the day is after 22:00', () => {
+    expect(
+      badgeConfig.feierabendbier.compute(
+        [order({time: new Date('2025-07-25 22:30:00+02:00')})],
+        event,
+      ),
+    ).toEqual({
+      status: 'awarded',
+      awardedAt: new Date('2025-07-25 22:30:00+02:00'),
+    });
+  });
+
+  test('not awarded when a beer was bought earlier that day', () => {
+    expect(
+      badgeConfig.feierabendbier.compute(
+        [
+          order({time: new Date('2025-07-25 19:00:00+02:00')}),
+          order({time: new Date('2025-07-25 23:00:00+02:00')}),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'not awarded',
+    });
+  });
+
+  test('not awarded when the only beer is before 22:00', () => {
+    expect(
+      badgeConfig.feierabendbier.compute(
+        [order({time: new Date('2025-07-25 21:00:00+02:00')})],
+        event,
+      ),
+    ).toEqual({
+      status: 'not awarded',
+    });
+  });
+
+  test('counts per day: an early beer on another day does not disqualify', () => {
+    expect(
+      badgeConfig.feierabendbier.compute(
+        [
+          // Friday: first beer before 22:00 → Friday disqualified
+          order({time: new Date('2025-07-25 19:00:00+02:00')}),
+          // Saturday: first beer after 22:00 → still awarded
+          order({time: new Date('2025-07-26 23:00:00+02:00')}),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'awarded',
+      awardedAt: new Date('2025-07-26 23:00:00+02:00'),
+    });
+  });
+});
+
+describe('konterhalbe', () => {
+  test('awarded for a beer in the morning window (6:00–12:00)', () => {
+    expect(
+      badgeConfig.konterhalbe.compute(
+        [order({time: new Date('2025-07-26 09:00:00+02:00')})],
+        event,
+      ),
+    ).toEqual({
+      status: 'awarded',
+      awardedAt: new Date('2025-07-26 09:00:00+02:00'),
+    });
+  });
+
+  test('not awarded for a beer before 6:00 or from noon onwards', () => {
+    expect(
+      badgeConfig.konterhalbe.compute(
+        [
+          order({time: new Date('2025-07-26 05:30:00+02:00')}),
+          order({time: new Date('2025-07-26 12:00:00+02:00')}),
+          order({time: new Date('2025-07-26 20:00:00+02:00')}),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'not awarded',
+    });
+  });
+});
+
+describe('zuckerrausch', () => {
+  test('awarded for 3 sugar products within an hour', () => {
+    expect(
+      badgeConfig.zuckerrausch.compute(
+        [
+          order({
+            time: new Date('2025-07-26 14:00:00+02:00'),
+            items: [{name: 'Kuchen', amount: 1}],
+          }),
+          order({
+            time: new Date('2025-07-26 14:30:00+02:00'),
+            items: [{name: 'Waffel', amount: 1}],
+          }),
+          order({
+            time: new Date('2025-07-26 14:59:00+02:00'),
+            items: [{name: 'Schoko', amount: 1}],
+          }),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'awarded',
+      awardedAt: new Date('2025-07-26 14:59:00+02:00'),
+    });
+  });
+
+  test('awarded when a single order contains 3 sugar products', () => {
+    expect(
+      badgeConfig.zuckerrausch.compute(
+        [
+          order({
+            time: new Date('2025-07-26 14:00:00+02:00'),
+            items: [{name: 'Schoko-Banane', amount: 3}],
+          }),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'awarded',
+      awardedAt: new Date('2025-07-26 14:00:00+02:00'),
+    });
+  });
+
+  test('not awarded when the 3 sugar products span more than an hour', () => {
+    expect(
+      badgeConfig.zuckerrausch.compute(
+        [
+          order({
+            time: new Date('2025-07-26 14:00:00+02:00'),
+            items: [{name: 'Kuchen', amount: 1}],
+          }),
+          order({
+            time: new Date('2025-07-26 14:30:00+02:00'),
+            items: [{name: 'Waffel', amount: 1}],
+          }),
+          order({
+            time: new Date('2025-07-26 15:01:00+02:00'),
+            items: [{name: 'Schoko', amount: 1}],
+          }),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'not awarded',
+      progress: {
+        target: 3,
+        current: 2,
+      },
+    });
+  });
+});
+
+describe('erreichbarBleiben', () => {
+  test('awarded when "Handy laden" was purchased', () => {
+    expect(
+      badgeConfig.erreichbarBleiben.compute(
+        [
+          order({
+            time: new Date('2025-07-26 14:00:00+02:00'),
+            items: [{name: 'Handy laden', amount: 1}],
+          }),
+        ],
+        event,
+      ),
+    ).toEqual({
+      status: 'awarded',
+      awardedAt: new Date('2025-07-26 14:00:00+02:00'),
+    });
+  });
+
+  test('not awarded without "Handy laden"', () => {
+    expect(
+      badgeConfig.erreichbarBleiben.compute(
+        [order({items: [{name: 'Helles', amount: 1}]})],
+        event,
+      ),
+    ).toEqual({
+      status: 'not awarded',
+    });
   });
 });

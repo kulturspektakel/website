@@ -13,11 +13,9 @@ import {useBadges} from '../utils/useBadges';
 import {CardDetails} from '../components/kultcard/CardDetails';
 import {CrewCardInfo} from '../components/kultcard/CrewCardInfo';
 import {createServerFn} from '@tanstack/react-start';
-import {prismaClient} from '../server/prismaClient.server';
 import {queryCrewCard, orderToCardActivity} from '../server/cardUtils.server';
-import {byteArrayToString, stringToByteArray} from '../utils/cardUtils';
+import {stringToByteArray} from '../utils/cardUtils';
 import {decodePayload} from '../utils/decodePayload';
-import {HighscoreEntry} from '../components/kultcard/Highscore';
 
 const loader = createServerFn()
   .inputValidator(
@@ -31,60 +29,9 @@ const loader = createServerFn()
       throw notFound();
     }
 
-    const _highscores = await prismaClient.$queryRaw<
-      Array<{
-        productListId: number;
-        emoji: string | null;
-        name: string;
-        cardId: Uint8Array;
-        nickname: string | null;
-        displayName: string | null;
-        amount: BigInt;
-        rnk: BigInt;
-      }>
-    >`SELECT * FROM (
-          SELECT
-            pl.id AS "productListId",
-            pl.emoji,
-            pl.name,
-            c.id AS "cardId",
-            c.nickname,
-            v."displayName",
-            SUM(oi.amount) AS "amount",
-            RANK() OVER (PARTITION BY pl.id ORDER BY SUM(oi.amount) DESC) AS rnk
-          FROM "ProductList" pl
-          JOIN "OrderItem" oi ON oi."productListId" = pl.id
-          JOIN "Order" o ON o.id = oi."orderId"
-          JOIN "CrewCard" c ON o."crewCardId" = c.id
-          JOIN "Viewer" v ON c."viewerId" = v.id
-          WHERE pl.active AND o."crewCardId" IS NOT NULL AND o."notForMe" IS NOT TRUE AND o."createdAt" > ${event.start} AND o."createdAt" < ${event.end}
-          GROUP BY 1, 2, 3, 4, 5, 6
-        ) ranked
-        WHERE rnk <= 3
-        ORDER BY "productListId", rnk;`;
-
-    const highscores = _highscores.reduce<Record<number, HighscoreEntry[]>>(
-      (acc, cv) => {
-        if (!acc[cv.productListId]) {
-          acc[cv.productListId] = [];
-        }
-        acc[cv.productListId].push({
-          name: cv.displayName || cv.nickname || 'Unbekannt',
-          cardId: byteArrayToString(cv.cardId),
-          amount: Number(cv.amount),
-          rank: Number(cv.rnk),
-          productList: cv.name,
-          emoji: cv.emoji,
-        });
-        return acc;
-      },
-      {},
-    );
-
     const {Order, ...crewCard} = _crewCard;
 
     return {
-      highscores,
       crewCard,
       cardActivities: orderToCardActivity(Order),
       totals: {
@@ -93,9 +40,6 @@ const loader = createServerFn()
           0,
         ),
         Badges: 0 as number,
-        Highscores: Object.values(highscores)
-          .flatMap((v) => v)
-          .reduce((acc, cv) => (cv.cardId === cardId ? acc + 1 : acc), 0),
       },
       event,
       cardId,
@@ -121,15 +65,8 @@ const ringCss = defineStyle({
 });
 
 function CrewCard() {
-  const {
-    crewCard,
-    totals,
-    cardActivities,
-    event,
-    cardId,
-    validUntil,
-    highscores,
-  } = Route.useLoaderData();
+  const {crewCard, totals, cardActivities, event, cardId, validUntil} =
+    Route.useLoaderData();
   const name = crewCard.viewer?.displayName ?? crewCard.nickname;
   const {awardedBadges} = useBadges(cardActivities, event, true);
   totals.Badges = awardedBadges.length;
@@ -141,7 +78,6 @@ function CrewCard() {
       }
       cardActivities={cardActivities}
       cardId={cardId}
-      highscores={highscores}
       cardType="crew"
       footer={<CrewCardInfo />}
     >

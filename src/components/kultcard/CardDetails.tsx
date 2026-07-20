@@ -4,7 +4,6 @@ import {ClientOnly, StackProps, VStack} from '@chakra-ui/react';
 import {SegmentedControl} from '../chakra-snippets/segmented-control';
 import {BadgeActivity} from './Badges';
 import {CardActivities, CardActivity} from './CardActivities';
-import {Highscore, HighscoreProps} from './Highscore';
 import InfoText from './InfoText';
 import {useBadges} from '../../utils/useBadges';
 import {useRouteContext} from '@tanstack/react-router';
@@ -13,7 +12,6 @@ export function CardDetails({
   infoText,
   children,
   cardActivities,
-  highscores,
   cardId,
   cardType,
   footer,
@@ -24,19 +22,12 @@ export function CardDetails({
   children: React.ReactNode;
   cardActivities: Array<CardActivity>;
   cardType: 'crew' | 'regular';
-  highscores?: HighscoreProps;
   footer?: React.ReactNode;
 } & StackProps) {
   const {event} = useRouteContext({
     from: '/_main/card/$hash',
   });
-  const TABS = useMemo(() => {
-    const t = ['Buchungen', 'Badges'];
-    if (highscores) {
-      t.push('Highscores');
-    }
-    return t;
-  }, [highscores]);
+  const TABS = useMemo(() => ['Buchungen', 'Badges'], []);
   const [active, setActive] = useState(TABS[0]);
   const {awardedBadges, unawardedBadges} = useBadges(
     cardActivities,
@@ -67,9 +58,6 @@ export function CardDetails({
             awardedBadges={awardedBadges}
             unawardedBadges={unawardedBadges}
           />
-        )}
-        {highscores && active === 'Highscores' && (
-          <Highscore data={highscores} />
         )}
         <InfoText textAlign="center">{infoText}</InfoText>
       </VStack>

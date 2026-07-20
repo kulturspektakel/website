@@ -7,18 +7,20 @@ import plane from '@twemoji/svg/2708.svg';
 import moneyBag from '@twemoji/svg/1f4b0.svg';
 import broccoli from '@twemoji/svg/1f966.svg';
 import signOfHorns from '@twemoji/svg/1f918.svg';
-import tropicalDrink from '@twemoji/svg/1f379.svg';
 import zap from '@twemoji/svg/26a1.svg';
 import jeans from '@twemoji/svg/1f456.svg';
 import droplet from '@twemoji/svg/1f4a7.svg';
 import cupWithStraw from '@twemoji/svg/1f964.svg';
-import fox from '@twemoji/svg/1f98a.svg';
 import beachWithUmbrella from '@twemoji/svg/1f3d6.svg';
 import wineGlass from '@twemoji/svg/1f377.svg';
 import universalRecyclingSymbol from '@twemoji/svg/267b.svg';
 import owl from '@twemoji/svg/1f989.svg';
 import fuelPump from '@twemoji/svg/26fd.svg';
 import lowBattery from '@twemoji/svg/1faab.svg';
+import beerMug from '@twemoji/svg/1f37a.svg';
+import zombie from '@twemoji/svg/1f9df.svg';
+import candy from '@twemoji/svg/1f36c.svg';
+import battery from '@twemoji/svg/1f50b.svg';
 
 import {tz} from '@date-fns/tz';
 
@@ -81,8 +83,20 @@ const beerList = new Set([
   'Tap 0.5',
   'Tap 0.3',
   'Tastingbrett',
+  'Probierglas 0.1l Tap',
   'Desperados 0.3',
   'Corona 0.3',
+]);
+
+const sugarList = new Set<string>([
+  'Spezi',
+  'Tüte Süßes',
+  'Red Bull',
+  'Kuchen',
+  'Zimtzucker',
+  'Schoko',
+  'Schoko-Banane',
+  'Waffel'
 ]);
 
 export type BadgeKey = keyof typeof badgeConfig;
@@ -250,13 +264,13 @@ export const badgeConfig = createBadgeDefinitions({
     availableForRegular: true,
     emoji: plane,
     compute: (activities) => {
-      const wb = new Set(['Kinderbude', 'Italien', 'EKP']);
+      const wb = new Set(['Kinderbude', 'Wein & Italien', 'EKP']);
       let hasWb = false;
-      const rondell = new Set(['Pizza', 'Frittiererei', 'Grill', 'Craft Beer']);
+      const rondell = new Set(['Pizza',  'Grill', 'Craft Beer']);
       let hasRondell = false;
-      const kb = new Set(['Waffel', 'Empanadas']);
+      const kb = new Set(['Waffel', 'Empanadas', 'Käsespätzle', 'Wraps', 'Crêpes']);
       let hasKb = false;
-      const gb = new Set(['Hot Dog', 'Schokofrüchte', 'Cocktail']);
+      const gb = new Set(['Hot Dog', 'Frittiererei', 'Burger', 'Cocktail']);
       let hasGb = false;
 
       for (const activity of activities) {
@@ -299,16 +313,16 @@ export const badgeConfig = createBadgeDefinitions({
       const allProductLists = new Set<string>([
         'Burger',
         'Crêpes',
-        'Wraps',
-        'Käsespätzle',
-        'Waffeln',
-        'Hot Dogs',
-        'Wein & Italien',
-        'Weißbiergarten',
-        'Pizza',
+        'Empanadas',
         'Frittiererei',
         'Grill',
-        'Empanadas',
+        'Hot Dogs',
+        'Käsespätzle',
+        'Pizza',
+        'Waffeln',
+        'Wein & Italien',
+        'Weißbiergarten',
+        'Wraps',
       ]);
       const allListsLength = allProductLists.size;
 
@@ -355,8 +369,12 @@ export const badgeConfig = createBadgeDefinitions({
         'Grillkäsesemmel',
         'Käse-Gemüse-Semmel',
         'Vegetarisch', // Pizza
-        'Waffel Vegan',
-        'Antipasti Teller vegetarisch',
+        'Veggie-Cheeseburger',
+        'Veggie-Burger mit Pommes',
+        'Vegetarisches Huhn Wrap',
+        'Veggie Chilli Cheese Nachos',
+        'Veggie Chilli Cheese Fries'
+
       ]);
       for (const activity of activities) {
         if (
@@ -375,71 +393,16 @@ export const badgeConfig = createBadgeDefinitions({
       };
     },
   },
-  kalle: {
-    name: 'Kalle',
-    description: 'Herrengedeck nach Kalle Art',
-    bgStart: '#6b6b6b',
-    bgEnd: '#090909',
-    availableForCrew: true,
-    availableForRegular: false,
-    emoji: signOfHorns,
-    compute: (activities) => {
-      for (const activity of activities) {
-        if (
-          activity.type === 'order' &&
-          activity.items.some((i) => i.name === 'Vodka Bull')
-        ) {
-          for (const activity2 of activities) {
-            if (
-              activity2.type === 'order' &&
-              activity2.items.some((i) => i.name === 'Weißbier') &&
-              Math.abs(differenceInMinutes(activity.time, activity2.time)) <= 60
-            ) {
-              return {
-                status: 'awarded',
-                awardedAt: max([activity.time, activity2.time]),
-              };
-            }
-          }
-        }
-      }
-      for (const activity of activities) {
-        if (
-          activity.type === 'order' &&
-          activity.items.some(
-            (i) => i.name === 'Weißbier' || i.name === 'Vodka Bull',
-          ) &&
-          differenceInMinutes(new Date(), activity.time) < 60
-        ) {
-          return {
-            status: 'not awarded',
-            progress: {
-              target: 2,
-              current: 1,
-            },
-          };
-        }
-      }
-
-      return {
-        status: 'not awarded',
-        progress: {
-          target: 2,
-          current: 0,
-        },
-      };
-    },
-  },
   flash: {
     name: 'Flash',
-    description: 'Waldbühne zu Große Bühne in unter 5 Minuten',
+    description: 'Waldbühne zu Große Bühne in unter 3 Minuten',
     bgStart: '#6F62D7',
     bgEnd: '#D201EA',
     availableForCrew: true,
     availableForRegular: false,
     emoji: zap,
     compute: (activities) => {
-      const maxSeconds = 5 * 60;
+      const maxSeconds = 3 * 60;
       const gb = [
         'Hot Dogs',
         'Burger',
@@ -519,44 +482,6 @@ export const badgeConfig = createBadgeDefinitions({
       };
     },
   },
-  rothy: {
-    name: 'Rothy',
-    description: 'Muss man sich den Rothy hier wirklich selbst mischen?',
-    bgStart: '#FF3437',
-    bgEnd: '#FFAE00',
-    availableForCrew: true,
-    availableForRegular: false,
-    emoji: tropicalDrink,
-    compute: (activities) => {
-      for (const activity of activities) {
-        if (activity.type === 'order' && activity.productList === 'Ausschank') {
-          let hasLimo = false;
-          let hasSpezi = false;
-          let hasHelles = false;
-          for (const item of activity.items) {
-            if (item.name === 'Helles') {
-              hasHelles = true;
-            } else if (item.name === 'Spezi') {
-              hasSpezi = true;
-            } else if (item.name === 'Zitronenlimo') {
-              hasLimo = true;
-            }
-
-            if (hasLimo && hasSpezi && hasHelles) {
-              return {
-                status: 'awarded',
-                awardedAt: activity.time,
-              };
-            }
-          }
-        }
-      }
-
-      return {
-        status: 'not awarded',
-      };
-    },
-  },
   hydrationHomie: {
     name: 'Hydration Homie',
     description: 'Expert:innen empfehlen 2,5 Liter Wasser',
@@ -607,35 +532,6 @@ export const badgeConfig = createBadgeDefinitions({
           (activity.type === 'generic' && activity.depositAfter >= target) ||
           (activity.type === 'order' &&
             (activity.cardChange?.depositAfter ?? 0) >= target)
-        ) {
-          return {
-            status: 'awarded',
-            awardedAt: activity.time,
-          };
-        }
-      }
-
-      return {
-        status: 'not awarded',
-      };
-    },
-  },
-  sparfuchs: {
-    name: 'Sparfuchs',
-    description: 'Zwei Radler selbst gemischt und 50 Cent gespart',
-    bgStart: '#FFF9C5',
-    bgEnd: '#FFE9B1',
-    availableForCrew: true,
-    availableForRegular: true,
-    emoji: fox,
-    compute: (activities) => {
-      for (const activity of activities) {
-        if (
-          activity.type === 'order' &&
-          activity.productList === 'Ausschank' &&
-          activity.items.some((i) => i.name === 'Helles') &&
-          activity.items.some((i) => i.name === 'Zitronenlimo') &&
-          activity.items.every((i) => i.name !== 'Radler')
         ) {
           return {
             status: 'awarded',
@@ -709,11 +605,10 @@ export const badgeConfig = createBadgeDefinitions({
     emoji: wineGlass,
     compute: (activities) => {
       const wineList = new Set([
-        'Weinschorle Sauer 0,5l',
+        'Weinschorle Sauer 0,3l',
         'Weißwein 0,2l',
         'Rosewein 0,2l',
         'Rotwein 0,2l',
-        'Lugana',
       ]);
 
       let activity1: CardActivity | undefined;
@@ -876,6 +771,172 @@ export const badgeConfig = createBadgeDefinitions({
         if (
           activity.type === 'order' &&
           activity.items.some((i) => caffeinatedItems.has(i.name))
+        ) {
+          return {
+            status: 'awarded',
+            awardedAt: activity.time,
+          };
+        }
+      }
+
+      return {
+        status: 'not awarded',
+      };
+    },
+  },
+  feierabendbier: {
+    name: 'Feierabendbier',
+    description: 'Dein erstes Bier des Tages nach 22 Uhr',
+    bgStart: '#8C6FD6',
+    bgEnd: '#553986',
+    availableForCrew: true,
+    availableForRegular: true,
+    emoji: beerMug,
+    compute: (activities) => {
+      const seenBeerDays = new Set<string>();
+
+      for (const activity of activities) {
+        if (
+          activity.type !== 'order' ||
+          activity.items.every((i) => !beerList.has(i.name))
+        ) {
+          continue;
+        }
+
+        // Group into event days that start at 06:00, so late-night beers
+        // still count towards the previous day's session.
+        const sessionStart = sub(activity.time, {hours: 6});
+        const dayKey = format(sessionStart, 'yyyy-MM-dd', {
+          in: tz('Europe/Berlin'),
+        });
+        if (seenBeerDays.has(dayKey)) {
+          continue;
+        }
+        seenBeerDays.add(dayKey);
+
+        // 22:00 Europe/Berlin on that session's day.
+        const threshold = set(
+          sessionStart,
+          {hours: 22, minutes: 0, seconds: 0, milliseconds: 0},
+          {in: tz('Europe/Berlin')},
+        );
+
+        if (
+          isEqual(activity.time, threshold) ||
+          isAfter(activity.time, threshold)
+        ) {
+          return {
+            status: 'awarded',
+            awardedAt: activity.time,
+          };
+        }
+      }
+
+      return {
+        status: 'not awarded',
+      };
+    },
+  },
+  konterhalbe: {
+    name: 'Konterhalbe',
+    description: 'Ein Bier am Vormittag – der Kater lässt grüßen',
+    bgStart: '#88C057',
+    bgEnd: '#3E721D',
+    availableForCrew: true,
+    availableForRegular: false,
+    emoji: zombie,
+    compute: (activities) => {
+      for (const activity of activities) {
+        if (
+          activity.type !== 'order' ||
+          activity.items.every((i) => !beerList.has(i.name))
+        ) {
+          continue;
+        }
+
+        // Local Europe/Berlin hour of the order (0–23).
+        const hour = Number(
+          format(activity.time, 'H', {in: tz('Europe/Berlin')}),
+        );
+        if (hour >= 6 && hour < 12) {
+          return {
+            status: 'awarded',
+            awardedAt: activity.time,
+          };
+        }
+      }
+
+      return {
+        status: 'not awarded',
+      };
+    },
+  },
+  zuckerrausch: {
+    name: 'Zuckerrausch',
+    description: 'Drei süße Sachen in einer Stunde',
+    bgStart: '#FFB4EF',
+    bgEnd: '#F4ABBA',
+    availableForCrew: true,
+    availableForRegular: true,
+    emoji: candy,
+    compute: (activities) => {
+      const target = 3;
+
+      // Every purchased sugar unit, in chronological order (expanded by
+      // amount so a single order of 3 counts as 3).
+      const sugarTimes: Date[] = [];
+      for (const activity of activities) {
+        if (activity.type !== 'order') {
+          continue;
+        }
+        for (const item of activity.items) {
+          if (sugarList.has(item.name)) {
+            for (let i = 0; i < item.amount; i++) {
+              sugarTimes.push(activity.time);
+            }
+          }
+        }
+      }
+
+      // Sliding 60-minute window over the sugar units.
+      let start = 0;
+      let maxInWindow = 0;
+      for (let end = 0; end < sugarTimes.length; end++) {
+        while (differenceInMinutes(sugarTimes[end], sugarTimes[start]) > 60) {
+          start++;
+        }
+        const inWindow = end - start + 1;
+        maxInWindow = Math.max(maxInWindow, inWindow);
+        if (inWindow >= target) {
+          return {
+            status: 'awarded',
+            awardedAt: sugarTimes[end],
+          };
+        }
+      }
+
+      return {
+        status: 'not awarded',
+        progress: {
+          target,
+          current: Math.min(maxInWindow, target),
+        },
+      };
+    },
+  },
+  erreichbarBleiben: {
+    name: 'Erreichbar bleiben',
+    description: 'Dein Handy ist geladen',
+    bgStart: '#55ACEE',
+    bgEnd: '#3B88C3',
+    availableForCrew: true,
+    availableForRegular: true,
+    emoji: battery,
+    compute: (activities) => {
+      for (const activity of activities) {
+        if (
+          activity.type === 'order' &&
+          activity.items.some((i) => i.name === 'Handy laden')
         ) {
           return {
             status: 'awarded',

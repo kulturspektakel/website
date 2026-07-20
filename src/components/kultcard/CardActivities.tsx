@@ -234,7 +234,7 @@ function NotForMeButton({cardId, orderId}: {cardId: string; orderId: number}) {
       onClick={async () => {
         if (
           !window.confirm(
-            'Diese Buchung als „nicht für mich“ markieren? Sie zählt dann nicht für Badges und Highscores.',
+            'Diese Buchung als „nicht für mich“ markieren? Sie zählt dann nicht für Badges.',
           )
         ) {
           return;
