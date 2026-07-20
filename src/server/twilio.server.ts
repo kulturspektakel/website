@@ -5,12 +5,14 @@
 //
 // Auth via a Twilio API Key (recommended over the account auth token). The
 // API key pair is the Basic-Auth credential, but the request path still uses
-// the account SID. Requires four env vars:
+// the account SID. Requires three env vars:
 //   TWILIO_ACCOUNT_SID  — account SID (AC…), used in the REST URL path
 //   TWILIO_API_KEY      — API key SID (SK…), Basic-Auth username
 //   TWILIO_API_SECRET   — API key secret, Basic-Auth password
-//   TWILIO_FROM_NUMBER  — a Twilio voice number to call from
-// The destination number(s) are supplied by the caller (see awareness-call).
+// The caller ID is the public AWARENESS_PHONE constant; the destination
+// number(s) are supplied by the caller (see awareness-call).
+
+import {AWARENESS_PHONE} from '../utils/awarenessContact';
 
 const XML_ESCAPES: Record<string, string> = {
   '&': '&amp;',
@@ -29,22 +31,22 @@ const REST_BASE = 'https://api.twilio.com/2010-04-01/Accounts';
 type TwilioCreds = {accountSid: string; authHeader: string; from: string};
 
 // Shared REST credentials. Auth via a Twilio API Key (the key SID/secret are the
-// Basic-Auth pair) while the request path still uses the account SID.
+// Basic-Auth pair) while the request path still uses the account SID. The caller
+// ID is the public AWARENESS_PHONE.
 function twilioCreds(): TwilioCreds {
   const accountSid = process.env.TWILIO_ACCOUNT_SID;
   const apiKey = process.env.TWILIO_API_KEY;
   const apiSecret = process.env.TWILIO_API_SECRET;
-  const from = process.env.TWILIO_FROM_NUMBER;
-  if (!accountSid || !apiKey || !apiSecret || !from) {
+  if (!accountSid || !apiKey || !apiSecret) {
     throw new Error(
-      'TWILIO_ACCOUNT_SID / TWILIO_API_KEY / TWILIO_API_SECRET / TWILIO_FROM_NUMBER not set',
+      'TWILIO_ACCOUNT_SID / TWILIO_API_KEY / TWILIO_API_SECRET not set',
     );
   }
   return {
     accountSid,
     authHeader:
       'Basic ' + Buffer.from(`${apiKey}:${apiSecret}`).toString('base64'),
-    from,
+    from: AWARENESS_PHONE,
   };
 }
 

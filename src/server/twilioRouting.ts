@@ -54,7 +54,7 @@ export function incomingTwiml(conf: string): string {
 
 export function screenTwiml(conf: string, base: string): string {
   const action = `${base}/api/twilio/accept?conf=${encodeURIComponent(conf)}`;
-  return `<Response><Gather numDigits="1" timeout="15" action="${action}"><Say voice="Polly.Vicki" language="de-DE">Anruf von der Website. Drücken Sie die Eins, um anzunehmen.</Say></Gather><Hangup/></Response>`;
+  return `<Response><Gather numDigits="1" timeout="15" action="${action}"><Say voice="Polly.Vicki" language="de-DE">Anruf für das Awareness-Team. Eins drücken um anzunehmen.</Say></Gather><Hangup/></Response>`;
 }
 
 export function acceptTwiml(conf: string): string {
