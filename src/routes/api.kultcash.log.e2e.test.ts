@@ -224,15 +224,19 @@ describe('POST /api/kultcash/log', () => {
       nickname: string | null;
       suspended: boolean;
       privileged: boolean;
-      enrolledAt: Date;
+      enrolledAt: number;
     }>(
-      `select nickname, suspended, privileged, "enrolledAt"
+      // `extract(epoch …)` computes the instant in Postgres; reading the raw
+      // `timestamp`-without-tz column into JS would be re-parsed in the process's
+      // local zone and shift the value on a non-UTC machine.
+      `select nickname, suspended, privileged,
+              extract(epoch from "enrolledAt")::int as "enrolledAt"
        from "CrewCard" where id = $1`,
       [idBuf],
     );
     // enrollment resets ownership/flags ...
     expect(card).toMatchObject({nickname: null, suspended: false, privileged: false});
     // ... and stamps enrolledAt with the device time
-    expect(Math.floor(card.enrolledAt.getTime() / 1000)).toBe(deviceTime);
+    expect(card.enrolledAt).toBe(deviceTime);
   });
 });

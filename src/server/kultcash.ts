@@ -12,10 +12,10 @@ import {
   OrderPayment,
   CardTransactionType,
 } from '../generated/prisma/client';
-import {subMinutes, addDays, isBefore, differenceInDays} from 'date-fns';
-import {tzOffset} from '@date-fns/tz';
+import {addDays, isBefore, differenceInDays} from 'date-fns';
 import crc32 from 'crc-32';
 import {ApiError} from './apiError.server';
+import {deviceLogCreateInput, deviceTimeToDate} from './deviceLog.server';
 import {enqueueGcpTask} from './enqueueGcpTask.server';
 import UnreachableCaseError from '../utils/UnreachableCaseError';
 
@@ -127,20 +127,12 @@ export async function handleLog(request: Request): Promise<Response> {
     throw new ApiError(400, 'Bad Request', new Error('Missing device/clientID'));
   }
 
-  const {
-    deviceTime: dt,
-    deviceTimeIsUtc,
-    deviceId,
-    order,
-    cardTransaction,
-    crewCardEnrollment,
-    ...data
-  } = message;
+  const {deviceId, order, cardTransaction, crewCardEnrollment} = message;
 
-  let deviceTime = new Date(dt * 1000);
-  if (!deviceTimeIsUtc) {
-    deviceTime = subMinutes(deviceTime, tzOffset('Europe/Berlin', deviceTime));
-  }
+  const deviceTime = deviceTimeToDate(
+    message.deviceTime,
+    message.deviceTimeIsUtc,
+  );
 
   // If the device references a product list that no longer exists on the server
   // (e.g. it was deleted), the order's items can't be attributed and the nested
@@ -200,18 +192,12 @@ export async function handleLog(request: Request): Promise<Response> {
   await prismaClient.deviceLog
     .create({
       data: {
-        ...data,
-        deviceTime,
-        device: {
-          connectOrCreate: {
-            create: {
-              id: deviceId,
-              lastSeen: new Date(),
-              type: 'CONTACTLESS_TERMINAL' as const,
-            },
-            where: {id: deviceId},
-          },
-        },
+        ...deviceLogCreateInput(
+          message,
+          deviceId,
+          deviceTime,
+          'CONTACTLESS_TERMINAL',
+        ),
         CardTransaction:
           cardTransaction != null
             ? {

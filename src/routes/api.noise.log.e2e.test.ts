@@ -127,6 +127,75 @@ describe('POST /api/noise/log', () => {
     expect(rows).toEqual([{laeq5m: 58, lceq5m: 61, laeq30m: 56, lceq30m: 59}]);
   });
 
+  test('records a DeviceLog check-in when the upload carries a clientId', async () => {
+    const dlHeaders = deviceHeaders('NM-DL', 'NoiseMonitor/test');
+    const body = () =>
+      LogMessage.encode(
+        LogMessage.create({
+          deviceId: 'NM-DL',
+          clientId: 'NM-DL-client-1',
+          deviceTime: 1_735_689_600,
+          deviceTimeIsUtc: true,
+          batteryVoltage: 4100,
+          usbVoltage: 5000,
+          noiseRecording: {
+            seqNo: 1,
+            bands: new Uint8Array(31),
+            laeq: 60, lceq: 62, lafmax: 70, lcfmax: 68, lcpeak: 80,
+            recordIntervalSeconds: 60,
+          },
+        }),
+      ).finish();
+
+    const first = await fetch(`${baseUrl}/api/noise/log`, {method: 'POST', headers: dlHeaders, body: body()});
+    expect(first.status).toBe(201);
+
+    // Re-uploading collides on the DeviceLog clientId PK; the P2002 is swallowed
+    // so the response stays idempotent and no second row is written.
+    const second = await fetch(`${baseUrl}/api/noise/log`, {method: 'POST', headers: dlHeaders, body: body()});
+    expect(second.status).toBe(201);
+
+    const rows = await query<{
+      clientId: string;
+      batteryVoltage: number | null;
+      usbVoltage: number | null;
+      ts: number;
+    }>(
+      `select "clientId", "batteryVoltage", "usbVoltage",
+              extract(epoch from "deviceTime")::int as ts
+       from "DeviceLog" where "deviceId" = $1`,
+      ['NM-DL'],
+    );
+    expect(rows).toEqual([
+      {clientId: 'NM-DL-client-1', batteryVoltage: 4100, usbVoltage: 5000, ts: 1_735_689_600},
+    ]);
+  });
+
+  test('does not write a DeviceLog when no clientId is sent', async () => {
+    const noClientHeaders = deviceHeaders('NM-NOCLIENT', 'NoiseMonitor/test');
+    const body = LogMessage.encode(
+      LogMessage.create({
+        deviceId: 'NM-NOCLIENT',
+        deviceTime: 1_735_689_600,
+        deviceTimeIsUtc: true,
+        noiseRecording: {
+          seqNo: 1,
+          bands: new Uint8Array(31),
+          laeq: 60, lceq: 62, lafmax: 70, lcfmax: 68, lcpeak: 80,
+          recordIntervalSeconds: 60,
+        },
+      }),
+    ).finish();
+    const res = await fetch(`${baseUrl}/api/noise/log`, {method: 'POST', headers: noClientHeaders, body});
+    expect(res.status).toBe(201);
+
+    const rows = await query<{n: number}>(
+      `select count(*)::int as n from "DeviceLog" where "deviceId" = $1`,
+      ['NM-NOCLIENT'],
+    );
+    expect(rows).toEqual([{n: 0}]);
+  });
+
   test('interprets a non-UTC deviceTime as Europe/Berlin local time', async () => {
     // A separate device so this row can't collide with the UTC write test.
     const tzHeaders = deviceHeaders('NM-TZ', 'NoiseMonitor/test');

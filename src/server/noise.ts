@@ -2,8 +2,8 @@ import {prismaClient} from './prismaClient.server';
 import {LogMessage} from '../proto/logmessage';
 import {ApiError} from './apiError.server';
 import type {DeviceToken} from './apiAuth.server';
-import {subMinutes} from 'date-fns';
-import {tzOffset} from '@date-fns/tz';
+import {deviceLogCreateInput, deviceTimeToDate} from './deviceLog.server';
+import {Prisma} from '../generated/prisma/client';
 
 /**
  * POST /api/noise/log — ingests a protobuf `LogMessage` from a noise monitor.
@@ -59,15 +59,34 @@ export async function handleNoiseLog(
     );
   }
 
-  let measuredAt: number;
-  if (message.deviceTime) {
-    let deviceTime = new Date(message.deviceTime * 1000);
-    if (!message.deviceTimeIsUtc) {
-      deviceTime = subMinutes(deviceTime, tzOffset('Europe/Berlin', deviceTime));
-    }
-    measuredAt = deviceTime.getTime();
-  } else {
-    measuredAt = Date.now();
+  const measuredAt = message.deviceTime
+    ? deviceTimeToDate(message.deviceTime, message.deviceTimeIsUtc)
+    : new Date();
+
+  // The upload carries the same device-telemetry envelope as KultCash. When the
+  // device sends a `clientId` (the log's primary key), record a `DeviceLog` for
+  // this check-in too — battery/USB voltage keyed to the device — reusing the
+  // shared builder. Re-uploads collide on `clientId`; swallow the `P2002` so
+  // they stay idempotent (matching the noise-log `skipDuplicates` below).
+  if (message.clientId) {
+    await prismaClient.deviceLog
+      .create({
+        data: deviceLogCreateInput(
+          message,
+          deviceId,
+          measuredAt,
+          'NOISE_MONITOR',
+        ),
+      })
+      .catch((e) => {
+        if (
+          e instanceof Prisma.PrismaClientKnownRequestError &&
+          e.code === 'P2002'
+        ) {
+          return;
+        }
+        throw e;
+      });
   }
 
   // `createMany` with `skipDuplicates` keeps re-uploads idempotent (they return
@@ -77,7 +96,7 @@ export async function handleNoiseLog(
     data: [
       {
         deviceId,
-        measuredAt: new Date(measuredAt),
+        measuredAt,
         bands: Uint8Array.from(recording.bands),
         laeq: recording.laeq,
         lceq: recording.lceq,
