@@ -21,8 +21,9 @@ import {toaster} from '../chakra-snippets/toaster';
 import {locale} from '../../utils/dateUtils';
 import {CalibrationPanel} from './CalibrationPanel';
 import {WifiDialog} from './WifiDialog';
-import {useLautstaerkeCtx} from './context';
+import {decodeDb, isFresh, useLautstaerkeCtx} from './context';
 import {useDeviceView} from './deviceView';
+import {BAND_FREQUENCIES} from './bluetooth';
 
 // yyyy-mm-dd → "Mo., 01.06.2026" (noon avoids any TZ date shift).
 const dayLabelFmt = new Intl.DateTimeFormat(locale, {
@@ -69,7 +70,8 @@ export function DeviceMenu({
   // 'live' on the live view, or the yyyy-mm-dd on a historical view.
   dayValue: string;
 }) {
-  const {bluetooth} = useLautstaerkeCtx();
+  const ctx = useLautstaerkeCtx();
+  const {bluetooth} = ctx;
   const {weighting, toggleWeighting, peaks, togglePeaks} = useDeviceView();
   const navigate = useNavigate();
   const router = useRouter();
@@ -97,6 +99,31 @@ export function DeviceMenu({
       void navigate({
         to: '/crew/lautstaerke/$device/$date',
         params: {device, date: value},
+      });
+    }
+  };
+
+  // Copy the live per-band spectrum as TSV (Hz<tab>dB, one band per line) so it
+  // pastes straight into a spreadsheet. Live-only: reads the current record off
+  // the shared context, aligned with the fixed 1/3-octave band centers.
+  const copyBands = async () => {
+    const deviceState = ctx.devices[device];
+    if (!deviceState || !isFresh(deviceState.lastSeen, Date.now())) {
+      toaster.create({type: 'error', title: 'Gerät ist nicht live'});
+      return;
+    }
+    const tsv = Array.from(
+      deviceState.latest.bands,
+      (b, i) => `${BAND_FREQUENCIES[i]}\t${decodeDb(b).toFixed(1)}`,
+    ).join('\n');
+    try {
+      await navigator.clipboard.writeText(tsv);
+      toaster.create({type: 'success', title: 'Frequenzbänder kopiert'});
+    } catch (e) {
+      toaster.create({
+        type: 'error',
+        title: 'Kopieren fehlgeschlagen',
+        description: e instanceof Error ? e.message : String(e),
       });
     }
   };
@@ -182,14 +209,24 @@ export function DeviceMenu({
           {/* Peak-hold overlay on the live frequency chart. Only the live view
               has that chart, so the toggle is hidden on historical days. */}
           {dayValue === 'live' && (
-            <MenuCheckboxItem
-              value="peaks"
-              checked={peaks}
-              onCheckedChange={togglePeaks}
-              closeOnSelect={false}
-            >
-              Peaks anzeigen
-            </MenuCheckboxItem>
+            <>
+              <MenuCheckboxItem
+                value="peaks"
+                checked={peaks}
+                onCheckedChange={togglePeaks}
+                closeOnSelect={false}
+              >
+                Peaks anzeigen
+              </MenuCheckboxItem>
+              <MenuItem
+                value="copy-bands"
+                onClick={() => {
+                  void copyBands();
+                }}
+              >
+                Frequenzbänder kopieren
+              </MenuItem>
+            </>
           )}
 
           <MenuSeparator />
