@@ -30,6 +30,14 @@ const loader = createServerFn()
   .handler(async ({data}) => {
     const productWhere = productWhereForFilter(data.filter);
 
+    const additives = await prismaClient.productAdditives.findMany({
+      orderBy: {id: 'asc'},
+      select: {
+        id: true,
+        displayName: true,
+      },
+    });
+
     const lists = await prismaClient.productList.findMany({
       where: {
         active: true,
@@ -62,7 +70,7 @@ const loader = createServerFn()
       },
     });
 
-    return lists;
+    return {lists, additives};
   });
 
 export const Route = createFileRoute('/_main/speisekarte')({
@@ -83,7 +91,7 @@ export const Route = createFileRoute('/_main/speisekarte')({
 });
 
 export default function Speisekarte() {
-  const data = Route.useLoaderData();
+  const {lists, additives} = Route.useLoaderData();
   const {filter} = Route.useSearch();
 
   return (
@@ -105,7 +113,7 @@ export default function Speisekarte() {
         columnCount={[1, 2]}
         listStyleType="none"
       >
-        {data.map((productList) => (
+        {lists.map((productList) => (
           <ListItem key={productList.name} breakInside="avoid-column" pb="10">
             <Heading size="md" textAlign="center" mb="2">
               {productList.emoji} {productList.name}
@@ -114,6 +122,27 @@ export default function Speisekarte() {
           </ListItem>
         ))}
       </ListRoot>
+      {additives.length > 0 && (
+        <>
+          <Heading size="md" mt="10" mb="2">
+            Zusatzstoffe & Allergene
+          </Heading>
+          <ListRoot
+            display="block"
+            columnGap="10"
+            m="0"
+            columnCount={[1, 2]}
+            listStyleType="none"
+            fontSize="sm"
+          >
+            {additives.map((additive) => (
+              <ListItem key={additive.id} breakInside="avoid-column">
+                {additive.id}) {additive.displayName}
+              </ListItem>
+            ))}
+          </ListRoot>
+        </>
+      )}
     </>
   );
 }
