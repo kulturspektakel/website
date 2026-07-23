@@ -24,7 +24,7 @@ const TooltipContent: FC<{
     <Box marginInlineStart={0}>
       {additives.map((additive) => (
         <Text key={additive.id} fontWeight={'normal'}>
-          {additive.displayName}
+          {additive.id}) {additive.displayName}
         </Text>
       ))}
     </Box>
