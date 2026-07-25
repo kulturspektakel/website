@@ -152,11 +152,6 @@ export type NonceRequest = Prisma.NonceRequestModel
  */
 export type GmailReminders = Prisma.GmailRemindersModel
 /**
- * Model DevicePrivilegeToken
- * 
- */
-export type DevicePrivilegeToken = Prisma.DevicePrivilegeTokenModel
-/**
  * Model DeviceConfigVersion
  * 
  */

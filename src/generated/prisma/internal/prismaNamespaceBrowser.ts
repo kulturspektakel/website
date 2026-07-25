@@ -73,7 +73,6 @@ export const ModelName = {
   Nonce: 'Nonce',
   NonceRequest: 'NonceRequest',
   GmailReminders: 'GmailReminders',
-  DevicePrivilegeToken: 'DevicePrivilegeToken',
   DeviceConfigVersion: 'DeviceConfigVersion',
   News: 'News',
   TwoFactor: 'TwoFactor',
@@ -404,14 +403,6 @@ export const GmailRemindersScalarFieldEnum = {
 } as const
 
 export type GmailRemindersScalarFieldEnum = (typeof GmailRemindersScalarFieldEnum)[keyof typeof GmailRemindersScalarFieldEnum]
-
-
-export const DevicePrivilegeTokenScalarFieldEnum = {
-  id: 'id',
-  label: 'label'
-} as const
-
-export type DevicePrivilegeTokenScalarFieldEnum = (typeof DevicePrivilegeTokenScalarFieldEnum)[keyof typeof DevicePrivilegeTokenScalarFieldEnum]
 
 
 export const DeviceConfigVersionScalarFieldEnum = {
@@ -775,13 +766,6 @@ export const GmailRemindersOrderByRelevanceFieldEnum = {
 } as const
 
 export type GmailRemindersOrderByRelevanceFieldEnum = (typeof GmailRemindersOrderByRelevanceFieldEnum)[keyof typeof GmailRemindersOrderByRelevanceFieldEnum]
-
-
-export const DevicePrivilegeTokenOrderByRelevanceFieldEnum = {
-  label: 'label'
-} as const
-
-export type DevicePrivilegeTokenOrderByRelevanceFieldEnum = (typeof DevicePrivilegeTokenOrderByRelevanceFieldEnum)[keyof typeof DevicePrivilegeTokenOrderByRelevanceFieldEnum]
 
 
 export const NewsOrderByRelevanceFieldEnum = {

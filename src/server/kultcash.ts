@@ -56,30 +56,24 @@ function getDeviceConfig(
  * Supports `If-None-Match` for caching via the config CRC32.
  */
 export async function handleLists(request: Request): Promise<Response> {
-  const [lists, privilegedCrewCards, privilegeTokens, suspendedCrewCards] =
-    await Promise.all([
-      prismaClient.productList.findMany({
-        where: {active: true},
-        include: productListQuery,
-        orderBy: {name: 'asc'},
-      }),
-      prismaClient.crewCard.findMany({
-        where: {privileged: true, suspended: {not: true}},
-        select: {id: true},
-      }),
-      prismaClient.devicePrivilegeToken.findMany({
-        select: {id: true},
-      }),
-      prismaClient.crewCard.findMany({
-        where: {suspended: true},
-      }),
-    ]);
+  const [lists, privilegedCrewCards, suspendedCrewCards] = await Promise.all([
+    prismaClient.productList.findMany({
+      where: {active: true},
+      include: productListQuery,
+      orderBy: {name: 'asc'},
+    }),
+    prismaClient.crewCard.findMany({
+      where: {privileged: true, suspended: {not: true}},
+      select: {id: true},
+    }),
+    prismaClient.crewCard.findMany({
+      where: {suspended: true},
+    }),
+  ]);
 
   const allLists: AllLists = {
     productList: lists.map(getDeviceConfig),
-    privilegeTokens: privilegeTokens
-      .concat(privilegedCrewCards)
-      .map(({id}) => new Uint8Array(id)),
+    privilegeTokens: privilegedCrewCards.map(({id}) => new Uint8Array(id)),
     suspendedCrewCards: suspendedCrewCards.map(({id}) => new Uint8Array(id)),
     versionNumber: 0,
     timestamp: 0,

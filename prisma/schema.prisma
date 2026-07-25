@@ -309,11 +309,6 @@ model GmailReminders {
   account   String
 }
 
-model DevicePrivilegeToken {
-  id    Bytes   @id
-  label String?
-}
-
 model DeviceConfigVersion {
   crc32     Int      @unique
   version   Int      @id @default(autoincrement())

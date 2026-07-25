@@ -80,12 +80,12 @@ export type PrismaVersion = {
 }
 
 /**
- * Prisma Client JS version: 7.6.0
- * Query Engine version: 75cbdc1eb7150937890ad5465d861175c6624711
+ * Prisma Client JS version: 7.8.0
+ * Query Engine version: 3c6e192761c0362d496ed980de936e2f3cebcd3a
  */
 export const prismaVersion: PrismaVersion = {
-  client: "7.6.0",
-  engine: "75cbdc1eb7150937890ad5465d861175c6624711"
+  client: "7.8.0",
+  engine: "3c6e192761c0362d496ed980de936e2f3cebcd3a"
 }
 
 /**
@@ -406,7 +406,6 @@ export const ModelName = {
   Nonce: 'Nonce',
   NonceRequest: 'NonceRequest',
   GmailReminders: 'GmailReminders',
-  DevicePrivilegeToken: 'DevicePrivilegeToken',
   DeviceConfigVersion: 'DeviceConfigVersion',
   News: 'News',
   TwoFactor: 'TwoFactor',
@@ -431,7 +430,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "viewer" | "area" | "areaOpeningHour" | "page" | "productList" | "product" | "productAdditives" | "device" | "order" | "orderItem" | "cardTransaction" | "crewCard" | "deviceLog" | "bandApplication" | "bandApplicationTag" | "bandApplicationRating" | "bandApplicationComment" | "event" | "bandPlaying" | "nonce" | "nonceRequest" | "gmailReminders" | "devicePrivilegeToken" | "deviceConfigVersion" | "news" | "twoFactor" | "itemLocation" | "viewerLocation" | "shortDomainRedirect" | "donation" | "deviceLocation" | "noiseLog"
+    modelProps: "viewer" | "area" | "areaOpeningHour" | "page" | "productList" | "product" | "productAdditives" | "device" | "order" | "orderItem" | "cardTransaction" | "crewCard" | "deviceLog" | "bandApplication" | "bandApplicationTag" | "bandApplicationRating" | "bandApplicationComment" | "event" | "bandPlaying" | "nonce" | "nonceRequest" | "gmailReminders" | "deviceConfigVersion" | "news" | "twoFactor" | "itemLocation" | "viewerLocation" | "shortDomainRedirect" | "donation" | "deviceLocation" | "noiseLog"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2063,80 +2062,6 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
-    DevicePrivilegeToken: {
-      payload: Prisma.$DevicePrivilegeTokenPayload<ExtArgs>
-      fields: Prisma.DevicePrivilegeTokenFieldRefs
-      operations: {
-        findUnique: {
-          args: Prisma.DevicePrivilegeTokenFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$DevicePrivilegeTokenPayload> | null
-        }
-        findUniqueOrThrow: {
-          args: Prisma.DevicePrivilegeTokenFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$DevicePrivilegeTokenPayload>
-        }
-        findFirst: {
-          args: Prisma.DevicePrivilegeTokenFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$DevicePrivilegeTokenPayload> | null
-        }
-        findFirstOrThrow: {
-          args: Prisma.DevicePrivilegeTokenFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$DevicePrivilegeTokenPayload>
-        }
-        findMany: {
-          args: Prisma.DevicePrivilegeTokenFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$DevicePrivilegeTokenPayload>[]
-        }
-        create: {
-          args: Prisma.DevicePrivilegeTokenCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$DevicePrivilegeTokenPayload>
-        }
-        createMany: {
-          args: Prisma.DevicePrivilegeTokenCreateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        createManyAndReturn: {
-          args: Prisma.DevicePrivilegeTokenCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$DevicePrivilegeTokenPayload>[]
-        }
-        delete: {
-          args: Prisma.DevicePrivilegeTokenDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$DevicePrivilegeTokenPayload>
-        }
-        update: {
-          args: Prisma.DevicePrivilegeTokenUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$DevicePrivilegeTokenPayload>
-        }
-        deleteMany: {
-          args: Prisma.DevicePrivilegeTokenDeleteManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateMany: {
-          args: Prisma.DevicePrivilegeTokenUpdateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateManyAndReturn: {
-          args: Prisma.DevicePrivilegeTokenUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$DevicePrivilegeTokenPayload>[]
-        }
-        upsert: {
-          args: Prisma.DevicePrivilegeTokenUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$DevicePrivilegeTokenPayload>
-        }
-        aggregate: {
-          args: Prisma.DevicePrivilegeTokenAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateDevicePrivilegeToken>
-        }
-        groupBy: {
-          args: Prisma.DevicePrivilegeTokenGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.DevicePrivilegeTokenGroupByOutputType>[]
-        }
-        count: {
-          args: Prisma.DevicePrivilegeTokenCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.DevicePrivilegeTokenCountAggregateOutputType> | number
-        }
-      }
-    }
     DeviceConfigVersion: {
       payload: Prisma.$DeviceConfigVersionPayload<ExtArgs>
       fields: Prisma.DeviceConfigVersionFieldRefs
@@ -3147,14 +3072,6 @@ export const GmailRemindersScalarFieldEnum = {
 export type GmailRemindersScalarFieldEnum = (typeof GmailRemindersScalarFieldEnum)[keyof typeof GmailRemindersScalarFieldEnum]
 
 
-export const DevicePrivilegeTokenScalarFieldEnum = {
-  id: 'id',
-  label: 'label'
-} as const
-
-export type DevicePrivilegeTokenScalarFieldEnum = (typeof DevicePrivilegeTokenScalarFieldEnum)[keyof typeof DevicePrivilegeTokenScalarFieldEnum]
-
-
 export const DeviceConfigVersionScalarFieldEnum = {
   crc32: 'crc32',
   version: 'version',
@@ -3516,13 +3433,6 @@ export const GmailRemindersOrderByRelevanceFieldEnum = {
 } as const
 
 export type GmailRemindersOrderByRelevanceFieldEnum = (typeof GmailRemindersOrderByRelevanceFieldEnum)[keyof typeof GmailRemindersOrderByRelevanceFieldEnum]
-
-
-export const DevicePrivilegeTokenOrderByRelevanceFieldEnum = {
-  label: 'label'
-} as const
-
-export type DevicePrivilegeTokenOrderByRelevanceFieldEnum = (typeof DevicePrivilegeTokenOrderByRelevanceFieldEnum)[keyof typeof DevicePrivilegeTokenOrderByRelevanceFieldEnum]
 
 
 export const NewsOrderByRelevanceFieldEnum = {
@@ -3970,6 +3880,21 @@ export type PrismaClientOptions = ({
    * ```
    */
   comments?: runtime.SqlCommenterPlugin[]
+  /**
+   * Optional maximum size for the query plan cache. If not provided, a default size will be used.
+   * A value of `0` can be used to disable the cache entirely. A higher cache size can improve
+   * performance for applications that execute a large number of unique queries, while a smaller
+   * cache size can reduce memory usage.
+   * 
+   * @example
+   * ```
+   * const prisma = new PrismaClient({
+   *   adapter,
+   *   queryPlanCacheMaxSize: 100,
+   * })
+   * ```
+   */
+  queryPlanCacheMaxSize?: number
 }
 export type GlobalOmitConfig = {
   viewer?: Prisma.ViewerOmit
@@ -3994,7 +3919,6 @@ export type GlobalOmitConfig = {
   nonce?: Prisma.NonceOmit
   nonceRequest?: Prisma.NonceRequestOmit
   gmailReminders?: Prisma.GmailRemindersOmit
-  devicePrivilegeToken?: Prisma.DevicePrivilegeTokenOmit
   deviceConfigVersion?: Prisma.DeviceConfigVersionOmit
   news?: Prisma.NewsOmit
   twoFactor?: Prisma.TwoFactorOmit
