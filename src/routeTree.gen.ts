@@ -59,6 +59,7 @@ import { Route as ApiTasksGmailWatchRefreshRouteImport } from './routes/api.task
 import { Route as ApiTasksGmailReminderRouteImport } from './routes/api.tasks.gmail-reminder'
 import { Route as ApiTasksGmailNotificationRouteImport } from './routes/api.tasks.gmail-notification'
 import { Route as ApiTasksFacebookLikesRouteImport } from './routes/api.tasks.facebook-likes'
+import { Route as ApiTasksCrewCardPrivilegesRouteImport } from './routes/api.tasks.crew-card-privileges'
 import { Route as ApiTasksCrewCardEnrolledRouteImport } from './routes/api.tasks.crew-card-enrolled'
 import { Route as ApiTasksCreateNonceRequestRouteImport } from './routes/api.tasks.create-nonce-request'
 import { Route as ApiTasksCreateMembershipApplicationRouteImport } from './routes/api.tasks.create-membership-application'
@@ -354,6 +355,12 @@ const ApiTasksFacebookLikesRoute = ApiTasksFacebookLikesRouteImport.update({
   path: '/facebook-likes',
   getParentRoute: () => ApiTasksRoute,
 } as any)
+const ApiTasksCrewCardPrivilegesRoute =
+  ApiTasksCrewCardPrivilegesRouteImport.update({
+    id: '/crew-card-privileges',
+    path: '/crew-card-privileges',
+    getParentRoute: () => ApiTasksRoute,
+  } as any)
 const ApiTasksCrewCardEnrolledRoute =
   ApiTasksCrewCardEnrolledRouteImport.update({
     id: '/crew-card-enrolled',
@@ -620,6 +627,7 @@ export interface FileRoutesByFullPath {
   '/api/tasks/create-membership-application': typeof ApiTasksCreateMembershipApplicationRoute
   '/api/tasks/create-nonce-request': typeof ApiTasksCreateNonceRequestRoute
   '/api/tasks/crew-card-enrolled': typeof ApiTasksCrewCardEnrolledRoute
+  '/api/tasks/crew-card-privileges': typeof ApiTasksCrewCardPrivilegesRoute
   '/api/tasks/facebook-likes': typeof ApiTasksFacebookLikesRoute
   '/api/tasks/gmail-notification': typeof ApiTasksGmailNotificationRoute
   '/api/tasks/gmail-reminder': typeof ApiTasksGmailReminderRoute
@@ -706,6 +714,7 @@ export interface FileRoutesByTo {
   '/api/tasks/create-membership-application': typeof ApiTasksCreateMembershipApplicationRoute
   '/api/tasks/create-nonce-request': typeof ApiTasksCreateNonceRequestRoute
   '/api/tasks/crew-card-enrolled': typeof ApiTasksCrewCardEnrolledRoute
+  '/api/tasks/crew-card-privileges': typeof ApiTasksCrewCardPrivilegesRoute
   '/api/tasks/facebook-likes': typeof ApiTasksFacebookLikesRoute
   '/api/tasks/gmail-notification': typeof ApiTasksGmailNotificationRoute
   '/api/tasks/gmail-reminder': typeof ApiTasksGmailReminderRoute
@@ -797,6 +806,7 @@ export interface FileRoutesById {
   '/api/tasks/create-membership-application': typeof ApiTasksCreateMembershipApplicationRoute
   '/api/tasks/create-nonce-request': typeof ApiTasksCreateNonceRequestRoute
   '/api/tasks/crew-card-enrolled': typeof ApiTasksCrewCardEnrolledRoute
+  '/api/tasks/crew-card-privileges': typeof ApiTasksCrewCardPrivilegesRoute
   '/api/tasks/facebook-likes': typeof ApiTasksFacebookLikesRoute
   '/api/tasks/gmail-notification': typeof ApiTasksGmailNotificationRoute
   '/api/tasks/gmail-reminder': typeof ApiTasksGmailReminderRoute
@@ -889,6 +899,7 @@ export interface FileRouteTypes {
     | '/api/tasks/create-membership-application'
     | '/api/tasks/create-nonce-request'
     | '/api/tasks/crew-card-enrolled'
+    | '/api/tasks/crew-card-privileges'
     | '/api/tasks/facebook-likes'
     | '/api/tasks/gmail-notification'
     | '/api/tasks/gmail-reminder'
@@ -975,6 +986,7 @@ export interface FileRouteTypes {
     | '/api/tasks/create-membership-application'
     | '/api/tasks/create-nonce-request'
     | '/api/tasks/crew-card-enrolled'
+    | '/api/tasks/crew-card-privileges'
     | '/api/tasks/facebook-likes'
     | '/api/tasks/gmail-notification'
     | '/api/tasks/gmail-reminder'
@@ -1065,6 +1077,7 @@ export interface FileRouteTypes {
     | '/api/tasks/create-membership-application'
     | '/api/tasks/create-nonce-request'
     | '/api/tasks/crew-card-enrolled'
+    | '/api/tasks/crew-card-privileges'
     | '/api/tasks/facebook-likes'
     | '/api/tasks/gmail-notification'
     | '/api/tasks/gmail-reminder'
@@ -1474,6 +1487,13 @@ declare module '@tanstack/react-router' {
       path: '/facebook-likes'
       fullPath: '/api/tasks/facebook-likes'
       preLoaderRoute: typeof ApiTasksFacebookLikesRouteImport
+      parentRoute: typeof ApiTasksRoute
+    }
+    '/api/tasks/crew-card-privileges': {
+      id: '/api/tasks/crew-card-privileges'
+      path: '/crew-card-privileges'
+      fullPath: '/api/tasks/crew-card-privileges'
+      preLoaderRoute: typeof ApiTasksCrewCardPrivilegesRouteImport
       parentRoute: typeof ApiTasksRoute
     }
     '/api/tasks/crew-card-enrolled': {
@@ -1974,6 +1994,7 @@ interface ApiTasksRouteChildren {
   ApiTasksCreateMembershipApplicationRoute: typeof ApiTasksCreateMembershipApplicationRoute
   ApiTasksCreateNonceRequestRoute: typeof ApiTasksCreateNonceRequestRoute
   ApiTasksCrewCardEnrolledRoute: typeof ApiTasksCrewCardEnrolledRoute
+  ApiTasksCrewCardPrivilegesRoute: typeof ApiTasksCrewCardPrivilegesRoute
   ApiTasksFacebookLikesRoute: typeof ApiTasksFacebookLikesRoute
   ApiTasksGmailNotificationRoute: typeof ApiTasksGmailNotificationRoute
   ApiTasksGmailReminderRoute: typeof ApiTasksGmailReminderRoute
@@ -1999,6 +2020,7 @@ const ApiTasksRouteChildren: ApiTasksRouteChildren = {
     ApiTasksCreateMembershipApplicationRoute,
   ApiTasksCreateNonceRequestRoute: ApiTasksCreateNonceRequestRoute,
   ApiTasksCrewCardEnrolledRoute: ApiTasksCrewCardEnrolledRoute,
+  ApiTasksCrewCardPrivilegesRoute: ApiTasksCrewCardPrivilegesRoute,
   ApiTasksFacebookLikesRoute: ApiTasksFacebookLikesRoute,
   ApiTasksGmailNotificationRoute: ApiTasksGmailNotificationRoute,
   ApiTasksGmailReminderRoute: ApiTasksGmailReminderRoute,

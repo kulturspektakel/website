@@ -2,6 +2,7 @@
  * Slack Web API helpers. `slackApiRequest` is the low-level wrapper; the
  * `sendMessage`/`fetchUser`/`unfurl` helpers cover the common calls.
  */
+import {ApiError} from './apiError.server';
 import {SlackChannel} from '../utils/slackChannels';
 
 export type SlackApiUser = {
@@ -66,6 +67,50 @@ export async function fetchUser(
     return;
   }
   return res.user;
+}
+
+/**
+ * All member ids of a channel, following `conversations.members` cursor
+ * pagination (Slack caps a page at 1000; we ask for 200). Bot users are
+ * included, as Slack returns them.
+ *
+ * Requires `channels:read` for public channels, `groups:read` plus bot
+ * membership for private ones.
+ */
+export async function conversationMembers(channel: string): Promise<string[]> {
+  const members: string[] = [];
+  let cursor: string | undefined;
+  // Belt-and-braces bound on the cursor loop: 20 pages × 200 is far more
+  // members than any of our channels has, so a cursor that never terminates
+  // can't spin the function until it times out.
+  for (let page = 0; page < 20; page++) {
+    const res = await slackApiRequest<{
+      members: string[];
+      response_metadata?: {next_cursor?: string};
+    }>(
+      `conversations.members?channel=${channel}&limit=200${
+        cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''
+      }`,
+    );
+    if (!res.ok) {
+      throw new ApiError(
+        502,
+        `Slack conversations.members failed: ${res.error}`,
+      );
+    }
+    members.push(...res.members);
+    cursor = res.response_metadata?.next_cursor || undefined;
+    if (!cursor) {
+      return members;
+    }
+  }
+  // Only reachable if the cap was hit with a cursor still pending, i.e. the
+  // list is genuinely truncated — say so rather than silently returning a
+  // partial membership.
+  console.warn(
+    `[conversationMembers] ${channel}: stopped after 20 pages, list truncated at ${members.length}`,
+  );
+  return members;
 }
 
 export async function unfurl(body: {

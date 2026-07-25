@@ -192,6 +192,27 @@ resource "google_cloud_scheduler_job" "nuclino_update_message" {
   depends_on = [google_project_service.apis]
 }
 
+# Grants the Bonbude privilege to the crew cards of everyone in #bonbude.
+# Grant-only, and a no-op once everyone is granted, so polling is cheap.
+resource "google_cloud_scheduler_job" "crew_card_privileges" {
+  name        = "crew-card-privileges"
+  description = "Grant Bonbude privilege to crew cards of #bonbude members."
+  schedule    = "*/10 * * * *"
+  time_zone   = "UTC"
+  region      = local.region
+
+  http_target {
+    uri         = "${local.site_url}/api/tasks/crew-card-privileges"
+    http_method = "POST"
+    oidc_token {
+      service_account_email = google_service_account.tasks.email
+      audience              = "crew-card-privileges"
+    }
+  }
+
+  depends_on = [google_project_service.apis]
+}
+
 # ---- Google API keys -------------------------------------------------------
 
 # Server-side Maps key, shared with the legacy `~/api.kulturspektakel.de`
