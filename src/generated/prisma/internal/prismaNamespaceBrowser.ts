@@ -80,8 +80,12 @@ export const ModelName = {
   ViewerLocation: 'ViewerLocation',
   ShortDomainRedirect: 'ShortDomainRedirect',
   Donation: 'Donation',
+  NoiseProject: 'NoiseProject',
+  NoiseLocation: 'NoiseLocation',
+  NoiseLocationAssignment: 'NoiseLocationAssignment',
   DeviceLocation: 'DeviceLocation',
-  NoiseLog: 'NoiseLog'
+  NoiseLog: 'NoiseLog',
+  NoiseLogTag: 'NoiseLogTag'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -483,6 +487,38 @@ export const DonationScalarFieldEnum = {
 export type DonationScalarFieldEnum = (typeof DonationScalarFieldEnum)[keyof typeof DonationScalarFieldEnum]
 
 
+export const NoiseProjectScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  start: 'start',
+  end: 'end'
+} as const
+
+export type NoiseProjectScalarFieldEnum = (typeof NoiseProjectScalarFieldEnum)[keyof typeof NoiseProjectScalarFieldEnum]
+
+
+export const NoiseLocationScalarFieldEnum = {
+  id: 'id',
+  projectId: 'projectId',
+  latitude: 'latitude',
+  longitude: 'longitude',
+  locationName: 'locationName'
+} as const
+
+export type NoiseLocationScalarFieldEnum = (typeof NoiseLocationScalarFieldEnum)[keyof typeof NoiseLocationScalarFieldEnum]
+
+
+export const NoiseLocationAssignmentScalarFieldEnum = {
+  id: 'id',
+  locationId: 'locationId',
+  deviceId: 'deviceId',
+  start: 'start',
+  end: 'end'
+} as const
+
+export type NoiseLocationAssignmentScalarFieldEnum = (typeof NoiseLocationAssignmentScalarFieldEnum)[keyof typeof NoiseLocationAssignmentScalarFieldEnum]
+
+
 export const DeviceLocationScalarFieldEnum = {
   id: 'id',
   deviceId: 'deviceId',
@@ -512,6 +548,19 @@ export const NoiseLogScalarFieldEnum = {
 } as const
 
 export type NoiseLogScalarFieldEnum = (typeof NoiseLogScalarFieldEnum)[keyof typeof NoiseLogScalarFieldEnum]
+
+
+export const NoiseLogTagScalarFieldEnum = {
+  id: 'id',
+  deviceId: 'deviceId',
+  tag: 'tag',
+  start: 'start',
+  end: 'end',
+  createdAt: 'createdAt',
+  createdByViewerId: 'createdByViewerId'
+} as const
+
+export type NoiseLogTagScalarFieldEnum = (typeof NoiseLogTagScalarFieldEnum)[keyof typeof NoiseLogTagScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -825,6 +874,32 @@ export const DonationOrderByRelevanceFieldEnum = {
 export type DonationOrderByRelevanceFieldEnum = (typeof DonationOrderByRelevanceFieldEnum)[keyof typeof DonationOrderByRelevanceFieldEnum]
 
 
+export const NoiseProjectOrderByRelevanceFieldEnum = {
+  id: 'id',
+  name: 'name'
+} as const
+
+export type NoiseProjectOrderByRelevanceFieldEnum = (typeof NoiseProjectOrderByRelevanceFieldEnum)[keyof typeof NoiseProjectOrderByRelevanceFieldEnum]
+
+
+export const NoiseLocationOrderByRelevanceFieldEnum = {
+  id: 'id',
+  projectId: 'projectId',
+  locationName: 'locationName'
+} as const
+
+export type NoiseLocationOrderByRelevanceFieldEnum = (typeof NoiseLocationOrderByRelevanceFieldEnum)[keyof typeof NoiseLocationOrderByRelevanceFieldEnum]
+
+
+export const NoiseLocationAssignmentOrderByRelevanceFieldEnum = {
+  id: 'id',
+  locationId: 'locationId',
+  deviceId: 'deviceId'
+} as const
+
+export type NoiseLocationAssignmentOrderByRelevanceFieldEnum = (typeof NoiseLocationAssignmentOrderByRelevanceFieldEnum)[keyof typeof NoiseLocationAssignmentOrderByRelevanceFieldEnum]
+
+
 export const DeviceLocationOrderByRelevanceFieldEnum = {
   id: 'id',
   deviceId: 'deviceId',
@@ -840,4 +915,13 @@ export const NoiseLogOrderByRelevanceFieldEnum = {
 } as const
 
 export type NoiseLogOrderByRelevanceFieldEnum = (typeof NoiseLogOrderByRelevanceFieldEnum)[keyof typeof NoiseLogOrderByRelevanceFieldEnum]
+
+
+export const NoiseLogTagOrderByRelevanceFieldEnum = {
+  id: 'id',
+  deviceId: 'deviceId',
+  createdByViewerId: 'createdByViewerId'
+} as const
+
+export type NoiseLogTagOrderByRelevanceFieldEnum = (typeof NoiseLogTagOrderByRelevanceFieldEnum)[keyof typeof NoiseLogTagOrderByRelevanceFieldEnum]
 

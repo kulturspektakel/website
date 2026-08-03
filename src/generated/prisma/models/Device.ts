@@ -221,6 +221,8 @@ export type DeviceWhereInput = {
   DeviceLog?: Prisma.DeviceLogListRelationFilter
   Order?: Prisma.OrderListRelationFilter
   noiseLogs?: Prisma.NoiseLogListRelationFilter
+  NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentListRelationFilter
+  NoiseLogTag?: Prisma.NoiseLogTagListRelationFilter
 }
 
 export type DeviceOrderByWithRelationInput = {
@@ -234,6 +236,8 @@ export type DeviceOrderByWithRelationInput = {
   DeviceLog?: Prisma.DeviceLogOrderByRelationAggregateInput
   Order?: Prisma.OrderOrderByRelationAggregateInput
   noiseLogs?: Prisma.NoiseLogOrderByRelationAggregateInput
+  NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentOrderByRelationAggregateInput
+  NoiseLogTag?: Prisma.NoiseLogTagOrderByRelationAggregateInput
   _relevance?: Prisma.DeviceOrderByRelevanceInput
 }
 
@@ -251,6 +255,8 @@ export type DeviceWhereUniqueInput = Prisma.AtLeast<{
   DeviceLog?: Prisma.DeviceLogListRelationFilter
   Order?: Prisma.OrderListRelationFilter
   noiseLogs?: Prisma.NoiseLogListRelationFilter
+  NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentListRelationFilter
+  NoiseLogTag?: Prisma.NoiseLogTagListRelationFilter
 }, "id">
 
 export type DeviceOrderByWithAggregationInput = {
@@ -287,6 +293,8 @@ export type DeviceCreateInput = {
   DeviceLog?: Prisma.DeviceLogCreateNestedManyWithoutDeviceInput
   Order?: Prisma.OrderCreateNestedManyWithoutDeviceInput
   noiseLogs?: Prisma.NoiseLogCreateNestedManyWithoutDeviceInput
+  NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentCreateNestedManyWithoutDeviceInput
+  NoiseLogTag?: Prisma.NoiseLogTagCreateNestedManyWithoutDeviceInput
 }
 
 export type DeviceUncheckedCreateInput = {
@@ -299,6 +307,8 @@ export type DeviceUncheckedCreateInput = {
   DeviceLog?: Prisma.DeviceLogUncheckedCreateNestedManyWithoutDeviceInput
   Order?: Prisma.OrderUncheckedCreateNestedManyWithoutDeviceInput
   noiseLogs?: Prisma.NoiseLogUncheckedCreateNestedManyWithoutDeviceInput
+  NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentUncheckedCreateNestedManyWithoutDeviceInput
+  NoiseLogTag?: Prisma.NoiseLogTagUncheckedCreateNestedManyWithoutDeviceInput
 }
 
 export type DeviceUpdateInput = {
@@ -311,6 +321,8 @@ export type DeviceUpdateInput = {
   DeviceLog?: Prisma.DeviceLogUpdateManyWithoutDeviceNestedInput
   Order?: Prisma.OrderUpdateManyWithoutDeviceNestedInput
   noiseLogs?: Prisma.NoiseLogUpdateManyWithoutDeviceNestedInput
+  NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentUpdateManyWithoutDeviceNestedInput
+  NoiseLogTag?: Prisma.NoiseLogTagUpdateManyWithoutDeviceNestedInput
 }
 
 export type DeviceUncheckedUpdateInput = {
@@ -323,6 +335,8 @@ export type DeviceUncheckedUpdateInput = {
   DeviceLog?: Prisma.DeviceLogUncheckedUpdateManyWithoutDeviceNestedInput
   Order?: Prisma.OrderUncheckedUpdateManyWithoutDeviceNestedInput
   noiseLogs?: Prisma.NoiseLogUncheckedUpdateManyWithoutDeviceNestedInput
+  NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentUncheckedUpdateManyWithoutDeviceNestedInput
+  NoiseLogTag?: Prisma.NoiseLogTagUncheckedUpdateManyWithoutDeviceNestedInput
 }
 
 export type DeviceCreateManyInput = {
@@ -490,6 +504,20 @@ export type DeviceUpdateOneRequiredWithoutDeviceLogNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.DeviceUpdateToOneWithWhereWithoutDeviceLogInput, Prisma.DeviceUpdateWithoutDeviceLogInput>, Prisma.DeviceUncheckedUpdateWithoutDeviceLogInput>
 }
 
+export type DeviceCreateNestedOneWithoutNoiseLocationAssignmentInput = {
+  create?: Prisma.XOR<Prisma.DeviceCreateWithoutNoiseLocationAssignmentInput, Prisma.DeviceUncheckedCreateWithoutNoiseLocationAssignmentInput>
+  connectOrCreate?: Prisma.DeviceCreateOrConnectWithoutNoiseLocationAssignmentInput
+  connect?: Prisma.DeviceWhereUniqueInput
+}
+
+export type DeviceUpdateOneRequiredWithoutNoiseLocationAssignmentNestedInput = {
+  create?: Prisma.XOR<Prisma.DeviceCreateWithoutNoiseLocationAssignmentInput, Prisma.DeviceUncheckedCreateWithoutNoiseLocationAssignmentInput>
+  connectOrCreate?: Prisma.DeviceCreateOrConnectWithoutNoiseLocationAssignmentInput
+  upsert?: Prisma.DeviceUpsertWithoutNoiseLocationAssignmentInput
+  connect?: Prisma.DeviceWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.DeviceUpdateToOneWithWhereWithoutNoiseLocationAssignmentInput, Prisma.DeviceUpdateWithoutNoiseLocationAssignmentInput>, Prisma.DeviceUncheckedUpdateWithoutNoiseLocationAssignmentInput>
+}
+
 export type DeviceCreateNestedOneWithoutDeviceLocationInput = {
   create?: Prisma.XOR<Prisma.DeviceCreateWithoutDeviceLocationInput, Prisma.DeviceUncheckedCreateWithoutDeviceLocationInput>
   connectOrCreate?: Prisma.DeviceCreateOrConnectWithoutDeviceLocationInput
@@ -518,6 +546,20 @@ export type DeviceUpdateOneRequiredWithoutNoiseLogsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.DeviceUpdateToOneWithWhereWithoutNoiseLogsInput, Prisma.DeviceUpdateWithoutNoiseLogsInput>, Prisma.DeviceUncheckedUpdateWithoutNoiseLogsInput>
 }
 
+export type DeviceCreateNestedOneWithoutNoiseLogTagInput = {
+  create?: Prisma.XOR<Prisma.DeviceCreateWithoutNoiseLogTagInput, Prisma.DeviceUncheckedCreateWithoutNoiseLogTagInput>
+  connectOrCreate?: Prisma.DeviceCreateOrConnectWithoutNoiseLogTagInput
+  connect?: Prisma.DeviceWhereUniqueInput
+}
+
+export type DeviceUpdateOneRequiredWithoutNoiseLogTagNestedInput = {
+  create?: Prisma.XOR<Prisma.DeviceCreateWithoutNoiseLogTagInput, Prisma.DeviceUncheckedCreateWithoutNoiseLogTagInput>
+  connectOrCreate?: Prisma.DeviceCreateOrConnectWithoutNoiseLogTagInput
+  upsert?: Prisma.DeviceUpsertWithoutNoiseLogTagInput
+  connect?: Prisma.DeviceWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.DeviceUpdateToOneWithWhereWithoutNoiseLogTagInput, Prisma.DeviceUpdateWithoutNoiseLogTagInput>, Prisma.DeviceUncheckedUpdateWithoutNoiseLogTagInput>
+}
+
 export type DeviceCreateWithoutProductListInput = {
   id: string
   lastSeen?: Date | string | null
@@ -527,6 +569,8 @@ export type DeviceCreateWithoutProductListInput = {
   DeviceLog?: Prisma.DeviceLogCreateNestedManyWithoutDeviceInput
   Order?: Prisma.OrderCreateNestedManyWithoutDeviceInput
   noiseLogs?: Prisma.NoiseLogCreateNestedManyWithoutDeviceInput
+  NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentCreateNestedManyWithoutDeviceInput
+  NoiseLogTag?: Prisma.NoiseLogTagCreateNestedManyWithoutDeviceInput
 }
 
 export type DeviceUncheckedCreateWithoutProductListInput = {
@@ -538,6 +582,8 @@ export type DeviceUncheckedCreateWithoutProductListInput = {
   DeviceLog?: Prisma.DeviceLogUncheckedCreateNestedManyWithoutDeviceInput
   Order?: Prisma.OrderUncheckedCreateNestedManyWithoutDeviceInput
   noiseLogs?: Prisma.NoiseLogUncheckedCreateNestedManyWithoutDeviceInput
+  NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentUncheckedCreateNestedManyWithoutDeviceInput
+  NoiseLogTag?: Prisma.NoiseLogTagUncheckedCreateNestedManyWithoutDeviceInput
 }
 
 export type DeviceCreateOrConnectWithoutProductListInput = {
@@ -586,6 +632,8 @@ export type DeviceCreateWithoutOrderInput = {
   DeviceLocation?: Prisma.DeviceLocationCreateNestedManyWithoutDeviceInput
   DeviceLog?: Prisma.DeviceLogCreateNestedManyWithoutDeviceInput
   noiseLogs?: Prisma.NoiseLogCreateNestedManyWithoutDeviceInput
+  NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentCreateNestedManyWithoutDeviceInput
+  NoiseLogTag?: Prisma.NoiseLogTagCreateNestedManyWithoutDeviceInput
 }
 
 export type DeviceUncheckedCreateWithoutOrderInput = {
@@ -597,6 +645,8 @@ export type DeviceUncheckedCreateWithoutOrderInput = {
   DeviceLocation?: Prisma.DeviceLocationUncheckedCreateNestedManyWithoutDeviceInput
   DeviceLog?: Prisma.DeviceLogUncheckedCreateNestedManyWithoutDeviceInput
   noiseLogs?: Prisma.NoiseLogUncheckedCreateNestedManyWithoutDeviceInput
+  NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentUncheckedCreateNestedManyWithoutDeviceInput
+  NoiseLogTag?: Prisma.NoiseLogTagUncheckedCreateNestedManyWithoutDeviceInput
 }
 
 export type DeviceCreateOrConnectWithoutOrderInput = {
@@ -624,6 +674,8 @@ export type DeviceUpdateWithoutOrderInput = {
   DeviceLocation?: Prisma.DeviceLocationUpdateManyWithoutDeviceNestedInput
   DeviceLog?: Prisma.DeviceLogUpdateManyWithoutDeviceNestedInput
   noiseLogs?: Prisma.NoiseLogUpdateManyWithoutDeviceNestedInput
+  NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentUpdateManyWithoutDeviceNestedInput
+  NoiseLogTag?: Prisma.NoiseLogTagUpdateManyWithoutDeviceNestedInput
 }
 
 export type DeviceUncheckedUpdateWithoutOrderInput = {
@@ -635,6 +687,8 @@ export type DeviceUncheckedUpdateWithoutOrderInput = {
   DeviceLocation?: Prisma.DeviceLocationUncheckedUpdateManyWithoutDeviceNestedInput
   DeviceLog?: Prisma.DeviceLogUncheckedUpdateManyWithoutDeviceNestedInput
   noiseLogs?: Prisma.NoiseLogUncheckedUpdateManyWithoutDeviceNestedInput
+  NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentUncheckedUpdateManyWithoutDeviceNestedInput
+  NoiseLogTag?: Prisma.NoiseLogTagUncheckedUpdateManyWithoutDeviceNestedInput
 }
 
 export type DeviceCreateWithoutDeviceLogInput = {
@@ -646,6 +700,8 @@ export type DeviceCreateWithoutDeviceLogInput = {
   DeviceLocation?: Prisma.DeviceLocationCreateNestedManyWithoutDeviceInput
   Order?: Prisma.OrderCreateNestedManyWithoutDeviceInput
   noiseLogs?: Prisma.NoiseLogCreateNestedManyWithoutDeviceInput
+  NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentCreateNestedManyWithoutDeviceInput
+  NoiseLogTag?: Prisma.NoiseLogTagCreateNestedManyWithoutDeviceInput
 }
 
 export type DeviceUncheckedCreateWithoutDeviceLogInput = {
@@ -657,6 +713,8 @@ export type DeviceUncheckedCreateWithoutDeviceLogInput = {
   DeviceLocation?: Prisma.DeviceLocationUncheckedCreateNestedManyWithoutDeviceInput
   Order?: Prisma.OrderUncheckedCreateNestedManyWithoutDeviceInput
   noiseLogs?: Prisma.NoiseLogUncheckedCreateNestedManyWithoutDeviceInput
+  NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentUncheckedCreateNestedManyWithoutDeviceInput
+  NoiseLogTag?: Prisma.NoiseLogTagUncheckedCreateNestedManyWithoutDeviceInput
 }
 
 export type DeviceCreateOrConnectWithoutDeviceLogInput = {
@@ -684,6 +742,8 @@ export type DeviceUpdateWithoutDeviceLogInput = {
   DeviceLocation?: Prisma.DeviceLocationUpdateManyWithoutDeviceNestedInput
   Order?: Prisma.OrderUpdateManyWithoutDeviceNestedInput
   noiseLogs?: Prisma.NoiseLogUpdateManyWithoutDeviceNestedInput
+  NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentUpdateManyWithoutDeviceNestedInput
+  NoiseLogTag?: Prisma.NoiseLogTagUpdateManyWithoutDeviceNestedInput
 }
 
 export type DeviceUncheckedUpdateWithoutDeviceLogInput = {
@@ -695,6 +755,76 @@ export type DeviceUncheckedUpdateWithoutDeviceLogInput = {
   DeviceLocation?: Prisma.DeviceLocationUncheckedUpdateManyWithoutDeviceNestedInput
   Order?: Prisma.OrderUncheckedUpdateManyWithoutDeviceNestedInput
   noiseLogs?: Prisma.NoiseLogUncheckedUpdateManyWithoutDeviceNestedInput
+  NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentUncheckedUpdateManyWithoutDeviceNestedInput
+  NoiseLogTag?: Prisma.NoiseLogTagUncheckedUpdateManyWithoutDeviceNestedInput
+}
+
+export type DeviceCreateWithoutNoiseLocationAssignmentInput = {
+  id: string
+  lastSeen?: Date | string | null
+  softwareVersion?: string | null
+  type: $Enums.DeviceType
+  productList?: Prisma.ProductListCreateNestedOneWithoutDeviceInput
+  DeviceLocation?: Prisma.DeviceLocationCreateNestedManyWithoutDeviceInput
+  DeviceLog?: Prisma.DeviceLogCreateNestedManyWithoutDeviceInput
+  Order?: Prisma.OrderCreateNestedManyWithoutDeviceInput
+  noiseLogs?: Prisma.NoiseLogCreateNestedManyWithoutDeviceInput
+  NoiseLogTag?: Prisma.NoiseLogTagCreateNestedManyWithoutDeviceInput
+}
+
+export type DeviceUncheckedCreateWithoutNoiseLocationAssignmentInput = {
+  id: string
+  lastSeen?: Date | string | null
+  productListId?: number | null
+  softwareVersion?: string | null
+  type: $Enums.DeviceType
+  DeviceLocation?: Prisma.DeviceLocationUncheckedCreateNestedManyWithoutDeviceInput
+  DeviceLog?: Prisma.DeviceLogUncheckedCreateNestedManyWithoutDeviceInput
+  Order?: Prisma.OrderUncheckedCreateNestedManyWithoutDeviceInput
+  noiseLogs?: Prisma.NoiseLogUncheckedCreateNestedManyWithoutDeviceInput
+  NoiseLogTag?: Prisma.NoiseLogTagUncheckedCreateNestedManyWithoutDeviceInput
+}
+
+export type DeviceCreateOrConnectWithoutNoiseLocationAssignmentInput = {
+  where: Prisma.DeviceWhereUniqueInput
+  create: Prisma.XOR<Prisma.DeviceCreateWithoutNoiseLocationAssignmentInput, Prisma.DeviceUncheckedCreateWithoutNoiseLocationAssignmentInput>
+}
+
+export type DeviceUpsertWithoutNoiseLocationAssignmentInput = {
+  update: Prisma.XOR<Prisma.DeviceUpdateWithoutNoiseLocationAssignmentInput, Prisma.DeviceUncheckedUpdateWithoutNoiseLocationAssignmentInput>
+  create: Prisma.XOR<Prisma.DeviceCreateWithoutNoiseLocationAssignmentInput, Prisma.DeviceUncheckedCreateWithoutNoiseLocationAssignmentInput>
+  where?: Prisma.DeviceWhereInput
+}
+
+export type DeviceUpdateToOneWithWhereWithoutNoiseLocationAssignmentInput = {
+  where?: Prisma.DeviceWhereInput
+  data: Prisma.XOR<Prisma.DeviceUpdateWithoutNoiseLocationAssignmentInput, Prisma.DeviceUncheckedUpdateWithoutNoiseLocationAssignmentInput>
+}
+
+export type DeviceUpdateWithoutNoiseLocationAssignmentInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  lastSeen?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  softwareVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.EnumDeviceTypeFieldUpdateOperationsInput | $Enums.DeviceType
+  productList?: Prisma.ProductListUpdateOneWithoutDeviceNestedInput
+  DeviceLocation?: Prisma.DeviceLocationUpdateManyWithoutDeviceNestedInput
+  DeviceLog?: Prisma.DeviceLogUpdateManyWithoutDeviceNestedInput
+  Order?: Prisma.OrderUpdateManyWithoutDeviceNestedInput
+  noiseLogs?: Prisma.NoiseLogUpdateManyWithoutDeviceNestedInput
+  NoiseLogTag?: Prisma.NoiseLogTagUpdateManyWithoutDeviceNestedInput
+}
+
+export type DeviceUncheckedUpdateWithoutNoiseLocationAssignmentInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  lastSeen?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  productListId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  softwareVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.EnumDeviceTypeFieldUpdateOperationsInput | $Enums.DeviceType
+  DeviceLocation?: Prisma.DeviceLocationUncheckedUpdateManyWithoutDeviceNestedInput
+  DeviceLog?: Prisma.DeviceLogUncheckedUpdateManyWithoutDeviceNestedInput
+  Order?: Prisma.OrderUncheckedUpdateManyWithoutDeviceNestedInput
+  noiseLogs?: Prisma.NoiseLogUncheckedUpdateManyWithoutDeviceNestedInput
+  NoiseLogTag?: Prisma.NoiseLogTagUncheckedUpdateManyWithoutDeviceNestedInput
 }
 
 export type DeviceCreateWithoutDeviceLocationInput = {
@@ -706,6 +836,8 @@ export type DeviceCreateWithoutDeviceLocationInput = {
   DeviceLog?: Prisma.DeviceLogCreateNestedManyWithoutDeviceInput
   Order?: Prisma.OrderCreateNestedManyWithoutDeviceInput
   noiseLogs?: Prisma.NoiseLogCreateNestedManyWithoutDeviceInput
+  NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentCreateNestedManyWithoutDeviceInput
+  NoiseLogTag?: Prisma.NoiseLogTagCreateNestedManyWithoutDeviceInput
 }
 
 export type DeviceUncheckedCreateWithoutDeviceLocationInput = {
@@ -717,6 +849,8 @@ export type DeviceUncheckedCreateWithoutDeviceLocationInput = {
   DeviceLog?: Prisma.DeviceLogUncheckedCreateNestedManyWithoutDeviceInput
   Order?: Prisma.OrderUncheckedCreateNestedManyWithoutDeviceInput
   noiseLogs?: Prisma.NoiseLogUncheckedCreateNestedManyWithoutDeviceInput
+  NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentUncheckedCreateNestedManyWithoutDeviceInput
+  NoiseLogTag?: Prisma.NoiseLogTagUncheckedCreateNestedManyWithoutDeviceInput
 }
 
 export type DeviceCreateOrConnectWithoutDeviceLocationInput = {
@@ -744,6 +878,8 @@ export type DeviceUpdateWithoutDeviceLocationInput = {
   DeviceLog?: Prisma.DeviceLogUpdateManyWithoutDeviceNestedInput
   Order?: Prisma.OrderUpdateManyWithoutDeviceNestedInput
   noiseLogs?: Prisma.NoiseLogUpdateManyWithoutDeviceNestedInput
+  NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentUpdateManyWithoutDeviceNestedInput
+  NoiseLogTag?: Prisma.NoiseLogTagUpdateManyWithoutDeviceNestedInput
 }
 
 export type DeviceUncheckedUpdateWithoutDeviceLocationInput = {
@@ -755,6 +891,8 @@ export type DeviceUncheckedUpdateWithoutDeviceLocationInput = {
   DeviceLog?: Prisma.DeviceLogUncheckedUpdateManyWithoutDeviceNestedInput
   Order?: Prisma.OrderUncheckedUpdateManyWithoutDeviceNestedInput
   noiseLogs?: Prisma.NoiseLogUncheckedUpdateManyWithoutDeviceNestedInput
+  NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentUncheckedUpdateManyWithoutDeviceNestedInput
+  NoiseLogTag?: Prisma.NoiseLogTagUncheckedUpdateManyWithoutDeviceNestedInput
 }
 
 export type DeviceCreateWithoutNoiseLogsInput = {
@@ -766,6 +904,8 @@ export type DeviceCreateWithoutNoiseLogsInput = {
   DeviceLocation?: Prisma.DeviceLocationCreateNestedManyWithoutDeviceInput
   DeviceLog?: Prisma.DeviceLogCreateNestedManyWithoutDeviceInput
   Order?: Prisma.OrderCreateNestedManyWithoutDeviceInput
+  NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentCreateNestedManyWithoutDeviceInput
+  NoiseLogTag?: Prisma.NoiseLogTagCreateNestedManyWithoutDeviceInput
 }
 
 export type DeviceUncheckedCreateWithoutNoiseLogsInput = {
@@ -777,6 +917,8 @@ export type DeviceUncheckedCreateWithoutNoiseLogsInput = {
   DeviceLocation?: Prisma.DeviceLocationUncheckedCreateNestedManyWithoutDeviceInput
   DeviceLog?: Prisma.DeviceLogUncheckedCreateNestedManyWithoutDeviceInput
   Order?: Prisma.OrderUncheckedCreateNestedManyWithoutDeviceInput
+  NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentUncheckedCreateNestedManyWithoutDeviceInput
+  NoiseLogTag?: Prisma.NoiseLogTagUncheckedCreateNestedManyWithoutDeviceInput
 }
 
 export type DeviceCreateOrConnectWithoutNoiseLogsInput = {
@@ -804,6 +946,8 @@ export type DeviceUpdateWithoutNoiseLogsInput = {
   DeviceLocation?: Prisma.DeviceLocationUpdateManyWithoutDeviceNestedInput
   DeviceLog?: Prisma.DeviceLogUpdateManyWithoutDeviceNestedInput
   Order?: Prisma.OrderUpdateManyWithoutDeviceNestedInput
+  NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentUpdateManyWithoutDeviceNestedInput
+  NoiseLogTag?: Prisma.NoiseLogTagUpdateManyWithoutDeviceNestedInput
 }
 
 export type DeviceUncheckedUpdateWithoutNoiseLogsInput = {
@@ -815,6 +959,76 @@ export type DeviceUncheckedUpdateWithoutNoiseLogsInput = {
   DeviceLocation?: Prisma.DeviceLocationUncheckedUpdateManyWithoutDeviceNestedInput
   DeviceLog?: Prisma.DeviceLogUncheckedUpdateManyWithoutDeviceNestedInput
   Order?: Prisma.OrderUncheckedUpdateManyWithoutDeviceNestedInput
+  NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentUncheckedUpdateManyWithoutDeviceNestedInput
+  NoiseLogTag?: Prisma.NoiseLogTagUncheckedUpdateManyWithoutDeviceNestedInput
+}
+
+export type DeviceCreateWithoutNoiseLogTagInput = {
+  id: string
+  lastSeen?: Date | string | null
+  softwareVersion?: string | null
+  type: $Enums.DeviceType
+  productList?: Prisma.ProductListCreateNestedOneWithoutDeviceInput
+  DeviceLocation?: Prisma.DeviceLocationCreateNestedManyWithoutDeviceInput
+  DeviceLog?: Prisma.DeviceLogCreateNestedManyWithoutDeviceInput
+  Order?: Prisma.OrderCreateNestedManyWithoutDeviceInput
+  noiseLogs?: Prisma.NoiseLogCreateNestedManyWithoutDeviceInput
+  NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentCreateNestedManyWithoutDeviceInput
+}
+
+export type DeviceUncheckedCreateWithoutNoiseLogTagInput = {
+  id: string
+  lastSeen?: Date | string | null
+  productListId?: number | null
+  softwareVersion?: string | null
+  type: $Enums.DeviceType
+  DeviceLocation?: Prisma.DeviceLocationUncheckedCreateNestedManyWithoutDeviceInput
+  DeviceLog?: Prisma.DeviceLogUncheckedCreateNestedManyWithoutDeviceInput
+  Order?: Prisma.OrderUncheckedCreateNestedManyWithoutDeviceInput
+  noiseLogs?: Prisma.NoiseLogUncheckedCreateNestedManyWithoutDeviceInput
+  NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentUncheckedCreateNestedManyWithoutDeviceInput
+}
+
+export type DeviceCreateOrConnectWithoutNoiseLogTagInput = {
+  where: Prisma.DeviceWhereUniqueInput
+  create: Prisma.XOR<Prisma.DeviceCreateWithoutNoiseLogTagInput, Prisma.DeviceUncheckedCreateWithoutNoiseLogTagInput>
+}
+
+export type DeviceUpsertWithoutNoiseLogTagInput = {
+  update: Prisma.XOR<Prisma.DeviceUpdateWithoutNoiseLogTagInput, Prisma.DeviceUncheckedUpdateWithoutNoiseLogTagInput>
+  create: Prisma.XOR<Prisma.DeviceCreateWithoutNoiseLogTagInput, Prisma.DeviceUncheckedCreateWithoutNoiseLogTagInput>
+  where?: Prisma.DeviceWhereInput
+}
+
+export type DeviceUpdateToOneWithWhereWithoutNoiseLogTagInput = {
+  where?: Prisma.DeviceWhereInput
+  data: Prisma.XOR<Prisma.DeviceUpdateWithoutNoiseLogTagInput, Prisma.DeviceUncheckedUpdateWithoutNoiseLogTagInput>
+}
+
+export type DeviceUpdateWithoutNoiseLogTagInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  lastSeen?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  softwareVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.EnumDeviceTypeFieldUpdateOperationsInput | $Enums.DeviceType
+  productList?: Prisma.ProductListUpdateOneWithoutDeviceNestedInput
+  DeviceLocation?: Prisma.DeviceLocationUpdateManyWithoutDeviceNestedInput
+  DeviceLog?: Prisma.DeviceLogUpdateManyWithoutDeviceNestedInput
+  Order?: Prisma.OrderUpdateManyWithoutDeviceNestedInput
+  noiseLogs?: Prisma.NoiseLogUpdateManyWithoutDeviceNestedInput
+  NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentUpdateManyWithoutDeviceNestedInput
+}
+
+export type DeviceUncheckedUpdateWithoutNoiseLogTagInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  lastSeen?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  productListId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  softwareVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.EnumDeviceTypeFieldUpdateOperationsInput | $Enums.DeviceType
+  DeviceLocation?: Prisma.DeviceLocationUncheckedUpdateManyWithoutDeviceNestedInput
+  DeviceLog?: Prisma.DeviceLogUncheckedUpdateManyWithoutDeviceNestedInput
+  Order?: Prisma.OrderUncheckedUpdateManyWithoutDeviceNestedInput
+  noiseLogs?: Prisma.NoiseLogUncheckedUpdateManyWithoutDeviceNestedInput
+  NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentUncheckedUpdateManyWithoutDeviceNestedInput
 }
 
 export type DeviceCreateManyProductListInput = {
@@ -833,6 +1047,8 @@ export type DeviceUpdateWithoutProductListInput = {
   DeviceLog?: Prisma.DeviceLogUpdateManyWithoutDeviceNestedInput
   Order?: Prisma.OrderUpdateManyWithoutDeviceNestedInput
   noiseLogs?: Prisma.NoiseLogUpdateManyWithoutDeviceNestedInput
+  NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentUpdateManyWithoutDeviceNestedInput
+  NoiseLogTag?: Prisma.NoiseLogTagUpdateManyWithoutDeviceNestedInput
 }
 
 export type DeviceUncheckedUpdateWithoutProductListInput = {
@@ -844,6 +1060,8 @@ export type DeviceUncheckedUpdateWithoutProductListInput = {
   DeviceLog?: Prisma.DeviceLogUncheckedUpdateManyWithoutDeviceNestedInput
   Order?: Prisma.OrderUncheckedUpdateManyWithoutDeviceNestedInput
   noiseLogs?: Prisma.NoiseLogUncheckedUpdateManyWithoutDeviceNestedInput
+  NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentUncheckedUpdateManyWithoutDeviceNestedInput
+  NoiseLogTag?: Prisma.NoiseLogTagUncheckedUpdateManyWithoutDeviceNestedInput
 }
 
 export type DeviceUncheckedUpdateManyWithoutProductListInput = {
@@ -863,6 +1081,8 @@ export type DeviceCountOutputType = {
   DeviceLog: number
   Order: number
   noiseLogs: number
+  NoiseLocationAssignment: number
+  NoiseLogTag: number
 }
 
 export type DeviceCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -870,6 +1090,8 @@ export type DeviceCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions
   DeviceLog?: boolean | DeviceCountOutputTypeCountDeviceLogArgs
   Order?: boolean | DeviceCountOutputTypeCountOrderArgs
   noiseLogs?: boolean | DeviceCountOutputTypeCountNoiseLogsArgs
+  NoiseLocationAssignment?: boolean | DeviceCountOutputTypeCountNoiseLocationAssignmentArgs
+  NoiseLogTag?: boolean | DeviceCountOutputTypeCountNoiseLogTagArgs
 }
 
 /**
@@ -910,6 +1132,20 @@ export type DeviceCountOutputTypeCountNoiseLogsArgs<ExtArgs extends runtime.Type
   where?: Prisma.NoiseLogWhereInput
 }
 
+/**
+ * DeviceCountOutputType without action
+ */
+export type DeviceCountOutputTypeCountNoiseLocationAssignmentArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.NoiseLocationAssignmentWhereInput
+}
+
+/**
+ * DeviceCountOutputType without action
+ */
+export type DeviceCountOutputTypeCountNoiseLogTagArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.NoiseLogTagWhereInput
+}
+
 
 export type DeviceSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -922,6 +1158,8 @@ export type DeviceSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   DeviceLog?: boolean | Prisma.Device$DeviceLogArgs<ExtArgs>
   Order?: boolean | Prisma.Device$OrderArgs<ExtArgs>
   noiseLogs?: boolean | Prisma.Device$noiseLogsArgs<ExtArgs>
+  NoiseLocationAssignment?: boolean | Prisma.Device$NoiseLocationAssignmentArgs<ExtArgs>
+  NoiseLogTag?: boolean | Prisma.Device$NoiseLogTagArgs<ExtArgs>
   _count?: boolean | Prisma.DeviceCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["device"]>
 
@@ -958,6 +1196,8 @@ export type DeviceInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   DeviceLog?: boolean | Prisma.Device$DeviceLogArgs<ExtArgs>
   Order?: boolean | Prisma.Device$OrderArgs<ExtArgs>
   noiseLogs?: boolean | Prisma.Device$noiseLogsArgs<ExtArgs>
+  NoiseLocationAssignment?: boolean | Prisma.Device$NoiseLocationAssignmentArgs<ExtArgs>
+  NoiseLogTag?: boolean | Prisma.Device$NoiseLogTagArgs<ExtArgs>
   _count?: boolean | Prisma.DeviceCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type DeviceIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -975,6 +1215,8 @@ export type $DevicePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
     DeviceLog: Prisma.$DeviceLogPayload<ExtArgs>[]
     Order: Prisma.$OrderPayload<ExtArgs>[]
     noiseLogs: Prisma.$NoiseLogPayload<ExtArgs>[]
+    NoiseLocationAssignment: Prisma.$NoiseLocationAssignmentPayload<ExtArgs>[]
+    NoiseLogTag: Prisma.$NoiseLogTagPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1381,6 +1623,8 @@ export interface Prisma__DeviceClient<T, Null = never, ExtArgs extends runtime.T
   DeviceLog<T extends Prisma.Device$DeviceLogArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Device$DeviceLogArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DeviceLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   Order<T extends Prisma.Device$OrderArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Device$OrderArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$OrderPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   noiseLogs<T extends Prisma.Device$noiseLogsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Device$noiseLogsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NoiseLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  NoiseLocationAssignment<T extends Prisma.Device$NoiseLocationAssignmentArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Device$NoiseLocationAssignmentArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NoiseLocationAssignmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  NoiseLogTag<T extends Prisma.Device$NoiseLogTagArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Device$NoiseLogTagArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NoiseLogTagPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1928,6 +2172,54 @@ export type Device$noiseLogsArgs<ExtArgs extends runtime.Types.Extensions.Intern
   take?: number
   skip?: number
   distinct?: Prisma.NoiseLogScalarFieldEnum | Prisma.NoiseLogScalarFieldEnum[]
+}
+
+/**
+ * Device.NoiseLocationAssignment
+ */
+export type Device$NoiseLocationAssignmentArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the NoiseLocationAssignment
+   */
+  select?: Prisma.NoiseLocationAssignmentSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the NoiseLocationAssignment
+   */
+  omit?: Prisma.NoiseLocationAssignmentOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.NoiseLocationAssignmentInclude<ExtArgs> | null
+  where?: Prisma.NoiseLocationAssignmentWhereInput
+  orderBy?: Prisma.NoiseLocationAssignmentOrderByWithRelationInput | Prisma.NoiseLocationAssignmentOrderByWithRelationInput[]
+  cursor?: Prisma.NoiseLocationAssignmentWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.NoiseLocationAssignmentScalarFieldEnum | Prisma.NoiseLocationAssignmentScalarFieldEnum[]
+}
+
+/**
+ * Device.NoiseLogTag
+ */
+export type Device$NoiseLogTagArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the NoiseLogTag
+   */
+  select?: Prisma.NoiseLogTagSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the NoiseLogTag
+   */
+  omit?: Prisma.NoiseLogTagOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.NoiseLogTagInclude<ExtArgs> | null
+  where?: Prisma.NoiseLogTagWhereInput
+  orderBy?: Prisma.NoiseLogTagOrderByWithRelationInput | Prisma.NoiseLogTagOrderByWithRelationInput[]
+  cursor?: Prisma.NoiseLogTagWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.NoiseLogTagScalarFieldEnum | Prisma.NoiseLogTagScalarFieldEnum[]
 }
 
 /**

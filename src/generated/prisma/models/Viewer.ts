@@ -203,6 +203,7 @@ export type ViewerWhereInput = {
   NonceRequest?: Prisma.NonceRequestListRelationFilter
   ViewerLocation?: Prisma.ViewerLocationListRelationFilter
   ProductList?: Prisma.ProductListListRelationFilter
+  NoiseLogTag?: Prisma.NoiseLogTagListRelationFilter
 }
 
 export type ViewerOrderByWithRelationInput = {
@@ -222,6 +223,7 @@ export type ViewerOrderByWithRelationInput = {
   NonceRequest?: Prisma.NonceRequestOrderByRelationAggregateInput
   ViewerLocation?: Prisma.ViewerLocationOrderByRelationAggregateInput
   ProductList?: Prisma.ProductListOrderByRelationAggregateInput
+  NoiseLogTag?: Prisma.NoiseLogTagOrderByRelationAggregateInput
   _relevance?: Prisma.ViewerOrderByRelevanceInput
 }
 
@@ -245,6 +247,7 @@ export type ViewerWhereUniqueInput = Prisma.AtLeast<{
   NonceRequest?: Prisma.NonceRequestListRelationFilter
   ViewerLocation?: Prisma.ViewerLocationListRelationFilter
   ProductList?: Prisma.ProductListListRelationFilter
+  NoiseLogTag?: Prisma.NoiseLogTagListRelationFilter
 }, "id">
 
 export type ViewerOrderByWithAggregationInput = {
@@ -290,6 +293,7 @@ export type ViewerCreateInput = {
   NonceRequest?: Prisma.NonceRequestCreateNestedManyWithoutCreatedForInput
   ViewerLocation?: Prisma.ViewerLocationCreateNestedManyWithoutViewerInput
   ProductList?: Prisma.ProductListCreateNestedManyWithoutLastUpdatedByViewerInput
+  NoiseLogTag?: Prisma.NoiseLogTagCreateNestedManyWithoutCreatedByViewerInput
 }
 
 export type ViewerUncheckedCreateInput = {
@@ -309,6 +313,7 @@ export type ViewerUncheckedCreateInput = {
   NonceRequest?: Prisma.NonceRequestUncheckedCreateNestedManyWithoutCreatedForInput
   ViewerLocation?: Prisma.ViewerLocationUncheckedCreateNestedManyWithoutViewerInput
   ProductList?: Prisma.ProductListUncheckedCreateNestedManyWithoutLastUpdatedByViewerInput
+  NoiseLogTag?: Prisma.NoiseLogTagUncheckedCreateNestedManyWithoutCreatedByViewerInput
 }
 
 export type ViewerUpdateInput = {
@@ -328,6 +333,7 @@ export type ViewerUpdateInput = {
   NonceRequest?: Prisma.NonceRequestUpdateManyWithoutCreatedForNestedInput
   ViewerLocation?: Prisma.ViewerLocationUpdateManyWithoutViewerNestedInput
   ProductList?: Prisma.ProductListUpdateManyWithoutLastUpdatedByViewerNestedInput
+  NoiseLogTag?: Prisma.NoiseLogTagUpdateManyWithoutCreatedByViewerNestedInput
 }
 
 export type ViewerUncheckedUpdateInput = {
@@ -347,6 +353,7 @@ export type ViewerUncheckedUpdateInput = {
   NonceRequest?: Prisma.NonceRequestUncheckedUpdateManyWithoutCreatedForNestedInput
   ViewerLocation?: Prisma.ViewerLocationUncheckedUpdateManyWithoutViewerNestedInput
   ProductList?: Prisma.ProductListUncheckedUpdateManyWithoutLastUpdatedByViewerNestedInput
+  NoiseLogTag?: Prisma.NoiseLogTagUncheckedUpdateManyWithoutCreatedByViewerNestedInput
 }
 
 export type ViewerCreateManyInput = {
@@ -588,6 +595,20 @@ export type ViewerUpdateOneRequiredWithoutViewerLocationNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.ViewerUpdateToOneWithWhereWithoutViewerLocationInput, Prisma.ViewerUpdateWithoutViewerLocationInput>, Prisma.ViewerUncheckedUpdateWithoutViewerLocationInput>
 }
 
+export type ViewerCreateNestedOneWithoutNoiseLogTagInput = {
+  create?: Prisma.XOR<Prisma.ViewerCreateWithoutNoiseLogTagInput, Prisma.ViewerUncheckedCreateWithoutNoiseLogTagInput>
+  connectOrCreate?: Prisma.ViewerCreateOrConnectWithoutNoiseLogTagInput
+  connect?: Prisma.ViewerWhereUniqueInput
+}
+
+export type ViewerUpdateOneRequiredWithoutNoiseLogTagNestedInput = {
+  create?: Prisma.XOR<Prisma.ViewerCreateWithoutNoiseLogTagInput, Prisma.ViewerUncheckedCreateWithoutNoiseLogTagInput>
+  connectOrCreate?: Prisma.ViewerCreateOrConnectWithoutNoiseLogTagInput
+  upsert?: Prisma.ViewerUpsertWithoutNoiseLogTagInput
+  connect?: Prisma.ViewerWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ViewerUpdateToOneWithWhereWithoutNoiseLogTagInput, Prisma.ViewerUpdateWithoutNoiseLogTagInput>, Prisma.ViewerUncheckedUpdateWithoutNoiseLogTagInput>
+}
+
 export type ViewerCreateWithoutProductListInput = {
   id?: string
   displayName: string
@@ -604,6 +625,7 @@ export type ViewerCreateWithoutProductListInput = {
   Nonce?: Prisma.NonceCreateNestedManyWithoutCreatedForInput
   NonceRequest?: Prisma.NonceRequestCreateNestedManyWithoutCreatedForInput
   ViewerLocation?: Prisma.ViewerLocationCreateNestedManyWithoutViewerInput
+  NoiseLogTag?: Prisma.NoiseLogTagCreateNestedManyWithoutCreatedByViewerInput
 }
 
 export type ViewerUncheckedCreateWithoutProductListInput = {
@@ -622,6 +644,7 @@ export type ViewerUncheckedCreateWithoutProductListInput = {
   Nonce?: Prisma.NonceUncheckedCreateNestedManyWithoutCreatedForInput
   NonceRequest?: Prisma.NonceRequestUncheckedCreateNestedManyWithoutCreatedForInput
   ViewerLocation?: Prisma.ViewerLocationUncheckedCreateNestedManyWithoutViewerInput
+  NoiseLogTag?: Prisma.NoiseLogTagUncheckedCreateNestedManyWithoutCreatedByViewerInput
 }
 
 export type ViewerCreateOrConnectWithoutProductListInput = {
@@ -656,6 +679,7 @@ export type ViewerUpdateWithoutProductListInput = {
   Nonce?: Prisma.NonceUpdateManyWithoutCreatedForNestedInput
   NonceRequest?: Prisma.NonceRequestUpdateManyWithoutCreatedForNestedInput
   ViewerLocation?: Prisma.ViewerLocationUpdateManyWithoutViewerNestedInput
+  NoiseLogTag?: Prisma.NoiseLogTagUpdateManyWithoutCreatedByViewerNestedInput
 }
 
 export type ViewerUncheckedUpdateWithoutProductListInput = {
@@ -674,6 +698,7 @@ export type ViewerUncheckedUpdateWithoutProductListInput = {
   Nonce?: Prisma.NonceUncheckedUpdateManyWithoutCreatedForNestedInput
   NonceRequest?: Prisma.NonceRequestUncheckedUpdateManyWithoutCreatedForNestedInput
   ViewerLocation?: Prisma.ViewerLocationUncheckedUpdateManyWithoutViewerNestedInput
+  NoiseLogTag?: Prisma.NoiseLogTagUncheckedUpdateManyWithoutCreatedByViewerNestedInput
 }
 
 export type ViewerCreateWithoutCrewCardInput = {
@@ -692,6 +717,7 @@ export type ViewerCreateWithoutCrewCardInput = {
   NonceRequest?: Prisma.NonceRequestCreateNestedManyWithoutCreatedForInput
   ViewerLocation?: Prisma.ViewerLocationCreateNestedManyWithoutViewerInput
   ProductList?: Prisma.ProductListCreateNestedManyWithoutLastUpdatedByViewerInput
+  NoiseLogTag?: Prisma.NoiseLogTagCreateNestedManyWithoutCreatedByViewerInput
 }
 
 export type ViewerUncheckedCreateWithoutCrewCardInput = {
@@ -710,6 +736,7 @@ export type ViewerUncheckedCreateWithoutCrewCardInput = {
   NonceRequest?: Prisma.NonceRequestUncheckedCreateNestedManyWithoutCreatedForInput
   ViewerLocation?: Prisma.ViewerLocationUncheckedCreateNestedManyWithoutViewerInput
   ProductList?: Prisma.ProductListUncheckedCreateNestedManyWithoutLastUpdatedByViewerInput
+  NoiseLogTag?: Prisma.NoiseLogTagUncheckedCreateNestedManyWithoutCreatedByViewerInput
 }
 
 export type ViewerCreateOrConnectWithoutCrewCardInput = {
@@ -744,6 +771,7 @@ export type ViewerUpdateWithoutCrewCardInput = {
   NonceRequest?: Prisma.NonceRequestUpdateManyWithoutCreatedForNestedInput
   ViewerLocation?: Prisma.ViewerLocationUpdateManyWithoutViewerNestedInput
   ProductList?: Prisma.ProductListUpdateManyWithoutLastUpdatedByViewerNestedInput
+  NoiseLogTag?: Prisma.NoiseLogTagUpdateManyWithoutCreatedByViewerNestedInput
 }
 
 export type ViewerUncheckedUpdateWithoutCrewCardInput = {
@@ -762,6 +790,7 @@ export type ViewerUncheckedUpdateWithoutCrewCardInput = {
   NonceRequest?: Prisma.NonceRequestUncheckedUpdateManyWithoutCreatedForNestedInput
   ViewerLocation?: Prisma.ViewerLocationUncheckedUpdateManyWithoutViewerNestedInput
   ProductList?: Prisma.ProductListUncheckedUpdateManyWithoutLastUpdatedByViewerNestedInput
+  NoiseLogTag?: Prisma.NoiseLogTagUncheckedUpdateManyWithoutCreatedByViewerNestedInput
 }
 
 export type ViewerCreateWithoutBandApplicationInput = {
@@ -780,6 +809,7 @@ export type ViewerCreateWithoutBandApplicationInput = {
   NonceRequest?: Prisma.NonceRequestCreateNestedManyWithoutCreatedForInput
   ViewerLocation?: Prisma.ViewerLocationCreateNestedManyWithoutViewerInput
   ProductList?: Prisma.ProductListCreateNestedManyWithoutLastUpdatedByViewerInput
+  NoiseLogTag?: Prisma.NoiseLogTagCreateNestedManyWithoutCreatedByViewerInput
 }
 
 export type ViewerUncheckedCreateWithoutBandApplicationInput = {
@@ -798,6 +828,7 @@ export type ViewerUncheckedCreateWithoutBandApplicationInput = {
   NonceRequest?: Prisma.NonceRequestUncheckedCreateNestedManyWithoutCreatedForInput
   ViewerLocation?: Prisma.ViewerLocationUncheckedCreateNestedManyWithoutViewerInput
   ProductList?: Prisma.ProductListUncheckedCreateNestedManyWithoutLastUpdatedByViewerInput
+  NoiseLogTag?: Prisma.NoiseLogTagUncheckedCreateNestedManyWithoutCreatedByViewerInput
 }
 
 export type ViewerCreateOrConnectWithoutBandApplicationInput = {
@@ -832,6 +863,7 @@ export type ViewerUpdateWithoutBandApplicationInput = {
   NonceRequest?: Prisma.NonceRequestUpdateManyWithoutCreatedForNestedInput
   ViewerLocation?: Prisma.ViewerLocationUpdateManyWithoutViewerNestedInput
   ProductList?: Prisma.ProductListUpdateManyWithoutLastUpdatedByViewerNestedInput
+  NoiseLogTag?: Prisma.NoiseLogTagUpdateManyWithoutCreatedByViewerNestedInput
 }
 
 export type ViewerUncheckedUpdateWithoutBandApplicationInput = {
@@ -850,6 +882,7 @@ export type ViewerUncheckedUpdateWithoutBandApplicationInput = {
   NonceRequest?: Prisma.NonceRequestUncheckedUpdateManyWithoutCreatedForNestedInput
   ViewerLocation?: Prisma.ViewerLocationUncheckedUpdateManyWithoutViewerNestedInput
   ProductList?: Prisma.ProductListUncheckedUpdateManyWithoutLastUpdatedByViewerNestedInput
+  NoiseLogTag?: Prisma.NoiseLogTagUncheckedUpdateManyWithoutCreatedByViewerNestedInput
 }
 
 export type ViewerCreateWithoutBandApplicationTagInput = {
@@ -868,6 +901,7 @@ export type ViewerCreateWithoutBandApplicationTagInput = {
   NonceRequest?: Prisma.NonceRequestCreateNestedManyWithoutCreatedForInput
   ViewerLocation?: Prisma.ViewerLocationCreateNestedManyWithoutViewerInput
   ProductList?: Prisma.ProductListCreateNestedManyWithoutLastUpdatedByViewerInput
+  NoiseLogTag?: Prisma.NoiseLogTagCreateNestedManyWithoutCreatedByViewerInput
 }
 
 export type ViewerUncheckedCreateWithoutBandApplicationTagInput = {
@@ -886,6 +920,7 @@ export type ViewerUncheckedCreateWithoutBandApplicationTagInput = {
   NonceRequest?: Prisma.NonceRequestUncheckedCreateNestedManyWithoutCreatedForInput
   ViewerLocation?: Prisma.ViewerLocationUncheckedCreateNestedManyWithoutViewerInput
   ProductList?: Prisma.ProductListUncheckedCreateNestedManyWithoutLastUpdatedByViewerInput
+  NoiseLogTag?: Prisma.NoiseLogTagUncheckedCreateNestedManyWithoutCreatedByViewerInput
 }
 
 export type ViewerCreateOrConnectWithoutBandApplicationTagInput = {
@@ -920,6 +955,7 @@ export type ViewerUpdateWithoutBandApplicationTagInput = {
   NonceRequest?: Prisma.NonceRequestUpdateManyWithoutCreatedForNestedInput
   ViewerLocation?: Prisma.ViewerLocationUpdateManyWithoutViewerNestedInput
   ProductList?: Prisma.ProductListUpdateManyWithoutLastUpdatedByViewerNestedInput
+  NoiseLogTag?: Prisma.NoiseLogTagUpdateManyWithoutCreatedByViewerNestedInput
 }
 
 export type ViewerUncheckedUpdateWithoutBandApplicationTagInput = {
@@ -938,6 +974,7 @@ export type ViewerUncheckedUpdateWithoutBandApplicationTagInput = {
   NonceRequest?: Prisma.NonceRequestUncheckedUpdateManyWithoutCreatedForNestedInput
   ViewerLocation?: Prisma.ViewerLocationUncheckedUpdateManyWithoutViewerNestedInput
   ProductList?: Prisma.ProductListUncheckedUpdateManyWithoutLastUpdatedByViewerNestedInput
+  NoiseLogTag?: Prisma.NoiseLogTagUncheckedUpdateManyWithoutCreatedByViewerNestedInput
 }
 
 export type ViewerCreateWithoutBandApplicationRatingInput = {
@@ -956,6 +993,7 @@ export type ViewerCreateWithoutBandApplicationRatingInput = {
   NonceRequest?: Prisma.NonceRequestCreateNestedManyWithoutCreatedForInput
   ViewerLocation?: Prisma.ViewerLocationCreateNestedManyWithoutViewerInput
   ProductList?: Prisma.ProductListCreateNestedManyWithoutLastUpdatedByViewerInput
+  NoiseLogTag?: Prisma.NoiseLogTagCreateNestedManyWithoutCreatedByViewerInput
 }
 
 export type ViewerUncheckedCreateWithoutBandApplicationRatingInput = {
@@ -974,6 +1012,7 @@ export type ViewerUncheckedCreateWithoutBandApplicationRatingInput = {
   NonceRequest?: Prisma.NonceRequestUncheckedCreateNestedManyWithoutCreatedForInput
   ViewerLocation?: Prisma.ViewerLocationUncheckedCreateNestedManyWithoutViewerInput
   ProductList?: Prisma.ProductListUncheckedCreateNestedManyWithoutLastUpdatedByViewerInput
+  NoiseLogTag?: Prisma.NoiseLogTagUncheckedCreateNestedManyWithoutCreatedByViewerInput
 }
 
 export type ViewerCreateOrConnectWithoutBandApplicationRatingInput = {
@@ -1008,6 +1047,7 @@ export type ViewerUpdateWithoutBandApplicationRatingInput = {
   NonceRequest?: Prisma.NonceRequestUpdateManyWithoutCreatedForNestedInput
   ViewerLocation?: Prisma.ViewerLocationUpdateManyWithoutViewerNestedInput
   ProductList?: Prisma.ProductListUpdateManyWithoutLastUpdatedByViewerNestedInput
+  NoiseLogTag?: Prisma.NoiseLogTagUpdateManyWithoutCreatedByViewerNestedInput
 }
 
 export type ViewerUncheckedUpdateWithoutBandApplicationRatingInput = {
@@ -1026,6 +1066,7 @@ export type ViewerUncheckedUpdateWithoutBandApplicationRatingInput = {
   NonceRequest?: Prisma.NonceRequestUncheckedUpdateManyWithoutCreatedForNestedInput
   ViewerLocation?: Prisma.ViewerLocationUncheckedUpdateManyWithoutViewerNestedInput
   ProductList?: Prisma.ProductListUncheckedUpdateManyWithoutLastUpdatedByViewerNestedInput
+  NoiseLogTag?: Prisma.NoiseLogTagUncheckedUpdateManyWithoutCreatedByViewerNestedInput
 }
 
 export type ViewerCreateWithoutBandApplicationCommentInput = {
@@ -1044,6 +1085,7 @@ export type ViewerCreateWithoutBandApplicationCommentInput = {
   NonceRequest?: Prisma.NonceRequestCreateNestedManyWithoutCreatedForInput
   ViewerLocation?: Prisma.ViewerLocationCreateNestedManyWithoutViewerInput
   ProductList?: Prisma.ProductListCreateNestedManyWithoutLastUpdatedByViewerInput
+  NoiseLogTag?: Prisma.NoiseLogTagCreateNestedManyWithoutCreatedByViewerInput
 }
 
 export type ViewerUncheckedCreateWithoutBandApplicationCommentInput = {
@@ -1062,6 +1104,7 @@ export type ViewerUncheckedCreateWithoutBandApplicationCommentInput = {
   NonceRequest?: Prisma.NonceRequestUncheckedCreateNestedManyWithoutCreatedForInput
   ViewerLocation?: Prisma.ViewerLocationUncheckedCreateNestedManyWithoutViewerInput
   ProductList?: Prisma.ProductListUncheckedCreateNestedManyWithoutLastUpdatedByViewerInput
+  NoiseLogTag?: Prisma.NoiseLogTagUncheckedCreateNestedManyWithoutCreatedByViewerInput
 }
 
 export type ViewerCreateOrConnectWithoutBandApplicationCommentInput = {
@@ -1096,6 +1139,7 @@ export type ViewerUpdateWithoutBandApplicationCommentInput = {
   NonceRequest?: Prisma.NonceRequestUpdateManyWithoutCreatedForNestedInput
   ViewerLocation?: Prisma.ViewerLocationUpdateManyWithoutViewerNestedInput
   ProductList?: Prisma.ProductListUpdateManyWithoutLastUpdatedByViewerNestedInput
+  NoiseLogTag?: Prisma.NoiseLogTagUpdateManyWithoutCreatedByViewerNestedInput
 }
 
 export type ViewerUncheckedUpdateWithoutBandApplicationCommentInput = {
@@ -1114,6 +1158,7 @@ export type ViewerUncheckedUpdateWithoutBandApplicationCommentInput = {
   NonceRequest?: Prisma.NonceRequestUncheckedUpdateManyWithoutCreatedForNestedInput
   ViewerLocation?: Prisma.ViewerLocationUncheckedUpdateManyWithoutViewerNestedInput
   ProductList?: Prisma.ProductListUncheckedUpdateManyWithoutLastUpdatedByViewerNestedInput
+  NoiseLogTag?: Prisma.NoiseLogTagUncheckedUpdateManyWithoutCreatedByViewerNestedInput
 }
 
 export type ViewerCreateWithoutNonceInput = {
@@ -1132,6 +1177,7 @@ export type ViewerCreateWithoutNonceInput = {
   NonceRequest?: Prisma.NonceRequestCreateNestedManyWithoutCreatedForInput
   ViewerLocation?: Prisma.ViewerLocationCreateNestedManyWithoutViewerInput
   ProductList?: Prisma.ProductListCreateNestedManyWithoutLastUpdatedByViewerInput
+  NoiseLogTag?: Prisma.NoiseLogTagCreateNestedManyWithoutCreatedByViewerInput
 }
 
 export type ViewerUncheckedCreateWithoutNonceInput = {
@@ -1150,6 +1196,7 @@ export type ViewerUncheckedCreateWithoutNonceInput = {
   NonceRequest?: Prisma.NonceRequestUncheckedCreateNestedManyWithoutCreatedForInput
   ViewerLocation?: Prisma.ViewerLocationUncheckedCreateNestedManyWithoutViewerInput
   ProductList?: Prisma.ProductListUncheckedCreateNestedManyWithoutLastUpdatedByViewerInput
+  NoiseLogTag?: Prisma.NoiseLogTagUncheckedCreateNestedManyWithoutCreatedByViewerInput
 }
 
 export type ViewerCreateOrConnectWithoutNonceInput = {
@@ -1184,6 +1231,7 @@ export type ViewerUpdateWithoutNonceInput = {
   NonceRequest?: Prisma.NonceRequestUpdateManyWithoutCreatedForNestedInput
   ViewerLocation?: Prisma.ViewerLocationUpdateManyWithoutViewerNestedInput
   ProductList?: Prisma.ProductListUpdateManyWithoutLastUpdatedByViewerNestedInput
+  NoiseLogTag?: Prisma.NoiseLogTagUpdateManyWithoutCreatedByViewerNestedInput
 }
 
 export type ViewerUncheckedUpdateWithoutNonceInput = {
@@ -1202,6 +1250,7 @@ export type ViewerUncheckedUpdateWithoutNonceInput = {
   NonceRequest?: Prisma.NonceRequestUncheckedUpdateManyWithoutCreatedForNestedInput
   ViewerLocation?: Prisma.ViewerLocationUncheckedUpdateManyWithoutViewerNestedInput
   ProductList?: Prisma.ProductListUncheckedUpdateManyWithoutLastUpdatedByViewerNestedInput
+  NoiseLogTag?: Prisma.NoiseLogTagUncheckedUpdateManyWithoutCreatedByViewerNestedInput
 }
 
 export type ViewerCreateWithoutNonceRequestInput = {
@@ -1220,6 +1269,7 @@ export type ViewerCreateWithoutNonceRequestInput = {
   Nonce?: Prisma.NonceCreateNestedManyWithoutCreatedForInput
   ViewerLocation?: Prisma.ViewerLocationCreateNestedManyWithoutViewerInput
   ProductList?: Prisma.ProductListCreateNestedManyWithoutLastUpdatedByViewerInput
+  NoiseLogTag?: Prisma.NoiseLogTagCreateNestedManyWithoutCreatedByViewerInput
 }
 
 export type ViewerUncheckedCreateWithoutNonceRequestInput = {
@@ -1238,6 +1288,7 @@ export type ViewerUncheckedCreateWithoutNonceRequestInput = {
   Nonce?: Prisma.NonceUncheckedCreateNestedManyWithoutCreatedForInput
   ViewerLocation?: Prisma.ViewerLocationUncheckedCreateNestedManyWithoutViewerInput
   ProductList?: Prisma.ProductListUncheckedCreateNestedManyWithoutLastUpdatedByViewerInput
+  NoiseLogTag?: Prisma.NoiseLogTagUncheckedCreateNestedManyWithoutCreatedByViewerInput
 }
 
 export type ViewerCreateOrConnectWithoutNonceRequestInput = {
@@ -1272,6 +1323,7 @@ export type ViewerUpdateWithoutNonceRequestInput = {
   Nonce?: Prisma.NonceUpdateManyWithoutCreatedForNestedInput
   ViewerLocation?: Prisma.ViewerLocationUpdateManyWithoutViewerNestedInput
   ProductList?: Prisma.ProductListUpdateManyWithoutLastUpdatedByViewerNestedInput
+  NoiseLogTag?: Prisma.NoiseLogTagUpdateManyWithoutCreatedByViewerNestedInput
 }
 
 export type ViewerUncheckedUpdateWithoutNonceRequestInput = {
@@ -1290,6 +1342,7 @@ export type ViewerUncheckedUpdateWithoutNonceRequestInput = {
   Nonce?: Prisma.NonceUncheckedUpdateManyWithoutCreatedForNestedInput
   ViewerLocation?: Prisma.ViewerLocationUncheckedUpdateManyWithoutViewerNestedInput
   ProductList?: Prisma.ProductListUncheckedUpdateManyWithoutLastUpdatedByViewerNestedInput
+  NoiseLogTag?: Prisma.NoiseLogTagUncheckedUpdateManyWithoutCreatedByViewerNestedInput
 }
 
 export type ViewerCreateWithoutViewerLocationInput = {
@@ -1308,6 +1361,7 @@ export type ViewerCreateWithoutViewerLocationInput = {
   Nonce?: Prisma.NonceCreateNestedManyWithoutCreatedForInput
   NonceRequest?: Prisma.NonceRequestCreateNestedManyWithoutCreatedForInput
   ProductList?: Prisma.ProductListCreateNestedManyWithoutLastUpdatedByViewerInput
+  NoiseLogTag?: Prisma.NoiseLogTagCreateNestedManyWithoutCreatedByViewerInput
 }
 
 export type ViewerUncheckedCreateWithoutViewerLocationInput = {
@@ -1326,6 +1380,7 @@ export type ViewerUncheckedCreateWithoutViewerLocationInput = {
   Nonce?: Prisma.NonceUncheckedCreateNestedManyWithoutCreatedForInput
   NonceRequest?: Prisma.NonceRequestUncheckedCreateNestedManyWithoutCreatedForInput
   ProductList?: Prisma.ProductListUncheckedCreateNestedManyWithoutLastUpdatedByViewerInput
+  NoiseLogTag?: Prisma.NoiseLogTagUncheckedCreateNestedManyWithoutCreatedByViewerInput
 }
 
 export type ViewerCreateOrConnectWithoutViewerLocationInput = {
@@ -1360,6 +1415,7 @@ export type ViewerUpdateWithoutViewerLocationInput = {
   Nonce?: Prisma.NonceUpdateManyWithoutCreatedForNestedInput
   NonceRequest?: Prisma.NonceRequestUpdateManyWithoutCreatedForNestedInput
   ProductList?: Prisma.ProductListUpdateManyWithoutLastUpdatedByViewerNestedInput
+  NoiseLogTag?: Prisma.NoiseLogTagUpdateManyWithoutCreatedByViewerNestedInput
 }
 
 export type ViewerUncheckedUpdateWithoutViewerLocationInput = {
@@ -1378,6 +1434,99 @@ export type ViewerUncheckedUpdateWithoutViewerLocationInput = {
   Nonce?: Prisma.NonceUncheckedUpdateManyWithoutCreatedForNestedInput
   NonceRequest?: Prisma.NonceRequestUncheckedUpdateManyWithoutCreatedForNestedInput
   ProductList?: Prisma.ProductListUncheckedUpdateManyWithoutLastUpdatedByViewerNestedInput
+  NoiseLogTag?: Prisma.NoiseLogTagUncheckedUpdateManyWithoutCreatedByViewerNestedInput
+}
+
+export type ViewerCreateWithoutNoiseLogTagInput = {
+  id?: string
+  displayName: string
+  email: string
+  profilePicture?: string | null
+  slackToken?: string | null
+  slackScopes?: Prisma.ViewerCreateslackScopesInput | string[]
+  updatedAt?: Date | string
+  BandApplication?: Prisma.BandApplicationCreateNestedManyWithoutContactedByViewerInput
+  BandApplicationComment?: Prisma.BandApplicationCommentCreateNestedManyWithoutViewerInput
+  BandApplicationRating?: Prisma.BandApplicationRatingCreateNestedManyWithoutViewerInput
+  BandApplicationTag?: Prisma.BandApplicationTagCreateNestedManyWithoutCreatedByViewerInput
+  CrewCard?: Prisma.CrewCardCreateNestedManyWithoutViewerInput
+  Nonce?: Prisma.NonceCreateNestedManyWithoutCreatedForInput
+  NonceRequest?: Prisma.NonceRequestCreateNestedManyWithoutCreatedForInput
+  ViewerLocation?: Prisma.ViewerLocationCreateNestedManyWithoutViewerInput
+  ProductList?: Prisma.ProductListCreateNestedManyWithoutLastUpdatedByViewerInput
+}
+
+export type ViewerUncheckedCreateWithoutNoiseLogTagInput = {
+  id?: string
+  displayName: string
+  email: string
+  profilePicture?: string | null
+  slackToken?: string | null
+  slackScopes?: Prisma.ViewerCreateslackScopesInput | string[]
+  updatedAt?: Date | string
+  BandApplication?: Prisma.BandApplicationUncheckedCreateNestedManyWithoutContactedByViewerInput
+  BandApplicationComment?: Prisma.BandApplicationCommentUncheckedCreateNestedManyWithoutViewerInput
+  BandApplicationRating?: Prisma.BandApplicationRatingUncheckedCreateNestedManyWithoutViewerInput
+  BandApplicationTag?: Prisma.BandApplicationTagUncheckedCreateNestedManyWithoutCreatedByViewerInput
+  CrewCard?: Prisma.CrewCardUncheckedCreateNestedManyWithoutViewerInput
+  Nonce?: Prisma.NonceUncheckedCreateNestedManyWithoutCreatedForInput
+  NonceRequest?: Prisma.NonceRequestUncheckedCreateNestedManyWithoutCreatedForInput
+  ViewerLocation?: Prisma.ViewerLocationUncheckedCreateNestedManyWithoutViewerInput
+  ProductList?: Prisma.ProductListUncheckedCreateNestedManyWithoutLastUpdatedByViewerInput
+}
+
+export type ViewerCreateOrConnectWithoutNoiseLogTagInput = {
+  where: Prisma.ViewerWhereUniqueInput
+  create: Prisma.XOR<Prisma.ViewerCreateWithoutNoiseLogTagInput, Prisma.ViewerUncheckedCreateWithoutNoiseLogTagInput>
+}
+
+export type ViewerUpsertWithoutNoiseLogTagInput = {
+  update: Prisma.XOR<Prisma.ViewerUpdateWithoutNoiseLogTagInput, Prisma.ViewerUncheckedUpdateWithoutNoiseLogTagInput>
+  create: Prisma.XOR<Prisma.ViewerCreateWithoutNoiseLogTagInput, Prisma.ViewerUncheckedCreateWithoutNoiseLogTagInput>
+  where?: Prisma.ViewerWhereInput
+}
+
+export type ViewerUpdateToOneWithWhereWithoutNoiseLogTagInput = {
+  where?: Prisma.ViewerWhereInput
+  data: Prisma.XOR<Prisma.ViewerUpdateWithoutNoiseLogTagInput, Prisma.ViewerUncheckedUpdateWithoutNoiseLogTagInput>
+}
+
+export type ViewerUpdateWithoutNoiseLogTagInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  displayName?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  slackToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  slackScopes?: Prisma.ViewerUpdateslackScopesInput | string[]
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  BandApplication?: Prisma.BandApplicationUpdateManyWithoutContactedByViewerNestedInput
+  BandApplicationComment?: Prisma.BandApplicationCommentUpdateManyWithoutViewerNestedInput
+  BandApplicationRating?: Prisma.BandApplicationRatingUpdateManyWithoutViewerNestedInput
+  BandApplicationTag?: Prisma.BandApplicationTagUpdateManyWithoutCreatedByViewerNestedInput
+  CrewCard?: Prisma.CrewCardUpdateManyWithoutViewerNestedInput
+  Nonce?: Prisma.NonceUpdateManyWithoutCreatedForNestedInput
+  NonceRequest?: Prisma.NonceRequestUpdateManyWithoutCreatedForNestedInput
+  ViewerLocation?: Prisma.ViewerLocationUpdateManyWithoutViewerNestedInput
+  ProductList?: Prisma.ProductListUpdateManyWithoutLastUpdatedByViewerNestedInput
+}
+
+export type ViewerUncheckedUpdateWithoutNoiseLogTagInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  displayName?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  slackToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  slackScopes?: Prisma.ViewerUpdateslackScopesInput | string[]
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  BandApplication?: Prisma.BandApplicationUncheckedUpdateManyWithoutContactedByViewerNestedInput
+  BandApplicationComment?: Prisma.BandApplicationCommentUncheckedUpdateManyWithoutViewerNestedInput
+  BandApplicationRating?: Prisma.BandApplicationRatingUncheckedUpdateManyWithoutViewerNestedInput
+  BandApplicationTag?: Prisma.BandApplicationTagUncheckedUpdateManyWithoutCreatedByViewerNestedInput
+  CrewCard?: Prisma.CrewCardUncheckedUpdateManyWithoutViewerNestedInput
+  Nonce?: Prisma.NonceUncheckedUpdateManyWithoutCreatedForNestedInput
+  NonceRequest?: Prisma.NonceRequestUncheckedUpdateManyWithoutCreatedForNestedInput
+  ViewerLocation?: Prisma.ViewerLocationUncheckedUpdateManyWithoutViewerNestedInput
+  ProductList?: Prisma.ProductListUncheckedUpdateManyWithoutLastUpdatedByViewerNestedInput
 }
 
 
@@ -1395,6 +1544,7 @@ export type ViewerCountOutputType = {
   NonceRequest: number
   ViewerLocation: number
   ProductList: number
+  NoiseLogTag: number
 }
 
 export type ViewerCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1407,6 +1557,7 @@ export type ViewerCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions
   NonceRequest?: boolean | ViewerCountOutputTypeCountNonceRequestArgs
   ViewerLocation?: boolean | ViewerCountOutputTypeCountViewerLocationArgs
   ProductList?: boolean | ViewerCountOutputTypeCountProductListArgs
+  NoiseLogTag?: boolean | ViewerCountOutputTypeCountNoiseLogTagArgs
 }
 
 /**
@@ -1482,6 +1633,13 @@ export type ViewerCountOutputTypeCountProductListArgs<ExtArgs extends runtime.Ty
   where?: Prisma.ProductListWhereInput
 }
 
+/**
+ * ViewerCountOutputType without action
+ */
+export type ViewerCountOutputTypeCountNoiseLogTagArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.NoiseLogTagWhereInput
+}
+
 
 export type ViewerSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1500,6 +1658,7 @@ export type ViewerSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   NonceRequest?: boolean | Prisma.Viewer$NonceRequestArgs<ExtArgs>
   ViewerLocation?: boolean | Prisma.Viewer$ViewerLocationArgs<ExtArgs>
   ProductList?: boolean | Prisma.Viewer$ProductListArgs<ExtArgs>
+  NoiseLogTag?: boolean | Prisma.Viewer$NoiseLogTagArgs<ExtArgs>
   _count?: boolean | Prisma.ViewerCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["viewer"]>
 
@@ -1544,6 +1703,7 @@ export type ViewerInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   NonceRequest?: boolean | Prisma.Viewer$NonceRequestArgs<ExtArgs>
   ViewerLocation?: boolean | Prisma.Viewer$ViewerLocationArgs<ExtArgs>
   ProductList?: boolean | Prisma.Viewer$ProductListArgs<ExtArgs>
+  NoiseLogTag?: boolean | Prisma.Viewer$NoiseLogTagArgs<ExtArgs>
   _count?: boolean | Prisma.ViewerCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type ViewerIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -1561,6 +1721,7 @@ export type $ViewerPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
     NonceRequest: Prisma.$NonceRequestPayload<ExtArgs>[]
     ViewerLocation: Prisma.$ViewerLocationPayload<ExtArgs>[]
     ProductList: Prisma.$ProductListPayload<ExtArgs>[]
+    NoiseLogTag: Prisma.$NoiseLogTagPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1973,6 +2134,7 @@ export interface Prisma__ViewerClient<T, Null = never, ExtArgs extends runtime.T
   NonceRequest<T extends Prisma.Viewer$NonceRequestArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Viewer$NonceRequestArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NonceRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   ViewerLocation<T extends Prisma.Viewer$ViewerLocationArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Viewer$ViewerLocationArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ViewerLocationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   ProductList<T extends Prisma.Viewer$ProductListArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Viewer$ProductListArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ProductListPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  NoiseLogTag<T extends Prisma.Viewer$NoiseLogTagArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Viewer$NoiseLogTagArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NoiseLogTagPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2615,6 +2777,30 @@ export type Viewer$ProductListArgs<ExtArgs extends runtime.Types.Extensions.Inte
   take?: number
   skip?: number
   distinct?: Prisma.ProductListScalarFieldEnum | Prisma.ProductListScalarFieldEnum[]
+}
+
+/**
+ * Viewer.NoiseLogTag
+ */
+export type Viewer$NoiseLogTagArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the NoiseLogTag
+   */
+  select?: Prisma.NoiseLogTagSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the NoiseLogTag
+   */
+  omit?: Prisma.NoiseLogTagOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.NoiseLogTagInclude<ExtArgs> | null
+  where?: Prisma.NoiseLogTagWhereInput
+  orderBy?: Prisma.NoiseLogTagOrderByWithRelationInput | Prisma.NoiseLogTagOrderByWithRelationInput[]
+  cursor?: Prisma.NoiseLogTagWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.NoiseLogTagScalarFieldEnum | Prisma.NoiseLogTagScalarFieldEnum[]
 }
 
 /**

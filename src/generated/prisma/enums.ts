@@ -9,6 +9,17 @@
 * 🟢 You can import this file directly.
 */
 
+export const NoiseTag = {
+  SOUNDCHECK: 'SOUNDCHECK',
+  BAND_PLAYING: 'BAND_PLAYING',
+  DJ: 'DJ',
+  EXCLUDED: 'EXCLUDED',
+  CALIBRATION: 'CALIBRATION'
+} as const
+
+export type NoiseTag = (typeof NoiseTag)[keyof typeof NoiseTag]
+
+
 export const DietType = {
   VEGETARIAN: 'VEGETARIAN',
   VEGAN: 'VEGAN'

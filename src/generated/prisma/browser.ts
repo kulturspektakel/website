@@ -163,6 +163,21 @@ export type ShortDomainRedirect = Prisma.ShortDomainRedirectModel
  */
 export type Donation = Prisma.DonationModel
 /**
+ * Model NoiseProject
+ * 
+ */
+export type NoiseProject = Prisma.NoiseProjectModel
+/**
+ * Model NoiseLocation
+ * 
+ */
+export type NoiseLocation = Prisma.NoiseLocationModel
+/**
+ * Model NoiseLocationAssignment
+ * 
+ */
+export type NoiseLocationAssignment = Prisma.NoiseLocationAssignmentModel
+/**
  * Model DeviceLocation
  * 
  */
@@ -172,3 +187,8 @@ export type DeviceLocation = Prisma.DeviceLocationModel
  * 
  */
 export type NoiseLog = Prisma.NoiseLogModel
+/**
+ * Model NoiseLogTag
+ * 
+ */
+export type NoiseLogTag = Prisma.NoiseLogTagModel

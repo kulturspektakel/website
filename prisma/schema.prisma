@@ -26,6 +26,7 @@ model Viewer {
   NonceRequest           NonceRequest[]
   ViewerLocation         ViewerLocation[]
   ProductList            ProductList[]
+  NoiseLogTag            NoiseLogTag[]
 }
 
 model Area {
@@ -57,17 +58,17 @@ model Page {
 }
 
 model ProductList {
-  id          Int         @id @default(autoincrement())
-  name        String      @db.VarChar(20)
-  emoji       String?
-  active      Boolean     @default(true)
-  updatedAt   DateTime?
-  lastUpdatedBy String?
-  description String?
-  Device      Device[]
-  OrderItem   OrderItem[]
-  product     Product[]
-  lastUpdatedByViewer Viewer? @relation(fields: [lastUpdatedBy], references: [id])
+  id                  Int         @id @default(autoincrement())
+  name                String      @db.VarChar(20)
+  emoji               String?
+  active              Boolean     @default(true)
+  updatedAt           DateTime?
+  lastUpdatedBy       String?
+  description         String?
+  Device              Device[]
+  OrderItem           OrderItem[]
+  product             Product[]
+  lastUpdatedByViewer Viewer?     @relation(fields: [lastUpdatedBy], references: [id])
 }
 
 model Product {
@@ -90,16 +91,18 @@ model ProductAdditives {
 }
 
 model Device {
-  id              String           @id
-  lastSeen        DateTime?
-  productListId   Int?
-  softwareVersion String?
-  type            DeviceType
-  productList     ProductList?     @relation(fields: [productListId], references: [id])
-  DeviceLocation  DeviceLocation[]
-  DeviceLog       DeviceLog[]
-  Order           Order[]
-  noiseLogs       NoiseLog[]
+  id                      String                    @id
+  lastSeen                DateTime?
+  productListId           Int?
+  softwareVersion         String?
+  type                    DeviceType
+  productList             ProductList?              @relation(fields: [productListId], references: [id])
+  DeviceLocation          DeviceLocation[]
+  DeviceLog               DeviceLog[]
+  Order                   Order[]
+  noiseLogs               NoiseLog[]
+  NoiseLocationAssignment NoiseLocationAssignment[]
+  NoiseLogTag             NoiseLogTag[]
 }
 
 model Order {
@@ -278,11 +281,11 @@ model BandPlaying {
   areaId            String
   eventId           String
   slug              String
-  photo             String?   @db.Uuid
-  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  photo             String?  @db.Uuid
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   spotifyPreviewUrl String?
-  area              Area      @relation(fields: [areaId], references: [id])
-  event             Event     @relation(fields: [eventId], references: [id])
+  area              Area     @relation(fields: [areaId], references: [id])
+  event             Event    @relation(fields: [eventId], references: [id])
 
   @@unique([areaId, startTime])
   @@unique([eventId, slug])
@@ -371,6 +374,43 @@ model Donation {
   @@index([reference])
 }
 
+model NoiseProject {
+  id            String          @id @default(cuid())
+  name          String
+  start         DateTime
+  end           DateTime
+  NoiseLocation NoiseLocation[]
+}
+
+model NoiseLocation {
+  id                      String                    @id @default(cuid())
+  projectId               String
+  latitude                Float
+  longitude               Float
+  locationName            String
+  NoiseProject            NoiseProject              @relation(fields: [projectId], references: [id])
+  NoiseLocationAssignment NoiseLocationAssignment[]
+}
+
+// Assigns a noise monitor to a `NoiseLocation` for a timeframe. Multiple
+// devices can be assigned to the same location simultaneously, and a device
+// moves between locations over the course of a project, so this is a
+// many-to-many-over-time table rather than a field on either side.
+// `end == null` means the device is still assigned.
+model NoiseLocationAssignment {
+  id         String    @id @default(cuid())
+  locationId String
+  deviceId   String
+  start      DateTime
+  end        DateTime?
+
+  NoiseLocation NoiseLocation @relation(fields: [locationId], references: [id])
+  Device        Device        @relation(fields: [deviceId], references: [id])
+
+  @@index([deviceId, start])
+  @@index([locationId, start])
+}
+
 model DeviceLocation {
   id           String   @id
   deviceId     String
@@ -391,11 +431,11 @@ model NoiseLog {
 
   // 31 bands, one uint8 byte each; (dB - 20) * 2 per band
   bands  Bytes
-  laeq   Int @db.SmallInt // A-weighted Leq over the interval (same encoding as bands)
-  lceq   Int @db.SmallInt // C-weighted Leq over the interval
-  lafmax Int @db.SmallInt // LAFmax — max over the interval
-  lcfmax Int @db.SmallInt // LCFmax — max over the interval
-  lcpeak Int @db.SmallInt // LCpeak — max over the interval
+  laeq   Int   @db.SmallInt // A-weighted Leq over the interval (same encoding as bands)
+  lceq   Int   @db.SmallInt // C-weighted Leq over the interval
+  lafmax Int   @db.SmallInt // LAFmax — max over the interval
+  lcfmax Int   @db.SmallInt // LCFmax — max over the interval
+  lcpeak Int   @db.SmallInt // LCpeak — max over the interval
 
   // Device-computed trailing Leq windows, same encoding. Nullable: the device
   // only sends them once its rolling buffer has filled (5/30 min after boot),
@@ -407,6 +447,33 @@ model NoiseLog {
   lceq30m Int? @db.SmallInt // trailing 30-min LCeq
 
   @@unique([deviceId, measuredAt])
+}
+
+// A crew-applied tag covering a timeframe of one device's measurements — e.g.
+// marking a soundcheck, or excluding a stretch where the mic was handled.
+// Deliberately a range and not a column on `NoiseLog`: NoiseLog is one row per
+// device-minute, so tagging an evening would mean rewriting hundreds of rows
+// with no way to edit or undo the span as a unit. Reads join on
+// `deviceId` + `measuredAt BETWEEN start AND end`.
+model NoiseLogTag {
+  id                String   @id @default(cuid())
+  deviceId          String
+  tag               NoiseTag
+  start             DateTime
+  end               DateTime?
+  createdAt         DateTime @default(now())
+  createdByViewerId String
+  label             String?
+
+  Device          Device @relation(fields: [deviceId], references: [id])
+  createdByViewer Viewer @relation(fields: [createdByViewerId], references: [id])
+
+  @@index([deviceId, start])
+}
+
+enum NoiseTag {
+  EXCLUDED
+  CUSTOM_LABEL
 }
 
 // Ordered diet chain: VEGAN ⊆ VEGETARIAN. Only applies to consumables

@@ -637,6 +637,23 @@ export type EnumDonationSourceWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumDonationSourceFilter<$PrismaModel>
 }
 
+export type EnumNoiseTagFilter<$PrismaModel = never> = {
+  equals?: $Enums.NoiseTag | Prisma.EnumNoiseTagFieldRefInput<$PrismaModel>
+  in?: $Enums.NoiseTag[] | Prisma.ListEnumNoiseTagFieldRefInput<$PrismaModel>
+  notIn?: $Enums.NoiseTag[] | Prisma.ListEnumNoiseTagFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumNoiseTagFilter<$PrismaModel> | $Enums.NoiseTag
+}
+
+export type EnumNoiseTagWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.NoiseTag | Prisma.EnumNoiseTagFieldRefInput<$PrismaModel>
+  in?: $Enums.NoiseTag[] | Prisma.ListEnumNoiseTagFieldRefInput<$PrismaModel>
+  notIn?: $Enums.NoiseTag[] | Prisma.ListEnumNoiseTagFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumNoiseTagWithAggregatesFilter<$PrismaModel> | $Enums.NoiseTag
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumNoiseTagFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumNoiseTagFilter<$PrismaModel>
+}
+
 export type NestedStringFilter<$PrismaModel = never> = {
   equals?: string | Prisma.StringFieldRefInput<$PrismaModel>
   in?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
@@ -1218,6 +1235,23 @@ export type NestedEnumDonationSourceWithAggregatesFilter<$PrismaModel = never> =
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumDonationSourceFilter<$PrismaModel>
   _max?: Prisma.NestedEnumDonationSourceFilter<$PrismaModel>
+}
+
+export type NestedEnumNoiseTagFilter<$PrismaModel = never> = {
+  equals?: $Enums.NoiseTag | Prisma.EnumNoiseTagFieldRefInput<$PrismaModel>
+  in?: $Enums.NoiseTag[] | Prisma.ListEnumNoiseTagFieldRefInput<$PrismaModel>
+  notIn?: $Enums.NoiseTag[] | Prisma.ListEnumNoiseTagFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumNoiseTagFilter<$PrismaModel> | $Enums.NoiseTag
+}
+
+export type NestedEnumNoiseTagWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.NoiseTag | Prisma.EnumNoiseTagFieldRefInput<$PrismaModel>
+  in?: $Enums.NoiseTag[] | Prisma.ListEnumNoiseTagFieldRefInput<$PrismaModel>
+  notIn?: $Enums.NoiseTag[] | Prisma.ListEnumNoiseTagFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumNoiseTagWithAggregatesFilter<$PrismaModel> | $Enums.NoiseTag
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumNoiseTagFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumNoiseTagFilter<$PrismaModel>
 }
 
 
