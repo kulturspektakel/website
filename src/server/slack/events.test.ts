@@ -3,10 +3,18 @@ import {beforeEach, describe, expect, test, vi} from 'vitest';
 const {item, user} = vi.hoisted(() => ({item: vi.fn(), user: vi.fn()}));
 const {unfurl} = vi.hoisted(() => ({unfurl: vi.fn()}));
 const {addToMailingList} = vi.hoisted(() => ({addToMailingList: vi.fn()}));
+const {grantBonbudePrivilege, revokeBonbudePrivilege} = vi.hoisted(() => ({
+  grantBonbudePrivilege: vi.fn(),
+  revokeBonbudePrivilege: vi.fn(),
+}));
 
 vi.mock('../nuclino.server', () => ({item, user}));
 vi.mock('../slack.server', () => ({unfurl}));
 vi.mock('../addToMailingList.server', () => ({addToMailingList}));
+vi.mock('../crewCardPrivileges.server', () => ({
+  grantBonbudePrivilege,
+  revokeBonbudePrivilege,
+}));
 
 const {handleSlackEvents} = await import('./events');
 
@@ -67,5 +75,40 @@ describe('handleSlackEvents', () => {
       expect.objectContaining({channel: 'C1', ts: '123.45'}),
     );
     expect(unfurl.mock.calls[0][0].unfurls[url]).toBeDefined();
+  });
+
+  test('joining #bonbude grants the privilege', async () => {
+    const res = await handleSlackEvents(
+      event({
+        type: 'event_callback',
+        event: {
+          type: 'member_joined_channel',
+          user: 'U1',
+          channel: 'C0BKU2WSN7K',
+        },
+      }),
+    );
+    expect(res.status).toBe(200);
+    expect(grantBonbudePrivilege).toHaveBeenCalledWith('U1');
+  });
+
+  test('joining any other channel is a no-op', async () => {
+    await handleSlackEvents(
+      event({
+        type: 'event_callback',
+        event: {type: 'member_joined_channel', user: 'U1', channel: 'C93K75X61'},
+      }),
+    );
+    expect(grantBonbudePrivilege).not.toHaveBeenCalled();
+  });
+
+  test('leaving #bonbude revokes the privilege', async () => {
+    await handleSlackEvents(
+      event({
+        type: 'event_callback',
+        event: {type: 'member_left_channel', user: 'U1', channel: 'C0BKU2WSN7K'},
+      }),
+    );
+    expect(revokeBonbudePrivilege).toHaveBeenCalledWith('U1');
   });
 });

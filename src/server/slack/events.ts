@@ -2,13 +2,19 @@ import {item, user} from '../nuclino.server';
 import {unfurl} from '../slack.server';
 import type {SlackApiUser} from '../slack.server';
 import {addToMailingList} from '../addToMailingList.server';
+import {
+  grantBonbudePrivilege,
+  revokeBonbudePrivilege,
+} from '../crewCardPrivileges.server';
+import {SlackChannel} from '../../utils/slackChannels';
 
 /**
  * Migrated from `~/api.kulturspektakel.de/src/routes/slack/events.ts` (+ the
  * legacy `unfurlLink` task, inlined here).
  *
  * Slack Events API webhook: the `url_verification` handshake, `link_shared`
- * Nuclino link unfurling, and `team_join` → mailing-list auto-add.
+ * Nuclino link unfurling, `team_join` → mailing-list auto-add, and the
+ * #bonbude membership events that drive the CrewCard Bonbude privilege.
  */
 type SlackEventBody =
   | {type: 'url_verification'; challenge: string}
@@ -21,7 +27,12 @@ type SlackEventBody =
             message_ts?: string;
             links: Array<{domain: string; url: string}>;
           }
-        | {type: 'team_join'; user: SlackApiUser};
+        | {type: 'team_join'; user: SlackApiUser}
+        | {
+            type: 'member_joined_channel' | 'member_left_channel';
+            user: string;
+            channel: string;
+          };
     };
 
 export async function handleSlackEvents(request: Request): Promise<Response> {
@@ -42,6 +53,18 @@ export async function handleSlackEvents(request: Request): Promise<Response> {
         }
         case 'team_join': {
           await addToMailingList(body.event.user.profile.email);
+          return new Response(null, {status: 200});
+        }
+        case 'member_joined_channel': {
+          if (body.event.channel === SlackChannel.bonbude) {
+            await grantBonbudePrivilege(body.event.user);
+          }
+          return new Response(null, {status: 200});
+        }
+        case 'member_left_channel': {
+          if (body.event.channel === SlackChannel.bonbude) {
+            await revokeBonbudePrivilege(body.event.user);
+          }
           return new Response(null, {status: 200});
         }
       }

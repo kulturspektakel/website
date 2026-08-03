@@ -1,8 +1,8 @@
 /**
  * Single source of truth for the Slack channel IDs we reference — mostly
  * channels we post to, but also ones we only read (`bonbude`, whose membership
- * drives crew card privileges). Add new channels here rather than hardcoding
- * IDs in individual route handlers.
+ * events drive crew card privileges). Add new channels here rather than
+ * hardcoding IDs in individual route handlers.
  */
 export enum SlackChannel {
   dev = 'C93K75X61',

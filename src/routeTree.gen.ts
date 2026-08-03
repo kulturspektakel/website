@@ -59,7 +59,6 @@ import { Route as ApiTasksGmailWatchRefreshRouteImport } from './routes/api.task
 import { Route as ApiTasksGmailReminderRouteImport } from './routes/api.tasks.gmail-reminder'
 import { Route as ApiTasksGmailNotificationRouteImport } from './routes/api.tasks.gmail-notification'
 import { Route as ApiTasksFacebookLikesRouteImport } from './routes/api.tasks.facebook-likes'
-import { Route as ApiTasksCrewCardPrivilegesRouteImport } from './routes/api.tasks.crew-card-privileges'
 import { Route as ApiTasksCrewCardEnrolledRouteImport } from './routes/api.tasks.crew-card-enrolled'
 import { Route as ApiTasksCreateNonceRequestRouteImport } from './routes/api.tasks.create-nonce-request'
 import { Route as ApiTasksCreateMembershipApplicationRouteImport } from './routes/api.tasks.create-membership-application'
@@ -76,6 +75,7 @@ import { Route as ApiSlackOwntracksRouteImport } from './routes/api.slack.owntra
 import { Route as ApiSlackMailinglisteRouteImport } from './routes/api.slack.mailingliste'
 import { Route as ApiSlackInteractionRouteImport } from './routes/api.slack.interaction'
 import { Route as ApiSlackEventsRouteImport } from './routes/api.slack.events'
+import { Route as ApiSlackBonbudeRouteImport } from './routes/api.slack.bonbude'
 import { Route as ApiSamlLogoutRouteImport } from './routes/api.saml.logout'
 import { Route as ApiSamlLoginRouteImport } from './routes/api.saml.login'
 import { Route as ApiOwntracksConfigRouteImport } from './routes/api.owntracks.config'
@@ -355,12 +355,6 @@ const ApiTasksFacebookLikesRoute = ApiTasksFacebookLikesRouteImport.update({
   path: '/facebook-likes',
   getParentRoute: () => ApiTasksRoute,
 } as any)
-const ApiTasksCrewCardPrivilegesRoute =
-  ApiTasksCrewCardPrivilegesRouteImport.update({
-    id: '/crew-card-privileges',
-    path: '/crew-card-privileges',
-    getParentRoute: () => ApiTasksRoute,
-  } as any)
 const ApiTasksCrewCardEnrolledRoute =
   ApiTasksCrewCardEnrolledRouteImport.update({
     id: '/crew-card-enrolled',
@@ -445,6 +439,11 @@ const ApiSlackInteractionRoute = ApiSlackInteractionRouteImport.update({
 const ApiSlackEventsRoute = ApiSlackEventsRouteImport.update({
   id: '/api/slack/events',
   path: '/api/slack/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSlackBonbudeRoute = ApiSlackBonbudeRouteImport.update({
+  id: '/api/slack/bonbude',
+  path: '/api/slack/bonbude',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiSamlLogoutRoute = ApiSamlLogoutRouteImport.update({
@@ -611,6 +610,7 @@ export interface FileRoutesByFullPath {
   '/api/owntracks/config': typeof ApiOwntracksConfigRoute
   '/api/saml/login': typeof ApiSamlLoginRoute
   '/api/saml/logout': typeof ApiSamlLogoutRoute
+  '/api/slack/bonbude': typeof ApiSlackBonbudeRoute
   '/api/slack/events': typeof ApiSlackEventsRoute
   '/api/slack/interaction': typeof ApiSlackInteractionRoute
   '/api/slack/mailingliste': typeof ApiSlackMailinglisteRoute
@@ -627,7 +627,6 @@ export interface FileRoutesByFullPath {
   '/api/tasks/create-membership-application': typeof ApiTasksCreateMembershipApplicationRoute
   '/api/tasks/create-nonce-request': typeof ApiTasksCreateNonceRequestRoute
   '/api/tasks/crew-card-enrolled': typeof ApiTasksCrewCardEnrolledRoute
-  '/api/tasks/crew-card-privileges': typeof ApiTasksCrewCardPrivilegesRoute
   '/api/tasks/facebook-likes': typeof ApiTasksFacebookLikesRoute
   '/api/tasks/gmail-notification': typeof ApiTasksGmailNotificationRoute
   '/api/tasks/gmail-reminder': typeof ApiTasksGmailReminderRoute
@@ -698,6 +697,7 @@ export interface FileRoutesByTo {
   '/api/owntracks/config': typeof ApiOwntracksConfigRoute
   '/api/saml/login': typeof ApiSamlLoginRoute
   '/api/saml/logout': typeof ApiSamlLogoutRoute
+  '/api/slack/bonbude': typeof ApiSlackBonbudeRoute
   '/api/slack/events': typeof ApiSlackEventsRoute
   '/api/slack/interaction': typeof ApiSlackInteractionRoute
   '/api/slack/mailingliste': typeof ApiSlackMailinglisteRoute
@@ -714,7 +714,6 @@ export interface FileRoutesByTo {
   '/api/tasks/create-membership-application': typeof ApiTasksCreateMembershipApplicationRoute
   '/api/tasks/create-nonce-request': typeof ApiTasksCreateNonceRequestRoute
   '/api/tasks/crew-card-enrolled': typeof ApiTasksCrewCardEnrolledRoute
-  '/api/tasks/crew-card-privileges': typeof ApiTasksCrewCardPrivilegesRoute
   '/api/tasks/facebook-likes': typeof ApiTasksFacebookLikesRoute
   '/api/tasks/gmail-notification': typeof ApiTasksGmailNotificationRoute
   '/api/tasks/gmail-reminder': typeof ApiTasksGmailReminderRoute
@@ -790,6 +789,7 @@ export interface FileRoutesById {
   '/api/owntracks/config': typeof ApiOwntracksConfigRoute
   '/api/saml/login': typeof ApiSamlLoginRoute
   '/api/saml/logout': typeof ApiSamlLogoutRoute
+  '/api/slack/bonbude': typeof ApiSlackBonbudeRoute
   '/api/slack/events': typeof ApiSlackEventsRoute
   '/api/slack/interaction': typeof ApiSlackInteractionRoute
   '/api/slack/mailingliste': typeof ApiSlackMailinglisteRoute
@@ -806,7 +806,6 @@ export interface FileRoutesById {
   '/api/tasks/create-membership-application': typeof ApiTasksCreateMembershipApplicationRoute
   '/api/tasks/create-nonce-request': typeof ApiTasksCreateNonceRequestRoute
   '/api/tasks/crew-card-enrolled': typeof ApiTasksCrewCardEnrolledRoute
-  '/api/tasks/crew-card-privileges': typeof ApiTasksCrewCardPrivilegesRoute
   '/api/tasks/facebook-likes': typeof ApiTasksFacebookLikesRoute
   '/api/tasks/gmail-notification': typeof ApiTasksGmailNotificationRoute
   '/api/tasks/gmail-reminder': typeof ApiTasksGmailReminderRoute
@@ -883,6 +882,7 @@ export interface FileRouteTypes {
     | '/api/owntracks/config'
     | '/api/saml/login'
     | '/api/saml/logout'
+    | '/api/slack/bonbude'
     | '/api/slack/events'
     | '/api/slack/interaction'
     | '/api/slack/mailingliste'
@@ -899,7 +899,6 @@ export interface FileRouteTypes {
     | '/api/tasks/create-membership-application'
     | '/api/tasks/create-nonce-request'
     | '/api/tasks/crew-card-enrolled'
-    | '/api/tasks/crew-card-privileges'
     | '/api/tasks/facebook-likes'
     | '/api/tasks/gmail-notification'
     | '/api/tasks/gmail-reminder'
@@ -970,6 +969,7 @@ export interface FileRouteTypes {
     | '/api/owntracks/config'
     | '/api/saml/login'
     | '/api/saml/logout'
+    | '/api/slack/bonbude'
     | '/api/slack/events'
     | '/api/slack/interaction'
     | '/api/slack/mailingliste'
@@ -986,7 +986,6 @@ export interface FileRouteTypes {
     | '/api/tasks/create-membership-application'
     | '/api/tasks/create-nonce-request'
     | '/api/tasks/crew-card-enrolled'
-    | '/api/tasks/crew-card-privileges'
     | '/api/tasks/facebook-likes'
     | '/api/tasks/gmail-notification'
     | '/api/tasks/gmail-reminder'
@@ -1061,6 +1060,7 @@ export interface FileRouteTypes {
     | '/api/owntracks/config'
     | '/api/saml/login'
     | '/api/saml/logout'
+    | '/api/slack/bonbude'
     | '/api/slack/events'
     | '/api/slack/interaction'
     | '/api/slack/mailingliste'
@@ -1077,7 +1077,6 @@ export interface FileRouteTypes {
     | '/api/tasks/create-membership-application'
     | '/api/tasks/create-nonce-request'
     | '/api/tasks/crew-card-enrolled'
-    | '/api/tasks/crew-card-privileges'
     | '/api/tasks/facebook-likes'
     | '/api/tasks/gmail-notification'
     | '/api/tasks/gmail-reminder'
@@ -1123,6 +1122,7 @@ export interface RootRouteChildren {
   ApiTasksRoute: typeof ApiTasksRouteWithChildren
   ApiSamlLoginRoute: typeof ApiSamlLoginRoute
   ApiSamlLogoutRoute: typeof ApiSamlLogoutRoute
+  ApiSlackBonbudeRoute: typeof ApiSlackBonbudeRoute
   ApiSlackEventsRoute: typeof ApiSlackEventsRoute
   ApiSlackInteractionRoute: typeof ApiSlackInteractionRoute
   ApiSlackMailinglisteRoute: typeof ApiSlackMailinglisteRoute
@@ -1489,13 +1489,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTasksFacebookLikesRouteImport
       parentRoute: typeof ApiTasksRoute
     }
-    '/api/tasks/crew-card-privileges': {
-      id: '/api/tasks/crew-card-privileges'
-      path: '/crew-card-privileges'
-      fullPath: '/api/tasks/crew-card-privileges'
-      preLoaderRoute: typeof ApiTasksCrewCardPrivilegesRouteImport
-      parentRoute: typeof ApiTasksRoute
-    }
     '/api/tasks/crew-card-enrolled': {
       id: '/api/tasks/crew-card-enrolled'
       path: '/crew-card-enrolled'
@@ -1606,6 +1599,13 @@ declare module '@tanstack/react-router' {
       path: '/api/slack/events'
       fullPath: '/api/slack/events'
       preLoaderRoute: typeof ApiSlackEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/slack/bonbude': {
+      id: '/api/slack/bonbude'
+      path: '/api/slack/bonbude'
+      fullPath: '/api/slack/bonbude'
+      preLoaderRoute: typeof ApiSlackBonbudeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/saml/logout': {
@@ -1994,7 +1994,6 @@ interface ApiTasksRouteChildren {
   ApiTasksCreateMembershipApplicationRoute: typeof ApiTasksCreateMembershipApplicationRoute
   ApiTasksCreateNonceRequestRoute: typeof ApiTasksCreateNonceRequestRoute
   ApiTasksCrewCardEnrolledRoute: typeof ApiTasksCrewCardEnrolledRoute
-  ApiTasksCrewCardPrivilegesRoute: typeof ApiTasksCrewCardPrivilegesRoute
   ApiTasksFacebookLikesRoute: typeof ApiTasksFacebookLikesRoute
   ApiTasksGmailNotificationRoute: typeof ApiTasksGmailNotificationRoute
   ApiTasksGmailReminderRoute: typeof ApiTasksGmailReminderRoute
@@ -2020,7 +2019,6 @@ const ApiTasksRouteChildren: ApiTasksRouteChildren = {
     ApiTasksCreateMembershipApplicationRoute,
   ApiTasksCreateNonceRequestRoute: ApiTasksCreateNonceRequestRoute,
   ApiTasksCrewCardEnrolledRoute: ApiTasksCrewCardEnrolledRoute,
-  ApiTasksCrewCardPrivilegesRoute: ApiTasksCrewCardPrivilegesRoute,
   ApiTasksFacebookLikesRoute: ApiTasksFacebookLikesRoute,
   ApiTasksGmailNotificationRoute: ApiTasksGmailNotificationRoute,
   ApiTasksGmailReminderRoute: ApiTasksGmailReminderRoute,
@@ -2050,6 +2048,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiTasksRoute: ApiTasksRouteWithChildren,
   ApiSamlLoginRoute: ApiSamlLoginRoute,
   ApiSamlLogoutRoute: ApiSamlLogoutRoute,
+  ApiSlackBonbudeRoute: ApiSlackBonbudeRoute,
   ApiSlackEventsRoute: ApiSlackEventsRoute,
   ApiSlackInteractionRoute: ApiSlackInteractionRoute,
   ApiSlackMailinglisteRoute: ApiSlackMailinglisteRoute,

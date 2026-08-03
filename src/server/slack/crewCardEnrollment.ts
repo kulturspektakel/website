@@ -6,6 +6,10 @@ import {
   slackApiRequest,
 } from '../slack.server';
 import {upsertViewer} from '../upsertViewer.server';
+import {
+  grantBonbudePrivilege,
+  isBonbudeMember,
+} from '../crewCardPrivileges.server';
 
 /**
  * Migrated from `~/api.kulturspektakel.de/src/utils/crewCardEnrollment.ts`
@@ -118,6 +122,13 @@ export async function assignCrewCard(
     where: {id: cardIdBytes},
     data: {viewerId, nickname},
   });
+
+  // Enrollment resets `privileged` to false and no membership event fires when a
+  // card changes hands, so an already-in-#bonbude holder needs the privilege
+  // applied here. Nickname-only cards have no Slack account to look up.
+  if (viewerId && (await isBonbudeMember(viewerId))) {
+    await grantBonbudePrivilege(viewerId);
+  }
 
   const formattedDate = subDays(crewCard.validUntil, 1).toLocaleDateString(
     'de-DE',
