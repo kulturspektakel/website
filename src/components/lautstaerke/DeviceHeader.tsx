@@ -25,20 +25,15 @@ function LiveStatusDot({lastSeen, ble}: {lastSeen?: number; ble: boolean}) {
 }
 
 // One header for both the live and historical device views. Everything but the
-// loader-derived bits (location, day list, selected day) is read straight from
-// the shared contexts, so the chrome is identical everywhere: the online dot,
+// loader-derived location is read straight from the shared contexts (or, for the
+// viewed timeframe, from the URL), so the chrome is identical everywhere: the
 // battery, and bluetooth chips reflect current device state regardless of view.
 export function DeviceHeader({
   device,
   location,
-  days,
-  dayValue,
 }: {
   device: string;
   location?: string | null;
-  days: string[];
-  // 'live' on the live view, or the yyyy-mm-dd on a historical view.
-  dayValue: string;
 }) {
   const ctx = useLautstaerkeCtx();
   const deviceState = ctx.devices[device];
@@ -85,12 +80,7 @@ export function DeviceHeader({
           {wifiStatus && <WifiStatusIcon status={wifiStatus} />}
         </HStack>
       </VStack>
-      <DeviceMenu
-        device={device}
-        currentLocation={location}
-        days={days}
-        dayValue={dayValue}
-      />
+      <DeviceMenu device={device} currentLocation={location} />
     </HStack>
   );
 }

@@ -29,6 +29,8 @@ export function NoiseTimeChart({
   live,
   zoomable,
   zoomResetKey,
+  onZoomRange,
+  canZoomOut,
   onCursorIdx,
 }: {
   // [xEpochSeconds[], ...one column per entry in `series`, in order]. In live
@@ -52,9 +54,19 @@ export function NoiseTimeChart({
   // window would fight an active zoom, so live callers leave this off.
   zoomable?: boolean;
   // Changing this clears any active zoom — it marks a genuinely different
-  // dataset (e.g. another day). Kept separate from `data` identity so a same-day
-  // refetch can push newly-arrived samples without resetting the user's zoom.
+  // dataset (e.g. another timeframe). Kept separate from `data` identity so a
+  // poll can push newly-arrived samples without resetting the user's zoom.
   zoomResetKey?: unknown;
+  // Fired once per completed zoom gesture (mouse drag release, touch gesture end,
+  // or the reset button), with the new x-window in epoch seconds — or null to zoom
+  // out. The zoom is still applied locally for instant feedback; the caller
+  // mirrors it into the URL, and the resulting narrower xRange plus a changed
+  // zoomResetKey then clears the local zoom.
+  onZoomRange?: (range: [number, number] | null) => void;
+  // Shows the reset button even without a local zoom. The URL-driven history view
+  // can be narrower than the day it belongs to with no local zoom active (e.g.
+  // after a reload), and clamping means the chart alone can't widen back out.
+  canZoomOut?: boolean;
   onCursorIdx: (idx: number | 'gap' | null) => void;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -78,6 +90,8 @@ export function NoiseTimeChart({
   xAxisFormatRef.current = xAxisFormat;
   const onCursorRef = useRef(onCursorIdx);
   onCursorRef.current = onCursorIdx;
+  const onZoomRangeRef = useRef(onZoomRange);
+  onZoomRangeRef.current = onZoomRange;
 
   // Active zoom x-window (epoch seconds), or null for the full/default range.
   // Read by the long-lived x-scale range closure so a zoom survives redraws and
@@ -85,6 +99,9 @@ export function NoiseTimeChart({
   const zoomRef = useRef<[number, number] | null>(null);
   const [zoomed, setZoomed] = useState(false);
 
+  // Drop any local zoom and fall back to the default range. Internal only — used
+  // when a genuinely new dataset arrives — so it must not notify the parent, or
+  // the URL sync below would navigate in a loop on every range change.
   const resetZoom = useCallback(() => {
     const plot = plotRef.current;
     if (!plot || !zoomRef.current) return;
@@ -93,6 +110,7 @@ export function NoiseTimeChart({
     const [min, max] = xRangeRef.current();
     plot.setScale('x', {min, max});
   }, []);
+
 
   // Only the selected weighting's series are plotted. The buffer always carries
   // every column, so project it down to [time, ...visible].
@@ -221,6 +239,7 @@ export function NoiseTimeChart({
             setZoomed(true);
             u.setScale('x', {min, max});
             u.setSelect({left: 0, top: 0, width: 0, height: 0}, false);
+            onZoomRangeRef.current?.([min, max]);
           },
         ],
       },
@@ -276,9 +295,13 @@ export function NoiseTimeChart({
         xVal = plot.posToVal(fr.x, 'x');
       };
 
+      // Whether the current gesture actually moved the window. A plain tap also
+      // ends in touchend, and must not be read as "zoom out".
+      let gestureZoomed = false;
       let rafPending = false;
       const applyZoom = () => {
         rafPending = false;
+        gestureZoomed = true;
         const [fullMin, fullMax] = xRangeRef.current();
         const fullRange = fullMax - fullMin;
         const leftPct = to.x / rect.width;
@@ -322,11 +345,23 @@ export function NoiseTimeChart({
         anchor(e);
       };
 
+      // Notify the caller once the fingers are off, not from applyZoom — a pinch
+      // runs applyZoom every frame and would otherwise navigate per frame.
+      const onEnd = (e: TouchEvent) => {
+        if (e.touches.length > 0 || !gestureZoomed) return;
+        gestureZoomed = false;
+        onZoomRangeRef.current?.(zoomRef.current);
+      };
+
       over.addEventListener('touchstart', onStart, {passive: false});
       over.addEventListener('touchmove', onMove, {passive: false});
+      over.addEventListener('touchend', onEnd);
+      over.addEventListener('touchcancel', onEnd);
       removeTouch = () => {
         over.removeEventListener('touchstart', onStart);
         over.removeEventListener('touchmove', onMove);
+        over.removeEventListener('touchend', onEnd);
+        over.removeEventListener('touchcancel', onEnd);
       };
     }
 
@@ -343,9 +378,9 @@ export function NoiseTimeChart({
     };
   }, [visible, gapThresholdX, zoomable]);
 
-  // A new dataset (e.g. a different day) invalidates any active zoom — clear it
-  // so the new range opens at full extent. Keyed on `zoomResetKey`, not `data`:
-  // a weighting toggle or a same-day refetch keeps the key and so keeps the zoom.
+  // A new dataset (e.g. another timeframe) invalidates any active zoom — clear it
+  // so the new range opens at full extent. Keyed on `zoomResetKey`, not `data`: a
+  // weighting toggle or a poll keeps the key and so keeps the zoom.
   useEffect(() => {
     resetZoom();
   }, [zoomResetKey, resetZoom]);
@@ -402,7 +437,7 @@ export function NoiseTimeChart({
           </Text>
         </ChartTooltip>
       )}
-      {zoomed && (
+      {(zoomed || canZoomOut) && (
         <Button
           position="absolute"
           top="2"
@@ -410,9 +445,15 @@ export function NoiseTimeChart({
           size="xs"
           variant="subtle"
           colorPalette="gray"
-          onClick={resetZoom}
+          // Zooming out is the caller's decision when it owns the range: the
+          // default range here *is* the current window, so clearing the local
+          // zoom alone would be a no-op.
+          onClick={() => {
+            resetZoom();
+            onZoomRange?.(null);
+          }}
         >
-          Zoom zurücksetzen
+          Herauszoomen
         </Button>
       )}
     </Box>

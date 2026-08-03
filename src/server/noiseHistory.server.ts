@@ -1,42 +1,40 @@
-import {subMinutes} from 'date-fns';
-import {tzOffset} from '@date-fns/tz';
 import {prismaClient} from './prismaClient.server';
 import {
   HISTORY_SERIES,
   type DeviceLocationRecord,
   type HistoryRow,
 } from '../components/lautstaerke/context';
-import {timeZone} from '../utils/dateUtils';
-
-// NoiseLog.measuredAt is stored as a UTC instant. A local day runs from local
-// 00:00 to the next local 00:00; convert each boundary with that date's timeZone
-// offset so the range stays correct across DST transitions.
-export function localDayRange(date: string): {start: Date; end: Date} {
-  const [y, m, d] = date.split('-').map(Number);
-  const startUtc = new Date(Date.UTC(y, m - 1, d));
-  const endUtc = new Date(Date.UTC(y, m - 1, d + 1));
-  return {
-    start: subMinutes(startUtc, tzOffset(timeZone, startUtc)),
-    end: subMinutes(endUtc, tzOffset(timeZone, endUtc)),
-  };
-}
+import {
+  energeticMeanDb,
+  expectedMinutes,
+  type HistoryTotals,
+} from '../components/lautstaerke/leq';
+import {
+  MAX_RANGE_DAYS,
+  MAX_RANGE_MS,
+} from '../components/lautstaerke/timeframe';
 
 // NoiseLog already holds one 60-second aggregate per row (measuredAt = the start
 // of that minute), and every level — the 1m Leq, the device's trailing 5m/30m
 // windows, and the max/peak values — is stored per row. So this is a straight
-// per-row decode for one device and one local day: no aggregation, since each
-// row is already the minute. Stored ints are encoded as (dB - 20) * 2, so
-// dB = 20 + val/2; the 5m/30m columns are null until the device's buffer has
-// filled (and for rows ingested before those columns existed), which decodes to
-// null and simply leaves a gap in that line.
+// per-row decode for one device over the requested UTC range: no aggregation and
+// deliberately no downsampling, since each row is already the minute. Stored ints
+// are encoded as (dB - 20) * 2, so dB = 20 + val/2; the 5m/30m columns are null
+// until the device's buffer has filled (and for rows ingested before those
+// columns existed), which decodes to null and simply leaves a gap in that line.
 //
 // The WHERE clause is a single range scan on the @@unique([deviceId, measuredAt])
-// index (~1440 rows/day), so this stays cheap.
+// index (~1440 rows/day), so this stays cheap for the ranges MAX_RANGE_MS allows.
 export async function noiseHistory(
   deviceId: string,
-  date: string,
+  start: Date,
+  end: Date,
 ): Promise<HistoryRow[]> {
-  const {start, end} = localDayRange(date);
+  // Backstop only: parseRangeSearch already rejects over-cap ranges at every
+  // entry point, so reaching this means a caller bypassed it.
+  if (end.getTime() - start.getTime() > MAX_RANGE_MS) {
+    throw new Error(`noiseHistory: range exceeds ${MAX_RANGE_DAYS} days`);
+  }
   return prismaClient.$queryRaw<HistoryRow[]>`
     SELECT
       extract(epoch FROM "measuredAt")::float8 AS minute_epoch,
@@ -55,25 +53,6 @@ export async function noiseHistory(
       AND "measuredAt" < ${end}
     ORDER BY "measuredAt"
   `;
-}
-
-// The up-to-10 most recent local-timezone days that have any data for a device,
-// as 'yyyy-mm-dd' strings (newest first), for the day picker. "Has data" is
-// evaluated in `timeZone`: measuredAt is stored as a UTC instant, so we
-// reinterpret it as UTC then shift to `timeZone` before truncating to a day.
-export async function noiseDays(deviceId: string): Promise<string[]> {
-  const rows = await prismaClient.$queryRaw<{date: string}[]>`
-    SELECT to_char(day, 'YYYY-MM-DD') AS date
-    FROM (
-      SELECT DISTINCT
-        date_trunc('day', ("measuredAt" AT TIME ZONE 'UTC') AT TIME ZONE ${timeZone}) AS day
-      FROM "NoiseLog"
-      WHERE "deviceId" = ${deviceId}
-    ) d
-    ORDER BY day DESC
-    LIMIT 10
-  `;
-  return rows.map((r) => r.date);
 }
 
 // A device's full location history (few rows), oldest first. The label shown for
@@ -100,4 +79,29 @@ export function rowsToAligned(rows: HistoryRow[]): (number | null)[][] {
   const xs = rows.map((r) => r.minute_epoch);
   const cols = HISTORY_SERIES.map((s) => rows.map((r) => r[s.col]));
   return [xs, ...cols];
+}
+
+// The single Leq for the selected timeframe, both weightings so the A/C toggle
+// needs no refetch. Read off the named HistoryRow fields rather than the aligned
+// columns, so a HISTORY_SERIES reorder can't silently change which level this
+// averages. Rows are already one-per-minute and equally weighted, so this is a
+// plain energetic mean — see energeticMeanDb for why it isn't an arithmetic one.
+//
+// A gap is an *absent row*, not a null: NoiseLog.laeq/lceq are NOT NULL, so unlike
+// the 5m/30m columns these two are always present on a row that exists. The mean is
+// therefore over the minutes that were measured (standard Leq-over-measured-time) —
+// treating a gap as silence would drag the level down and misrepresent it, so the
+// caller gets `minutes`/`expectedMinutes` to disclose how much was actually covered.
+export function historyTotals(
+  rows: HistoryRow[],
+  start: Date,
+  end: Date,
+  now = Date.now(),
+): HistoryTotals {
+  return {
+    laeq: energeticMeanDb(rows.map((r) => r.laeq_1m)),
+    lceq: energeticMeanDb(rows.map((r) => r.lceq_1m)),
+    minutes: rows.length,
+    expectedMinutes: expectedMinutes(start, end, now),
+  };
 }

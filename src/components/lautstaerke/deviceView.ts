@@ -25,13 +25,10 @@ export function useDeviceView() {
 }
 
 // yyyy-mm-dd in the festival timezone, for comparing a placement's day against
-// the selected day.
+// the selected day. Also the basis for turning a URL timeframe back into a local
+// day (see timeframe.ts), hence exported.
 const dayKeyFmt = new Intl.DateTimeFormat('sv-SE', {timeZone});
-const dayKey = (ms: number) => dayKeyFmt.format(new Date(ms));
-
-// Today's day key (yyyy-mm-dd, festival timezone). A historical view whose date
-// equals this is still accumulating data and worth polling for new samples.
-export const todayDayKey = () => dayKey(Date.now());
+export const dayKey = (ms: number) => dayKeyFmt.format(new Date(ms));
 
 // The location in effect on `date` (yyyy-mm-dd), or the latest known location
 // for the live view (`date` null): the most recent placement on or before the

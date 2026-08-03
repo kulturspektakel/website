@@ -30,10 +30,17 @@ export const fmtTime = (ts: number) => {
   return `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
 };
 
-// HH:MM — historical chart x-axis (per-minute, full day), in `timeZone`.
+// HH:MM — historical chart x-axis (per-minute, within a day), in `timeZone`.
 export const fmtHourMinute = (ts: number) => {
   const d = zonedDate(ts);
   return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+};
+
+// dd.MM. HH:MM — historical x-axis for a timeframe spanning more than a day,
+// where a bare HH:MM would repeat and read ambiguously.
+export const fmtDayHourMinute = (ts: number) => {
+  const d = zonedDate(ts);
+  return `${pad2(d.getDate())}.${pad2(d.getMonth() + 1)}. ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 };
 
 // Weighting-independent identity of a series ('LAeq,1s' -> 'Leq,1s'), so the

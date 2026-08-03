@@ -1,5 +1,5 @@
-import {useNavigate, useRouter} from '@tanstack/react-router';
-import {useState} from 'react';
+import {useNavigate, useRouter, useSearch} from '@tanstack/react-router';
+import {useMemo, useState} from 'react';
 import {LuEllipsisVertical} from 'react-icons/lu';
 import {IconButton} from '@chakra-ui/react';
 import {createServerFn} from '@tanstack/react-start';
@@ -18,22 +18,25 @@ import {
 import {crewAuth} from '../../server/crewAuth';
 import {prismaClient} from '../../server/prismaClient.server';
 import {toaster} from '../chakra-snippets/toaster';
-import {locale} from '../../utils/dateUtils';
+import {locale, timeZone} from '../../utils/dateUtils';
+import {rangeSearch} from './timeframe';
 import {CalibrationPanel} from './CalibrationPanel';
+import {TimeframeDialog} from './TimeframeDialog';
 import {WifiDialog} from './WifiDialog';
 import {decodeDb, isFresh, useLautstaerkeCtx} from './context';
 import {useDeviceView} from './deviceView';
 import {BAND_FREQUENCIES} from './bluetooth';
 
-// yyyy-mm-dd → "Mo., 01.06.2026" (noon avoids any TZ date shift).
-const dayLabelFmt = new Intl.DateTimeFormat(locale, {
-  weekday: 'short',
+// The menu label for the viewed range. formatRange collapses the parts the two
+// ends share, so a within-one-day range reads "01.08., 18:00–21:30 Uhr" and a
+// longer one spells out both dates.
+const rangeFmt = new Intl.DateTimeFormat(locale, {
+  timeZone,
   day: '2-digit',
   month: '2-digit',
-  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
 });
-const fmtDay = (date: string) =>
-  dayLabelFmt.format(new Date(`${date}T12:00:00`));
 
 // Records a new location for a device. DeviceLocation is history — each call
 // appends a placement (latitude/longitude left null for now); resolveLocation
@@ -61,15 +64,21 @@ const setDeviceLocation = createServerFn()
 export function DeviceMenu({
   device,
   currentLocation,
-  days,
-  dayValue,
 }: {
   device: string;
   currentLocation?: string | null;
-  days: string[];
-  // 'live' on the live view, or the yyyy-mm-dd on a historical view.
-  dayValue: string;
 }) {
+  // This menu already navigates to the $device route, so it reads the viewed
+  // timeframe from there rather than having it threaded down as a prop. Memoized
+  // so TimeframeDialog's seed effect doesn't re-run on unrelated re-renders.
+  const search = useSearch({from: '/crew/lautstaerke/$device'});
+  const range = useMemo(
+    () =>
+      search.start && search.end
+        ? {start: Date.parse(search.start), end: Date.parse(search.end)}
+        : null,
+    [search.start, search.end],
+  );
   const ctx = useLautstaerkeCtx();
   const {bluetooth} = ctx;
   const {weighting, toggleWeighting, peaks, togglePeaks} = useDeviceView();
@@ -77,13 +86,10 @@ export function DeviceMenu({
   const router = useRouter();
   const [calibrating, setCalibrating] = useState(false);
   const [wifiOpen, setWifiOpen] = useState(false);
+  const [timeframeOpen, setTimeframeOpen] = useState(false);
   const [savingLocation, setSavingLocation] = useState(false);
 
   const bleConnected = bluetooth.deviceName != null;
-  // Keep the viewed day selectable even if it dropped off the recent-10 list
-  // (e.g. reached directly by URL).
-  const dayOptions =
-    dayValue !== 'live' && !days.includes(dayValue) ? [dayValue, ...days] : days;
 
   const connectBle = async () => {
     const name = await bluetooth.connect();
@@ -92,15 +98,14 @@ export function DeviceMenu({
     }
   };
 
-  const selectView = (value: string) => {
-    if (value === 'live') {
-      void navigate({to: '/crew/lautstaerke/$device', params: {device}});
-    } else {
-      void navigate({
-        to: '/crew/lautstaerke/$device/$date',
-        params: {device, date: value},
-      });
-    }
+  // The timeframe is a search param: an explicit UTC range shows history, no range
+  // at all shows live.
+  const setRange = (next: {start: Date; end: Date} | null) => {
+    void navigate({
+      to: '/crew/lautstaerke/$device',
+      params: {device},
+      search: next ? rangeSearch(next) : {},
+    });
   };
 
   // Copy the live per-band spectrum as TSV (Hz<tab>dB, one band per line) so it
@@ -168,25 +173,18 @@ export function DeviceMenu({
           </IconButton>
         </MenuTrigger>
         <MenuContent>
-          {/* View: live or one of the recent days with data. */}
-          <MenuRoot positioning={{placement: 'left-start', gutter: 2}}>
-            <MenuTriggerItem value="view">
-              Zeitraum: {dayValue === 'live' ? 'Live' : fmtDay(dayValue)}
-            </MenuTriggerItem>
-            <MenuContent>
-              <MenuRadioItemGroup
-                value={dayValue}
-                onValueChange={(e) => selectView(e.value)}
-              >
-                <MenuRadioItem value="live">Live</MenuRadioItem>
-                {dayOptions.map((d) => (
-                  <MenuRadioItem key={d} value={d}>
-                    {fmtDay(d)}
-                  </MenuRadioItem>
-                ))}
-              </MenuRadioItemGroup>
-            </MenuContent>
-          </MenuRoot>
+          {/* View: live, or an arbitrary timeframe picked in the dialog. */}
+          <MenuItem value="timeframe" onClick={() => setTimeframeOpen(true)}>
+            Zeitraum:{' '}
+            {range
+              ? rangeFmt.formatRange(new Date(range.start), new Date(range.end))
+              : 'Live'}
+          </MenuItem>
+          {range && (
+            <MenuItem value="live" onClick={() => setRange(null)}>
+              Live anzeigen
+            </MenuItem>
+          )}
 
           {/* Frequency weighting (A/C). */}
           <MenuRoot positioning={{placement: 'left-start', gutter: 2}}>
@@ -208,7 +206,7 @@ export function DeviceMenu({
 
           {/* Peak-hold overlay on the live frequency chart. Only the live view
               has that chart, so the toggle is hidden on historical days. */}
-          {dayValue === 'live' && (
+          {range == null && (
             <>
               <MenuCheckboxItem
                 value="peaks"
@@ -278,6 +276,12 @@ export function DeviceMenu({
           )}
         </MenuContent>
       </MenuRoot>
+      <TimeframeDialog
+        open={timeframeOpen}
+        onClose={() => setTimeframeOpen(false)}
+        onApply={setRange}
+        current={range}
+      />
       <CalibrationPanel
         open={calibrating}
         onClose={() => setCalibrating(false)}
