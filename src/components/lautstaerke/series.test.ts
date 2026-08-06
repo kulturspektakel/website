@@ -3,6 +3,7 @@ import {
   HISTORY_SERIES,
   LIVE_SERIES,
   SERIES,
+  emptyBuffer,
   rowsToAligned,
   type SeriesKind,
 } from './series';
@@ -106,6 +107,23 @@ describe('LIVE_SERIES / HISTORY_SERIES', () => {
       SERIES.filter((s) => s.hidden).map((s) => s.kind),
     );
     expect([...hidden].sort()).toEqual(['fmax', 'peak']);
+  });
+});
+
+describe('emptyBuffer', () => {
+  // The live view renders this until the device's first record arrives, so it
+  // has to be the same width as the buffer ingest goes on to fill — otherwise
+  // the chart binds its lines to the wrong columns for one frame.
+  it('matches the live buffer width', () => {
+    const buffer = emptyBuffer();
+    expect(buffer).toHaveLength(SERIES.length + 1);
+    expect(buffer.every((col) => col.length === 0)).toBe(true);
+  });
+
+  it('is a fresh array each call, never a shared one', () => {
+    const a = emptyBuffer();
+    a[0]!.push(1);
+    expect(emptyBuffer()[0]).toEqual([]);
   });
 });
 

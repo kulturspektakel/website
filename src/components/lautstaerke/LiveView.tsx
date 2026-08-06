@@ -1,9 +1,9 @@
-import {useState} from 'react';
+import {useMemo, useState} from 'react';
 import {Flex} from '@chakra-ui/react';
 import type uPlot from 'uplot';
 import {useNoiseLive} from './context';
 import {GAP_THRESHOLD_S, WINDOW_S} from './noise';
-import {LIVE_SERIES} from './series';
+import {LIVE_SERIES, emptyBuffer} from './series';
 import {BigNumberRow, useSeriesToggle} from './BigNumber';
 import {NoiseTimeChart} from './NoiseTimeChart';
 import {BandSpectrumChart} from './BandSpectrumChart';
@@ -22,11 +22,17 @@ export function LiveView({device}: {device: string}) {
   const [cursorIdx, setCursorIdx] = useState<number | 'gap' | null>(null);
   const {shown, toggle} = useSeriesToggle(LIVE_SERIES);
 
-  // This view can mount before the device's first record arrives, so the buffer
-  // may not exist yet; ensureBuffer hands back an empty one with the right
-  // column count rather than the chart having to cope with undefined.
-  const buffer = ctx.ensureBuffer(device);
-  const data = buffer as unknown as uPlot.AlignedData;
+  // This view can mount before the device's first record arrives, and only
+  // ingest may create a buffer — so stand in an empty one of the right width
+  // until it does, rather than writing to shared state during a render.
+  //
+  // The swap is safe because the chart re-reads this every second off a latest-
+  // value ref, and re-applies immediately when the identity changes: the same
+  // ingest call that creates the real buffer also schedules the re-render that
+  // hands it over.
+  const placeholder = useMemo(() => emptyBuffer(), []);
+  const data = (ctx.deviceData.current[device] ??
+    placeholder) as unknown as uPlot.AlignedData;
 
   const deviceState = ctx.devices[device];
   const latest = deviceState?.latest ?? null;

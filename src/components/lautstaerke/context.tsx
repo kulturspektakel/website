@@ -27,12 +27,11 @@ export type NoiseLiveCtx = {
   // The rolling per-device sample buffers, deliberately outside React: they are
   // rewritten several times a second and read directly by uPlot, so re-rendering
   // on every sample would be both pointless and too slow.
+  //
+  // Read-only to consumers. A device only gets an entry once its first record
+  // arrives; a view that mounts before then renders emptyBuffer() rather than
+  // creating one, so nothing here is written during a render.
   deviceData: MutableRefObject<Record<string, DeviceBuffer>>;
-  // The buffer for one device, created empty if the stream hasn't seen it yet.
-  // A view can mount before the device's first record arrives, and it needs
-  // something with the right column count to hand the chart. Idempotent, so
-  // calling it while rendering is safe.
-  ensureBuffer: (device: string) => DeviceBuffer;
 };
 
 export const NoiseLiveContext = createContext<NoiseLiveCtx | null>(null);

@@ -2,7 +2,7 @@ import {startTransition, useCallback, useEffect, useRef, useState} from 'react';
 import mqtt from 'mqtt';
 import {NoiseRecording} from '../../proto/noise';
 import {TOPIC, WINDOW_S, type DeviceBuffer, type DeviceState} from './noise';
-import {SERIES} from './series';
+import {SERIES, emptyBuffer} from './series';
 import type {NoiseLiveCtx} from './context';
 
 const BROKER_URL = 'wss://broker.emqx.io:8084/mqtt';
@@ -25,10 +25,13 @@ export function useNoiseStream({
   const [devices, setDevices] = useState<Record<string, DeviceState>>({});
   const deviceData = useRef<Record<string, DeviceBuffer>>({});
 
+  // Deliberately private: ingest is the only thing that may create a buffer.
+  // Views that mount before a device's first record render an empty placeholder
+  // instead of creating one, so nothing mutates this map during a render.
   const ensureBuffer = useCallback((device: string): DeviceBuffer => {
     let data = deviceData.current[device];
     if (!data) {
-      data = [[], ...SERIES.map(() => [] as number[])];
+      data = emptyBuffer();
       deviceData.current[device] = data;
     }
     return data;
@@ -106,7 +109,7 @@ export function useNoiseStream({
     };
   }, [ingest, skipDevice]);
 
-  return {devices, deviceData, ensureBuffer, ingest};
+  return {devices, deviceData, ingest};
 }
 
 export type Ingest = (

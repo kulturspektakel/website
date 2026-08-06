@@ -1,5 +1,10 @@
 import {type NoiseRecording} from '../../proto/noise';
-import {decodeDb, type HistoryRow, type Weighting} from './noise';
+import {
+  decodeDb,
+  type DeviceBuffer,
+  type HistoryRow,
+  type Weighting,
+} from './noise';
 
 // The one table to edit when adding, recolouring or reordering a chart line.
 //
@@ -134,6 +139,14 @@ export const HISTORY_SERIES: readonly ChartSeries[] = SERIES.map((s) => ({
   ...s,
   label: s.historyLabel,
 }));
+
+// A live buffer with no samples in it: the timestamp column plus one column per
+// series. Lives here because the column count is the series table's business,
+// and a buffer with the wrong width is a chart that plots the wrong lines.
+export const emptyBuffer = (): DeviceBuffer => [
+  [],
+  ...SERIES.map(() => [] as number[]),
+];
 
 // History rows → uPlot's column-major shape: [xs, ...one column per series].
 // Only minutes that had data are present, so gaps are rendered by

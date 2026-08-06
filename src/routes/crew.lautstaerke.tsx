@@ -277,14 +277,14 @@ function LautstaerkeLayout() {
   // effect and drop the broker connection mid-session.
   const connectedDevice = useRef<string | null>(null);
 
-  const {devices, deviceData, ensureBuffer, ingest} = useNoiseStream({
+  const {devices, deviceData, ingest} = useNoiseStream({
     skipDevice: connectedDevice,
   });
   const bluetooth = useBleDevice({ingest, connectedDevice});
 
   const live = useMemo<NoiseLiveCtx>(
-    () => ({devices, deviceData, ensureBuffer}),
-    [devices, deviceData, ensureBuffer],
+    () => ({devices, deviceData}),
+    [devices, deviceData],
   );
 
   // Warn before navigating away or reloading while connected over Bluetooth —
