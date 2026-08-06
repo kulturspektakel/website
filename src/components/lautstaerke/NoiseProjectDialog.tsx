@@ -7,6 +7,7 @@ import {createNoiseProject, noiseName} from '../../routes/crew.lautstaerke';
 import {ConnectedField} from '../forms/ConnectedField';
 import {timeZone} from '../../utils/dateUtils';
 import {END_BEFORE_START, fromLocalInput} from './timeframe';
+import {errorToast} from './toast';
 import {
   DialogBody,
   DialogCloseTrigger,
@@ -59,6 +60,7 @@ export function NoiseProjectDialog({
         },
       }),
     onSuccess: (created) => onCreated(created.id),
+    onError: errorToast('Projekt konnte nicht erstellt werden'),
   });
 
   return (

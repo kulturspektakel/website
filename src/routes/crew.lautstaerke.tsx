@@ -46,6 +46,10 @@ import {crewAuth} from '../server/crewAuth';
 import {prismaClient} from '../server/prismaClient.server';
 import {projectLevelsAt} from '../server/noiseHistory.server';
 import {Toaster, toaster} from '../components/chakra-snippets/toaster';
+import {
+  errorMessage,
+  errorToast,
+} from '../components/lautstaerke/toast';
 import {END_BEFORE_START} from '../components/lautstaerke/timeframe';
 
 // The section's data layer lives in this layout file and is imported by the leaf
@@ -440,16 +444,12 @@ function LautstaerkeLayout() {
       setBleDeviceName(conn.deviceName);
       return conn.deviceName;
     } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
+      // Cancelling the chooser is not a failure, so it gets no toast.
       if (
         !(e instanceof DOMException && e.name === 'NotFoundError') &&
-        !/User cancelled/i.test(msg)
+        !/User cancelled/i.test(errorMessage(e))
       ) {
-        toaster.create({
-          type: 'error',
-          title: 'Bluetooth-Verbindung fehlgeschlagen',
-          description: msg,
-        });
+        errorToast('Bluetooth-Verbindung fehlgeschlagen')(e);
       }
       return null;
     } finally {

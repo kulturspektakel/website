@@ -16,6 +16,7 @@ import {
 } from '../chakra-snippets/dialog';
 // From the map, because the map is what produced the point.
 import {type Coordinates} from './LocationsMap';
+import {errorToast} from './toast';
 
 // The name is the only thing left to ask for: the point comes from where the map
 // was clicked, and the pin plus the coordinates on the location card already show
@@ -45,6 +46,7 @@ export function NoiseLocationDialog({
     mutationFn: async (data: Coordinates & {locationName: string}) =>
       createNoiseLocation({data: {projectId, ...data}}),
     onSuccess: () => onCreated(),
+    onError: errorToast('Standort konnte nicht erstellt werden'),
   });
 
   return (

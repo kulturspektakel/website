@@ -12,6 +12,7 @@ import {
 import {Field} from '../chakra-snippets/field';
 import {PasswordInput} from '../chakra-snippets/password-input';
 import {toaster} from '../chakra-snippets/toaster';
+import {errorToast} from './toast';
 import {type BluetoothSlice} from './context';
 
 export function WifiDialog({
@@ -47,11 +48,7 @@ export function WifiDialog({
       toaster.create({type: 'success', title: 'WLAN gespeichert'});
       onClose();
     } catch (e) {
-      toaster.create({
-        type: 'error',
-        title: 'WLAN konnte nicht gespeichert werden',
-        description: e instanceof Error ? e.message : String(e),
-      });
+      errorToast('WLAN konnte nicht gespeichert werden')(e);
     } finally {
       setSaving(false);
     }

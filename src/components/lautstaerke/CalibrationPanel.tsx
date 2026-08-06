@@ -21,6 +21,7 @@ import {
 } from './bluetooth';
 import {type BluetoothSlice} from './context';
 import {toaster} from '../chakra-snippets/toaster';
+import {errorMessage, errorToast} from './toast';
 
 // Calibration lives in a draggable, resizable floating panel rather than a
 // modal dialog so the live frequency chart stays visible (and uncovered) while
@@ -70,7 +71,7 @@ export function CalibrationPanel({
         }
       })
       .catch((e) => {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
+        if (!cancelled) setError(errorMessage(e));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -102,11 +103,7 @@ export function CalibrationPanel({
       toaster.create({type: 'success', title: 'Kalibrierung gespeichert'});
       onClose();
     } catch (e) {
-      toaster.create({
-        type: 'error',
-        title: 'Kalibrierung fehlgeschlagen',
-        description: e instanceof Error ? e.message : String(e),
-      });
+      errorToast('Kalibrierung fehlgeschlagen')(e);
     } finally {
       setSaving(false);
     }

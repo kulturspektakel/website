@@ -18,6 +18,7 @@ import {
 import {crewAuth} from '../../server/crewAuth';
 import {prismaClient} from '../../server/prismaClient.server';
 import {toaster} from '../chakra-snippets/toaster';
+import {errorToast} from './toast';
 import {formatTimeframeRange, rangeSearch} from './timeframe';
 import {CalibrationPanel} from './CalibrationPanel';
 import {TimeframeDialog} from './TimeframeDialog';
@@ -113,11 +114,7 @@ export function DeviceMenu({
       await navigator.clipboard.writeText(tsv);
       toaster.create({type: 'success', title: 'Frequenzbänder kopiert'});
     } catch (e) {
-      toaster.create({
-        type: 'error',
-        title: 'Kopieren fehlgeschlagen',
-        description: e instanceof Error ? e.message : String(e),
-      });
+      errorToast('Kopieren fehlgeschlagen')(e);
     }
   };
 
@@ -135,11 +132,7 @@ export function DeviceMenu({
       await router.invalidate();
       toaster.create({type: 'success', title: 'Standort gespeichert'});
     } catch (e) {
-      toaster.create({
-        type: 'error',
-        title: 'Standort konnte nicht gespeichert werden',
-        description: e instanceof Error ? e.message : String(e),
-      });
+      errorToast('Standort konnte nicht gespeichert werden')(e);
     } finally {
       setSavingLocation(false);
     }

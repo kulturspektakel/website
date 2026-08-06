@@ -9,6 +9,7 @@ import {
   MenuTrigger,
 } from '../chakra-snippets/menu';
 import {toaster} from '../chakra-snippets/toaster';
+import {errorToast} from './toast';
 import {
   assignNoiseDevice,
   assignableNoiseDevices,
@@ -44,12 +45,7 @@ export function AssignDeviceMenu({
       await onAssigned();
       toaster.create({type: 'success', title: `${deviceId} zugewiesen`});
     },
-    onError: (e) =>
-      toaster.create({
-        type: 'error',
-        title: 'Zuweisung fehlgeschlagen',
-        description: e instanceof Error ? e.message : String(e),
-      }),
+    onError: errorToast('Zuweisung fehlgeschlagen'),
   });
 
   return (
@@ -104,12 +100,7 @@ export function AssignmentMenu({
       await onEnded();
       toaster.create({type: 'success', title: 'Zuweisung beendet'});
     },
-    onError: (e) =>
-      toaster.create({
-        type: 'error',
-        title: 'Zuweisung konnte nicht beendet werden',
-        description: e instanceof Error ? e.message : String(e),
-      }),
+    onError: errorToast('Zuweisung konnte nicht beendet werden'),
   });
 
   return (
