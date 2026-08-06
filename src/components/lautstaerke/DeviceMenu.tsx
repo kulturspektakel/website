@@ -18,25 +18,13 @@ import {
 import {crewAuth} from '../../server/crewAuth';
 import {prismaClient} from '../../server/prismaClient.server';
 import {toaster} from '../chakra-snippets/toaster';
-import {locale, timeZone} from '../../utils/dateUtils';
-import {rangeSearch} from './timeframe';
+import {formatTimeframeRange, rangeSearch} from './timeframe';
 import {CalibrationPanel} from './CalibrationPanel';
 import {TimeframeDialog} from './TimeframeDialog';
 import {WifiDialog} from './WifiDialog';
 import {decodeDb, isFresh, useLautstaerkeCtx} from './context';
 import {useDeviceView} from './deviceView';
 import {BAND_FREQUENCIES} from './bluetooth';
-
-// The menu label for the viewed range. formatRange collapses the parts the two
-// ends share, so a within-one-day range reads "01.08., 18:00–21:30 Uhr" and a
-// longer one spells out both dates.
-const rangeFmt = new Intl.DateTimeFormat(locale, {
-  timeZone,
-  day: '2-digit',
-  month: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit',
-});
 
 // Records a new location for a device. DeviceLocation is history — each call
 // appends a placement (latitude/longitude left null for now); resolveLocation
@@ -177,7 +165,7 @@ export function DeviceMenu({
           <MenuItem value="timeframe" onClick={() => setTimeframeOpen(true)}>
             Zeitraum:{' '}
             {range
-              ? rangeFmt.formatRange(new Date(range.start), new Date(range.end))
+              ? formatTimeframeRange(range.start, range.end)
               : 'Live'}
           </MenuItem>
           {range && (

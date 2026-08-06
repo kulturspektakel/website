@@ -18,6 +18,7 @@ import {createServerFn} from '@tanstack/react-start';
 import {z} from 'zod';
 import {prismaClient} from '../../server/prismaClient.server';
 import {stringToByteArray} from '../../utils/cardUtils';
+import {locale, timeZone} from '../../utils/dateUtils';
 
 const DEPOSIT_VALUE = 200;
 
@@ -257,18 +258,18 @@ function CellDateTime(props: {time: Date}) {
   return (
     <>
       {new Date(props.time)
-        .toLocaleDateString('de-DE', {
+        .toLocaleDateString(locale, {
           weekday: 'short',
           day: '2-digit',
           month: 'long',
-          timeZone: 'Europe/Berlin',
+          timeZone,
         })
         .replace(',', '')}
       ,&nbsp;
-      {new Date(props.time).toLocaleTimeString('de-DE', {
+      {new Date(props.time).toLocaleTimeString(locale, {
         hour: '2-digit',
         minute: '2-digit',
-        timeZone: 'Europe/Berlin',
+        timeZone,
       })}
       &nbsp;Uhr
     </>

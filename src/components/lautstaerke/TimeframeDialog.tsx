@@ -12,6 +12,7 @@ import {
 import {Field} from '../chakra-snippets/field';
 import {timeZone} from '../../utils/dateUtils';
 import {
+  END_BEFORE_START,
   MAX_RANGE_DAYS,
   MAX_RANGE_MS,
   defaultRange,
@@ -23,7 +24,7 @@ import {
 function rangeError(start: Date | null, end: Date | null): string | null {
   if (!start || !end) return 'Bitte Beginn und Ende angeben.';
   if (end.getTime() <= start.getTime()) {
-    return 'Das Ende muss nach dem Beginn liegen.';
+    return END_BEFORE_START;
   }
   if (end.getTime() - start.getTime() > MAX_RANGE_MS) {
     return `Der Zeitraum darf höchstens ${MAX_RANGE_DAYS} Tage umfassen.`;

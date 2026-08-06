@@ -1,6 +1,12 @@
 /// <reference types="web-bluetooth" />
-import {createFileRoute, Outlet, useBlocker} from '@tanstack/react-router';
+import {
+  createFileRoute,
+  notFound,
+  Outlet,
+  useBlocker,
+} from '@tanstack/react-router';
 import {Box} from '@chakra-ui/react';
+import {z} from 'zod';
 import {DarkMode} from '../components/chakra-snippets/color-mode';
 import {
   startTransition,
@@ -38,49 +44,237 @@ import {
 import {createServerFn} from '@tanstack/react-start';
 import {crewAuth} from '../server/crewAuth';
 import {prismaClient} from '../server/prismaClient.server';
+import {projectLevelsAt} from '../server/noiseHistory.server';
 import {Toaster, toaster} from '../components/chakra-snippets/toaster';
+import {END_BEFORE_START} from '../components/lautstaerke/timeframe';
 
-const noiseDevices = createServerFn()
+// The section's data layer lives in this layout file and is imported by the leaf
+// routes, as in crew.produkte.tsx. Every DateTime crosses the wire as epoch ms
+// (like deviceLastSeen and HistoryData) and comes back in as an ISO string (like
+// the ?start/?end search params), so no Date ever has to survive serialization.
+
+export const listNoiseProjects = createServerFn()
   .middleware([crewAuth])
   .handler(async () => {
-    const devices = await prismaClient.device.findMany({
-      where: {type: 'NOISE_MONITOR'},
+    // Newest festival first — that's the one you're almost always after.
+    const projects = await prismaClient.noiseProject.findMany({
+      orderBy: [{start: 'desc'}, {name: 'asc'}],
       select: {
         id: true,
-        lastSeen: true,
-        DeviceLocation: {
-          orderBy: {createdAt: 'desc'},
-          take: 1,
-          select: {locationName: true},
+        name: true,
+        start: true,
+        end: true,
+        _count: {select: {NoiseLocation: true}},
+      },
+    });
+    return projects.map((p) => ({
+      id: p.id,
+      name: p.name,
+      start: p.start.getTime(),
+      end: p.end.getTime(),
+      locationCount: p._count.NoiseLocation,
+    }));
+  });
+
+const isoInstant = z
+  .string()
+  .refine((v) => !Number.isNaN(Date.parse(v)), 'Ungültiges Datum');
+
+// Exported because the create dialogs validate the same field client-side; the
+// length cap and the message must not be able to drift apart, or an over-long
+// name becomes a server rejection with nothing to attach it to.
+export const noiseName = z
+  .string()
+  .trim()
+  .min(1, 'Name erforderlich')
+  .max(60);
+
+export const createNoiseProjectInput = z
+  .object({
+    name: noiseName,
+    start: isoInstant,
+    end: isoInstant,
+  })
+  .refine((v) => Date.parse(v.end) > Date.parse(v.start), {
+    message: END_BEFORE_START,
+    path: ['end'],
+  });
+
+export const createNoiseProject = createServerFn()
+  .middleware([crewAuth])
+  .inputValidator(createNoiseProjectInput)
+  .handler(async ({data}) =>
+    // Returns the id so the dialog can drop the user straight into the project
+    // they just created (which is why they created it).
+    prismaClient.noiseProject.create({
+      data: {
+        name: data.name,
+        start: new Date(data.start),
+        end: new Date(data.end),
+      },
+      select: {id: true},
+    }),
+  );
+
+export const loadNoiseProject = createServerFn()
+  .middleware([crewAuth])
+  .inputValidator(z.object({projectId: z.string().min(1)}))
+  .handler(async ({data}) => {
+    const project = await prismaClient.noiseProject.findUnique({
+      where: {id: data.projectId},
+      select: {
+        id: true,
+        name: true,
+        start: true,
+        end: true,
+        NoiseLocation: {
+          orderBy: {locationName: 'asc'},
+          select: {
+            id: true,
+            locationName: true,
+            latitude: true,
+            longitude: true,
+            // Open assignments only: `end == null` is "a device is standing here
+            // right now". Closed rows are history and belong to the device views.
+            NoiseLocationAssignment: {
+              where: {end: null},
+              orderBy: {start: 'asc'},
+              select: {
+                id: true,
+                deviceId: true,
+                Device: {select: {lastSeen: true}},
+              },
+            },
+          },
         },
       },
     });
-    const deviceIds = devices.map((d) => d.id).sort();
-    const deviceLocations = Object.fromEntries(
-      devices.flatMap((d) =>
-        d.DeviceLocation[0] ? [[d.id, d.DeviceLocation[0].locationName]] : [],
-      ),
-    );
-    const deviceLastSeen = Object.fromEntries(
-      devices.flatMap((d) =>
-        d.lastSeen ? [[d.id, d.lastSeen.getTime()]] : [],
-      ),
-    );
-    return {deviceIds, deviceLocations, deviceLastSeen};
+    if (!project) throw notFound();
+    return {
+      id: project.id,
+      name: project.name,
+      start: project.start.getTime(),
+      end: project.end.getTime(),
+      // Browser-key for the Maps JS API, shipped to the client the same way the
+      // booking detail route does it.
+      apiKey: process.env.GOOGLE_MAPS_API_KEY ?? null,
+      locations: project.NoiseLocation.map((l) => ({
+        id: l.id,
+        locationName: l.locationName,
+        latitude: l.latitude,
+        longitude: l.longitude,
+        assignments: l.NoiseLocationAssignment.map((a) => ({
+          id: a.id,
+          deviceId: a.deviceId,
+          lastSeen: a.Device.lastSeen?.getTime() ?? null,
+        })),
+      })),
+    };
+  });
+
+// Coordinates are plain numbers, never z.coerce.number(): Number('') is 0, so a
+// coercing schema would turn an empty field into a valid point off West Africa.
+// The dialog validates its strings first and only then converts.
+export const createNoiseLocationInput = z.object({
+  projectId: z.string().min(1),
+  locationName: noiseName,
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+});
+
+export const createNoiseLocation = createServerFn()
+  .middleware([crewAuth])
+  .inputValidator(createNoiseLocationInput)
+  .handler(async ({data}) => {
+    // The FK would reject an unknown project anyway, but a 404 is the honest
+    // answer for a stale page.
+    const project = await prismaClient.noiseProject.findUnique({
+      where: {id: data.projectId},
+      select: {id: true},
+    });
+    if (!project) throw notFound();
+    return prismaClient.noiseLocation.create({data, select: {id: true}});
+  });
+
+export const noiseLevelsAt = createServerFn()
+  .middleware([crewAuth])
+  .inputValidator(z.object({projectId: z.string().min(1), at: isoInstant}))
+  .handler(async ({data}) => projectLevelsAt(data.projectId, new Date(data.at)));
+
+export const assignableNoiseDevices = createServerFn()
+  .middleware([crewAuth])
+  .handler(async () => {
+    const devices = await prismaClient.device.findMany({
+      // A monitor hangs in one place at a time, so "available" means it has no
+      // open assignment anywhere — including in another project.
+      where: {
+        type: 'NOISE_MONITOR',
+        NoiseLocationAssignment: {none: {end: null}},
+      },
+      orderBy: {id: 'asc'},
+      select: {id: true, lastSeen: true},
+    });
+    return devices.map((d) => ({
+      id: d.id,
+      lastSeen: d.lastSeen?.getTime() ?? null,
+    }));
+  });
+
+export const assignNoiseDevice = createServerFn()
+  .middleware([crewAuth])
+  .inputValidator(
+    z.object({locationId: z.string().min(1), deviceId: z.string().min(1)}),
+  )
+  .handler(async ({data}) => {
+    const [location, device] = await Promise.all([
+      prismaClient.noiseLocation.findUnique({
+        where: {id: data.locationId},
+        select: {id: true},
+      }),
+      prismaClient.device.findUnique({
+        where: {id: data.deviceId},
+        select: {id: true, type: true},
+      }),
+    ]);
+    if (!location) throw notFound();
+    if (!device || device.type !== 'NOISE_MONITOR') {
+      throw new Error('Unbekanntes Lärmmessgerät.');
+    }
+    // Moving a device closes its previous placement: `end == null` only means
+    // "is here now" if exactly one row per device can be open. One `now` for
+    // both writes, so the two windows abut exactly and a history query over
+    // them neither gaps nor double-counts.
+    const now = new Date();
+    await prismaClient.$transaction([
+      prismaClient.noiseLocationAssignment.updateMany({
+        where: {deviceId: data.deviceId, end: null},
+        data: {end: now},
+      }),
+      prismaClient.noiseLocationAssignment.create({
+        data: {locationId: data.locationId, deviceId: data.deviceId, start: now},
+      }),
+    ]);
+  });
+
+export const endNoiseAssignment = createServerFn()
+  .middleware([crewAuth])
+  .inputValidator(z.object({assignmentId: z.string().min(1)}))
+  .handler(async ({data}) => {
+    // updateMany + `end: null` makes this idempotent: a double-tap or a stale
+    // list can't overwrite an already-recorded end, and a vanished row is a
+    // no-op rather than a throw.
+    await prismaClient.noiseLocationAssignment.updateMany({
+      where: {id: data.assignmentId, end: null},
+      data: {end: new Date()},
+    });
   });
 
 export const Route = createFileRoute('/crew/lautstaerke')({
   component: LautstaerkeLayout,
-  loader: async () => await noiseDevices(),
   head: () => seo({title: 'Lautstärke'}),
 });
 
 function LautstaerkeLayout() {
-  const {
-    deviceIds,
-    deviceLocations: locations,
-    deviceLastSeen,
-  } = Route.useLoaderData();
   const [connected, setConnected] = useState(false);
   const [devices, setDevices] = useState<Record<string, DeviceState>>({});
   const deviceDataRef = useRef<Record<string, DeviceBuffer>>({});
@@ -305,9 +499,6 @@ function LautstaerkeLayout() {
       connected,
       devices,
       deviceData: deviceDataRef,
-      deviceIds,
-      deviceLocations: locations,
-      deviceLastSeen,
       bluetooth: {
         deviceName: bleDeviceName,
         connecting: bleConnecting,
@@ -324,9 +515,6 @@ function LautstaerkeLayout() {
     [
       connected,
       devices,
-      deviceIds,
-      locations,
-      deviceLastSeen,
       bleDeviceName,
       bleConnecting,
       bleSupported,

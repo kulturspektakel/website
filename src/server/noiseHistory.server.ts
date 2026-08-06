@@ -1,9 +1,11 @@
 import {prismaClient} from './prismaClient.server';
 import {
   HISTORY_SERIES,
+  decodeDb,
   type DeviceLocationRecord,
   type HistoryRow,
 } from '../components/lautstaerke/context';
+import {MINUTE_MS, floorToMinute} from '../components/lautstaerke/timeframe';
 import {
   energeticMeanDb,
   expectedMinutes,
@@ -104,4 +106,46 @@ export function historyTotals(
     minutes: rows.length,
     expectedMinutes: expectedMinutes(start, end, now),
   };
+}
+
+// The stored level for each monitor of one project at a single instant — what the
+// project page's list and map show when live mode is off.
+//
+// Reads the minute the instant falls in, because NoiseLog is one row per
+// device-minute. Devices are those assigned *at that instant*, not those assigned
+// now, so scrubbing back through a project reads the monitor that actually stood at
+// each location then.
+export async function projectLevelsAt(
+  projectId: string,
+  at: Date,
+): Promise<Record<string, number>> {
+  const minute = new Date(floorToMinute(at.getTime()));
+  const nextMinute = new Date(minute.getTime() + MINUTE_MS);
+
+  const assignments = await prismaClient.noiseLocationAssignment.findMany({
+    where: {
+      NoiseLocation: {projectId},
+      start: {lte: at},
+      OR: [{end: null}, {end: {gt: at}}],
+    },
+    select: {deviceId: true},
+  });
+  const deviceIds = [...new Set(assignments.map((a) => a.deviceId))];
+  if (deviceIds.length === 0) return {};
+
+  // A range rather than an equality match: measuredAt comes off the device's own
+  // clock, so it marks the start of its 60s window without necessarily landing
+  // exactly on the minute. @@unique([deviceId, measuredAt]) makes this an index
+  // scan yielding at most one row per device.
+  const logs = await prismaClient.noiseLog.findMany({
+    where: {deviceId: {in: deviceIds}, measuredAt: {gte: minute, lt: nextMinute}},
+    orderBy: {measuredAt: 'asc'},
+    select: {deviceId: true, laeq: true},
+  });
+
+  const levels: Record<string, number> = {};
+  for (const log of logs) {
+    levels[log.deviceId] ??= decodeDb(log.laeq);
+  }
+  return levels;
 }

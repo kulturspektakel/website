@@ -1,28 +1,12 @@
 import {Link} from '@tanstack/react-router';
 import {LuArrowLeft} from 'react-icons/lu';
-import {Box, HStack, Heading, IconButton, Text, VStack} from '@chakra-ui/react';
+import {HStack, Heading, IconButton, Text, VStack} from '@chakra-ui/react';
 import {BatteryChip} from './BatteryChip';
 import {UploadsChip} from './UploadsChip';
 import {WifiStatusIcon} from './WifiStatusIcon';
 import {DeviceMenu} from './DeviceMenu';
-import {isFresh, useLautstaerkeCtx, useTick} from './context';
-
-// Online dot. Ticks internally so only it (not the whole header) re-renders each
-// second. Driven by live MQTT state, which is "is the device alive now" —
-// independent of which day is being viewed, so it shows on every view. Turns
-// blue while this device is the one connected over Bluetooth.
-function LiveStatusDot({lastSeen, ble}: {lastSeen?: number; ble: boolean}) {
-  const now = useTick();
-  return (
-    <Box
-      w="3"
-      h="3"
-      rounded="full"
-      flexShrink="0"
-      bg={ble ? 'blue.500' : isFresh(lastSeen, now) ? 'green.500' : 'gray.400'}
-    />
-  );
-}
+import {LiveStatusDot} from './LiveStatusDot';
+import {useLautstaerkeCtx} from './context';
 
 // One header for both the live and historical device views. Everything but the
 // loader-derived location is read straight from the shared contexts (or, for the
@@ -46,7 +30,7 @@ export function DeviceHeader({
     <HStack mb="4" align="center">
       <IconButton
         asChild
-        aria-label="Zurück zur Geräteliste"
+        aria-label="Zurück zur Projektliste"
         variant="ghost"
         size="sm"
       >

@@ -13,6 +13,7 @@ import {Readable} from 'node:stream';
 import {prismaClient} from '../server/prismaClient.server';
 import React from 'react';
 import {de} from 'n2words';
+import {locale, timeZone} from '../utils/dateUtils';
 
 const styles = StyleSheet.create({
   page: {
@@ -144,9 +145,9 @@ export const Route = createFileRoute('/api/spenden/quittung/$id')({
               />
               <Text style={styles.date}>
                 Gauting,{' '}
-                {donation.spendenQuittungAt!.toLocaleDateString('de-DE', {
+                {donation.spendenQuittungAt!.toLocaleDateString(locale, {
                   month: 'long',
-                  timeZone: 'Europe/Berlin',
+                  timeZone,
                   year: 'numeric',
                   day: 'numeric',
                 })}
@@ -179,8 +180,8 @@ export const Route = createFileRoute('/api/spenden/quittung/$id')({
                 </Text>
                 <Text>
                   Tag der Zuwendung:{' '}
-                  {donation.createdAt.toLocaleDateString('de-DE', {
-                    timeZone: 'Europe/Berlin',
+                  {donation.createdAt.toLocaleDateString(locale, {
+                    timeZone,
                   })}
                 </Text>
                 <Text>Referenz: {donation.id}</Text>

@@ -73,13 +73,10 @@ import {CopyToClipboard} from '../components/CopyToClipboard';
 import {StageMatrix} from '../components/booking/StageMatrix';
 import {toStageValue, type StageValue} from '../components/booking/stageMatrixShared';
 import {setBandApplicationStage} from '../server/setBandApplicationStage';
+import {KULT_LOCATION} from '../utils/kultLocation';
 import {meanRating} from '../utils/meanRating';
 import {normalizeBandName} from '../utils/normalizeBandName';
 import {computedTagsFor} from './crew.booking.$eventId';
-
-// Kulturspektakel venue — second marker on the band-location map, so the map
-// always frames the distance the band travels to the festival.
-const KULT = {latitude: 48.078143, longitude: 11.375518};
 
 // ---------------------------------------------------------------------------
 // Server function — lazy detail loader (runs only when the child route opens)
@@ -472,12 +469,14 @@ function LeftColumn({
       </Fact>
       {data.latitude != null && data.longitude != null && data.apiKey && (
         <Box h="56" borderRadius="md" overflow="hidden">
+          {/* KULT_LOCATION as the second marker, so the map always frames the
+              distance the band travels to the festival. */}
           <GoogleMaps
             latitude={data.latitude}
             longitude={data.longitude}
             apiKey={data.apiKey}
             zoom={12}
-            secondaryMarker={KULT}
+            secondaryMarker={KULT_LOCATION}
           />
         </Box>
       )}
@@ -673,7 +672,6 @@ function RightColumn({data}: {data: DetailData}) {
                       <DateString 
                         date={c.createdAt}
                         options={{
-                          timeZone: 'Europe/Berlin',
                           day: 'numeric',
                           month: 'numeric',
                           year: 'numeric',

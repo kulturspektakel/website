@@ -7,6 +7,7 @@ import {
   revokeBonbudePrivilege,
 } from '../crewCardPrivileges.server';
 import {SlackChannel} from '../../utils/slackChannels';
+import {locale, timeZone} from '../../utils/dateUtils';
 
 /**
  * Migrated from `~/api.kulturspektakel.de/src/routes/slack/events.ts` (+ the
@@ -131,7 +132,7 @@ async function unfurlNuclinoLink(url: string) {
             type: 'plain_text',
             text: `aktualisiert von ${updateAuthor.firstName} ${updateAuthor.lastName} am ${new Date(
               nuclinoItem.lastUpdatedAt,
-            ).toLocaleString('de-DE')}`,
+            ).toLocaleString(locale, {timeZone})}`,
             emoji: true,
           },
         ],

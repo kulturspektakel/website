@@ -2,6 +2,7 @@ import {subMinutes} from 'date-fns';
 import {tzOffset} from '@date-fns/tz';
 import type {Prisma, DeviceType} from '../generated/prisma/client';
 import type {LogMessage} from '../proto/logmessage';
+import {timeZone} from '../utils/dateUtils';
 
 /**
  * Convert a device's on-clock `deviceTime` (Unix seconds) into a UTC `Date`.
@@ -18,7 +19,7 @@ export function deviceTimeToDate(
   if (deviceTimeIsUtc) {
     return date;
   }
-  return subMinutes(date, tzOffset('Europe/Berlin', date));
+  return subMinutes(date, tzOffset(timeZone, date));
 }
 
 /**

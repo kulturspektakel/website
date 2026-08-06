@@ -10,6 +10,7 @@ import {
   grantBonbudePrivilege,
   isBonbudeMember,
 } from '../crewCardPrivileges.server';
+import {locale, timeZone} from '../../utils/dateUtils';
 
 /**
  * Migrated from `~/api.kulturspektakel.de/src/utils/crewCardEnrollment.ts`
@@ -131,13 +132,13 @@ export async function assignCrewCard(
   }
 
   const formattedDate = subDays(crewCard.validUntil, 1).toLocaleDateString(
-    'de-DE',
+    locale,
     {
       weekday: 'long',
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
-      timeZone: 'Europe/Berlin',
+      timeZone,
     },
   );
 

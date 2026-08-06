@@ -5,6 +5,7 @@ import {readJsonPayload} from '../../server/readJsonPayload.server';
 import {slackApiRequest} from '../../server/slack.server';
 import {SlackChannel} from '../../utils/slackChannels';
 import type {z} from 'zod';
+import {locale, timeZone} from '../../utils/dateUtils';
 
 export type CreateMembershipApplicationPayload = z.infer<typeof schema>;
 
@@ -73,7 +74,7 @@ export async function handleCreateMembershipApplication(
       to: sender,
       subject: `Mitgliedsantrag ${data.name}`,
       text: `Verein: ${getLegalName(data.membership)}
-Datum des Antrags: ${new Date().toLocaleDateString('de-DE')}
+Datum des Antrags: ${new Date().toLocaleDateString(locale, {timeZone})}
 Mitgliedsbeitrag: ${membershipFee}
 Name: ${data.name}
 Adresse: ${data.address}

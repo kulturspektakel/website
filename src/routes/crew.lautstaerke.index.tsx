@@ -1,184 +1,154 @@
-import {createFileRoute, Link} from '@tanstack/react-router';
+import {createFileRoute, Link, useNavigate} from '@tanstack/react-router';
 import {
   Box,
-  Center,
-  HStack,
   Heading,
-  Spinner,
+  HStack,
+  IconButton,
+  Span,
   Text,
   VStack,
 } from '@chakra-ui/react';
-import {
-  decodeDb,
-  formatLastSeen,
-  isFresh,
-  useLautstaerkeCtx,
-  useTick,
-} from '../components/lautstaerke/context';
-import {BatteryChip} from '../components/lautstaerke/BatteryChip';
+import {useQuery, useQueryClient} from '@tanstack/react-query';
+import {useState} from 'react';
+import {FaChevronRight, FaPlus} from 'react-icons/fa6';
+import {assignableNoiseDevices, listNoiseProjects} from './crew.lautstaerke';
+import {formatProjectRange} from '../components/lautstaerke/timeframe';
 import {BluetoothMenu} from '../components/lautstaerke/BluetoothMenu';
+import {DeviceRow} from '../components/lautstaerke/DeviceRow';
+import {NoiseProjectDialog} from '../components/lautstaerke/NoiseProjectDialog';
+
+type NoiseProjectItem = Awaited<ReturnType<typeof listNoiseProjects>>[number];
 
 export const Route = createFileRoute('/crew/lautstaerke/')({
-  component: DeviceList,
+  loader: async () => {
+    const [projects, unassigned] = await Promise.all([
+      listNoiseProjects(),
+      assignableNoiseDevices(),
+    ]);
+    return {projects, unassigned};
+  },
+  component: NoiseProjectList,
 });
 
-function DeviceList() {
-  const ctx = useLautstaerkeCtx();
-  const now = useTick();
-  // DB-registered devices are always listed; devices first seen via MQTT are
-  // added on the fly so newly discovered monitors show up without a DB entry.
-  // Ordering: the Bluetooth-connected device first, then active (recently seen)
-  // devices, then by location name, then by device name as the final tie-breaker.
-  const bleName = ctx.bluetooth.deviceName;
-  const names = [
-    ...new Set([...ctx.deviceIds, ...Object.keys(ctx.devices)]),
-  ].sort((a, b) => {
-    const aBle = a === bleName;
-    const bBle = b === bleName;
-    if (aBle !== bBle) return aBle ? -1 : 1;
+function NoiseProjectList() {
+  const initial = Route.useLoaderData();
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const [createOpen, setCreateOpen] = useState(false);
 
-    const aActive = isFresh(ctx.devices[a]?.lastSeen, now);
-    const bActive = isFresh(ctx.devices[b]?.lastSeen, now);
-    if (aActive !== bActive) return aActive ? -1 : 1;
-
-    const aLoc = ctx.deviceLocations[a];
-    const bLoc = ctx.deviceLocations[b];
-    if (aLoc !== bLoc) {
-      if (!aLoc) return 1;
-      if (!bLoc) return -1;
-      return aLoc.localeCompare(bLoc);
-    }
-    return a.localeCompare(b);
+  const {data: projects} = useQuery({
+    queryKey: ['noiseProjects'],
+    queryFn: () => listNoiseProjects(),
+    initialData: initial.projects,
+  });
+  const {data: unassigned} = useQuery({
+    queryKey: ['assignableNoiseDevices'],
+    queryFn: () => assignableNoiseDevices(),
+    initialData: initial.unassigned,
   });
 
   return (
     <Box display="flex" flexDirection="column" flex="1" minH="0">
-      <HStack mb="4" justify="space-between" align="center">
+      <HStack mb="6" justify="space-between" align="center">
         <Heading as="h1" size="2xl">
           Lautstärke
         </Heading>
-        <BluetoothMenu />
+        <HStack gap="2">
+          {/* Stays on the landing page: a freshly flashed monitor belongs to no
+              project yet, and this is the only page reachable without first
+              picking one. Connecting navigates to that device's page, where
+              DeviceMenu offers the same calibrate/WLAN actions. */}
+          <BluetoothMenu />
+          <IconButton
+            aria-label="Neues Projekt"
+            borderRadius="full"
+            size="sm"
+            onClick={() => setCreateOpen(true)}
+          >
+            <FaPlus />
+          </IconButton>
+        </HStack>
       </HStack>
-      {names.length === 0 && !ctx.connected ? (
-        <Center flex="1" py="10">
-          <Spinner size="lg" />
-        </Center>
-      ) : names.length === 0 ? (
-        <Text color="gray.500">Keine Lärmmessgeräte registriert.</Text>
+
+      {projects.length === 0 ? (
+        <Text color="gray.500">Noch keine Projekte.</Text>
       ) : (
-        <VStack align="stretch" gap="2" pb="4">
-          {names.map((name) => {
-            const state = ctx.devices[name];
-            const active = isFresh(state?.lastSeen, now);
-            const ble = name === bleName;
-            // Newest of the DB's lastSeen and the latest MQTT message we've seen
-            // this session; shown only while the device isn't currently active.
-            const lastSeen = Math.max(
-              ctx.deviceLastSeen[name] ?? 0,
-              state?.lastSeen ?? 0,
-            );
-            return (
-              <Box
-                key={name}
-                asChild
-                py="3"
-                pl="4"
-                pr="3"
-                rounded="md"
-                borderWidth="1px"
-                borderColor="gray.700"
-                _hover={{bg: 'gray.800'}}
-              >
-                <Link to="/crew/lautstaerke/$device" params={{device: name}}>
-                  <HStack>
-                    <Box
-                      w="3"
-                      h="3"
-                      mr="2"
-                      rounded="full"
-                      flexShrink="0"
-                      bg={ble ? 'blue.500' : active ? 'green.500' : 'gray.400'}
-                    />
-                    <DeviceTitle
-                      deviceName={name}
-                      locationName={ctx.deviceLocations[name]}
-                      batteryMv={state?.latest.batteryMv}
-                    />
-                    <VStack gap="1" align="end" minW="0">
-                      {active ? (
-                        <>
-                          <Text
-                            fontFamily="mono"
-                            fontWeight="bold"
-                            lineHeight="1"
-                          >
-                            {decodeDb(state!.latest.laeq).toFixed(1)} dB(A)
-                          </Text>
-                          <Text
-                            fontFamily="mono"
-                            fontSize="xs"
-                            color="gray.500"
-                            lineHeight="1"
-                          >
-                            {state!.latest.laeq5m == null
-                              ? '— dB(A) 5m'
-                              : `${decodeDb(state!.latest.laeq5m).toFixed(1)} dB(A) 5m`}
-                          </Text>
-                        </>
-                      ) : (
-                        <Text
-                          fontFamily="mono"
-                          fontSize="xs"
-                          color="gray.500"
-                          lineHeight="1"
-                        >
-                          {lastSeen > 0
-                            ? formatLastSeen(lastSeen, now)
-                            : 'nie gesehen'}
-                        </Text>
-                      )}
-                    </VStack>
-                  </HStack>
-                </Link>
-              </Box>
-            );
-          })}
+        <VStack align="stretch" gap="2">
+          {projects.map((project) => (
+            <ProjectRow key={project.id} project={project} />
+          ))}
         </VStack>
       )}
+
+      {/* Devices are reached through a project's locations, so a monitor with no
+          open assignment would otherwise appear nowhere at all — including every
+          monitor before the first project exists. This lists only that
+          otherwise-unreachable subset, and is empty in the steady state. */}
+      {unassigned.length > 0 && (
+        <>
+          <Heading size="md" color="gray.500" mt="8" mb="3">
+            Nicht zugewiesen
+          </Heading>
+          <VStack align="stretch" gap="2" pb="4">
+            {unassigned.map((device) => (
+              <DeviceRow
+                key={device.id}
+                deviceName={device.id}
+                lastSeen={device.lastSeen}
+              />
+            ))}
+          </VStack>
+        </>
+      )}
+
+      <NoiseProjectDialog
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onCreated={async (projectId) => {
+          await queryClient.invalidateQueries({queryKey: ['noiseProjects']});
+          setCreateOpen(false);
+          // You create a project in order to put locations in it.
+          await navigate({
+            to: '/crew/lautstaerke/projekt/$projectId',
+            params: {projectId},
+          });
+        }}
+      />
     </Box>
   );
 }
 
-function DeviceTitle({
-  deviceName,
-  locationName,
-  batteryMv,
-}: {
-  deviceName: string;
-  locationName: string | undefined;
-  batteryMv: number | undefined;
-}) {
-  const battery = batteryMv != null && <BatteryChip mv={batteryMv} />;
+function ProjectRow({project}: {project: NoiseProjectItem}) {
   return (
-    <VStack align="start" gap="0" flex="1" minW="0">
-      {locationName && (
-        <Text truncate w="full" fontWeight="bold">
-          {locationName}
-        </Text>
-      )}
-      <HStack gap="2">
-        <Text
-          fontFamily="mono"
-          fontSize={locationName ? 'xs' : undefined}
-          fontWeight={locationName ? undefined : 'bold'}
-          color={locationName ? 'gray.500' : undefined}
-          truncate
-          minW="0"
-        >
-          {deviceName}
-        </Text>
-        {battery}
-      </HStack>
-    </VStack>
+    <HStack
+      asChild
+      p="3"
+      gap="3"
+      rounded="md"
+      borderWidth="1px"
+      borderColor="gray.700"
+      cursor="pointer"
+      _hover={{bg: 'gray.800'}}
+    >
+      <Link
+        to="/crew/lautstaerke/projekt/$projectId"
+        params={{projectId: project.id}}
+      >
+        <Box flex="1" minW="0">
+          <Text fontWeight="bold" truncate>
+            {project.name}
+          </Text>
+          <Text fontSize="sm" color="gray.500">
+            {formatProjectRange(project.start, project.end)} ·{' '}
+            {project.locationCount === 1
+              ? '1 Standort'
+              : `${project.locationCount} Standorte`}
+          </Text>
+        </Box>
+        <Span color="gray.500">
+          <FaChevronRight />
+        </Span>
+      </Link>
+    </HStack>
   );
 }

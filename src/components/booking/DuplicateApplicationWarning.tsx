@@ -3,6 +3,7 @@ import {useRouteContext} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
 import {prismaClient} from '../../server/prismaClient.server';
 import {useQuery} from '@tanstack/react-query';
+import {locale, timeZone} from '../../utils/dateUtils';
 
 const getDuplicateApplication = createServerFn()
   .inputValidator((data: {bandname: string; eventId: string}) => data)
@@ -60,8 +61,8 @@ export default function DuplicateWarning(props: {bandname?: string}) {
       title="Schon beworben?"
     >
       Es sieht so aus als hätten wir von euch am{' '}
-      {data.applicationTime.toLocaleString('de-DE', {
-        timeZone: 'Europe/Berlin',
+      {data.applicationTime.toLocaleString(locale, {
+        timeZone,
         timeStyle: 'short',
         dateStyle: 'medium',
       })}{' '}

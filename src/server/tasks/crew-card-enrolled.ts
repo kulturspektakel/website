@@ -3,6 +3,7 @@ import {readJsonPayload} from '../../server/readJsonPayload.server';
 import {slackApiRequest} from '../../server/slack.server';
 import {ApiError} from '../../server/apiError.server';
 import {SlackChannel} from '../../utils/slackChannels';
+import {locale, timeZone} from '../../utils/dateUtils';
 
 export type CrewCardEnrolledPayload = {
   crewCardId: number[];
@@ -30,13 +31,13 @@ export async function handleCrewCardEnrolled(
     .toUpperCase();
 
   const formattedDate = subDays(new Date(validUntil), 1).toLocaleDateString(
-    'de-DE',
+    locale,
     {
       weekday: 'long',
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
-      timeZone: 'Europe/Berlin',
+      timeZone,
     },
   );
 

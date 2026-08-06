@@ -37,6 +37,7 @@ import {
   set,
   sub,
 } from 'date-fns';
+import {timeZone} from './dateUtils';
 
 export type BadgeStatus =
   | {
@@ -120,7 +121,7 @@ export const badgeConfig = createBadgeDefinitions({
           seconds: 0,
         },
         {
-          in: tz('Europe/Berlin'),
+          in: tz(timeZone),
         },
       );
       const sunday = set(
@@ -131,7 +132,7 @@ export const badgeConfig = createBadgeDefinitions({
           seconds: 0,
         },
         {
-          in: tz('Europe/Berlin'),
+          in: tz(timeZone),
         },
       );
       const startOfDays = [friday, saturday, sunday];
@@ -200,7 +201,7 @@ export const badgeConfig = createBadgeDefinitions({
     compute: (activities, event) => {
       const noEventDays =
         differenceInCalendarDays(event.end, event.start, {
-          in: tz('Europe/Berlin'),
+          in: tz(timeZone),
         }) + 1;
       const activityDays = new Set<string>();
       for (const activity of activities) {
@@ -209,7 +210,7 @@ export const badgeConfig = createBadgeDefinitions({
         }
         activityDays.add(
           format(sub(activity.time, {hours: 6}), 'yyyy-MM-dd', {
-            in: tz('Europe/Berlin'),
+            in: tz(timeZone),
           }),
         );
         if (activityDays.size === noEventDays) {
@@ -576,7 +577,7 @@ export const badgeConfig = createBadgeDefinitions({
                 sub(activity2.time, {hours: 6}),
                 sub(activity.time, {hours: 6}),
                 {
-                  in: tz('Europe/Berlin'),
+                  in: tz(timeZone),
                 },
               )
             ) {
@@ -633,7 +634,7 @@ export const badgeConfig = createBadgeDefinitions({
               sub(activity2.time, {hours: 6}),
               sub(activity.time, {hours: 6}),
               {
-                in: tz('Europe/Berlin'),
+                in: tz(timeZone),
               },
             )
           ) {
@@ -650,7 +651,7 @@ export const badgeConfig = createBadgeDefinitions({
         progress:
           activity1?.type === 'order' &&
           isSameDay(activity1.time, sub(new Date(), {hours: 6}), {
-            in: tz('Europe/Berlin'),
+            in: tz(timeZone),
           })
             ? {
                 target: 2,
@@ -807,7 +808,7 @@ export const badgeConfig = createBadgeDefinitions({
         // still count towards the previous day's session.
         const sessionStart = sub(activity.time, {hours: 6});
         const dayKey = format(sessionStart, 'yyyy-MM-dd', {
-          in: tz('Europe/Berlin'),
+          in: tz(timeZone),
         });
         if (seenBeerDays.has(dayKey)) {
           continue;
@@ -818,7 +819,7 @@ export const badgeConfig = createBadgeDefinitions({
         const threshold = set(
           sessionStart,
           {hours: 22, minutes: 0, seconds: 0, milliseconds: 0},
-          {in: tz('Europe/Berlin')},
+          {in: tz(timeZone)},
         );
 
         if (
@@ -856,7 +857,7 @@ export const badgeConfig = createBadgeDefinitions({
 
         // Local Europe/Berlin hour of the order (0–23).
         const hour = Number(
-          format(activity.time, 'H', {in: tz('Europe/Berlin')}),
+          format(activity.time, 'H', {in: tz(timeZone)}),
         );
         if (hour >= 6 && hour < 12) {
           return {

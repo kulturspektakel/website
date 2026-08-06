@@ -8,6 +8,7 @@ import {
 } from 'react';
 import {type NoiseRecording} from '../../proto/noise';
 import {type WifiStatus} from './bluetooth';
+import {locale} from '../../utils/dateUtils';
 
 export const TOPIC = 'noise/+/record';
 // A device counts as online — and its live spectrum keeps showing — while its
@@ -173,18 +174,15 @@ export type BluetoothSlice = {
   writeWifi: (ssid: string, password: string) => Promise<void>;
 };
 
+// Only what the live pipeline alone can provide. Which devices exist, where they
+// stand, and when the DB last saw them are per-page concerns now: the pages
+// listing devices (project locations, unassigned monitors) each get those from
+// the query they already run, and pass them into DeviceRow as props.
 export type LautstaerkeCtx = {
   connected: boolean;
   devices: Record<string, DeviceState>;
   deviceData: MutableRefObject<Record<string, DeviceBuffer>>;
   bluetooth: BluetoothSlice;
-  // All NOISE_MONITOR device ids from the database (sorted). This is the set of
-  // rows rendered in the list; MQTT only drives each row's activity indicator.
-  deviceIds: string[];
-  deviceLocations: Record<string, string>;
-  // Last-seen timestamp (epoch ms) from the DB's Device.lastSeen, per device.
-  // For a live MQTT message we use its receive time instead; see the list view.
-  deviceLastSeen: Record<string, number>;
 };
 
 export const LautstaerkeContext = createContext<LautstaerkeCtx | null>(null);
@@ -215,11 +213,31 @@ export function useTick(intervalMs = 1000): number {
   return now;
 }
 
-export function isFresh(lastSeen: number | undefined, now: number): boolean {
-  return lastSeen != null && now - lastSeen < ACTIVE_WINDOW_MS;
+// useTick, withheld until after mount and slow by default.
+//
+// useTick seeds itself during render, which is fine when the value only drives a
+// freshness dot. Where the clock decides *layout* — the range picker's right edge
+// is the current time — a value read during render would differ between the server
+// and client renders. So this yields null for that one paint and callers fall back
+// to something deterministic.
+export function useNowAfterMount(intervalMs = 60_000): number | null {
+  const now = useTick(intervalMs);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  return mounted ? now : null;
 }
 
-const relativeTime = new Intl.RelativeTimeFormat('de-DE', {numeric: 'auto'});
+// Default window drives the online dot; callers wanting a different notion of
+// "recent" (see LIVE_LEVEL_WINDOW_MS) pass their own. Exclusive at the edge.
+export function isFresh(
+  lastSeen: number | undefined,
+  now: number,
+  windowMs = ACTIVE_WINDOW_MS,
+): boolean {
+  return lastSeen != null && now - lastSeen < windowMs;
+}
+
+const relativeTime = new Intl.RelativeTimeFormat(locale, {numeric: 'auto'});
 
 // German relative time (e.g. "vor 5 Minuten") for a past timestamp.
 export function formatLastSeen(ts: number, now: number): string {
