@@ -262,6 +262,26 @@ export const assignNoiseDevice = createServerFn()
     ]);
   });
 
+// Records a new location for a device. DeviceLocation is history — each call
+// appends a placement (latitude/longitude left null for now); resolveLocation
+// picks the one in effect on the viewed day. id/createdAt have no DB default,
+// so we set them here.
+export const setDeviceLocation = createServerFn()
+  .middleware([crewAuth])
+  .inputValidator(
+    z.object({device: z.string(), locationName: z.string().trim().min(1)}),
+  )
+  .handler(async ({data}) => {
+    await prismaClient.deviceLocation.create({
+      data: {
+        id: crypto.randomUUID(),
+        deviceId: data.device,
+        locationName: data.locationName,
+        createdAt: new Date(),
+      },
+    });
+  });
+
 export const endNoiseAssignment = createServerFn()
   .middleware([crewAuth])
   .inputValidator(z.object({assignmentId: z.string().min(1)}))

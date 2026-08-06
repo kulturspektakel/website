@@ -10,6 +10,7 @@ import {
 } from '../chakra-snippets/menu';
 import {toaster} from '../chakra-snippets/toaster';
 import {errorToast} from './toast';
+import {noiseQueryKeys} from './queries';
 import {
   assignNoiseDevice,
   assignableNoiseDevices,
@@ -33,7 +34,7 @@ export function AssignDeviceMenu({
   // every location card mounts one of these, and most page visits never open
   // any of them.
   const {data: devices, isPending} = useQuery({
-    queryKey: ['assignableNoiseDevices'],
+    queryKey: noiseQueryKeys.assignableDevices,
     queryFn: () => assignableNoiseDevices(),
     enabled: open,
   });

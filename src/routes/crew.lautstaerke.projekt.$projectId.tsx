@@ -24,7 +24,7 @@ import {
 } from '../components/lautstaerke/projectSelection';
 import {useNowAfterMount} from '../components/lautstaerke/context';
 import {ProjectTimeline} from '../components/lautstaerke/ProjectTimeline';
-import {SegmentedControl} from '../components/chakra-snippets/segmented-control';
+import {SegmentedControlOrSelect} from '../components/SegmentedControlOrSelect';
 import {Switch} from '../components/chakra-snippets/switch';
 import {DeviceRow} from '../components/lautstaerke/DeviceRow';
 import LocationsMap, {
@@ -36,6 +36,7 @@ import {
   AssignDeviceMenu,
   AssignmentMenu,
 } from '../components/lautstaerke/AssignDeviceMenu';
+import {noiseQueryKeys} from '../components/lautstaerke/queries';
 import {seo} from '../utils/seo';
 
 type NoiseProject = Awaited<ReturnType<typeof loadNoiseProject>>;
@@ -79,7 +80,7 @@ function NoiseProjectDetail() {
   const [live, setLive] = useState(true);
 
   const {data: project} = useQuery({
-    queryKey: ['noiseProject', projectId],
+    queryKey: noiseQueryKeys.project(projectId),
     queryFn: () => loadNoiseProject({data: {projectId}}),
     initialData: initial,
   });
@@ -105,7 +106,7 @@ function NoiseProjectDetail() {
   // reuses what it already fetched, and skipped entirely while live.
   const playheadMinute = floorToMinute(selection.current);
   const {data: history} = useQuery({
-    queryKey: ['noiseLevelsAt', projectId, playheadMinute],
+    queryKey: noiseQueryKeys.levelsAt(projectId, playheadMinute),
     queryFn: () =>
       noiseLevelsAt({
         data: {projectId, at: new Date(playheadMinute).toISOString()},
@@ -128,9 +129,9 @@ function NoiseProjectDetail() {
   // are still available, on this page and on the index.
   const refresh = async () => {
     await Promise.all([
-      queryClient.invalidateQueries({queryKey: ['noiseProject', projectId]}),
-      queryClient.invalidateQueries({queryKey: ['assignableNoiseDevices']}),
-      queryClient.invalidateQueries({queryKey: ['noiseProjects']}),
+      queryClient.invalidateQueries({queryKey: noiseQueryKeys.project(projectId)}),
+      queryClient.invalidateQueries({queryKey: noiseQueryKeys.assignableDevices}),
+      queryClient.invalidateQueries({queryKey: noiseQueryKeys.projects}),
     ]);
   };
 
@@ -165,7 +166,7 @@ function NoiseProjectDetail() {
             <Text fontSize="sm">Live</Text>
           </Switch>
           {mapAvailable && (
-            <SegmentedControl
+            <SegmentedControlOrSelect
               size="xs"
               value={shown}
               onValueChange={(e) => setView(e.value as View)}

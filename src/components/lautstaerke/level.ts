@@ -61,5 +61,12 @@ export function loudestLevel(levels: DisplayedLevel[]): DisplayedLevel {
   );
 }
 
-// One decimal everywhere a level is shown, on the map and in the list alike.
-export const formatDb = (db: number): string => db.toFixed(1);
+// One decimal everywhere a level is shown, on the map and in the list alike,
+// and one dash where there is no level to show. The dash is the part worth
+// centralising: a missing reading is not a quiet one, so it must never render
+// as '0.0', and every site that got this right was deciding it again locally.
+// `unit` is folded in so the dash doesn't come out as '— dB'.
+export const formatDb = (db: number | null, unit?: string): string => {
+  if (db == null) return '—';
+  return unit ? `${db.toFixed(1)} ${unit}` : db.toFixed(1);
+};

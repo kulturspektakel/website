@@ -1,5 +1,11 @@
 import {describe, expect, it} from 'vitest';
-import {coverageNote, energeticMeanDb, expectedMinutes} from './leq';
+import {
+  coverageNote,
+  energeticMeanDb,
+  expectedMinutes,
+  historyTotals,
+} from './leq';
+import {type HistoryRow} from './noise';
 
 describe('energeticMeanDb', () => {
   // The load-bearing case: a plain mean would give 65. If this ever reads 65,
@@ -83,5 +89,57 @@ describe('coverageNote', () => {
 
   it('says nothing about a window that has not started', () => {
     expect(coverageNote(totals(0, 0))).toBeUndefined();
+  });
+});
+
+describe('historyTotals', () => {
+  const START = new Date('2026-07-24T18:00:00Z');
+  const END = new Date('2026-07-24T19:00:00Z');
+  // Well after END, so coverage is judged against the full hour.
+  const AFTER = Date.parse('2026-07-24T20:00:00Z');
+
+  const row = (laeq: number, lceq: number): HistoryRow => ({
+    minute_epoch: 0,
+    laeq_1m: laeq,
+    laeq_5m: null,
+    laeq_30m: null,
+    lafmax: laeq,
+    lceq_1m: lceq,
+    lceq_5m: null,
+    lceq_30m: null,
+    lcfmax: lceq,
+    lcpeak: lceq,
+  });
+
+  it('averages each weighting energetically and counts the minutes', () => {
+    const totals = historyTotals([row(60, 70), row(70, 80)], START, END, AFTER);
+    expect(totals.laeq).toBeCloseTo(67.4, 1);
+    expect(totals.lceq).toBeCloseTo(77.4, 1);
+    expect(totals.minutes).toBe(2);
+    expect(totals.expectedMinutes).toBe(60);
+  });
+
+  // An empty window is a dash, not a zero — see energeticMeanDb.
+  it('reports null levels for a window with no rows', () => {
+    const totals = historyTotals([], START, END, AFTER);
+    expect(totals.laeq).toBeNull();
+    expect(totals.lceq).toBeNull();
+    expect(totals.minutes).toBe(0);
+  });
+
+  // The pairing that makes the coverage note meaningful: 2 of 60 minutes is a
+  // 3 %-covered hour, and the tile has to say so rather than imply it was quiet.
+  it('feeds coverageNote a shortfall it will disclose', () => {
+    const totals = historyTotals([row(60, 70), row(70, 80)], START, END, AFTER);
+    expect(coverageNote(totals)).toBe('3 % Daten');
+  });
+
+  it('measures coverage against elapsed time for a window reaching into the future', () => {
+    // Half an hour in: the minutes that haven't happened yet aren't missing.
+    const halfway = Date.parse('2026-07-24T18:30:00Z');
+    const rows = Array.from({length: 30}, () => row(65, 75));
+    const totals = historyTotals(rows, START, END, halfway);
+    expect(totals.expectedMinutes).toBe(30);
+    expect(coverageNote(totals)).toBeUndefined();
   });
 });

@@ -16,6 +16,7 @@ import {formatProjectRange} from '../components/lautstaerke/timeframe';
 import {BluetoothMenu} from '../components/lautstaerke/BluetoothMenu';
 import {DeviceRow} from '../components/lautstaerke/DeviceRow';
 import {NoiseProjectDialog} from '../components/lautstaerke/NoiseProjectDialog';
+import {noiseQueryKeys} from '../components/lautstaerke/queries';
 
 type NoiseProjectItem = Awaited<ReturnType<typeof listNoiseProjects>>[number];
 
@@ -37,12 +38,12 @@ function NoiseProjectList() {
   const [createOpen, setCreateOpen] = useState(false);
 
   const {data: projects} = useQuery({
-    queryKey: ['noiseProjects'],
+    queryKey: noiseQueryKeys.projects,
     queryFn: () => listNoiseProjects(),
     initialData: initial.projects,
   });
   const {data: unassigned} = useQuery({
-    queryKey: ['assignableNoiseDevices'],
+    queryKey: noiseQueryKeys.assignableDevices,
     queryFn: () => assignableNoiseDevices(),
     initialData: initial.unassigned,
   });
@@ -105,7 +106,7 @@ function NoiseProjectList() {
         open={createOpen}
         onClose={() => setCreateOpen(false)}
         onCreated={async (projectId) => {
-          await queryClient.invalidateQueries({queryKey: ['noiseProjects']});
+          await queryClient.invalidateQueries({queryKey: noiseQueryKeys.projects});
           setCreateOpen(false);
           // You create a project in order to put locations in it.
           await navigate({

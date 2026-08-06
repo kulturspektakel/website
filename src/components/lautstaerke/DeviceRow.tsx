@@ -1,5 +1,5 @@
 import {Link} from '@tanstack/react-router';
-import {Box, HStack, Text, VStack} from '@chakra-ui/react';
+import {HStack, Text, VStack} from '@chakra-ui/react';
 import type {ReactNode} from 'react';
 import {useLautstaerkeCtx, useTick} from './context';
 import {decodeDb, formatLastSeen} from './noise';
@@ -76,7 +76,7 @@ export function DeviceRow({
             ) : (
               <>
                 <Text fontFamily="mono" fontWeight="bold" lineHeight="1">
-                  {formatDb(level.db)} dB(A)
+                  {formatDb(level.db, 'dB(A)')}
                 </Text>
                 {/* The trailing 5-minute Leq rides along on the live record, so
                     it only exists in live mode. */}
@@ -87,9 +87,12 @@ export function DeviceRow({
                     color="gray.500"
                     lineHeight="1"
                   >
-                    {state!.latest.laeq5m == null
-                      ? '— dB(A) 5m'
-                      : `${formatDb(decodeDb(state!.latest.laeq5m))} dB(A) 5m`}
+                    {formatDb(
+                      state!.latest.laeq5m == null
+                        ? null
+                        : decodeDb(state!.latest.laeq5m),
+                      'dB(A) 5m',
+                    )}
                   </Text>
                 )}
               </>

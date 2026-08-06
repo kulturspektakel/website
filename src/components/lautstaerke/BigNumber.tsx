@@ -1,6 +1,7 @@
 import {useState} from 'react';
 import {SimpleGrid, Text, chakra} from '@chakra-ui/react';
 import type uPlot from 'uplot';
+import {formatDb} from './level';
 import {type Weighting} from './noise';
 import {type SeriesKind} from './series';
 
@@ -66,7 +67,7 @@ export function BigNumber({
         fontWeight="bold"
         lineHeight="1"
       >
-        {value == null ? '—' : value.toFixed(1)}
+        {formatDb(value)}
       </Text>
       <Text fontSize="sm" color={color} fontWeight="bold">
         {label}

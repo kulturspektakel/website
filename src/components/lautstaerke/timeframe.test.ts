@@ -1,8 +1,11 @@
 import {describe, expect, it} from 'vitest';
 import {
   dayRangeSearch,
+  defaultRange,
+  floorToMinute,
   fromLocalInput,
   parseRangeSearch,
+  rangeSearch,
   snapToQuarter,
   toLocalInput,
 } from './timeframe';
@@ -94,9 +97,8 @@ describe('parseRangeSearch', () => {
   });
 });
 
-// The project page's three-thumb timeline lives in the URL, and the selection has
-// to survive a hand-edited or stale one. These pin the clamping and ordering
-// rules, which the slider itself relies on holding.
+// What the project timeline's thumbs snap to on release; the clamping and
+// ordering built on top of it live in projectSelection.test.ts.
 describe('snapToQuarter', () => {
   it('rounds to the nearest wall-clock quarter hour', () => {
     const at = (iso: string) => new Date(snapToQuarter(Date.parse(iso))).toISOString();
@@ -110,5 +112,53 @@ describe('snapToQuarter', () => {
   it('lands on a local quarter hour too', () => {
     const local = toLocalInput(snapToQuarter(Date.parse('2026-07-24T18:08:00Z')));
     expect(local.endsWith(':15')).toBe(true);
+  });
+});
+
+describe('floorToMinute', () => {
+  // Both sides of the level query floor to this — the client to key the request,
+  // the server to find the aggregate — so the two must agree exactly. A minute
+  // is a UTC minute here, deliberately: every zone Berlin uses is a whole-hour
+  // offset, so a local minute and a UTC minute are the same instant.
+  it('floors to the start of the containing minute', () => {
+    const at = (iso: string) => new Date(floorToMinute(Date.parse(iso))).toISOString();
+    expect(at('2026-07-24T18:07:59.999Z')).toBe('2026-07-24T18:07:00.000Z');
+    expect(at('2026-07-24T18:07:00.000Z')).toBe('2026-07-24T18:07:00.000Z');
+  });
+
+  it('is idempotent', () => {
+    const once = floorToMinute(Date.parse('2026-07-24T18:07:42Z'));
+    expect(floorToMinute(once)).toBe(once);
+  });
+});
+
+describe('defaultRange', () => {
+  it('offers the hour ending at the current minute', () => {
+    const {start, end} = defaultRange(Date.parse('2026-07-24T18:07:42Z'));
+    expect(end.toISOString()).toBe('2026-07-24T18:07:00.000Z');
+    expect(start.toISOString()).toBe('2026-07-24T17:07:00.000Z');
+  });
+
+  // Whatever it offers has to be a range the picker and the query will accept.
+  it('produces a range parseRangeSearch accepts', () => {
+    const range = defaultRange(Date.parse('2026-07-24T18:07:42Z'));
+    expect(parseRangeSearch(rangeSearch(range))).toEqual(range);
+  });
+});
+
+describe('rangeSearch / parseRangeSearch', () => {
+  // The older and more used of the two round trips, and the only one that was
+  // untested: the URL is the single source of truth for the viewed timeframe.
+  it('round-trips a range through the URL', () => {
+    const range = {
+      start: new Date('2026-07-24T16:00:00Z'),
+      end: new Date('2026-07-24T18:30:00Z'),
+    };
+    const search = rangeSearch(range);
+    expect(search).toEqual({
+      start: '2026-07-24T16:00:00.000Z',
+      end: '2026-07-24T18:30:00.000Z',
+    });
+    expect(parseRangeSearch(search)).toEqual(range);
   });
 });

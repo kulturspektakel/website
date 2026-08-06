@@ -10,6 +10,41 @@ import {
   visibleProjectWindow,
 } from './projectSelection';
 
+// The project page's three-thumb timeline lives in the URL, and the selection has
+// to survive a hand-edited or stale one. These pin the clamping and ordering
+// rules, which the slider itself relies on holding.
+
+describe('visibleProjectWindow', () => {
+  const project = {
+    start: Date.parse('2026-07-24T00:00:00Z'),
+    end: Date.parse('2026-07-27T00:00:00Z'),
+  };
+
+  it('is the whole project once it is over', () => {
+    expect(visibleProjectWindow(project, Date.parse('2026-08-01T00:00:00Z'))).toEqual(
+      project,
+    );
+  });
+
+  // There are no measurements in the future, so a running project is only
+  // pickable up to now.
+  it('clips a running project at the current time', () => {
+    const now = Date.parse('2026-07-25T12:00:00Z');
+    expect(visibleProjectWindow(project, now)).toEqual({
+      start: project.start,
+      end: now,
+    });
+  });
+
+  // The load-bearing case: the slider copes with a zero-width window, but an
+  // inverted one it would not.
+  it('collapses to a point rather than inverting before the project starts', () => {
+    const window = visibleProjectWindow(project, Date.parse('2026-07-01T00:00:00Z'));
+    expect(window).toEqual({start: project.start, end: project.start});
+    expect(window.end).toBeGreaterThanOrEqual(window.start);
+  });
+});
+
 describe('parseProjectSelectionSearch', () => {
   it('keeps parseable instants and drops the rest', () => {
     expect(

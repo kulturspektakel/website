@@ -2,8 +2,6 @@ import {useNavigate, useRouter, useSearch} from '@tanstack/react-router';
 import {useMemo, useState} from 'react';
 import {LuEllipsisVertical} from 'react-icons/lu';
 import {IconButton} from '@chakra-ui/react';
-import {createServerFn} from '@tanstack/react-start';
-import {z} from 'zod';
 import {
   MenuCheckboxItem,
   MenuContent,
@@ -15,8 +13,7 @@ import {
   MenuTrigger,
   MenuTriggerItem,
 } from '../chakra-snippets/menu';
-import {crewAuth} from '../../server/crewAuth';
-import {prismaClient} from '../../server/prismaClient.server';
+import {setDeviceLocation} from '../../routes/crew.lautstaerke';
 import {toaster} from '../chakra-snippets/toaster';
 import {errorToast} from './toast';
 import {formatTimeframeRange, rangeSearch} from './timeframe';
@@ -27,26 +24,6 @@ import {useLautstaerkeCtx} from './context';
 import {decodeDb, isFresh} from './noise';
 import {useDeviceView} from './deviceView';
 import {BAND_FREQUENCIES} from './bluetooth';
-
-// Records a new location for a device. DeviceLocation is history — each call
-// appends a placement (latitude/longitude left null for now); resolveLocation
-// picks the one in effect on the viewed day. id/createdAt have no DB default,
-// so we set them here.
-const setDeviceLocation = createServerFn()
-  .middleware([crewAuth])
-  .inputValidator(
-    z.object({device: z.string(), locationName: z.string().trim().min(1)}),
-  )
-  .handler(async ({data}) => {
-    await prismaClient.deviceLocation.create({
-      data: {
-        id: crypto.randomUUID(),
-        deviceId: data.device,
-        locationName: data.locationName,
-        createdAt: new Date(),
-      },
-    });
-  });
 
 // The single header menu for a device view, consolidating what used to be four
 // separate controls: Bluetooth (connect / calibrate / WLAN / disconnect),

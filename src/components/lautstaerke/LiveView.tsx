@@ -10,6 +10,7 @@ import {
   type DeviceState,
 } from './noise';
 import {LIVE_SERIES} from './series';
+import {formatDb} from './level';
 import {BigNumberRow, useSeriesToggle} from './BigNumber';
 import {NoiseTimeChart} from './NoiseTimeChart';
 import {useDeviceView} from './deviceView';
@@ -326,11 +327,11 @@ function BandTooltip({
         {fmtHz(FREQS[hover.idx] ?? 0)} Hz
       </Text>
       <Text fontFamily="mono" fontWeight="bold" lineHeight="1.2">
-        {db == null ? '—' : `${db.toFixed(1)} dB`}
+        {formatDb(db, 'dB')}
       </Text>
       {peakDb != null && (
         <Text fontFamily="mono" fontSize="xs" color={PEAK_COLOR} lineHeight="1.2">
-          Peak {peakDb.toFixed(1)} dB
+          Peak {formatDb(peakDb, 'dB')}
         </Text>
       )}
     </ChartTooltip>

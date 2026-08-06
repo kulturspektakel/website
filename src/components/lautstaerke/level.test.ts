@@ -108,6 +108,16 @@ describe('loudestLevel', () => {
 });
 
 describe('formatDb', () => {
+  it('renders a dash for a missing level, never a zero', () => {
+    expect(formatDb(null)).toBe('—');
+    expect(formatDb(null, 'dB(A)')).toBe('—');
+    expect(formatDb(0)).toBe('0.0');
+  });
+
+  it('appends a unit when given one', () => {
+    expect(formatDb(87.25, 'dB(A)')).toBe('87.3 dB(A)');
+  });
+
   it('always shows one decimal, so pins and rows agree', () => {
     expect(formatDb(87)).toBe('87.0');
     expect(formatDb(87.25)).toBe('87.3');
