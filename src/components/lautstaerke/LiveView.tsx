@@ -1,7 +1,7 @@
 import {useEffect, useMemo, useRef, useState} from 'react';
 import {Box, Flex, Text} from '@chakra-ui/react';
 import uPlot from 'uplot';
-import {useLautstaerkeCtx, useTick} from './context';
+import {useNoiseLive, useTick} from './context';
 import {
   GAP_THRESHOLD_S,
   WINDOW_S,
@@ -57,7 +57,7 @@ const peakCaps: uPlot.Series.PathBuilder = (u, sIdx) => {
 // the MQTT records in the shared context. Rendered by the $device index route
 // whenever the URL carries no timeframe.
 export function LiveView({device}: {device: string}) {
-  const ctx = useLautstaerkeCtx();
+  const ctx = useNoiseLive();
   const {weighting, peaks} = useDeviceView();
   const bandRef = useRef<HTMLDivElement | null>(null);
   const bandPlotRef = useRef<uPlot | null>(null);
@@ -81,9 +81,10 @@ export function LiveView({device}: {device: string}) {
   const [cursorIdx, setCursorIdx] = useState<number | 'gap' | null>(null);
   const {shown, toggle} = useSeriesToggle(LIVE_SERIES);
 
-  if (!ctx.deviceData.current[device]) {
-    ctx.deviceData.current[device] = [[], ...LIVE_SERIES.map(() => [] as number[])];
-  }
+  // This view can mount before the device's first record arrives, so the buffer
+  // may not exist yet; ensureBuffer hands back an empty one with the right
+  // column count rather than the chart having to cope with undefined.
+  const buffer = ctx.ensureBuffer(device);
 
   const deviceState = ctx.devices[device];
   const latest = deviceState?.latest ?? null;
@@ -244,7 +245,7 @@ export function LiveView({device}: {device: string}) {
     bandPlotRef.current?.setSeries(2, {show: peaks});
   }, [peaks, weighting, device]);
 
-  const data = ctx.deviceData.current[device] as uPlot.AlignedData;
+  const data = buffer as unknown as uPlot.AlignedData;
 
   return (
     <>

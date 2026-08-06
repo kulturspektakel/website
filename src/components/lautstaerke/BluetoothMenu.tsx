@@ -5,14 +5,14 @@ import {IconButton} from '@chakra-ui/react';
 import {MenuContent, MenuItem, MenuRoot, MenuTrigger} from '../chakra-snippets/menu';
 import {CalibrationPanel} from './CalibrationPanel';
 import {WifiDialog} from './WifiDialog';
-import {useLautstaerkeCtx} from './context';
+import {useBluetooth} from './context';
 
 // Owns the whole Bluetooth lifecycle, shared by the overview and device views.
 // While disconnected the button connects directly (and on success we jump to
 // the connected device's detail page); once connected it becomes a dropdown
 // offering calibration and disconnect. The trigger is blue while connected.
 export function BluetoothMenu() {
-  const {bluetooth} = useLautstaerkeCtx();
+  const bluetooth = useBluetooth();
   const navigate = useNavigate();
   const [calibrating, setCalibrating] = useState(false);
   const [wifiOpen, setWifiOpen] = useState(false);

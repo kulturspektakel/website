@@ -20,7 +20,7 @@ import {formatTimeframeRange, rangeSearch} from './timeframe';
 import {CalibrationPanel} from './CalibrationPanel';
 import {TimeframeDialog} from './TimeframeDialog';
 import {WifiDialog} from './WifiDialog';
-import {useLautstaerkeCtx} from './context';
+import {useBluetooth, useNoiseLive} from './context';
 import {decodeDb, isFresh} from './noise';
 import {useDeviceView} from './deviceView';
 import {BAND_FREQUENCIES} from './bluetooth';
@@ -46,8 +46,8 @@ export function DeviceMenu({
         : null,
     [search.start, search.end],
   );
-  const ctx = useLautstaerkeCtx();
-  const {bluetooth} = ctx;
+  const ctx = useNoiseLive();
+  const bluetooth = useBluetooth();
   const {weighting, toggleWeighting, peaks, togglePeaks} = useDeviceView();
   const navigate = useNavigate();
   const router = useRouter();

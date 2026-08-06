@@ -1,4 +1,3 @@
-/// <reference types="web-bluetooth" />
 import {
   createFileRoute,
   notFound,
@@ -8,50 +7,21 @@ import {
 import {Box} from '@chakra-ui/react';
 import {z} from 'zod';
 import {DarkMode} from '../components/chakra-snippets/color-mode';
-import {
-  startTransition,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
-import mqtt from 'mqtt';
+import {useMemo, useRef} from 'react';
 import 'uplot/dist/uPlot.min.css';
-import {NoiseRecording} from '../proto/noise';
 import {seo} from '../utils/seo';
 import {
-  LautstaerkeContext,
-  type LautstaerkeCtx,
+  BluetoothContext,
+  NoiseLiveContext,
+  type NoiseLiveCtx,
 } from '../components/lautstaerke/context';
-import {
-  TOPIC,
-  WINDOW_S,
-  type DeviceBuffer,
-  type DeviceState,
-} from '../components/lautstaerke/noise';
-import {SERIES} from '../components/lautstaerke/series';
-import {
-  connectBleDevice,
-  decodePendingUploads,
-  decodeWifiStatus,
-  isWebBluetoothSupported,
-  readCalibration,
-  subscribeCharacteristic,
-  writeCalibration,
-  writeWifi,
-  type BleConnection,
-  type WifiStatus,
-} from '../components/lautstaerke/bluetooth';
+import {useNoiseStream} from '../components/lautstaerke/useNoiseStream';
+import {useBleDevice} from '../components/lautstaerke/useBleDevice';
 import {createServerFn} from '@tanstack/react-start';
 import {crewAuth} from '../server/crewAuth';
 import {prismaClient} from '../server/prismaClient.server';
 import {projectLevelsAt} from '../server/noiseHistory.server';
-import {Toaster, toaster} from '../components/chakra-snippets/toaster';
-import {
-  errorMessage,
-  errorToast,
-} from '../components/lautstaerke/toast';
+import {Toaster} from '../components/chakra-snippets/toaster';
 import {END_BEFORE_START} from '../components/lautstaerke/timeframe';
 
 // The section's data layer lives in this layout file and is imported by the leaf
@@ -301,209 +271,29 @@ export const Route = createFileRoute('/crew/lautstaerke')({
 });
 
 function LautstaerkeLayout() {
-  const [devices, setDevices] = useState<Record<string, DeviceState>>({});
-  const deviceDataRef = useRef<Record<string, DeviceBuffer>>({});
+  // The seam between the two pipelines, and the reason it's a ref: the BLE hook
+  // writes the connected device's name here so the MQTT stream can skip its
+  // duplicate copies, and a ref means connecting doesn't re-run the stream's
+  // effect and drop the broker connection mid-session.
+  const connectedDevice = useRef<string | null>(null);
 
-  const [bleDeviceName, setBleDeviceName] = useState<string | null>(null);
-  const [bleConnecting, setBleConnecting] = useState(false);
-  const [bleSupported, setBleSupported] = useState(false);
-  const [blePendingUploads, setBlePendingUploads] = useState<number | null>(
-    null,
+  const {devices, deviceData, ensureBuffer, ingest} = useNoiseStream({
+    skipDevice: connectedDevice,
+  });
+  const bluetooth = useBleDevice({ingest, connectedDevice});
+
+  const live = useMemo<NoiseLiveCtx>(
+    () => ({devices, deviceData, ensureBuffer}),
+    [devices, deviceData, ensureBuffer],
   );
-  const [bleWifiStatus, setBleWifiStatus] = useState<WifiStatus | null>(null);
-
-  useEffect(() => {
-    setBleSupported(isWebBluetoothSupported());
-  }, []);
-  const bleConnRef = useRef<BleConnection | null>(null);
-  // Teardown callbacks registered while connecting (one per characteristic
-  // subscription plus the disconnect listener); cleanupBle runs them all.
-  const bleCleanupsRef = useRef<Array<() => void>>([]);
-
-  const ingest = useCallback(
-    (deviceName: string, payload: Uint8Array, receiveTime: number) => {
-      let decoded: NoiseRecording;
-      try {
-        decoded = NoiseRecording.decode(payload);
-      } catch (e) {
-        console.error('[lautstärke] decode error', e);
-        return;
-      }
-      let data = deviceDataRef.current[deviceName];
-      if (!data) {
-        data = [[], ...SERIES.map(() => [] as number[])];
-        deviceDataRef.current[deviceName] = data;
-      }
-      data[0].push(receiveTime / 1000);
-      SERIES.forEach((s, j) => data[j + 1].push(s.get(decoded)));
-
-      // Non-urgent: MQTT records arrive several times a second. As an *urgent*
-      // update this preempts (and, on slower/mobile renders, permanently
-      // starves) TanStack Router's route transition — the URL commits but the
-      // detail view never swaps in. Demoting it to a transition lets navigation
-      // win; the live values lag at most a frame, which is imperceptible here.
-      startTransition(() =>
-        setDevices((prev) => ({
-          ...prev,
-          [deviceName]: {
-            lastSeen: receiveTime,
-            latest: decoded,
-          },
-        })),
-      );
-    },
-    [],
-  );
-
-  useEffect(() => {
-    const tick = setInterval(() => {
-      const minTs = Date.now() / 1000 - WINDOW_S;
-      for (const data of Object.values(deviceDataRef.current)) {
-        let cutoff = 0;
-        while (cutoff < data[0].length && data[0][cutoff]! < minTs) cutoff++;
-        if (cutoff > 0) for (const col of data) col.splice(0, cutoff);
-      }
-    }, 1000);
-    return () => clearInterval(tick);
-  }, []);
-
-  useEffect(() => {
-    const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt', {
-      clean: true,
-      reconnectPeriod: 2000,
-      clientId: `kult-lautstaerke-${Math.random().toString(16).slice(2, 10)}`,
-    });
-
-    client.on('connect', () => {
-      client.subscribe(TOPIC, {qos: 0}, (err) => {
-        if (err) console.error('[lautstärke] subscribe error', err);
-      });
-    });
-    client.on('error', (e) => console.error('[lautstärke] mqtt error', e));
-
-    client.on('message', (topic, payload) => {
-      const deviceName = topic.split('/')[1];
-      if (!deviceName) return;
-      if (bleConnRef.current?.deviceName === deviceName) return;
-      ingest(deviceName, payload, Date.now());
-    });
-
-    return () => {
-      client.removeAllListeners();
-      client.end(true);
-    };
-  }, [ingest]);
-
-  const cleanupBle = useCallback(() => {
-    // Detach every characteristic listener + the disconnect listener, then drop
-    // the GATT link.
-    for (const cleanup of bleCleanupsRef.current) {
-      try {
-        cleanup();
-      } catch {}
-    }
-    bleCleanupsRef.current = [];
-    try {
-      bleConnRef.current?.device.gatt?.disconnect();
-    } catch {}
-    bleConnRef.current = null;
-    setBleDeviceName(null);
-    setBlePendingUploads(null);
-    setBleWifiStatus(null);
-  }, []);
-
-  const disconnectBle = useCallback(async () => {
-    cleanupBle();
-  }, [cleanupBle]);
-
-  const connectBle = useCallback(async (): Promise<string | null> => {
-    if (bleConnecting) return null;
-    if (bleConnRef.current) cleanupBle();
-    setBleConnecting(true);
-    try {
-      const conn = await connectBleDevice();
-      const onDisconnect = () => {
-        cleanupBle();
-        toaster.create({
-          type: 'info',
-          title: 'Bluetooth-Verbindung getrennt',
-        });
-      };
-      conn.device.addEventListener('gattserverdisconnected', onDisconnect);
-      // Each subscription reads its current value on connect and updates on
-      // notify; the record stream is live-only (no initial read) so we don't
-      // plot a stale sample. Every registered cleanup runs in cleanupBle.
-      bleCleanupsRef.current = [
-        subscribeCharacteristic(
-          conn.characteristic,
-          (value) =>
-            ingest(
-              conn.deviceName,
-              new Uint8Array(value.buffer, value.byteOffset, value.byteLength),
-              Date.now(),
-            ),
-          {readInitial: false},
-        ),
-        subscribeCharacteristic(conn.uploadsCharacteristic, (value) =>
-          setBlePendingUploads(decodePendingUploads(value)),
-        ),
-        subscribeCharacteristic(conn.wifiStatusCharacteristic, (value) => {
-          // Ignore the 0xff subscribe sentinel / unknown values (decode → null).
-          const status = decodeWifiStatus(value);
-          if (status) setBleWifiStatus(status);
-        }),
-        () =>
-          conn.device.removeEventListener(
-            'gattserverdisconnected',
-            onDisconnect,
-          ),
-      ];
-      bleConnRef.current = conn;
-      setBleDeviceName(conn.deviceName);
-      return conn.deviceName;
-    } catch (e) {
-      // Cancelling the chooser is not a failure, so it gets no toast.
-      if (
-        !(e instanceof DOMException && e.name === 'NotFoundError') &&
-        !/User cancelled/i.test(errorMessage(e))
-      ) {
-        errorToast('Bluetooth-Verbindung fehlgeschlagen')(e);
-      }
-      return null;
-    } finally {
-      setBleConnecting(false);
-    }
-  }, [bleConnecting, cleanupBle, ingest]);
-
-  const readCal = useCallback(async () => {
-    const conn = bleConnRef.current;
-    if (!conn) throw new Error('Kein Gerät über Bluetooth verbunden.');
-    return readCalibration(conn);
-  }, []);
-
-  const writeCal = useCallback(async (offsetsDb: number[]) => {
-    const conn = bleConnRef.current;
-    if (!conn) throw new Error('Kein Gerät über Bluetooth verbunden.');
-    await writeCalibration(conn, offsetsDb);
-  }, []);
-
-  const writeWifiCreds = useCallback(async (ssid: string, password: string) => {
-    const conn = bleConnRef.current;
-    if (!conn) throw new Error('Kein Gerät über Bluetooth verbunden.');
-    await writeWifi(conn, ssid, password);
-  }, []);
-
-  useEffect(() => {
-    return () => cleanupBle();
-  }, [cleanupBle]);
 
   // Warn before navigating away or reloading while connected over Bluetooth —
   // leaving the page tears down the BLE connection. Navigating between pages
   // under /crew/lautstaerke keeps the layout (and the connection) mounted, so
   // those moves should not be blocked.
   useBlocker({
-    disabled: !bleDeviceName,
-    enableBeforeUnload: () => bleDeviceName != null,
+    disabled: !bluetooth.deviceName,
+    enableBeforeUnload: () => bluetooth.deviceName != null,
     shouldBlockFn: ({next}) => {
       if (next.fullPath.startsWith(Route.fullPath)) return false;
       return !window.confirm(
@@ -512,54 +302,24 @@ function LautstaerkeLayout() {
     },
   });
 
-  const ctx = useMemo<LautstaerkeCtx>(
-    () => ({
-      devices,
-      deviceData: deviceDataRef,
-      bluetooth: {
-        deviceName: bleDeviceName,
-        connecting: bleConnecting,
-        supported: bleSupported,
-        pendingUploads: blePendingUploads,
-        wifiStatus: bleWifiStatus,
-        connect: connectBle,
-        disconnect: disconnectBle,
-        readCalibration: readCal,
-        writeCalibration: writeCal,
-        writeWifi: writeWifiCreds,
-      },
-    }),
-    [
-      devices,
-      bleDeviceName,
-      bleConnecting,
-      bleSupported,
-      blePendingUploads,
-      bleWifiStatus,
-      connectBle,
-      disconnectBle,
-      readCal,
-      writeCal,
-      writeWifiCreds,
-    ],
-  );
-
   return (
-    <LautstaerkeContext.Provider value={ctx}>
-      <DarkMode>
-        <Box
-          bg="gray.900"
-          color="gray.100"
-          h="100vh"
-          display="flex"
-          flexDirection="column"
-          overflow="auto"
-          p="4"
-        >
-          <Outlet />
-        </Box>
-        <Toaster />
-      </DarkMode>
-    </LautstaerkeContext.Provider>
+    <NoiseLiveContext.Provider value={live}>
+      <BluetoothContext.Provider value={bluetooth}>
+        <DarkMode>
+          <Box
+            bg="gray.900"
+            color="gray.100"
+            h="100vh"
+            display="flex"
+            flexDirection="column"
+            overflow="auto"
+            p="4"
+          >
+            <Outlet />
+          </Box>
+          <Toaster />
+        </DarkMode>
+      </BluetoothContext.Provider>
+    </NoiseLiveContext.Provider>
   );
 }

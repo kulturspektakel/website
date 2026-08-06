@@ -1,7 +1,7 @@
 import {Link} from '@tanstack/react-router';
 import {HStack, Text, VStack} from '@chakra-ui/react';
 import type {ReactNode} from 'react';
-import {useLautstaerkeCtx, useTick} from './context';
+import {useBluetooth, useNoiseLive, useTick} from './context';
 import {decodeDb, formatLastSeen} from './noise';
 import {displayedLevel, formatDb} from './level';
 import {BatteryChip} from './BatteryChip';
@@ -35,12 +35,13 @@ export function DeviceRow({
   // row doesn't nest interactive elements — e.g. "Zuweisung beenden".
   action?: ReactNode;
 }) {
-  const ctx = useLautstaerkeCtx();
+  const ctx = useNoiseLive();
+  const bluetooth = useBluetooth();
   // Local tick: freshness is per-row, so this doesn't re-render its siblings.
   const now = useTick();
   const state = ctx.devices[deviceName];
   const level = displayedLevel({live, now, state, historyDb});
-  const ble = deviceName === ctx.bluetooth.deviceName;
+  const ble = deviceName === bluetooth.deviceName;
   const seen = Math.max(lastSeen ?? 0, state?.lastSeen ?? 0);
 
   return (

@@ -6,7 +6,7 @@ import {UploadsChip} from './UploadsChip';
 import {WifiStatusIcon} from './WifiStatusIcon';
 import {DeviceMenu} from './DeviceMenu';
 import {LiveStatusDot} from './LiveStatusDot';
-import {useLautstaerkeCtx} from './context';
+import {useBluetooth, useNoiseLive} from './context';
 
 // One header for both the live and historical device views. Everything but the
 // loader-derived location is read straight from the shared contexts (or, for the
@@ -19,12 +19,13 @@ export function DeviceHeader({
   device: string;
   location?: string | null;
 }) {
-  const ctx = useLautstaerkeCtx();
+  const ctx = useNoiseLive();
+  const bluetooth = useBluetooth();
   const deviceState = ctx.devices[device];
-  const bleConnected = ctx.bluetooth.deviceName === device;
+  const bleConnected = bluetooth.deviceName === device;
   // Pending uploads and WiFi status only make sense for the BLE-connected device.
-  const pendingUploads = bleConnected ? ctx.bluetooth.pendingUploads : null;
-  const wifiStatus = bleConnected ? ctx.bluetooth.wifiStatus : null;
+  const pendingUploads = bleConnected ? bluetooth.pendingUploads : null;
+  const wifiStatus = bleConnected ? bluetooth.wifiStatus : null;
 
   return (
     <HStack mb="4" align="center">

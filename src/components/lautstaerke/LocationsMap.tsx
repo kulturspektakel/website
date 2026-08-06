@@ -3,7 +3,7 @@ import {Box} from '@chakra-ui/react';
 import {memo, useEffect, useRef, useState} from 'react';
 import {SegmentedControl} from '../chakra-snippets/segmented-control';
 import {KULT_LOCATION} from '../../utils/kultLocation';
-import {useLautstaerkeCtx, useTick} from './context';
+import {useNoiseLive, useTick} from './context';
 import {displayedLevel, formatDb, loudestLevel} from './level';
 import {DARK_MAP_STYLE, MAP_BACKGROUND} from './mapStyle';
 
@@ -322,7 +322,7 @@ function MapCanvas({
   }, [signature]);
 
   // The level each pin shows, decided by the same function the list rows use.
-  const ctx = useLautstaerkeCtx();
+  const ctx = useNoiseLive();
   // Live records arrive ~1/s; without a tick the pins would freeze at whatever
   // value happened to be current when the markers were built.
   const now = useTick();
