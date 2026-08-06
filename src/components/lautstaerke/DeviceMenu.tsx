@@ -23,7 +23,8 @@ import {formatTimeframeRange, rangeSearch} from './timeframe';
 import {CalibrationPanel} from './CalibrationPanel';
 import {TimeframeDialog} from './TimeframeDialog';
 import {WifiDialog} from './WifiDialog';
-import {decodeDb, isFresh, useLautstaerkeCtx} from './context';
+import {useLautstaerkeCtx} from './context';
+import {decodeDb, isFresh} from './noise';
 import {useDeviceView} from './deviceView';
 import {BAND_FREQUENCIES} from './bluetooth';
 

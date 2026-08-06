@@ -19,7 +19,7 @@ import {
   CAL_STEP_DB,
   formatBandFrequency,
 } from './bluetooth';
-import {type BluetoothSlice} from './context';
+import {type BluetoothSlice} from './noise';
 import {toaster} from '../chakra-snippets/toaster';
 import {errorMessage, errorToast} from './toast';
 

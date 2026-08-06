@@ -1,19 +1,15 @@
 import {prismaClient} from './prismaClient.server';
 import {
-  HISTORY_SERIES,
   decodeDb,
   type DeviceLocationRecord,
   type HistoryRow,
-} from '../components/lautstaerke/context';
-import {MINUTE_MS, floorToMinute} from '../components/lautstaerke/timeframe';
-import {
-  energeticMeanDb,
-  expectedMinutes,
-  type HistoryTotals,
-} from '../components/lautstaerke/leq';
+  type NoiseLevels,
+} from '../components/lautstaerke/noise';
 import {
   MAX_RANGE_DAYS,
   MAX_RANGE_MS,
+  MINUTE_MS,
+  floorToMinute,
 } from '../components/lautstaerke/timeframe';
 
 // NoiseLog already holds one 60-second aggregate per row (measuredAt = the start
@@ -71,43 +67,6 @@ export async function deviceLocations(
   return rows.map((r) => ({name: r.locationName, createdAt: r.createdAt.getTime()}));
 }
 
-// Project the aggregate rows into the [x, ...columns] layout uPlot wants, with
-// one column per HISTORY_SERIES entry in order. The SQL only emits minutes that
-// had data, so gaps are rendered by NoiseTimeChart's gap refiner (a > threshold
-// jump between consecutive x values), no explicit null rows needed. Individual
-// nulls (a missing 5m/30m value on an otherwise-present minute) break just that
-// line. The view casts the result to uPlot.AlignedData at the chart edge.
-export function rowsToAligned(rows: HistoryRow[]): (number | null)[][] {
-  const xs = rows.map((r) => r.minute_epoch);
-  const cols = HISTORY_SERIES.map((s) => rows.map((r) => r[s.col]));
-  return [xs, ...cols];
-}
-
-// The single Leq for the selected timeframe, both weightings so the A/C toggle
-// needs no refetch. Read off the named HistoryRow fields rather than the aligned
-// columns, so a HISTORY_SERIES reorder can't silently change which level this
-// averages. Rows are already one-per-minute and equally weighted, so this is a
-// plain energetic mean — see energeticMeanDb for why it isn't an arithmetic one.
-//
-// A gap is an *absent row*, not a null: NoiseLog.laeq/lceq are NOT NULL, so unlike
-// the 5m/30m columns these two are always present on a row that exists. The mean is
-// therefore over the minutes that were measured (standard Leq-over-measured-time) —
-// treating a gap as silence would drag the level down and misrepresent it, so the
-// caller gets `minutes`/`expectedMinutes` to disclose how much was actually covered.
-export function historyTotals(
-  rows: HistoryRow[],
-  start: Date,
-  end: Date,
-  now = Date.now(),
-): HistoryTotals {
-  return {
-    laeq: energeticMeanDb(rows.map((r) => r.laeq_1m)),
-    lceq: energeticMeanDb(rows.map((r) => r.lceq_1m)),
-    minutes: rows.length,
-    expectedMinutes: expectedMinutes(start, end, now),
-  };
-}
-
 // The stored level for each monitor of one project at a single instant — what the
 // project page's list and map show when live mode is off.
 //
@@ -118,7 +77,7 @@ export function historyTotals(
 export async function projectLevelsAt(
   projectId: string,
   at: Date,
-): Promise<Record<string, number>> {
+): Promise<NoiseLevels> {
   const minute = new Date(floorToMinute(at.getTime()));
   const nextMinute = new Date(minute.getTime() + MINUTE_MS);
 
@@ -143,7 +102,7 @@ export async function projectLevelsAt(
     select: {deviceId: true, laeq: true},
   });
 
-  const levels: Record<string, number> = {};
+  const levels: NoiseLevels = {};
   for (const log of logs) {
     levels[log.deviceId] ??= decodeDb(log.laeq);
   }

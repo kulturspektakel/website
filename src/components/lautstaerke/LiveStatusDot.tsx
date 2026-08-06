@@ -1,5 +1,6 @@
 import {Box} from '@chakra-ui/react';
-import {isFresh, useTick} from './context';
+import {useTick} from './context';
+import {isFresh} from './noise';
 
 // Online dot, shared by the device header and every device row. Ticks internally
 // so only it (not its parent) re-renders each second. Driven by live MQTT state,

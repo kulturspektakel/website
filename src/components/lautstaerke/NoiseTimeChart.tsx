@@ -7,9 +7,9 @@ import {
   zonedDate,
   makeGapsRefiner,
   resolveCssVar,
-  seriesKind,
 } from './chartUtils';
-import {type Weighting} from './context';
+import {type Weighting} from './noise';
+import {type SeriesKind} from './series';
 import {ChartTooltip} from './ChartTooltip';
 
 // Shared time-series chart for both the live and historical noise pages. The
@@ -38,14 +38,15 @@ export function NoiseTimeChart({
   // historical mode a static array re-pushed whenever its identity changes.
   data: uPlot.AlignedData;
   series: ReadonlyArray<{
+    kind: SeriesKind;
     label: string;
     weighting: Weighting;
     stroke: string;
     hidden?: boolean;
   }>;
   weighting: Weighting;
-  // Keyed by seriesKind; mirrors the big-number legend toggles.
-  shown: Record<string, boolean>;
+  // Keyed by series kind; mirrors the big-number legend toggles.
+  shown: Record<SeriesKind, boolean>;
   xRange: () => [number, number];
   xAxisFormat: (ts: number) => string;
   gapThresholdX: number;
@@ -179,7 +180,7 @@ export function NoiseTimeChart({
         ...visible.map(({s}) => ({
           label: s.label,
           stroke: s.stroke,
-          show: shownRef.current[seriesKind(s.label)],
+          show: shownRef.current[s.kind],
           width: 1.5,
           spanGaps: false,
           gaps,
@@ -409,7 +410,7 @@ export function NoiseTimeChart({
     const plot = plotRef.current;
     if (!plot) return;
     visible.forEach(({s}, vi) =>
-      plot.setSeries(vi + 1, {show: shown[seriesKind(s.label)]}),
+      plot.setSeries(vi + 1, {show: shown[s.kind]}),
     );
   }, [shown, visible]);
 

@@ -7,11 +7,9 @@ import {
   type HistoryData,
 } from '../components/lautstaerke/HistoryView';
 import {parseRangeSearch} from '../components/lautstaerke/timeframe';
-import {
-  historyTotals,
-  noiseHistory,
-  rowsToAligned,
-} from '../server/noiseHistory.server';
+import {historyTotals} from '../components/lautstaerke/leq';
+import {rowsToAligned} from '../components/lautstaerke/series';
+import {noiseHistory} from '../server/noiseHistory.server';
 
 // Loads one device's minute-aggregates for an explicit UTC window. The range
 // arrives as the same ISO strings the URL carries; parseRangeSearch is the single

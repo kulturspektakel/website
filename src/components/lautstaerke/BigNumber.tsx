@@ -1,8 +1,8 @@
 import {useState} from 'react';
 import {SimpleGrid, Text, chakra} from '@chakra-ui/react';
 import type uPlot from 'uplot';
-import {seriesKind} from './chartUtils';
-import {type Weighting} from './context';
+import {type Weighting} from './noise';
+import {type SeriesKind} from './series';
 
 // Shared by both tile variants so they can't drift apart visually.
 const tileBase = {
@@ -107,7 +107,12 @@ export function BigNumber({
 // — the optional `liveValue` (the live latest reading; omitted for historical,
 // where the numbers stay blank until hover). Clicking toggles the series.
 export function BigNumberRow<
-  S extends {label: string; weighting: Weighting; stroke: string},
+  S extends {
+    kind: SeriesKind;
+    label: string;
+    weighting: Weighting;
+    stroke: string;
+  },
 >({
   series,
   weighting,
@@ -120,18 +125,18 @@ export function BigNumberRow<
 }: {
   series: ReadonlyArray<S>;
   weighting: Weighting;
-  shown: Record<string, boolean>;
-  toggle: (kind: string) => void;
+  shown: Record<SeriesKind, boolean>;
+  toggle: (kind: SeriesKind) => void;
   cursorIdx: number | 'gap' | null;
   data: uPlot.AlignedData;
   liveValue?: (s: S) => number | null;
   // A tile with no data column behind it: a value over the whole window, so it
-  // ignores the cursor and isn't toggleable. Inserted after the series labelled
+  // ignores the cursor and isn't toggleable. Inserted after the series of kind
   // `after` (falling back to the end) to keep the 1m → 5m → 30m → total reading
   // order. Deliberately not a `series` entry: those are index-coupled to the
   // aligned columns and shared with the chart, which would plot a phantom line.
   aggregate?: {
-    after: string;
+    after: SeriesKind;
     label: string;
     color: string;
     value: number | null;
@@ -143,13 +148,12 @@ export function BigNumberRow<
     color: string;
     value: number | null;
     // Absent for the aggregate tile — nothing to toggle.
-    kind?: string;
+    kind?: SeriesKind;
     sub?: string;
   }> = series
     .map((s, i) => ({s, i}))
     .filter(({s}) => s.weighting === weighting)
     .map(({s, i}) => {
-      const kind = seriesKind(s.label);
       const value =
         cursorIdx === 'gap'
           ? null
@@ -158,11 +162,11 @@ export function BigNumberRow<
             : liveValue
               ? liveValue(s)
               : null;
-      return {kind, label: s.label, color: s.stroke, value};
+      return {kind: s.kind, label: s.label, color: s.stroke, value};
     });
 
   if (aggregate) {
-    const at = items.findIndex((n) => n.label === aggregate.after);
+    const at = items.findIndex((n) => n.kind === aggregate.after);
     items.splice(at < 0 ? items.length : at + 1, 0, {
       label: aggregate.label,
       color: aggregate.color,
@@ -191,16 +195,16 @@ export function BigNumberRow<
 // Visibility keyed by weighting-independent series kind, so the toggle state
 // mirrors what's plotted and carries across the dB(A)/dB(C) switch.
 export function useSeriesToggle(
-  series: ReadonlyArray<{label: string; hidden?: boolean}>,
+  series: ReadonlyArray<{kind: SeriesKind; hidden?: boolean}>,
 ) {
-  const [shown, setShown] = useState<Record<string, boolean>>(() => {
-    const m: Record<string, boolean> = {};
-    for (const s of series) m[seriesKind(s.label)] = !('hidden' in s && s.hidden);
+  const [shown, setShown] = useState<Record<SeriesKind, boolean>>(() => {
+    const m = {} as Record<SeriesKind, boolean>;
+    for (const s of series) m[s.kind] = !s.hidden;
     return m;
   });
   return {
     shown,
-    toggle: (kind: string) =>
+    toggle: (kind: SeriesKind) =>
       setShown((prev) => ({...prev, [kind]: !prev[kind]})),
   };
 }

@@ -1,12 +1,8 @@
 import {Link} from '@tanstack/react-router';
 import {Box, HStack, Text, VStack} from '@chakra-ui/react';
 import type {ReactNode} from 'react';
-import {
-  decodeDb,
-  formatLastSeen,
-  useLautstaerkeCtx,
-  useTick,
-} from './context';
+import {useLautstaerkeCtx, useTick} from './context';
+import {decodeDb, formatLastSeen} from './noise';
 import {displayedLevel, formatDb} from './level';
 import {BatteryChip} from './BatteryChip';
 import {LiveStatusDot} from './LiveStatusDot';

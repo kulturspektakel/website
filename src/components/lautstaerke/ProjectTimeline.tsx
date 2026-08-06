@@ -11,15 +11,17 @@ import {Field} from '../chakra-snippets/field';
 import {
   MINUTE_MS,
   QUARTER_MINUTES,
-  commitProjectSelection,
   formatInstant,
   fromLocalInput,
+  toLocalInput,
+} from './timeframe';
+import {
+  commitProjectSelection,
   selectionThumbs,
   setProjectBound,
   thumbsToSelection,
-  toLocalInput,
   type ProjectSelection,
-} from './timeframe';
+} from './projectSelection';
 
 // The slider's own unit is whole minutes from the project's start, and it steps a
 // quarter hour at a time — so every thumb, cursor included, moves in 15-minute

@@ -3,7 +3,7 @@ import {createServerFn} from '@tanstack/react-start';
 import {crewAuth} from '../server/crewAuth';
 import {useState} from 'react';
 import {Box} from '@chakra-ui/react';
-import {type Weighting} from '../components/lautstaerke/context';
+import {type Weighting} from '../components/lautstaerke/noise';
 import {DeviceHeader} from '../components/lautstaerke/DeviceHeader';
 import {
   DeviceViewContext,

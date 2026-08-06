@@ -22,13 +22,15 @@ import {NoiseRecording} from '../proto/noise';
 import {seo} from '../utils/seo';
 import {
   LautstaerkeContext,
-  SERIES,
+  type LautstaerkeCtx,
+} from '../components/lautstaerke/context';
+import {
   TOPIC,
   WINDOW_S,
   type DeviceBuffer,
   type DeviceState,
-  type LautstaerkeCtx,
-} from '../components/lautstaerke/context';
+} from '../components/lautstaerke/noise';
+import {SERIES} from '../components/lautstaerke/series';
 import {
   connectBleDevice,
   decodePendingUploads,
@@ -279,7 +281,6 @@ export const Route = createFileRoute('/crew/lautstaerke')({
 });
 
 function LautstaerkeLayout() {
-  const [connected, setConnected] = useState(false);
   const [devices, setDevices] = useState<Record<string, DeviceState>>({});
   const deviceDataRef = useRef<Record<string, DeviceBuffer>>({});
 
@@ -354,13 +355,10 @@ function LautstaerkeLayout() {
     });
 
     client.on('connect', () => {
-      setConnected(true);
       client.subscribe(TOPIC, {qos: 0}, (err) => {
         if (err) console.error('[lautstärke] subscribe error', err);
       });
     });
-    client.on('close', () => setConnected(false));
-    client.on('offline', () => setConnected(false));
     client.on('error', (e) => console.error('[lautstärke] mqtt error', e));
 
     client.on('message', (topic, payload) => {
@@ -496,7 +494,6 @@ function LautstaerkeLayout() {
 
   const ctx = useMemo<LautstaerkeCtx>(
     () => ({
-      connected,
       devices,
       deviceData: deviceDataRef,
       bluetooth: {
@@ -513,7 +510,6 @@ function LautstaerkeLayout() {
       },
     }),
     [
-      connected,
       devices,
       bleDeviceName,
       bleConnecting,

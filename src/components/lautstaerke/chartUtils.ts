@@ -43,10 +43,6 @@ export const fmtDayHourMinute = (ts: number) => {
   return `${pad2(d.getDate())}.${pad2(d.getMonth() + 1)}. ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 };
 
-// Weighting-independent identity of a series ('LAeq,1s' -> 'Leq,1s'), so the
-// legend toggle state can be shared across the dB(A)/dB(C) switch.
-export const seriesKind = (label: string) => label[0] + label.slice(2);
-
 // Renders an explicit gap whenever consecutive samples are further apart than
 // `gapThresholdX` on the x-axis (seconds for live, minutes-as-seconds for
 // history) — uPlot otherwise draws a continuous line across missing data.

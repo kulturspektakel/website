@@ -6,180 +6,17 @@ import {
   useState,
   type MutableRefObject,
 } from 'react';
-import {type NoiseRecording} from '../../proto/noise';
-import {type WifiStatus} from './bluetooth';
-import {locale} from '../../utils/dateUtils';
+import {type BluetoothSlice, type DeviceBuffer, type DeviceState} from './noise';
 
-export const TOPIC = 'noise/+/record';
-// A device counts as online — and its live spectrum keeps showing — while its
-// most recent record is younger than this. Used by both the presence
-// indicator (isFresh) and the frequency chart's live/empty decision.
-export const ACTIVE_WINDOW_MS = 5_000;
-export const WINDOW_S = 300;
-// Live samples arrive ~1/s; break the line (and treat the cursor as "in a gap")
-// once consecutive samples are more than this far apart — i.e. a few seconds of
-// missing data, while tolerating normal sub-second delivery jitter.
-export const GAP_THRESHOLD_S = 3;
-
-export const decodeDb = (byte: number) => 20 + byte / 2;
-
-export type Weighting = 'A' | 'C';
-
-// Order matters: this is the legend order within each weighting. Each Leq is a
-// shade of yellow (lighter → darker as the window grows); max and peak are
-// shades of orange. All lines are solid.
-export const SERIES = [
-  {
-    label: 'LAeq,1s',
-    weighting: 'A',
-    stroke: '#fef08a',
-    get: (d: NoiseRecording) => decodeDb(d.laeq),
-  },
-  {
-    label: 'LAeq,5m',
-    weighting: 'A',
-    stroke: '#eab308',
-    get: (d: NoiseRecording) => (d.laeq5m == null ? null : decodeDb(d.laeq5m)),
-  },
-  {
-    label: 'LAeq,30m',
-    weighting: 'A',
-    stroke: '#a16207',
-    get: (d: NoiseRecording) => (d.laeq30m == null ? null : decodeDb(d.laeq30m)),
-  },
-  {
-    label: 'LAFmax',
-    weighting: 'A',
-    stroke: '#f87171',
-    hidden: true,
-    get: (d: NoiseRecording) => decodeDb(d.lafmax),
-  },
-  {
-    label: 'LCeq,1s',
-    weighting: 'C',
-    stroke: '#fef08a',
-    get: (d: NoiseRecording) => decodeDb(d.lceq),
-  },
-  {
-    label: 'LCeq,5m',
-    weighting: 'C',
-    stroke: '#eab308',
-    get: (d: NoiseRecording) => (d.lceq5m == null ? null : decodeDb(d.lceq5m)),
-  },
-  {
-    label: 'LCeq,30m',
-    weighting: 'C',
-    stroke: '#a16207',
-    get: (d: NoiseRecording) => (d.lceq30m == null ? null : decodeDb(d.lceq30m)),
-  },
-  {
-    label: 'LCFmax',
-    weighting: 'C',
-    stroke: '#f87171',
-    hidden: true,
-    get: (d: NoiseRecording) => decodeDb(d.lcfmax),
-  },
-  {
-    label: 'LCpeak',
-    weighting: 'C',
-    stroke: '#b91c1c',
-    hidden: true,
-    get: (d: NoiseRecording) => decodeDb(d.lcpeak),
-  },
-] as const satisfies ReadonlyArray<{
-  label: string;
-  weighting: Weighting;
-  stroke: string;
-  // hidden from the chart by default; still toggleable via the legend.
-  hidden?: boolean;
-  get: (d: NoiseRecording) => number | null;
-}>;
-
-// A device's location history; `createdAt` is epoch ms. Fetched by
-// deviceLocations (noiseHistory.server) and resolved per viewed day by
-// resolveLocation (deviceView). Isomorphic type, so it lives here next to the
-// other shared shapes rather than in a client- or server-only module.
-export type DeviceLocationRecord = {name: string; createdAt: number};
-
-// One row (one 60s aggregate) from the historical query; every level is already
-// decoded to dB. Lives here next to HISTORY_SERIES so the `col` mapping below can
-// be checked against it; the query that produces it is in noiseHistory.server.ts.
-export type HistoryRow = {
-  minute_epoch: number;
-  laeq_1m: number;
-  // Read from the device's stored trailing-window columns, so null until its
-  // buffer filled (and for rows predating those columns).
-  laeq_5m: number | null;
-  laeq_30m: number | null;
-  lafmax: number;
-  lceq_1m: number;
-  lceq_5m: number | null;
-  lceq_30m: number | null;
-  lcfmax: number;
-  lcpeak: number;
-};
-
-// Parallel to SERIES, for the historical (per-day) page. Same order, strokes,
-// weightings and hidden flags — the only difference is the "fast" window is one
-// minute instead of one second (Leq,1m vs Leq,1s). `col` maps each series to a
-// column the query decodes per row (see noiseHistory.server.ts); values come
-// back already decoded to dB, so no `get`/decodeDb is needed here.
-export const HISTORY_SERIES = [
-  {label: 'LAeq,1m', weighting: 'A', stroke: '#fef08a', col: 'laeq_1m'},
-  {label: 'LAeq,5m', weighting: 'A', stroke: '#eab308', col: 'laeq_5m'},
-  {label: 'LAeq,30m', weighting: 'A', stroke: '#a16207', col: 'laeq_30m'},
-  {label: 'LAFmax', weighting: 'A', stroke: '#f87171', hidden: true, col: 'lafmax'},
-  {label: 'LCeq,1m', weighting: 'C', stroke: '#fef08a', col: 'lceq_1m'},
-  {label: 'LCeq,5m', weighting: 'C', stroke: '#eab308', col: 'lceq_5m'},
-  {label: 'LCeq,30m', weighting: 'C', stroke: '#a16207', col: 'lceq_30m'},
-  {label: 'LCFmax', weighting: 'C', stroke: '#f87171', hidden: true, col: 'lcfmax'},
-  {label: 'LCpeak', weighting: 'C', stroke: '#b91c1c', hidden: true, col: 'lcpeak'},
-] as const satisfies ReadonlyArray<{
-  label: string;
-  weighting: Weighting;
-  stroke: string;
-  hidden?: boolean;
-  col: keyof HistoryRow;
-}>;
-
-export type DeviceState = {
-  lastSeen: number;
-  // The most recent live (1 Hz) record. Being flat, it also carries the
-  // trailing 5m/30m Leq (null until the device's ring buffer is full) and
-  // batteryMv (only when on battery), so no separate fields are needed here.
-  latest: NoiseRecording;
-};
-export type DeviceBuffer = (number | null)[][];
-
-export type BluetoothSlice = {
-  deviceName: string | null;
-  connecting: boolean;
-  supported: boolean;
-  // Count of log files the connected device still has to upload, from the
-  // Read+Notify uploads characteristic. null when disconnected or when the
-  // firmware doesn't expose the counter.
-  pendingUploads: number | null;
-  // The connected device's WiFi state, from the Read+Notify wifi-status
-  // characteristic. null when disconnected or when the firmware doesn't expose
-  // it.
-  wifiStatus: WifiStatus | null;
-  // Resolves to the connected device's name, or null if the user cancelled or
-  // the connection failed (the error is exposed via `error`).
-  connect: () => Promise<string | null>;
-  disconnect: () => Promise<void>;
-  // Per-band calibration over the connected device; both throw if not connected.
-  readCalibration: () => Promise<number[]>;
-  writeCalibration: (offsetsDb: number[]) => Promise<void>;
-  // Push WiFi credentials to the connected device; throws if not connected.
-  writeWifi: (ssid: string, password: string) => Promise<void>;
-};
+// The React half of the section: the live-pipeline context and the clock hooks.
+// The shapes, the wire encoding and the freshness rules are in noise.ts, and the
+// series table in series.ts — both React-free, so the server can import them.
 
 // Only what the live pipeline alone can provide. Which devices exist, where they
-// stand, and when the DB last saw them are per-page concerns now: the pages
-// listing devices (project locations, unassigned monitors) each get those from
-// the query they already run, and pass them into DeviceRow as props.
+// stand, and when the DB last saw them are per-page concerns: the pages listing
+// devices (project locations, unassigned monitors) each get those from the query
+// they already run, and pass them into DeviceRow as props.
 export type LautstaerkeCtx = {
-  connected: boolean;
   devices: Record<string, DeviceState>;
   deviceData: MutableRefObject<Record<string, DeviceBuffer>>;
   bluetooth: BluetoothSlice;
@@ -226,26 +63,3 @@ export function useNowAfterMount(intervalMs = 60_000): number | null {
   useEffect(() => setMounted(true), []);
   return mounted ? now : null;
 }
-
-// Default window drives the online dot; callers wanting a different notion of
-// "recent" (see LIVE_LEVEL_WINDOW_MS) pass their own. Exclusive at the edge.
-export function isFresh(
-  lastSeen: number | undefined,
-  now: number,
-  windowMs = ACTIVE_WINDOW_MS,
-): boolean {
-  return lastSeen != null && now - lastSeen < windowMs;
-}
-
-const relativeTime = new Intl.RelativeTimeFormat(locale, {numeric: 'auto'});
-
-// German relative time (e.g. "vor 5 Minuten") for a past timestamp.
-export function formatLastSeen(ts: number, now: number): string {
-  const diffS = Math.round((ts - now) / 1000);
-  const abs = Math.abs(diffS);
-  if (abs < 60) return relativeTime.format(diffS, 'second');
-  if (abs < 3600) return relativeTime.format(Math.round(diffS / 60), 'minute');
-  if (abs < 86400) return relativeTime.format(Math.round(diffS / 3600), 'hour');
-  return relativeTime.format(Math.round(diffS / 86400), 'day');
-}
-

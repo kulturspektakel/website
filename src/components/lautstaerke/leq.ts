@@ -1,6 +1,9 @@
-// The Leq for a whole selected timeframe, as the history loader computes it (see
-// historyTotals). Lives here, on the client-safe side, so the view can type its
-// loader data without importing the server module.
+import {MINUTE_MS} from './timeframe';
+import {type HistoryRow} from './noise';
+
+// The Leq for a whole selected timeframe, plus how it's computed. Lives here,
+// beside the energetic mean it's built on and away from the Prisma import, so
+// the view can type its loader data and the maths can be unit-tested.
 export type HistoryTotals = {
   // Leq over the whole window, per weighting; null when the window had no data.
   laeq: number | null;
@@ -18,7 +21,7 @@ export type HistoryTotals = {
 // minutes that haven't happened yet, and would otherwise always look gappy.
 export function expectedMinutes(start: Date, end: Date, now: number): number {
   const elapsedMs = Math.min(end.getTime(), now) - start.getTime();
-  return Math.max(0, Math.round(elapsedMs / 60_000));
+  return Math.max(0, Math.round(elapsedMs / MINUTE_MS));
 }
 
 // How much of the window went unmeasured, as a note for the Leq tile — or
@@ -63,4 +66,29 @@ export function energeticMeanDb(
     n++;
   }
   return n === 0 ? null : 10 * Math.log10(sum / n);
+}
+
+// The single Leq for the selected timeframe, both weightings so the A/C toggle
+// needs no refetch. Read off the named HistoryRow fields rather than the aligned
+// columns, so a SERIES reorder can't silently change which level this averages.
+// Rows are already one-per-minute and equally weighted, so this is a plain
+// energetic mean — see energeticMeanDb for why it isn't an arithmetic one.
+//
+// A gap is an *absent row*, not a null: NoiseLog.laeq/lceq are NOT NULL, so unlike
+// the 5m/30m columns these two are always present on a row that exists. The mean is
+// therefore over the minutes that were measured (standard Leq-over-measured-time) —
+// treating a gap as silence would drag the level down and misrepresent it, so the
+// caller gets `minutes`/`expectedMinutes` to disclose how much was actually covered.
+export function historyTotals(
+  rows: HistoryRow[],
+  start: Date,
+  end: Date,
+  now = Date.now(),
+): HistoryTotals {
+  return {
+    laeq: energeticMeanDb(rows.map((r) => r.laeq_1m)),
+    lceq: energeticMeanDb(rows.map((r) => r.lceq_1m)),
+    minutes: rows.length,
+    expectedMinutes: expectedMinutes(start, end, now),
+  };
 }

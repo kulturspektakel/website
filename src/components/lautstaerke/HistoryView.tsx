@@ -2,7 +2,7 @@ import {useNavigate, useRouter} from '@tanstack/react-router';
 import {useCallback, useEffect, useMemo, useState} from 'react';
 import {Box} from '@chakra-ui/react';
 import type uPlot from 'uplot';
-import {HISTORY_SERIES} from './context';
+import {HISTORY_SERIES} from './series';
 import {BigNumberRow, useSeriesToggle} from './BigNumber';
 import {NoiseTimeChart} from './NoiseTimeChart';
 import {useDeviceView} from './deviceView';
@@ -100,7 +100,7 @@ export function HistoryView({
         cursorIdx={cursorIdx}
         data={data}
         aggregate={{
-          after: weighting === 'A' ? 'LAeq,30m' : 'LCeq,30m',
+          after: 'eq_30m',
           // Unqualified Leq already means "over the measurement period".
           label: weighting === 'A' ? 'LAeq' : 'LCeq',
           // Neutral rather than a stroke colour: there's no line to match.

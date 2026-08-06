@@ -1,5 +1,5 @@
 import {createContext, useContext} from 'react';
-import {type DeviceLocationRecord, type Weighting} from './context';
+import {type DeviceLocationRecord, type Weighting} from './noise';
 import {timeZone} from '../../utils/dateUtils';
 
 // The weighting toggle lives in the shared header (the $device layout route),

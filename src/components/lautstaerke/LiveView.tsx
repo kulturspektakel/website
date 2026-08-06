@@ -1,16 +1,15 @@
 import {useEffect, useMemo, useRef, useState} from 'react';
 import {Box, Flex, Text} from '@chakra-ui/react';
 import uPlot from 'uplot';
+import {useLautstaerkeCtx, useTick} from './context';
 import {
   GAP_THRESHOLD_S,
-  SERIES,
   WINDOW_S,
   decodeDb,
   isFresh,
-  useLautstaerkeCtx,
-  useTick,
   type DeviceState,
-} from './context';
+} from './noise';
+import {LIVE_SERIES} from './series';
 import {BigNumberRow, useSeriesToggle} from './BigNumber';
 import {NoiseTimeChart} from './NoiseTimeChart';
 import {useDeviceView} from './deviceView';
@@ -79,10 +78,10 @@ export function LiveView({device}: {device: string}) {
   // buffer index for the hovered sample, or 'gap' when the cursor sits in a
   // region with no nearby sample (big numbers show — rather than stale data).
   const [cursorIdx, setCursorIdx] = useState<number | 'gap' | null>(null);
-  const {shown, toggle} = useSeriesToggle(SERIES);
+  const {shown, toggle} = useSeriesToggle(LIVE_SERIES);
 
   if (!ctx.deviceData.current[device]) {
-    ctx.deviceData.current[device] = [[], ...SERIES.map(() => [] as number[])];
+    ctx.deviceData.current[device] = [[], ...LIVE_SERIES.map(() => [] as number[])];
   }
 
   const deviceState = ctx.devices[device];
@@ -249,7 +248,7 @@ export function LiveView({device}: {device: string}) {
   return (
     <>
       <BigNumberRow
-        series={SERIES}
+        series={LIVE_SERIES}
         weighting={weighting}
         shown={shown}
         toggle={toggle}
@@ -261,7 +260,7 @@ export function LiveView({device}: {device: string}) {
         <NoiseTimeChart
           live
           data={data}
-          series={SERIES}
+          series={LIVE_SERIES}
           weighting={weighting}
           shown={shown}
           xRange={() => {

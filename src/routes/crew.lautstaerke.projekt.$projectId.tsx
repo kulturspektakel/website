@@ -14,12 +14,14 @@ import {loadNoiseProject, noiseLevelsAt} from './crew.lautstaerke';
 import {
   floorToMinute,
   formatProjectRange,
+} from '../components/lautstaerke/timeframe';
+import {
   parseProjectSelectionSearch,
   projectSelectionSearch,
   resolveProjectSelection,
   visibleProjectWindow,
   type ProjectSelection,
-} from '../components/lautstaerke/timeframe';
+} from '../components/lautstaerke/projectSelection';
 import {useNowAfterMount} from '../components/lautstaerke/context';
 import {ProjectTimeline} from '../components/lautstaerke/ProjectTimeline';
 import {SegmentedControl} from '../components/chakra-snippets/segmented-control';
