@@ -1,4 +1,5 @@
 import uPlot from 'uplot';
+import {useRef, type MutableRefObject} from 'react';
 import {TZDate} from '@date-fns/tz';
 import {timeZone} from '../../utils/dateUtils';
 
@@ -21,6 +22,45 @@ export const resolveCssVar = (cssVar: string, fallback: string): string => {
 
 export const AXIS_STROKE_VAR = 'var(--chakra-colors-gray-400)';
 export const GRID_STROKE_VAR = 'var(--chakra-colors-gray-700)';
+
+// The dB axis, shared by the time chart and the band spectrum so the two read
+// against the same scale when they sit side by side in the live view. 30 dB is
+// below the noise floor of these mics and 110 above anything the festival
+// produces, so a fixed range keeps the lines from rescaling as levels move.
+export const dbAxis = {range: [30, 110] as const};
+
+// uPlot needs a concrete pixel height, and the container is flex-sized, so it
+// can measure 0 before layout settles — fall back rather than collapse.
+export const plotHeight = (container: HTMLElement, fallback: number): number =>
+  Math.max(100, container.clientHeight || fallback);
+
+// uPlot's cursor coordinates are relative to the plotting area; offset by it to
+// anchor a React tooltip in container coordinates.
+export const cursorAnchor = (
+  u: uPlot,
+  container: HTMLElement,
+  left: number,
+  top: number,
+): {left: number; top: number} => {
+  const over = u.over.getBoundingClientRect();
+  const root = container.getBoundingClientRect();
+  return {left: over.left - root.left + left, top: over.top - root.top + top};
+};
+
+// Both charts stroke their axes, grid and ticks identically off the same two
+// Chakra variables; only the resolution differs (they're read at mount).
+export const chartAxisStyle = (): {
+  stroke: string;
+  grid: {stroke: string};
+  ticks: {stroke: string};
+} => {
+  const gridStroke = resolveCssVar(GRID_STROKE_VAR, '#374151');
+  return {
+    stroke: resolveCssVar(AXIS_STROKE_VAR, '#9ca3af'),
+    grid: {stroke: gridStroke},
+    ticks: {stroke: gridStroke},
+  };
+};
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
 
@@ -61,3 +101,12 @@ export const makeGapsRefiner =
     }
     return out;
   };
+
+// A ref that always holds the latest value, for reading current props inside a
+// long-lived plot closure without making them effect dependencies — a chart
+// must not be torn down and rebuilt because a callback got a new identity.
+export function useLatest<T>(value: T): MutableRefObject<T> {
+  const ref = useRef(value);
+  ref.current = value;
+  return ref;
+}

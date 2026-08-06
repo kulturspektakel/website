@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {useCallback, useEffect, useMemo, useState} from 'react';
 import {
   Box,
   Button,
@@ -22,6 +22,7 @@ import {
 import {type BluetoothSlice} from './noise';
 import {toaster} from '../chakra-snippets/toaster';
 import {errorMessage, errorToast} from './toast';
+import {useCalibrationClipboard} from './useCalibrationClipboard';
 
 // Calibration lives in a draggable, resizable floating panel rather than a
 // modal dialog so the live frequency chart stays visible (and uncovered) while
@@ -119,69 +120,7 @@ export function CalibrationPanel({
   );
 
   // Clipboard support so a set of trims can be carried to another device.
-  // Active while the panel is open: a document-level ⌘/Ctrl+C·V handler (capture
-  // phase, so the panel's own key handling can't swallow it). Uses the async
-  // Clipboard API — a plain `copy` event never fires for a focused non-editable
-  // element without a selection. The wire format is just the 31 values, one per
-  // line ("1.0\n-2.5\n…").
-  const offsetsRef = useRef(offsets);
-  offsetsRef.current = offsets;
-
-  useEffect(() => {
-    if (!open) return;
-
-    const copy = () => {
-      const current = offsetsRef.current;
-      if (!current) return;
-      navigator.clipboard.writeText(current.map((v) => v.toFixed(1)).join('\n')).then(
-        () => toaster.create({type: 'success', title: 'Kalibrierung kopiert'}),
-        () =>
-          toaster.create({type: 'error', title: 'Kopieren fehlgeschlagen'}),
-      );
-    };
-
-    const paste = (text: string) => {
-      const parts = text.trim().split(/[\s,]+/).filter(Boolean);
-      const nums = parts.map(Number);
-      if (parts.length !== CAL_BAND_COUNT || nums.some((n) => !Number.isFinite(n))) {
-        toaster.create({
-          type: 'error',
-          title: 'Kalibrierung konnte nicht eingefügt werden',
-          description: `Erwartet ${CAL_BAND_COUNT} Zahlenwerte, ${parts.length} erhalten.`,
-        });
-        return;
-      }
-      // Snap to the slider's step and clamp to its range so the pasted values
-      // stay valid (encodeCalibration would clamp anyway, but this keeps the UI
-      // consistent).
-      setOffsets(
-        nums.map((n) =>
-          Math.max(
-            -CAL_MAX_DB,
-            Math.min(CAL_MAX_DB, Math.round(n / CAL_STEP_DB) * CAL_STEP_DB),
-          ),
-        ),
-      );
-      toaster.create({type: 'success', title: 'Kalibrierung eingefügt'});
-    };
-
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (!(e.metaKey || e.ctrlKey) || e.altKey || e.shiftKey) return;
-      const key = e.key.toLowerCase();
-      if (key === 'c') {
-        e.preventDefault();
-        copy();
-      } else if (key === 'v') {
-        e.preventDefault();
-        navigator.clipboard.readText().then(paste, () =>
-          toaster.create({type: 'error', title: 'Einfügen fehlgeschlagen'}),
-        );
-      }
-    };
-
-    document.addEventListener('keydown', onKeyDown, true);
-    return () => document.removeEventListener('keydown', onKeyDown, true);
-  }, [open]);
+  useCalibrationClipboard({open, offsets, onPaste: setOffsets});
 
   return (
     <FloatingPanel.Root

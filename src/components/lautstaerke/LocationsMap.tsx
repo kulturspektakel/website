@@ -6,6 +6,9 @@ import {KULT_LOCATION} from '../../utils/kultLocation';
 import {useNoiseLive, useTick} from './context';
 import {displayedLevel, formatDb, loudestLevel} from './level';
 import {DARK_MAP_STYLE, MAP_BACKGROUND} from './mapStyle';
+import {pinIcon, pinLabel} from './mapPin';
+import {pulseOverlay} from './mapPulse';
+import {useSamplePins} from './mapDevPins';
 
 export type MapLocation = {
   id: string;
@@ -18,142 +21,6 @@ export type MapLocation = {
 
 export type Coordinates = {latitude: number; longitude: number};
 
-// A pin carries its location's current level, so it has to be wide enough for
-// "87.3" — a pill when there's a number, and the bare dot when there isn't.
-const PIN_FILL = '#fafafa';
-const PIN_LABEL = '#18181b';
-// Rounded rect 56×26, centred on the location like the dot is.
-const PILL_PATH =
-  'M -15,-13 h 30 a 13,13 0 0 1 0,26 h -30 a 13,13 0 0 1 0,-26 z';
-const DOT_RADIUS = 13;
-const PIN_FONT_SIZE = '13px';
-
-// A pin's two looks. Shared so the dev samples below render through exactly the
-// same code as the real pins rather than approximating them.
-const pinIcon = (
-  maps: typeof google.maps,
-  withLabel: boolean,
-): google.maps.Symbol => {
-  const base = {
-    fillColor: PIN_FILL,
-    fillOpacity: 1,
-    // A ring in the ground color separates overlapping pins.
-    strokeColor: MAP_BACKGROUND,
-    strokeWeight: 2,
-  };
-  return withLabel
-    ? {...base, path: PILL_PATH, labelOrigin: new maps.Point(0, 0)}
-    : {...base, path: maps.SymbolPath.CIRCLE, scale: DOT_RADIUS};
-};
-
-const pinLabel = (text: string): google.maps.MarkerLabel | null =>
-  text
-    ? {text, color: PIN_LABEL, fontSize: PIN_FONT_SIZE, fontWeight: '700'}
-    : null;
-
-// A ring expanding out from a pin, marking it as fed by the live stream.
-//
-// It has to be a DOM overlay rather than a marker: a marker's icon is an SVG
-// Symbol the API rasterises, so it can't be animated without re-setting the icon
-// every frame, and AdvancedMarkerElement (which *is* DOM) requires a mapId, which
-// would disable the custom map style. OverlayView needs neither.
-const PULSE_SIZE = 26;
-const PULSE_PERIOD_MS = 2000;
-// Two rings half a period apart, so there's always one on its way out rather than
-// a gap between beats.
-const PULSE_RINGS = 2;
-
-type PulseCtor = new (position: google.maps.LatLngLiteral) => Pulse;
-interface Pulse extends google.maps.OverlayView {
-  setPosition(position: google.maps.LatLngLiteral): void;
-}
-
-// `google.maps` doesn't exist until the loader has run, so the subclass can't be
-// declared at module scope. Built on first use and cached.
-let pulseCtor: PulseCtor | null = null;
-
-function pulseOverlay(maps: typeof google.maps): PulseCtor {
-  if (pulseCtor) return pulseCtor;
-  pulseCtor = class extends maps.OverlayView implements Pulse {
-    private div: HTMLDivElement | null = null;
-
-    constructor(private position: google.maps.LatLngLiteral) {
-      super();
-    }
-
-    setPosition(position: google.maps.LatLngLiteral) {
-      this.position = position;
-      this.draw();
-    }
-
-    onAdd() {
-      const div = document.createElement('div');
-      div.style.position = 'absolute';
-      // The rings must never take a click meant for the map.
-      div.style.pointerEvents = 'none';
-
-      for (let i = 0; i < PULSE_RINGS; i++) {
-        const ring = document.createElement('div');
-        Object.assign(ring.style, {
-          position: 'absolute',
-          width: `${PULSE_SIZE}px`,
-          height: `${PULSE_SIZE}px`,
-          marginLeft: `${-PULSE_SIZE / 2}px`,
-          marginTop: `${-PULSE_SIZE / 2}px`,
-          borderRadius: '50%',
-          border: `2px solid ${PIN_FILL}`,
-        });
-        // Web Animations rather than a CSS keyframe: nothing has to be injected
-        // into the page's stylesheet, and transform/opacity animate off the main
-        // thread — which matters because this runs continuously behind every live
-        // pin. A negative delay starts each ring mid-flight instead of waiting.
-        ring.animate(
-          [
-            {transform: 'scale(0.7)', opacity: 0.7},
-            {transform: 'scale(2.4)', opacity: 0},
-          ],
-          {
-            duration: PULSE_PERIOD_MS,
-            iterations: Infinity,
-            easing: 'ease-out',
-            delay: (-PULSE_PERIOD_MS / PULSE_RINGS) * i,
-          },
-        );
-        div.appendChild(ring);
-      }
-
-      this.div = div;
-      // overlayLayer, not overlayMouseTarget: the ring must never take a click
-      // meant for the map, which is how a location gets placed.
-      this.getPanes()?.overlayLayer.appendChild(div);
-    }
-
-    draw() {
-      const point = this.getProjection()?.fromLatLngToDivPixel(
-        new maps.LatLng(this.position),
-      );
-      if (!point || !this.div) return;
-      this.div.style.left = `${point.x}px`;
-      this.div.style.top = `${point.y}px`;
-    }
-
-    onRemove() {
-      this.div?.remove();
-      this.div = null;
-    }
-  };
-  return pulseCtor;
-}
-
-// Dev only: one sample per DisplayedLevel kind, so the pin variants can be
-// compared side by side without waiting for a monitor to go quiet. Note that
-// `live` and `history` deliberately look identical today — seeing that is half
-// the point of having this.
-const SAMPLE_PINS = [
-  {kind: 'live', label: '88.4'},
-  {kind: 'history', label: '62.5'},
-  {kind: 'none', label: ''},
-];
 // Two mics twenty metres apart would otherwise make fitBounds zoom to the max.
 const MAX_FIT_ZOOM = 18;
 const SINGLE_LOCATION_ZOOM = 17;
@@ -387,62 +254,7 @@ function MapCanvas({
     };
   }, [liveKey, signature]);
 
-  // Dev only. Kept anchored to the viewport on every idle so panning and zooming
-  // can't leave the samples off-screen; hover for the kind name. import.meta.env.DEV
-  // is statically false in a production build, so this whole body drops out.
-  useEffect(() => {
-    if (!import.meta.env.DEV) return;
-    const map = mapRef.current;
-    if (!map) return;
-    const maps = window.google.maps;
-
-    const samples = SAMPLE_PINS.map(({kind, label}) =>
-      new maps.Marker({
-        map,
-        position: {lat: 0, lng: 0},
-        title: `DEV — ${kind}`,
-        label: pinLabel(label),
-        icon: pinIcon(maps, label !== ''),
-        // Above the real pins, and never a drag target.
-        zIndex: 1000,
-        clickable: false,
-      }),
-    );
-
-    // A row near the top of whatever is currently in view, evenly spaced.
-    const place = () => {
-      const bounds = map.getBounds();
-      if (!bounds) return;
-      const ne = bounds.getNorthEast();
-      const sw = bounds.getSouthWest();
-      const lat = ne.lat() - (ne.lat() - sw.lat()) * 0.12;
-      const span = ne.lng() - sw.lng();
-      samples.forEach((marker, i) =>
-        marker.setPosition({
-          lat,
-          lng: sw.lng() + (span * (i + 1)) / (samples.length + 1),
-        }),
-      );
-    };
-    // The live sample gets its pulse, so the dev row shows what live really looks
-    // like rather than just its pill.
-    const liveIndex = SAMPLE_PINS.findIndex((pin) => pin.kind === 'live');
-    const pulse = new (pulseOverlay(maps))({lat: 0, lng: 0});
-    pulse.setMap(map);
-    const placeAll = () => {
-      place();
-      const at = samples[liveIndex]?.getPosition();
-      if (at) pulse.setPosition({lat: at.lat(), lng: at.lng()});
-    };
-    placeAll();
-    const listener = maps.event.addListener(map, 'idle', placeAll);
-
-    return () => {
-      listener.remove();
-      pulse.setMap(null);
-      for (const marker of samples) marker.setMap(null);
-    };
-  }, []);
+  useSamplePins(mapRef);
 
   // Drop every marker when the page unmounts; the map goes with the container.
   useEffect(

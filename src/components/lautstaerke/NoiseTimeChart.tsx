@@ -2,12 +2,15 @@ import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {Box, Button, Text} from '@chakra-ui/react';
 import uPlot from 'uplot';
 import {
-  AXIS_STROKE_VAR,
-  GRID_STROKE_VAR,
+  chartAxisStyle,
+  cursorAnchor,
+  dbAxis,
+  plotHeight,
+  useLatest,
   zonedDate,
   makeGapsRefiner,
-  resolveCssVar,
 } from './chartUtils';
+import {attachTouchZoom} from './uplotTouchZoom';
 import {type Weighting} from './noise';
 import {type SeriesKind} from './series';
 import {ChartTooltip} from './ChartTooltip';
@@ -81,18 +84,12 @@ export function NoiseTimeChart({
   // Read by the long-lived plot closures (range/axis/cursor) and the 1 Hz tick
   // without making them effect dependencies, so the plot isn't torn down when
   // the buffer mutates or props change identity.
-  const dataRef = useRef(data);
-  dataRef.current = data;
-  const shownRef = useRef(shown);
-  shownRef.current = shown;
-  const xRangeRef = useRef(xRange);
-  xRangeRef.current = xRange;
-  const xAxisFormatRef = useRef(xAxisFormat);
-  xAxisFormatRef.current = xAxisFormat;
-  const onCursorRef = useRef(onCursorIdx);
-  onCursorRef.current = onCursorIdx;
-  const onZoomRangeRef = useRef(onZoomRange);
-  onZoomRangeRef.current = onZoomRange;
+  const dataRef = useLatest(data);
+  const shownRef = useLatest(shown);
+  const xRangeRef = useLatest(xRange);
+  const xAxisFormatRef = useLatest(xAxisFormat);
+  const onCursorRef = useLatest(onCursorIdx);
+  const onZoomRangeRef = useLatest(onZoomRange);
 
   // Active zoom x-window (epoch seconds), or null for the full/default range.
   // Read by the long-lived x-scale range closure so a zoom survives redraws and
@@ -130,9 +127,8 @@ export function NoiseTimeChart({
       const full = dataRef.current;
       return [full[0], ...visible.map(({col}) => full[col])] as uPlot.AlignedData;
     };
-    const axisStroke = resolveCssVar(AXIS_STROKE_VAR, '#9ca3af');
-    const gridStroke = resolveCssVar(GRID_STROKE_VAR, '#374151');
-    const canvasHeight = () => Math.max(100, container.clientHeight || 280);
+    const axis = chartAxisStyle();
+    const canvasHeight = () => plotHeight(container, 280);
     const gaps = makeGapsRefiner(gapThresholdX);
 
     const opts: uPlot.Options = {
@@ -156,20 +152,11 @@ export function NoiseTimeChart({
         // An active zoom wins over the default range, and survives redraws
         // because uPlot re-invokes this on every non-explicit rescale.
         x: {time: true, range: () => zoomRef.current ?? xRangeRef.current()},
-        y: {range: () => [30, 110]},
+        y: {range: () => [...dbAxis.range]},
       },
       axes: [
-        {
-          values: (_u, ticks) => ticks.map((t) => xAxisFormatRef.current(t)),
-          stroke: axisStroke,
-          grid: {stroke: gridStroke},
-          ticks: {stroke: gridStroke},
-        },
-        {
-          stroke: axisStroke,
-          grid: {stroke: gridStroke},
-          ticks: {stroke: gridStroke},
-        },
+        {values: (_u, ticks) => ticks.map((t) => xAxisFormatRef.current(t)), ...axis},
+        {...axis},
       ],
       series: [
         {
@@ -213,11 +200,8 @@ export function NoiseTimeChart({
             if (idx == null || left == null || left < 0 || top == null) {
               setTip(null);
             } else {
-              const over = u.over.getBoundingClientRect();
-              const root = container.getBoundingClientRect();
               setTip({
-                left: over.left - root.left + left,
-                top: over.top - root.top + top,
+                ...cursorAnchor(u, container, left, top),
                 label: xAxisFormatRef.current(u.posToVal(left, 'x')),
               });
             }
@@ -249,122 +233,18 @@ export function NoiseTimeChart({
     const plot = new uPlot(opts, project(), container);
     plotRef.current = plot;
 
-    // uPlot's mouse drag-to-select zoom doesn't fire on touch, so give touch
-    // devices a one-finger pan / two-finger pinch on the x-axis instead (adapted
-    // from uPlot's zoom-touch demo, x-only). We drive it through the same
-    // `zoomRef` the mouse selection uses, so a touch zoom survives redraws and
-    // the reset button appears. Scoped to zoomable (historical view); the live
-    // view keeps normal page scrolling. touch-action:none stops the browser from
-    // claiming the gesture for scroll.
-    let removeTouch: (() => void) | undefined;
-    if (zoomable) {
-      const over = plot.over;
-      over.style.touchAction = 'none';
-
-      // Finger midpoint x (px, relative to the plot) and spread `d` between the
-      // two fingers (1 for a single finger, so xFactor stays 1 → pure pan).
-      const fr = {x: 0, d: 1};
-      const to = {x: 0, d: 1};
-      let rect = over.getBoundingClientRect();
-      let oxRange = 0;
-      let xVal = 0;
-
-      const storePos = (t: {x: number; d: number}, e: TouchEvent) => {
-        const t0 = e.touches[0];
-        const t0x = t0.clientX - rect.left;
-        if (e.touches.length === 1) {
-          t.x = t0x;
-          t.d = 1;
-        } else {
-          const t1x = e.touches[1].clientX - rect.left;
-          t.x = (t0x + t1x) / 2;
-          t.d = Math.max(Math.abs(t1x - t0x), 1);
-        }
-      };
-
-      // Re-anchor the gesture to the current scale and finger positions. Called
-      // on touchstart and whenever the finger count changes mid-gesture, so
-      // `fr.d` and `to.d` are always measured with the same number of fingers —
-      // otherwise lifting a finger collapses `to.d` to 1 and zooms way out.
-      let anchoredCount = 0;
-      const anchor = (e: TouchEvent) => {
-        rect = over.getBoundingClientRect();
-        storePos(fr, e);
-        anchoredCount = e.touches.length;
-        const {min, max} = plot.scales.x;
-        oxRange = (max ?? 0) - (min ?? 0);
-        xVal = plot.posToVal(fr.x, 'x');
-      };
-
-      // Whether the current gesture actually moved the window. A plain tap also
-      // ends in touchend, and must not be read as "zoom out".
-      let gestureZoomed = false;
-      let rafPending = false;
-      const applyZoom = () => {
-        rafPending = false;
-        gestureZoomed = true;
-        const [fullMin, fullMax] = xRangeRef.current();
-        const fullRange = fullMax - fullMin;
-        const leftPct = to.x / rect.width;
-        // Never zoom out past the full day; keep a 60s floor when zooming in.
-        let nxRange = oxRange * (fr.d / to.d);
-        nxRange = Math.min(Math.max(nxRange, 60), fullRange);
-        let nxMin = xVal - leftPct * nxRange;
-        let nxMax = nxMin + nxRange;
-        // Keep the window inside the day's bounds, preserving its width.
-        if (nxMin < fullMin) [nxMin, nxMax] = [fullMin, fullMin + nxRange];
-        if (nxMax > fullMax) [nxMin, nxMax] = [fullMax - nxRange, fullMax];
-        // At full extent there's no zoom to persist — clear it so the reset
-        // button hides and the default range takes over.
-        if (nxRange >= fullRange) {
-          zoomRef.current = null;
-          setZoomed(false);
-        } else {
-          zoomRef.current = [nxMin, nxMax];
-          setZoomed(true);
-        }
-        plot.setScale('x', {min: nxMin, max: nxMax});
-      };
-
-      const onMove = (e: TouchEvent) => {
-        e.preventDefault();
-        if (e.touches.length !== anchoredCount) {
-          anchor(e);
-          return;
-        }
-        storePos(to, e);
-        if (!rafPending) {
-          rafPending = true;
-          requestAnimationFrame(applyZoom);
-        }
-      };
-      // preventDefault stops the browser's compatibility mouse events, which
-      // would otherwise trigger uPlot's own drag-select and zoom to an empty
-      // region when the touch ends.
-      const onStart = (e: TouchEvent) => {
-        e.preventDefault();
-        anchor(e);
-      };
-
-      // Notify the caller once the fingers are off, not from applyZoom — a pinch
-      // runs applyZoom every frame and would otherwise navigate per frame.
-      const onEnd = (e: TouchEvent) => {
-        if (e.touches.length > 0 || !gestureZoomed) return;
-        gestureZoomed = false;
-        onZoomRangeRef.current?.(zoomRef.current);
-      };
-
-      over.addEventListener('touchstart', onStart, {passive: false});
-      over.addEventListener('touchmove', onMove, {passive: false});
-      over.addEventListener('touchend', onEnd);
-      over.addEventListener('touchcancel', onEnd);
-      removeTouch = () => {
-        over.removeEventListener('touchstart', onStart);
-        over.removeEventListener('touchmove', onMove);
-        over.removeEventListener('touchend', onEnd);
-        over.removeEventListener('touchcancel', onEnd);
-      };
-    }
+    // Touch devices get a one-finger pan / two-finger pinch instead of the mouse
+    // drag-select, driven through the same zoomRef so either gesture survives a
+    // redraw and shows the reset button. Scoped to zoomable (the historical
+    // view); the live view keeps normal page scrolling.
+    const removeTouch = zoomable
+      ? attachTouchZoom(plot, {
+          fullRange: () => xRangeRef.current(),
+          zoom: zoomRef,
+          setZoomed,
+          onCommit: (range) => onZoomRangeRef.current?.(range),
+        })
+      : undefined;
 
     const ro = new ResizeObserver(() => {
       plot.setSize({width: container.clientWidth, height: canvasHeight()});
