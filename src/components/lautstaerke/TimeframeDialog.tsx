@@ -71,7 +71,8 @@ export function TimeframeDialog({
       onOpenChange={(e) => !e.open && onClose()}
       placement="center"
     >
-      <DialogContent>
+      {/* Light, though the area around it is dark — see DARK_ROUTE_ID in __root. */}
+      <DialogContent appearance="light">
         <DialogHeader>
           <DialogTitle>Zeitraum</DialogTitle>
         </DialogHeader>
@@ -93,7 +94,8 @@ export function TimeframeDialog({
               />
             </Field>
             <Text fontSize="sm" color={error ? 'red.400' : 'gray.500'}>
-              {error ?? `Zeiten in ${timeZone}. Höchstens ${MAX_RANGE_DAYS} Tage.`}
+              {error ??
+                `Zeiten in ${timeZone}. Höchstens ${MAX_RANGE_DAYS} Tage.`}
             </Text>
           </Stack>
         </DialogBody>

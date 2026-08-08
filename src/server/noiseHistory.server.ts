@@ -17,10 +17,13 @@ import {
   MINUTE_MS,
 } from '../components/lautstaerke/timeframe';
 
-// The displayable Leq windows, as the wire names them against the Prisma field each
-// comes from. One table rather than the same six names spelled out in the select, the
-// initializer and the fill: adding a window is one row here, and the reader resolves
-// the same names through the series table (see logColumn).
+// The displayable levels, as the wire names them against the Prisma field each comes
+// from. One table rather than the same names spelled out in the select, the
+// initializer and the fill: adding one is one row here, and the reader resolves the
+// same names through the series table (see logColumn).
+//
+// Every series the picker offers, not just the Leq windows: the maxima are what one
+// checks a limit against, so a page that can plot them has to be shipped them.
 const LOG_COLUMNS = [
   ['laeq_1m', 'laeq'],
   ['lceq_1m', 'lceq'],
@@ -28,13 +31,25 @@ const LOG_COLUMNS = [
   ['lceq_5m', 'lceq5m'],
   ['laeq_30m', 'laeq30m'],
   ['lceq_30m', 'lceq30m'],
+  ['lafmax', 'lafmax'],
+  ['lcfmax', 'lcfmax'],
+  ['lcpeak', 'lcpeak'],
 ] as const satisfies ReadonlyArray<readonly [LevelColumn, LevelField]>;
 
 // The Prisma fields the table above may name. Spelling them again as a select is
 // unavoidable — Prisma infers the row type from a literal, so a computed select would
 // hand back untyped rows — but `satisfies` keys both against this one union, so a
 // missing or misspelt field is a compile error rather than a column of nulls.
-type LevelField = 'laeq' | 'lceq' | 'laeq5m' | 'lceq5m' | 'laeq30m' | 'lceq30m';
+type LevelField =
+  | 'laeq'
+  | 'lceq'
+  | 'laeq5m'
+  | 'lceq5m'
+  | 'laeq30m'
+  | 'lceq30m'
+  | 'lafmax'
+  | 'lcfmax'
+  | 'lcpeak';
 
 const LEVEL_SELECT = {
   laeq: true,
@@ -43,6 +58,9 @@ const LEVEL_SELECT = {
   lceq5m: true,
   laeq30m: true,
   lceq30m: true,
+  lafmax: true,
+  lcfmax: true,
+  lcpeak: true,
 } as const satisfies Record<LevelField, true> & Prisma.NoiseLogSelect;
 
 // What one project may hand to the browser, in device-minutes actually deployed. A

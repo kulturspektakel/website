@@ -6,7 +6,6 @@ import {
 } from '@tanstack/react-router';
 import {Box} from '@chakra-ui/react';
 import {z} from 'zod';
-import {DarkMode} from '../components/chakra-snippets/color-mode';
 import {useMemo, useRef} from 'react';
 import 'uplot/dist/uPlot.min.css';
 import {seo} from '../utils/seo';
@@ -211,7 +210,16 @@ export const assignableNoiseDevices = createServerFn()
 export const assignNoiseDevice = createServerFn()
   .middleware([crewAuth])
   .inputValidator(
-    z.object({locationId: z.string().min(1), deviceId: z.string().min(1)}),
+    z.object({
+      locationId: z.string().min(1),
+      deviceId: z.string().min(1),
+      // Epoch ms, and optional: assigning from a location card means "from now",
+      // while a location created on the map offers the project's start, so its
+      // monitor's history covers the event rather than beginning mid-festival.
+      // Never in the future — a placement that hasn't begun would leave the new
+      // location looking empty until it did.
+      start: z.number().int().optional(),
+    }),
   )
   .handler(async ({data}) => {
     const [location, device] = await Promise.all([
@@ -228,21 +236,35 @@ export const assignNoiseDevice = createServerFn()
     if (!device || device.type !== 'NOISE_MONITOR') {
       throw new Error('Unbekanntes Lärmmessgerät.');
     }
-    // Moving a device closes its previous placement: `end == null` only means
-    // "is here now" if exactly one row per device can be open. One `now` for
-    // both writes, so the two windows abut exactly and a history query over
-    // them neither gaps nor double-counts.
     const now = new Date();
+    const start =
+      data.start == null ? now : new Date(Math.min(data.start, now.getTime()));
+
+    // Moving a device closes its previous placement: `end == null` only means
+    // "is here now" if exactly one row per device can be open. Each is closed at
+    // the moment this one begins, so the two windows abut exactly and a history
+    // query over them neither gaps nor double-counts — except where the new start
+    // predates the open row, which a backdated assignment can do: there the old
+    // window would invert, so it closes at its own start instead (an empty window,
+    // which is the truthful record of a placement that never held).
+    const open = await prismaClient.noiseLocationAssignment.findMany({
+      where: {deviceId: data.deviceId, end: null},
+      select: {id: true, start: true},
+    });
     await prismaClient.$transaction([
-      prismaClient.noiseLocationAssignment.updateMany({
-        where: {deviceId: data.deviceId, end: null},
-        data: {end: now},
-      }),
+      ...open.map((assignment) =>
+        prismaClient.noiseLocationAssignment.update({
+          where: {id: assignment.id},
+          data: {
+            end: assignment.start > start ? assignment.start : start,
+          },
+        }),
+      ),
       prismaClient.noiseLocationAssignment.create({
         data: {
           locationId: data.locationId,
           deviceId: data.deviceId,
-          start: now,
+          start,
         },
       }),
     ]);
@@ -321,20 +343,31 @@ function LautstaerkeLayout() {
   return (
     <NoiseLiveContext.Provider value={live}>
       <BluetoothContext.Provider value={bluetooth}>
-        <DarkMode>
-          <Box
-            bg="gray.900"
-            color="gray.100"
-            h="100vh"
-            display="flex"
-            flexDirection="column"
-            overflow="auto"
-            p="4"
-          >
-            <Outlet />
-          </Box>
-          <Toaster />
-        </DarkMode>
+        {/* The dark scope itself lives on <html> (see __root), so portalled
+            menus, dialogs and toasts get it too. */}
+        {/* Tabular figures for the whole area, inherited rather than repeated on
+            every readout. The levels, the clock and the battery all change in place
+            — a proportional '1' is narrower than a '4', so without this every number
+            on the page reflows as it updates, and a dB value twitches once a second.
+            The monospace they used to be set in was doing this by accident; this is
+            the half of it that was actually wanted.
+
+            Portalled surfaces don't inherit it (they hang off <body>): the menus and
+            dialogs show identifiers rather than ticking numbers, so they don't need
+            it — CalibrationPanel is the exception and sets it itself. */}
+        <Box
+          fontVariantNumeric="tabular-nums"
+          bg="gray.900"
+          color="gray.100"
+          h="100vh"
+          display="flex"
+          flexDirection="column"
+          overflow="auto"
+          p="4"
+        >
+          <Outlet />
+        </Box>
+        <Toaster />
       </BluetoothContext.Provider>
     </NoiseLiveContext.Provider>
   );

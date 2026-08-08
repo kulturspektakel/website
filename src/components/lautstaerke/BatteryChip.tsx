@@ -10,7 +10,6 @@ export function BatteryChip({mv}: {mv: number}) {
       bg="gray.800"
       color="gray.300"
       fontSize="xs"
-      fontFamily="mono"
       fontWeight="medium"
       whiteSpace="nowrap"
     >

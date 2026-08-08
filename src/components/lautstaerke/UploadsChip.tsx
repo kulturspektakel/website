@@ -15,7 +15,6 @@ export function UploadsChip({count}: {count: number}) {
       bg="orange.900"
       color="orange.200"
       fontSize="xs"
-      fontFamily="mono"
       fontWeight="medium"
       whiteSpace="nowrap"
       aria-label={`${count} Logs warten auf Upload`}

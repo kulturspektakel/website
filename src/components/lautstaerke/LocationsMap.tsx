@@ -1,7 +1,9 @@
 import {Wrapper} from '@googlemaps/react-wrapper';
-import {Box} from '@chakra-ui/react';
+import {Box, HStack, IconButton} from '@chakra-ui/react';
 import {memo, useEffect, useRef, useState} from 'react';
+import {LuPlus, LuX} from 'react-icons/lu';
 import {SegmentedControl} from '../chakra-snippets/segmented-control';
+import {Tooltip} from '../chakra-snippets/tooltip';
 import {KULT_LOCATION} from '../../utils/kultLocation';
 import {useNoiseLive, useTick} from './context';
 import {
@@ -48,8 +50,12 @@ const MAP_TYPES: Array<{value: MapTypeId; label: string}> = [
 
 /**
  * Every location of one noise project, on either the dark basemap or satellite
- * imagery. Clicking the map reports the clicked point via `onCreateAt`, which is
- * how new locations get placed.
+ * imagery.
+ *
+ * Placing a new one is a mode, not the map's default behaviour: the plus button arms
+ * it, and only then does a click report a point via `onCreateAt`. The map is mostly
+ * read — panning to a stage, reading a pin — and a surface where every stray click
+ * opened a dialog made that reading nervous.
  */
 // live/metric/weighting/history are the same four inputs the list rows get;
 // displayedLevel turns them into a number.
@@ -59,6 +65,12 @@ type MapCanvasProps = {
   metric: LevelMetric;
   weighting: Weighting;
   history?: Record<string, number>;
+  // Whether the create tool is armed. Owned by the caller, because what disarms it
+  // is the dialog it opens closing again — which the map knows nothing about.
+  placing?: boolean;
+  onPlacingChange?: (placing: boolean) => void;
+  // Where the map was clicked while armed. Absent for a map that may not be added
+  // to, which also hides the plus button.
   onCreateAt?: (coordinates: Coordinates) => void;
 };
 
@@ -81,10 +93,25 @@ function MapCanvas({
   metric,
   weighting,
   history,
+  placing = false,
+  onPlacingChange,
   onCreateAt,
 }: MapCanvasProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
+  // An OverlayView that draws nothing, kept only for its projection: it is the
+  // one way to turn a pin's lat/lng into a pixel inside the container, which is
+  // where the tooltip has to be anchored.
+  const projectionRef = useRef<google.maps.OverlayView | null>(null);
+  // Which pin is hovered and where it sits, in container pixels. One tooltip for
+  // the whole map rather than one per marker: a marker is drawn by the Maps API
+  // and has no DOM node of its own to hang a trigger on.
+  const [hovered, setHovered] = useState<{
+    id: string;
+    name: string;
+    x: number;
+    y: number;
+  } | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
   const [mapTypeId, setMapTypeId] = useState<MapTypeId>('roadmap');
 
@@ -108,11 +135,15 @@ function MapCanvas({
       // POI labels are styled off; this stops their invisible hitboxes from
       // swallowing clicks meant for the map.
       clickableIcons: false,
-      // Signals that the surface itself is the control.
-      draggableCursor: 'crosshair',
       center: {lat: KULT_LOCATION.latitude, lng: KULT_LOCATION.longitude},
       zoom: EMPTY_ZOOM,
     });
+    const projection = new maps.OverlayView();
+    projection.onAdd = () => {};
+    projection.draw = () => {};
+    projection.onRemove = () => {};
+    projection.setMap(mapRef.current);
+    projectionRef.current = projection;
   }, []);
 
   useEffect(() => {
@@ -125,22 +156,47 @@ function MapCanvas({
     });
   }, [mapTypeId]);
 
-  // Click to place.
+  // Armed: the pointer says the next click lands somewhere. Undefined puts it back
+  // to Google's hand, which is what says the map is there to be moved around.
+  useEffect(() => {
+    mapRef.current?.setOptions({
+      draggableCursor: placing ? 'crosshair' : undefined,
+    });
+  }, [placing]);
+
+  // Click to place — and only while armed, so the listener is simply not registered
+  // the rest of the time.
   useEffect(() => {
     const map = mapRef.current;
-    if (!map) return;
+    if (!map || !placing || !onCreateAt) return;
     const listener = map.addListener(
       'click',
       (e: google.maps.MapMouseEvent) => {
         if (!e.latLng) return;
-        onCreateAt?.({
+        onCreateAt({
           latitude: Number(e.latLng.lat().toFixed(COORD_DECIMALS)),
           longitude: Number(e.latLng.lng().toFixed(COORD_DECIMALS)),
         });
       },
     );
     return () => listener.remove();
-  }, [onCreateAt]);
+  }, [placing, onCreateAt]);
+
+  // The pointer stays over a marker while the world moves under it, so panning or
+  // zooming fires no mouseout and the tooltip would hang at a stale pixel. On the
+  // map itself, not per marker: the map outlives every marker rebuild.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const dismiss = () => setHovered(null);
+    const listeners = [
+      map.addListener('dragstart', dismiss),
+      map.addListener('zoom_changed', dismiss),
+    ];
+    return () => {
+      for (const listener of listeners) listener.remove();
+    };
+  }, []);
 
   // Markers and viewport follow the data — but only when the data actually
   // changed. Refetching after an assignment hands back an equal-but-new array,
@@ -156,15 +212,31 @@ function MapCanvas({
     // `locations` is captured from the same render that produced `signature`, so
     // reading it here can't go stale.
     for (const marker of markersRef.current) marker.setMap(null);
-    markersRef.current = locations.map(
-      (location) =>
-        new maps.Marker({
-          map,
-          position: {lat: location.latitude, lng: location.longitude},
-          // The pin shows a level, not a name, so the name lives in the tooltip.
-          title: location.locationName,
-        }),
-    );
+    markersRef.current = locations.map((location) => {
+      const marker = new maps.Marker({
+        map,
+        position: {lat: location.latitude, lng: location.longitude},
+      });
+      // The pin shows a level, not a name, so the name lives in a tooltip — a
+      // Chakra one, driven from here. Deliberately no `title`: the native tooltip
+      // would sit under the styled one on the same hover.
+      marker.addListener('mouseover', () => {
+        const point = projectionRef.current
+          ?.getProjection()
+          ?.fromLatLngToContainerPixel(
+            new maps.LatLng({lat: location.latitude, lng: location.longitude}),
+          );
+        if (!point) return;
+        setHovered({
+          id: location.id,
+          name: location.locationName,
+          x: point.x,
+          y: point.y,
+        });
+      });
+      marker.addListener('mouseout', () => setHovered(null));
+      return marker;
+    });
 
     // Nothing to frame yet: leave the festival-site view the map opened with.
     if (locations.length === 0) return;
@@ -212,28 +284,35 @@ function MapCanvas({
   const pinLabels = pinLevels.map((level) =>
     level.kind === 'none' ? '' : formatDb(level.db),
   );
+  // A number we only remember rather than one arriving now, greyed down on the pin
+  // the same way the list rows grey theirs.
+  const pinStale = pinLevels.map((level) => level.kind === 'stale');
 
   // Two effects, because the two change at very different rates: the number moves
   // roughly once a second per monitor, while the pin's *shape* only flips when a
   // level appears or disappears. Rebuilding an icon object per marker per second
   // would be pure churn.
   const labelKey = pinLabels.join('|');
+  const staleKey = pinStale.map((stale) => (stale ? '1' : '0')).join('');
   useEffect(() => {
     markersRef.current.forEach((marker, i) => {
       const text = pinLabels[i] ?? '';
-      marker.setLabel(pinLabel(text));
+      marker.setLabel(pinLabel(text, pinStale[i] ?? false));
     });
-  }, [labelKey, signature]);
+  }, [labelKey, staleKey, signature]);
 
-  // '1' where the pin has a number to carry, '0' where it's a bare dot.
-  const shapeKey = pinLabels.map((text) => (text ? '1' : '0')).join('');
+  // '1' where the pin has a number to carry, '0' where it's a bare dot — plus
+  // whether that number is stale, which is the icon's other axis.
+  const shapeKey =
+    pinLabels.map((text) => (text ? '1' : '0')).join('') + staleKey;
   useEffect(() => {
     if (!mapRef.current) return;
     const maps = window.google.maps;
     const pill = pinIcon(maps, true);
+    const stalePill = pinIcon(maps, true, true);
     const dot = pinIcon(maps, false);
     markersRef.current.forEach((marker, i) => {
-      marker.setIcon(pinLabels[i] ? pill : dot);
+      marker.setIcon(pinLabels[i] ? (pinStale[i] ? stalePill : pill) : dot);
     });
   }, [shapeKey, signature]);
 
@@ -269,26 +348,83 @@ function MapCanvas({
     [],
   );
 
+  // One string for the plus button's accessible name and its tooltip: they say the
+  // same thing to a screen reader and to a pointer, and two that drifted apart is
+  // exactly the sort of thing nobody notices.
+  const placeLabel = placing
+    ? 'Standortauswahl abbrechen'
+    : 'Standort hinzufügen';
+
   // Fills its nearest positioned ancestor rather than taking a percentage height,
   // so it works the same whether the caller sizes the box explicitly or lets flex
   // do it. The caller must set position="relative".
   return (
     <Box position="absolute" inset="0">
       <div ref={containerRef} style={{height: '100%', width: '100%'}} />
+      {/* The tooltip's trigger. A marker is drawn by the Maps API and owns no DOM
+          node, so the anchor is this zero-size box parked at the pin's pixel and
+          the open state is driven by the marker's own hover events. Keyed on the
+          location so moving between two pins re-anchors rather than leaving the
+          bubble where the last one was. */}
+      {hovered && (
+        <Tooltip
+          key={hovered.id}
+          open
+          content={hovered.name}
+          positioning={{placement: 'top'}}
+          showArrow
+        >
+          <Box
+            position="absolute"
+            left={`${hovered.x}px`}
+            top={`${hovered.y}px`}
+            // The pill is 26px tall and centred on the point, so lifting the
+            // anchor by half of it puts the bubble above the badge, not over it.
+            mt="-13px"
+            boxSize="0"
+            pointerEvents="none"
+          />
+        </Tooltip>
+      )}
       {/* A sibling of the map container rather than a Google control, so it's
           styled like the rest of the page and swallows its own clicks instead of
           letting them through as a "create here" tap. */}
-      <Box position="absolute" top="2" right="2" zIndex="1">
+      <HStack position="absolute" top="2" right="2" zIndex="1" gap="2">
+        {/* No colour overrides: recolouring only the track leaves the unselected
+            label in the theme's dark `fg`, which on a dark track is unreadable.
+            The theme's own track is opaque, so it reads over roadmap and
+            satellite alike; the shadow is what lifts it off the map. */}
         <SegmentedControl
           size="xs"
-          bg="gray.900"
-          borderWidth="1px"
-          borderColor="gray.700"
+          shadow="md"
           value={mapTypeId}
           onValueChange={(e) => setMapTypeId(e.value as MapTypeId)}
           items={MAP_TYPES}
         />
-      </Box>
+        {onCreateAt && (
+          // The same words as the accessible name, in a Chakra tooltip like the
+          // pins' — and no `title`, or the native one would show up beside it.
+          <Tooltip
+            content={placeLabel}
+            showArrow
+            positioning={{placement: 'bottom'}}
+          >
+            {/* A toggle, and it says so: armed it is solid and its icon turns from
+                "add" into "cancel", so the mode is visible from the button as well
+                as from the cursor — which a touch device doesn't have. */}
+            <IconButton
+              aria-label={placeLabel}
+              size="xs"
+              shadow="md"
+              variant={placing ? 'solid' : 'surface'}
+              colorPalette={placing ? 'green' : undefined}
+              onClick={() => onPlacingChange?.(!placing)}
+            >
+              {placing ? <LuX /> : <LuPlus />}
+            </IconButton>
+          </Tooltip>
+        )}
+      </HStack>
     </Box>
   );
 }

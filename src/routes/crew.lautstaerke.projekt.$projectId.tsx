@@ -20,6 +20,8 @@ import {loadNoiseProject} from './crew.lautstaerke';
 import {formatProjectRange} from '../components/lautstaerke/timeframe';
 import {
   resolveProjectSelection,
+  cropProjectSelection,
+  setSelectionCurrent,
   visibleProjectWindow,
   type ProjectSelection,
 } from '../components/lautstaerke/projectSelection';
@@ -31,11 +33,15 @@ import {
 import {ProjectTimeline} from '../components/lautstaerke/ProjectTimeline';
 import {LevelPicker} from '../components/lautstaerke/LevelPicker';
 import {useProjectLogs} from '../components/lautstaerke/useProjectLogs';
-import {isPointMetric, type LevelMetric} from '../components/lautstaerke/level';
+import {
+  supportedMetric,
+  type LevelMetric,
+} from '../components/lautstaerke/level';
 import {type Weighting} from '../components/lautstaerke/noise';
 import {SegmentedControlOrSelect} from '../components/SegmentedControlOrSelect';
 import {Switch} from '../components/chakra-snippets/switch';
 import {noiseQueryKeys} from '../components/lautstaerke/queries';
+import {useLatest} from '../components/lautstaerke/chartUtils';
 import {seo} from '../utils/seo';
 
 // Either/or rather than both: the map is only useful at a size worth giving the
@@ -118,10 +124,51 @@ function NoiseProjectDetail() {
   // view, so the map and the list can't answer it differently.
   const viewedAt = live ? null : selection.current;
 
+  // Read by scrubTo so it can start from the selection in effect without depending on
+  // it: hovering a row chart fires once per animation frame, and a callback that
+  // changed identity with the playhead would put a new context value — and so a fresh
+  // chart prop — in front of every consumer on every one of those frames.
+  const selectionRef = useLatest(selection);
+  // Same reason: the window's right edge follows the clock on a running festival, and
+  // the bound setter below must not change identity when it ticks.
+  const pickableRef = useLatest(pickable);
+
+  // Hovering a row chart is the same commit dragging the playhead makes, so it goes
+  // to the same place: an override, which is also what pins the crop from following
+  // the live edge any further. An unchanged instant keeps whatever was there before —
+  // that's most frames of a slow hover, and it also means merely passing the pointer
+  // over the playhead where it already stands doesn't pin an untouched timeline.
+  const scrubTo = useCallback(
+    (at: number) => {
+      setChosen((prev) => {
+        const from = selectionRef.current;
+        const next = setSelectionCurrent(from, at);
+        return next.current === from.current ? prev : next;
+      });
+    },
+    [selectionRef],
+  );
+
+  // Cropping from a row chart: the in/out keys hand over one end, a drag across the
+  // trace both. One commit either way — exact, never snapped, and a single state
+  // update, so a drag can't briefly put a start past an end.
+  const cropTo = useCallback(
+    (crop: {start?: number; end?: number}) => {
+      setChosen((prev) =>
+        cropProjectSelection(
+          crop,
+          prev ?? selectionRef.current,
+          pickableRef.current,
+        ),
+      );
+    },
+    [selectionRef, pickableRef],
+  );
+
   // One request for the project's whole stored history, and then nothing: every
   // number below is read out of it locally, so the timeline and both dropdowns cost
   // no round trip. Skipped entirely while live.
-  const {levels, traces, isFetching} = useProjectLogs({
+  const {levels, totals, traces, isFetching} = useProjectLogs({
     projectId,
     live,
     metric,
@@ -151,11 +198,26 @@ function NoiseProjectDetail() {
       weighting,
       selection,
       viewedAt,
+      scrubTo,
+      cropTo,
       levels,
+      totals,
       traces,
       refresh,
     }),
-    [project, live, metric, weighting, selection, levels, traces, refresh],
+    [
+      project,
+      live,
+      metric,
+      weighting,
+      selection,
+      scrubTo,
+      cropTo,
+      levels,
+      totals,
+      traces,
+      refresh,
+    ],
   );
 
   return (
@@ -186,12 +248,9 @@ function NoiseProjectDetail() {
             <Switch
               size="sm"
               checked={live}
-              onCheckedChange={(e) => {
-                setLive(e.checked);
-                // Live is an instant, so there is no range to average over it: fall
-                // back to the finest window rather than blanking every pin.
-                if (e.checked && !isPointMetric(metric)) setMetric('eq_fast');
-              }}
+              // The window survives the switch: every one of them exists in both
+              // modes (the finest simply gets finer), so there is nothing to reset.
+              onCheckedChange={(e) => setLive(e.checked)}
               colorPalette="green"
             >
               <Text fontSize="sm">Live</Text>
@@ -204,7 +263,14 @@ function NoiseProjectDetail() {
               live={live}
               weighting={weighting}
               metric={metric}
-              onWeighting={setWeighting}
+              onWeighting={(next) => {
+                setWeighting(next);
+                // Switching to dB(A) with LCpeak selected leaves the picker pointing
+                // at a series that doesn't exist, which everything downstream resolves
+                // through the series table and would trip over. So the pick follows
+                // the weighting to its nearest kin.
+                setMetric((m) => supportedMetric(m, next));
+              }}
               onMetric={setMetric}
             />
             {mapAvailable && (

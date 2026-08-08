@@ -1,0 +1,7 @@
+/* A marker label takes a class but no arbitrary style — the Maps API only exposes
+   colour, size, weight and family — so the one property the pin actually needs
+   lives here. Tabular figures give every digit the same advance, which is what
+   stops a level re-rendered once a second from shifting inside its pill. */
+.noise-pin-label {
+  font-variant-numeric: tabular-nums;
+}

@@ -17,7 +17,6 @@ const MULTI_DAY_MS = 36 * 60 * 60 * 1000;
 // How much wider one zoom-out step makes the window.
 const ZOOM_OUT_FACTOR = 4;
 
-
 export type HistoryData = {
   aligned: (number | null)[][];
   // Leq over the whole window plus its coverage — see historyTotals.
@@ -58,7 +57,10 @@ export function HistoryView({
 
   // New identity whenever the samples change (a poll updates it), so the chart
   // re-pushes; zoomResetKey tracks the range separately so a poll keeps the zoom.
-  const data = useMemo(() => aligned as unknown as uPlot.AlignedData, [aligned]);
+  const data = useMemo(
+    () => aligned as unknown as uPlot.AlignedData,
+    [aligned],
+  );
 
   // A completed zoom gesture becomes the new URL timeframe, so it's linkable and
   // the query narrows with it. null means zoom out: the URL *is* the range, so the

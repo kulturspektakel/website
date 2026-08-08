@@ -9,6 +9,7 @@ import {pulseOverlay} from './mapPulse';
 const SAMPLE_PINS = [
   {kind: 'live', label: '88.4'},
   {kind: 'history', label: '62.5'},
+  {kind: 'stale', label: '87.3'},
   {kind: 'none', label: ''},
 ];
 
@@ -28,17 +29,18 @@ export function useSamplePins(
     if (!map) return;
     const maps = window.google.maps;
 
-    const samples = SAMPLE_PINS.map(({kind, label}) =>
-      new maps.Marker({
-        map,
-        position: {lat: 0, lng: 0},
-        title: `DEV — ${kind}`,
-        label: pinLabel(label),
-        icon: pinIcon(maps, label !== ''),
-        // Above the real pins, and never a drag target.
-        zIndex: 1000,
-        clickable: false,
-      }),
+    const samples = SAMPLE_PINS.map(
+      ({kind, label}) =>
+        new maps.Marker({
+          map,
+          position: {lat: 0, lng: 0},
+          title: `DEV — ${kind}`,
+          label: pinLabel(label, kind === 'stale'),
+          icon: pinIcon(maps, label !== '', kind === 'stale'),
+          // Above the real pins, and never a drag target.
+          zIndex: 1000,
+          clickable: false,
+        }),
     );
 
     // A row near the top of whatever is currently in view, evenly spaced.

@@ -71,7 +71,6 @@ export function AssignDeviceMenu({
             <MenuItem
               key={d.id}
               value={d.id}
-              fontFamily="mono"
               onClick={() => assign.mutate(d.id)}
             >
               {d.id}

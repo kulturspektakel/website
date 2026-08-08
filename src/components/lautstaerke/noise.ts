@@ -54,13 +54,11 @@ export type HistoryRow = {
   lcpeak: number;
 };
 
-// The Leq windows the project page can display, named as a HistoryRow names them —
-// so the series table's `col` indexes both. A map pin has no use for fmax/peak, so
-// those stay out.
-export type LevelColumn = keyof Pick<
-  HistoryRow,
-  'laeq_1m' | 'lceq_1m' | 'laeq_5m' | 'lceq_5m' | 'laeq_30m' | 'lceq_30m'
->;
+// The levels the project page can display, named as a HistoryRow names them — so the
+// series table's `col` indexes both. Every series the picker offers is here, maxima
+// included: LCpeak is the one a limit is usually written against, and a page that
+// cannot read it would send you back to the device view for it.
+export type LevelColumn = keyof Omit<HistoryRow, 'minute_epoch'>;
 
 // One device's stored levels over a whole project, one value per minute per column.
 // The index *is* the minute (see ProjectLogs.start/stepMs), so a reading is an index

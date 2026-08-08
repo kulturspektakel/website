@@ -2,7 +2,12 @@ import {useNavigate} from '@tanstack/react-router';
 import {useState} from 'react';
 import {LuBluetooth} from 'react-icons/lu';
 import {IconButton} from '@chakra-ui/react';
-import {MenuContent, MenuItem, MenuRoot, MenuTrigger} from '../chakra-snippets/menu';
+import {
+  MenuContent,
+  MenuItem,
+  MenuRoot,
+  MenuTrigger,
+} from '../chakra-snippets/menu';
 import {CalibrationPanel} from './CalibrationPanel';
 import {WifiDialog} from './WifiDialog';
 import {useBluetooth} from './context';

@@ -1,7 +1,13 @@
 import {describe, expect, it} from 'vitest';
-import {levelsByDevice, logColumn, logRangeLeq, logSeries} from './projectLogs';
-import {POINT_METRICS} from './level';
-import {energeticMeanDb} from './leq';
+import {
+  levelsByDevice,
+  logColumn,
+  logRangeTotals,
+  logSeries,
+  totalsByDevice,
+} from './projectLogs';
+import {LEVEL_METRICS, supportedMetric} from './level';
+import {coverageNote, energeticMeanDb} from './leq';
 import {MINUTE_MS} from './timeframe';
 import {logMinuteIndex, type ProjectLogs} from './noise';
 
@@ -25,6 +31,10 @@ const logs: ProjectLogs = {
       lceq_1m: [65, 75, null, 85],
       laeq_5m: [null, 71, null, 81],
       lceq_5m: [null, 76, null, 86],
+      // The maxima the picker can also be set to; peak is C-weighted only.
+      lafmax: [80, 90, null, 100],
+      lcfmax: [85, 95, null, 105],
+      lcpeak: [91, 101, null, 111],
     },
     // Deployed for the last two minutes only — the earlier ones are nulls that
     // projectLogs clipped away, not silence.
@@ -50,11 +60,14 @@ describe('logMinuteIndex', () => {
 });
 
 describe('logColumn', () => {
-  // The picker's window→column mapping goes through the series table, so every
-  // offered combination has to resolve — otherwise switching to dB(C) reads nothing.
-  it('resolves every offered window under both weightings', () => {
-    for (const metric of POINT_METRICS) {
+  // The picker's metric→column mapping goes through the series table, so every
+  // enabled combination has to resolve — otherwise switching to dB(C) reads nothing.
+  it('resolves every enabled option under both weightings', () => {
+    for (const metric of LEVEL_METRICS) {
       for (const weighting of ['A', 'C'] as const) {
+        // LCpeak has no A-weighted twin, and the picker disables it there rather
+        // than asking for it.
+        if (supportedMetric(metric, weighting) !== metric) continue;
         // eq_30m was dropped from this payload, so absent is a valid answer; what
         // must not happen is resolving to the wrong column.
         const column = logColumn(logs, 'mic-1', metric, weighting);
@@ -68,18 +81,20 @@ describe('logColumn', () => {
     expect(logColumn(logs, 'mic-1', 'eq_fast', 'A')?.[1]).toBe(70);
     expect(logColumn(logs, 'mic-1', 'eq_fast', 'C')?.[1]).toBe(75);
     expect(logColumn(logs, 'mic-1', 'eq_5m', 'C')?.[1]).toBe(76);
+    expect(logColumn(logs, 'mic-1', 'peak', 'C')?.[1]).toBe(101);
   });
 
-  // 'total' can't even be asked for: it is a range aggregate with no column, and the
-  // parameter type says so rather than a runtime branch.
   it('has nothing for an unknown device', () => {
     expect(logColumn(logs, 'nobody', 'eq_fast', 'A')).toBeUndefined();
   });
 });
 
-describe('logRangeLeq', () => {
+describe('logRangeTotals', () => {
+  const leqOf = (...args: Parameters<typeof logRangeTotals>) =>
+    logRangeTotals(...args)?.db ?? null;
+
   it('averages the window energetically, not arithmetically', () => {
-    const leq = logRangeLeq(logs, 'mic-1', {start: START, end: at(2)}, 'A');
+    const leq = leqOf(logs, 'mic-1', {start: START, end: at(2)}, 'A');
     expect(leq).toBeCloseTo(energeticMeanDb([60, 70])!, 10);
     expect(leq).toBeCloseTo(67.4, 1);
   });
@@ -89,22 +104,35 @@ describe('logRangeLeq', () => {
   // clipped minutes as silence would drag the level down and misreport it.
   it('averages only the minutes a device has, not the whole crop', () => {
     const whole = {start: START, end: at(4)};
-    expect(logRangeLeq(logs, 'mic-2', whole, 'A')).toBeCloseTo(90, 10);
-    expect(logRangeLeq(logs, 'mic-2', whole, 'C')).toBeCloseTo(95, 10);
+    expect(leqOf(logs, 'mic-2', whole, 'A')).toBeCloseTo(90, 10);
+    expect(leqOf(logs, 'mic-2', whole, 'C')).toBeCloseTo(95, 10);
+  });
+
+  // The counts that turn "90 dB over the crop" into "90 dB, over half of it" — the
+  // whole reason the Leq and its coverage travel together.
+  it('reports how much of the crop the mean actually had', () => {
+    const whole = {start: START, end: at(4)};
+    expect(logRangeTotals(logs, 'mic-2', whole, 'A')).toMatchObject({
+      minutes: 2,
+      expectedMinutes: 4,
+    });
+    expect(coverageNote(logRangeTotals(logs, 'mic-2', whole, 'A')!)).toBe(
+      '50 % Daten',
+    );
   });
 
   it('is null for a window with nothing in it, or an empty window', () => {
     expect(
-      logRangeLeq(logs, 'mic-2', {start: START, end: at(2)}, 'A'),
+      logRangeTotals(logs, 'mic-2', {start: START, end: at(2)}, 'A'),
     ).toBeNull();
     expect(
-      logRangeLeq(logs, 'mic-1', {start: at(2), end: at(2)}, 'A'),
+      logRangeTotals(logs, 'mic-1', {start: at(2), end: at(2)}, 'A'),
     ).toBeNull();
   });
 
   it('clamps a window reaching outside the payload', () => {
     const beyond = {start: START - 10 * MINUTE_MS, end: at(99)};
-    expect(logRangeLeq(logs, 'mic-1', beyond, 'A')).toBeCloseTo(
+    expect(leqOf(logs, 'mic-1', beyond, 'A')).toBeCloseTo(
       energeticMeanDb([60, 70, 80])!,
       10,
     );
@@ -112,27 +140,15 @@ describe('logRangeLeq', () => {
 });
 
 describe('levelsByDevice', () => {
-  const range = {start: START, end: at(4)};
-
-  it('reads the playhead minute for an instantaneous window', () => {
+  it('reads the playhead minute for the selected window', () => {
     expect(
-      levelsByDevice(logs, {
-        metric: 'eq_fast',
-        weighting: 'A',
-        current: at(1),
-        range,
-      }),
+      levelsByDevice(logs, {metric: 'eq_fast', weighting: 'A', current: at(1)}),
     ).toEqual({'mic-1': 70});
   });
 
   it('follows the weighting and the window', () => {
     expect(
-      levelsByDevice(logs, {
-        metric: 'eq_5m',
-        weighting: 'C',
-        current: at(3),
-        range,
-      }),
+      levelsByDevice(logs, {metric: 'eq_5m', weighting: 'C', current: at(3)}),
     ).toEqual({'mic-1': 86});
   });
 
@@ -140,36 +156,33 @@ describe('levelsByDevice', () => {
   // as null: absent and unmeasured render identically, and consumers key on presence.
   it('omits a device with no value at the playhead', () => {
     expect(
-      levelsByDevice(logs, {
-        metric: 'eq_fast',
-        weighting: 'A',
-        current: at(2),
-        range,
-      }),
+      levelsByDevice(logs, {metric: 'eq_fast', weighting: 'A', current: at(2)}),
     ).toEqual({'mic-2': 90});
   });
 
   it('omits everyone for a window no device reports', () => {
     expect(
-      levelsByDevice(logs, {
-        metric: 'eq_30m',
-        weighting: 'A',
-        current: at(1),
-        range,
-      }),
+      levelsByDevice(logs, {metric: 'eq_30m', weighting: 'A', current: at(1)}),
     ).toEqual({});
   });
+});
 
-  it('averages the crop instead of the playhead for the range Leq', () => {
-    const levels = levelsByDevice(logs, {
-      metric: 'total',
-      weighting: 'A',
-      // Deliberately a minute nobody reported: the range Leq must not read it.
-      current: at(2),
-      range,
-    });
-    expect(levels['mic-1']).toBeCloseTo(energeticMeanDb([60, 70, 80])!, 10);
-    expect(levels['mic-2']).toBeCloseTo(90, 10);
+// The number every row leads with, and the reason it is no longer a picker option:
+// it answers a different question from the one above — the crop, not the instant.
+describe('totalsByDevice', () => {
+  const range = {start: START, end: at(4)};
+
+  it('averages the crop for every device, playhead or not', () => {
+    const totals = totalsByDevice(logs, range, 'A');
+    expect(totals['mic-1']?.db).toBeCloseTo(energeticMeanDb([60, 70, 80])!, 10);
+    // Deployed for two minutes of the four, and averaged over those two.
+    expect(totals['mic-2']?.db).toBeCloseTo(90, 10);
+  });
+
+  it('omits a device with nothing in the crop', () => {
+    expect(
+      Object.keys(totalsByDevice(logs, {start: START, end: at(2)}, 'A')),
+    ).toEqual(['mic-1']);
   });
 });
 
@@ -177,7 +190,7 @@ describe('logSeries', () => {
   it('hands over the whole stored column, not a crop of it', () => {
     // uPlot clips and decimates, so this is deliberately full resolution and
     // project-length — that is what makes a crop drag cost nothing here.
-    const series = logSeries(logs, 'A');
+    const series = logSeries(logs, 'eq_fast', 'A');
     expect(series['mic-1']!.db).toEqual([60, 70, null, 80]);
     expect(series['mic-1']!.xs).toEqual(
       [at(0), at(1), at(2), at(3)].map((ms) => ms / 1000),
@@ -185,24 +198,47 @@ describe('logSeries', () => {
   });
 
   it('follows the weighting', () => {
-    expect(logSeries(logs, 'C')['mic-1']!.db).toEqual([65, 75, null, 85]);
+    expect(logSeries(logs, 'eq_fast', 'C')['mic-1']!.db).toEqual([
+      65,
+      75,
+      null,
+      85,
+    ]);
+  });
+
+  // The header's window picks a stored column, so a row's line is the device's own
+  // trailing Leq — never a rollup of the 1m one, which would average twice.
+  it('plots the trailing window the header asks for', () => {
+    expect(logSeries(logs, 'eq_5m', 'A')['mic-1']!.db).toEqual([
+      null,
+      71,
+      null,
+      81,
+    ]);
+    // A window the payload never carried is no trace at all, not a flat line.
+    expect(logSeries(logs, 'eq_30m', 'A')).toEqual({});
   });
 
   // One array of timestamps for every device: they are all the same minutes, and a
   // copy per device would be the largest allocation on the page for no reason.
   it('shares one x column across devices', () => {
-    const series = logSeries(logs, 'A');
+    const series = logSeries(logs, 'eq_fast', 'A');
     expect(series['mic-1']!.xs).toBe(series['mic-2']!.xs);
   });
 
   // The nulls travel rather than being stripped, which is what lets the x column be
   // shared — and what makes uPlot break the line where a monitor wasn't deployed.
   it('keeps a device that reported only part of the project, nulls and all', () => {
-    expect(logSeries(logs, 'A')['mic-2']!.db).toEqual([null, null, 90, 90]);
+    expect(logSeries(logs, 'eq_fast', 'A')['mic-2']!.db).toEqual([
+      null,
+      null,
+      90,
+      90,
+    ]);
   });
 
   it('omits a device with no column at all', () => {
     const empty = {...logs, devices: {'mic-3': {}}};
-    expect(logSeries(empty, 'A')).toEqual({});
+    expect(logSeries(empty, 'eq_fast', 'A')).toEqual({});
   });
 });

@@ -3,6 +3,7 @@ import {
   fmtDayHourMinute,
   fmtHourMinute,
   fmtTime,
+  spanTimeFormat,
   timeGridStepS,
   zonedDate,
 } from './chartUtils';
@@ -98,5 +99,22 @@ describe('timeGridStepS', () => {
     expect(timeGridStepS(0, 400, 56)).toBe(30);
     expect(timeGridStepS(-1, 400, 56)).toBe(30);
     expect(timeGridStepS(3600, 0, 56)).toBeGreaterThan(0);
+  });
+});
+
+// Which label a window that wide wants. The boundary is the whole point: at a day the
+// same clock time comes round again, so HH:MM stops being an answer.
+describe('spanTimeFormat', () => {
+  const HOUR = 60 * 60 * 1000;
+  const ts = Date.parse('2026-07-24T18:05:09Z') / 1000;
+
+  it('leaves the date off a window shorter than a day', () => {
+    expect(spanTimeFormat(6 * HOUR)(ts)).toBe('20:05');
+    expect(spanTimeFormat(23.99 * HOUR)(ts)).toBe('20:05');
+  });
+
+  it('carries the date from a day upwards', () => {
+    expect(spanTimeFormat(24 * HOUR)(ts)).toBe('24.07. 20:05');
+    expect(spanTimeFormat(4 * 24 * HOUR)(ts)).toBe('24.07. 20:05');
   });
 });

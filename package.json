@@ -19,6 +19,7 @@
     "email:band-lineup": "tsx scripts/bandLineup.ts",
     "email:band-rejection": "tsx scripts/bandRejectionMail.ts",
     "email:donations": "tsx scripts/donations.ts",
+    "sms": "tsx scripts/sendSms.ts",
     "test": "vitest",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "typecheck": "tsc --noEmit"

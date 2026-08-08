@@ -9,8 +9,6 @@ import {
 import {useEffect, useRef, useState} from 'react';
 import {Field} from '../chakra-snippets/field';
 import {
-  MINUTE_MS,
-  QUARTER_MINUTES,
   clampTo,
   formatInstant,
   fromLocalInput,
@@ -20,6 +18,7 @@ import {
 import {
   commitProjectSelection,
   isCropped,
+  nudgeSelectionThumb,
   panProjectSelection,
   selectionThumbs,
   setProjectBound,
@@ -27,12 +26,41 @@ import {
   type ProjectSelection,
 } from './projectSelection';
 
-// The slider's own unit is whole minutes from the project's start, and it steps a
-// quarter hour at a time — so every thumb, cursor included, moves in 15-minute
-// increments. An exact time is still reachable by typing it into the fields below,
-// which is why commitProjectSelection only snaps what actually moved. Which thumb
-// is which depends on the mode, so selectionThumbs/thumbsToSelection own that
-// mapping.
+// The slider speaks epoch milliseconds, the same unit as everything it is handed,
+// and steps one of them at a time. It has no unit of its own and so nothing to
+// convert at: min and max are the window's own ends, and a thumb value *is* an
+// instant.
+//
+// That is load-bearing, not tidiness. zag re-normalizes the controlled value on every
+// update, snapping each thumb to a grid anchored on its *neighbour*
+// (getValueRanges → snapValueToStep). Any value not already an exact multiple of the
+// step gets moved, and when the neighbour it is anchored on is the playhead, "where
+// it gets moved to" changes every frame of a hover — which is a visible wobble on a
+// thumb the user is not touching. With the step at one millisecond every instant is
+// on the grid by construction, so that normalization can only ever be a no-op.
+//
+// It also means there is no lossy round trip through a coarser unit: a thumb the user
+// never touched comes back exactly as it went in, so commitProjectSelection can tell
+// what actually moved. Both properties hold whatever the snap grid below becomes, and
+// whatever resolution the logs are stored at.
+const STEP_MS = 1;
+
+// zag derives its keyboard stride from that same step, so how far a key press moves
+// has to be stated here instead — a millisecond is a resolution, not a stride. In
+// grid steps, which nudgeSelectionThumb turns into time: the grid every gesture on
+// this page lands on belongs to projectSelection.ts, not to the slider.
+const KEY_STEPS: Record<string, number> = {
+  ArrowLeft: -1,
+  ArrowRight: 1,
+  PageDown: -4,
+  PageUp: 4,
+};
+
+// Milliseconds since the epoch make a poor aria-valuenow, and "minutes into the
+// project" was no better — say the instant. Hoisted so the thumbs aren't handed a new
+// closure on every frame of a scrub.
+const ariaValueText = ({value}: {value: number}) => formatInstant(value);
+
 // A crop window rather than a line with knobs: the strip is the whole pickable
 // span, the lit part between the two handles is the selection, and everything
 // outside it is dimmed. Sized in px because zag needs a concrete thumb size to
@@ -106,16 +134,17 @@ export function ProjectTimeline({
   selection: ProjectSelection;
   onCommit: (selection: ProjectSelection) => void;
 }) {
-  const toMinutes = (ms: number) => Math.round((ms - window.start) / MINUTE_MS);
-  const toMs = (minutes: number) => window.start + minutes * MINUTE_MS;
-  const totalMinutes = Math.max(toMinutes(window.end), 1);
+  // A degenerate window — a project that hasn't started — would have zag dividing by
+  // its own span, so give it one unit to work with. Nothing is pickable in it either
+  // way.
+  const sliderMax = Math.max(window.end, window.start + STEP_MS);
 
   // Every gesture commits as it moves, so `selection` is the only truth there is —
   // there is no in-flight copy to preview from. It used to be one: while the
   // timeframe lived in the URL, committing per pointer move meant a navigation and a
   // refetch per move, so the drag showed a local preview and committed on release.
   // The whole event is in the browser now, so the views can simply follow.
-  const thumbs = selectionThumbs(selection, live).map(toMinutes);
+  const thumbs = selectionThumbs(selection, live);
   const {onFrame, onceNow} = useFrameCommit(onCommit);
 
   // Dragging the lit part means one of two things, and which one depends on whether
@@ -163,7 +192,7 @@ export function ProjectTimeline({
     const span = width - HANDLE_W;
     if (span <= 0) return null;
     const ratio = clampTo((clientX - left - HANDLE_W / 2) / span, 0, 1);
-    return toMs(ratio * totalMinutes);
+    return window.start + ratio * (sliderMax - window.start);
   };
 
   // Onto the quarter hour, then back inside the window — so a window narrower than a
@@ -270,27 +299,23 @@ export function ProjectTimeline({
       borderWidth="1px"
       borderColor="gray.700"
     >
-      {/* The cursor has no field of its own, so this is the only place its value
-          is readable. Tabular figures keep it from twitching as it changes. */}
-      <Text
-        fontFamily="mono"
-        fontWeight="bold"
-        fontVariantNumeric="tabular-nums"
-        color={live ? 'green.400' : undefined}
-        truncate
-      >
+      {/* The cursor has no field of its own, so this is the only place its value is
+          readable. It changes under a scrub or a hover, and holds still while doing
+          it because the area sets tabular figures (see crew.lautstaerke). */}
+      <Text fontWeight="bold" color={live ? 'green.400' : undefined} truncate>
         {live ? 'Live' : formatInstant(selection.current)}
       </Text>
 
       <ChakraSlider.Root
-        min={0}
-        max={totalMinutes}
-        step={QUARTER_MINUTES}
+        min={window.start}
+        max={sliderMax}
+        step={STEP_MS}
         value={thumbs}
-        // Straight through as the thumbs move: the values zag hands over are already
-        // on the slider's own 15-minute grid, so the thumb stays under the pointer.
+        // Straight through as the thumbs move: a value zag hands over is already an
+        // instant, so the thumb stays under the pointer and a thumb that didn't move
+        // comes back untouched.
         onValueChange={(e) =>
-          onFrame(thumbsToSelection(e.value.map(toMs), live, selection))
+          onFrame(thumbsToSelection(e.value, live, selection))
         }
         // The wall-clock snap lands once, on release. Doing it per move would pull
         // each value off the grid zag is computing from — the thumb would sit up to
@@ -299,12 +324,13 @@ export function ProjectTimeline({
         onValueChangeEnd={(e) =>
           onceNow(
             commitProjectSelection(
-              thumbsToSelection(e.value.map(toMs), live, selection),
+              thumbsToSelection(e.value, live, selection),
               selection,
               window,
             ),
           )
         }
+        getAriaValueText={ariaValueText}
         thumbCollisionBehavior={collision}
         // Keeps the handles within the strip, so the one at 0 doesn't hang off
         // the left edge like a knob would.
@@ -362,6 +388,22 @@ export function ProjectTimeline({
                 onPointerDownCapture={() =>
                   setCollision(playhead ? 'none' : 'push')
                 }
+                // Capture, for the same reason: zag's own key handler sits on this
+                // element and bails on an event that has already been defaulted, so
+                // preventing it here is what replaces its one-millisecond stride. Keys
+                // it isn't given — Home, End — still reach it untouched.
+                onKeyDownCapture={(event) => {
+                  const steps = KEY_STEPS[event.key];
+                  if (steps == null) return;
+                  event.preventDefault();
+                  onceNow(
+                    nudgeSelectionThumb(
+                      selection,
+                      {index: i, steps, live},
+                      window,
+                    ),
+                  );
+                }}
                 _focusVisible={{outline: 'none', '& > *': {bg: 'blue.400'}}}
               >
                 <ChakraSlider.HiddenInput />
@@ -453,7 +495,6 @@ function BoundField({
       <Input
         type="datetime-local"
         size="sm"
-        fontFamily="mono"
         // Native bounds, so the picker itself won't offer times outside the
         // project; setProjectBound clamps anyway for typed input.
         min={toLocalInput(window.start)}

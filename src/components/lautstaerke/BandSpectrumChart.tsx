@@ -40,7 +40,9 @@ const PEAK_COLOR = '#f97316';
 const peakCaps: uPlot.Series.PathBuilder = (u, sIdx) => {
   const xs = u.data[0];
   const ys = u.data[sIdx];
-  const half = Math.abs(u.valToPos(0.425, 'x', true) - u.valToPos(0, 'x', true));
+  const half = Math.abs(
+    u.valToPos(0.425, 'x', true) - u.valToPos(0, 'x', true),
+  );
   const stroke = new Path2D();
   for (let i = 0; i < xs.length; i++) {
     const y = ys[i];
@@ -281,14 +283,14 @@ function BandTooltip({
   const db = band == null ? null : decodeDb(band);
   return (
     <ChartTooltip left={hover.left} top={hover.top}>
-      <Text fontFamily="mono" fontSize="xs" color="gray.400" lineHeight="1.2">
+      <Text fontSize="xs" color="gray.400" lineHeight="1.2">
         {fmtHz(FREQS[hover.idx] ?? 0)} Hz
       </Text>
-      <Text fontFamily="mono" fontWeight="bold" lineHeight="1.2">
+      <Text fontWeight="bold" lineHeight="1.2">
         {formatDb(db, 'dB')}
       </Text>
       {peakDb != null && (
-        <Text fontFamily="mono" fontSize="xs" color={PEAK_COLOR} lineHeight="1.2">
+        <Text fontSize="xs" color={PEAK_COLOR} lineHeight="1.2">
           Peak {formatDb(peakDb, 'dB')}
         </Text>
       )}

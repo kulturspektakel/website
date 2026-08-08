@@ -5,7 +5,10 @@ import {
   panProjectSelection,
   resolveProjectSelection,
   selectionThumbs,
+  nudgeSelectionThumb,
+  cropProjectSelection,
   setProjectBound,
+  setSelectionCurrent,
   thumbsToSelection,
   visibleProjectWindow,
 } from './projectSelection';
@@ -255,6 +258,64 @@ describe('setProjectBound', () => {
   });
 });
 
+// What a row chart commits: one end from the in/out keys, both from a drag. The two
+// are one gesture at different degrees of completeness, so they are one function.
+describe('cropProjectSelection', () => {
+  const window = {
+    start: Date.parse('2026-07-24T12:00:00Z'),
+    end: Date.parse('2026-07-27T16:00:00Z'),
+  };
+  const selection = {
+    start: Date.parse('2026-07-25T18:00:00Z'),
+    current: Date.parse('2026-07-25T19:00:00Z'),
+    end: Date.parse('2026-07-25T22:00:00Z'),
+  };
+  const at = (iso: string) => Date.parse(iso);
+
+  it('takes one end and leaves the other where it was', () => {
+    const next = cropProjectSelection(
+      {start: at('2026-07-25T18:47:00Z')},
+      selection,
+      window,
+    );
+    expect(next.start).toBe(at('2026-07-25T18:47:00Z'));
+    expect(next.end).toBe(selection.end);
+  });
+
+  it('takes both ends of a drag, in either direction', () => {
+    const swept = {
+      start: at('2026-07-25T21:00:00Z'),
+      end: at('2026-07-25T20:03:00Z'),
+    };
+    const next = cropProjectSelection(swept, selection, window);
+    expect(next.start).toBe(swept.end);
+    expect(next.end).toBe(swept.start);
+  });
+
+  // The instant the page is reading levels at survives a crop it still falls inside,
+  // and is pulled to the nearest edge of one it doesn't.
+  it('keeps the playhead where the crop still contains it', () => {
+    expect(
+      cropProjectSelection(
+        {start: at('2026-07-25T18:30:00Z')},
+        selection,
+        window,
+      ).current,
+    ).toBe(selection.current);
+    expect(
+      cropProjectSelection(
+        {start: at('2026-07-25T20:00:00Z'), end: at('2026-07-25T21:00:00Z')},
+        selection,
+        window,
+      ).current,
+    ).toBe(at('2026-07-25T20:00:00Z'));
+  });
+
+  it('is a no-op when neither end is given', () => {
+    expect(cropProjectSelection({}, selection, window)).toBe(selection);
+  });
+});
+
 // Live mode drops the cursor thumb, so the slider's indices shift. These pin the
 // mapping in both directions, because getting it wrong silently writes one bound
 // into another.
@@ -440,5 +501,83 @@ describe('panProjectSelection', () => {
   it('does nothing to a selection that fills the window', () => {
     const full = {...window, current: at('2026-07-25T12:00:00Z')};
     expect(panProjectSelection(full, 99 * MINUTE_MS, window)).toEqual(full);
+  });
+});
+
+// What hovering a row chart commits. Unlike every gesture on the timeline itself it
+// keeps the exact instant under the pointer, and it must not disturb the crop.
+describe('setSelectionCurrent', () => {
+  const selection = {
+    start: Date.parse('2026-07-25T18:00:00Z'),
+    current: Date.parse('2026-07-25T19:00:00Z'),
+    end: Date.parse('2026-07-25T20:00:00Z'),
+  };
+
+  it('takes the instant as given, off the quarter hour, and leaves the crop alone', () => {
+    const at = Date.parse('2026-07-25T18:37:23.400Z');
+    expect(setSelectionCurrent(selection, at)).toEqual({
+      ...selection,
+      current: at,
+    });
+  });
+
+  it('clamps to the crop rather than widening it', () => {
+    expect(
+      setSelectionCurrent(selection, Date.parse('2026-07-25T06:00:00Z')),
+    ).toEqual({...selection, current: selection.start});
+    expect(
+      setSelectionCurrent(selection, Date.parse('2026-07-25T23:00:00Z')),
+    ).toEqual({...selection, current: selection.end});
+  });
+});
+
+// The keyboard's gesture. Arrow keys are the only way to move a thumb without a
+// pointer, so the grid it walks and the neighbour it stops at are pinned here.
+describe('nudgeSelectionThumb', () => {
+  const window = {
+    start: Date.parse('2026-07-25T12:00:00Z'),
+    end: Date.parse('2026-07-25T23:00:00Z'),
+  };
+  const at = (iso: string) => Date.parse(iso);
+  const iso = (ms: number) => new Date(ms).toISOString();
+  const selection = {
+    start: at('2026-07-25T18:07:00Z'),
+    current: at('2026-07-25T19:00:00Z'),
+    end: at('2026-07-25T20:00:00Z'),
+  };
+
+  it('pulls an unaligned bound onto the grid on the first press', () => {
+    // 18:07 + 15 min is 18:22, which snaps to 18:15 — not 18:22.
+    expect(
+      iso(
+        nudgeSelectionThumb(
+          selection,
+          {index: 0, steps: 1, live: false},
+          window,
+        ).start,
+      ),
+    ).toBe('2026-07-25T18:15:00.000Z');
+  });
+
+  it('steps whole grid units once a thumb is on the grid', () => {
+    const onGrid = {...selection, end: at('2026-07-25T20:00:00Z')};
+    expect(
+      iso(
+        nudgeSelectionThumb(onGrid, {index: 2, steps: 4, live: false}, window)
+          .end,
+      ),
+    ).toBe('2026-07-25T21:00:00.000Z');
+  });
+
+  // An edge must not shove the instant you are looking at out of the way; only a
+  // pointer drag may do that.
+  it('stops an edge at the playhead instead of pushing it', () => {
+    const next = nudgeSelectionThumb(
+      selection,
+      {index: 0, steps: 8, live: false},
+      window,
+    );
+    expect(next.start).toBe(selection.current);
+    expect(next.current).toBe(selection.current);
   });
 });

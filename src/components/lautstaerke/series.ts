@@ -158,6 +158,12 @@ export const seriesFor = (
 ): NoiseSeries =>
   SERIES.find((s) => s.kind === kind && s.weighting === weighting)!;
 
+// Not every kind exists under both weightings — a peak is only ever C-weighted, which
+// is why seriesFor's assertion needs a way to be checked rather than trusted. The
+// picker asks this to decide what it may offer for the weighting in force.
+export const hasSeries = (kind: SeriesKind, weighting: Weighting): boolean =>
+  SERIES.some((s) => s.kind === kind && s.weighting === weighting);
+
 // Which live-buffer column holds a series: column 0 is the timestamps and column
 // i+1 mirrors SERIES[i]. That convention is this file's (see emptyBuffer above and
 // rowsToAligned below), so reading it is too — a chart that worked the +1 out for

@@ -83,6 +83,18 @@ export const fmtDayHourMinute = (ts: number) => {
   return `${pad2(d.getDate())}.${pad2(d.getMonth() + 1)}. ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 };
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+// Which of the two a window that wide wants to be labelled with. Below a day an HH:MM
+// reading is unambiguous; at a day or more the same clock time comes round again, so
+// the label has to carry the date. Keyed on the span rather than on the data, because
+// what decides it is whether two points in the window could share a clock time.
+//
+// (HistoryView keeps its own, wider threshold: its window is a day the user picked,
+// and a slight zoom out of one shouldn't start printing dates.)
+export const spanTimeFormat = (spanMs: number): ((ts: number) => string) =>
+  spanMs < DAY_MS ? fmtHourMinute : fmtDayHourMinute;
+
 // Vertical-grid steps in seconds, smallest first, for the row charts' time axis.
 // A fixed ladder rather than a fixed line count, so the grid reads as clock time:
 // half-minute lines on a five-minute live window, quarter hours on an afternoon.

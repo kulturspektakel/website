@@ -1,6 +1,7 @@
 import {createFileRoute} from '@tanstack/react-router';
 import {Box, Text} from '@chakra-ui/react';
-import {useMemo, useState} from 'react';
+import {useEffect, useMemo, useState} from 'react';
+import {toaster} from '../components/chakra-snippets/toaster';
 import LocationsMap, {
   type Coordinates,
 } from '../components/lautstaerke/LocationsMap';
@@ -17,14 +18,37 @@ export const Route = createFileRoute(
   component: ProjectMapView,
 });
 
+// A fixed id, so arming the tool twice replaces the prompt rather than stacking two.
+const PLACE_TOAST = 'noise-place-location';
+
 function ProjectMapView() {
   const {projectId} = Route.useParams();
   const {project, live, metric, weighting, viewedAt, levels, refresh} =
     useProjectView();
-  // The clicked point, or null while the create dialog is closed. Clicking the
-  // map is the only way to add a location, so there is no coordinate-less open —
-  // and so the dialog belongs to this view rather than to the layout.
+  // The clicked point, or null while the create dialog is closed. A location is only
+  // ever placed by clicking the map, so there is no coordinate-less open — and so the
+  // dialog belongs to this view rather than to the layout.
   const [createAt, setCreateAt] = useState<Coordinates | null>(null);
+  // Whether the plus button has armed the map. Lives here rather than in the map
+  // because what disarms it is the dialog closing, which the map knows nothing about:
+  // one location per press of the button, and then the map is a map again.
+  const [placing, setPlacing] = useState(false);
+
+  // The prompt, for exactly as long as it is an instruction: from arming the tool
+  // until a point is picked or the tool is dropped. Persistent rather than timed —
+  // it is the only thing telling you what the crosshair is waiting for, and it
+  // outlives any five seconds a toast would give it.
+  const prompting = placing && createAt == null;
+  useEffect(() => {
+    if (!prompting) return;
+    toaster.create({
+      id: PLACE_TOAST,
+      type: 'info',
+      title: 'Auf die Karte klicken, um den Standort zu setzen',
+      duration: Number.POSITIVE_INFINITY,
+    });
+    return () => toaster.dismiss(PLACE_TOAST);
+  }, [prompting]);
 
   // The map wants each location's monitors flattened; the list view keeps the
   // assignments themselves, since it renders one row each. Which monitors those are
@@ -82,6 +106,8 @@ function ProjectMapView() {
           metric={metric}
           weighting={weighting}
           history={levels}
+          placing={placing}
+          onPlacingChange={setPlacing}
           onCreateAt={setCreateAt}
         />
       </Box>
@@ -89,10 +115,17 @@ function ProjectMapView() {
       <NoiseLocationDialog
         coordinates={createAt}
         projectId={projectId}
-        onClose={() => setCreateAt(null)}
+        projectStart={project.start}
+        // Whether it was saved or abandoned, the tool has done its one job: the map
+        // goes back to being read-only until the plus is pressed again.
+        onClose={() => {
+          setCreateAt(null);
+          setPlacing(false);
+        }}
         onCreated={async () => {
           await refresh();
           setCreateAt(null);
+          setPlacing(false);
         }}
       />
     </>

@@ -97,6 +97,21 @@ export function commitProjectSelection(
   );
 }
 
+// The playhead moved and nothing else: what hovering a row chart commits.
+//
+// Deliberately unsnapped, unlike every gesture on the timeline itself. A hover reads
+// an instant off a trace under the pointer, and rounding it to the quarter hour would
+// light up a sample the pointer isn't on. The bounds are untouched, so a crop survives
+// being hovered over — and the clamp is what keeps the playhead inside it when the
+// pointer sits on the plot's very edge.
+export const setSelectionCurrent = (
+  selection: ProjectSelection,
+  at: number,
+): ProjectSelection => ({
+  ...selection,
+  current: clampTo(at, selection.start, selection.end),
+});
+
 // Whether the selection crops the window at all. Below it, the whole strip is
 // selected and there is nothing to slide — which is what decides whether a drag
 // inside the window pans it or places the playhead.
@@ -105,7 +120,10 @@ export const isCropped = (
   window: {start: number; end: number},
 ): boolean => selection.start > window.start || selection.end < window.end;
 
-const QUARTER_MS = QUARTER_MINUTES * MINUTE_MS;
+// The grid every gesture on this page lands on. Exported because the timeline's
+// keyboard stepping walks it too, and two derivations of one grid in the two files
+// that have to agree about it is one too many.
+export const QUARTER_MS = QUARTER_MINUTES * MINUTE_MS;
 
 // The selection slid bodily along the strip by `deltaMs`, keeping its length: what
 // dragging the lit part commits.
@@ -138,6 +156,67 @@ export function panProjectSelection(
   const start = selection.start + shift;
   const end = selection.end + shift;
   return {start, end, current: clampTo(selection.current, start, end)};
+}
+
+// One thumb moved by whole grid steps: what an arrow or page key on the timeline
+// commits. Which thumb `index` names depends on the mode, so it is read and written
+// through selectionThumbs/thumbsToSelection like every other thumb gesture.
+//
+// Snapped before it is clamped, so the first press off a bound typed as 18:07 lands
+// on the grid rather than carrying that offset along for ever. Clamped to its
+// neighbours after, so an edge stops at the playhead instead of pushing it — where
+// zag's own stepping stops too, and only a pointer drag is allowed to push (see the
+// timeline's `collision`).
+export function nudgeSelectionThumb(
+  selection: ProjectSelection,
+  {index, steps, live}: {index: number; steps: number; live: boolean},
+  window: {start: number; end: number},
+): ProjectSelection {
+  const values = selectionThumbs(selection, live);
+  values[index] = clampTo(
+    snapToQuarter(values[index]! + steps * QUARTER_MS),
+    values[index - 1] ?? window.start,
+    values[index + 1] ?? window.end,
+  );
+  return orderSelection(thumbsToSelection(values, live, selection), window);
+}
+
+/**
+ * Cropping the timeframe from a row chart: `i` gives one end, `o` the other, a drag
+ * across the trace gives both. One function because they are one gesture at different
+ * degrees of completeness — the keys are a drag you make in two goes.
+ *
+ * Unsnapped, like the date fields below and unlike every drag on the timeline itself:
+ * the instants were read off a trace under the pointer, and rounding them to the
+ * quarter hour would crop somewhere other than where you pointed.
+ *
+ * A drag is taken as drawn, in either direction — uPlot reports left-to-right pixels,
+ * but a caller that doesn't is answered rather than ignored. One end alone leaves the
+ * other where it was, pushing it along only if the two would cross, which is exactly
+ * what a typed bound does.
+ *
+ * The playhead is carried over and clamped by orderSelection, so it survives a crop it
+ * still falls inside and is pulled to the nearest edge of one it doesn't.
+ */
+export function cropProjectSelection(
+  crop: {start?: number; end?: number},
+  selection: ProjectSelection,
+  window: {start: number; end: number},
+): ProjectSelection {
+  const {start, end} = crop;
+  if (start != null && end != null) {
+    return orderSelection(
+      {
+        start: Math.min(start, end),
+        end: Math.max(start, end),
+        current: selection.current,
+      },
+      window,
+    );
+  }
+  if (start != null) return setProjectBound('start', start, selection, window);
+  if (end != null) return setProjectBound('end', end, selection, window);
+  return selection;
 }
 
 // What a manual date/time field commits: the exact minute typed, never snapped —

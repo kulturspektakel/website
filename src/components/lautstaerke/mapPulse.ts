@@ -1,5 +1,3 @@
-import {PIN_FILL} from './mapPin';
-
 // A ring expanding out from a pin, marking it as fed by the live stream.
 //
 // It has to be a DOM overlay rather than a marker: a marker's icon is an SVG
@@ -7,6 +5,11 @@ import {PIN_FILL} from './mapPin';
 // every frame, and AdvancedMarkerElement (which *is* DOM) requires a mapId, which
 // would disable the custom map style. OverlayView needs neither.
 const PULSE_SIZE = 26;
+// Green, matching the header's Live switch — "live" means the same thing in both
+// places. A literal because this is plain DOM outside Chakra's provider; green.300
+// rather than the switch's green.solid (green.600), because a 2px ring fading out
+// to nothing needs to start well clear of the dark basemap.
+const PULSE_STROKE = '#86efac';
 const PULSE_PERIOD_MS = 2000;
 // Two rings half a period apart, so there's always one on its way out rather than
 // a gap between beats.
@@ -50,7 +53,7 @@ export function pulseOverlay(maps: typeof google.maps): PulseCtor {
           marginLeft: `${-PULSE_SIZE / 2}px`,
           marginTop: `${-PULSE_SIZE / 2}px`,
           borderRadius: '50%',
-          border: `2px solid ${PIN_FILL}`,
+          border: `2px solid ${PULSE_STROKE}`,
         });
         // Web Animations rather than a CSS keyframe: nothing has to be injected
         // into the page's stylesheet, and transform/opacity animate off the main

@@ -60,7 +60,8 @@ export function WifiDialog({
       onOpenChange={(e) => !e.open && onClose()}
       placement="center"
     >
-      <DialogContent>
+      {/* Light, though the area around it is dark — see DARK_ROUTE_ID in __root. */}
+      <DialogContent appearance="light">
         <DialogHeader>
           <DialogTitle>WLAN – {deviceName}</DialogTitle>
         </DialogHeader>

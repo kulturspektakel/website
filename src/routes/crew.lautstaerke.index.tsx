@@ -106,7 +106,9 @@ function NoiseProjectList() {
         open={createOpen}
         onClose={() => setCreateOpen(false)}
         onCreated={async (projectId) => {
-          await queryClient.invalidateQueries({queryKey: noiseQueryKeys.projects});
+          await queryClient.invalidateQueries({
+            queryKey: noiseQueryKeys.projects,
+          });
           setCreateOpen(false);
           // You create a project in order to put locations in it.
           await navigate({

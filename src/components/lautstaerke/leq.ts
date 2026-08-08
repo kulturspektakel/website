@@ -35,7 +35,12 @@ export function expectedMinutes(start: Date, end: Date, now: number): number {
 const MIN_MISSING_MINUTES = 2;
 const MIN_COVERAGE = 0.95;
 
-export function coverageNote(totals: HistoryTotals): string | undefined {
+// The two fields the note is computed from. Named so a caller that has measured a
+// window but isn't a full HistoryTotals — the project page's per-device crop totals —
+// can use the same rule rather than reimplementing the thresholds.
+export type Coverage = Pick<HistoryTotals, 'minutes' | 'expectedMinutes'>;
+
+export function coverageNote(totals: Coverage): string | undefined {
   const {minutes, expectedMinutes} = totals;
   if (expectedMinutes === 0) return undefined;
   if (expectedMinutes - minutes < MIN_MISSING_MINUTES) return undefined;

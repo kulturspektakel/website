@@ -109,6 +109,36 @@ export async function placeCall(opts: {
   return json.sid;
 }
 
+// Alphanumeric sender ID (max 11 chars). Recipients can't reply to these, and
+// they only work in countries that allow them — Germany does, the US/Canada
+// don't. Override with TWILIO_SMS_FROM if a real number is ever needed.
+export const SMS_SENDER_ID = 'KultGauting';
+
+/**
+ * Send an SMS from the `KultGauting` alphanumeric sender ID (or `TWILIO_SMS_FROM`
+ * if set). Returns the new message's SID.
+ */
+export async function sendSms(opts: {to: string; body: string}): Promise<string> {
+  const creds = twilioCreds();
+  const res = await fetch(`${REST_BASE}/${creds.accountSid}/Messages.json`, {
+    method: 'POST',
+    headers: {
+      Authorization: creds.authHeader,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({
+      To: opts.to,
+      From: process.env.TWILIO_SMS_FROM ?? SMS_SENDER_ID,
+      Body: opts.body,
+    }),
+  });
+  if (!res.ok) {
+    throw new Error(`Twilio sendSms failed (${res.status}): ${await res.text()}`);
+  }
+  const json = (await res.json()) as {sid: string};
+  return json.sid;
+}
+
 export type ActiveCall = {sid: string; to: string; status: string};
 
 /**

@@ -133,7 +133,9 @@ export function CalibrationPanel({
     >
       <Portal>
         <FloatingPanel.Positioner>
-          <FloatingPanel.Content>
+          {/* Its own, because a portal hangs off <body> and so misses the layout's
+              (see crew.lautstaerke). The live level in here ticks like any other. */}
+          <FloatingPanel.Content fontVariantNumeric="tabular-nums">
             <FloatingPanel.Header>
               <FloatingPanel.DragTrigger>
                 <FloatingPanel.Title>Kalibrierung</FloatingPanel.Title>
@@ -159,12 +161,7 @@ export function CalibrationPanel({
                 <Stack gap="4">
                   {BAND_FREQUENCIES.map((hz, i) => (
                     <HStack key={hz} gap="3">
-                      <Box
-                        minW="16"
-                        fontFamily="mono"
-                        flexShrink="0"
-                        textAlign="end"
-                      >
+                      <Box minW="16" flexShrink="0" textAlign="end">
                         {formatBandFrequency(hz)}
                       </Box>
                       <Slider
@@ -177,7 +174,6 @@ export function CalibrationPanel({
                       />
                       <Text
                         color="gray.500"
-                        fontFamily="mono"
                         fontSize="xs"
                         minW="14"
                         textAlign="end"
@@ -206,7 +202,12 @@ export function CalibrationPanel({
               >
                 Zurücksetzen
               </Button>
-              <Button size="sm" onClick={apply} loading={saving} disabled={!dirty}>
+              <Button
+                size="sm"
+                onClick={apply}
+                loading={saving}
+                disabled={!dirty}
+              >
                 Speichern
               </Button>
             </HStack>

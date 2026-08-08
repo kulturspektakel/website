@@ -28,7 +28,9 @@ const projectFormSchema = z
     start: z
       .string()
       .refine((v) => fromLocalInput(v) != null, 'Beginn erforderlich'),
-    end: z.string().refine((v) => fromLocalInput(v) != null, 'Ende erforderlich'),
+    end: z
+      .string()
+      .refine((v) => fromLocalInput(v) != null, 'Ende erforderlich'),
   })
   .refine(
     (v) => {
@@ -69,7 +71,8 @@ export function NoiseProjectDialog({
       onOpenChange={(e) => !e.open && onClose()}
       placement="center"
     >
-      <DialogContent>
+      {/* Light, though the area around it is dark — see DARK_ROUTE_ID in __root. */}
+      <DialogContent appearance="light">
         <DialogHeader>
           <DialogTitle>Neues Projekt</DialogTitle>
         </DialogHeader>

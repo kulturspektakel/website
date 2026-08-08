@@ -6,7 +6,11 @@ import {
   useState,
   type MutableRefObject,
 } from 'react';
-import {type BluetoothSlice, type DeviceBuffer, type DeviceState} from './noise';
+import {
+  type BluetoothSlice,
+  type DeviceBuffer,
+  type DeviceState,
+} from './noise';
 
 // The React half of the section: the two live-pipeline contexts and the clock
 // hooks. The shapes, the wire encoding and the freshness rules are in noise.ts,

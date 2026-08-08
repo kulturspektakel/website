@@ -48,11 +48,11 @@ export function DeviceHeader({
         <HStack gap="2" minW="0" w="full">
           <LiveStatusDot lastSeen={deviceState?.lastSeen} ble={bleConnected} />
           {location ? (
-            <Text fontFamily="mono" fontSize="sm" color="gray.500" truncate minW="0">
+            <Text fontSize="sm" color="gray.500" truncate minW="0">
               {device}
             </Text>
           ) : (
-            <Heading as="h1" size="2xl" fontFamily="mono" truncate minW="0">
+            <Heading as="h1" size="2xl" truncate minW="0">
               {device}
             </Heading>
           )}

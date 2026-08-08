@@ -62,8 +62,10 @@ export function BigNumber({
   const body = (
     <>
       <Text
-        fontSize={{base: 'clamp(1rem, 7vw, 2rem)', lg: 'clamp(2rem, 6vw, 4rem)'}}
-        fontFamily="mono"
+        fontSize={{
+          base: 'clamp(1rem, 7vw, 2rem)',
+          lg: 'clamp(2rem, 6vw, 4rem)',
+        }}
         fontWeight="bold"
         lineHeight="1"
       >

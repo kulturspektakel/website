@@ -77,9 +77,11 @@ export function NoiseTimeChart({
   const plotRef = useRef<uPlot | null>(null);
   // Hovered time readout: where to anchor the tooltip (container-relative CSS
   // pixels) and the formatted time under the cursor. null when not hovering.
-  const [tip, setTip] = useState<{left: number; top: number; label: string} | null>(
-    null,
-  );
+  const [tip, setTip] = useState<{
+    left: number;
+    top: number;
+    label: string;
+  } | null>(null);
 
   // Read by the long-lived plot closures (range/axis/cursor) and the 1 Hz tick
   // without making them effect dependencies, so the plot isn't torn down when
@@ -109,7 +111,6 @@ export function NoiseTimeChart({
     plot.setScale('x', {min, max});
   }, []);
 
-
   // Only the selected weighting's series are plotted. The buffer always carries
   // every column, so project it down to [time, ...visible].
   const visible = useMemo(
@@ -125,7 +126,10 @@ export function NoiseTimeChart({
     if (!container) return;
     const project = () => {
       const full = dataRef.current;
-      return [full[0], ...visible.map(({col}) => full[col])] as uPlot.AlignedData;
+      return [
+        full[0],
+        ...visible.map(({col}) => full[col]),
+      ] as uPlot.AlignedData;
     };
     const axis = chartAxisStyle();
     const canvasHeight = () => plotHeight(container, 280);
@@ -155,7 +159,10 @@ export function NoiseTimeChart({
         y: {range: () => [...dbAxis.range]},
       },
       axes: [
-        {values: (_u, ticks) => ticks.map((t) => xAxisFormatRef.current(t)), ...axis},
+        {
+          values: (_u, ticks) => ticks.map((t) => xAxisFormatRef.current(t)),
+          ...axis,
+        },
         {...axis},
       ],
       series: [
@@ -289,9 +296,7 @@ export function NoiseTimeChart({
   useEffect(() => {
     const plot = plotRef.current;
     if (!plot) return;
-    visible.forEach(({s}, vi) =>
-      plot.setSeries(vi + 1, {show: shown[s.kind]}),
-    );
+    visible.forEach(({s}, vi) => plot.setSeries(vi + 1, {show: shown[s.kind]}));
   }, [shown, visible]);
 
   return (
@@ -313,7 +318,7 @@ export function NoiseTimeChart({
       />
       {tip && (
         <ChartTooltip left={tip.left} top={tip.top}>
-          <Text fontFamily="mono" fontSize="xs" lineHeight="1.2">
+          <Text fontSize="xs" lineHeight="1.2">
             {tip.label}
           </Text>
         </ChartTooltip>

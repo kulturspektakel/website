@@ -21,8 +21,10 @@ export function LevelPicker({
   onWeighting,
   onMetric,
 }: {
-  // Only to label and to disable: the finest window is 1 s live and 1 min stored,
-  // and there is no range Leq to show for an instant.
+  // Only to label: the finest window is 1 s live and 1 min stored. Every option means
+  // the same thing in either mode — the one thing that had no live counterpart, the
+  // Leq over the timeframe, is now shown on the rows themselves rather than picked
+  // here — so the mode never disables anything. The weighting does.
   live: boolean;
   weighting: Weighting;
   metric: LevelMetric;
@@ -34,7 +36,6 @@ export function LevelPicker({
       <NativeSelectRoot size="xs" w="auto">
         <NativeSelectField
           aria-label="Frequenzbewertung"
-          fontFamily="mono"
           value={weighting}
           onChange={(e) => onWeighting(e.target.value as Weighting)}
           items={WEIGHTING_OPTIONS}
@@ -43,10 +44,11 @@ export function LevelPicker({
       <NativeSelectRoot size="xs" w="auto">
         <NativeSelectField
           aria-label="Angezeigter Wert"
-          fontFamily="mono"
           value={metric}
           onChange={(e) => onMetric(e.target.value as LevelMetric)}
-          items={metricOptions(live)}
+          // The weighting decides what may be picked: a peak is C-weighted by
+          // definition, so under dB(A) that option is there but greyed out.
+          items={metricOptions(live, weighting)}
         />
       </NativeSelectRoot>
     </HStack>

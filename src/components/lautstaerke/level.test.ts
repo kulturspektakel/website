@@ -1,13 +1,14 @@
 import {describe, expect, it} from 'vitest';
 import {NoiseRecording} from '../../proto/noise';
 import {
+  LEVEL_METRICS,
   LIVE_LEVEL_WINDOW_MS,
-  POINT_METRICS,
   displayedLevel,
   formatDb,
   liveDb,
   loudestLevel,
   metricOptions,
+  supportedMetric,
   weightingUnit,
   type DisplayedLevel,
   type LevelMetric,
@@ -67,19 +68,12 @@ describe('displayedLevel', () => {
     ).toEqual({kind: 'none'});
   });
 
-  // 'total' is a range aggregate; live has no range. The picker disables it while
-  // live, and this is the belt to that braces.
-  it('shows nothing for the range Leq while live', () => {
-    expect(
-      shows({live: true, now: NOW, metric: 'total', state: state(87.5, 1_000)}),
-    ).toEqual({kind: 'none'});
-  });
-
-  // The point of the 10 s window: a monitor that stopped publishing must not keep
-  // showing a number that reads as "right now".
-  it('shows nothing when the live stream has dried up', () => {
+  // The point of the 10 s window: a monitor that stopped publishing keeps its last
+  // number, but that number must no longer read as "right now".
+  it('keeps the last value as stale when the live stream has dried up', () => {
     expect(shows({live: true, now: NOW, state: state(87.5, 11_000)})).toEqual({
-      kind: 'none',
+      kind: 'stale',
+      db: 87.5,
     });
   });
 
@@ -94,7 +88,7 @@ describe('displayedLevel', () => {
         now: NOW,
         state: state(80, LIVE_LEVEL_WINDOW_MS),
       }).kind,
-    ).toBe('none');
+    ).toBe('stale');
   });
 
   it('shows nothing when live and the device has never reported', () => {
@@ -133,8 +127,8 @@ describe('displayedLevel', () => {
   });
 });
 
-// Every window the picker offers has to resolve for both weightings, or seriesFor's
-// assertion is a crash waiting for someone to switch to dB(C).
+// Every combination the picker leaves enabled has to resolve, or seriesFor's
+// assertion is a crash waiting for someone to switch weighting.
 describe('liveDb', () => {
   const record = {
     laeq: encoded(80),
@@ -143,11 +137,15 @@ describe('liveDb', () => {
     lceq5m: encoded(75),
     laeq30m: encoded(60),
     lceq30m: encoded(65),
+    lafmax: encoded(90),
+    lcfmax: encoded(95),
+    lcpeak: encoded(105),
   } as NoiseRecording;
 
-  it('resolves every offered window under both weightings', () => {
-    for (const metric of POINT_METRICS) {
+  it('resolves every enabled option under both weightings', () => {
+    for (const metric of LEVEL_METRICS) {
       for (const weighting of ['A', 'C'] as const) {
+        if (supportedMetric(metric, weighting) !== metric) continue;
         expect(liveDb(record, metric, weighting)).toBeTypeOf('number');
       }
     }
@@ -157,10 +155,8 @@ describe('liveDb', () => {
     expect(liveDb(record, 'eq_fast', 'A')).toBe(80);
     expect(liveDb(record, 'eq_fast', 'C')).toBe(85);
     expect(liveDb(record, 'eq_30m', 'C')).toBe(65);
-  });
-
-  it('has no answer for the range Leq', () => {
-    expect(liveDb(record, 'total', 'A')).toBeNull();
+    expect(liveDb(record, 'fmax', 'A')).toBe(90);
+    expect(liveDb(record, 'peak', 'C')).toBe(105);
   });
 });
 
@@ -168,15 +164,45 @@ describe('metricOptions', () => {
   // The one option whose label depends on the mode: a live record is per-second, a
   // stored row is per-minute, and the user picked "as fine as it gets" either way.
   it('labels the finest window for the mode', () => {
-    expect(metricOptions(true)[0]?.label).toBe('Leq,1s');
-    expect(metricOptions(false)[0]?.label).toBe('Leq,1m');
+    expect(metricOptions(true, 'A')[0]?.label).toBe('Leq,1s');
+    expect(metricOptions(false, 'A')[0]?.label).toBe('Leq,1m');
   });
 
-  it('offers the range Leq only when not live', () => {
-    const range = (live: boolean) =>
-      metricOptions(live).find((o) => o.value === 'total');
-    expect(range(true)?.disabled).toBe(true);
-    expect(range(false)?.disabled).toBe(false);
+  // The mode never disables anything: the Leq over the timeframe, the one thing live
+  // had no answer for, is shown on the rows themselves and is not picked here.
+  it('offers every series in either mode', () => {
+    for (const live of [true, false]) {
+      expect(metricOptions(live, 'C').map((o) => o.label)).toEqual([
+        live ? 'Leq,1s' : 'Leq,1m',
+        'Leq,5m',
+        'Leq,30m',
+        'Fmax',
+        'Peak',
+      ]);
+    }
+  });
+
+  // The weighting does: a peak is C-weighted by definition, so under dB(A) it is
+  // offered and greyed out rather than quietly missing.
+  it('disables what the weighting has no series for', () => {
+    const disabled = (weighting: Weighting) =>
+      metricOptions(false, weighting)
+        .filter((o) => o.disabled)
+        .map((o) => o.value);
+    expect(disabled('A')).toEqual(['peak']);
+    expect(disabled('C')).toEqual([]);
+  });
+});
+
+describe('supportedMetric', () => {
+  it('keeps a pick the weighting can answer', () => {
+    expect(supportedMetric('eq_5m', 'A')).toBe('eq_5m');
+    expect(supportedMetric('peak', 'C')).toBe('peak');
+  });
+
+  // Peaks are maxima, so dB(A)'s answer to them is LAFmax — not the page default.
+  it('falls back to the nearest kin when it cannot', () => {
+    expect(supportedMetric('peak', 'A')).toBe('fmax');
   });
 });
 
@@ -207,6 +233,23 @@ describe('loudestLevel', () => {
       kind: 'none',
     });
     expect(loudestLevel([])).toEqual({kind: 'none'});
+  });
+
+  // One monitor still reporting is what the location is doing now, however loud
+  // another one was before it went quiet.
+  it('prefers a current reading over a louder stale one', () => {
+    const stale: DisplayedLevel = {kind: 'stale', db: 95};
+    expect(loudestLevel([stale, live(72.1)])).toEqual(live(72.1));
+    expect(loudestLevel([live(72.1), stale])).toEqual(live(72.1));
+  });
+
+  it('falls back to the loudest stale value when none are current', () => {
+    expect(
+      loudestLevel([
+        {kind: 'stale', db: 70},
+        {kind: 'stale', db: 84.2},
+      ]),
+    ).toEqual({kind: 'stale', db: 84.2});
   });
 });
 
