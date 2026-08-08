@@ -1,5 +1,11 @@
 import {describe, expect, it} from 'vitest';
-import {fmtDayHourMinute, fmtHourMinute, fmtTime, zonedDate} from './chartUtils';
+import {
+  fmtDayHourMinute,
+  fmtHourMinute,
+  fmtTime,
+  timeGridStepS,
+  zonedDate,
+} from './chartUtils';
 
 // The chart axes are labelled in festival-local time whatever zone the viewer is
 // in, and these run per tick on every redraw. x values are unix epoch *seconds*,
@@ -40,5 +46,57 @@ describe('axis formatters', () => {
   it('cross midnight into the next local day', () => {
     // 22:30 UTC is 00:30 the next day in Berlin.
     expect(fmtDayHourMinute(secs('2026-07-24T22:30:00Z'))).toBe('25.07. 00:30');
+  });
+});
+
+describe('timeGridStepS', () => {
+  // The row charts' vertical grid. A row is ~400 px wide and asks for at least
+  // 56 px between lines, so the step is whatever clock interval that allows.
+  const step = (spanSeconds: number, widthPx = 400) =>
+    timeGridStepS(spanSeconds, widthPx, 56);
+
+  it('picks the clock interval that fits the window', () => {
+    expect(step(5 * 60)).toBe(60); // the live window: minute lines
+    expect(step(60 * 60)).toBe(15 * 60); // an hour: quarter hours
+    expect(step(6 * 60 * 60)).toBe(60 * 60); // an afternoon: full hours
+    expect(step(24 * 60 * 60)).toBe(6 * 60 * 60);
+    expect(step(4 * 24 * 60 * 60)).toBe(24 * 60 * 60); // a festival: daily
+  });
+
+  it('never draws lines closer than the minimum spacing', () => {
+    for (const days of [0.01, 0.1, 1, 2, 4, 7, 30, 365]) {
+      const span = days * 24 * 60 * 60;
+      const lines = span / step(span);
+      expect(lines).toBeLessThanOrEqual(400 / 56);
+    }
+  });
+
+  it('goes finer as the row gets wider, same window', () => {
+    // The step is a function of pixels per second, not of the window alone: the
+    // live window drops to half-minute lines once there is room for them.
+    expect(step(5 * 60, 800)).toBe(30);
+    expect(step(5 * 60, 200)).toBe(5 * 60);
+  });
+
+  it('holds the finest step for a window finer than the ladder', () => {
+    // Nothing below half a minute, however few seconds are on screen — a second
+    // grid on a level chart is noise.
+    expect(step(20)).toBe(30);
+    expect(step(1)).toBe(30);
+  });
+
+  it('widens beyond the ladder rather than returning an unusable step', () => {
+    // uPlot loops forever on a zero increment, so a window wider than the ladder
+    // covers still has to come back with something that fits.
+    const span = 10 * 365 * 24 * 60 * 60;
+    const chosen = step(span);
+    expect(chosen).toBeGreaterThan(24 * 60 * 60);
+    expect(span / chosen).toBeLessThanOrEqual(400 / 56);
+  });
+
+  it('is never zero, whatever it is handed', () => {
+    expect(timeGridStepS(0, 400, 56)).toBe(30);
+    expect(timeGridStepS(-1, 400, 56)).toBe(30);
+    expect(timeGridStepS(3600, 0, 56)).toBeGreaterThan(0);
   });
 });

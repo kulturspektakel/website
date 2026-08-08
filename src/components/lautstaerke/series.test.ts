@@ -42,7 +42,10 @@ describe('SERIES', () => {
     for (const kind of new Set(SERIES.map((s) => s.kind))) {
       const [a, c] = SERIES.filter((s) => s.kind === kind);
       if (!c) continue; // 'peak' is C-only.
-      expect([a!.stroke, a!.hidden ?? false]).toEqual([c.stroke, c.hidden ?? false]);
+      expect([a!.stroke, a!.hidden ?? false]).toEqual([
+        c.stroke,
+        c.hidden ?? false,
+      ]);
     }
   });
 
@@ -148,7 +151,9 @@ describe('rowsToAligned', () => {
   it('preserves nulls rather than dropping the sample', () => {
     // A minute present in the query but missing its 5m/30m windows breaks just
     // those lines; it must not shorten the columns or shift the others.
-    const aligned = rowsToAligned([{...emptyRow(), minute_epoch: 1, laeq_1m: 70}]);
+    const aligned = rowsToAligned([
+      {...emptyRow(), minute_epoch: 1, laeq_1m: 70},
+    ]);
     expect(aligned.every((col) => col.length === 1)).toBe(true);
     const laeq5m = SERIES.findIndex((s) => s.col === 'laeq_5m');
     expect(aligned[laeq5m + 1]![0]).toBeNull();

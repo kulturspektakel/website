@@ -1,39 +1,13 @@
-import {MINUTE_MS, clampTo, snapToQuarter} from './timeframe';
+import {MINUTE_MS, QUARTER_MINUTES, clampTo, snapToQuarter} from './timeframe';
 
 // A project page's selection: a sub-range of the project's window plus a cursor
-// inside it. Lives in the URL as three ISO-UTC instants, the same encoding the
-// device view's ?start/?end already uses.
+// inside it. Component state on the layout, not a search param — it filters data the
+// browser already holds (see projectLogs.ts), so nothing reloads when it changes.
 //
 // Everything here speaks epoch milliseconds, because it exists to drive a
 // slider. Its sibling, timeframe.ts, speaks Date, because it exists to drive a
 // database query. Neither unit is wrong for its job, so the two live apart
 // rather than converting at every call — this import is the whole seam.
-
-export type ProjectSelectionSearch = {
-  start?: string;
-  end?: string;
-  current?: string;
-};
-
-// Shape-only, because validateSearch runs before the loader knows the project's
-// window. Anything unparseable is dropped rather than rejected, so a mangled URL
-// degrades to the default selection instead of 404ing.
-export function parseProjectSelectionSearch(search: {
-  start?: unknown;
-  end?: unknown;
-  current?: unknown;
-}): ProjectSelectionSearch {
-  const iso = (v: unknown) =>
-    typeof v === 'string' && !Number.isNaN(Date.parse(v)) ? v : undefined;
-  const out: ProjectSelectionSearch = {};
-  const start = iso(search.start);
-  const end = iso(search.end);
-  const current = iso(search.current);
-  if (start) out.start = start;
-  if (end) out.end = end;
-  if (current) out.current = current;
-  return out;
-}
 
 // The part of a project you can actually pick in: never past the current time,
 // because there are no measurements in the future. `end` is floored at `start` so
@@ -51,22 +25,22 @@ export function visibleProjectWindow(
 
 export type ProjectSelection = {start: number; current: number; end: number};
 
-// Everything the UI needs, clamped into the project window and ordered. Defaults
-// are the whole window with the cursor at its start — deliberately not `now`,
-// which would differ between the server render and the client and so would have
-// to be a post-mount effect.
+// What the user picked, resolved against the window — or, where they have picked
+// nothing, the whole window with the cursor at its right edge, which for a running
+// festival is now: the first switch out of live mode then freezes the moment you were
+// watching rather than jumping to the festival's opening minute.
+//
+// The null is load-bearing, and the reason the page stores a pick rather than a
+// resolved selection: the window's right edge follows the clock during a running
+// festival, so an untouched timeline tracks it, and the first drag pins the crop.
 export function resolveProjectSelection(
-  search: ProjectSelectionSearch,
+  chosen: ProjectSelection | null,
   window: {start: number; end: number},
 ): ProjectSelection {
-  const at = (v: string | undefined, fallback: number) =>
-    v ? Date.parse(v) : fallback;
-
-  const start = at(search.start, window.start);
-  // orderSelection does the clamping and the ordering, so a hand-edited URL with
-  // the ends swapped collapses the range rather than inverting it.
+  // orderSelection does the clamping and the ordering, so a pick made against a wider
+  // window collapses the range rather than inverting it.
   return orderSelection(
-    {start, end: at(search.end, window.end), current: at(search.current, start)},
+    chosen ?? {start: window.start, end: window.end, current: window.end},
     window,
   );
 }
@@ -89,13 +63,14 @@ export const thumbsToSelection = (
   previous: ProjectSelection,
 ): ProjectSelection =>
   live
-    ? // The cursor is carried over, not discarded: it stays in the URL so turning
-      // live off again returns to the instant you were last looking at.
+    ? // The cursor is carried over, not discarded, so turning live off again returns
+      // to the instant you were last looking at.
       {start: thumbs[0]!, end: thumbs[1]!, current: previous.current}
     : {start: thumbs[0]!, current: thumbs[1]!, end: thumbs[2]!};
 
 // Clamp into the window and restore start <= current <= end. The slider won't let
-// thumbs cross, so this is a safety net for typed input and hand-edited URLs.
+// thumbs cross, so this is a safety net for typed input, and for an override made
+// against a window that has since moved.
 const orderSelection = (
   selection: ProjectSelection,
   window: {start: number; end: number},
@@ -122,6 +97,49 @@ export function commitProjectSelection(
   );
 }
 
+// Whether the selection crops the window at all. Below it, the whole strip is
+// selected and there is nothing to slide — which is what decides whether a drag
+// inside the window pans it or places the playhead.
+export const isCropped = (
+  selection: ProjectSelection,
+  window: {start: number; end: number},
+): boolean => selection.start > window.start || selection.end < window.end;
+
+const QUARTER_MS = QUARTER_MINUTES * MINUTE_MS;
+
+// The selection slid bodily along the strip by `deltaMs`, keeping its length: what
+// dragging the lit part commits.
+//
+// The *shift* is snapped to the quarter hour, not the bounds it lands on. Snapping
+// the bounds (which is what commitProjectSelection does, correctly, for a thumb
+// drag) would round each end independently, so a window typed as 18:07–19:20 would
+// change length as it travelled. This way it keeps both its length and its offset
+// within the grid.
+//
+// The shift is clamped rather than the bounds, so the window slides up against the
+// end of the strip and stops there instead of being squashed against it.
+//
+// The cursor does not travel: it marks an instant the page is showing levels for,
+// and panning the window around it is how you look at that instant in a different
+// context. It only moves when the window would leave it behind, and then only as far
+// as the edge that overtook it.
+export function panProjectSelection(
+  selection: ProjectSelection,
+  deltaMs: number,
+  window: {start: number; end: number},
+): ProjectSelection {
+  const shift = clampTo(
+    Math.round(deltaMs / QUARTER_MS) * QUARTER_MS,
+    // Both bounds are <= 0 <= both others for any selection inside the window,
+    // which resolveProjectSelection guarantees.
+    window.start - selection.start,
+    window.end - selection.end,
+  );
+  const start = selection.start + shift;
+  const end = selection.end + shift;
+  return {start, end, current: clampTo(selection.current, start, end)};
+}
+
 // What a manual date/time field commits: the exact minute typed, never snapped —
 // rounding what someone deliberately typed is worse than an unaligned bound. The
 // opposite end is pushed along if the two would otherwise cross.
@@ -139,16 +157,6 @@ export function setProjectBound(
       : {...selection, start: Math.min(selection.start, at), end: at},
     window,
   );
-}
-
-export function projectSelectionSearch(
-  selection: ProjectSelection,
-): Required<ProjectSelectionSearch> {
-  return {
-    start: new Date(selection.start).toISOString(),
-    end: new Date(selection.end).toISOString(),
-    current: new Date(selection.current).toISOString(),
-  };
 }
 
 // Re-exported so the project page, which is otherwise entirely in selection

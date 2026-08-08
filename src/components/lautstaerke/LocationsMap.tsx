@@ -4,7 +4,13 @@ import {memo, useEffect, useRef, useState} from 'react';
 import {SegmentedControl} from '../chakra-snippets/segmented-control';
 import {KULT_LOCATION} from '../../utils/kultLocation';
 import {useNoiseLive, useTick} from './context';
-import {displayedLevel, formatDb, loudestLevel} from './level';
+import {
+  displayedLevel,
+  formatDb,
+  loudestLevel,
+  type LevelMetric,
+} from './level';
+import {type Weighting} from './noise';
 import {DARK_MAP_STYLE, MAP_BACKGROUND} from './mapStyle';
 import {pinIcon, pinLabel} from './mapPin';
 import {pulseOverlay} from './mapPulse';
@@ -45,30 +51,24 @@ const MAP_TYPES: Array<{value: MapTypeId; label: string}> = [
  * imagery. Clicking the map reports the clicked point via `onCreateAt`, which is
  * how new locations get placed.
  */
-function LocationsMap({
-  apiKey,
-  locations,
-  live,
-  history,
-  onCreateAt,
-}: {
-  apiKey: string;
+// live/metric/weighting/history are the same four inputs the list rows get;
+// displayedLevel turns them into a number.
+type MapCanvasProps = {
   locations: MapLocation[];
-  // Same two inputs the list rows get; displayedLevel turns them into the number.
   live: boolean;
+  metric: LevelMetric;
+  weighting: Weighting;
   history?: Record<string, number>;
   onCreateAt?: (coordinates: Coordinates) => void;
-}) {
+};
+
+function LocationsMap({apiKey, ...canvas}: MapCanvasProps & {apiKey: string}) {
   // Wrapper renders its children only once the Maps JS API has loaded, which is
-  // what lets MapCanvas reach for window.google.maps directly.
+  // what lets MapCanvas reach for window.google.maps directly. The key is the only
+  // prop it consumes; everything else is the canvas's, passed through untouched.
   return (
     <Wrapper apiKey={apiKey}>
-      <MapCanvas
-        locations={locations}
-        live={live}
-        history={history}
-        onCreateAt={onCreateAt}
-      />
+      <MapCanvas {...canvas} />
     </Wrapper>
   );
 }
@@ -78,14 +78,11 @@ export default memo(LocationsMap);
 function MapCanvas({
   locations,
   live,
+  metric,
+  weighting,
   history,
   onCreateAt,
-}: {
-  locations: MapLocation[];
-  live: boolean;
-  history?: Record<string, number>;
-  onCreateAt?: (coordinates: Coordinates) => void;
-}) {
+}: MapCanvasProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
@@ -99,8 +96,10 @@ function MapCanvas({
     mapRef.current = new maps.Map(containerRef.current, {
       styles: DARK_MAP_STYLE,
       backgroundColor: MAP_BACKGROUND,
-      // The page scrolls, so a plain wheel scroll must not get captured.
-      gestureHandling: 'cooperative',
+      // The map takes the whole view here, so a plain wheel scroll zooms rather
+      // than asking for a modifier key first. On a viewport short enough that
+      // the page scrolls, the map is still tall enough to scroll past.
+      gestureHandling: 'greedy',
       streetViewControl: false,
       fullscreenControl: false,
       // Google's own map-type switcher is a light-themed widget that would sit
@@ -130,13 +129,16 @@ function MapCanvas({
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-    const listener = map.addListener('click', (e: google.maps.MapMouseEvent) => {
-      if (!e.latLng) return;
-      onCreateAt?.({
-        latitude: Number(e.latLng.lat().toFixed(COORD_DECIMALS)),
-        longitude: Number(e.latLng.lng().toFixed(COORD_DECIMALS)),
-      });
-    });
+    const listener = map.addListener(
+      'click',
+      (e: google.maps.MapMouseEvent) => {
+        if (!e.latLng) return;
+        onCreateAt?.({
+          latitude: Number(e.latLng.lat().toFixed(COORD_DECIMALS)),
+          longitude: Number(e.latLng.lng().toFixed(COORD_DECIMALS)),
+        });
+      },
+    );
     return () => listener.remove();
   }, [onCreateAt]);
 
@@ -199,6 +201,8 @@ function MapCanvas({
         displayedLevel({
           live,
           now,
+          metric,
+          weighting,
           state: ctx.devices[deviceId],
           historyDb: history?.[deviceId],
         }),

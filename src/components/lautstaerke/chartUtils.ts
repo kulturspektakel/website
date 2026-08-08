@@ -83,6 +83,46 @@ export const fmtDayHourMinute = (ts: number) => {
   return `${pad2(d.getDate())}.${pad2(d.getMonth() + 1)}. ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 };
 
+// Vertical-grid steps in seconds, smallest first, for the row charts' time axis.
+// A fixed ladder rather than a fixed line count, so the grid reads as clock time:
+// half-minute lines on a five-minute live window, quarter hours on an afternoon.
+//
+// It continues past an hour because a project window is a festival, i.e. days —
+// capped at 1 h, a four-day range would draw a picket fence of ~100 lines. Every
+// step divides the one above it, so widening the window thins the grid out instead
+// of moving every line to a new offset.
+const TIME_GRID_STEPS_S = [
+  30,
+  60,
+  5 * 60,
+  15 * 60,
+  30 * 60,
+  60 * 60,
+  2 * 60 * 60,
+  3 * 60 * 60,
+  6 * 60 * 60,
+  12 * 60 * 60,
+  24 * 60 * 60,
+];
+
+// The step for a `spanSeconds` window drawn `widthPx` wide: the smallest one that
+// leaves at least `minSpacePx` between lines. A window wider than the ladder covers
+// (a project can be given any dates at all) gets the exact step that fits — off the
+// clock grid, but only in a case no ladder would have covered anyway.
+//
+// Never zero, and never so fine that the lines merge: uPlot picks the increment for
+// an axis itself, and when nothing clears its minimum spacing it settles on zero,
+// whose split generator loops without ever advancing. Deciding it here instead
+// makes that unreachable — and testable.
+export function timeGridStepS(
+  spanSeconds: number,
+  widthPx: number,
+  minSpacePx: number,
+): number {
+  const needed = (Math.max(0, spanSeconds) * minSpacePx) / Math.max(1, widthPx);
+  return TIME_GRID_STEPS_S.find((step) => step >= needed) ?? needed;
+}
+
 // Renders an explicit gap whenever consecutive samples are further apart than
 // `gapThresholdX` on the x-axis (seconds for live, minutes-as-seconds for
 // history) — uPlot otherwise draws a continuous line across missing data.

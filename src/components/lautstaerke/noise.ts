@@ -18,6 +18,10 @@ export const WINDOW_S = 300;
 // once consecutive samples are more than this far apart — i.e. a few seconds of
 // missing data, while tolerating normal sub-second delivery jitter.
 export const GAP_THRESHOLD_S = 3;
+// The same for stored data, which is one point per minute: half a minute of slack
+// past the step. Mostly belt — a stored trace carries an explicit null for a minute
+// it has nothing for, which uPlot breaks on by itself.
+export const STORED_GAP_THRESHOLD_S = 90;
 
 // Levels cross the wire as one byte per value. The history query decodes the
 // same encoding in SQL (see noiseHistory.server.ts) because it decodes 1440
@@ -50,9 +54,62 @@ export type HistoryRow = {
   lcpeak: number;
 };
 
-// Device id → its level in dB at some instant. What the project page's map and
-// list read, live from MQTT or stored via projectLevelsAt.
-export type NoiseLevels = Record<string, number>;
+// The Leq windows the project page can display, named as a HistoryRow names them —
+// so the series table's `col` indexes both. A map pin has no use for fmax/peak, so
+// those stay out.
+export type LevelColumn = keyof Pick<
+  HistoryRow,
+  'laeq_1m' | 'lceq_1m' | 'laeq_5m' | 'lceq_5m' | 'laeq_30m' | 'lceq_30m'
+>;
+
+// One device's stored levels over a whole project, one value per minute per column.
+// The index *is* the minute (see ProjectLogs.start/stepMs), so a reading is an index
+// and a window is a slice — no timestamps travel, and none are searched for.
+//
+// `null` means "nothing to show for that minute", which covers three cases the page
+// treats identically: the device reported nothing, it hadn't filled that trailing
+// window yet, or it wasn't standing in this project at the time (projectLogs clips
+// to each assignment). A column absent entirely is one that was null throughout.
+export type DeviceLog = Partial<Record<LevelColumn, (number | null)[]>>;
+
+// Every monitor of one project over its whole window, from projectLogs — the single
+// payload the project page's map and list read when live mode is off. Sized in the
+// tens of thousands of numbers, which is small enough to hold and slice locally and
+// so replaces what used to be three separate per-view queries.
+export type ProjectLogs = {
+  // Epoch ms of index 0, and how far apart neighbouring indices are.
+  start: number;
+  stepMs: number;
+  // Length of every column, so a caller can bound a slice without measuring one.
+  minutes: number;
+  devices: Record<string, DeviceLog>;
+};
+
+// The grid of a ProjectLogs, in both directions. Only the grid, so the server can
+// fill columns by index before the payload exists — and it is the one invariant the
+// whole payload rests on, so producer and consumers share it rather than each writing
+// `(ms - start) / stepMs` and hoping they agree.
+export type LogGrid = Pick<ProjectLogs, 'start' | 'stepMs'>;
+
+// May fall outside the payload — before the project began, or past the edge a running
+// festival has reached — so callers bound it themselves.
+export const logMinuteIndex = (grid: LogGrid, ms: number): number =>
+  Math.floor((ms - grid.start) / grid.stepMs);
+
+export const logMinuteAt = (grid: LogGrid, index: number): number =>
+  grid.start + index * grid.stepMs;
+
+// One device's level trace, in uPlot's column-major shape: epoch *seconds* (as in
+// HistoryRow.minute_epoch) against the Leq at each. Full resolution — one point per
+// stored minute, the whole project long — because uPlot clips to its x-scale by
+// binary search and decimates to min/max per pixel column once there are more than
+// four points per pixel. Reducing it here first would cost work on every crop change
+// and throw away the peaks uPlot would otherwise draw.
+//
+// `xs` is shared by every device of a project, so only the levels are per device. A
+// minute with no reading is null rather than absent, which is what keeps that sharing
+// possible — and uPlot breaks the line there of its own accord.
+export type DeviceSeries = {xs: number[]; db: (number | null)[]};
 
 export type DeviceState = {
   lastSeen: number;

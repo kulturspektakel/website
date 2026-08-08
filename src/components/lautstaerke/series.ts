@@ -148,6 +148,23 @@ export const emptyBuffer = (): DeviceBuffer => [
   ...SERIES.map(() => [] as number[]),
 ];
 
+// One row of the table, by what it *is* rather than by where it sits. Every
+// (kind, weighting) pair that this file lists exists — see series.test.ts — which
+// is what makes the assertion safe, and it is the only place the pair is looked
+// up: level.ts reads `get`/`col` off it, the charts read `stroke`.
+export const seriesFor = (
+  kind: SeriesKind,
+  weighting: Weighting,
+): NoiseSeries =>
+  SERIES.find((s) => s.kind === kind && s.weighting === weighting)!;
+
+// Which live-buffer column holds a series: column 0 is the timestamps and column
+// i+1 mirrors SERIES[i]. That convention is this file's (see emptyBuffer above and
+// rowsToAligned below), so reading it is too — a chart that worked the +1 out for
+// itself would keep plotting a plausible-looking wrong line if the layout changed.
+export const bufferColumn = (kind: SeriesKind, weighting: Weighting): number =>
+  SERIES.indexOf(seriesFor(kind, weighting)) + 1;
+
 // History rows → uPlot's column-major shape: [xs, ...one column per series].
 // Only minutes that had data are present, so gaps are rendered by
 // NoiseTimeChart's gap refiner (a > threshold jump between consecutive x

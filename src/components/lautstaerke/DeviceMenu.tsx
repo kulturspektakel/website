@@ -22,6 +22,7 @@ import {TimeframeDialog} from './TimeframeDialog';
 import {WifiDialog} from './WifiDialog';
 import {useBluetooth, useNoiseLive} from './context';
 import {decodeDb, isFresh} from './noise';
+import {WEIGHTING_OPTIONS, weightingUnit} from './level';
 import {useDeviceView} from './deviceView';
 import {BAND_FREQUENCIES} from './bluetooth';
 
@@ -135,9 +136,7 @@ export function DeviceMenu({
           {/* View: live, or an arbitrary timeframe picked in the dialog. */}
           <MenuItem value="timeframe" onClick={() => setTimeframeOpen(true)}>
             Zeitraum:{' '}
-            {range
-              ? formatTimeframeRange(range.start, range.end)
-              : 'Live'}
+            {range ? formatTimeframeRange(range.start, range.end) : 'Live'}
           </MenuItem>
           {range && (
             <MenuItem value="live" onClick={() => setRange(null)}>
@@ -148,7 +147,7 @@ export function DeviceMenu({
           {/* Frequency weighting (A/C). */}
           <MenuRoot positioning={{placement: 'left-start', gutter: 2}}>
             <MenuTriggerItem value="weighting">
-              Frequenzbewertung: {weighting === 'A' ? 'dB(A)' : 'dB(C)'}
+              Frequenzbewertung: {weightingUnit(weighting)}
             </MenuTriggerItem>
             <MenuContent>
               <MenuRadioItemGroup
@@ -157,8 +156,13 @@ export function DeviceMenu({
                   if (e.value !== weighting) toggleWeighting();
                 }}
               >
-                <MenuRadioItem value="A">dB(A)</MenuRadioItem>
-                <MenuRadioItem value="C">dB(C)</MenuRadioItem>
+                {/* Same two labels the project page's picker offers, from one list:
+                    how a weighting is spelled is one decision. */}
+                {WEIGHTING_OPTIONS.map((option) => (
+                  <MenuRadioItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuRadioItem>
+                ))}
               </MenuRadioItemGroup>
             </MenuContent>
           </MenuRoot>

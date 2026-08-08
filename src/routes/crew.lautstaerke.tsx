@@ -20,7 +20,7 @@ import {useBleDevice} from '../components/lautstaerke/useBleDevice';
 import {createServerFn} from '@tanstack/react-start';
 import {crewAuth} from '../server/crewAuth';
 import {prismaClient} from '../server/prismaClient.server';
-import {projectLevelsAt} from '../server/noiseHistory.server';
+import {projectLogs} from '../server/noiseHistory.server';
 import {Toaster} from '../components/chakra-snippets/toaster';
 import {END_BEFORE_START} from '../components/lautstaerke/timeframe';
 
@@ -59,11 +59,7 @@ const isoInstant = z
 // Exported because the create dialogs validate the same field client-side; the
 // length cap and the message must not be able to drift apart, or an over-long
 // name becomes a server rejection with nothing to attach it to.
-export const noiseName = z
-  .string()
-  .trim()
-  .min(1, 'Name erforderlich')
-  .max(60);
+export const noiseName = z.string().trim().min(1, 'Name erforderlich').max(60);
 
 export const createNoiseProjectInput = z
   .object({
@@ -110,14 +106,22 @@ export const loadNoiseProject = createServerFn()
             locationName: true,
             latitude: true,
             longitude: true,
-            // Open assignments only: `end == null` is "a device is standing here
-            // right now". Closed rows are history and belong to the device views.
+            // The whole history, not just the open rows: which monitor stood here is
+            // a question the page asks about the instant it is showing, and it
+            // resolves that client-side (see assignmentsAt). `end == null` still
+            // means "standing here right now", which is what live mode reads.
+            //
+            // Deliberately not filtered to the project's window either. Out-of-window
+            // rows never match an in-window instant, and one case needs them: a device
+            // assigned after a finished project's end has an open assignment starting
+            // past the window, and live mode must still show it standing there.
             NoiseLocationAssignment: {
-              where: {end: null},
               orderBy: {start: 'asc'},
               select: {
                 id: true,
                 deviceId: true,
+                start: true,
+                end: true,
                 Device: {select: {lastSeen: true}},
               },
             },
@@ -142,6 +146,10 @@ export const loadNoiseProject = createServerFn()
         assignments: l.NoiseLocationAssignment.map((a) => ({
           id: a.id,
           deviceId: a.deviceId,
+          start: a.start.getTime(),
+          // Null means still standing there; every other field is epoch ms, as
+          // everything that crosses this wire is.
+          end: a.end?.getTime() ?? null,
           lastSeen: a.Device.lastSeen?.getTime() ?? null,
         })),
       })),
@@ -172,10 +180,14 @@ export const createNoiseLocation = createServerFn()
     return prismaClient.noiseLocation.create({data, select: {id: true}});
   });
 
-export const noiseLevelsAt = createServerFn()
+// Every stored level of one project, in one payload: the page then answers its own
+// questions locally (see projectLogs.ts). No window and no weighting in the input —
+// the whole event travels, so scrubbing, cropping and the header's dropdowns never
+// come back here. Only sent when live mode is off.
+export const noiseProjectLogs = createServerFn()
   .middleware([crewAuth])
-  .inputValidator(z.object({projectId: z.string().min(1), at: isoInstant}))
-  .handler(async ({data}) => projectLevelsAt(data.projectId, new Date(data.at)));
+  .inputValidator(z.object({projectId: z.string().min(1)}))
+  .handler(async ({data}) => projectLogs(data.projectId));
 
 export const assignableNoiseDevices = createServerFn()
   .middleware([crewAuth])
@@ -227,7 +239,11 @@ export const assignNoiseDevice = createServerFn()
         data: {end: now},
       }),
       prismaClient.noiseLocationAssignment.create({
-        data: {locationId: data.locationId, deviceId: data.deviceId, start: now},
+        data: {
+          locationId: data.locationId,
+          deviceId: data.deviceId,
+          start: now,
+        },
       }),
     ]);
   });

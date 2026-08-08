@@ -99,6 +99,9 @@ import { Route as MainLineupYearSlugRouteImport } from './routes/_main.lineup.$y
 import { Route as MainCardHashKultRouteImport } from './routes/_main.card.$hash.kult'
 import { Route as MainCardHashCrewRouteImport } from './routes/_main.card.$hash.crew'
 import { Route as MainBookingApplicationTypeDankeRouteImport } from './routes/_main.booking_.$applicationType_.danke'
+import { Route as CrewLautstaerkeProjektProjectIdIndexRouteImport } from './routes/crew.lautstaerke.projekt.$projectId.index'
+import { Route as CrewLautstaerkeProjektProjectIdListeRouteImport } from './routes/crew.lautstaerke.projekt.$projectId.liste'
+import { Route as CrewLautstaerkeProjektProjectIdKarteRouteImport } from './routes/crew.lautstaerke.projekt.$projectId.karte'
 import { Route as CrewBookingEventIdApplicationIdContactRouteImport } from './routes/crew.booking.$eventId.$applicationId.contact'
 
 const VeganRoute = VeganRouteImport.update({
@@ -569,6 +572,24 @@ const MainBookingApplicationTypeDankeRoute =
     path: '/booking/$applicationType/danke',
     getParentRoute: () => MainRoute,
   } as any)
+const CrewLautstaerkeProjektProjectIdIndexRoute =
+  CrewLautstaerkeProjektProjectIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => CrewLautstaerkeProjektProjectIdRoute,
+  } as any)
+const CrewLautstaerkeProjektProjectIdListeRoute =
+  CrewLautstaerkeProjektProjectIdListeRouteImport.update({
+    id: '/liste',
+    path: '/liste',
+    getParentRoute: () => CrewLautstaerkeProjektProjectIdRoute,
+  } as any)
+const CrewLautstaerkeProjektProjectIdKarteRoute =
+  CrewLautstaerkeProjektProjectIdKarteRouteImport.update({
+    id: '/karte',
+    path: '/karte',
+    getParentRoute: () => CrewLautstaerkeProjektProjectIdRoute,
+  } as any)
 const CrewBookingEventIdApplicationIdContactRoute =
   CrewBookingEventIdApplicationIdContactRouteImport.update({
     id: '/contact',
@@ -664,9 +685,12 @@ export interface FileRoutesByFullPath {
   '/api/spenden/quittung/$id': typeof ApiSpendenQuittungIdRoute
   '/crew/booking/$eventId/$applicationId': typeof CrewBookingEventIdApplicationIdRouteWithChildren
   '/crew/lautstaerke/$device/$date': typeof CrewLautstaerkeDeviceDateRoute
-  '/crew/lautstaerke/projekt/$projectId': typeof CrewLautstaerkeProjektProjectIdRoute
+  '/crew/lautstaerke/projekt/$projectId': typeof CrewLautstaerkeProjektProjectIdRouteWithChildren
   '/crew/lautstaerke/$device/': typeof CrewLautstaerkeDeviceIndexRoute
   '/crew/booking/$eventId/$applicationId/contact': typeof CrewBookingEventIdApplicationIdContactRoute
+  '/crew/lautstaerke/projekt/$projectId/karte': typeof CrewLautstaerkeProjektProjectIdKarteRoute
+  '/crew/lautstaerke/projekt/$projectId/liste': typeof CrewLautstaerkeProjektProjectIdListeRoute
+  '/crew/lautstaerke/projekt/$projectId/': typeof CrewLautstaerkeProjektProjectIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/glutenfrei': typeof GlutenfreiRoute
@@ -751,9 +775,11 @@ export interface FileRoutesByTo {
   '/api/spenden/quittung/$id': typeof ApiSpendenQuittungIdRoute
   '/crew/booking/$eventId/$applicationId': typeof CrewBookingEventIdApplicationIdRouteWithChildren
   '/crew/lautstaerke/$device/$date': typeof CrewLautstaerkeDeviceDateRoute
-  '/crew/lautstaerke/projekt/$projectId': typeof CrewLautstaerkeProjektProjectIdRoute
   '/crew/lautstaerke/$device': typeof CrewLautstaerkeDeviceIndexRoute
   '/crew/booking/$eventId/$applicationId/contact': typeof CrewBookingEventIdApplicationIdContactRoute
+  '/crew/lautstaerke/projekt/$projectId/karte': typeof CrewLautstaerkeProjektProjectIdKarteRoute
+  '/crew/lautstaerke/projekt/$projectId/liste': typeof CrewLautstaerkeProjektProjectIdListeRoute
+  '/crew/lautstaerke/projekt/$projectId': typeof CrewLautstaerkeProjektProjectIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -845,9 +871,12 @@ export interface FileRoutesById {
   '/api/spenden/quittung/$id': typeof ApiSpendenQuittungIdRoute
   '/crew/booking/$eventId/$applicationId': typeof CrewBookingEventIdApplicationIdRouteWithChildren
   '/crew/lautstaerke/$device/$date': typeof CrewLautstaerkeDeviceDateRoute
-  '/crew/lautstaerke/projekt/$projectId': typeof CrewLautstaerkeProjektProjectIdRoute
+  '/crew/lautstaerke/projekt/$projectId': typeof CrewLautstaerkeProjektProjectIdRouteWithChildren
   '/crew/lautstaerke/$device/': typeof CrewLautstaerkeDeviceIndexRoute
   '/crew/booking/$eventId/$applicationId/contact': typeof CrewBookingEventIdApplicationIdContactRoute
+  '/crew/lautstaerke/projekt/$projectId/karte': typeof CrewLautstaerkeProjektProjectIdKarteRoute
+  '/crew/lautstaerke/projekt/$projectId/liste': typeof CrewLautstaerkeProjektProjectIdListeRoute
+  '/crew/lautstaerke/projekt/$projectId/': typeof CrewLautstaerkeProjektProjectIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -942,6 +971,9 @@ export interface FileRouteTypes {
     | '/crew/lautstaerke/projekt/$projectId'
     | '/crew/lautstaerke/$device/'
     | '/crew/booking/$eventId/$applicationId/contact'
+    | '/crew/lautstaerke/projekt/$projectId/karte'
+    | '/crew/lautstaerke/projekt/$projectId/liste'
+    | '/crew/lautstaerke/projekt/$projectId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/glutenfrei'
@@ -1026,9 +1058,11 @@ export interface FileRouteTypes {
     | '/api/spenden/quittung/$id'
     | '/crew/booking/$eventId/$applicationId'
     | '/crew/lautstaerke/$device/$date'
-    | '/crew/lautstaerke/projekt/$projectId'
     | '/crew/lautstaerke/$device'
     | '/crew/booking/$eventId/$applicationId/contact'
+    | '/crew/lautstaerke/projekt/$projectId/karte'
+    | '/crew/lautstaerke/projekt/$projectId/liste'
+    | '/crew/lautstaerke/projekt/$projectId'
   id:
     | '__root__'
     | '/_main'
@@ -1122,6 +1156,9 @@ export interface FileRouteTypes {
     | '/crew/lautstaerke/projekt/$projectId'
     | '/crew/lautstaerke/$device/'
     | '/crew/booking/$eventId/$applicationId/contact'
+    | '/crew/lautstaerke/projekt/$projectId/karte'
+    | '/crew/lautstaerke/projekt/$projectId/liste'
+    | '/crew/lautstaerke/projekt/$projectId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1782,6 +1819,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainBookingApplicationTypeDankeRouteImport
       parentRoute: typeof MainRoute
     }
+    '/crew/lautstaerke/projekt/$projectId/': {
+      id: '/crew/lautstaerke/projekt/$projectId/'
+      path: '/'
+      fullPath: '/crew/lautstaerke/projekt/$projectId/'
+      preLoaderRoute: typeof CrewLautstaerkeProjektProjectIdIndexRouteImport
+      parentRoute: typeof CrewLautstaerkeProjektProjectIdRoute
+    }
+    '/crew/lautstaerke/projekt/$projectId/liste': {
+      id: '/crew/lautstaerke/projekt/$projectId/liste'
+      path: '/liste'
+      fullPath: '/crew/lautstaerke/projekt/$projectId/liste'
+      preLoaderRoute: typeof CrewLautstaerkeProjektProjectIdListeRouteImport
+      parentRoute: typeof CrewLautstaerkeProjektProjectIdRoute
+    }
+    '/crew/lautstaerke/projekt/$projectId/karte': {
+      id: '/crew/lautstaerke/projekt/$projectId/karte'
+      path: '/karte'
+      fullPath: '/crew/lautstaerke/projekt/$projectId/karte'
+      preLoaderRoute: typeof CrewLautstaerkeProjektProjectIdKarteRouteImport
+      parentRoute: typeof CrewLautstaerkeProjektProjectIdRoute
+    }
     '/crew/booking/$eventId/$applicationId/contact': {
       id: '/crew/booking/$eventId/$applicationId/contact'
       path: '/contact'
@@ -1893,16 +1951,38 @@ const CrewLautstaerkeDeviceRouteWithChildren =
     CrewLautstaerkeDeviceRouteChildren,
   )
 
+interface CrewLautstaerkeProjektProjectIdRouteChildren {
+  CrewLautstaerkeProjektProjectIdKarteRoute: typeof CrewLautstaerkeProjektProjectIdKarteRoute
+  CrewLautstaerkeProjektProjectIdListeRoute: typeof CrewLautstaerkeProjektProjectIdListeRoute
+  CrewLautstaerkeProjektProjectIdIndexRoute: typeof CrewLautstaerkeProjektProjectIdIndexRoute
+}
+
+const CrewLautstaerkeProjektProjectIdRouteChildren: CrewLautstaerkeProjektProjectIdRouteChildren =
+  {
+    CrewLautstaerkeProjektProjectIdKarteRoute:
+      CrewLautstaerkeProjektProjectIdKarteRoute,
+    CrewLautstaerkeProjektProjectIdListeRoute:
+      CrewLautstaerkeProjektProjectIdListeRoute,
+    CrewLautstaerkeProjektProjectIdIndexRoute:
+      CrewLautstaerkeProjektProjectIdIndexRoute,
+  }
+
+const CrewLautstaerkeProjektProjectIdRouteWithChildren =
+  CrewLautstaerkeProjektProjectIdRoute._addFileChildren(
+    CrewLautstaerkeProjektProjectIdRouteChildren,
+  )
+
 interface CrewLautstaerkeRouteChildren {
   CrewLautstaerkeDeviceRoute: typeof CrewLautstaerkeDeviceRouteWithChildren
   CrewLautstaerkeIndexRoute: typeof CrewLautstaerkeIndexRoute
-  CrewLautstaerkeProjektProjectIdRoute: typeof CrewLautstaerkeProjektProjectIdRoute
+  CrewLautstaerkeProjektProjectIdRoute: typeof CrewLautstaerkeProjektProjectIdRouteWithChildren
 }
 
 const CrewLautstaerkeRouteChildren: CrewLautstaerkeRouteChildren = {
   CrewLautstaerkeDeviceRoute: CrewLautstaerkeDeviceRouteWithChildren,
   CrewLautstaerkeIndexRoute: CrewLautstaerkeIndexRoute,
-  CrewLautstaerkeProjektProjectIdRoute: CrewLautstaerkeProjektProjectIdRoute,
+  CrewLautstaerkeProjektProjectIdRoute:
+    CrewLautstaerkeProjektProjectIdRouteWithChildren,
 }
 
 const CrewLautstaerkeRouteWithChildren = CrewLautstaerkeRoute._addFileChildren(

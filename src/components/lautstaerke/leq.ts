@@ -55,12 +55,18 @@ export function coverageNote(totals: HistoryTotals): string | undefined {
 // Nulls are skipped rather than counted as zero: a minute with no reading is a
 // minute we know nothing about, not a silent one. Returns null when nothing is
 // left to average, so callers render a dash instead of -Infinity.
+// `from`/`to` bound the range without slicing it: the project page averages windows
+// out of a column thousands of minutes long, per device, as the timeline is dragged,
+// and a copy per call would be the only allocation on that path.
 export function energeticMeanDb(
   values: ReadonlyArray<number | null>,
+  from = 0,
+  to = values.length,
 ): number | null {
   let sum = 0;
   let n = 0;
-  for (const v of values) {
+  for (let i = from; i < to; i++) {
+    const v = values[i];
     if (v == null || !Number.isFinite(v)) continue;
     sum += 10 ** (v / 10);
     n++;
