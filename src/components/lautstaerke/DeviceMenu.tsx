@@ -47,7 +47,10 @@ export function DeviceMenu({
         : null,
     [search.start, search.end],
   );
-  const ctx = useNoiseLive();
+  // The store rather than a subscription: the one thing here that reads a record does
+  // it inside a click handler (see copyBands), so nothing about this menu changes when
+  // one arrives.
+  const live = useNoiseLive();
   const bluetooth = useBluetooth();
   const {weighting, toggleWeighting, peaks, togglePeaks} = useDeviceView();
   const navigate = useNavigate();
@@ -80,7 +83,7 @@ export function DeviceMenu({
   // pastes straight into a spreadsheet. Live-only: reads the current record off
   // the shared context, aligned with the fixed 1/3-octave band centers.
   const copyBands = async () => {
-    const deviceState = ctx.devices[device];
+    const deviceState = live.get(device);
     if (!deviceState || !isFresh(deviceState.lastSeen, Date.now())) {
       toaster.create({type: 'error', title: 'Gerät ist nicht live'});
       return;

@@ -1,7 +1,7 @@
 import {useCallback, useEffect, useRef, useState} from 'react';
 import {Box, Text} from '@chakra-ui/react';
 import uPlot from 'uplot';
-import {useNoiseLive} from './context';
+import {subscribeToClock, useNoiseBuffers} from './context';
 import {
   GAP_THRESHOLD_S,
   STORED_GAP_THRESHOLD_S,
@@ -9,38 +9,50 @@ import {
   type DeviceSeries,
   type Weighting,
 } from './noise';
-import {bufferColumn, seriesFor} from './series';
+import {
+  alignedBuffers,
+  alignedSeries,
+  bufferColumn,
+  loudestColumn,
+  seriesFor,
+} from './series';
 import type {LevelMetric} from './level';
 import {
   chartAxisStyle,
   cursorAnchor,
   dbAxis,
-  fmtTime,
-  makeGapsRefiner,
-  spanTimeFormat,
+  instantLabel,
+  makeSampleGapsRefiner,
   timeGridStepS,
   useLatest,
   zonedDate,
 } from './chartUtils';
 import {ChartTooltip} from './ChartTooltip';
+import {usePlayheadEffect} from './projectView';
 
-// The level trace behind one device row: a single filled line, no axes, no legend.
-// Its own plot rather than a configuration of NoiseTimeChart, which is built for a
-// full-page chart — nine toggleable series, a tooltip, drag-to-zoom — none of which
-// fits (or is wanted) at row height. The styling it does share comes from chartUtils,
-// so a row and the detail page read against the same dB scale.
+// The level trace behind one location's row: a line per monitor standing there, no
+// axes, no legend. Its own plot rather than a configuration of NoiseTimeChart, which
+// is built for a full-page chart — nine toggleable series, a tooltip, drag-to-zoom —
+// none of which fits (or is wanted) at row height. The styling it does share comes
+// from chartUtils, so a row and the detail page read against the same dB scale.
 //
 // Which quantity it plots is the header's choice, the same one the coloured number on
 // the row is read in: both dropdowns pick a column — of the stored payload when not
 // live, of the rolling buffer when live — and neither side computes anything the
 // device did not report.
 //
+// Every line is that window's colour, monitors and all: two monitors at one location
+// are two readings of the same place, and the useful thing to see is the envelope they
+// make — which is loudest, and where they part. Telling them apart by name is what the
+// row above the chart is for.
+//
 // Two sources, one shape, chosen by `live`:
-//   live off — the device's whole stored history at one point per minute. uPlot clips
-//              it to the x-scale and reduces it to min/max per pixel column itself,
-//              so cropping the timeline is a redraw here and no work at all upstream.
-//   live on  — the layout's rolling MQTT buffer, re-projected once a second over
-//              its last WINDOW_S, so a row moves while you watch it.
+//   live off — the devices' whole stored history at one point per minute, already on a
+//              shared x (see alignedSeries). uPlot clips it to the x-scale and reduces
+//              it to min/max per pixel column itself, so cropping the timeline is a
+//              redraw here and no work at all upstream.
+//   live on  — the layout's rolling MQTT buffers, merged onto one x and re-projected
+//              once a second over their last WINDOW_S, so a row moves while you watch.
 
 // Whether a keystroke is somebody writing rather than reaching for a shortcut. The
 // dialogs on this page are full of fields, and one of them may well be open over a
@@ -58,7 +70,6 @@ const fill = (stroke: string) => `${stroke}26`;
 // 10 dB grid below is always eight gaps — at this height ~15 px each, which is
 // what makes a level readable off the grid rather than merely suggested by it.
 const HEIGHT = 128;
-const EMPTY: uPlot.AlignedData = [[], []];
 
 // Horizontal grid every 10 dB, so the trace can be read against a level without
 // an axis to label it.
@@ -82,9 +93,9 @@ const X_GRID_SPACE = 56;
 // end of a chart whose scale has moved past the playhead.
 const PLAYHEAD_CLASS = 'noise-row-playhead';
 
-// Hoisted, and not an inline object on the Box: hovering re-renders every chart on
-// the page once per frame, and Emotion re-serializes a fresh style object each time
-// it sees one. A module constant is hashed once for the whole session.
+// Hoisted, and not an inline object on the Box: Emotion re-serializes a fresh style
+// object every time it sees one, and there is one of these per open card. A module
+// constant is hashed once for the whole session.
 const CHART_CSS = {
   // uPlot's own rubber band, which its stylesheet paints in 7 % black — invisible on
   // this chart. The same translucent white the full-page chart gives its drag region,
@@ -96,11 +107,13 @@ const CHART_CSS = {
     position: 'absolute',
     top: 0,
     bottom: 0,
-    width: '2px',
-    // Centred on its instant rather than starting at it, so it lines up with the
-    // timeline's own playhead, which is drawn the same way. In the margin rather than
-    // the transform, which positionPlayhead writes and should hold nothing else.
-    marginLeft: '-1px',
+    // A hairline: at row height the trace is only ~128 px of chart, and anything
+    // thicker reads as a band over the samples it is meant to point at.
+    width: '1px',
+    // Centred on its instant rather than starting at it, so it marks the sample the
+    // pointer is on rather than the pixel after it. In the margin rather than the
+    // transform, which positionPlayhead writes and should hold nothing else.
+    marginLeft: '-0.5px',
     background: 'var(--chakra-colors-gray-50)',
     // The cursor underneath it has to keep receiving the pointer, or the line would
     // stall the moment it caught up with what's moving it.
@@ -108,18 +121,19 @@ const CHART_CSS = {
   },
 } as const;
 
-export function DeviceRowChart({
-  device,
+export function LevelTrace({
+  devices,
   live,
   metric,
   weighting,
   range,
-  current,
   onScrub,
   onCrop,
   series,
 }: {
-  device: string;
+  // The monitors standing at this location at the instant being viewed, in the order
+  // the row lists them. One line each, and one is the ordinary case.
+  devices: string[];
   live: boolean;
   // Which Leq window and which weighting the page is showing. `series` was already
   // resolved for both; this pair is what picks the matching column out of the live
@@ -130,9 +144,6 @@ export function DeviceRowChart({
   // The crop in epoch ms — the x-range when not live, and the only thing a timeline
   // drag changes here.
   range: {start: number; end: number};
-  // The instant the page is looking at, in epoch ms, or null for none — which is what
-  // live mode is, since it reads whatever is standing there now.
-  current: number | null;
   // Where the pointer is, in epoch ms, once per animation frame while it's over the
   // plot (uPlot batches its own cursor updates to a frame). Omitted where there's
   // nothing to scrub.
@@ -149,11 +160,14 @@ export function DeviceRowChart({
   // An omitted end keeps the crop's own. Absent where there is no crop to set, which
   // also disarms the drag.
   onCrop?: (crop: {start?: number; end?: number}) => void;
-  // This device's whole stored trace, at one point per minute; absent while it loads,
-  // and for a device that measured nothing in the project.
-  series?: DeviceSeries;
+  // Every device's whole stored trace, at one point per minute — the page's own
+  // record, passed through rather than picked apart here. Absent while it loads, and
+  // missing an entry for a device that measured nothing in the project.
+  series?: Record<string, DeviceSeries>;
 }) {
-  const {deviceData} = useNoiseLive();
+  // The buffers alone: a chart has nothing to say about a record arriving — the
+  // canvas is redrawn by its own tick below — so it must not subscribe to them.
+  const deviceData = useNoiseBuffers();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const plotRef = useRef<uPlot | null>(null);
 
@@ -164,6 +178,15 @@ export function DeviceRowChart({
   // construction, so switching source rebuilds the plot either way.
   const seriesRef = useLatest(series);
   const rangeRef = useLatest(range);
+  // The devices go the same way, and their names go into a key: the array is new on
+  // every render of the card above, so an effect that depended on it directly would
+  // tear the plot down for a card that had merely re-rendered.
+  const devicesRef = useLatest(devices);
+  const devicesKey = devices.join(' ');
+  // Whether the fill is a series of its own. One decision, read by both the projection
+  // and the series list below, which have to agree on the column count — and it only
+  // changes when the monitor count crosses two, so it can't rebuild the plot idly.
+  const multi = devices.length > 1;
   // Through a ref like the rest: switching weighting swaps which buffer column is
   // plotted, and it must not tear the plot down to do it. The live projection reruns
   // every second anyway, and a new `series` lands with it when not live. (Switching
@@ -175,12 +198,12 @@ export function DeviceRowChart({
   // so unlike the column this one does rebuild the plot; it changes only when someone
   // moves the dropdown, and at this size a rebuild is cheap.
   const stroke = seriesFor(metric, weighting).stroke;
-  // Both through refs for the usual reason, and here it's the whole point: the
-  // playhead is page state, so every row's chart gets a new one on every frame of a
-  // hover over any one of them. Rebuilding a plot for that — or even re-registering a
-  // hook — would make the synced cursor cost more than the charts do.
-  const currentRef = useLatest(current);
   const onScrubRef = useLatest(onScrub);
+  // The instant the page is looking at, written by the subscription below rather than
+  // taken as a prop. The playhead is page state that moves on every frame of a hover
+  // over any row on the page, so a prop would mean re-rendering every chart at once to
+  // hand each of them a number it only writes into a ref — see usePlayheadEffect.
+  const currentRef = useRef<number | null>(null);
 
   // The hovered instant, anchored in container pixels. Same readout NoiseTimeChart
   // gives its own cursor, and through the same two helpers — a row is smaller, not
@@ -198,50 +221,88 @@ export function DeviceRowChart({
 
   // How much of the instant is worth printing, decided by how wide the window is: a
   // crop inside one day needs no date, a festival-length one would otherwise say
-  // 22:15 four times over. Live is a window of minutes, so it gets seconds instead.
-  const formatRef = useLatest(
-    live ? fmtTime : spanTimeFormat(range.end - range.start),
-  );
+  // 22:15 four times over. Shared with the timeline's readout, which labels the same
+  // instant a hover here puts under the playhead — see instantLabel.
+  const formatRef = useLatest(instantLabel(live, range.end - range.start));
 
   const playheadRef = useRef<HTMLDivElement | null>(null);
 
   // Where the playhead stands on this chart, or out of sight when it stands outside
-  // the crop this one is showing (or when there is no playhead at all). Imperative
-  // and ref-driven so it can be called from the plot's own callbacks — a resize and
-  // a rescale move the line without the instant having changed.
-  const positionPlayhead = useCallback(() => {
-    const line = playheadRef.current;
-    const plot = plotRef.current;
-    if (!line) return;
-    const at = currentRef.current;
-    if (!plot || at == null) {
-      line.style.display = 'none';
-      return;
-    }
-    const x = at / 1000;
-    const {min, max} = plot.scales.x;
-    if (min == null || max == null || x < min || x > max) {
-      line.style.display = 'none';
-      return;
-    }
-    line.style.display = '';
-    // transform rather than `left`: this runs on every frame of a hover, on every
-    // chart at once, and a transform stays off the layout path.
-    line.style.transform = `translateX(${plot.valToPos(x, 'x')}px)`;
-  }, [currentRef]);
+  // the crop this one is showing (or when there is no playhead at all).
+  //
+  // Called two ways, hence the default: with an instant, by the page's playhead
+  // subscription below; and with none, by a resize or a rescale, which move the pixel
+  // the same instant falls on. Imperative and ref-driven either way, so it can be
+  // called from the plot's own callbacks.
+  const positionPlayhead = useCallback(
+    (next: number | null = currentRef.current) => {
+      currentRef.current = next;
+      const line = playheadRef.current;
+      const plot = plotRef.current;
+      if (!line) return;
+      const at = currentRef.current;
+      if (!plot || at == null) {
+        line.style.display = 'none';
+        return;
+      }
+      const x = at / 1000;
+      const {min, max} = plot.scales.x;
+      if (min == null || max == null || x < min || x > max) {
+        line.style.display = 'none';
+        return;
+      }
+      line.style.display = '';
+      // transform rather than `left`: this runs on every frame of a hover, on every
+      // chart at once, and a transform stays off the layout path.
+      line.style.transform = `translateX(${plot.valToPos(x, 'x')}px)`;
+    },
+    [],
+  );
+
+  // Stable by construction — positionPlayhead closes over nothing but refs — which is
+  // what keeps the subscription from being torn down and re-established as the page
+  // scrubs, and this component from rendering for it at all.
+  usePlayheadEffect(positionPlayhead);
+
+  // How far apart two of a monitor's readings may be before the line between them is
+  // a lie rather than a line — a few seconds of a 1 Hz stream, and a minute and a half
+  // of a per-minute one, where a single missing minute is already a 120 s step. Also
+  // how long one counts as still standing at its last reading, for the envelope.
+  const gapThresholdX = live ? GAP_THRESHOLD_S : STORED_GAP_THRESHOLD_S;
 
   const project = useCallback((): uPlot.AlignedData => {
-    if (live) {
-      const buffer = deviceData.current[device];
-      // A device with no records yet has no buffer at all (only ingest creates
-      // one), which is an empty chart rather than an error.
-      return buffer
-        ? ([buffer[0], buffer[colRef.current]] as uPlot.AlignedData)
-        : EMPTY;
-    }
-    const loaded = seriesRef.current;
-    return loaded ? ([loaded.xs, loaded.db] as uPlot.AlignedData) : EMPTY;
-  }, [device, deviceData, live, seriesRef, colRef]);
+    const names = devicesRef.current;
+    // A device with no records yet has no buffer at all (only ingest creates one),
+    // and one that measured nothing in the project has no stored trace; either way
+    // the aligners pad it to the shared x rather than dropping a column uPlot is
+    // expecting.
+    const data = live
+      ? alignedBuffers(
+          names.map((name) => deviceData.current[name]),
+          colRef.current,
+        )
+      : alignedSeries(names.map((name) => seriesRef.current?.[name]));
+    if (!multi) return data as uPlot.AlignedData;
+    // With several monitors the filled area is the loudest of them, in front of which
+    // their lines are drawn — see the series below.
+    const [xs, ...columns] = data;
+    return [
+      xs,
+      loudestColumn(xs as number[], columns, gapThresholdX),
+      ...columns,
+    ] as uPlot.AlignedData;
+    // Keyed on the names rather than the array: the same monitors are the same
+    // projection, and a new array of them every render is not a new plot.
+  }, [
+    devicesKey,
+    devicesRef,
+    deviceData,
+    live,
+    multi,
+    seriesRef,
+    colRef,
+    gapThresholdX,
+  ]);
 
   // Epoch seconds, uPlot's x unit. Live is a window on the clock rather than on
   // the data, so it slides even while nothing arrives — which is what makes a
@@ -260,14 +321,13 @@ export function DeviceRowChart({
   // tracks `live`, which rebuilds the plot anyway.
   const selectable = onCrop != null;
 
-  // What counts as a break in the line, which differs by source: the live buffer omits
-  // samples that never arrived, so the refiner has to spot the jump, while a stored
-  // trace carries an explicit null that uPlot breaks on by itself.
-  const gapThresholdX = live ? GAP_THRESHOLD_S : STORED_GAP_THRESHOLD_S;
-
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
+
+    // One refiner for every line: it closes over nothing but the threshold, and uPlot
+    // only ever calls it.
+    const gaps = makeSampleGapsRefiner(gapThresholdX);
 
     // Both axes exist only to carry a grid: uPlot draws no grid for an axis that
     // isn't shown, so they are shown and then stripped of everything else — no
@@ -340,12 +400,14 @@ export function DeviceRowChart({
                 setTip(null);
                 return;
               }
-              const at = u.posToVal(left, 'x');
-              hoverAtRef.current = at * 1000;
-              onScrubRef.current?.(at * 1000);
+              // Out of uPlot's seconds once, here at its edge: everything downstream
+              // of this — the ref, the page's playhead, the label — is milliseconds.
+              const atMs = u.posToVal(left, 'x') * 1000;
+              hoverAtRef.current = atMs;
+              onScrubRef.current?.(atMs);
               setTip({
                 ...cursorAnchor(u, container, left, u.cursor.top ?? 0),
-                label: formatRef.current(at),
+                label: formatRef.current(atMs),
               });
             },
           ],
@@ -380,14 +442,32 @@ export function DeviceRowChart({
         },
         series: [
           {},
-          {
+          // The area under the trace is what makes a level readable at row height, and
+          // with several monitors it is filled under the loudest of them rather than
+          // under each: the lines are all one colour, so two areas would stack into a
+          // darker band that looks like it means something. Drawn first, which in
+          // uPlot is underneath, and only ever an area — the lines over it are the
+          // monitors themselves.
+          ...(multi
+            ? [
+                {
+                  stroke: 'transparent',
+                  fill: fill(stroke),
+                  width: 0,
+                  spanGaps: false,
+                  gaps,
+                  points: {show: false},
+                },
+              ]
+            : []),
+          ...devicesRef.current.map(() => ({
             stroke,
-            fill: fill(stroke),
+            fill: multi ? undefined : fill(stroke),
             width: 1.25,
             spanGaps: false,
-            gaps: makeGapsRefiner(gapThresholdX),
+            gaps,
             points: {show: false},
-          },
+          })),
         ],
       },
       project(),
@@ -421,7 +501,15 @@ export function DeviceRowChart({
     // switching between the live and stored sources — or switching window — rebuilds
     // the plot. Cheap at this size, and it keeps the two from sharing one stale
     // threshold.
-  }, [project, xRange, gapThresholdX, stroke, selectable, positionPlayhead]);
+  }, [
+    project,
+    xRange,
+    gapThresholdX,
+    multi,
+    stroke,
+    selectable,
+    positionPlayhead,
+  ]);
 
   // In and out points, bound to the hover rather than to the page: `i` crops the
   // timeframe to start at the instant under the pointer, `o` to end there.
@@ -453,42 +541,80 @@ export function DeviceRowChart({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [hovering, onCropRef]);
 
+  // Whether this row is anywhere near the viewport, and whether a crop arrived while
+  // it wasn't. Refs, because nothing renders from either: scrolling a list must not
+  // re-render the cards it moves past.
+  const nearViewRef = useRef(true);
+  const missedCropRef = useRef(false);
+
   // Push data in: once per new trace or mode, and every second while live — which is
   // also what re-runs the x-range closure and slides the live window along.
   // Deliberately not keyed on `range`: the stored trace covers the whole project, so
   // cropping doesn't change a single value.
+  //
+  // On the page's shared clock rather than an interval of its own, so a dozen open
+  // cards redraw together once a second instead of painting a chart somewhere twelve
+  // times a second — and skipped entirely for a row scrolled out of view, where the
+  // projection (a merge and a sort across every monitor's window) and the redraw would
+  // both be for nobody — it catches up on the next tick when it scrolls back, which on
+  // a five-minute rolling window is a second of staleness nobody can see. The clock
+  // does not call on registration, hence the eager apply.
   useEffect(() => {
     const apply = () => plotRef.current?.setData(project());
     apply();
     if (!live) return;
-    const id = setInterval(apply, 1000);
-    return () => clearInterval(id);
+    return subscribeToClock(1000, () => {
+      if (nearViewRef.current) apply();
+    });
   }, [project, live, series]);
+
+  const applyCrop = useCallback(() => {
+    const {start, end} = rangeRef.current;
+    plotRef.current?.setScale('x', {min: start / 1000, max: end / 1000});
+    // The playhead keeps its instant while the axis under it moves, so the line has to
+    // be put back on the pixel that instant now falls on. Here rather than in an effect
+    // of its own, because the two other things that move the line — the instant itself
+    // and a resize — reach it through the subscription and the ResizeObserver, neither
+    // of which renders.
+    positionPlayhead();
+  }, [rangeRef, positionPlayhead]);
 
   // Cropping is a scale change and nothing more, which is the whole point of handing
   // the reduction to uPlot: it re-clips by binary search and redraws, with no data
   // rebuilt on either side. Live's window comes from the tick above instead.
+  //
+  // Deferred while the row is off-screen. A crop is what a timeline drag commits, once
+  // per animation frame, to every open card at once — and setScale is not free even
+  // when nothing moved: uPlot drops its cached paths and clears the canvas either way.
+  // A list of locations is taller than the screen, so most of that redrawing is of rows
+  // nobody is looking at.
   useEffect(() => {
     if (live) return;
-    plotRef.current?.setScale('x', {
-      min: range.start / 1000,
-      max: range.end / 1000,
-    });
-  }, [live, range.start, range.end]);
+    if (!nearViewRef.current) {
+      missedCropRef.current = true;
+      return;
+    }
+    applyCrop();
+  }, [live, range.start, range.end, applyCrop]);
 
-  // Kept out of the effect above, though a crop is one of the two things that moves
-  // the line: setScale is not free — uPlot drops the cached paths and clears the
-  // canvas whether or not the values differ — and the other thing that moves the line
-  // is the playhead itself, which changes on every frame someone hovers any row on the
-  // page. Running the two together would redraw every chart per pointer frame, which
-  // is the cost the line is drawn in the DOM to avoid.
-  useEffect(positionPlayhead, [
-    live,
-    range.start,
-    range.end,
-    current,
-    positionPlayhead,
-  ]);
+  // The other half of that: scrolling a deferred row back into view is what finally
+  // pays for it. Generous margin, so the crop lands before the row is actually visible
+  // rather than as it arrives.
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        nearViewRef.current = entry?.isIntersecting ?? true;
+        if (!nearViewRef.current || !missedCropRef.current) return;
+        missedCropRef.current = false;
+        applyCrop();
+      },
+      {rootMargin: '200px'},
+    );
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [applyCrop]);
 
   return (
     // The plot gets a wrapper of its own so the tooltip has something to be absolute

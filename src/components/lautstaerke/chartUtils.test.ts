@@ -3,6 +3,7 @@ import {
   fmtDayHourMinute,
   fmtHourMinute,
   fmtTime,
+  instantLabel,
   spanTimeFormat,
   timeGridStepS,
   zonedDate,
@@ -116,5 +117,29 @@ describe('spanTimeFormat', () => {
   it('carries the date from a day upwards', () => {
     expect(spanTimeFormat(24 * HOUR)(ts)).toBe('24.07. 20:05');
     expect(spanTimeFormat(4 * 24 * HOUR)(ts)).toBe('24.07. 20:05');
+  });
+});
+
+// The one formatter here that speaks milliseconds, because it is shared with a readout
+// that never had seconds to hand. Reading its argument in the wrong unit puts the label
+// in 1970 rather than making it look wrong, so the unit is pinned first.
+describe('instantLabel', () => {
+  const HOUR = 60 * 60 * 1000;
+  const ms = Date.parse('2026-07-24T18:05:09Z'); // 20:05:09 Berlin
+
+  it('takes milliseconds where the axis formatters take seconds', () => {
+    expect(instantLabel(false, 6 * HOUR)(ms)).toBe('20:05');
+    expect(instantLabel(false, 6 * HOUR)(ms)).toBe(
+      spanTimeFormat(6 * HOUR)(ms / 1000),
+    );
+  });
+
+  it('reads to the second while live, that window being minutes wide', () => {
+    expect(instantLabel(true, 5 * 60 * 1000)(ms)).toBe('20:05:09');
+  });
+
+  it('otherwise carries the date exactly when the span does', () => {
+    expect(instantLabel(false, 23.99 * HOUR)(ms)).toBe('20:05');
+    expect(instantLabel(false, 24 * HOUR)(ms)).toBe('24.07. 20:05');
   });
 });

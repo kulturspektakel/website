@@ -1,7 +1,7 @@
 import {useMemo, useState} from 'react';
 import {Flex} from '@chakra-ui/react';
 import type uPlot from 'uplot';
-import {useNoiseLive} from './context';
+import {useDeviceState, useNoiseBuffers} from './context';
 import {GAP_THRESHOLD_S, WINDOW_S} from './noise';
 import {LIVE_SERIES, emptyBuffer} from './series';
 import {BigNumberRow, useSeriesToggle} from './BigNumber';
@@ -14,7 +14,11 @@ import {fmtTime} from './chartUtils';
 // the MQTT records in the shared context. Rendered by the $device index route
 // whenever the URL carries no timeframe.
 export function LiveView({device}: {device: string}) {
-  const ctx = useNoiseLive();
+  // Both, and it wants both: the big numbers above the chart are this device's
+  // latest record, so this view does re-render on every one of them — but only on
+  // this device's, which is all it shows.
+  const deviceState = useDeviceState(device);
+  const deviceData = useNoiseBuffers();
   const {weighting, peaks} = useDeviceView();
   // Chart cursor: null when not hovering (big numbers show live values), a
   // buffer index for the hovered sample, or 'gap' when the cursor sits in a
@@ -31,10 +35,9 @@ export function LiveView({device}: {device: string}) {
   // ingest call that creates the real buffer also schedules the re-render that
   // hands it over.
   const placeholder = useMemo(() => emptyBuffer(), []);
-  const data = (ctx.deviceData.current[device] ??
+  const data = (deviceData.current[device] ??
     placeholder) as unknown as uPlot.AlignedData;
 
-  const deviceState = ctx.devices[device];
   const latest = deviceState?.latest ?? null;
 
   return (

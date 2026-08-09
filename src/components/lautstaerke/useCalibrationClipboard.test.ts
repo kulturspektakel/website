@@ -25,26 +25,32 @@ describe('parseCalibration', () => {
     const parts = values(CAL_BAND_COUNT, 1);
     parts[3] = NaN;
     expect(parseCalibration(parts.join('\n')).ok).toBe(false);
-    expect(parseCalibration(values(CAL_BAND_COUNT - 1, 1).concat().join('\n') + '\nx').ok).toBe(
-      false,
-    );
+    expect(
+      parseCalibration(
+        values(CAL_BAND_COUNT - 1, 1)
+          .concat()
+          .join('\n') + '\nx',
+      ).ok,
+    ).toBe(false);
   });
 
   it('takes whitespace or commas, so a spreadsheet column and a CSV line both work', () => {
-    expect(parseCalibration(values(CAL_BAND_COUNT, 2).join(', ')).ok).toBe(true);
-    expect(parseCalibration(values(CAL_BAND_COUNT, 2).join(' ')).ok).toBe(true);
-    // Trailing newline from a copied column must not read as an extra value.
-    expect(parseCalibration(values(CAL_BAND_COUNT, 2).join('\n') + '\n').ok).toBe(
+    expect(parseCalibration(values(CAL_BAND_COUNT, 2).join(', ')).ok).toBe(
       true,
     );
+    expect(parseCalibration(values(CAL_BAND_COUNT, 2).join(' ')).ok).toBe(true);
+    // Trailing newline from a copied column must not read as an extra value.
+    expect(
+      parseCalibration(values(CAL_BAND_COUNT, 2).join('\n') + '\n').ok,
+    ).toBe(true);
   });
 
   it('snaps to the slider step', () => {
     const parsed = parseCalibration(values(CAL_BAND_COUNT, 1.3).join('\n'));
     expect(parsed.ok && parsed.offsets[0]).toBe(1.5);
-    expect(parsed.ok && parsed.offsets.every((v) => v % CAL_STEP_DB === 0)).toBe(
-      true,
-    );
+    expect(
+      parsed.ok && parsed.offsets.every((v) => v % CAL_STEP_DB === 0),
+    ).toBe(true);
   });
 
   it('clamps to the trim range in both directions', () => {
@@ -59,8 +65,8 @@ describe('parseCalibration', () => {
 
 describe('formatCalibration', () => {
   it('round-trips through parseCalibration', () => {
-    const offsets = values(CAL_BAND_COUNT, 0).map((_, i) =>
-      Math.round((i % 9) - 4) * CAL_STEP_DB,
+    const offsets = values(CAL_BAND_COUNT, 0).map(
+      (_, i) => Math.round((i % 9) - 4) * CAL_STEP_DB,
     );
     const parsed = parseCalibration(formatCalibration(offsets));
     expect(parsed.ok && parsed.offsets).toEqual(offsets);

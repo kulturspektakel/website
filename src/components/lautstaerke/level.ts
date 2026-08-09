@@ -193,17 +193,34 @@ export const WEIGHTING_OPTIONS: Array<{value: Weighting; label: string}> = (
  * preferred a louder stale value would go quiet-looking the moment it recovered.
  */
 export function loudestLevel(levels: DisplayedLevel[]): DisplayedLevel {
-  return levels.reduce<DisplayedLevel>(
-    (best, level) => {
-      if (level.kind === 'none') return best;
-      if (best.kind === 'none') return level;
-      if (isCurrent(level) !== isCurrent(best)) {
-        return isCurrent(level) ? level : best;
-      }
-      return level.db > best.db ? level : best;
-    },
-    {kind: 'none'},
-  );
+  return levels[loudestIndex(levels)] ?? {kind: 'none'};
+}
+
+/**
+ * Which of them that is, for a caller that has more to say about the winner than its
+ * dB: the list row prints the loudest monitor's coverage and its second reading too,
+ * and numbers picked off two different monitors would not describe anything.
+ *
+ * -1 when there is nothing to show, which is what makes loudestLevel above fall
+ * through to `none` — the one comparison, asked two ways.
+ */
+export function loudestIndex(levels: DisplayedLevel[]): number {
+  let best = -1;
+  let winner: DisplayedLevel | undefined;
+  levels.forEach((level, i) => {
+    if (level.kind === 'none') return;
+    const beats =
+      winner == null || winner.kind === 'none'
+        ? true
+        : isCurrent(level) !== isCurrent(winner)
+          ? isCurrent(level)
+          : level.db > winner.db;
+    if (beats) {
+      best = i;
+      winner = level;
+    }
+  });
+  return best;
 }
 
 // One decimal everywhere a level is shown, on the map and in the list alike,

@@ -2,6 +2,7 @@ import {type NoiseRecording} from '../../proto/noise';
 import {
   decodeDb,
   type DeviceBuffer,
+  type DeviceSeries,
   type HistoryRow,
   type Weighting,
 } from './noise';
@@ -170,6 +171,114 @@ export const hasSeries = (kind: SeriesKind, weighting: Weighting): boolean =>
 // itself would keep plotting a plausible-looking wrong line if the layout changed.
 export const bufferColumn = (kind: SeriesKind, weighting: Weighting): number =>
   SERIES.indexOf(seriesFor(kind, weighting)) + 1;
+
+// Several devices in one chart, which uPlot's aligned data means one x column and a
+// y column per device. Both aligners live here for the same reason rowsToAligned
+// does: the column layout is this file's convention, and a chart that joined the
+// data itself would be the second place that decides it.
+
+/**
+ * Stored traces → [xs, ...one column per device], in the order asked for.
+ *
+ * No joining, because there is nothing to join: logSeries builds the minute grid once
+ * and hands every device the same `xs` array, with nulls for the minutes it has
+ * nothing (see projectLogs.ts). A device with no trace at all — one that measured
+ * nothing in the project — is padded to that grid so its column still lines up.
+ */
+export function alignedSeries(
+  series: Array<DeviceSeries | undefined>,
+): (number | null)[][] {
+  const xs = series.find((s) => s != null)?.xs ?? [];
+  return [xs, ...series.map((s) => s?.db ?? nulls(xs.length))];
+}
+
+const nulls = (length: number): (number | null)[] =>
+  new Array<number | null>(length).fill(null);
+
+/**
+ * Live buffers → [xs, ...one column per device], reading `col` out of each.
+ *
+ * Unlike the stored traces these share no grid: every device is appended to on its
+ * own message, so their timestamps interleave. The union of them is the x column, and
+ * a device is null at the instants that belong to the others — which is why the
+ * series drawn from this want makeSampleGapsRefiner rather than uPlot's own nulls.
+ *
+ * One device is the overwhelmingly common case and is handed back untouched: its own
+ * timestamps already are the union, and its columns are what the chart would build.
+ */
+export function alignedBuffers(
+  buffers: Array<DeviceBuffer | undefined>,
+  col: number,
+): (number | null)[][] {
+  if (buffers.length === 1) {
+    const only = buffers[0];
+    return only ? [only[0]!, only[col]!] : [[], []];
+  }
+  // Sorted and deduplicated rather than merged pairwise: a window holds a few hundred
+  // samples per device and this runs once a second per chart, so the clearer of the
+  // two is fast enough by a wide margin.
+  const xs = [...new Set(buffers.flatMap((b) => (b ? b[0]! : [])))].sort(
+    (a, b) => (a as number) - (b as number),
+  ) as number[];
+  return [
+    xs,
+    ...buffers.map((buffer) => {
+      const out = nulls(xs.length);
+      if (!buffer) return out;
+      const times = buffer[0]!;
+      const values = buffer[col]!;
+      // Both sides are sorted, so one pass with a pointer into the union places every
+      // sample: equal timestamps from two devices share the slot they were merged into.
+      let at = 0;
+      for (let i = 0; i < times.length; i++) {
+        while (at < xs.length && xs[at]! < (times[i] as number)) at++;
+        if (at >= xs.length) break;
+        out[at] = values[i] ?? null;
+      }
+      return out;
+    }),
+  ];
+}
+
+/**
+ * The loudest of several aligned columns at each x — a location's envelope, which is
+ * what a chart of its monitors fills the area under: the lines all being one colour,
+ * two filled areas would stack into a shade that looks like it means something.
+ *
+ * A monitor counts as still being at its last reading until `holdX` past it. Without
+ * that this would sawtooth rather than trace anything: live buffers interleave, so at
+ * most instants exactly one monitor has a value and a plain pointwise max would follow
+ * whoever spoke last. Past `holdX` it has gone quiet and contributes nothing — the same
+ * threshold at which its own line breaks.
+ */
+export function loudestColumn(
+  xs: number[],
+  columns: (number | null)[][],
+  holdX: number,
+): (number | null)[] {
+  // Last reading per column, and when it came: walked forward with the x, so this is
+  // one pass whatever the device count. Plain loops over two flat arrays, because the
+  // stored grid is every minute of the festival and the callbacks a map/forEach pair
+  // would allocate per point are the only cost here worth avoiding.
+  const lastAt = new Array<number>(columns.length).fill(-Infinity);
+  const lastDb = new Array<number>(columns.length).fill(0);
+  const out = new Array<number | null>(xs.length);
+  for (let i = 0; i < xs.length; i++) {
+    const x = xs[i]!;
+    let loudest: number | null = null;
+    for (let c = 0; c < columns.length; c++) {
+      const db = columns[c]![i];
+      if (db != null) {
+        lastAt[c] = x;
+        lastDb[c] = db;
+      }
+      if (x - lastAt[c]! > holdX) continue;
+      if (loudest == null || lastDb[c]! > loudest) loudest = lastDb[c]!;
+    }
+    out[i] = loudest;
+  }
+  return out;
+}
 
 // History rows → uPlot's column-major shape: [xs, ...one column per series].
 // Only minutes that had data are present, so gaps are rendered by

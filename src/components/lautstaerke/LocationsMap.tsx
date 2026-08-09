@@ -5,7 +5,7 @@ import {LuPlus, LuX} from 'react-icons/lu';
 import {SegmentedControl} from '../chakra-snippets/segmented-control';
 import {Tooltip} from '../chakra-snippets/tooltip';
 import {KULT_LOCATION} from '../../utils/kultLocation';
-import {useNoiseLive, useTick} from './context';
+import {useDeviceStates, useTick} from './context';
 import {
   displayedLevel,
   formatDb,
@@ -262,8 +262,12 @@ function MapCanvas({
     return () => clamp.remove();
   }, [signature]);
 
-  // The level each pin shows, decided by the same function the list rows use.
-  const ctx = useNoiseLive();
+  // The level each pin shows, decided by the same function the list rows use. Every
+  // pin is redrawn together, so one subscription across the monitors actually on the
+  // map — and none for the ones that aren't.
+  const deviceState = useDeviceStates(
+    locations.flatMap((location) => location.deviceIds),
+  );
   // Live records arrive ~1/s; without a tick the pins would freeze at whatever
   // value happened to be current when the markers were built.
   const now = useTick();
@@ -275,7 +279,7 @@ function MapCanvas({
           now,
           metric,
           weighting,
-          state: ctx.devices[deviceId],
+          state: deviceState(deviceId),
           historyDb: history?.[deviceId],
         }),
       ),

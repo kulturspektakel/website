@@ -3,7 +3,10 @@ import {
   HISTORY_SERIES,
   LIVE_SERIES,
   SERIES,
+  alignedBuffers,
+  alignedSeries,
   emptyBuffer,
+  loudestColumn,
   rowsToAligned,
   type SeriesKind,
 } from './series';
@@ -163,6 +166,137 @@ describe('rowsToAligned', () => {
     expect(rowsToAligned([])).toEqual(
       Array.from({length: SERIES.length + 1}, () => []),
     );
+  });
+});
+
+describe('alignedSeries', () => {
+  // logSeries hands every device the same xs array; this leans on that, so it is
+  // pinned here rather than trusted.
+  it('shares one x column and keeps the devices in order', () => {
+    const xs = [60, 120, 180];
+    expect(
+      alignedSeries([
+        {xs, db: [70, null, 72]},
+        {xs, db: [80, 81, 82]},
+      ]),
+    ).toEqual([xs, [70, null, 72], [80, 81, 82]]);
+  });
+
+  it('pads a device with no trace to the shared grid', () => {
+    const xs = [60, 120];
+    expect(alignedSeries([undefined, {xs, db: [80, 81]}])).toEqual([
+      xs,
+      [null, null],
+      [80, 81],
+    ]);
+  });
+
+  it('is empty columns when nothing has loaded', () => {
+    expect(alignedSeries([undefined, undefined])).toEqual([[], [], []]);
+  });
+});
+
+describe('alignedBuffers', () => {
+  // Column 1 under the default weighting is LAeq; the tests build buffers by hand
+  // rather than through ingest, so the column index is spelled out.
+  const buffer = (times: number[], values: (number | null)[]) => {
+    const b = emptyBuffer();
+    b[0] = times;
+    b[1] = values;
+    return b;
+  };
+
+  it('hands a lone device its own columns, untouched', () => {
+    const only = buffer([1, 2, 3], [70, 71, 72]);
+    const aligned = alignedBuffers([only], 1);
+    expect(aligned).toEqual([
+      [1, 2, 3],
+      [70, 71, 72],
+    ]);
+    // The same arrays, not copies: this runs once a second per chart.
+    expect(aligned[0]).toBe(only[0]);
+  });
+
+  it('is empty columns for a device that has never reported', () => {
+    expect(alignedBuffers([undefined], 1)).toEqual([[], []]);
+  });
+
+  it('merges interleaved timestamps and nulls each device elsewhere', () => {
+    expect(
+      alignedBuffers([buffer([1, 3], [70, 72]), buffer([2, 3.5], [80, 81])], 1),
+    ).toEqual([
+      [1, 2, 3, 3.5],
+      [70, null, 72, null],
+      [null, 80, null, 81],
+    ]);
+  });
+
+  it('lets two devices share a timestamp they both reported at', () => {
+    expect(
+      alignedBuffers([buffer([1, 2], [70, 71]), buffer([2], [80])], 1),
+    ).toEqual([
+      [1, 2],
+      [70, 71],
+      [null, 80],
+    ]);
+  });
+
+  it('pads a device with no buffer alongside one that has samples', () => {
+    expect(alignedBuffers([undefined, buffer([1, 2], [80, 81])], 1)).toEqual([
+      [1, 2],
+      [null, null],
+      [80, 81],
+    ]);
+  });
+});
+
+describe('loudestColumn', () => {
+  // The stored case: every monitor has a value at every minute it was up, so this is
+  // the plain pointwise maximum.
+  it('takes the loudest at each x', () => {
+    expect(
+      loudestColumn(
+        [60, 120, 180],
+        [
+          [70, 85, 72],
+          [80, 81, 82],
+        ],
+        90,
+      ),
+    ).toEqual([80, 85, 82]);
+  });
+
+  // The live case, and the reason for the hold: the two monitors' messages land at
+  // different instants, so at every x exactly one column has a value. Without carrying
+  // the other's last reading this would sawtooth between them.
+  it('holds a monitor at its last reading between its samples', () => {
+    expect(
+      loudestColumn(
+        [1, 2, 3, 4],
+        [
+          [90, null, 90, null],
+          [null, 70, null, 70],
+        ],
+        3,
+      ),
+    ).toEqual([90, 90, 90, 90]);
+  });
+
+  it('drops a monitor that has been silent longer than the hold', () => {
+    expect(
+      loudestColumn(
+        [1, 2, 10],
+        [
+          [90, null, null],
+          [null, 70, 70],
+        ],
+        3,
+      ),
+    ).toEqual([90, 90, 70]);
+  });
+
+  it('is null where no monitor has said anything yet', () => {
+    expect(loudestColumn([1, 2], [[null, 80]], 3)).toEqual([null, 80]);
   });
 });
 

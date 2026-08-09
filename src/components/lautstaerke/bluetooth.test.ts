@@ -36,14 +36,20 @@ describe('wifi credential framing', () => {
   test('frames [ssid_len][ssid][pw_len][pw]', () => {
     const bytes = encodeWifiCredentials('Kult', 'secret');
     expect([...bytes]).toEqual([
-      4, ...[...'Kult'].map((c) => c.charCodeAt(0)),
-      6, ...[...'secret'].map((c) => c.charCodeAt(0)),
+      4,
+      ...[...'Kult'].map((c) => c.charCodeAt(0)),
+      6,
+      ...[...'secret'].map((c) => c.charCodeAt(0)),
     ]);
   });
 
   test('open network has a zero-length password', () => {
     const bytes = encodeWifiCredentials('Open', '');
-    expect([...bytes]).toEqual([4, ...[...'Open'].map((c) => c.charCodeAt(0)), 0]);
+    expect([...bytes]).toEqual([
+      4,
+      ...[...'Open'].map((c) => c.charCodeAt(0)),
+      0,
+    ]);
   });
 
   test('uses UTF-8 byte length, not character count', () => {

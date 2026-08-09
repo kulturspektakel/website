@@ -41,14 +41,34 @@ const MIN_COVERAGE = 0.95;
 export type Coverage = Pick<HistoryTotals, 'minutes' | 'expectedMinutes'>;
 
 export function coverageNote(totals: Coverage): string | undefined {
-  const {minutes, expectedMinutes} = totals;
-  if (expectedMinutes === 0) return undefined;
-  if (expectedMinutes - minutes < MIN_MISSING_MINUTES) return undefined;
-  const covered = minutes / expectedMinutes;
-  return covered >= MIN_COVERAGE
-    ? undefined
-    : `${Math.round(covered * 100)} % Daten`;
+  return worthDisclosing(totals)
+    ? `${coveredPercent(totals)} % Daten`
+    : undefined;
 }
+
+/**
+ * The same shortfall spelled out, for somewhere with room for a sentence — the list
+ * row shows a warning sign rather than the note, and this is what hovering it says.
+ *
+ * Undefined on the same terms as the note above, so a caller picking one of the two
+ * wordings never has to consult the other about whether to say anything at all.
+ */
+export function coverageDetail(totals: Coverage): string | undefined {
+  const {minutes, expectedMinutes} = totals;
+  return worthDisclosing(totals)
+    ? `Nur ${minutes} von ${expectedMinutes} Minuten im Zeitraum gemessen (${coveredPercent(totals)} %)`
+    : undefined;
+}
+
+// The thresholds, in the one place both wordings ask about them. A window of no
+// elapsed minutes is ruled out here, which is also what keeps the divide below safe.
+const worthDisclosing = ({minutes, expectedMinutes}: Coverage): boolean =>
+  expectedMinutes > 0 &&
+  expectedMinutes - minutes >= MIN_MISSING_MINUTES &&
+  minutes / expectedMinutes < MIN_COVERAGE;
+
+const coveredPercent = ({minutes, expectedMinutes}: Coverage): number =>
+  Math.round((minutes / expectedMinutes) * 100);
 
 // Leq over a set of equal-length sub-intervals is the *energetic* (power) mean,
 // not the arithmetic one — decibels are logarithmic, so 60 dB and 70 dB average
@@ -60,9 +80,21 @@ export function coverageNote(totals: Coverage): string | undefined {
 // Nulls are skipped rather than counted as zero: a minute with no reading is a
 // minute we know nothing about, not a silent one. Returns null when nothing is
 // left to average, so callers render a dash instead of -Infinity.
-// `from`/`to` bound the range without slicing it: the project page averages windows
-// out of a column thousands of minutes long, per device, as the timeline is dragged,
-// and a copy per call would be the only allocation on that path.
+//
+// The three primitives are exported because the project page does not use the loop:
+// it sums the same energies once into a running total (see energyIndex) so that a
+// timeline drag costs a subtraction rather than a pass over the crop. Two spellings of
+// "what a Leq is" would be one too many, so both read them from here.
+
+// A minute the mean may count. Non-finite is treated as absent rather than clamped:
+// the device didn't report a level, whatever it put in the column.
+export const usableDb = (v: number | null | undefined): v is number =>
+  v != null && Number.isFinite(v);
+export const toEnergy = (db: number): number => 10 ** (db / 10);
+export const fromEnergy = (mean: number): number => 10 * Math.log10(mean);
+
+// `from`/`to` bound the range without slicing it, so a caller holding a long column
+// can average a window of it without copying one out.
 export function energeticMeanDb(
   values: ReadonlyArray<number | null>,
   from = 0,
@@ -72,11 +104,11 @@ export function energeticMeanDb(
   let n = 0;
   for (let i = from; i < to; i++) {
     const v = values[i];
-    if (v == null || !Number.isFinite(v)) continue;
-    sum += 10 ** (v / 10);
+    if (!usableDb(v)) continue;
+    sum += toEnergy(v);
     n++;
   }
-  return n === 0 ? null : 10 * Math.log10(sum / n);
+  return n === 0 ? null : fromEnergy(sum / n);
 }
 
 // The single Leq for the selected timeframe, both weightings so the A/C toggle

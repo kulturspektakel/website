@@ -6,6 +6,7 @@ import {
   displayedLevel,
   formatDb,
   liveDb,
+  loudestIndex,
   loudestLevel,
   metricOptions,
   supportedMetric,
@@ -250,6 +251,15 @@ describe('loudestLevel', () => {
         {kind: 'stale', db: 84.2},
       ]),
     ).toEqual({kind: 'stale', db: 84.2});
+  });
+
+  // The list row needs the winner itself, not just its dB: the coverage and the
+  // second reading it prints have to come off that same monitor.
+  it('names which monitor it was, and -1 for none', () => {
+    expect(loudestIndex([live(72.1), live(88.4), live(80)])).toBe(1);
+    expect(loudestIndex([{kind: 'stale', db: 95}, live(72.1)])).toBe(1);
+    expect(loudestIndex([{kind: 'none'}, {kind: 'none'}])).toBe(-1);
+    expect(loudestIndex([])).toBe(-1);
   });
 });
 

@@ -9,15 +9,20 @@ export const formatCalibration = (offsets: number[]): string =>
   offsets.map((v) => v.toFixed(1)).join('\n');
 
 export type ParsedCalibration =
-  | {ok: true; offsets: number[]}
-  | {ok: false; reason: string};
+  {ok: true; offsets: number[]} | {ok: false; reason: string};
 
 // Accepts the values separated by whitespace or commas, so a column pasted out
 // of a spreadsheet and a comma-separated line both work.
 export function parseCalibration(text: string): ParsedCalibration {
-  const parts = text.trim().split(/[\s,]+/).filter(Boolean);
+  const parts = text
+    .trim()
+    .split(/[\s,]+/)
+    .filter(Boolean);
   const nums = parts.map(Number);
-  if (parts.length !== CAL_BAND_COUNT || nums.some((n) => !Number.isFinite(n))) {
+  if (
+    parts.length !== CAL_BAND_COUNT ||
+    nums.some((n) => !Number.isFinite(n))
+  ) {
     return {
       ok: false,
       reason: `Erwartet ${CAL_BAND_COUNT} Zahlenwerte, ${parts.length} erhalten.`,
@@ -91,9 +96,11 @@ export function useCalibrationClipboard({
         copy();
       } else if (key === 'v') {
         e.preventDefault();
-        navigator.clipboard.readText().then(paste, () =>
-          toaster.create({type: 'error', title: 'Einfügen fehlgeschlagen'}),
-        );
+        navigator.clipboard
+          .readText()
+          .then(paste, () =>
+            toaster.create({type: 'error', title: 'Einfügen fehlgeschlagen'}),
+          );
       }
     };
 

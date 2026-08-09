@@ -95,6 +95,26 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export const spanTimeFormat = (spanMs: number): ((ts: number) => string) =>
   spanMs < DAY_MS ? fmtHourMinute : fmtDayHourMinute;
 
+// How a single pointed-at instant reads, decided once for everything that points at
+// one. The row charts' tooltip and the timeline's playhead readout show the same
+// instant at the same moment — a hover writes both — so they cannot be allowed to
+// print it two different ways.
+//
+// The rule: live is a rolling window of minutes, which wants seconds; otherwise the
+// crop's own width decides, by spanTimeFormat's above. Pass the same span both are
+// looking at, which on the project page is the crop, not the whole festival.
+//
+// In milliseconds, unlike the formatters it composes: that is the unit an instant
+// travels this page in, and uPlot's seconds are a local fact of the chart. Converting
+// here rather than at each caller is what lets the readout share this at all.
+export const instantLabel = (
+  live: boolean,
+  spanMs: number,
+): ((ms: number) => string) => {
+  const format = live ? fmtTime : spanTimeFormat(spanMs);
+  return (ms) => format(ms / 1000);
+};
+
 // Vertical-grid steps in seconds, smallest first, for the row charts' time axis.
 // A fixed ladder rather than a fixed line count, so the grid reads as clock time:
 // half-minute lines on a five-minute live window, quarter hours on an afternoon.
@@ -150,6 +170,41 @@ export const makeGapsRefiner =
           Math.round(u.valToPos(xs[i + 1] as number, 'x', true)),
         ]);
       }
+    }
+    return out;
+  };
+
+// The same question asked of one series' own samples rather than of the x column:
+// a gap wherever consecutive *non-null* values of this series are further apart than
+// `gapThresholdX`, and uPlot's null-derived gaps discarded.
+//
+// That discarding is the point. Where several devices share one chart, their x
+// columns are the union of their sample times, so each series is null at every
+// instant that belonged to another device — nulls that say nothing about whether
+// *this* monitor was reporting. uPlot strokes straight through a null and renders
+// gaps by clipping the list this refiner returns, so returning only the intervals
+// this series was actually silent for draws each line whole and still breaks it
+// where the monitor went quiet.
+//
+// For one device it is the rule above by another route: its column has a value at
+// every x, so consecutive non-nulls are consecutive samples.
+export const makeSampleGapsRefiner =
+  (gapThresholdX: number): uPlot.Series.GapsRefiner =>
+  (u, sIdx, i0, i1) => {
+    const xs = u.data[0];
+    const ys = u.data[sIdx];
+    const out: [number, number][] = [];
+    let prev: number | null = null;
+    for (let i = i0; i <= i1; i++) {
+      if (ys[i] == null) continue;
+      const x = xs[i] as number;
+      if (prev != null && x - prev > gapThresholdX) {
+        out.push([
+          Math.round(u.valToPos(prev, 'x', true)),
+          Math.round(u.valToPos(x, 'x', true)),
+        ]);
+      }
+      prev = x;
     }
     return out;
   };

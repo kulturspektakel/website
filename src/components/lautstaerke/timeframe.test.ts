@@ -69,7 +69,9 @@ describe('toLocalInput / fromLocalInput', () => {
 describe('parseRangeSearch', () => {
   it('rejects malformed, empty, and inverted ranges', () => {
     expect(parseRangeSearch({})).toBeNull();
-    expect(parseRangeSearch({start: 'nope', end: '2026-08-01T00:00:00Z'})).toBeNull();
+    expect(
+      parseRangeSearch({start: 'nope', end: '2026-08-01T00:00:00Z'}),
+    ).toBeNull();
     const same = '2026-08-01T00:00:00Z';
     expect(parseRangeSearch({start: same, end: same})).toBeNull();
     expect(
@@ -81,10 +83,10 @@ describe('parseRangeSearch', () => {
   // inherit it — an over-wide hand-edited URL degrades to the live view.
   it('rejects a range wider than the cap', () => {
     const start = '2026-08-01T00:00:00Z';
+    expect(parseRangeSearch({start, end: '2026-08-08T00:00:01Z'})).toBeNull();
     expect(
-      parseRangeSearch({start, end: '2026-08-08T00:00:01Z'}),
-    ).toBeNull();
-    expect(parseRangeSearch({start, end: '2026-08-08T00:00:00Z'})).not.toBeNull();
+      parseRangeSearch({start, end: '2026-08-08T00:00:00Z'}),
+    ).not.toBeNull();
   });
 
   it('normalizes a non-UTC offset to the same instant', () => {
@@ -101,7 +103,8 @@ describe('parseRangeSearch', () => {
 // ordering built on top of it live in projectSelection.test.ts.
 describe('snapToQuarter', () => {
   it('rounds to the nearest wall-clock quarter hour', () => {
-    const at = (iso: string) => new Date(snapToQuarter(Date.parse(iso))).toISOString();
+    const at = (iso: string) =>
+      new Date(snapToQuarter(Date.parse(iso))).toISOString();
     expect(at('2026-07-24T18:07:00.000Z')).toBe('2026-07-24T18:00:00.000Z');
     expect(at('2026-07-24T18:08:00.000Z')).toBe('2026-07-24T18:15:00.000Z');
     expect(at('2026-07-24T18:52:30.000Z')).toBe('2026-07-24T19:00:00.000Z');
@@ -110,7 +113,9 @@ describe('snapToQuarter', () => {
   // Berlin is a whole-hour offset from UTC, so snapping in absolute time also
   // lands on a local :00/:15/:30/:45 — that's what makes the simple math valid.
   it('lands on a local quarter hour too', () => {
-    const local = toLocalInput(snapToQuarter(Date.parse('2026-07-24T18:08:00Z')));
+    const local = toLocalInput(
+      snapToQuarter(Date.parse('2026-07-24T18:08:00Z')),
+    );
     expect(local.endsWith(':15')).toBe(true);
   });
 });
@@ -121,7 +126,8 @@ describe('floorToMinute', () => {
   // is a UTC minute here, deliberately: every zone Berlin uses is a whole-hour
   // offset, so a local minute and a UTC minute are the same instant.
   it('floors to the start of the containing minute', () => {
-    const at = (iso: string) => new Date(floorToMinute(Date.parse(iso))).toISOString();
+    const at = (iso: string) =>
+      new Date(floorToMinute(Date.parse(iso))).toISOString();
     expect(at('2026-07-24T18:07:59.999Z')).toBe('2026-07-24T18:07:00.000Z');
     expect(at('2026-07-24T18:07:00.000Z')).toBe('2026-07-24T18:07:00.000Z');
   });

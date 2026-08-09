@@ -7,8 +7,7 @@
 export const BLE_SERVICE_UUID = '7ed2f2c4-69e8-4f7c-9c93-7a3b1e5d0a00';
 export const BLE_CHAR_UUID = '7ed2f2c4-69e8-4f7c-9c93-7a3b1e5d0a01';
 // READ + WRITE characteristic holding the 31 per-band calibration trims.
-export const BLE_CALIBRATION_CHAR_UUID =
-  '7ed2f2c4-69e8-4f7c-9c93-7a3b1e5d0a02';
+export const BLE_CALIBRATION_CHAR_UUID = '7ed2f2c4-69e8-4f7c-9c93-7a3b1e5d0a02';
 // WRITE-ONLY characteristic that pushes WiFi credentials to the device.
 export const BLE_WIFI_CHAR_UUID = '7ed2f2c4-69e8-4f7c-9c93-7a3b1e5d0a03';
 // READ + NOTIFY characteristic: uint16 (little-endian) count of log files still
@@ -19,8 +18,7 @@ export const BLE_UPLOADS_CHAR_UUID = '7ed2f2c4-69e8-4f7c-9c93-7a3b1e5d0a04';
 // Same notify convention as the other characteristics (one immediate push, then
 // on change). A very short (<~1 s) "connecting" phase can be skipped in the
 // notify stream, but a read always returns the exact current value.
-export const BLE_WIFI_STATUS_CHAR_UUID =
-  '7ed2f2c4-69e8-4f7c-9c93-7a3b1e5d0a05';
+export const BLE_WIFI_STATUS_CHAR_UUID = '7ed2f2c4-69e8-4f7c-9c93-7a3b1e5d0a05';
 
 export type WifiStatus = 'disconnected' | 'connecting' | 'connected';
 
@@ -32,9 +30,9 @@ export const WIFI_PASSWORD_MAX_BYTES = 63;
 // The 31 IEC 1/3-octave nominal center frequencies (Hz), in band order: byte[i]
 // of the calibration payload trims the band at BAND_FREQUENCIES[i].
 export const BAND_FREQUENCIES = [
-  16, 20, 25, 31.5, 40, 50, 63, 80, 100, 125, 160, 200, 250, 315, 400, 500,
-  630, 800, 1000, 1250, 1600, 2000, 2500, 3150, 4000, 5000, 6300, 8000, 10000,
-  12500, 16000,
+  16, 20, 25, 31.5, 40, 50, 63, 80, 100, 125, 160, 200, 250, 315, 400, 500, 630,
+  800, 1000, 1250, 1600, 2000, 2500, 3150, 4000, 5000, 6300, 8000, 10000, 12500,
+  16000,
 ] as const;
 
 export const CAL_BAND_COUNT = BAND_FREQUENCIES.length;
@@ -51,7 +49,9 @@ export function formatBandFrequency(hz: number): string {
 // Each byte is a signed 8-bit offset in 0.5 dB steps (offset_dB = byte × 0.5).
 // Clamping to ±48 enforces the ±24 dB UI range and guarantees we never send the
 // −128 sentinel. Output is always exactly CAL_BAND_COUNT bytes.
-export function encodeCalibration(offsetsDb: number[]): Uint8Array<ArrayBuffer> {
+export function encodeCalibration(
+  offsetsDb: number[],
+): Uint8Array<ArrayBuffer> {
   const bytes = new Uint8Array(new ArrayBuffer(CAL_BAND_COUNT));
   for (let i = 0; i < CAL_BAND_COUNT; i++) {
     const step = Math.round((offsetsDb[i] ?? 0) / CAL_STEP_DB);

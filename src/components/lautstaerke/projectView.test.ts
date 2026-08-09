@@ -1,5 +1,9 @@
 import {describe, expect, it} from 'vitest';
-import {assignmentsAt, type NoiseAssignment} from './projectView';
+import {
+  assignmentsAt,
+  createPlayheadSignal,
+  type NoiseAssignment,
+} from './projectView';
 import {MINUTE_MS} from './timeframe';
 
 // A location's monitors are a question about an instant, not about now: the loader
@@ -66,5 +70,46 @@ describe('assignmentsAt', () => {
     const late = assignment('c', Date.parse('2030-01-01T00:00:00Z'), null);
     expect(assignmentsAt([late], null)).toEqual([late]);
     expect(assignmentsAt([late], MOVED_AT)).toEqual([]);
+  });
+});
+
+// The playhead is the one piece of page state that moves on every animation frame, so
+// it travels as a subscription rather than as a context value — see createPlayheadSignal.
+// These pin the two properties the row charts depend on: that a subscriber is told
+// where the line stands the moment it registers, and that an unchanged instant is not
+// an event.
+describe('createPlayheadSignal', () => {
+  it('tells a new subscriber where the playhead already stands', () => {
+    const signal = createPlayheadSignal();
+    signal.set(MOVED_AT);
+    const seen: Array<number | null> = [];
+    signal.subscribe((at) => seen.push(at));
+    expect(seen).toEqual([MOVED_AT]);
+  });
+
+  it('starts at no instant at all', () => {
+    const seen: Array<number | null> = [];
+    createPlayheadSignal().subscribe((at) => seen.push(at));
+    expect(seen).toEqual([null]);
+  });
+
+  it('says nothing when the instant has not moved', () => {
+    const signal = createPlayheadSignal();
+    const seen: Array<number | null> = [];
+    signal.subscribe((at) => seen.push(at));
+    signal.set(MOVED_AT);
+    signal.set(MOVED_AT);
+    signal.set(MOVED_AT + MINUTE_MS);
+    signal.set(null);
+    expect(seen).toEqual([null, MOVED_AT, MOVED_AT + MINUTE_MS, null]);
+  });
+
+  it('stops telling a subscriber that has unsubscribed', () => {
+    const signal = createPlayheadSignal();
+    const seen: Array<number | null> = [];
+    const unsubscribe = signal.subscribe((at) => seen.push(at));
+    unsubscribe();
+    signal.set(MOVED_AT);
+    expect(seen).toEqual([null]);
   });
 });

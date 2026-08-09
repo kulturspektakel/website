@@ -25,6 +25,7 @@ import {
   thumbsToSelection,
   type ProjectSelection,
 } from './projectSelection';
+import {instantLabel} from './chartUtils';
 
 // The slider speaks epoch milliseconds, the same unit as everything it is handed,
 // and steps one of them at a time. It has no unit of its own and so nothing to
@@ -59,14 +60,37 @@ const KEY_STEPS: Record<string, number> = {
 // Milliseconds since the epoch make a poor aria-valuenow, and "minutes into the
 // project" was no better — say the instant. Hoisted so the thumbs aren't handed a new
 // closure on every frame of a scrub.
+//
+// Deliberately not the readout's format, which is the only place the two part company:
+// that one drops the date once the crop is inside a day, because the strip under it
+// says which day. Spoken aloud there is no strip, so it says the whole instant — and
+// saying it the same way at every crop width is also what keeps this hoisted.
 const ariaValueText = ({value}: {value: number}) => formatInstant(value);
 
 // A crop window rather than a line with knobs: the strip is the whole pickable
-// span, the lit part between the two handles is the selection, and everything
-// outside it is dimmed. Sized in px because zag needs a concrete thumb size to
-// keep the handles inside the strip (thumbAlignment="contain").
+// span, the lit part between the two grips is the selection, and everything
+// outside it is dimmed.
+//
+// The grips sit *outside* the lit range rather than centred on its ends — the start
+// one finishes where the range begins, the end one begins where it finishes — so the
+// playhead can stand on either edge and still be seen. Three pieces make that hold:
+//
+//  · The value axis is inset by one grip width at each end, as padding on the root.
+//    That padding shrinks the control, which is the box zag measures, so the ends of
+//    the axis leave exactly the room a grip needs. The track is pulled back out over
+//    the padding (mx below) so the strip itself still spans the full width.
+//  · Alignment is "center", so a thumb's offset is the plain value percentage — the
+//    same coordinate Slider.Range is laid out in, which is what lets the two abut
+//    exactly. ("contain" insets the thumbs but not the range, so under it the two
+//    disagree by up to half a thumb.)
+//  · Each thumb's box is the one-pixel column its value occupies, and a grip hangs
+//    off the side of it. zag centres a thumb with a translate of its own width, so
+//    the box can be widened for a hit area without moving what's drawn in it — which
+//    is all PLAYHEAD_HIT is.
 const STRIP_H = 44;
 const HANDLE_W = 12;
+const PLAYHEAD_W = 1;
+const PLAYHEAD_HIT = 11;
 
 /**
  * At most one commit per animation frame, keeping only the newest value.
@@ -183,15 +207,15 @@ export function ProjectTimeline({
   } | null>(null);
 
   // The instant a pointer sits over, unsnapped. Mirrors zag's own point→value math,
-  // half-thumb inset included (thumbAlignment="contain" shrinks the usable span by
-  // one thumb width), because the handler below bypasses it. Unsnapped because the
-  // first thing it decides is which side of an edge the pointer is on, and on a
-  // narrow window the grid would answer that wrong.
+  // which the handler below bypasses: under thumbAlignment="center" that is the
+  // control's own box end to end, with no inset of its own — the room the grips need
+  // is padding on the root, and so already outside the box this measures. Unsnapped
+  // because the first thing it decides is which side of an edge the pointer is on,
+  // and on a narrow window the grid would answer that wrong.
   const pointerAt = (control: HTMLElement, clientX: number): number | null => {
     const {left, width} = control.getBoundingClientRect();
-    const span = width - HANDLE_W;
-    if (span <= 0) return null;
-    const ratio = clampTo((clientX - left - HANDLE_W / 2) / span, 0, 1);
+    if (width <= 0) return null;
+    const ratio = clampTo((clientX - left) / width, 0, 1);
     return window.start + ratio * (sliderMax - window.start);
   };
 
@@ -290,6 +314,52 @@ export function ProjectTimeline({
     if (ownGesture(event)) endGesture();
   };
 
+  // The readout stands over the playhead rather than off in the corner, so the instant
+  // is read where it is being pointed at. Two things have to hold at once: it is
+  // centred on the line, and it never leaves the strip — so approaching either end it
+  // stops travelling and the playhead carries on without it.
+  //
+  // One clamp does both, and does it in CSS: the bounds are percentages of the row,
+  // which is the strip's own width, so nothing about the container has to be measured
+  // for a resize to be followed. The label's own width is the one thing no percentage
+  // can express, and so the one thing that is measured.
+  const labelRef = useRef<HTMLParagraphElement>(null);
+  const [labelW, setLabelW] = useState(0);
+  useEffect(() => {
+    const el = labelRef.current;
+    if (!el) return;
+    // Delivered once on observe and again on every later change of width — 'Live' and
+    // a timestamp are nothing like the same size — so the clamp is re-derived rather
+    // than pinned to whichever of the two was on screen first. Rounded up, so the
+    // sub-pixel drift a text measurement comes with can't churn state per frame.
+    const ro = new ResizeObserver(() =>
+      setLabelW(Math.ceil(el.getBoundingClientRect().width)),
+    );
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // How far along the axis the playhead stands, 0…1. The axis is inset by a grip width
+  // at each end (see the note above the constants), which is why the offset below is
+  // not simply that fraction of the row. Pinned left while live: there is no playhead
+  // to stand over then, and 'Live' belongs where it has always been.
+  const labelAt = live
+    ? 0
+    : clampTo(
+        (selection.current - window.start) / (sliderMax - window.start),
+        0,
+        1,
+      );
+  const labelLeft = `clamp(0px, ${HANDLE_W}px + ${labelAt} * (100% - ${
+    HANDLE_W * 2
+  }px) - ${labelW / 2}px, 100% - ${labelW}px)`;
+
+  // Read the same way the row charts' tooltip reads it, off the same rule and the same
+  // span — the crop, which is what those charts are showing. A hover writes both at
+  // once, and one of them saying 22:15 while the other says 09.08. 22:15 would read as
+  // two different instants.
+  const labelFormat = instantLabel(live, selection.end - selection.start);
+
   return (
     <VStack
       align="stretch"
@@ -300,10 +370,28 @@ export function ProjectTimeline({
       borderColor="gray.700"
     >
       {/* The cursor has no field of its own, so this is the only place its value is
-          readable. It changes under a scrub or a hover, and holds still while doing
-          it because the area sets tabular figures (see crew.lautstaerke). */}
-      <Text fontWeight="bold" color={live ? 'green.400' : undefined} truncate>
-        {live ? 'Live' : formatInstant(selection.current)}
+          readable. Tabular figures (see crew.lautstaerke) earn their keep twice here:
+          the digits hold still as they change, and the label holds one width — so the
+          measurement behind the clamp survives a whole scrub. */}
+      <Text
+        ref={labelRef}
+        fontWeight="bold"
+        color={live ? 'green.400' : undefined}
+        // Shrink-wrapped rather than stretched to the row, so its width is the text's
+        // and there is something for the offset to be centred on. Offset by `left`
+        // while staying in flow, so it still reserves its own line and the strip
+        // below doesn't climb into it.
+        alignSelf="flex-start"
+        maxW="full"
+        truncate
+        position="relative"
+        // The one thing here that isn't a style prop, and the offset is why: a scrub
+        // gives it a new value every frame, and Chakra serializes a style prop into a
+        // hashed class and inserts a rule for it. That would be a rule per frame,
+        // cached and never freed. An inline style is a single attribute write.
+        style={{left: labelLeft}}
+      >
+        {live ? 'Live' : labelFormat(selection.current)}
       </Text>
 
       <ChakraSlider.Root
@@ -332,10 +420,15 @@ export function ProjectTimeline({
         }
         getAriaValueText={ariaValueText}
         thumbCollisionBehavior={collision}
-        // Keeps the handles within the strip, so the one at 0 doesn't hang off
-        // the left edge like a knob would.
-        thumbAlignment="contain"
-        thumbSize={{width: HANDLE_W, height: STRIP_H}}
+        // The grip width, held back at each end: it shrinks the control, and so the
+        // axis, leaving the room a grip standing outside the range needs. The track
+        // reaches back over it, so nothing about the strip moves — only the span its
+        // ends can be dragged to.
+        px={`${HANDLE_W}px`}
+        // Every thumb sits at its plain value percentage, which is the coordinate the
+        // range is laid out in too. See the note above the constants for what rests
+        // on that.
+        thumbAlignment="center"
         aria-label={live ? ['Beginn', 'Ende'] : ['Beginn', 'Zeitpunkt', 'Ende']}
       >
         <ChakraSlider.Control
@@ -348,15 +441,27 @@ export function ProjectTimeline({
           // away, so it is the one signal a scrub can't end without.
           onLostPointerCapture={onControlPointerUp}
         >
-          {/* Outside the selection: the span you could pick, dimmed. */}
-          <ChakraSlider.Track h="full" rounded="md" bg="gray.950">
+          {/* Outside the selection: the span you could pick, dimmed. Back out over
+              the root's padding, so the strip is the whole window even though the
+              axis inside it stops a grip short of either end. */}
+          <ChakraSlider.Track
+            h="full"
+            rounded="md"
+            bg="gray.950"
+            mx={`-${HANDLE_W}px`}
+          >
             {/* Inside it: the window. Range spans first→last thumb, which is
-                start→end whether or not the playhead sits between them. The cursor
+                start→end whether or not the playhead sits between them. Half a pixel
+                wider at each end than those two thumbs, because a thumb marks a
+                column and the range has to cover the whole of the two it ends on —
+                otherwise the playhead standing on one would half hang out of the lit
+                part, and the grip that abuts it would clip that half. The cursor
                 names which of the two drags this is: a cropped window is grabbable,
                 an uncropped one is clickable to place the playhead — and while live
                 with nothing cropped, neither. */}
             <ChakraSlider.Range
               bg="gray.700"
+              mx="-0.5px"
               cursor={cropped ? 'grab' : live ? undefined : 'pointer'}
               _active={cropped ? {cursor: 'grabbing'} : undefined}
             />
@@ -364,6 +469,7 @@ export function ProjectTimeline({
 
           {thumbs.map((_, i) => {
             const playhead = !live && i === 1;
+            const start = i === 0;
             return (
               <ChakraSlider.Thumb
                 key={i}
@@ -374,8 +480,17 @@ export function ProjectTimeline({
                 borderWidth="0"
                 boxShadow="none"
                 rounded="none"
-                width={`${HANDLE_W}px`}
+                // The column the value occupies. The playhead is the only one drawn
+                // inside its own box and so the only one that needs it widened, to
+                // something a finger can find; a grip hangs off the side of its box
+                // and brings its own hit area with it.
+                width={`${playhead ? PLAYHEAD_HIT : PLAYHEAD_W}px`}
                 height={`${STRIP_H}px`}
+                // Above the playhead's hit area, which is wider than the line it
+                // draws and overlaps a grip whenever it is parked against one. The
+                // grip has to win that: the playhead can also be placed by clicking
+                // the window, while a grip is the only way to move an edge.
+                zIndex={playhead ? undefined : '3'}
                 display="flex"
                 alignItems="center"
                 justifyContent="center"
@@ -408,33 +523,37 @@ export function ProjectTimeline({
               >
                 <ChakraSlider.HiddenInput />
                 {playhead ? (
-                  // A line across the whole strip with a head on top, so it reads
-                  // as a position in time rather than a draggable edge.
-                  <Box w="2px" h="full" bg="gray.50" position="relative">
-                    <Box
-                      position="absolute"
-                      top="-1px"
-                      left="50%"
-                      transform="translateX(-50%)"
-                      w="2.5"
-                      h="2.5"
-                      rounded="sm"
-                      bg="gray.50"
-                    />
-                  </Box>
+                  // A hairline across the whole strip, so it reads as a position in
+                  // time rather than a draggable edge. The same width and the same
+                  // near-white as the one the row charts draw (see LevelTrace's
+                  // CHART_CSS): one instant, standing in several places at once, and
+                  // it should be recognisably the same mark in each of them. It is
+                  // the grips' yellow that tells it apart from an edge here.
+                  <Box w={`${PLAYHEAD_W}px`} h="full" bg="gray.50" />
                 ) : (
-                  // A trim bracket: the full height of the strip, so the window's
-                  // edge is something you can obviously take hold of.
+                  // A trim bracket, the full height of the strip, so the window's
+                  // edge is something you can obviously take hold of. Alongside its
+                  // thumb rather than around it: the range starts at the column the
+                  // thumb marks, so this ends where the range begins, and the two
+                  // meet without either covering the other. Rounded on the outer
+                  // side only, for the same reason — and to the strip's own radius,
+                  // so an uncropped window reads as one bar with its ends held.
                   <Box
-                    w="full"
+                    position="absolute"
+                    top="0"
+                    {...(start
+                      ? {right: '100%', roundedLeft: 'md'}
+                      : {left: '100%', roundedRight: 'md'})}
+                    w={`${HANDLE_W}px`}
                     h="full"
-                    rounded="sm"
-                    bg="gray.300"
+                    bg="yellow.400"
                     display="flex"
                     alignItems="center"
                     justifyContent="center"
                   >
-                    <Box w="2px" h="14px" rounded="full" bg="gray.600" />
+                    {/* Its own hue rather than a neutral, so the notch stays legible
+                        on the yellow at the same contrast the grey pair had. */}
+                    <Box w="2px" h="14px" rounded="full" bg="yellow.800" />
                   </Box>
                 )}
               </ChakraSlider.Thumb>

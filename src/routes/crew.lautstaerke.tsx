@@ -6,13 +6,13 @@ import {
 } from '@tanstack/react-router';
 import {Box} from '@chakra-ui/react';
 import {z} from 'zod';
-import {useMemo, useRef} from 'react';
+import {useRef} from 'react';
 import 'uplot/dist/uPlot.min.css';
 import {seo} from '../utils/seo';
 import {
   BluetoothContext,
+  NoiseBuffersContext,
   NoiseLiveContext,
-  type NoiseLiveCtx,
 } from '../components/lautstaerke/context';
 import {useNoiseStream} from '../components/lautstaerke/useNoiseStream';
 import {useBleDevice} from '../components/lautstaerke/useBleDevice';
@@ -315,15 +315,10 @@ function LautstaerkeLayout() {
   // effect and drop the broker connection mid-session.
   const connectedDevice = useRef<string | null>(null);
 
-  const {devices, deviceData, ingest} = useNoiseStream({
+  const {live, deviceData, ingest} = useNoiseStream({
     skipDevice: connectedDevice,
   });
   const bluetooth = useBleDevice({ingest, connectedDevice});
-
-  const live = useMemo<NoiseLiveCtx>(
-    () => ({devices, deviceData}),
-    [devices, deviceData],
-  );
 
   // Warn before navigating away or reloading while connected over Bluetooth —
   // leaving the page tears down the BLE connection. Navigating between pages
@@ -341,11 +336,15 @@ function LautstaerkeLayout() {
   });
 
   return (
-    <NoiseLiveContext.Provider value={live}>
-      <BluetoothContext.Provider value={bluetooth}>
-        {/* The dark scope itself lives on <html> (see __root), so portalled
+    // Both of these are the same object for the life of the layout — the buffers a
+    // ref, the live records a store subscribed to by device name — so neither provider
+    // ever hands its consumers a new value.
+    <NoiseBuffersContext.Provider value={deviceData}>
+      <NoiseLiveContext.Provider value={live}>
+        <BluetoothContext.Provider value={bluetooth}>
+          {/* The dark scope itself lives on <html> (see __root), so portalled
             menus, dialogs and toasts get it too. */}
-        {/* Tabular figures for the whole area, inherited rather than repeated on
+          {/* Tabular figures for the whole area, inherited rather than repeated on
             every readout. The levels, the clock and the battery all change in place
             — a proportional '1' is narrower than a '4', so without this every number
             on the page reflows as it updates, and a dB value twitches once a second.
@@ -355,20 +354,21 @@ function LautstaerkeLayout() {
             Portalled surfaces don't inherit it (they hang off <body>): the menus and
             dialogs show identifiers rather than ticking numbers, so they don't need
             it — CalibrationPanel is the exception and sets it itself. */}
-        <Box
-          fontVariantNumeric="tabular-nums"
-          bg="gray.900"
-          color="gray.100"
-          h="100vh"
-          display="flex"
-          flexDirection="column"
-          overflow="auto"
-          p="4"
-        >
-          <Outlet />
-        </Box>
-        <Toaster />
-      </BluetoothContext.Provider>
-    </NoiseLiveContext.Provider>
+          <Box
+            fontVariantNumeric="tabular-nums"
+            bg="gray.900"
+            color="gray.100"
+            h="100vh"
+            display="flex"
+            flexDirection="column"
+            overflow="auto"
+            p="4"
+          >
+            <Outlet />
+          </Box>
+          <Toaster />
+        </BluetoothContext.Provider>
+      </NoiseLiveContext.Provider>
+    </NoiseBuffersContext.Provider>
   );
 }

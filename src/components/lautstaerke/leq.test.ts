@@ -1,5 +1,6 @@
 import {describe, expect, it} from 'vitest';
 import {
+  coverageDetail,
   coverageNote,
   energeticMeanDb,
   expectedMinutes,
@@ -30,7 +31,10 @@ describe('energeticMeanDb', () => {
 
   it('skips gaps rather than treating them as silence', () => {
     expect(energeticMeanDb([70, null, 70])).toBeCloseTo(70, 10);
-    expect(energeticMeanDb([null, Number.NaN, 60, Infinity])).toBeCloseTo(60, 10);
+    expect(energeticMeanDb([null, Number.NaN, 60, Infinity])).toBeCloseTo(
+      60,
+      10,
+    );
   });
 
   it('returns null when there is nothing to average', () => {
@@ -44,19 +48,25 @@ describe('expectedMinutes', () => {
 
   it('counts the whole span for a window already in the past', () => {
     const end = new Date('2026-08-01T11:00:00Z');
-    expect(expectedMinutes(start, end, Date.parse('2026-08-01T20:00:00Z'))).toBe(60);
+    expect(
+      expectedMinutes(start, end, Date.parse('2026-08-01T20:00:00Z')),
+    ).toBe(60);
   });
 
   // The picker's default window ends at the current minute and every poll runs
   // against a window whose end is ahead of now — neither has "missing" minutes.
   it('counts only elapsed time for a window ending in the future', () => {
     const end = new Date('2026-08-01T12:00:00Z');
-    expect(expectedMinutes(start, end, Date.parse('2026-08-01T10:30:00Z'))).toBe(30);
+    expect(
+      expectedMinutes(start, end, Date.parse('2026-08-01T10:30:00Z')),
+    ).toBe(30);
   });
 
   it('is zero for a window that has not started', () => {
     const end = new Date('2026-08-01T12:00:00Z');
-    expect(expectedMinutes(start, end, Date.parse('2026-08-01T09:00:00Z'))).toBe(0);
+    expect(
+      expectedMinutes(start, end, Date.parse('2026-08-01T09:00:00Z')),
+    ).toBe(0);
   });
 });
 
@@ -89,6 +99,23 @@ describe('coverageNote', () => {
 
   it('says nothing about a window that has not started', () => {
     expect(coverageNote(totals(0, 0))).toBeUndefined();
+  });
+
+  // What the list row's warning sign says when hovered, where the note itself is
+  // only the sign. Same percentage as the note, so the two can't disagree.
+  it('spells the shortfall out for a tooltip', () => {
+    expect(coverageDetail(totals(180, 360))).toBe(
+      'Nur 180 von 360 Minuten im Zeitraum gemessen (50 %)',
+    );
+  });
+
+  // Both wordings ask one predicate, so a caller can pick either without consulting
+  // the other about whether there is anything to say.
+  it('stays silent wherever the note does', () => {
+    for (const t of [totals(59, 60), totals(1, 2), totals(0, 0)]) {
+      expect(coverageDetail(t)).toBeUndefined();
+      expect(coverageNote(t)).toBeUndefined();
+    }
   });
 });
 

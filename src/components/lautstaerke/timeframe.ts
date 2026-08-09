@@ -41,13 +41,8 @@ export const clampTo = (ms: number, min: number, max: number): number =>
   Math.min(Math.max(ms, min), max);
 
 // Local wall-clock fields → the instant they denote in `timeZone`.
-const zonedInstant = (
-  y: number,
-  mo: number,
-  d: number,
-  h = 0,
-  min = 0,
-): Date => new Date(new TZDate(y, mo - 1, d, h, min, timeZone).getTime());
+const zonedInstant = (y: number, mo: number, d: number, h = 0, min = 0): Date =>
+  new Date(new TZDate(y, mo - 1, d, h, min, timeZone).getTime());
 
 // The URL shape, in one place: both navigate() callers and the legacy redirect
 // go through this, so the param names and encoding live here alone. TZDate's own
@@ -138,7 +133,10 @@ export function formatTimeframeRange(startMs: number, endMs: number): string {
   return timeframeRangeFmt.formatRange(new Date(startMs), new Date(endMs));
 }
 
-// A single instant at minute precision, for the timeline's playhead readout.
+// A single instant at minute precision, carrying its weekday and date whatever the
+// window around it — the timeline's playhead thumbs say this to a screen reader, which
+// has no strip in front of it to take the day from. What that readout *prints* is
+// chartUtils' instantLabel, so that it and the row charts' tooltip agree.
 const instantFmt = new Intl.DateTimeFormat(locale, {
   timeZone,
   weekday: 'short',

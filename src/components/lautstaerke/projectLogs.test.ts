@@ -1,9 +1,10 @@
 import {describe, expect, it} from 'vitest';
 import {
+  energyIndex,
   levelsByDevice,
   logColumn,
-  logRangeTotals,
   logSeries,
+  rangeTotals,
   totalsByDevice,
 } from './projectLogs';
 import {LEVEL_METRICS, supportedMetric} from './level';
@@ -89,12 +90,20 @@ describe('logColumn', () => {
   });
 });
 
-describe('logRangeTotals', () => {
-  const leqOf = (...args: Parameters<typeof logRangeTotals>) =>
-    logRangeTotals(...args)?.db ?? null;
+describe('rangeTotals', () => {
+  // The index is what every Leq on the page is read off; building one per weighting
+  // here is what the project page's own memo does.
+  const indexed = {A: energyIndex(logs, 'A'), C: energyIndex(logs, 'C')};
+  const totalsOf = (
+    weighting: 'A' | 'C',
+    deviceId: string,
+    range: {start: number; end: number},
+  ) => rangeTotals(indexed[weighting], deviceId, range);
+  const leqOf = (...args: Parameters<typeof totalsOf>) =>
+    totalsOf(...args)?.db ?? null;
 
   it('averages the window energetically, not arithmetically', () => {
-    const leq = leqOf(logs, 'mic-1', {start: START, end: at(2)}, 'A');
+    const leq = leqOf('A', 'mic-1', {start: START, end: at(2)});
     expect(leq).toBeCloseTo(energeticMeanDb([60, 70])!, 10);
     expect(leq).toBeCloseTo(67.4, 1);
   });
@@ -104,51 +113,59 @@ describe('logRangeTotals', () => {
   // clipped minutes as silence would drag the level down and misreport it.
   it('averages only the minutes a device has, not the whole crop', () => {
     const whole = {start: START, end: at(4)};
-    expect(leqOf(logs, 'mic-2', whole, 'A')).toBeCloseTo(90, 10);
-    expect(leqOf(logs, 'mic-2', whole, 'C')).toBeCloseTo(95, 10);
+    expect(leqOf('A', 'mic-2', whole)).toBeCloseTo(90, 10);
+    expect(leqOf('C', 'mic-2', whole)).toBeCloseTo(95, 10);
   });
 
   // The counts that turn "90 dB over the crop" into "90 dB, over half of it" — the
   // whole reason the Leq and its coverage travel together.
   it('reports how much of the crop the mean actually had', () => {
     const whole = {start: START, end: at(4)};
-    expect(logRangeTotals(logs, 'mic-2', whole, 'A')).toMatchObject({
+    expect(totalsOf('A', 'mic-2', whole)).toMatchObject({
       minutes: 2,
       expectedMinutes: 4,
     });
-    expect(coverageNote(logRangeTotals(logs, 'mic-2', whole, 'A')!)).toBe(
-      '50 % Daten',
-    );
+    expect(coverageNote(totalsOf('A', 'mic-2', whole)!)).toBe('50 % Daten');
   });
 
   it('is null for a window with nothing in it, or an empty window', () => {
-    expect(
-      logRangeTotals(logs, 'mic-2', {start: START, end: at(2)}, 'A'),
-    ).toBeNull();
-    expect(
-      logRangeTotals(logs, 'mic-1', {start: at(2), end: at(2)}, 'A'),
-    ).toBeNull();
+    expect(totalsOf('A', 'mic-2', {start: START, end: at(2)})).toBeNull();
+    expect(totalsOf('A', 'mic-1', {start: at(2), end: at(2)})).toBeNull();
   });
 
   it('clamps a window reaching outside the payload', () => {
     const beyond = {start: START - 10 * MINUTE_MS, end: at(99)};
-    expect(leqOf(logs, 'mic-1', beyond, 'A')).toBeCloseTo(
+    expect(leqOf('A', 'mic-1', beyond)).toBeCloseTo(
       energeticMeanDb([60, 70, 80])!,
       10,
     );
+  });
+
+  // The whole point of the index: it must answer exactly what a direct pass over the
+  // column would, for every sub-range of it — including the ones that start or end on
+  // a minute the device didn't report.
+  it('matches a direct energetic mean over every sub-range', () => {
+    const column = logs.devices['mic-1']!.laeq_1m!;
+    for (let from = 0; from <= logs.minutes; from++) {
+      for (let to = from; to <= logs.minutes; to++) {
+        expect(leqOf('A', 'mic-1', {start: at(from), end: at(to)})).toBe(
+          energeticMeanDb(column, from, to),
+        );
+      }
+    }
   });
 });
 
 describe('levelsByDevice', () => {
   it('reads the playhead minute for the selected window', () => {
     expect(
-      levelsByDevice(logs, {metric: 'eq_fast', weighting: 'A', current: at(1)}),
+      levelsByDevice(logs, {metric: 'eq_fast', weighting: 'A', minute: 1}),
     ).toEqual({'mic-1': 70});
   });
 
   it('follows the weighting and the window', () => {
     expect(
-      levelsByDevice(logs, {metric: 'eq_5m', weighting: 'C', current: at(3)}),
+      levelsByDevice(logs, {metric: 'eq_5m', weighting: 'C', minute: 3}),
     ).toEqual({'mic-1': 86});
   });
 
@@ -156,13 +173,13 @@ describe('levelsByDevice', () => {
   // as null: absent and unmeasured render identically, and consumers key on presence.
   it('omits a device with no value at the playhead', () => {
     expect(
-      levelsByDevice(logs, {metric: 'eq_fast', weighting: 'A', current: at(2)}),
+      levelsByDevice(logs, {metric: 'eq_fast', weighting: 'A', minute: 2}),
     ).toEqual({'mic-2': 90});
   });
 
   it('omits everyone for a window no device reports', () => {
     expect(
-      levelsByDevice(logs, {metric: 'eq_30m', weighting: 'A', current: at(1)}),
+      levelsByDevice(logs, {metric: 'eq_30m', weighting: 'A', minute: 1}),
     ).toEqual({});
   });
 });
@@ -173,7 +190,7 @@ describe('totalsByDevice', () => {
   const range = {start: START, end: at(4)};
 
   it('averages the crop for every device, playhead or not', () => {
-    const totals = totalsByDevice(logs, range, 'A');
+    const totals = totalsByDevice(energyIndex(logs, 'A'), range);
     expect(totals['mic-1']?.db).toBeCloseTo(energeticMeanDb([60, 70, 80])!, 10);
     // Deployed for two minutes of the four, and averaged over those two.
     expect(totals['mic-2']?.db).toBeCloseTo(90, 10);
@@ -181,7 +198,9 @@ describe('totalsByDevice', () => {
 
   it('omits a device with nothing in the crop', () => {
     expect(
-      Object.keys(totalsByDevice(logs, {start: START, end: at(2)}, 'A')),
+      Object.keys(
+        totalsByDevice(energyIndex(logs, 'A'), {start: START, end: at(2)}),
+      ),
     ).toEqual(['mic-1']);
   });
 });

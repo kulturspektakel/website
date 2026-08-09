@@ -107,7 +107,11 @@ export const DARK_MAP_STYLE: google.maps.MapTypeStyle[] = [
   },
 
   // Water sits below the ground plane rather than above it.
-  {featureType: 'water', elementType: 'geometry', stylers: [{color: '#0d0d10'}]},
+  {
+    featureType: 'water',
+    elementType: 'geometry',
+    stylers: [{color: '#0d0d10'}],
+  },
   {featureType: 'water', elementType: 'labels', stylers: [{visibility: 'off'}]},
 ];
 

@@ -8,7 +8,7 @@ import LocationsMap, {
 import {MAP_BACKGROUND} from '../components/lautstaerke/mapStyle';
 import {NoiseLocationDialog} from '../components/lautstaerke/NoiseLocationDialog';
 import {
-  assignmentsAt,
+  usePlayheadLevels,
   useProjectView,
 } from '../components/lautstaerke/projectView';
 
@@ -23,8 +23,12 @@ const PLACE_TOAST = 'noise-place-location';
 
 function ProjectMapView() {
   const {projectId} = Route.useParams();
-  const {project, live, metric, weighting, viewedAt, levels, refresh} =
+  const {project, live, metric, weighting, locations, refresh} =
     useProjectView();
+  // Read here rather than inside the map: what a pin shows at the playhead is a
+  // question about this page, and LocationsMap is a map — it takes levels, not a
+  // project. This view re-renders as the playhead crosses a minute either way.
+  const levels = usePlayheadLevels();
   // The clicked point, or null while the create dialog is closed. A location is only
   // ever placed by clicking the map, so there is no coordinate-less open — and so the
   // dialog belongs to this view rather than to the layout.
@@ -52,17 +56,16 @@ function ProjectMapView() {
 
   // The map wants each location's monitors flattened; the list view keeps the
   // assignments themselves, since it renders one row each. Which monitors those are
-  // depends on when you're looking: live shows the ones standing there now, and
-  // scrubbing shows whoever stood there then.
+  // was already decided by the layout — live means the ones standing there now, and
+  // scrubbing whoever stood there then — so this only reshapes the answer, and inherits
+  // its identity: the memo holds still through a scrub, and so does the memo'd map.
   const mapLocations = useMemo(
     () =>
-      project.locations.map((location) => ({
+      locations.map(({location, assignments}) => ({
         ...location,
-        deviceIds: assignmentsAt(location.assignments, viewedAt).map(
-          (a) => a.deviceId,
-        ),
+        deviceIds: assignments.map((a) => a.deviceId),
       })),
-    [project.locations, viewedAt],
+    [locations],
   );
 
   // Reachable only by hand-typed URL — the index route sends a keyless

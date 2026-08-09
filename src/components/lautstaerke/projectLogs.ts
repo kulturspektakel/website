@@ -3,17 +3,19 @@ import {
   logMinuteIndex,
   type DeviceSeries,
   type LevelColumn,
+  type LogGrid,
   type ProjectLogs,
   type Weighting,
 } from './noise';
 import {type LevelMetric} from './level';
 import {seriesFor} from './series';
-import {energeticMeanDb, type Coverage} from './leq';
+import {fromEnergy, toEnergy, usableDb, type Coverage} from './leq';
 
 // Reading the project page's numbers off the whole event, which the browser now
 // holds (see projectLogs in noiseHistory.server.ts). Every question the map and the
-// list ask is an index or a slice into a minute-indexed column, so scrubbing,
-// cropping and both header dropdowns cost no request at all.
+// list ask is an index into a minute-indexed column, a slice of one, or — for the Leq
+// over a crop, the one question a slice would be too slow to answer as the timeline is
+// dragged — a difference of two running totals. None of them costs a request.
 //
 // React-free on purpose: this is where the maths lives, the hook beside it
 // (useProjectLogs.ts) only decides when to recompute.
@@ -40,40 +42,82 @@ const eqColumn = (logs: ProjectLogs, deviceId: string, weighting: Weighting) =>
 export type RangeTotals = {db: number} & Coverage;
 
 /**
+ * The project's per-minute Leq columns as running totals: for every device, the
+ * cumulative acoustic energy up to each minute and the cumulative count of minutes it
+ * actually reported.
+ *
+ * Built once per payload and weighting, because of what asks for a Leq: dragging the
+ * timeline re-averages the crop for every device on every animation frame, and over a
+ * four-day event that was tens of thousands of 10^(v/10) per frame — for a number the
+ * drag moves by a minute at a time. Off a running total, any crop is two subtractions.
+ *
+ * Typed arrays because they are one entry per minute per device, hold nothing but
+ * numbers, and exist to be read hot. One entry longer than the payload, so index i is
+ * "everything before minute i" and the empty range needs no special case.
+ */
+// The grid and the count rather than the whole payload: once the columns are summed
+// nothing re-walks them, and saying so in the type is what keeps that true. Carrying
+// the grid at all — rather than taking it beside the index at every call — is what
+// makes it impossible to read a range out of an index built for another project.
+export type EnergyIndex = {
+  grid: LogGrid;
+  minutes: number;
+  devices: Record<string, {energy: Float64Array; measured: Int32Array}>;
+};
+
+export function energyIndex(
+  logs: ProjectLogs,
+  weighting: Weighting,
+): EnergyIndex {
+  const devices: EnergyIndex['devices'] = {};
+  for (const deviceId of Object.keys(logs.devices)) {
+    const values = eqColumn(logs, deviceId, weighting);
+    if (!values) continue;
+    const energy = new Float64Array(logs.minutes + 1);
+    const measured = new Int32Array(logs.minutes + 1);
+    for (let i = 0; i < logs.minutes; i++) {
+      const v = values[i];
+      const usable = usableDb(v);
+      energy[i + 1] = energy[i]! + (usable ? toEnergy(v) : 0);
+      measured[i + 1] = measured[i]! + (usable ? 1 : 0);
+    }
+    devices[deviceId] = {energy, measured};
+  }
+  return {grid: logs, minutes: logs.minutes, devices};
+}
+
+/**
  * The Leq one device measured over a window: the energetic mean of the minutes it
  * actually reported. Nulls are skipped rather than counted as silence, so a monitor
  * that was offline — or that stood somewhere else for part of the window — is
  * averaged over the time it was there, not over the window's whole span. That makes
  * the coverage alongside it part of the answer, not a decoration: without it a
  * monitor present for two minutes of an hour reads exactly like one present all of it.
+ *
+ * The mean is the one energeticMeanDb defines; it is read off the index rather than
+ * computed here so that a crop costs the same whether it spans a minute or a festival.
  */
-export function logRangeTotals(
-  logs: ProjectLogs,
+export function rangeTotals(
+  index: EnergyIndex,
   deviceId: string,
   range: {start: number; end: number},
-  weighting: Weighting,
 ): RangeTotals | null {
-  const values = eqColumn(logs, deviceId, weighting);
-  if (!values) return null;
+  const device = index.devices[deviceId];
+  if (!device) return null;
   // Half-open and clamped into the payload, like every other range in this section:
-  // the minute containing `end` is not included. Bounds rather than a slice, because
-  // copying a crop's worth of numbers per device per frame is the one allocation on
-  // this path that would be felt.
-  const from = Math.max(0, logMinuteIndex(logs, range.start));
-  const to = Math.min(logs.minutes, logMinuteIndex(logs, range.end));
+  // the minute containing `end` is not included.
+  const from = Math.max(0, logMinuteIndex(index.grid, range.start));
+  const to = Math.min(index.minutes, logMinuteIndex(index.grid, range.end));
   if (from >= to) return null;
-  const db = energeticMeanDb(values, from, to);
-  if (db == null) return null;
-  // How many of those minutes the mean actually had to work with. A second pass over
-  // the same bounds rather than a count out of energeticMeanDb: it is read by the
-  // device page too, and this costs no allocation on a path that cares about that.
-  //
+  // How many of those minutes the mean actually had to work with, which is also what
+  // says whether there is a mean at all.
+  const minutes = device.measured[to]! - device.measured[from]!;
+  if (minutes === 0) return null;
+  const db = fromEnergy((device.energy[to]! - device.energy[from]!) / minutes);
   // `expectedMinutes` is the crop clamped to the payload, and the payload already
   // ends at the last elapsed minute (see projectLogs on the server) — so a crop
   // reaching into a running festival's future isn't charged for minutes that haven't
   // happened, exactly as expectedMinutes() does for the device page.
-  let minutes = 0;
-  for (let i = from; i < to; i++) if (values[i] != null) minutes++;
   return {db, minutes, expectedMinutes: to - from};
 }
 
@@ -91,15 +135,17 @@ export function levelsByDevice(
   {
     metric,
     weighting,
-    current,
+    // The playhead's minute, not its instant: the payload has no finer resolution, so
+    // the caller resolves it once and can then hold this answer still for every frame
+    // of a hover that stays inside the same minute (see useProjectLogs).
+    minute,
   }: {
     metric: LevelMetric;
     weighting: Weighting;
-    current: number;
+    minute: number;
   },
 ): Record<string, number> {
   const out: Record<string, number> = {};
-  const minute = logMinuteIndex(logs, current);
   for (const deviceId of Object.keys(logs.devices)) {
     const db = logColumn(logs, deviceId, metric, weighting)?.[minute];
     if (db != null) out[deviceId] = db;
@@ -114,13 +160,12 @@ export function levelsByDevice(
  * ignores the playhead, that one ignores the crop.
  */
 export function totalsByDevice(
-  logs: ProjectLogs,
+  index: EnergyIndex,
   range: {start: number; end: number},
-  weighting: Weighting,
 ): Record<string, RangeTotals> {
   const out: Record<string, RangeTotals> = {};
-  for (const deviceId of Object.keys(logs.devices)) {
-    const totals = logRangeTotals(logs, deviceId, range, weighting);
+  for (const deviceId of Object.keys(index.devices)) {
+    const totals = rangeTotals(index, deviceId, range);
     if (totals != null) out[deviceId] = totals;
   }
   return out;
