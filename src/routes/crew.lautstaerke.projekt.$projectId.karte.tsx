@@ -84,16 +84,14 @@ function ProjectMapView() {
     <>
       {/* The map is shown even with no locations — an empty project's map is the
           fastest way to place the first one, and it frames the festival site by
-          default. It takes the height the header and timeline leave over; minH
-          keeps it usable on a short viewport, where the page scrolls instead. */}
+          default. It takes everything the toolbars leave over, edge to edge and
+          unframed: a border round it would be a line drawn just inside the window's
+          own. minH keeps it usable on a short viewport, where the page scrolls
+          under the toolbars instead. */}
       <Box
         flex="1"
         minH="20rem"
-        mb="4"
-        rounded="md"
         overflow="hidden"
-        borderWidth="1px"
-        borderColor="gray.700"
         // The map fills this box by absolute inset, so it needs a positioned
         // ancestor — and that avoids resolving a percentage height against a
         // flex-derived one, which browsers treat inconsistently.

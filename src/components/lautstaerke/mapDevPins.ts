@@ -1,16 +1,16 @@
 import {useEffect, type MutableRefObject} from 'react';
-import {pinIcon, pinLabel} from './mapPin';
+import {NO_LEVEL_LABEL, pinIcon, pinLabel} from './mapPin';
 import {pulseOverlay} from './mapPulse';
 
 // Dev only: one sample per DisplayedLevel kind, so the pin variants can be
 // compared side by side without waiting for a monitor to go quiet. Note that
-// `live` and `history` deliberately look identical today — seeing that is half
-// the point of having this.
+// `live` and `history` deliberately look identical today, as do `stale` and
+// `none` — seeing that is half the point of having this.
 const SAMPLE_PINS = [
   {kind: 'live', label: '88.4'},
   {kind: 'history', label: '62.5'},
   {kind: 'stale', label: '87.3'},
-  {kind: 'none', label: ''},
+  {kind: 'none', label: NO_LEVEL_LABEL},
 ];
 
 // Renders the samples through exactly the same pinIcon/pinLabel/pulseOverlay the
@@ -29,19 +29,21 @@ export function useSamplePins(
     if (!map) return;
     const maps = window.google.maps;
 
-    const samples = SAMPLE_PINS.map(
-      ({kind, label}) =>
-        new maps.Marker({
-          map,
-          position: {lat: 0, lng: 0},
-          title: `DEV — ${kind}`,
-          label: pinLabel(label, kind === 'stale'),
-          icon: pinIcon(maps, label !== '', kind === 'stale'),
-          // Above the real pins, and never a drag target.
-          zIndex: 1000,
-          clickable: false,
-        }),
-    );
+    const samples = SAMPLE_PINS.map(({kind, label}) => {
+      // Greyed for everything that isn't a reading of now, which is the rule the
+      // real pins go by (see isCurrent).
+      const stale = kind === 'stale' || kind === 'none';
+      return new maps.Marker({
+        map,
+        position: {lat: 0, lng: 0},
+        title: `DEV — ${kind}`,
+        label: pinLabel(label, stale),
+        icon: pinIcon(maps, stale),
+        // Above the real pins, and never a drag target.
+        zIndex: 1000,
+        clickable: false,
+      });
+    });
 
     // A row near the top of whatever is currently in view, evenly spaced.
     const place = () => {

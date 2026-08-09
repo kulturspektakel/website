@@ -11,23 +11,16 @@ import {
 import {useQuery, useQueryClient} from '@tanstack/react-query';
 import {useState} from 'react';
 import {FaChevronRight, FaPlus} from 'react-icons/fa6';
-import {assignableNoiseDevices, listNoiseProjects} from './crew.lautstaerke';
+import {listNoiseProjects} from './crew.lautstaerke';
 import {formatProjectRange} from '../components/lautstaerke/timeframe';
 import {BluetoothMenu} from '../components/lautstaerke/BluetoothMenu';
-import {DeviceRow} from '../components/lautstaerke/DeviceRow';
 import {NoiseProjectDialog} from '../components/lautstaerke/NoiseProjectDialog';
 import {noiseQueryKeys} from '../components/lautstaerke/queries';
 
 type NoiseProjectItem = Awaited<ReturnType<typeof listNoiseProjects>>[number];
 
 export const Route = createFileRoute('/crew/lautstaerke/')({
-  loader: async () => {
-    const [projects, unassigned] = await Promise.all([
-      listNoiseProjects(),
-      assignableNoiseDevices(),
-    ]);
-    return {projects, unassigned};
-  },
+  loader: async () => ({projects: await listNoiseProjects()}),
   component: NoiseProjectList,
 });
 
@@ -42,14 +35,11 @@ function NoiseProjectList() {
     queryFn: () => listNoiseProjects(),
     initialData: initial.projects,
   });
-  const {data: unassigned} = useQuery({
-    queryKey: noiseQueryKeys.assignableDevices,
-    queryFn: () => assignableNoiseDevices(),
-    initialData: initial.unassigned,
-  });
 
   return (
-    <Box display="flex" flexDirection="column" flex="1" minH="0">
+    // The area layout is edge-to-edge now (the project page is a map), so a page
+    // that is a list of cards asks for its own gutter.
+    <Box display="flex" flexDirection="column" flex="1" minH="0" p="4">
       <HStack mb="6" justify="space-between" align="center">
         <Heading as="h1" size="2xl">
           Lautstärke
@@ -79,27 +69,6 @@ function NoiseProjectList() {
             <ProjectRow key={project.id} project={project} />
           ))}
         </VStack>
-      )}
-
-      {/* Devices are reached through a project's locations, so a monitor with no
-          open assignment would otherwise appear nowhere at all — including every
-          monitor before the first project exists. This lists only that
-          otherwise-unreachable subset, and is empty in the steady state. */}
-      {unassigned.length > 0 && (
-        <>
-          <Heading size="md" color="gray.500" mt="8" mb="3">
-            Nicht zugewiesen
-          </Heading>
-          <VStack align="stretch" gap="2" pb="4">
-            {unassigned.map((device) => (
-              <DeviceRow
-                key={device.id}
-                deviceName={device.id}
-                lastSeen={device.lastSeen}
-              />
-            ))}
-          </VStack>
-        </>
       )}
 
       <NoiseProjectDialog

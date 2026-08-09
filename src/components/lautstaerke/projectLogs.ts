@@ -41,17 +41,36 @@ const eqColumn = (logs: ProjectLogs, deviceId: string, weighting: Weighting) =>
 // measured over — which is the caveat that keeps the number honest.
 export type RangeTotals = {db: number} & Coverage;
 
+// A location and the placements whose readings count as its own — the same windows the
+// chart's lines are clipped to (see maskToWindows), in the shape the index needs.
+export type LocationAssignments = {
+  id: string;
+  assignments: readonly {
+    deviceId: string;
+    start: number;
+    end: number | null;
+  }[];
+};
+
 /**
- * The project's per-minute Leq columns as running totals: for every device, the
- * cumulative acoustic energy up to each minute and the cumulative count of minutes it
- * actually reported.
+ * Every *location's* per-minute level as running totals — the cumulative acoustic
+ * energy up to each minute, the minutes that actually had a reading, and the minutes a
+ * monitor was standing there at all.
  *
- * Built once per payload and weighting, because of what asks for a Leq: dragging the
- * timeline re-averages the crop for every device on every animation frame, and over a
- * four-day event that was tens of thousands of 10^(v/10) per frame — for a number the
- * drag moves by a minute at a time. Off a running total, any crop is two subtractions.
+ * A location's level for a minute is the loudest of the monitors assigned to it then.
+ * That is the quantity the card leads with and the one the chart fills the area under
+ * (loudestColumn draws the same envelope), so the number and the picture are one
+ * statement rather than two derivations that can drift. It is per location and not per
+ * device because a monitor's own history spans every stage it visited: averaged whole,
+ * it would print the same figure on the card of every place it ever stood.
  *
- * Typed arrays because they are one entry per minute per device, hold nothing but
+ * Built once per payload, weighting and set of assignments — none of which a timeline
+ * drag changes. That is what keeps the drag cheap: re-averaging the crop for every
+ * location on every animation frame would be tens of thousands of 10^(v/10) over a
+ * four-day event, for a number the drag moves by a minute at a time. Off a running
+ * total, any crop is two subtractions.
+ *
+ * Typed arrays because they are one entry per minute per location, hold nothing but
  * numbers, and exist to be read hot. One entry longer than the payload, so index i is
  * "everything before minute i" and the empty range needs no special case.
  */
@@ -59,66 +78,102 @@ export type RangeTotals = {db: number} & Coverage;
 // nothing re-walks them, and saying so in the type is what keeps that true. Carrying
 // the grid at all — rather than taking it beside the index at every call — is what
 // makes it impossible to read a range out of an index built for another project.
-export type EnergyIndex = {
+export type LocationEnergyIndex = {
   grid: LogGrid;
   minutes: number;
-  devices: Record<string, {energy: Float64Array; measured: Int32Array}>;
+  locations: Record<
+    string,
+    {energy: Float64Array; measured: Int32Array; assigned: Int32Array}
+  >;
 };
 
-export function energyIndex(
+export function locationEnergyIndex(
   logs: ProjectLogs,
   weighting: Weighting,
-): EnergyIndex {
-  const devices: EnergyIndex['devices'] = {};
-  for (const deviceId of Object.keys(logs.devices)) {
-    const values = eqColumn(logs, deviceId, weighting);
-    if (!values) continue;
-    const energy = new Float64Array(logs.minutes + 1);
-    const measured = new Int32Array(logs.minutes + 1);
-    for (let i = 0; i < logs.minutes; i++) {
-      const v = values[i];
-      const usable = usableDb(v);
-      energy[i + 1] = energy[i]! + (usable ? toEnergy(v) : 0);
-      measured[i + 1] = measured[i]! + (usable ? 1 : 0);
+  locations: readonly LocationAssignments[],
+): LocationEnergyIndex {
+  const {minutes} = logs;
+  const out: LocationEnergyIndex['locations'] = {};
+  for (const location of locations) {
+    // The loudest reading at each minute, and whether there was one — `loudest` alone
+    // could not tell a genuine 0 dB from an untouched slot.
+    const loudest = new Float64Array(minutes);
+    const heard = new Uint8Array(minutes);
+    // Whether anyone was standing here, which is what the coverage caveat is measured
+    // against: a location that had no monitor for half the crop should say so, rather
+    // than being charged for minutes nobody was ever going to report.
+    const covered = new Uint8Array(minutes);
+
+    for (const a of location.assignments) {
+      // Half-open and clamped into the payload, like every other range here: the
+      // minute containing `end` belongs to whoever took over.
+      const from = Math.max(0, logMinuteIndex(logs, a.start));
+      const to =
+        a.end == null ? minutes : Math.min(minutes, logMinuteIndex(logs, a.end));
+      const values = eqColumn(logs, a.deviceId, weighting);
+      for (let i = from; i < to; i++) {
+        covered[i] = 1;
+        const v = values?.[i];
+        if (!usableDb(v)) continue;
+        // dB is monotonic in energy, so the loudest in dB is the loudest full stop —
+        // no need to convert before comparing.
+        if (!heard[i] || v > loudest[i]!) {
+          loudest[i] = v;
+          heard[i] = 1;
+        }
+      }
     }
-    devices[deviceId] = {energy, measured};
+
+    const energy = new Float64Array(minutes + 1);
+    const measured = new Int32Array(minutes + 1);
+    const assigned = new Int32Array(minutes + 1);
+    for (let i = 0; i < minutes; i++) {
+      energy[i + 1] = energy[i]! + (heard[i] ? toEnergy(loudest[i]!) : 0);
+      measured[i + 1] = measured[i]! + (heard[i] ? 1 : 0);
+      assigned[i + 1] = assigned[i]! + (covered[i] ? 1 : 0);
+    }
+    out[location.id] = {energy, measured, assigned};
   }
-  return {grid: logs, minutes: logs.minutes, devices};
+  return {grid: logs, minutes, locations: out};
 }
 
 /**
- * The Leq one device measured over a window: the energetic mean of the minutes it
- * actually reported. Nulls are skipped rather than counted as silence, so a monitor
- * that was offline — or that stood somewhere else for part of the window — is
- * averaged over the time it was there, not over the window's whole span. That makes
- * the coverage alongside it part of the answer, not a decoration: without it a
- * monitor present for two minutes of an hour reads exactly like one present all of it.
+ * The Leq a location measured over a window: the energetic mean of its per-minute
+ * loudest, over the minutes that actually had a reading.
+ *
+ * Nulls are skipped rather than counted as silence, so a stretch when the monitor here
+ * was offline is left out of the average rather than dragging it down. That is what
+ * makes the coverage alongside part of the answer and not a decoration — and here it is
+ * measured against the minutes a monitor was *assigned* here, so a place that stood
+ * empty for half the crop says so instead of quietly averaging the half it had.
  *
  * The mean is the one energeticMeanDb defines; it is read off the index rather than
  * computed here so that a crop costs the same whether it spans a minute or a festival.
  */
-export function rangeTotals(
-  index: EnergyIndex,
-  deviceId: string,
+export function locationRangeTotals(
+  index: LocationEnergyIndex,
+  locationId: string,
   range: {start: number; end: number},
 ): RangeTotals | null {
-  const device = index.devices[deviceId];
-  if (!device) return null;
-  // Half-open and clamped into the payload, like every other range in this section:
-  // the minute containing `end` is not included.
+  const location = index.locations[locationId];
+  if (!location) return null;
+  // Half-open and clamped into the payload: the minute containing `end` is not
+  // included.
   const from = Math.max(0, logMinuteIndex(index.grid, range.start));
   const to = Math.min(index.minutes, logMinuteIndex(index.grid, range.end));
   if (from >= to) return null;
   // How many of those minutes the mean actually had to work with, which is also what
   // says whether there is a mean at all.
-  const minutes = device.measured[to]! - device.measured[from]!;
+  const minutes = location.measured[to]! - location.measured[from]!;
   if (minutes === 0) return null;
-  const db = fromEnergy((device.energy[to]! - device.energy[from]!) / minutes);
-  // `expectedMinutes` is the crop clamped to the payload, and the payload already
-  // ends at the last elapsed minute (see projectLogs on the server) — so a crop
-  // reaching into a running festival's future isn't charged for minutes that haven't
-  // happened, exactly as expectedMinutes() does for the device page.
-  return {db, minutes, expectedMinutes: to - from};
+  const db = fromEnergy(
+    (location.energy[to]! - location.energy[from]!) / minutes,
+  );
+  return {
+    db,
+    minutes,
+    expectedMinutes: location.assigned[to]! - location.assigned[from]!,
+  };
 }
 
 /**
@@ -154,19 +209,19 @@ export function levelsByDevice(
 }
 
 /**
- * What each device averaged over the whole crop — the number every row leads with,
+ * What each location averaged over the whole crop — the number every card leads with,
  * whatever the picker is set to. Its own record, and not a mode of the one above,
  * because the two answer different questions and change on different things: this one
  * ignores the playhead, that one ignores the crop.
  */
-export function totalsByDevice(
-  index: EnergyIndex,
+export function totalsByLocation(
+  index: LocationEnergyIndex,
   range: {start: number; end: number},
 ): Record<string, RangeTotals> {
   const out: Record<string, RangeTotals> = {};
-  for (const deviceId of Object.keys(index.devices)) {
-    const totals = rangeTotals(index, deviceId, range);
-    if (totals != null) out[deviceId] = totals;
+  for (const locationId of Object.keys(index.locations)) {
+    const totals = locationRangeTotals(index, locationId, range);
+    if (totals != null) out[locationId] = totals;
   }
   return out;
 }

@@ -241,6 +241,51 @@ export function alignedBuffers(
 }
 
 /**
+ * One device's column, blanked outside the stretches it belongs to — what turns a
+ * monitor's trace into a location's.
+ *
+ * A monitor's stored history covers the whole event wherever it stood, so a location that
+ * had it for one evening must not draw the rest: everything outside its windows becomes
+ * null, which is a break in the line rather than a value of nothing. Live buffers get the
+ * same treatment, so a monitor carried off to another stage stops drawing here the moment
+ * its assignment ended rather than the moment it next goes quiet.
+ *
+ * `xs` is in uPlot's epoch seconds and the windows are in the epoch milliseconds
+ * everything else in this section speaks, so the conversion happens here — once per
+ * window rather than once per sample. `[start, end)`, and an open end runs to the last
+ * sample, matching assignmentsAt: a monitor handed over at 18:00 stops here exactly where
+ * the next one starts, and the two lines meet without overlapping by a point.
+ *
+ * No windows at all is a line with nothing to show rather than a line with everything:
+ * the caller only ever passes an empty list for a device this location never had.
+ */
+export function maskToWindows(
+  xs: readonly number[],
+  column: readonly (number | null)[],
+  windows: readonly {start: number; end: number | null}[],
+): (number | null)[] {
+  const from = windows.map((w) => w.start / 1000);
+  const to = windows.map((w) => (w.end == null ? Infinity : w.end / 1000));
+  // Nulls up front and only the kept samples written back, so the common case — a
+  // monitor that stood here for one evening of a four-day event — writes a few hundred
+  // slots of the thousands it is handed rather than all of them.
+  const out = new Array<number | null>(xs.length).fill(null);
+  // Two flat loops rather than `bounds.some(…)`: the callback would close over `x` and
+  // so be allocated once per sample, and this runs over the whole project's minute grid
+  // for every line of every card on the list — and once a second per card while live.
+  for (let i = 0; i < xs.length; i++) {
+    const x = xs[i]!;
+    for (let w = 0; w < from.length; w++) {
+      if (x >= from[w]! && x < to[w]!) {
+        out[i] = column[i] ?? null;
+        break;
+      }
+    }
+  }
+  return out;
+}
+
+/**
  * The loudest of several aligned columns at each x — a location's envelope, which is
  * what a chart of its monitors fills the area under: the lines all being one colour,
  * two filled areas would stack into a shade that looks like it means something.

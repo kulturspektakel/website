@@ -1,15 +1,19 @@
 // The section's react-query keys, in one place.
 //
-// These were bare string literals spread over three files, and two of them
-// coordinate across files that don't otherwise know about each other: the
-// unassigned-monitor list on the index page and the assign menu on a project
-// page share `assignableDevices` so that assigning a device updates both.
+// These were bare string literals spread over three files, and keeping them here is
+// what lets two components that don't know about each other invalidate the same data.
 //
 // The shapes are deliberately flat rather than nested under a common prefix, so that
 // invalidating one can't evict another (see projectLogs below).
 export const noiseQueryKeys = {
   projects: ['noiseProjects'] as const,
+  // Monitors with no open assignment anywhere — offered by the map's create-location
+  // dialog, which is placing a spot that has nobody standing at it yet.
   assignableDevices: ['assignableNoiseDevices'] as const,
+  // Every monitor, assigned or not — the assignments dialog's picker. Separate from
+  // `assignableDevices` because the two answer different questions, and this one
+  // changes only when a monitor first reports in, so no mutation invalidates it.
+  monitorDevices: ['noiseMonitorDevices'] as const,
   project: (projectId: string) => ['noiseProject', projectId] as const,
   // A project's whole stored history, and deliberately keyed on nothing else. The
   // timeframe isn't in it because the payload covers the entire event and the page

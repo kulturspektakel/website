@@ -1,31 +1,17 @@
-import {
-  Box,
-  HStack,
-  Input,
-  Slider as ChakraSlider,
-  Text,
-  VStack,
-} from '@chakra-ui/react';
+import {Box, Slider as ChakraSlider} from '@chakra-ui/react';
 import {useEffect, useRef, useState} from 'react';
-import {Field} from '../chakra-snippets/field';
-import {
-  clampTo,
-  formatInstant,
-  fromLocalInput,
-  snapToQuarter,
-  toLocalInput,
-} from './timeframe';
+import {clampTo, formatInstant, snapToQuarter} from './timeframe';
 import {
   commitProjectSelection,
   isCropped,
   nudgeSelectionThumb,
   panProjectSelection,
   selectionThumbs,
-  setProjectBound,
   thumbsToSelection,
   type ProjectSelection,
 } from './projectSelection';
 import {instantLabel} from './chartUtils';
+import {CHART_READOUT_STYLE} from './ChartTooltip';
 
 // The slider speaks epoch milliseconds, the same unit as everything it is handed,
 // and steps one of them at a time. It has no unit of its own and so nothing to
@@ -92,6 +78,22 @@ const HANDLE_W = 12;
 const PLAYHEAD_W = 1;
 const PLAYHEAD_HIT = 11;
 
+// Each thumb carries its own readout, hidden until it is being pointed at or moved:
+// three pills standing open over a 44 px strip would cover the very thing they label,
+// and while dragging one the other two are not what anyone is reading. Hoisted, so
+// Emotion hashes it once rather than per frame of a scrub.
+//
+// Four ways to be "now": hovered, dragged by zag (which flags the thumb it is moving),
+// stepped with the keyboard (focus-visible, so the value is readable while arrowing),
+// and moved by one of this file's own gestures, which zag knows nothing about — hence
+// data-moving below.
+const READOUT_ATTR = 'data-readout';
+const READOUT_CSS = {
+  [`& [${READOUT_ATTR}]`]: {display: 'none'},
+  [`&:hover [${READOUT_ATTR}], &[data-dragging] [${READOUT_ATTR}], &[data-focus-visible] [${READOUT_ATTR}], &[data-moving] [${READOUT_ATTR}]`]:
+    {display: 'block'},
+} as const;
+
 /**
  * At most one commit per animation frame, keeping only the newest value.
  *
@@ -134,27 +136,31 @@ function useFrameCommit(onCommit: (selection: ProjectSelection) => void) {
 }
 
 /**
- * Picks a sub-range of a noise project's window, and — unless `live` — a cursor
- * inside it: thumbs are start · cursor · end on one track, or just start · end
- * while live, since live data has no instant to point at.
+ * Picks a sub-range of a noise project's window and a cursor inside it: three thumbs
+ * on one track, start · cursor · end.
+ *
+ * Mounted only while scrubbing. Live mode reads what is arriving now, which is neither
+ * a range nor an instant anyone picked, so the page leaves this out entirely rather
+ * than showing a strip with nothing to point at — hence no `live` anywhere below, and
+ * the `false` handed to the selection helpers, which still describe both layouts.
+ *
+ * The strip is the whole component: it is the page's second toolbar, and what a thumb
+ * stands on is read off the thumb itself (see READOUT_CSS) rather than from a line of
+ * text beside it. The two date fields that used to sit under it are gone — every
+ * instant they set can be dragged, and a toolbar is not where a form belongs.
  *
  * `onCommit` fires as the drag moves rather than on release, so the page follows the
  * pointer; see useFrameCommit for the rate that happens at.
  */
 export function ProjectTimeline({
   window,
-  cappedToNow = false,
-  live,
   selection,
   onCommit,
 }: {
   // The pickable window, which is not the project's own: it stops at the current
-  // time while the event is still running (see visibleProjectWindow).
+  // time while the event is still running (see visibleProjectWindow) — which the
+  // strip shows by simply ending there.
   window: {start: number; end: number};
-  cappedToNow?: boolean;
-  // Live mode reads the current measurements rather than a chosen instant, so the
-  // cursor thumb has nothing to point at and is dropped.
-  live: boolean;
   selection: ProjectSelection;
   onCommit: (selection: ProjectSelection) => void;
 }) {
@@ -168,7 +174,7 @@ export function ProjectTimeline({
   // timeframe lived in the URL, committing per pointer move meant a navigation and a
   // refetch per move, so the drag showed a local preview and committed on release.
   // The whole event is in the browser now, so the views can simply follow.
-  const thumbs = selectionThumbs(selection, live);
+  const thumbs = selectionThumbs(selection, false);
   const {onFrame, onceNow} = useFrameCommit(onCommit);
 
   // Dragging the lit part means one of two things, and which one depends on whether
@@ -189,6 +195,12 @@ export function ProjectTimeline({
   // Only pointer drags consult this; zag's keyboard stepping always stops at the
   // neighbour, so arrow keys on an edge still can't push the playhead past itself.
   const [collision, setCollision] = useState<'none' | 'push'>('none');
+
+  // Which of this file's own gestures is in flight, if any — a pan moves both edges, a
+  // scrub the playhead, and each should show the readout of what it is moving. State
+  // and not the ref below, because it is read while rendering; set twice per gesture,
+  // not per move.
+  const [moving, setMoving] = useState<'pan' | 'scrub' | null>(null);
 
   // The gesture in flight, if any: which pointer owns it, which of the two it is,
   // and — since a pan is relative — where on the strip it was grabbed together with
@@ -250,10 +262,6 @@ export function ProjectTimeline({
 
     event.preventDefault();
     event.stopPropagation();
-    // Nothing to pan and, while live, no playhead to place either — swallowing the
-    // click is the point: the edges stay where they are.
-    if (!cropped && live) return;
-
     // One gesture at a time: a second finger landing on the strip would otherwise
     // start its own and fight the first over the same selection.
     if (gesture.current != null) return;
@@ -265,6 +273,7 @@ export function ProjectTimeline({
       grabbedAt: at,
       from: selection,
     };
+    setMoving(mode);
     // A pan is relative, so it does nothing until the pointer actually travels — and
     // so a stray click on the window writes no selection at all. A scrub jumps the
     // playhead to where it was clicked.
@@ -308,327 +317,229 @@ export function ProjectTimeline({
   // releasing the gate, so the next pointer can start a gesture.
   const endGesture = () => {
     gesture.current = null;
+    setMoving(null);
   };
 
   const onControlPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
     if (ownGesture(event)) endGesture();
   };
 
-  // The readout stands over the playhead rather than off in the corner, so the instant
-  // is read where it is being pointed at. Two things have to hold at once: it is
-  // centred on the line, and it never leaves the strip — so approaching either end it
-  // stops travelling and the playhead carries on without it.
-  //
-  // One clamp does both, and does it in CSS: the bounds are percentages of the row,
-  // which is the strip's own width, so nothing about the container has to be measured
-  // for a resize to be followed. The label's own width is the one thing no percentage
-  // can express, and so the one thing that is measured.
-  const labelRef = useRef<HTMLParagraphElement>(null);
-  const [labelW, setLabelW] = useState(0);
-  useEffect(() => {
-    const el = labelRef.current;
-    if (!el) return;
-    // Delivered once on observe and again on every later change of width — 'Live' and
-    // a timestamp are nothing like the same size — so the clamp is re-derived rather
-    // than pinned to whichever of the two was on screen first. Rounded up, so the
-    // sub-pixel drift a text measurement comes with can't churn state per frame.
-    const ro = new ResizeObserver(() =>
-      setLabelW(Math.ceil(el.getBoundingClientRect().width)),
-    );
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
-  // How far along the axis the playhead stands, 0…1. The axis is inset by a grip width
-  // at each end (see the note above the constants), which is why the offset below is
-  // not simply that fraction of the row. Pinned left while live: there is no playhead
-  // to stand over then, and 'Live' belongs where it has always been.
-  const labelAt = live
-    ? 0
-    : clampTo(
-        (selection.current - window.start) / (sliderMax - window.start),
-        0,
-        1,
-      );
-  const labelLeft = `clamp(0px, ${HANDLE_W}px + ${labelAt} * (100% - ${
-    HANDLE_W * 2
-  }px) - ${labelW / 2}px, 100% - ${labelW}px)`;
+  // Where a thumb stands on the strip, 0…1 — which is also how far its readout is
+  // pulled back over itself (see the pill below).
+  const readoutShift = (value: number) =>
+    clampTo((value - window.start) / (sliderMax - window.start), 0, 1);
 
   // Read the same way the row charts' tooltip reads it, off the same rule and the same
   // span — the crop, which is what those charts are showing. A hover writes both at
   // once, and one of them saying 22:15 while the other says 09.08. 22:15 would read as
   // two different instants.
-  const labelFormat = instantLabel(live, selection.end - selection.start);
+  const labelFormat = instantLabel(false, selection.end - selection.start);
 
   return (
-    <VStack
-      align="stretch"
-      gap="3"
-      p="3"
-      rounded="md"
-      borderWidth="1px"
-      borderColor="gray.700"
+    <ChakraSlider.Root
+      min={window.start}
+      max={sliderMax}
+      step={STEP_MS}
+      value={thumbs}
+      // Straight through as the thumbs move: a value zag hands over is already an
+      // instant, so the thumb stays under the pointer and a thumb that didn't move
+      // comes back untouched.
+      onValueChange={(e) =>
+        onFrame(thumbsToSelection(e.value, false, selection))
+      }
+      // The wall-clock snap lands once, on release. Doing it per move would pull
+      // each value off the grid zag is computing from — the thumb would sit up to
+      // half a step away from the pointer for the whole drag, on a project whose
+      // window doesn't start on a quarter hour.
+      onValueChangeEnd={(e) =>
+        onceNow(
+          commitProjectSelection(
+            thumbsToSelection(e.value, false, selection),
+            selection,
+            window,
+          ),
+        )
+      }
+      getAriaValueText={ariaValueText}
+      thumbCollisionBehavior={collision}
+      // The grip width, held back at each end: it shrinks the control, and so the
+      // axis, leaving the room a grip standing outside the range needs. The track
+      // reaches back over it, so nothing about the strip moves — only the span its
+      // ends can be dragged to.
+      px={`${HANDLE_W}px`}
+      // Every thumb sits at its plain value percentage, which is the coordinate the
+      // range is laid out in too. See the note above the constants for what rests
+      // on that.
+      thumbAlignment="center"
+      aria-label={['Beginn', 'Zeitpunkt', 'Ende']}
     >
-      {/* The cursor has no field of its own, so this is the only place its value is
-          readable. Tabular figures (see crew.lautstaerke) earn their keep twice here:
-          the digits hold still as they change, and the label holds one width — so the
-          measurement behind the clamp survives a whole scrub. */}
-      <Text
-        ref={labelRef}
-        fontWeight="bold"
-        color={live ? 'green.400' : undefined}
-        // Shrink-wrapped rather than stretched to the row, so its width is the text's
-        // and there is something for the offset to be centred on. Offset by `left`
-        // while staying in flow, so it still reserves its own line and the strip
-        // below doesn't climb into it.
-        alignSelf="flex-start"
-        maxW="full"
-        truncate
-        position="relative"
-        // The one thing here that isn't a style prop, and the offset is why: a scrub
-        // gives it a new value every frame, and Chakra serializes a style prop into a
-        // hashed class and inserts a rule for it. That would be a rule per frame,
-        // cached and never freed. An inline style is a single attribute write.
-        style={{left: labelLeft}}
+      <ChakraSlider.Control
+        height={`${STRIP_H}px`}
+        onPointerDownCapture={onControlPointerDownCapture}
+        onPointerMove={onControlPointerMove}
+        onPointerUp={onControlPointerUp}
+        onPointerCancel={onControlPointerUp}
+        // Fires on the ordinary release and whenever the browser takes the capture
+        // away, so it is the one signal a scrub can't end without.
+        onLostPointerCapture={onControlPointerUp}
       >
-        {live ? 'Live' : labelFormat(selection.current)}
-      </Text>
-
-      <ChakraSlider.Root
-        min={window.start}
-        max={sliderMax}
-        step={STEP_MS}
-        value={thumbs}
-        // Straight through as the thumbs move: a value zag hands over is already an
-        // instant, so the thumb stays under the pointer and a thumb that didn't move
-        // comes back untouched.
-        onValueChange={(e) =>
-          onFrame(thumbsToSelection(e.value, live, selection))
-        }
-        // The wall-clock snap lands once, on release. Doing it per move would pull
-        // each value off the grid zag is computing from — the thumb would sit up to
-        // half a step away from the pointer for the whole drag, on a project whose
-        // window doesn't start on a quarter hour.
-        onValueChangeEnd={(e) =>
-          onceNow(
-            commitProjectSelection(
-              thumbsToSelection(e.value, live, selection),
-              selection,
-              window,
-            ),
-          )
-        }
-        getAriaValueText={ariaValueText}
-        thumbCollisionBehavior={collision}
-        // The grip width, held back at each end: it shrinks the control, and so the
-        // axis, leaving the room a grip standing outside the range needs. The track
-        // reaches back over it, so nothing about the strip moves — only the span its
-        // ends can be dragged to.
-        px={`${HANDLE_W}px`}
-        // Every thumb sits at its plain value percentage, which is the coordinate the
-        // range is laid out in too. See the note above the constants for what rests
-        // on that.
-        thumbAlignment="center"
-        aria-label={live ? ['Beginn', 'Ende'] : ['Beginn', 'Zeitpunkt', 'Ende']}
-      >
-        <ChakraSlider.Control
-          height={`${STRIP_H}px`}
-          onPointerDownCapture={onControlPointerDownCapture}
-          onPointerMove={onControlPointerMove}
-          onPointerUp={onControlPointerUp}
-          onPointerCancel={onControlPointerUp}
-          // Fires on the ordinary release and whenever the browser takes the capture
-          // away, so it is the one signal a scrub can't end without.
-          onLostPointerCapture={onControlPointerUp}
-        >
-          {/* Outside the selection: the span you could pick, dimmed. Back out over
+        {/* Outside the selection: the span you could pick, dimmed. Back out over
               the root's padding, so the strip is the whole window even though the
               axis inside it stops a grip short of either end. */}
-          <ChakraSlider.Track
-            h="full"
-            rounded="md"
-            bg="gray.950"
-            mx={`-${HANDLE_W}px`}
-          >
-            {/* Inside it: the window. Range spans first→last thumb, which is
+        <ChakraSlider.Track
+          h="full"
+          rounded="md"
+          bg="gray.950"
+          mx={`-${HANDLE_W}px`}
+        >
+          {/* Inside it: the window. Range spans first→last thumb, which is
                 start→end whether or not the playhead sits between them. Half a pixel
                 wider at each end than those two thumbs, because a thumb marks a
                 column and the range has to cover the whole of the two it ends on —
                 otherwise the playhead standing on one would half hang out of the lit
                 part, and the grip that abuts it would clip that half. The cursor
                 names which of the two drags this is: a cropped window is grabbable,
-                an uncropped one is clickable to place the playhead — and while live
-                with nothing cropped, neither. */}
-            <ChakraSlider.Range
-              bg="gray.700"
-              mx="-0.5px"
-              cursor={cropped ? 'grab' : live ? undefined : 'pointer'}
-              _active={cropped ? {cursor: 'grabbing'} : undefined}
-            />
-          </ChakraSlider.Track>
+                an uncropped one is clickable to place the playhead. */}
+          <ChakraSlider.Range
+            bg="gray.700"
+            mx="-0.5px"
+            cursor={cropped ? 'grab' : 'pointer'}
+            _active={cropped ? {cursor: 'grabbing'} : undefined}
+          />
+        </ChakraSlider.Track>
 
-          {thumbs.map((_, i) => {
-            const playhead = !live && i === 1;
-            const start = i === 0;
-            return (
-              <ChakraSlider.Thumb
-                key={i}
-                index={i}
-                // Neutralize the default round knob; these are grips and a
-                // playhead, drawn by the children below.
-                bg="transparent"
-                borderWidth="0"
-                boxShadow="none"
-                rounded="none"
-                // The column the value occupies. The playhead is the only one drawn
-                // inside its own box and so the only one that needs it widened, to
-                // something a finger can find; a grip hangs off the side of its box
-                // and brings its own hit area with it.
-                width={`${playhead ? PLAYHEAD_HIT : PLAYHEAD_W}px`}
-                height={`${STRIP_H}px`}
-                // Above the playhead's hit area, which is wider than the line it
-                // draws and overlaps a grip whenever it is parked against one. The
-                // grip has to win that: the playhead can also be placed by clicking
-                // the window, while a grip is the only way to move an edge.
-                zIndex={playhead ? undefined : '3'}
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                cursor={playhead ? 'grab' : 'ew-resize'}
-                _active={playhead ? {cursor: 'grabbing'} : undefined}
-                // Before zag reads it: a discrete event's state update is flushed
-                // before the browser dispatches the first move of the drag, and the
-                // behaviour is consulted per move rather than once at the start.
-                // Composed with zag's own handler, not replacing it — Ark merges.
-                onPointerDownCapture={() =>
-                  setCollision(playhead ? 'none' : 'push')
-                }
-                // Capture, for the same reason: zag's own key handler sits on this
-                // element and bails on an event that has already been defaulted, so
-                // preventing it here is what replaces its one-millisecond stride. Keys
-                // it isn't given — Home, End — still reach it untouched.
-                onKeyDownCapture={(event) => {
-                  const steps = KEY_STEPS[event.key];
-                  if (steps == null) return;
-                  event.preventDefault();
-                  onceNow(
-                    nudgeSelectionThumb(
-                      selection,
-                      {index: i, steps, live},
-                      window,
-                    ),
-                  );
+        {thumbs.map((value, i) => {
+          const playhead = i === 1;
+          const start = i === 0;
+          return (
+            <ChakraSlider.Thumb
+              key={i}
+              index={i}
+              // Set while one of this file's own gestures is moving *this* thumb: a
+              // pan carries both edges, a scrub the playhead. zag flags the thumb it
+              // is dragging itself, but it is not involved in either of those.
+              data-moving={
+                (playhead ? moving === 'scrub' : moving === 'pan') || undefined
+              }
+              css={READOUT_CSS}
+              // Neutralize the default round knob; these are grips and a
+              // playhead, drawn by the children below.
+              bg="transparent"
+              borderWidth="0"
+              boxShadow="none"
+              rounded="none"
+              // The column the value occupies. The playhead is the only one drawn
+              // inside its own box and so the only one that needs it widened, to
+              // something a finger can find; a grip hangs off the side of its box
+              // and brings its own hit area with it.
+              width={`${playhead ? PLAYHEAD_HIT : PLAYHEAD_W}px`}
+              height={`${STRIP_H}px`}
+              // Above the playhead's hit area, which is wider than the line it
+              // draws and overlaps a grip whenever it is parked against one. The
+              // grip has to win that: the playhead can also be placed by clicking
+              // the window, while a grip is the only way to move an edge.
+              zIndex={playhead ? undefined : '3'}
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              cursor={playhead ? 'grab' : 'ew-resize'}
+              _active={playhead ? {cursor: 'grabbing'} : undefined}
+              // Before zag reads it: a discrete event's state update is flushed
+              // before the browser dispatches the first move of the drag, and the
+              // behaviour is consulted per move rather than once at the start.
+              // Composed with zag's own handler, not replacing it — Ark merges.
+              onPointerDownCapture={() =>
+                setCollision(playhead ? 'none' : 'push')
+              }
+              // Capture, for the same reason: zag's own key handler sits on this
+              // element and bails on an event that has already been defaulted, so
+              // preventing it here is what replaces its one-millisecond stride. Keys
+              // it isn't given — Home, End — still reach it untouched.
+              onKeyDownCapture={(event) => {
+                const steps = KEY_STEPS[event.key];
+                if (steps == null) return;
+                event.preventDefault();
+                onceNow(
+                  nudgeSelectionThumb(
+                    selection,
+                    {index: i, steps, live: false},
+                    window,
+                  ),
+                );
+              }}
+              // The mark itself takes the focus ring's colour — everything drawn in
+              // this box except the readout, which is a pill of its own and would
+              // otherwise turn blue along with the thing it labels.
+              _focusVisible={{
+                outline: 'none',
+                [`& > *:not([${READOUT_ATTR}])`]: {bg: 'blue.400'},
+              }}
+            >
+              <ChakraSlider.HiddenInput />
+              {/* The instant this thumb stands on, over the strip and absolutely
+                  positioned on the thumb's own column, so it follows the value without
+                  anything being measured.
+                  Its left edge starts at the thumb and it is then pulled back by its
+                  own width in proportion to how far along the strip that thumb is:
+                  centred in the middle (-50 %), flush right of the first thumb at the
+                  far left (0 %), flush left of the last at the far right (-100 %). That
+                  one expression is the clamping — a pill narrower than the strip cannot
+                  leave it at any position, and it never stops pointing at its thumb the
+                  way a hard clamp would. Inline, because it changes per frame of a drag
+                  and a style prop would have Emotion hash a class for each one. */}
+              <Box
+                {...{[READOUT_ATTR]: ''}}
+                {...CHART_READOUT_STYLE}
+                position="absolute"
+                bottom="100%"
+                mb="1"
+                left="50%"
+                pointerEvents="none"
+                zIndex="4"
+                style={{
+                  transform: `translateX(-${readoutShift(value) * 100}%)`,
                 }}
-                _focusVisible={{outline: 'none', '& > *': {bg: 'blue.400'}}}
               >
-                <ChakraSlider.HiddenInput />
-                {playhead ? (
-                  // A hairline across the whole strip, so it reads as a position in
-                  // time rather than a draggable edge. The same width and the same
-                  // near-white as the one the row charts draw (see LevelTrace's
-                  // CHART_CSS): one instant, standing in several places at once, and
-                  // it should be recognisably the same mark in each of them. It is
-                  // the grips' yellow that tells it apart from an edge here.
-                  <Box w={`${PLAYHEAD_W}px`} h="full" bg="gray.50" />
-                ) : (
-                  // A trim bracket, the full height of the strip, so the window's
-                  // edge is something you can obviously take hold of. Alongside its
-                  // thumb rather than around it: the range starts at the column the
-                  // thumb marks, so this ends where the range begins, and the two
-                  // meet without either covering the other. Rounded on the outer
-                  // side only, for the same reason — and to the strip's own radius,
-                  // so an uncropped window reads as one bar with its ends held.
-                  <Box
-                    position="absolute"
-                    top="0"
-                    {...(start
-                      ? {right: '100%', roundedLeft: 'md'}
-                      : {left: '100%', roundedRight: 'md'})}
-                    w={`${HANDLE_W}px`}
-                    h="full"
-                    bg="yellow.400"
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
-                  >
-                    {/* Its own hue rather than a neutral, so the notch stays legible
+                {labelFormat(value)}
+              </Box>
+              {playhead ? (
+                // A hairline across the whole strip, so it reads as a position in
+                // time rather than a draggable edge. The same width and the same
+                // near-white as the one the row charts draw (see LevelTrace's
+                // CHART_CSS): one instant, standing in several places at once, and
+                // it should be recognisably the same mark in each of them. It is
+                // the grips' yellow that tells it apart from an edge here.
+                <Box w={`${PLAYHEAD_W}px`} h="full" bg="gray.50" />
+              ) : (
+                // A trim bracket, the full height of the strip, so the window's
+                // edge is something you can obviously take hold of. Alongside its
+                // thumb rather than around it: the range starts at the column the
+                // thumb marks, so this ends where the range begins, and the two
+                // meet without either covering the other. Rounded on the outer
+                // side only, for the same reason — and to the strip's own radius,
+                // so an uncropped window reads as one bar with its ends held.
+                <Box
+                  position="absolute"
+                  top="0"
+                  {...(start
+                    ? {right: '100%', roundedLeft: 'md'}
+                    : {left: '100%', roundedRight: 'md'})}
+                  w={`${HANDLE_W}px`}
+                  h="full"
+                  bg="yellow.400"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                >
+                  {/* Its own hue rather than a neutral, so the notch stays legible
                         on the yellow at the same contrast the grey pair had. */}
-                    <Box w="2px" h="14px" rounded="full" bg="yellow.800" />
-                  </Box>
-                )}
-              </ChakraSlider.Thumb>
-            );
-          })}
-        </ChakraSlider.Control>
-      </ChakraSlider.Root>
-
-      <HStack gap="3" align="flex-start">
-        <BoundField
-          label="Beginn"
-          value={selection.start}
-          window={window}
-          onCommit={(ms) =>
-            onCommit(setProjectBound('start', ms, selection, window))
-          }
-        />
-        <BoundField
-          label="Ende"
-          value={selection.end}
-          window={window}
-          onCommit={(ms) =>
-            onCommit(setProjectBound('end', ms, selection, window))
-          }
-        />
-      </HStack>
-
-      {cappedToNow && (
-        <Text fontSize="xs" color="gray.500">
-          Das Projekt läuft noch, daher endet die Auswahl bei jetzt.
-        </Text>
-      )}
-    </VStack>
-  );
-}
-
-// One end of the range, typed rather than dragged. It keeps its own draft string
-// because a datetime-local reports '' for a half-filled value: a field driven
-// straight off the committed selection would snap back to the old time between
-// keystrokes. Only a complete value commits, and blurring discards anything that
-// didn't parse.
-function BoundField({
-  label,
-  value,
-  window,
-  onCommit,
-}: {
-  label: string;
-  value: number;
-  window: {start: number; end: number};
-  onCommit: (ms: number) => void;
-}) {
-  const [draft, setDraft] = useState(() => toLocalInput(value));
-  useEffect(() => setDraft(toLocalInput(value)), [value]);
-
-  return (
-    <Field label={label}>
-      <Input
-        type="datetime-local"
-        size="sm"
-        // Native bounds, so the picker itself won't offer times outside the
-        // project; setProjectBound clamps anyway for typed input.
-        min={toLocalInput(window.start)}
-        max={toLocalInput(window.end)}
-        value={draft}
-        onChange={(e) => {
-          setDraft(e.target.value);
-          const parsed = fromLocalInput(e.target.value);
-          if (parsed) onCommit(parsed.getTime());
-        }}
-        // Never leave a value on screen that isn't the one in effect: if the draft
-        // parsed it was committed and `value` already matches, and if it didn't
-        // this puts the real time back.
-        onBlur={() => setDraft(toLocalInput(value))}
-      />
-    </Field>
+                  <Box w="2px" h="14px" rounded="full" bg="yellow.800" />
+                </Box>
+              )}
+            </ChakraSlider.Thumb>
+          );
+        })}
+      </ChakraSlider.Control>
+    </ChakraSlider.Root>
   );
 }

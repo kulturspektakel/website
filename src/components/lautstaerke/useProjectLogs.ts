@@ -2,10 +2,11 @@ import {useQuery} from '@tanstack/react-query';
 import {useMemo} from 'react';
 import {noiseProjectLogs} from '../../routes/crew.lautstaerke';
 import {
-  energyIndex,
   levelsByDevice,
+  locationEnergyIndex,
   logSeries,
-  totalsByDevice,
+  totalsByLocation,
+  type LocationAssignments,
   type RangeTotals,
 } from './projectLogs';
 import {noiseQueryKeys} from './queries';
@@ -31,8 +32,8 @@ const LOGS_CACHE = {
  * Nothing is fetched while live mode is on — `enabled` is doing exactly what it is
  * for, and it also means SSR never touches this. The four derived shapes are memoized
  * apart because they change on very different things: the levels follow the playhead's
- * *minute* and both dropdowns, the running totals only the payload and the weighting,
- * the crop's Leq those totals and the crop, the traces only the payload and the
+ * *minute* and both dropdowns, the running totals the payload, the weighting and the
+ * assignments, the crop's Leq those totals and the crop, the traces only the payload and the
  * dropdowns. So dragging the timeline leaves the levels and the traces alone, and
  * scrubbing recomputes one small record — and only when it crosses into a new minute.
  */
@@ -42,15 +43,20 @@ export function useProjectLogs({
   metric,
   weighting,
   selection,
+  locations,
 }: {
   projectId: string;
   live: boolean;
   metric: LevelMetric;
   weighting: Weighting;
   selection: ProjectSelection;
+  // Which placements count as each location's, for the crop Leq below. The pins and
+  // the charts resolve their own; this is the one number that has to be summed over
+  // the whole crop rather than read at an instant.
+  locations: readonly LocationAssignments[];
 }): {
   levels?: Record<string, number>;
-  totals?: Record<string, RangeTotals>;
+  locationTotals?: Record<string, RangeTotals>;
   traces?: Record<string, DeviceSeries>;
   isFetching: boolean;
 } {
@@ -77,19 +83,19 @@ export function useProjectLogs({
 
   // The running totals every crop's Leq is read off, which depend on neither end of
   // it: dragging the timeline is the gesture that asks for those Leqs, once a frame
-  // for every device, and this is what keeps that from re-walking the whole event each
-  // time. See energyIndex.
+  // for every location, and this is what keeps that from re-walking the whole event
+  // each time. Not keyed on the crop, and it must not be — see locationEnergyIndex.
   const energies = useMemo(
-    () => logs && energyIndex(logs, weighting),
-    [logs, weighting],
+    () => logs && locationEnergyIndex(logs, weighting, locations),
+    [logs, weighting, locations],
   );
 
   // And the reverse of the levels: an energetic mean over every minute of the crop for
-  // every device, which the playhead cannot change. Keying it on the playhead too would
-  // redo all of that on every frame of a scrub for a number that could not have moved —
-  // which is why this is its own memo rather than a branch of the one above.
-  const totals = useMemo(
-    () => energies && totalsByDevice(energies, {start, end}),
+  // every location, which the playhead cannot change. Keying it on the playhead too
+  // would redo all of that on every frame of a scrub for a number that could not have
+  // moved — which is why this is its own memo rather than a branch of the one above.
+  const locationTotals = useMemo(
+    () => energies && totalsByLocation(energies, {start, end}),
     [energies, start, end],
   );
 
@@ -102,5 +108,5 @@ export function useProjectLogs({
     [logs, metric, weighting],
   );
 
-  return {levels, totals, traces, isFetching};
+  return {levels, locationTotals, traces, isFetching};
 }

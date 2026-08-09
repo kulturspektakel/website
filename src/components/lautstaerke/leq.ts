@@ -82,7 +82,7 @@ const coveredPercent = ({minutes, expectedMinutes}: Coverage): number =>
 // left to average, so callers render a dash instead of -Infinity.
 //
 // The three primitives are exported because the project page does not use the loop:
-// it sums the same energies once into a running total (see energyIndex) so that a
+// it sums the same energies once into a running total (see locationEnergyIndex) so that a
 // timeline drag costs a subtraction rather than a pass over the crop. Two spellings of
 // "what a Leq is" would be one too many, so both read them from here.
 

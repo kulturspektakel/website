@@ -69,7 +69,9 @@ function DeviceLayout() {
     <DeviceViewContext.Provider
       value={{weighting, toggleWeighting, peaks, togglePeaks}}
     >
-      <Box display="flex" flexDirection="column" flex="1" minH="0">
+      {/* Its own gutter: the area layout stopped providing one when the project
+          page went edge-to-edge. */}
+      <Box display="flex" flexDirection="column" flex="1" minH="0" p="4">
         <DeviceHeader device={device} location={location} />
         <Outlet />
       </Box>

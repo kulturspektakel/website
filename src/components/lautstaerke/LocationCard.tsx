@@ -1,75 +1,76 @@
-import {Box, Collapsible, HStack, Text} from '@chakra-ui/react';
-import {memo} from 'react';
-import {LuChevronDown} from 'react-icons/lu';
-import {DeviceIdentity, DeviceLevels, DeviceRowFrame} from './DeviceRow';
-import {LevelTrace} from './LevelTrace';
-import {AssignDeviceMenu, LocationDeviceMenu} from './AssignDeviceMenu';
+import {Box, HStack, IconButton, Text} from '@chakra-ui/react';
+import {memo, useState} from 'react';
+import {LuEllipsisVertical} from 'react-icons/lu';
 import {
+  MenuContent,
+  MenuItem,
+  MenuRoot,
+  MenuTrigger,
+} from '../chakra-snippets/menu';
+import {DeviceIdentity, LocationReadings} from './LocationReadings';
+import {LocationChart} from './LocationChart';
+import {LocationAssignmentsDialog} from './LocationAssignmentsDialog';
+import {
+  locationLines,
   usePlayheadLevels,
   useProjectView,
   type NoiseAssignment,
   type NoiseLocationItem,
 } from './projectView';
-import type {LevelMetric} from './level';
-import type {Weighting} from './noise';
-import type {RangeTotals} from './projectLogs';
 
-// One place on the list, and one row for it however many monitors stand there. The
+// One place on the list, and one row for it however many monitors have stood there. The
 // card *is* that row: the monitors' names take the line the coordinates used to have,
-// the readings sit beside the menu — where they stay legible with the card collapsed —
-// and the trace below plots a line each.
+// the readings sit beside the menu, at the top where they are read first,
+// and the chart below is the location's, over the whole crop.
 //
 // A row per monitor is what this replaced. It said the same thing twice for the
 // ordinary location, which has one, and for the rare one with two it stacked two
 // charts that had to be read against each other by eye rather than drawn on one pair
 // of axes.
 //
+// What the card *shows* never comes and goes with the playhead — the same monitors are
+// named, the same two numbers are printed and the same ⋮ is there to press however far
+// back you have scrubbed. A card whose contents appeared and vanished as the pointer
+// travelled would reflow the list under the cursor.
+//
+// What those numbers *mean* does follow it, and that is the split worth knowing: the
+// names and the chart are the place's whole history, while the readings are the place at
+// one instant — the loudest of the monitors actually standing here then (see
+// LocationReadings). So the header can name a monitor that has nothing to say right now,
+// which is the honest answer rather than a row that disappears.
+//
 // Everything page-wide comes from the context rather than down through the list: this
 // renders inside the very provider ProjectListView read from, and threading the
 // display settings would mean a third place to edit for every one added.
 //
-// Memoized, and both props are pinned by the layout for it (see ProjectViewCtx.
+// Memoized, and its one prop is pinned by the layout for it (see ProjectViewCtx.
 // locations) — so a hover over any trace on the page, which moves the playhead on every
-// animation frame, doesn't re-render this card's disclosure, its ⋮ menu and its two
-// monitors' names for it. What does follow the playhead is the two leaves below it, and
-// they read it themselves.
+// animation frame, doesn't re-render this card's ⋮ menu and its two monitors' names
+// for it. What does follow the playhead is the leaf below, and it reads
+// it itself.
 export const LocationCard = memo(function LocationCard({
   location,
   assignments,
 }: {
   location: NoiseLocationItem;
-  // The monitors that stood here at the instant being viewed — which while live means
-  // the ones standing here now, and while scrubbing may be ones that have since moved
-  // on. Resolved by the layout, which does it for every location at once.
+  // The monitors standing here at the instant being viewed, resolved by the layout for
+  // the whole page. Only the numbers use them: the names and the chart are the place's
+  // whole history, and are not allowed to come and go as the pointer travels.
   assignments: NoiseAssignment[];
 }) {
-  const {
-    live,
-    metric,
-    weighting,
-    range,
-    totals,
-    traces,
-    refresh,
-    scrubTo,
-    cropTo,
-  } = useProjectView();
-  const devices = assignments.map((a) => a.deviceId);
-  const hasDevices = assignments.length > 0;
+  const [editing, setEditing] = useState(false);
+
+  // Every monitor this location has ever had, once each and in the order it first had
+  // them. Grouped once here and handed to both the names and the chart, so the two are
+  // the same set in the same order by construction rather than by two calls agreeing.
+  const lines = locationLines(location.assignments);
 
   return (
-    // Chakra's own disclosure rather than a `useState` and a conditional: it owns the
-    // trigger/content wiring (aria-expanded, aria-controls, the ids) and the height
-    // transition, none of which is worth hand-rolling per card.
-    //
-    // unmountOnExit, because the content is a chart: left mounted it would keep a
-    // uPlot instance alive and reposition a playhead on every frame anyone hovers a
-    // trace anywhere on the page, so a closed card would cost as much as an open one.
-    // Rebuilding on expand is cheap at this size. Open to begin with — a list you have
-    // to unfold before it says anything is a worse first paint than a long one.
-    <Collapsible.Root
-      defaultOpen
-      unmountOnExit
+    // A card is either on the list or not on it at all — which of them are is picked in
+    // the toolbar at the foot of the view (see LocationPicker), not by folding them one
+    // at a time. So there is no disclosure here any more: a card that is here is open,
+    // and a chart nobody wants is one that was never mounted.
+    <Box
       display="flex"
       flexDirection="column"
       gap="2"
@@ -77,159 +78,112 @@ export const LocationCard = memo(function LocationCard({
       rounded="md"
       borderWidth="1px"
       borderColor="gray.700"
+      // The cards share the page equally, which the grid around them does by making
+      // every row the same height (see the list view) — including the width, at two
+      // columns. All this has to do is not insist on being taller than its share; the
+      // chart inside has the floor that stops the rows collapsing into slivers and
+      // starts the list scrolling instead.
+      minH="0"
     >
-      {/* Centred when the right-hand side has to line up against a two-line title
-          block, top-aligned when there is only the button to place. */}
-      <HStack
-        justify="space-between"
-        align={hasDevices ? 'center' : 'start'}
-        gap="3"
-      >
-        {/* The whole title block is the trigger rather than a chevron button beside
-            it: at phone width a lone icon is a target you miss, and there is nothing
-            else in the block that wants a click of its own. The menu stays outside it,
-            so it keeps its own click and the two don't nest.
-            Laid out on the trigger itself rather than `asChild` onto an HStack, which
-            would merge it onto a div and quietly drop the button — its focus, its
-            Enter and Space. */}
-        <Collapsible.Trigger
-          flex="1"
-          minW="0"
-          display="flex"
-          alignItems="center"
-          gap="2"
-          textAlign="left"
-          cursor="pointer"
-        >
-          <Collapsible.Indicator
-            color="gray.400"
-            flexShrink="0"
-            display="flex"
-            // Pointing right when closed, down when open — one icon rotated, which
-            // is what makes it animate rather than swap.
-            rotate={{base: '-90deg', _open: '0deg'}}
-            transition="rotate 0.2s"
-          >
-            <LuChevronDown />
-          </Collapsible.Indicator>
+      <HStack justify="space-between" align="center" gap="3">
+        {/* Nothing clickable in here any more: the name and its monitors are what the
+            card is about, and the two things you can do to it — take it off the list,
+            edit it — are the toolbar below and the ⋮ beside it. */}
+        <HStack flex="1" minW="0" gap="2">
           <Box minW="0" flex="1">
             <Text fontWeight="bold" truncate>
               {location.locationName}
             </Text>
-            {/* Which monitors stand here beats where here is: the coordinates were
-                placed on the map and never change. Boxes and text, nothing focusable,
-                so the whole block stays one trigger. Wrapped rather than truncated as
-                a set — with two monitors the second name is not a detail. */}
-            {hasDevices ? (
-              <HStack gap="3" wrap="wrap" minW="0">
-                {devices.map((deviceId) => (
-                  <DeviceIdentity key={deviceId} deviceName={deviceId} />
-                ))}
-              </HStack>
-            ) : (
-              <Text fontSize="xs" color="gray.500">
-                {location.latitude.toFixed(5)}, {location.longitude.toFixed(5)}
-              </Text>
-            )}
+            {/* Which monitors have stood here, always — the coordinates this line used
+                to fall back to were placed on the map, never change, and are not
+                something anyone reads a noise list for. Wrapped rather than truncated
+                as a set: with two monitors the second name is not a detail. */}
+            <HStack gap="3" wrap="wrap" minW="0">
+              {lines.map(({deviceId}) => (
+                <DeviceIdentity key={deviceId} deviceName={deviceId} />
+              ))}
+            </HStack>
           </Box>
-        </Collapsible.Trigger>
-        {/* Assigning is a now-action, so it stays put however far back you scrub. The
-            labelled button only where the card would otherwise hold nothing at all —
-            everywhere else the ⋮ carries it, alongside the readings and removing what
-            is already here. */}
-        {hasDevices ? (
-          <>
-            <LocationLevels
-              assignments={assignments}
-              live={live}
-              metric={metric}
-              weighting={weighting}
-              totals={totals}
-            />
-            <LocationDeviceMenu
-              locationId={location.id}
-              // Only open assignments can be ended; ones you scrubbed back to are
-              // history, and offering to end them again would be nonsense.
-              assignments={assignments.filter((a) => a.end == null)}
-              onChanged={refresh}
-            />
-          </>
-        ) : (
-          <AssignDeviceMenu locationId={location.id} onAssigned={refresh} />
-        )}
+        </HStack>
+        <LocationLevels
+          locationId={location.id}
+          assignments={assignments}
+          empty={lines.length === 0}
+        />
+        {/* Always here, and always the ⋮: a location with no monitor is exactly the one
+            you came to the card to assign one to, and a labelled button that appeared
+            only there would move the whole right-hand side of the row the moment it
+            got one.
+            A menu even at one entry — everything else this card will grow (renaming
+            the place, moving its pin, deleting it) belongs behind the same ⋮, and a
+            button that opened a dialog directly would have to become one anyway. */}
+        <MenuRoot>
+          <MenuTrigger asChild>
+            <IconButton
+              aria-label="Standort bearbeiten"
+              rounded="full"
+              size="sm"
+              flexShrink="0"
+              variant="ghost"
+            >
+              <LuEllipsisVertical />
+            </IconButton>
+          </MenuTrigger>
+          <MenuContent>
+            <MenuItem value="devices" onClick={() => setEditing(true)}>
+              Geräte verwalten
+            </MenuItem>
+          </MenuContent>
+        </MenuRoot>
       </HStack>
 
-      <Collapsible.Content>
-        {!hasDevices ? (
-          <Text fontSize="sm" color="gray.500">
-            {live
-              ? 'Kein Gerät zugewiesen.'
-              : 'Zu diesem Zeitpunkt kein Gerät.'}
-          </Text>
-        ) : (
-          // Everything else the row carries is in the header, so what is left inside
-          // is the trace — in a box of its own, so the levels are framed rather than
-          // bleeding into the card's own padding.
-          <DeviceRowFrame>
-            <LevelTrace
-              devices={devices}
-              live={live}
-              // The header's window — the same one the traces were built for, and the
-              // same one the coloured number above is read in.
-              metric={metric}
-              weighting={weighting}
-              range={range}
-              // Hovering any trace moves the page's playhead, which is what puts the
-              // line in the same place on every other card and on the timeline.
-              // Withheld while live for the same reason there is no line then: there
-              // is nothing for it to move.
-              onScrub={live ? undefined : scrubTo}
-              // `i`/`o` over the trace, or a drag across it, crop the page's timeframe
-              // to what was pointed at. Withheld while live for the same reason as the
-              // playhead: the window follows the clock then, and a crop inside it
-              // would be overwritten a second later.
-              onCrop={live ? undefined : cropTo}
-              series={traces}
-            />
-          </DeviceRowFrame>
-        )}
-      </Collapsible.Content>
-    </Collapsible.Root>
+      <LocationAssignmentsDialog
+        open={editing}
+        onClose={() => setEditing(false)}
+        location={location}
+      />
+
+      {/* Everything else the card carries is in the header, so what is left inside is
+          the chart — and it is here whether or not anything is standing at this
+          location, because it is a chart of the place rather than of its monitors. */}
+      {/* The card's one growing part, so the height it was given lands on the chart
+          rather than as a gap under it. */}
+      <LocationChart lines={lines} />
+    </Box>
   );
 });
 
-// The readings beside a location's name, which are the one thing in the card's header
-// that follows the playhead.
+// The readings beside a location's name — the place's Leq over the crop, and what the
+// loudest monitor standing here reads at the playhead.
 //
 // Its own component so that it, and not the card around it, is what re-renders as the
-// pointer travels over a trace.
-//
-// DeviceLevels itself is left alone deliberately, and not because it also serves a page
-// with no playhead: it takes a resolved number per monitor, and reading the playhead
-// there would mean handing a leaf the whole page's lookup table to pick its own out of.
-// Resolving that table into one reading per monitor is this component's entire job.
+// pointer travels over a trace: the second, tagged number it prints is the instant's.
+// Both halves of the page's state are read here rather than passed down for the same
+// reason — the card holds still through a crop drag except for these numbers, so
+// subscribing the leaf and not its parent keeps a drag off every card's header and ⋮. Same arrangement LocationChart uses, and why both take only what is theirs.
 function LocationLevels({
+  locationId,
   assignments,
-  live,
-  metric,
-  weighting,
-  totals,
+  empty,
 }: {
+  locationId: string;
+  // Resolved at the playhead by the layout — the monitors whose readings are this
+  // location's at the instant being viewed.
   assignments: NoiseAssignment[];
-  live: boolean;
-  metric: LevelMetric;
-  weighting: Weighting;
-  totals?: Record<string, RangeTotals>;
+  // Whether the place has never had a monitor at all, which is the one case with
+  // nothing to print. Not `assignments.length`: a location between two placements has
+  // no monitor *now* and still has a crop Leq to show.
+  empty: boolean;
 }) {
+  const {live, metric, weighting, locationTotals} = useProjectView();
   const levels = usePlayheadLevels();
+  if (empty) return null;
+
   return (
-    <DeviceLevels
-      devices={assignments.map((a) => ({
-        deviceName: a.deviceId,
-        lastSeen: a.lastSeen,
-        historyDb: levels?.[a.deviceId],
-        total: totals?.[a.deviceId],
-      }))}
+    <LocationReadings
+      assignments={assignments}
+      total={locationTotals?.[locationId]}
+      levels={levels}
       live={live}
       metric={metric}
       weighting={weighting}

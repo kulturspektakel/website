@@ -1,5 +1,5 @@
-import {useCallback, useEffect, useRef, useState} from 'react';
-import {Box, Text} from '@chakra-ui/react';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {Box, HStack, Text} from '@chakra-ui/react';
 import uPlot from 'uplot';
 import {subscribeToClock, useNoiseBuffers} from './context';
 import {
@@ -14,13 +14,15 @@ import {
   alignedSeries,
   bufferColumn,
   loudestColumn,
+  maskToWindows,
   seriesFor,
 } from './series';
-import type {LevelMetric} from './level';
+import {formatDb, metricTag, weightingUnit, type LevelMetric} from './level';
 import {
   chartAxisStyle,
   cursorAnchor,
   dbAxis,
+  fmtHourMinute,
   instantLabel,
   makeSampleGapsRefiner,
   timeGridStepS,
@@ -28,13 +30,21 @@ import {
   zonedDate,
 } from './chartUtils';
 import {ChartTooltip} from './ChartTooltip';
-import {usePlayheadEffect} from './projectView';
+import {usePlayheadEffect, type DeviceWindows} from './projectView';
 
-// The level trace behind one location's row: a line per monitor standing there, no
-// axes, no legend. Its own plot rather than a configuration of NoiseTimeChart, which
-// is built for a full-page chart — nine toggleable series, a tooltip, drag-to-zoom —
-// none of which fits (or is wanted) at row height. The styling it does share comes
-// from chartUtils, so a row and the detail page read against the same dB scale.
+// The level trace of one location: a line per monitor that has ever stood there, each
+// clipped to the stretches it did, a sparse label up each side, no legend. Its own plot
+// rather than a configuration of NoiseTimeChart, which is built for a full-page chart —
+// nine toggleable series, a tooltip, drag-to-zoom — none of which fits (or is wanted) at
+// row height. The styling it does share comes from chartUtils, so a row and the detail
+// page read against the same dB scale.
+//
+// A chart of the place and not of its monitors, which is the whole reason the lines are
+// windowed: a monitor's history covers the event wherever it stood, so drawn whole under
+// one location it would plot every other stage it visited. Clipped, consecutive monitors
+// read as one continuous trace of the location — and the chart is drawn even where there
+// is nothing to plot, because an empty pair of axes says "nothing was measured here" and
+// a missing chart says nothing at all.
 //
 // Which quantity it plots is the header's choice, the same one the coloured number on
 // the row is read in: both dropdowns pick a column — of the stored payload when not
@@ -44,7 +54,8 @@ import {usePlayheadEffect} from './projectView';
 // Every line is that window's colour, monitors and all: two monitors at one location
 // are two readings of the same place, and the useful thing to see is the envelope they
 // make — which is loudest, and where they part. Telling them apart by name is what the
-// row above the chart is for.
+// header above the chart and this one's tooltip are for, which is why there is no
+// legend: at row height it would cost more of the trace than it explained.
 //
 // Two sources, one shape, chosen by `live`:
 //   live off — the devices' whole stored history at one point per minute, already on a
@@ -54,6 +65,40 @@ import {usePlayheadEffect} from './projectView';
 //   live on  — the layout's rolling MQTT buffers, merged onto one x and re-projected
 //              once a second over their last WINDOW_S, so a row moves while you watch.
 
+// What each monitor read at the sample the cursor is on — the body of the tooltip, and
+// the only place this chart says which of its lines is which. Every line is the window's
+// colour on purpose (see above), so with two monitors standing at a location the trace
+// alone cannot be attributed; hovering is how you ask.
+//
+// uPlot snaps `idx` to the nearest sample however far away it is, so a hover over a gap
+// would otherwise report the reading on the far side of it. Past the same threshold that
+// breaks the line, there is nothing under the pointer and the tooltip says only when.
+//
+// A monitor with no value at that sample is left out rather than printed as a dash: it
+// was either silent or standing somewhere else, and the masked line already shows which
+// by not being there.
+function readingsAt(
+  u: uPlot,
+  lines: DeviceWindows[],
+  multi: boolean,
+  gapThresholdX: number,
+): Array<{deviceId: string; db: number}> {
+  const idx = u.cursor.idx;
+  if (idx == null) return [];
+  const dataX = u.data[0]![idx] as number | undefined;
+  const cursorX = u.posToVal(u.cursor.left ?? -1, 'x');
+  if (dataX == null || Math.abs(cursorX - dataX) > gapThresholdX) return [];
+  // Column 0 is the x, and with several monitors column 1 is the filled envelope — the
+  // monitors' own lines start after whichever of those the projection built.
+  const first = multi ? 2 : 1;
+  const out: Array<{deviceId: string; db: number}> = [];
+  for (const [i, {deviceId}] of lines.entries()) {
+    const db = u.data[first + i]?.[idx];
+    if (db != null) out.push({deviceId, db});
+  }
+  return out;
+}
+
 // Whether a keystroke is somebody writing rather than reaching for a shortcut. The
 // dialogs on this page are full of fields, and one of them may well be open over a
 // row the pointer is still resting on.
@@ -62,18 +107,56 @@ const isTyping = (target: EventTarget | null): boolean =>
   (target.isContentEditable ||
     ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName));
 
+// Label every nth grid line, n being the fewest that leaves X_LABEL_SPACE between the
+// ones that survive. Measured off the first two splits — they are evenly spaced, this
+// axis having been handed a single increment — so it costs one conversion rather than
+// a text measurement, and follows a rescale without being told.
+const labelStride = (u: uPlot, splits: number[]): number => {
+  if (splits.length < 2) return 1;
+  const gap = Math.abs(
+    u.valToPos(splits[1]!, 'x') - u.valToPos(splits[0]!, 'x'),
+  );
+  return gap > 0 ? Math.max(1, Math.ceil(X_LABEL_SPACE / gap)) : 1;
+};
+
 // The line's own colour at 15 % (8-digit hex is canvas-legal), so the trace reads
 // as an area without the line getting lost in it.
 const fill = (stroke: string) => `${stroke}26`;
-// Fixed, and not chartUtils' plotHeight: that one floors at 100 px for the
-// full-page charts, whose containers are flex-sized. dbAxis spans 80 dB, so the
-// 10 dB grid below is always eight gaps — at this height ~15 px each, which is
-// what makes a level readable off the grid rather than merely suggested by it.
-const HEIGHT = 128;
+// The trace takes whatever height the card gives it and never less than this. A list
+// of two locations should be two tall charts rather than two short ones over a gap, so
+// the cards divide the page between them and this follows — but a list of ten on a
+// laptop would be slivers, and below this the list scrolls instead.
+//
+// The floor is what the chart used to be fixed at: it includes the axis under the plot,
+// so the trace itself gets what is left — dbAxis spans 80 dB, which over that remainder
+// is eight grid gaps of ~14 px each, still enough to read a level off the grid rather
+// than merely be reminded there is one.
+//
+// Not chartUtils' plotHeight, which floors at 100 px for the full-page charts.
+const MIN_HEIGHT = 128;
 
-// Horizontal grid every 10 dB, so the trace can be read against a level without
-// an axis to label it.
+const traceHeight = (container: HTMLElement): number =>
+  Math.max(MIN_HEIGHT, container.clientHeight);
+
+// Horizontal grid every 10 dB, and a number on every second line of it — see the
+// axis below for why not on every one.
 const DB_GRID_STEP = 10;
+const DB_LABEL_STEP = 20;
+
+// The axes' own type: a size small enough that two gutters cost a row less than the
+// trace gains by being readable, which means smaller than uPlot's 12 px default.
+// Concrete rather than a Chakra token, because this is drawn on a canvas — a `var()`
+// would resolve to nothing and take the labels with it.
+const AXIS_FONT = '10px ui-monospace, SFMono-Regular, Menlo, monospace';
+// What those gutters cost: enough for "110" at the font above, and for one line of it
+// under the plot. Both come out of the box's height, so the trace is that much
+// shorter than the card gives it.
+const Y_AXIS_W = 26;
+const X_AXIS_H = 15;
+// The closest two time labels may sit, which decides how many grid lines go
+// unlabelled between them. Sized for "22:15" at the font above with room to breathe —
+// the axis prints nothing wider, whatever the crop.
+const X_LABEL_SPACE = 48;
 
 // How far the pointer must travel before a press counts as a selection rather than a
 // click. A few pixels: the gesture is a deliberate sweep across a peak, and anything
@@ -94,7 +177,7 @@ const X_GRID_SPACE = 56;
 const PLAYHEAD_CLASS = 'noise-row-playhead';
 
 // Hoisted, and not an inline object on the Box: Emotion re-serializes a fresh style
-// object every time it sees one, and there is one of these per open card. A module
+// object every time it sees one, and there is one of these per card on the list. A module
 // constant is hashed once for the whole session.
 const CHART_CSS = {
   // uPlot's own rubber band, which its stylesheet paints in 7 % black — invisible on
@@ -122,7 +205,7 @@ const CHART_CSS = {
 } as const;
 
 export function LevelTrace({
-  devices,
+  lines,
   live,
   metric,
   weighting,
@@ -131,9 +214,10 @@ export function LevelTrace({
   onCrop,
   series,
 }: {
-  // The monitors standing at this location at the instant being viewed, in the order
-  // the row lists them. One line each, and one is the ordinary case.
-  devices: string[];
+  // Every monitor this location has ever had, with the windows it had them for. One
+  // line each, clipped to those windows; one line is the ordinary case, and none — a
+  // location nothing has stood at yet — draws an empty chart rather than nothing.
+  lines: DeviceWindows[];
   live: boolean;
   // Which Leq window and which weighting the page is showing. `series` was already
   // resolved for both; this pair is what picks the matching column out of the live
@@ -178,15 +262,33 @@ export function LevelTrace({
   // construction, so switching source rebuilds the plot either way.
   const seriesRef = useLatest(series);
   const rangeRef = useLatest(range);
-  // The devices go the same way, and their names go into a key: the array is new on
+  // The lines go the same way, and a digest of them into a key: the array is new on
   // every render of the card above, so an effect that depended on it directly would
-  // tear the plot down for a card that had merely re-rendered.
-  const devicesRef = useLatest(devices);
-  const devicesKey = devices.join(' ');
-  // Whether the fill is a series of its own. One decision, read by both the projection
-  // and the series list below, which have to agree on the column count — and it only
-  // changes when the monitor count crosses two, so it can't rebuild the plot idly.
-  const multi = devices.length > 1;
+  // tear the plot down for a card that had merely re-rendered. The windows are in the
+  // key as well as the names — retiming an assignment changes what is plotted without
+  // changing who is plotted.
+  //
+  // Memoized because this component re-renders on every frame of a hover — `tip` is
+  // state — and `lines` is untouched by that, so without it a walk of every window of
+  // every monitor would run sixty times a second to produce the same string.
+  const linesRef = useLatest(lines);
+  const linesKey = useMemo(
+    () =>
+      lines
+        .map(
+          (l) => `${l.deviceId}:${l.windows.map((w) => `${w.start}-${w.end}`)}`,
+        )
+        .join(' '),
+    [lines],
+  );
+  // How many y columns the plot has. At least one, so a location with no monitor yet
+  // still has a series to be empty in rather than an axis pair uPlot would reject.
+  const lineCount = Math.max(1, lines.length);
+  // Whether the fill is a series of its own. Read by both the projection and the series
+  // list below, which have to agree on the column count — so it is derived from the
+  // count they share rather than recounted, and it only changes when the monitor count
+  // crosses two, so it can't rebuild the plot idly.
+  const multi = lineCount > 1;
   // Through a ref like the rest: switching weighting swaps which buffer column is
   // plotted, and it must not tear the plot down to do it. The live projection reruns
   // every second anyway, and a new `series` lands with it when not live. (Switching
@@ -198,6 +300,9 @@ export function LevelTrace({
   // so unlike the column this one does rebuild the plot; it changes only when someone
   // moves the dropdown, and at this size a rebuild is cheap.
   const stroke = seriesFor(metric, weighting).stroke;
+  // What the tooltip's numbers are in, spelled the same way the card's header spells it
+  // — the two are readings of the same quantity and must not look like different ones.
+  const unitLabel = `${weightingUnit(weighting)} ${metricTag(metric, live)}`;
   const onScrubRef = useLatest(onScrub);
   // The instant the page is looking at, written by the subscription below rather than
   // taken as a prop. The playhead is page state that moves on every frame of a hover
@@ -205,13 +310,19 @@ export function LevelTrace({
   // hand each of them a number it only writes into a ref — see usePlayheadEffect.
   const currentRef = useRef<number | null>(null);
 
-  // The hovered instant, anchored in container pixels. Same readout NoiseTimeChart
-  // gives its own cursor, and through the same two helpers — a row is smaller, not
-  // different.
+  // The hovered instant and what every monitor read at it, anchored in container
+  // pixels. Same readout NoiseTimeChart gives its own cursor, and through the same two
+  // helpers — a row is smaller, not different.
+  //
+  // The readings are here rather than only in the card's header because the header
+  // prints one number for the whole location (the loudest monitor's), while this chart
+  // may be drawing two lines at once: what the tooltip answers is which line is which,
+  // which is also what the chart has no legend for.
   const [tip, setTip] = useState<{
     left: number;
     top: number;
     label: string;
+    readings: Array<{deviceId: string; db: number}>;
   } | null>(null);
 
   // The instant the pointer is on, for the keys below to read. A ref and not part of
@@ -271,31 +382,40 @@ export function LevelTrace({
   const gapThresholdX = live ? GAP_THRESHOLD_S : STORED_GAP_THRESHOLD_S;
 
   const project = useCallback((): uPlot.AlignedData => {
-    const names = devicesRef.current;
+    const current = linesRef.current;
+    // Nothing has ever stood here: one empty column, so the axes and their grid draw
+    // over an empty crop rather than the card holding a gap where a chart should be.
+    if (current.length === 0) return [[], []] as uPlot.AlignedData;
     // A device with no records yet has no buffer at all (only ingest creates one),
     // and one that measured nothing in the project has no stored trace; either way
     // the aligners pad it to the shared x rather than dropping a column uPlot is
     // expecting.
-    const data = live
+    const [xs, ...raw] = live
       ? alignedBuffers(
-          names.map((name) => deviceData.current[name]),
+          current.map((l) => deviceData.current[l.deviceId]),
           colRef.current,
         )
-      : alignedSeries(names.map((name) => seriesRef.current?.[name]));
-    if (!multi) return data as uPlot.AlignedData;
+      : alignedSeries(current.map((l) => seriesRef.current?.[l.deviceId]));
+    // What makes this a chart of the location: each monitor draws only where it stood
+    // here. Both sources are clipped, so a monitor that has moved on stops the moment
+    // its assignment ended rather than the moment it next goes quiet.
+    const columns = raw.map((column, i) =>
+      maskToWindows(xs as number[], column, current[i]!.windows),
+    );
+    if (!multi) return [xs, ...columns] as uPlot.AlignedData;
     // With several monitors the filled area is the loudest of them, in front of which
     // their lines are drawn — see the series below.
-    const [xs, ...columns] = data;
     return [
       xs,
       loudestColumn(xs as number[], columns, gapThresholdX),
       ...columns,
     ] as uPlot.AlignedData;
-    // Keyed on the names rather than the array: the same monitors are the same
-    // projection, and a new array of them every render is not a new plot.
+    // Keyed on the lines rather than the array: the same monitors over the same
+    // windows are the same projection, and a new array of them every render is not a
+    // new plot.
   }, [
-    devicesKey,
-    devicesRef,
+    linesKey,
+    linesRef,
     deviceData,
     live,
     multi,
@@ -329,17 +449,16 @@ export function LevelTrace({
     // only ever calls it.
     const gaps = makeSampleGapsRefiner(gapThresholdX);
 
-    // Both axes exist only to carry a grid: uPlot draws no grid for an axis that
-    // isn't shown, so they are shown and then stripped of everything else — no
-    // labels (`values` returns nothing, which the label loop simply skips), no
-    // ticks, and no reserved space, so the trace still fills the row.
+    // Both axes carry a grid and a thin row of labels — enough to read a level and a
+    // time off the trace without going to the timeline for one and the row's numbers
+    // for the other. No ticks: at this size the grid line the label sits on is the
+    // tick, and marks beside it would only thicken the gutters.
     const style = chartAxisStyle();
-    const gridOnly: uPlot.Axis = {
+    const axisBase: uPlot.Axis = {
       show: true,
-      size: 0,
-      gap: 0,
+      gap: 2,
+      font: AXIS_FONT,
       ticks: {show: false},
-      values: () => [],
       stroke: style.stroke,
       grid: {show: true, stroke: style.grid.stroke, width: 1},
     };
@@ -347,7 +466,7 @@ export function LevelTrace({
     const plot = new uPlot(
       {
         width: container.clientWidth || 300,
-        height: HEIGHT,
+        height: traceHeight(container),
         legend: {show: false},
         // The line you see under the pointer is the playhead, drawn by every row at
         // once — so uPlot's own guides stay off and this cursor exists only to report
@@ -408,6 +527,7 @@ export function LevelTrace({
               setTip({
                 ...cursorAnchor(u, container, left, u.cursor.top ?? 0),
                 label: formatRef.current(atMs),
+                readings: readingsAt(u, linesRef.current, multi, gapThresholdX),
               });
             },
           ],
@@ -420,19 +540,55 @@ export function LevelTrace({
           // enforced X_GRID_SPACE), and non-zero because the split generator
           // divides by it.
           {
-            ...gridOnly,
+            ...axisBase,
+            size: X_AXIS_H,
             incrs: (_self, _axisIdx, scaleMin, scaleMax, fullDim) => [
               timeGridStepS(scaleMax - scaleMin, fullDim, X_GRID_SPACE),
             ],
             space: 1,
+            // Clock time and nothing else, whatever the crop or the mode: the axis is
+            // there to place the trace in the evening, and at this width a date on
+            // every label buys nothing the timeline above doesn't already say. The
+            // tooltip is the precise readout and keeps its seconds and its date.
+            //
+            // Not every grid line gets a label — the lines are set for orientation,
+            // and X_LABEL_SPACE is what keeps the ones that remain apart. Nor does a
+            // line whose minute the last label already named: a live window is five
+            // minutes wide, so without that the same 22:15 would be printed twice.
+            values: (u, splits) => {
+              const step = labelStride(u, splits);
+              let last: string | null = null;
+              return splits.map((v, i) => {
+                if (i % step) return null;
+                const label = fmtHourMinute(v);
+                if (label === last) return null;
+                last = label;
+                return label;
+              });
+            },
           },
           // One line per 10 dB, however tight: eight gaps across a row can fall well
           // under any default minimum, and an increment that can't have its minimum
           // spacing is one uPlot refuses to use. So the minimum goes to one pixel —
           // the fixed spacing *is* the point here.
-          {...gridOnly, incrs: [DB_GRID_STEP], space: 1},
+          //
+          // Labelled every other line: nine numbers up the side of a row-height chart
+          // would touch, and the unlabelled lines between two labels are still the
+          // 10 dB grid the trace is read against. Bare numbers, no unit — which dB
+          // this is depends on the weighting, and the row's own readings say so.
+          {
+            ...axisBase,
+            size: Y_AXIS_W,
+            incrs: [DB_GRID_STEP],
+            space: 1,
+            values: (_u, splits) =>
+              splits.map((v) => (v % DB_LABEL_STEP ? null : String(v))),
+          },
         ],
-        padding: [2, 0, 2, 0],
+        // Right and top only: the axes reserve the other two. The right keeps the last
+        // time label from being clipped by the edge of the canvas, and the top keeps
+        // the trace off it at 110 dB.
+        padding: [2, 8, 0, 0],
         // Grid lines land on festival-local boundaries whatever zone the viewer is
         // in, the same as every other chart in the section.
         tzDate: (ts) => zonedDate(ts),
@@ -460,7 +616,9 @@ export function LevelTrace({
                 },
               ]
             : []),
-          ...devicesRef.current.map(() => ({
+          // One per monitor — or one empty line where there is no monitor, which is
+          // what keeps the axes drawn at a location nothing has stood at yet.
+          ...Array.from({length: lineCount}, () => ({
             stroke,
             fill: multi ? undefined : fill(stroke),
             width: 1.25,
@@ -484,7 +642,10 @@ export function LevelTrace({
     // Only the width can change: the row gives the trace a fixed height. A new width
     // is a new pixel for the same instant, so the playhead is replaced with it.
     const ro = new ResizeObserver(() => {
-      plot.setSize({width: container.clientWidth, height: HEIGHT});
+      plot.setSize({
+        width: container.clientWidth,
+        height: traceHeight(container),
+      });
       positionPlayhead();
     });
     ro.observe(container);
@@ -505,6 +666,7 @@ export function LevelTrace({
     project,
     xRange,
     gapThresholdX,
+    lineCount,
     multi,
     stroke,
     selectable,
@@ -584,7 +746,7 @@ export function LevelTrace({
   // rebuilt on either side. Live's window comes from the tick above instead.
   //
   // Deferred while the row is off-screen. A crop is what a timeline drag commits, once
-  // per animation frame, to every open card at once — and setScale is not free even
+  // per animation frame, to every card on the list at once — and setScale is not free even
   // when nothing moved: uPlot drops its cached paths and clears the canvas either way.
   // A list of locations is taller than the screen, so most of that redrawing is of rows
   // nobody is looking at.
@@ -620,7 +782,10 @@ export function LevelTrace({
     // The plot gets a wrapper of its own so the tooltip has something to be absolute
     // in: uPlot owns every child of its container, and React must not be inserting
     // siblings into a node another library is appending to.
-    <Box position="relative" h={`${HEIGHT}px`} w="full">
+    // Fills its card, down to the floor above. The plot inside is sized to this box by
+    // the observer rather than the other way round, so the height comes from the layout
+    // and nothing here has to know how many locations are sharing the page.
+    <Box position="relative" h="full" minH={`${MIN_HEIGHT}px`} w="full">
       <Box
         ref={containerRef}
         position="absolute"
@@ -636,6 +801,25 @@ export function LevelTrace({
           <Text fontSize="xs" lineHeight="1.2">
             {tip.label}
           </Text>
+          {/* One line per monitor with something to say at that instant, the value in
+              the line's own colour — which with two monitors is the same colour twice,
+              so the name beside it is what tells them apart. Spread to the pill's full
+              width so the numbers line up under each other rather than after names of
+              different lengths. */}
+          {tip.readings.map(({deviceId, db}) => (
+            <HStack
+              key={deviceId}
+              gap="3"
+              justify="space-between"
+              fontSize="xs"
+              lineHeight="1.2"
+            >
+              <Text color="gray.400">{deviceId}</Text>
+              <Text fontWeight="bold" color={stroke}>
+                {formatDb(db, unitLabel)}
+              </Text>
+            </HStack>
+          ))}
         </ChartTooltip>
       )}
     </Box>

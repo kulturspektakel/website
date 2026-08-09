@@ -9,12 +9,13 @@ import {useDeviceStates, useTick} from './context';
 import {
   displayedLevel,
   formatDb,
+  isCurrent,
   loudestLevel,
   type LevelMetric,
 } from './level';
 import {type Weighting} from './noise';
 import {DARK_MAP_STYLE, MAP_BACKGROUND} from './mapStyle';
-import {pinIcon, pinLabel} from './mapPin';
+import {NO_LEVEL_LABEL, pinIcon, pinLabel} from './mapPin';
 import {pulseOverlay} from './mapPulse';
 import {useSamplePins} from './mapDevPins';
 
@@ -286,39 +287,36 @@ function MapCanvas({
     ),
   );
   const pinLabels = pinLevels.map((level) =>
-    level.kind === 'none' ? '' : formatDb(level.db),
+    level.kind === 'none' ? NO_LEVEL_LABEL : formatDb(level.db),
   );
-  // A number we only remember rather than one arriving now, greyed down on the pin
-  // the same way the list rows grey theirs.
-  const pinStale = pinLevels.map((level) => level.kind === 'stale');
+  // Greyed down for anything that isn't a reading of the instant being viewed — a
+  // number we only remember, or none at all — the same way the list rows grey theirs.
+  // The two cases look alike on purpose: from across the map both mean "not this".
+  const pinStale = pinLevels.map((level) => !isCurrent(level));
 
   // Two effects, because the two change at very different rates: the number moves
-  // roughly once a second per monitor, while the pin's *shape* only flips when a
-  // level appears or disappears. Rebuilding an icon object per marker per second
-  // would be pure churn.
+  // roughly once a second per monitor, while the pin's *badge* only changes when a
+  // location stops (or starts) reading now. Rebuilding an icon object per marker per
+  // second would be pure churn.
   const labelKey = pinLabels.join('|');
   const staleKey = pinStale.map((stale) => (stale ? '1' : '0')).join('');
   useEffect(() => {
     markersRef.current.forEach((marker, i) => {
-      const text = pinLabels[i] ?? '';
-      marker.setLabel(pinLabel(text, pinStale[i] ?? false));
+      marker.setLabel(
+        pinLabel(pinLabels[i] ?? NO_LEVEL_LABEL, pinStale[i] ?? true),
+      );
     });
   }, [labelKey, staleKey, signature]);
 
-  // '1' where the pin has a number to carry, '0' where it's a bare dot — plus
-  // whether that number is stale, which is the icon's other axis.
-  const shapeKey =
-    pinLabels.map((text) => (text ? '1' : '0')).join('') + staleKey;
   useEffect(() => {
     if (!mapRef.current) return;
     const maps = window.google.maps;
-    const pill = pinIcon(maps, true);
-    const stalePill = pinIcon(maps, true, true);
-    const dot = pinIcon(maps, false);
+    const pill = pinIcon(maps);
+    const stalePill = pinIcon(maps, true);
     markersRef.current.forEach((marker, i) => {
-      marker.setIcon(pinLabels[i] ? (pinStale[i] ? stalePill : pill) : dot);
+      marker.setIcon(pinStale[i] ? stalePill : pill);
     });
-  }, [shapeKey, signature]);
+  }, [staleKey, signature]);
 
   // A pulse behind every pin currently fed by the live stream. Keyed on which pins
   // those are, so it only churns when liveness actually changes — not on every

@@ -7,6 +7,7 @@ import {
   alignedSeries,
   emptyBuffer,
   loudestColumn,
+  maskToWindows,
   rowsToAligned,
   type SeriesKind,
 } from './series';
@@ -297,6 +298,60 @@ describe('loudestColumn', () => {
 
   it('is null where no monitor has said anything yet', () => {
     expect(loudestColumn([1, 2], [[null, 80]], 3)).toEqual([null, 80]);
+  });
+});
+
+// What makes a location's chart the location's rather than its monitors': a monitor's
+// trace covers the event wherever it stood, and only the stretches it stood *here*
+// belong on this chart. `xs` is uPlot's epoch seconds, the windows are epoch ms.
+describe('maskToWindows', () => {
+  const xs = [60, 120, 180, 240];
+  const column = [70, 80, 90, 100];
+
+  it('keeps only the samples inside a window', () => {
+    expect(maskToWindows(xs, column, [{start: 120_000, end: 240_000}])).toEqual(
+      [null, 80, 90, null],
+    );
+  });
+
+  // Start inclusive, end exclusive, as everywhere else in this section — so a monitor
+  // handed over at 18:00 stops exactly where the next one starts and the two lines meet
+  // without both claiming the instant.
+  it('gives a handover instant to the later window alone', () => {
+    expect(maskToWindows(xs, column, [{start: 0, end: 180_000}])).toEqual([
+      70,
+      80,
+      null,
+      null,
+    ]);
+    expect(maskToWindows(xs, column, [{start: 180_000, end: null}])).toEqual([
+      null,
+      null,
+      90,
+      100,
+    ]);
+  });
+
+  // One line per monitor, so a monitor carried away and brought back is two windows on
+  // the same column with a break between them rather than two lines.
+  it('keeps both stints of a monitor that came back', () => {
+    expect(
+      maskToWindows(xs, column, [
+        {start: 60_000, end: 120_000},
+        {start: 240_000, end: null},
+      ]),
+    ).toEqual([70, null, null, 100]);
+  });
+
+  it('blanks everything for a monitor this location never had', () => {
+    expect(maskToWindows(xs, column, [])).toEqual([null, null, null, null]);
+  });
+
+  // A minute the monitor didn't report stays a gap: masking only ever removes.
+  it('leaves the column’s own nulls alone', () => {
+    expect(
+      maskToWindows(xs, [70, null, 90, 100], [{start: 0, end: null}]),
+    ).toEqual([70, null, 90, 100]);
   });
 });
 

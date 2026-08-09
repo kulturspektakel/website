@@ -207,25 +207,67 @@ export const assignableNoiseDevices = createServerFn()
     }));
   });
 
+// Every monitor there is, assigned or not — what the assignments dialog picks from.
+// Deliberately not `assignableNoiseDevices`: recording a placement that has already
+// ended is half of what that dialog is for, and the device standing somewhere today
+// is usually the one whose past you are correcting.
+export const noiseMonitorDevices = createServerFn()
+  .middleware([crewAuth])
+  .handler(async () => {
+    const devices = await prismaClient.device.findMany({
+      where: {type: 'NOISE_MONITOR'},
+      orderBy: {id: 'asc'},
+      select: {id: true, lastSeen: true},
+    });
+    return devices.map((d) => ({
+      id: d.id,
+      lastSeen: d.lastSeen?.getTime() ?? null,
+    }));
+  });
+
+// What a blank field means, in the two shapes the column can take it.
+//
+// An omitted start means "from the beginning of the event", which `start` cannot hold —
+// it is non-nullable — so the project's own start is written instead. Both writers below
+// resolve it from a row they had to read anyway, so knowing what blank means never costs
+// a query of its own.
+//
+// An omitted end needs no such trick: `null` there already means "still assigned", which
+// for a project that has finished reads as its end.
+const resolveAssignmentEnd = (end: number | null | undefined): Date | null =>
+  end == null ? null : new Date(end);
+
+// The event's start, reached from one of its assignments — what an edit that blanked the
+// start is asking for, and the only reason such an edit needs a read at all.
+async function projectStartOfAssignment(assignmentId: string): Promise<Date> {
+  const assignment = await prismaClient.noiseLocationAssignment.findUnique({
+    where: {id: assignmentId},
+    select: {NoiseLocation: {select: {NoiseProject: {select: {start: true}}}}},
+  });
+  if (!assignment) throw notFound();
+  return assignment.NoiseLocation.NoiseProject.start;
+}
+
 export const assignNoiseDevice = createServerFn()
   .middleware([crewAuth])
   .inputValidator(
     z.object({
       locationId: z.string().min(1),
       deviceId: z.string().min(1),
-      // Epoch ms, and optional: assigning from a location card means "from now",
-      // while a location created on the map offers the project's start, so its
-      // monitor's history covers the event rather than beginning mid-festival.
-      // Never in the future — a placement that hasn't begun would leave the new
-      // location looking empty until it did.
-      start: z.number().int().optional(),
+      // Epoch ms, both optional: an omitted bound means the edge of the event, so
+      // picking a device and nothing else records "stood here the whole time".
+      start: z.number().int().nullish(),
+      end: z.number().int().nullish(),
     }),
   )
   .handler(async ({data}) => {
     const [location, device] = await Promise.all([
       prismaClient.noiseLocation.findUnique({
         where: {id: data.locationId},
-        select: {id: true},
+        // The project's start comes along with the existence check rather than in a
+        // second lookup of the same row: an omitted start is written as it (see
+        // resolveAssignmentStart), and the check has to happen either way.
+        select: {NoiseProject: {select: {start: true}}},
       }),
       prismaClient.device.findUnique({
         where: {id: data.deviceId},
@@ -236,38 +278,50 @@ export const assignNoiseDevice = createServerFn()
     if (!device || device.type !== 'NOISE_MONITOR') {
       throw new Error('Unbekanntes Lärmmessgerät.');
     }
-    const now = new Date();
-    const start =
-      data.start == null ? now : new Date(Math.min(data.start, now.getTime()));
 
-    // Moving a device closes its previous placement: `end == null` only means
-    // "is here now" if exactly one row per device can be open. Each is closed at
-    // the moment this one begins, so the two windows abut exactly and a history
-    // query over them neither gaps nor double-counts — except where the new start
-    // predates the open row, which a backdated assignment can do: there the old
-    // window would invert, so it closes at its own start instead (an empty window,
-    // which is the truthful record of a placement that never held).
-    const open = await prismaClient.noiseLocationAssignment.findMany({
-      where: {deviceId: data.deviceId, end: null},
-      select: {id: true, start: true},
+    // Nothing else is touched. This used to close the device's other open rows so
+    // that `end == null` could mean "is here now" — one open row per device. With
+    // the windows editable by hand that invariant is neither enforceable nor
+    // wanted, so the dialog warns about the overlap instead of the server quietly
+    // rewriting a row nobody opened (see overlappingAssignments in projectView.ts).
+    await prismaClient.noiseLocationAssignment.create({
+      data: {
+        locationId: data.locationId,
+        deviceId: data.deviceId,
+        start:
+          data.start == null
+            ? location.NoiseProject.start
+            : new Date(data.start),
+        end: resolveAssignmentEnd(data.end),
+      },
     });
-    await prismaClient.$transaction([
-      ...open.map((assignment) =>
-        prismaClient.noiseLocationAssignment.update({
-          where: {id: assignment.id},
-          data: {
-            end: assignment.start > start ? assignment.start : start,
-          },
-        }),
-      ),
-      prismaClient.noiseLocationAssignment.create({
-        data: {
-          locationId: data.locationId,
-          deviceId: data.deviceId,
-          start,
-        },
-      }),
-    ]);
+  });
+
+// One row's window, as typed. Times are taken at face value — including ones in the
+// future and ones that overlap another placement — because this is a record of where
+// a monitor stood, and the person filling it in knows better than a clamp would.
+export const updateNoiseAssignment = createServerFn()
+  .middleware([crewAuth])
+  .inputValidator(
+    z.object({
+      assignmentId: z.string().min(1),
+      start: z.number().int().nullable(),
+      end: z.number().int().nullable(),
+    }),
+  )
+  .handler(async ({data}) => {
+    // Read only when the start was left blank: a typed start needs nothing from the
+    // project, so the ordinary edit is one write rather than a walk down to the event
+    // and back. A row that has vanished throws from there, and from the update
+    // otherwise — which is the same answer either way.
+    const start =
+      data.start == null
+        ? await projectStartOfAssignment(data.assignmentId)
+        : new Date(data.start);
+    await prismaClient.noiseLocationAssignment.update({
+      where: {id: data.assignmentId},
+      data: {start, end: resolveAssignmentEnd(data.end)},
+    });
   });
 
 // Records a new location for a device. DeviceLocation is history — each call
@@ -290,16 +344,18 @@ export const setDeviceLocation = createServerFn()
     });
   });
 
-export const endNoiseAssignment = createServerFn()
+// Removes the row rather than closing it: a placement that never happened should
+// leave no window behind, since assignmentsAt and the log queries both read every
+// row there is. Ending one is an edit of its `end`, which is the dialog's other job.
+//
+// deleteMany, so a double-tap or a stale list deletes nothing twice rather than
+// throwing on a row that has already gone.
+export const deleteNoiseAssignment = createServerFn()
   .middleware([crewAuth])
   .inputValidator(z.object({assignmentId: z.string().min(1)}))
   .handler(async ({data}) => {
-    // updateMany + `end: null` makes this idempotent: a double-tap or a stale
-    // list can't overwrite an already-recorded end, and a vanished row is a
-    // no-op rather than a throw.
-    await prismaClient.noiseLocationAssignment.updateMany({
-      where: {id: data.assignmentId, end: null},
-      data: {end: new Date()},
+    await prismaClient.noiseLocationAssignment.deleteMany({
+      where: {id: data.assignmentId},
     });
   });
 
@@ -354,6 +410,12 @@ function LautstaerkeLayout() {
             Portalled surfaces don't inherit it (they hang off <body>): the menus and
             dialogs show identifiers rather than ticking numbers, so they don't need
             it — CalibrationPanel is the exception and sets it itself. */}
+          {/* No padding of its own: the page inside decides where its edges are. The
+              project page is a toolbar over an edge-to-edge map, which a gutter here
+              would either cut into or leave scrolling content peeking past; the pages
+              that do want one set it themselves. This box is only the dark ground, the
+              viewport height, and the one thing that scrolls — which is also what the
+              toolbars stick to. */}
           <Box
             fontVariantNumeric="tabular-nums"
             bg="gray.900"
@@ -362,7 +424,6 @@ function LautstaerkeLayout() {
             display="flex"
             flexDirection="column"
             overflow="auto"
-            p="4"
           >
             <Outlet />
           </Box>
