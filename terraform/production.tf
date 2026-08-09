@@ -356,7 +356,15 @@ resource "google_monitoring_uptime_check_config" "www" {
 }
 
 # Replaces the console-managed `www.kulturspektakel.de uptime failure` alert.
-# Fires when more than one check fails within a 20-minute window for 60s.
+#
+# Fires on a *sustained* drop in success rate, not on individual failed probes.
+# Every Vercel deploy cold-starts the SSR function in each edge region, and the
+# first request into a region regularly blows past the check's 20s timeout — so
+# a counting condition ("more than one failed check in 20 minutes") paged on
+# almost every deploy. Instead: per region, the fraction of probes that passed
+# in the last 15 minutes (3 probes at the 300s period); averaged across the six
+# checker regions. A one-probe blip in four of six regions still scores ~0.78,
+# while a real outage (e.g. the HTTP 402 spending-limit one) sits at 0.
 resource "google_monitoring_alert_policy" "www_uptime" {
   display_name = "www.kulturspektakel.de uptime failure"
   combiner     = "OR"
@@ -369,19 +377,25 @@ resource "google_monitoring_alert_policy" "www_uptime" {
         AND metric.label.check_id="${google_monitoring_uptime_check_config.www.uptime_check_id}"
         AND resource.type="uptime_url"
       EOT
-      comparison      = "COMPARISON_GT"
-      threshold_value = 1
-      duration        = "60s"
+      comparison      = "COMPARISON_LT"
+      threshold_value = 0.6
+      duration        = "300s"
       trigger {
         count = 1
       }
       aggregations {
-        alignment_period     = "1200s"
-        per_series_aligner   = "ALIGN_NEXT_OLDER"
-        cross_series_reducer = "REDUCE_COUNT_FALSE"
-        group_by_fields      = ["resource.label.*"]
+        alignment_period     = "900s"
+        per_series_aligner   = "ALIGN_FRACTION_TRUE"
+        cross_series_reducer = "REDUCE_MEAN"
+        group_by_fields      = ["resource.label.host"]
       }
     }
+  }
+
+  # No `notification_rate_limit` here — the API rejects it on anything but a
+  # log-based policy (`task_failures` below is one, and does set it).
+  alert_strategy {
+    auto_close = "1800s"
   }
 
   notification_channels = [data.google_monitoring_notification_channel.slack.name]

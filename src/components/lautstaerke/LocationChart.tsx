@@ -20,7 +20,7 @@ import {useProjectView, type DeviceWindows} from './projectView';
 // says "nothing was measured here", and a card that simply omits the chart says nothing
 // and jumps a hundred pixels the moment a monitor is assigned.
 export function LocationChart({lines}: {lines: DeviceWindows[]}) {
-  const {live, metric, weighting, range, traces, scrubTo, cropTo} =
+  const {live, metric, weighting, range, bounds, traces, scrubTo, cropTo} =
     useProjectView();
 
   return (
@@ -43,6 +43,12 @@ export function LocationChart({lines}: {lines: DeviceWindows[]}) {
         metric={metric}
         weighting={weighting}
         range={range}
+        // How far a finger may take the crop, and — being present at all — what installs
+        // the touch gestures: one finger reads the trace, two crop and slide it. The whole
+        // pickable project rather than the crop, so a pinch has somewhere to widen into.
+        // Withheld while live for the same reason as the two callbacks below, and the same
+        // reason there is no timeline to drag then.
+        bounds={live ? undefined : bounds}
         // Hovering any trace moves the page's playhead, which is what puts the line in
         // the same place on every other card and on the timeline. Withheld while live
         // for the same reason there is no line then: there is nothing for it to move.

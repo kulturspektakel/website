@@ -10,7 +10,6 @@ import {
   zonedDate,
   makeGapsRefiner,
 } from './chartUtils';
-import {attachTouchZoom} from './uplotTouchZoom';
 import {type Weighting} from './noise';
 import {type SeriesKind} from './series';
 import {ChartTooltip} from './ChartTooltip';
@@ -61,8 +60,8 @@ export function NoiseTimeChart({
   // dataset (e.g. another timeframe). Kept separate from `data` identity so a
   // poll can push newly-arrived samples without resetting the user's zoom.
   zoomResetKey?: unknown;
-  // Fired once per completed zoom gesture (mouse drag release, touch gesture end,
-  // or the reset button), with the new x-window in epoch seconds — or null to zoom
+  // Fired once per completed zoom gesture (a mouse drag release, or the reset
+  // button), with the new x-window in epoch seconds — or null to zoom
   // out. The zoom is still applied locally for instant feedback; the caller
   // mirrors it into the URL, and the resulting narrower xRange plus a changed
   // zoomResetKey then clears the local zoom.
@@ -240,19 +239,11 @@ export function NoiseTimeChart({
     const plot = new uPlot(opts, project(), container);
     plotRef.current = plot;
 
-    // Touch devices get a one-finger pan / two-finger pinch instead of the mouse
-    // drag-select, driven through the same zoomRef so either gesture survives a
-    // redraw and shows the reset button. Scoped to zoomable (the historical
-    // view); the live view keeps normal page scrolling.
-    const removeTouch = zoomable
-      ? attachTouchZoom(plot, {
-          fullRange: () => xRangeRef.current(),
-          zoom: zoomRef,
-          setZoomed,
-          onCommit: (range) => onZoomRangeRef.current?.(range),
-        })
-      : undefined;
-
+    // Mouse only: the zoom here is the drag-select above, and touch gets nothing —
+    // pinching over this chart is the browser's own page zoom. The location charts
+    // on a project page are the ones worth touching (see uplotTouchGestures), and
+    // they own the gesture rather than sharing one with a chart whose commit is a
+    // navigation.
     const ro = new ResizeObserver(() => {
       plot.setSize({width: container.clientWidth, height: canvasHeight()});
     });
@@ -260,7 +251,6 @@ export function NoiseTimeChart({
 
     return () => {
       ro.disconnect();
-      removeTouch?.();
       plot.destroy();
       plotRef.current = null;
     };

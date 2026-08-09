@@ -30,6 +30,7 @@ import {
   zonedDate,
 } from './chartUtils';
 import {ChartTooltip} from './ChartTooltip';
+import {attachTouchGestures} from './uplotTouchGestures';
 import {usePlayheadEffect, type DeviceWindows} from './projectView';
 
 // The level trace of one location: a line per monitor that has ever stood there, each
@@ -210,6 +211,7 @@ export function LevelTrace({
   metric,
   weighting,
   range,
+  bounds,
   onScrub,
   onCrop,
   series,
@@ -228,6 +230,17 @@ export function LevelTrace({
   // The crop in epoch ms — the x-range when not live, and the only thing a timeline
   // drag changes here.
   range: {start: number; end: number};
+  // How far a touch gesture may reach, in epoch ms: the whole of the project that can be
+  // looked at, of which `range` is the part currently on screen. Wider than the crop on
+  // purpose — that is what a pinch widens into and what a two-finger drag travels along,
+  // and clamping either to the chart's own extent would leave them nothing to do.
+  //
+  // Also the switch. Present installs the touch gestures (see uplotTouchGestures);
+  // absent leaves the chart mouse-only, without so much as a touch-action of its own, so
+  // a live card scrolls under a finger exactly as it always did. One prop rather than a
+  // flag beside a window, because a gesture that cannot say where it may go is not one
+  // this chart can offer.
+  bounds?: {start: number; end: number};
   // Where the pointer is, in epoch ms, once per animation frame while it's over the
   // plot (uPlot batches its own cursor updates to a frame). Omitted where there's
   // nothing to scrub.
@@ -262,6 +275,15 @@ export function LevelTrace({
   // construction, so switching source rebuilds the plot either way.
   const seriesRef = useLatest(series);
   const rangeRef = useLatest(range);
+  // Through a ref for the same reason as the range, and read only from inside a gesture:
+  // the window's right edge follows the clock on a running festival, so the object is new
+  // every minute and a dependency on it would rebuild the plot for a number no gesture
+  // was using at the time.
+  const boundsRef = useLatest(bounds);
+  // Whether there are touch gestures at all, which uPlot's own listeners know nothing
+  // about but the effect below has to be keyed on. The boolean and not the window, so a
+  // fresh object per render cannot tear the plot down.
+  const touchable = bounds != null;
   // The lines go the same way, and a digest of them into a key: the array is new on
   // every render of the card above, so an effect that depended on it directly would
   // tear the plot down for a card that had merely re-rendered. The windows are in the
@@ -304,10 +326,15 @@ export function LevelTrace({
   // — the two are readings of the same quantity and must not look like different ones.
   const unitLabel = `${weightingUnit(weighting)} ${metricTag(metric, live)}`;
   const onScrubRef = useLatest(onScrub);
-  // The instant the page is looking at, written by the subscription below rather than
-  // taken as a prop. The playhead is page state that moves on every frame of a hover
-  // over any row on the page, so a prop would mean re-rendering every chart at once to
-  // hand each of them a number it only writes into a ref — see usePlayheadEffect.
+  // Where the line stands: the instant the page is looking at, written by the
+  // subscription below rather than taken as a prop. The playhead is page state that moves
+  // on every frame of a hover over any row on the page, so a prop would mean re-rendering
+  // every chart at once to hand each of them a number it only writes into a ref — see
+  // usePlayheadEffect.
+  //
+  // While live it is this chart's own hover instead, because there is no page playhead
+  // then (see the setCursor hook). Same ref either way: it is the line's position, and the
+  // line is one line.
   const currentRef = useRef<number | null>(null);
 
   // The hovered instant and what every monitor read at it, anchored in container
@@ -341,8 +368,9 @@ export function LevelTrace({
   // Where the playhead stands on this chart, or out of sight when it stands outside
   // the crop this one is showing (or when there is no playhead at all).
   //
-  // Called two ways, hence the default: with an instant, by the page's playhead
-  // subscription below; and with none, by a resize or a rescale, which move the pixel
+  // Called two ways, hence the default: with an instant — by the page's playhead
+  // subscription below, or by this chart's own hover while live, when there is no such
+  // subscription to follow; and with none, by a resize or a rescale, which move the pixel
   // the same instant falls on. Imperative and ref-driven either way, so it can be
   // called from the plot's own callbacks.
   const positionPlayhead = useCallback(
@@ -468,11 +496,12 @@ export function LevelTrace({
         width: container.clientWidth || 300,
         height: traceHeight(container),
         legend: {show: false},
-        // The line you see under the pointer is the playhead, drawn by every row at
-        // once — so uPlot's own guides stay off and this cursor exists only to report
-        // where the pointer is. Same end as uPlot's sync-cursor demo, reached through
-        // the page's selection rather than a sync key: the timeline, the dB readouts
-        // and the map pins have to follow the pointer too, and none of them is a plot.
+        // The line you see under the pointer is the playhead — drawn by every row at
+        // once when there is a page instant to share, and by this row alone while live —
+        // so uPlot's own guides stay off and this cursor exists only to report where the
+        // pointer is. Same end as uPlot's sync-cursor demo, reached through the page's
+        // selection rather than a sync key: the timeline, the dB readouts and the map
+        // pins have to follow the pointer too, and none of them is a plot.
         cursor: {
           x: false,
           y: false,
@@ -510,13 +539,17 @@ export function LevelTrace({
           setCursor: [
             (u) => {
               const left = u.cursor.left;
-              // Negative once the pointer leaves. The tooltip goes with it, but the
-              // playhead stays where it was rather than snapping back: it's the page's
-              // instant now, and the row you hovered is usually the one you then want
-              // to read a number off.
+              // Negative once the pointer leaves. The tooltip goes with it. The playhead
+              // stays where it was rather than snapping back: it's the page's instant
+              // now, and the row you hovered is usually the one you then want to read a
+              // number off — except while live, where it was never the page's.
               if (left == null || left < 0) {
                 hoverAtRef.current = null;
                 setTip(null);
+                // Live's line is the pointer's own and goes with it, unlike the page's
+                // playhead: there is no instant for it to be left standing on, and the
+                // window slides out from under it a second later anyway.
+                if (live) positionPlayhead(null);
                 return;
               }
               // Out of uPlot's seconds once, here at its edge: everything downstream
@@ -524,6 +557,14 @@ export function LevelTrace({
               const atMs = u.posToVal(left, 'x') * 1000;
               hoverAtRef.current = atMs;
               onScrubRef.current?.(atMs);
+              // Live has no page playhead — nothing is scrubbing a rolling window, so
+              // `scrubTo` is withheld and the signal every other chart follows stays
+              // empty. Draw the line here instead, so pointing at a live trace marks the
+              // sample you are reading in the tooltip rather than leaving the tooltip to
+              // say where it came from. This chart's own line and no other card's: what
+              // it marks is where *this* pointer is, and there is no page instant for
+              // them to share.
+              if (live) positionPlayhead(atMs);
               setTip({
                 ...cursorAnchor(u, container, left, u.cursor.top ?? 0),
                 label: formatRef.current(atMs),
@@ -637,7 +678,49 @@ export function LevelTrace({
     line.className = PLAYHEAD_CLASS;
     plot.over.appendChild(line);
     playheadRef.current = line;
-    positionPlayhead();
+    // A plot nobody is hovering yet. While live that is the whole story — the line is the
+    // hover — so it starts empty rather than standing at whatever instant the page was
+    // showing before live was switched on. Otherwise it goes straight back to the page's
+    // playhead, which is where the rebuilt chart left it.
+    if (live) positionPlayhead(null);
+    else positionPlayhead();
+
+    // What a finger can do here, which uPlot does nothing about on its own: one finger is
+    // the cursor (the tooltip and the page's playhead, the same as a hover), two are the
+    // window (a pinch crops, a drag slides it). Installed only where there is a window to
+    // move — see `bounds` — so a live chart is left with no touch listeners at all.
+    const removeTouch = touchable
+      ? attachTouchGestures(plot, {
+          // Seconds, uPlot's unit, out of the milliseconds everything else here speaks.
+          // The gesture only exists where `bounds` does, so the fallback is unreachable —
+          // and it is the crop rather than something invented, so were it ever reached a
+          // finger would find the window immovable instead of somewhere unasked for.
+          bounds: () => {
+            const {start, end} = boundsRef.current ?? rangeRef.current;
+            return [start / 1000, end / 1000];
+          },
+          // The page's crop, once per frame — a pinch on one card moves the timeline, the
+          // other cards and every number on the page with the fingers, which is what a
+          // drag on the timeline itself does. That commit comes straight back as `range`
+          // and lands on this plot through applyCrop, so the setScale here is only about
+          // the frame in between: it keeps the chart under the fingers attached to them
+          // even while React is catching up. (applyCrop then finds the scale already
+          // where it wants it and does nothing.)
+          //
+          // No special case for a pinch that reaches the whole project: the pair
+          // committed *is* the project's window then, which is a crop of everything.
+          onRange: (min, max) => {
+            onCropRef.current?.({start: min * 1000, end: max * 1000});
+            plot.setScale('x', {min, max});
+            positionPlayhead();
+          },
+          // Straight into uPlot's cursor, which fires the setCursor hook above — so a
+          // finger reaches the tooltip, the readings and the page's playhead through the
+          // one path a mouse does, and there is no second definition of what a hover
+          // means. The negative pixel is uPlot's own "pointer has left".
+          onScrub: (pos) => plot.setCursor(pos ?? {left: -10, top: -10}, true),
+        })
+      : undefined;
 
     // Only the width can change: the row gives the trace a fixed height. A new width
     // is a new pixel for the same instant, so the playhead is replaced with it.
@@ -652,6 +735,8 @@ export function LevelTrace({
 
     return () => {
       ro.disconnect();
+      // Before the plot goes: the listeners are on a node uPlot is about to take away.
+      removeTouch?.();
       plot.destroy();
       plotRef.current = null;
       // Destroying the plot took the line with it; drop the handle so a stale node
@@ -662,14 +747,22 @@ export function LevelTrace({
     // switching between the live and stored sources — or switching window — rebuilds
     // the plot. Cheap at this size, and it keeps the two from sharing one stale
     // threshold.
+    //
+    // `live` is listed rather than left to the several dependencies derived from it: the
+    // cursor hook reads it directly to decide whether the line is the page's or its own,
+    // and a closure holding the wrong one would draw a line nothing moves.
   }, [
     project,
     xRange,
+    live,
     gapThresholdX,
     lineCount,
     multi,
     stroke,
     selectable,
+    touchable,
+    boundsRef,
+    rangeRef,
     positionPlayhead,
   ]);
 
@@ -732,7 +825,17 @@ export function LevelTrace({
 
   const applyCrop = useCallback(() => {
     const {start, end} = rangeRef.current;
-    plotRef.current?.setScale('x', {min: start / 1000, max: end / 1000});
+    const plot = plotRef.current;
+    if (!plot) return;
+    const min = start / 1000;
+    const max = end / 1000;
+    // Already there, so there is nothing to redraw and nowhere new for the playhead to
+    // be. Which is the ordinary case for exactly one chart: the one a pinch is happening
+    // on, which set this scale itself a frame ago and would otherwise pay for uPlot
+    // dropping its cached paths and clearing the canvas twice per frame of the gesture.
+    // Every other caller arrives with numbers that did move.
+    if (plot.scales.x.min === min && plot.scales.x.max === max) return;
+    plot.setScale('x', {min, max});
     // The playhead keeps its instant while the axis under it moves, so the line has to
     // be put back on the pixel that instant now falls on. Here rather than in an effect
     // of its own, because the two other things that move the line — the instant itself
@@ -793,7 +896,9 @@ export function LevelTrace({
         overflow="hidden"
         // Over the trace the pointer picks an instant, so say so — the row around it
         // is a link, and inheriting its pointer would promise a navigation instead.
-        cursor={onScrub ? 'crosshair' : undefined}
+        // Live too: there is no playhead for the page there, but the pointer still marks
+        // a sample on this chart and still reads it out.
+        cursor={live || onScrub ? 'crosshair' : undefined}
         css={CHART_CSS}
       />
       {tip && (

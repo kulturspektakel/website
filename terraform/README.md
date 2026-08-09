@@ -18,6 +18,25 @@ Task handlers live in `src/routes/api.tasks.*.ts` and
 | `deployment.tf` | CI plumbing: `ci-secret-pusher` SA + key, plus a `ci_secret_pusher_key` output used to refresh the `GCP_SA_KEY` GH Actions secret on rotation |
 | `scripts/sync-env.js` | The `ENV_VARS` manifest (every var + its source) → reads the `env_vars` terraform output + Secret Manager → writes `.env` + `types/env.d.ts` (types `process.env`) + optional Vercel push |
 
+## Monitoring
+
+Terraform owns the `www.kulturspektakel.de` uptime check and its alert, plus
+the `Task failures` alert. Console-managed duplicates of all three (created
+2026-06-03, alongside the terraform-managed originals) were deleted on
+2026-08-10 — they were notifying Slack twice per event. Don't recreate monitors
+in the console; add them to `production.tf`.
+
+The uptime alert deliberately fires on a *sustained* drop in success rate
+rather than on failed probes: every deploy cold-starts the SSR function per
+edge region, and the first request into a region routinely exceeds the check's
+20s timeout. Replayed over 30 days, the worst deploy scores 0.722 against the
+0.6 threshold, while a real outage (HTTP 402, spending limit, 2026-07-27) sits
+at 0. Retune with the `alignment_period` / `threshold_value` pair, not by
+loosening the check timeout.
+
+The `api.kulturspektakel.de` check + alert are still console-managed; retire
+them with the legacy API.
+
 ## How auth works (for tasks)
 
 Cloud Scheduler / Cloud Tasks / Pub/Sub push subscriptions attach an OIDC

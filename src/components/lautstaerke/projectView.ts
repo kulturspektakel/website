@@ -187,6 +187,12 @@ export type ProjectViewCtx = {
   // The timeline's crop in epoch ms, already clamped into the project. The playhead
   // inside it is not here — see above.
   range: {start: number; end: number};
+  // The whole of the project a crop may cover: the event's own window, never past the
+  // current time (see visibleProjectWindow), which is what every gesture is clamped to.
+  // `range` is the part of it on screen. Here rather than derived per view because the
+  // right edge follows the clock during a running festival, and the timeline and the
+  // charts must not answer differently about where the strip ends.
+  bounds: {start: number; end: number};
   // Every location with the monitors that stood there at the instant being viewed.
   // Resolved once by the layout, for two reasons: the map and the list would otherwise
   // each apply assignmentsAt themselves (two places to get the rule wrong), and the

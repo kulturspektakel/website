@@ -152,6 +152,15 @@ function NoiseProjectDetail() {
     [selection.start, selection.end],
   );
 
+  // And the strip the crop lives in, pinned the same way and for the same reason:
+  // `pickable` is a fresh object every render, and this one goes through the context to
+  // every card as the limit a pinch or a two-finger drag may reach. Its right edge moves
+  // once a minute on a running festival, which is a new value then and only then.
+  const bounds = useMemo(
+    () => ({start: pickable.start, end: pickable.end}),
+    [pickable.start, pickable.end],
+  );
+
   // Which monitors stood at each location at the instant being viewed, resolved once
   // for the whole page rather than per card and again in the map.
   //
@@ -259,6 +268,7 @@ function NoiseProjectDetail() {
       metric,
       weighting,
       range,
+      bounds,
       locations,
       scrubTo,
       cropTo,
@@ -272,6 +282,7 @@ function NoiseProjectDetail() {
       metric,
       weighting,
       range,
+      bounds,
       locations,
       scrubTo,
       cropTo,
