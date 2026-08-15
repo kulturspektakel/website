@@ -8,6 +8,7 @@ vi.mock('./prismaClient.server', () => ({
     shortDomainRedirect: {findUnique},
   },
 }));
+vi.mock('@sentry/tanstackstart-react', () => ({captureException: vi.fn()}));
 
 const {shortUrlRedirect} = await import('./shortUrlRedirect');
 
@@ -89,5 +90,30 @@ describe('shortUrlRedirect', () => {
     const res = await shortUrlRedirect(req('', '/x'));
     expect(res).toBeNull();
     expect(findUnique).not.toHaveBeenCalled();
+  });
+
+  test('slug lookup is case-insensitive', async () => {
+    findUnique.mockResolvedValueOnce(null);
+    await shortUrlRedirect(req('kult.wiki', '/Helfen'));
+    expect(findUnique).toHaveBeenCalledWith({where: {slug: '/helfen'}});
+  });
+
+  test('hits get an hour at the edge, misses five minutes', async () => {
+    findUnique.mockResolvedValueOnce({slug: '/a', targetUrl: 'https://t/'});
+    const hit = await shortUrlRedirect(req('kult.wiki', '/a'));
+    expect(hit?.headers.get('cache-control')).toContain('s-maxage=3600');
+
+    findUnique.mockResolvedValueOnce(null);
+    const miss = await shortUrlRedirect(req('kult.wiki', '/b'));
+    expect(miss?.headers.get('cache-control')).toBe(
+      'public, max-age=0, s-maxage=300',
+    );
+  });
+
+  test('database failure → 404 that is not cached', async () => {
+    findUnique.mockRejectedValueOnce(new Error('neon down'));
+    const res = await shortUrlRedirect(req('kult.wiki', '/helfen'));
+    expect(res?.status).toBe(404);
+    expect(res?.headers.get('cache-control')).toBe('no-store');
   });
 });
