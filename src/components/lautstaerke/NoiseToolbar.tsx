@@ -32,6 +32,7 @@ export function NoiseToolbar({
   sub,
   children,
   below,
+  back = true,
 }: {
   // What the page is about, filling the strip's left half. A node and not a string
   // because the two pages differ in kind: a project *has* a name (see ToolbarTitle,
@@ -53,6 +54,11 @@ export function NoiseToolbar({
   // controls wrap onto a second line at phone width. Given the same strip as the first,
   // so a caller passes contents and not chrome.
   below?: ReactNode;
+  // The arrow back to the project list. On by default, because every page that has this
+  // strip was arrived at from that list — except the list itself, which is the one place
+  // the arrow would point at the page you are already on. So the destination opts out and
+  // nobody else says anything.
+  back?: boolean;
 }) {
   return (
     <Box
@@ -66,16 +72,18 @@ export function NoiseToolbar({
       bg="bg"
     >
       <HStack align="center" gap="3" {...STRIP}>
-        <IconButton
-          asChild
-          aria-label="Zurück zur Projektliste"
-          variant="ghost"
-          size="sm"
-        >
-          <Link to="/crew/lautstaerke">
-            <LuArrowLeft />
-          </Link>
-        </IconButton>
+        {back && (
+          <IconButton
+            asChild
+            aria-label="Zurück zur Projektliste"
+            variant="ghost"
+            size="sm"
+          >
+            <Link to="/crew/lautstaerke">
+              <LuArrowLeft />
+            </Link>
+          </IconButton>
+        )}
         {/* The sub line's type is the toolbar's, not each caller's: one size and one
             muted grey, whether what sits in it is a date range or a row of chips. */}
         <VStack align="start" gap="0" flex="1" minW="0">

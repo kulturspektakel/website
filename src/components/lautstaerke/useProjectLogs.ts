@@ -2,14 +2,16 @@ import {useQuery} from '@tanstack/react-query';
 import {useMemo} from 'react';
 import {noiseProjectLogs} from '../../routes/crew.lautstaerke';
 import {
-  levelsByDevice,
   locationEnergyIndex,
   logSeries,
+  metricLevelsByDevice,
   totalsByLocation,
   type LocationAssignments,
   type MetricTraces,
+  type PlayheadLevels,
   type RangeTotals,
 } from './projectLogs';
+import {coverageGaps, type LogGap} from './logCoverage';
 import {noiseQueryKeys} from './queries';
 import {logMinuteIndex, type Weighting} from './noise';
 import {type LevelMetric} from './level';
@@ -31,29 +33,28 @@ const LOGS_CACHE = {
  * question answered locally.
  *
  * Nothing is fetched while live mode is on — `enabled` is doing exactly what it is
- * for, and it also means SSR never touches this. The four derived shapes are memoized
- * apart because they change on very different things: the levels follow the playhead's
- * *minute*, the primary window and the weighting; the running totals the payload, the
- * weighting and the assignments; the crop's Leq those totals and the crop; the traces only
- * the payload, the picked windows and the weighting. So dragging the timeline leaves the
- * levels and the traces alone, and scrubbing recomputes one small record — and only when it
- * crosses into a new minute.
+ * for, and it also means SSR never touches this. The derived shapes are memoized apart
+ * because they change on very different things: the levels follow the playhead's *minute*
+ * and the weighting; the running totals the payload, the weighting and the assignments;
+ * the crop's Leq those totals and the crop; the traces only the payload, the picked
+ * windows and the weighting; the coverage gaps the payload alone. So dragging the timeline
+ * leaves the levels, the traces and the gaps alone, and scrubbing recomputes one small
+ * record — and only when it crosses into a new minute.
  */
 export function useProjectLogs({
   projectId,
   live,
   metrics,
-  metric,
   weighting,
   selection,
   locations,
 }: {
   projectId: string;
   live: boolean;
-  // Every window the charts draw, and the primary the numbers are read in — the two halves
-  // of one pick (see useLevelPick), and they key different memos below.
+  // Every window the charts draw. Not the primary the numbers are read in: the playhead's
+  // record carries every window whatever is picked (see metricLevelsByDevice), so changing
+  // which one the header prints recomputes nothing here — only the traces follow the pick.
   metrics: readonly LevelMetric[];
-  metric: LevelMetric;
   weighting: Weighting;
   selection: ProjectSelection;
   // Which placements count as each location's, for the crop Leq below. The pins and
@@ -61,21 +62,35 @@ export function useProjectLogs({
   // the whole crop rather than read at an instant.
   locations: readonly LocationAssignments[];
 }): {
-  levels?: Record<string, number>;
+  levels?: PlayheadLevels;
   locationTotals?: Record<string, RangeTotals>;
   traces?: MetricTraces;
+  // The stretches of the event nobody reported in, which the timeline shades. Absent
+  // while live and while the payload is in flight, so the strip draws nothing rather
+  // than claiming the whole festival is missing.
+  gaps?: LogGap[];
   isFetching: boolean;
 } {
-  const {data: logs, isFetching} = useQuery({
+  const {data, isFetching} = useQuery({
     queryKey: noiseQueryKeys.projectLogs(projectId),
     queryFn: () => noiseProjectLogs({data: {projectId}}),
     enabled: !live,
     ...LOGS_CACHE,
   });
 
+  // Nothing stored is answered while live, and `enabled` alone does not say that: a query
+  // switched off keeps whatever it last fetched, and the payload is pinned for an hour on
+  // purpose (see LOGS_CACHE), so going live after a scrub left every derived shape below
+  // still standing on it. That mattered for the crop's Leq, which a card printed beside
+  // its live readings — a number averaged over a timeframe the page is no longer looking
+  // at. Dropped here rather than at each of the three memos, and rather than in the leaves:
+  // "absent while live" is one rule about this hook's whole answer, and it is what the
+  // context's fields (see ProjectViewCtx) already promise.
+  const logs = live ? undefined : data;
+
   const {start, end, current} = selection;
 
-  // The playhead's reading, so keyed on the playhead and not on the crop — and on the
+  // The playhead's readings, so keyed on the playhead and not on the crop — and on the
   // minute it stands in rather than the instant, because that is all the payload has.
   // A hover reports a new instant every animation frame, and on any crop shorter than a
   // day most of those frames land in the minute the last one did: keyed on the instant
@@ -83,8 +98,8 @@ export function useProjectLogs({
   // times a second.
   const minute = logs ? logMinuteIndex(logs, current) : 0;
   const levels = useMemo(
-    () => logs && levelsByDevice(logs, {metric, weighting, minute}),
-    [logs, metric, weighting, minute],
+    () => logs && metricLevelsByDevice(logs, {weighting, minute}),
+    [logs, weighting, minute],
   );
 
   // The running totals every crop's Leq is read off, which depend on neither end of
@@ -120,5 +135,11 @@ export function useProjectLogs({
     [logs, metricsKey, weighting],
   );
 
-  return {levels, locationTotals, traces, isFetching};
+  // The one shape here keyed on the payload and nothing else — not the crop, the playhead,
+  // the weighting or the picked windows. It answers "was anything heard at this minute",
+  // which none of those four can change (see PRESENCE_COLUMN), so the timeline's shading is
+  // computed once per project and then merely re-laid-out.
+  const gaps = useMemo(() => logs && coverageGaps(logs), [logs]);
+
+  return {levels, locationTotals, traces, gaps, isFetching};
 }

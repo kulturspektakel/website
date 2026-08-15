@@ -16,6 +16,10 @@ import {formatProjectRange} from '../components/lautstaerke/timeframe';
 import {BluetoothMenu} from '../components/lautstaerke/BluetoothMenu';
 import {DeviceRow} from '../components/lautstaerke/DeviceRow';
 import {NoiseProjectDialog} from '../components/lautstaerke/NoiseProjectDialog';
+import {
+  NoiseToolbar,
+  ToolbarTitle,
+} from '../components/lautstaerke/NoiseToolbar';
 import {compareDeviceIds} from '../components/lautstaerke/noise';
 import {noiseQueryKeys} from '../components/lautstaerke/queries';
 
@@ -39,7 +43,6 @@ function NoiseProjectList() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [createOpen, setCreateOpen] = useState(false);
-
   const {data: projects} = useQuery({
     queryKey: noiseQueryKeys.projects,
     queryFn: () => listNoiseProjects(),
@@ -63,57 +66,61 @@ function NoiseProjectList() {
   );
 
   return (
-    // The area layout is edge-to-edge now (the project page is a map), so a page
-    // that is a list of cards asks for its own gutter.
-    <Box display="flex" flexDirection="column" flex="1" minH="0" p="4">
-      <HStack mb="6" justify="space-between" align="center">
-        <Heading as="h1" size="2xl">
-          Lautstärke
+    // Grows past the viewport rather than being clamped to it, so the toolbar can stick
+    // to the area layout's scroll box — the same wrapper the project and device pages
+    // use, and for the same reason.
+    <Box display="flex" flexDirection="column" flex="1 0 auto">
+      <NoiseToolbar
+        // The one page the arrow would point at is this one.
+        back={false}
+        title={<ToolbarTitle>Lautstärke</ToolbarTitle>}
+      >
+        {/* Stays on the landing page: a freshly flashed monitor belongs to no
+            project yet, and this is the only page reachable without first
+            picking one. Connecting navigates to that device's page, where
+            DeviceMenu offers the same calibrate/WLAN actions. */}
+        <BluetoothMenu />
+        <IconButton
+          aria-label="Neues Projekt"
+          borderRadius="full"
+          size="sm"
+          onClick={() => setCreateOpen(true)}
+        >
+          <FaPlus />
+        </IconButton>
+      </NoiseToolbar>
+
+      {/* The gutter sits here rather than on the page, so the strip above stays
+          edge-to-edge: what is below is a list of cards, which asks for one. */}
+      <Box display="flex" flexDirection="column" flex="1" minH="0" p="4">
+        {projects.length === 0 ? (
+          <Text color="fg.subtle">Noch keine Projekte.</Text>
+        ) : (
+          <VStack align="stretch" gap="2">
+            {projects.map((project) => (
+              <ProjectRow key={project.id} project={project} />
+            ))}
+          </VStack>
+        )}
+
+        {/* Every monitor, under the events they are deployed at: the set is small and
+            long-lived, so this is a list of the hardware rather than of anything that
+            happened, and it is the only way to a monitor that belongs to no project.
+            Monitors appear once they have first reported in — one that has never
+            authenticated has no row to list. */}
+        <Heading size="md" color="fg.muted" mt="8" mb="3">
+          Geräte
         </Heading>
-        <HStack gap="2">
-          {/* Stays on the landing page: a freshly flashed monitor belongs to no
-              project yet, and this is the only page reachable without first
-              picking one. Connecting navigates to that device's page, where
-              DeviceMenu offers the same calibrate/WLAN actions. */}
-          <BluetoothMenu />
-          <IconButton
-            aria-label="Neues Projekt"
-            borderRadius="full"
-            size="sm"
-            onClick={() => setCreateOpen(true)}
-          >
-            <FaPlus />
-          </IconButton>
-        </HStack>
-      </HStack>
-
-      {projects.length === 0 ? (
-        <Text color="fg.subtle">Noch keine Projekte.</Text>
-      ) : (
-        <VStack align="stretch" gap="2">
-          {projects.map((project) => (
-            <ProjectRow key={project.id} project={project} />
-          ))}
-        </VStack>
-      )}
-
-      {/* Every monitor, under the events they are deployed at: the set is small and
-          long-lived, so this is a list of the hardware rather than of anything that
-          happened, and it is the only way to a monitor that belongs to no project.
-          Monitors appear once they have first reported in — one that has never
-          authenticated has no row to list. */}
-      <Heading size="md" color="fg.muted" mt="8" mb="3">
-        Geräte
-      </Heading>
-      {devices.length === 0 ? (
-        <Text color="fg.subtle">Noch keine Geräte.</Text>
-      ) : (
-        <VStack align="stretch" gap="2">
-          {devices.map((device) => (
-            <DeviceRow key={device.id} device={device} />
-          ))}
-        </VStack>
-      )}
+        {devices.length === 0 ? (
+          <Text color="fg.subtle">Noch keine Geräte.</Text>
+        ) : (
+          <VStack align="stretch" gap="2">
+            {devices.map((device) => (
+              <DeviceRow key={device.id} device={device} />
+            ))}
+          </VStack>
+        )}
+      </Box>
 
       <NoiseProjectDialog
         open={createOpen}
@@ -149,6 +156,10 @@ function ProjectRow({project}: {project: NoiseProjectItem}) {
       <Link
         to="/crew/lautstaerke/projekt/$projectId"
         params={{projectId: project.id}}
+        // No `live`, deliberately: a link that named it was this list deciding, for the one
+        // way in it happens to own, something the project page can decide for every way in.
+        // It has the project's own window and now applies the rule itself, so the plain URL
+        // is the whole of what a row has to say — see the layout route's `opened` effect.
       >
         <Box flex="1" minW="0">
           <Text fontWeight="bold" truncate>

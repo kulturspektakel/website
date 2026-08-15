@@ -5,6 +5,7 @@ import {LuPlus, LuX} from 'react-icons/lu';
 import {SegmentedControl} from '../chakra-snippets/segmented-control';
 import {Tooltip} from '../chakra-snippets/tooltip';
 import {KULT_LOCATION} from '../../utils/kultLocation';
+import {useLatest} from './chartUtils';
 import {useDeviceStates, useTick} from './context';
 import {
   displayedLevel,
@@ -17,7 +18,6 @@ import {type Weighting} from './noise';
 import {darkMapStyle, mapBackground} from './mapStyle';
 import {NO_LEVEL_LABEL, pinIcon, pinLabel} from './mapPin';
 import {pulseOverlay} from './mapPulse';
-import {useSamplePins} from './mapDevPins';
 
 export type MapLocation = {
   id: string;
@@ -73,6 +73,10 @@ type MapCanvasProps = {
   // Where the map was clicked while armed. Absent for a map that may not be added
   // to, which also hides the plus button.
   onCreateAt?: (coordinates: Coordinates) => void;
+  // Which pin was pressed. The map reports it and nothing more — where that leads is
+  // the caller's business, and a component that draws pins has no view to send anyone
+  // to. Absent leaves the pins unpressable.
+  onSelect?: (locationId: string) => void;
 };
 
 function LocationsMap({apiKey, ...canvas}: MapCanvasProps & {apiKey: string}) {
@@ -97,6 +101,7 @@ function MapCanvas({
   placing = false,
   onPlacingChange,
   onCreateAt,
+  onSelect,
 }: MapCanvasProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
@@ -199,6 +204,11 @@ function MapCanvas({
     };
   }, []);
 
+  // Through a ref, because the markers are built once per set of locations and the
+  // handler they close over would otherwise be the one from that render — a stale
+  // navigate for as long as the pins stand.
+  const selectRef = useLatest(onSelect);
+
   // Markers and viewport follow the data — but only when the data actually
   // changed. Refetching after an assignment hands back an equal-but-new array,
   // and re-fitting on that would throw away any panning the user just did.
@@ -236,6 +246,11 @@ function MapCanvas({
         });
       });
       marker.addListener('mouseout', () => setHovered(null));
+      // The pin is the way to the place: pressing one asks for that stage's readings,
+      // which the map can only show as a number in a badge. While the create tool is
+      // armed no pin is clickable at all, so this cannot fire then — the click goes to
+      // the map underneath, which is where an armed one belongs.
+      marker.addListener('click', () => selectRef.current?.(location.id));
       return marker;
     });
 
@@ -262,6 +277,27 @@ function MapCanvas({
     });
     return () => clamp.remove();
   }, [signature]);
+
+  // Armed, the pins step out of the way: a marker swallows the click that lands on it, so
+  // leaving them clickable would make the one spot you most want a second mic at — beside
+  // the first — the one spot you cannot drop it. Unclickable they pass it down to the map,
+  // and they carry the crosshair while they do, since the pointer they'd otherwise show
+  // promises a navigation that isn't going to happen.
+  //
+  // `signature` is a dependency because the markers are rebuilt on it, and a set built
+  // while armed would arrive clickable.
+  useEffect(() => {
+    for (const marker of markersRef.current) {
+      marker.setOptions({
+        clickable: !placing,
+        cursor: placing ? 'crosshair' : undefined,
+      });
+    }
+    // An unclickable marker fires no mouseout either, so a tooltip open at the moment the
+    // tool was armed would hang there for good. Dismissed here rather than by the pin,
+    // which has just stopped being able to say anything.
+    if (placing) setHovered(null);
+  }, [placing, signature]);
 
   // The level each pin shows, decided by the same function the list rows use. Every
   // pin is redrawn together, so one subscription across the monitors actually on the
@@ -338,8 +374,6 @@ function MapCanvas({
       for (const pulse of pulses) pulse.setMap(null);
     };
   }, [liveKey, signature]);
-
-  useSamplePins(mapRef);
 
   // Drop every marker when the page unmounts; the map goes with the container.
   useEffect(

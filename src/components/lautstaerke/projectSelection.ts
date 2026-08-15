@@ -1,8 +1,9 @@
 import {MINUTE_MS, QUARTER_MINUTES, clampTo, snapToQuarter} from './timeframe';
 
 // A project page's selection: a sub-range of the project's window plus a cursor
-// inside it. Component state on the layout, not a search param — it filters data the
-// browser already holds (see projectLogs.ts), so nothing reloads when it changes.
+// inside it. Component state on the layout, which the URL trails rather than drives (see
+// projectSearch.ts): it filters data the browser already holds (see projectLogs.ts), so
+// nothing reloads when it changes, and every gesture may commit per animation frame.
 //
 // Everything here speaks epoch milliseconds, because it exists to drive a
 // slider. Its sibling, timeframe.ts, speaks Date, because it exists to drive a
@@ -24,6 +25,21 @@ export function visibleProjectWindow(
 }
 
 export type ProjectSelection = {start: number; current: number; end: number};
+
+// Whether two picks are the same pick, "nothing picked" included. Every writer here
+// builds a fresh object — per frame of a drag, per navigation — and what matters is
+// whether any of the three instants actually moved: an equal-but-new selection re-renders
+// the page and re-keys everything derived from it for nothing.
+export const sameSelection = (
+  a: ProjectSelection | null,
+  b: ProjectSelection | null,
+): boolean =>
+  a === b ||
+  (a != null &&
+    b != null &&
+    a.start === b.start &&
+    a.end === b.end &&
+    a.current === b.current);
 
 // What the user picked, resolved against the window — or, where they have picked
 // nothing, the whole window with the cursor at its right edge, which for a running
@@ -112,51 +128,10 @@ export const setSelectionCurrent = (
   current: clampTo(at, selection.start, selection.end),
 });
 
-// Whether the selection crops the window at all. Below it, the whole strip is
-// selected and there is nothing to slide — which is what decides whether a drag
-// inside the window pans it or places the playhead.
-export const isCropped = (
-  selection: ProjectSelection,
-  window: {start: number; end: number},
-): boolean => selection.start > window.start || selection.end < window.end;
-
 // The grid every gesture on this page lands on. Exported because the timeline's
 // keyboard stepping walks it too, and two derivations of one grid in the two files
 // that have to agree about it is one too many.
 export const QUARTER_MS = QUARTER_MINUTES * MINUTE_MS;
-
-// The selection slid bodily along the strip by `deltaMs`, keeping its length: what
-// dragging the lit part commits.
-//
-// The *shift* is snapped to the quarter hour, not the bounds it lands on. Snapping
-// the bounds (which is what commitProjectSelection does, correctly, for a thumb
-// drag) would round each end independently, so a window typed as 18:07–19:20 would
-// change length as it travelled. This way it keeps both its length and its offset
-// within the grid.
-//
-// The shift is clamped rather than the bounds, so the window slides up against the
-// end of the strip and stops there instead of being squashed against it.
-//
-// The cursor does not travel: it marks an instant the page is showing levels for,
-// and panning the window around it is how you look at that instant in a different
-// context. It only moves when the window would leave it behind, and then only as far
-// as the edge that overtook it.
-export function panProjectSelection(
-  selection: ProjectSelection,
-  deltaMs: number,
-  window: {start: number; end: number},
-): ProjectSelection {
-  const shift = clampTo(
-    Math.round(deltaMs / QUARTER_MS) * QUARTER_MS,
-    // Both bounds are <= 0 <= both others for any selection inside the window,
-    // which resolveProjectSelection guarantees.
-    window.start - selection.start,
-    window.end - selection.end,
-  );
-  const start = selection.start + shift;
-  const end = selection.end + shift;
-  return {start, end, current: clampTo(selection.current, start, end)};
-}
 
 // One thumb moved by whole grid steps: what an arrow or page key on the timeline
 // commits. Which thumb `index` names depends on the mode, so it is read and written

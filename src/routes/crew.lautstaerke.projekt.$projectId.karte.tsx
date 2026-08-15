@@ -1,6 +1,6 @@
-import {createFileRoute} from '@tanstack/react-router';
+import {createFileRoute, useNavigate} from '@tanstack/react-router';
 import {Box, Text} from '@chakra-ui/react';
-import {useEffect, useMemo, useState} from 'react';
+import {useCallback, useEffect, useMemo, useState} from 'react';
 import {toaster} from '../components/chakra-snippets/toaster';
 import LocationsMap, {
   type Coordinates,
@@ -36,6 +36,28 @@ function ProjectMapView() {
   // because what disarms it is the dialog closing, which the map knows nothing about:
   // one location per press of the button, and then the map is a map again.
   const [placing, setPlacing] = useState(false);
+
+  // Pressing a pin goes to that place's card. The map asked a question a badge can only
+  // half answer — 88 dB of what, and how did it get there — and the list is where the
+  // trace, the totals and the monitors standing there are. Which place it is travels in
+  // the history entry rather than the URL (see locationSelection.ts); the moment being
+  // looked at rides along on the layout's retainSearchParams, so a scrubbed map hands the
+  // list the same instant. Nothing is said about how wide the cards are: the list remembers
+  // that itself (see listColumns.ts), and the one card handed over gets the whole row
+  // whatever the count, being the only thing on the page.
+  //
+  // A step of its own and not a replace: the map is where you came from, and back is how
+  // you get to the pin next to this one.
+  const navigate = useNavigate();
+  const select = useCallback(
+    (locationId: string) =>
+      navigate({
+        to: '/crew/lautstaerke/projekt/$projectId/liste',
+        params: {projectId},
+        state: {focusLocation: locationId},
+      }),
+    [navigate, projectId],
+  );
 
   // The prompt, for exactly as long as it is an instruction: from arming the tool
   // until a point is picked or the tool is dropped. Persistent rather than timed —
@@ -105,10 +127,13 @@ function ProjectMapView() {
           live={live}
           metric={metric}
           weighting={weighting}
-          history={levels}
+          // Only the primary window: a pin is a badge over a place, with room for one
+          // number. The cards print every picked window, out of the same record.
+          history={levels?.[metric]}
           placing={placing}
           onPlacingChange={setPlacing}
           onCreateAt={setCreateAt}
+          onSelect={select}
         />
       </Box>
 

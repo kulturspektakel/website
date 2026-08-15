@@ -182,6 +182,7 @@ const CURRENT_ASSIGNMENT_ORDER = {
 const CURRENT_ASSIGNMENT_SELECT = {
   NoiseLocation: {
     select: {
+      id: true,
       locationName: true,
       projectId: true,
       NoiseProject: {select: {name: true}},
@@ -191,11 +192,13 @@ const CURRENT_ASSIGNMENT_SELECT = {
 
 const toDeviceAssignment = (row: {
   NoiseLocation: {
+    id: string;
     locationName: string;
     projectId: string;
     NoiseProject: {name: string};
   };
 }): DeviceAssignment => ({
+  locationId: row.NoiseLocation.id,
   locationName: row.NoiseLocation.locationName,
   projectId: row.NoiseLocation.projectId,
   projectName: row.NoiseLocation.NoiseProject.name,

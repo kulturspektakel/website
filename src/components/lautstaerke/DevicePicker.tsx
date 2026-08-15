@@ -17,7 +17,7 @@ import {
   useDeviceStates,
   useTick,
 } from './context';
-import {compareDeviceIds, formatLastSeen, isFresh, lastSeenAt} from './noise';
+import {compareDeviceIds, formatSeen, isFresh, lastSeenAt} from './noise';
 import {LiveStatusDot} from './LiveStatusDot';
 import {noiseQueryKeys} from './queries';
 
@@ -164,7 +164,7 @@ function DeviceOptions({device}: {device: string}) {
                   />
                 ) : (
                   <Span fontSize="xs" color="fg.muted">
-                    {seen != null ? formatLastSeen(seen, now) : 'nie gesehen'}
+                    {formatSeen(seen, now)}
                   </Span>
                 )}
               </Box>

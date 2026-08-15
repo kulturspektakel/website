@@ -1,10 +1,18 @@
+import {Tooltip} from '../chakra-snippets/tooltip';
+import {formatBatteryHoursLeft, formatBatteryPercent} from './batteryCurve';
 import {Chip} from './Chip';
-import {formatBatteryVolts} from './noise';
 
-// A monitor's cell voltage as a chip of its own — the toolbar, where it sits beside the
-// stage it is standing at and has to look like its sibling. Inside a device badge the
-// voltage is a word in a line rather than a box (see DeviceBadge); both read the same
-// number through formatBatteryVolts.
+// A monitor's charge as a chip of its own — the toolbar, where it sits beside the stage it
+// is standing at and has to look like its sibling. A percentage and not the voltage it was
+// read from: 1.9 V is a number you have to know the cell to read, and the question being
+// asked is whether the monitor lasts the night. The tooltip answers that question in its
+// own terms — the hours, and nothing else, the percentage being what you were already
+// looking at. Inside a device badge the two are one line instead (see DeviceBadge), because
+// there the chip is not there to have said the first half.
 export function BatteryChip({mv}: {mv: number}) {
-  return <Chip whiteSpace="nowrap">{formatBatteryVolts(mv)}</Chip>;
+  return (
+    <Tooltip content={formatBatteryHoursLeft(mv)} showArrow>
+      <Chip whiteSpace="nowrap">{formatBatteryPercent(mv)}</Chip>
+    </Tooltip>
+  );
 }

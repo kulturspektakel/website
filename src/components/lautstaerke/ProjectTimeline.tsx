@@ -1,16 +1,16 @@
 import {Box, Slider as ChakraSlider} from '@chakra-ui/react';
 import {useEffect, useRef, useState} from 'react';
-import {clampTo, formatInstant, snapToQuarter} from './timeframe';
+import {formatInstant, snapToQuarter} from './timeframe';
 import {
   commitProjectSelection,
-  isCropped,
   nudgeSelectionThumb,
-  panProjectSelection,
   selectionThumbs,
+  setSelectionCurrent,
   thumbsToSelection,
   type ProjectSelection,
 } from './projectSelection';
 import {instantLabel} from './chartUtils';
+import type {LogGap} from './logCoverage';
 import {CHART_READOUT_STYLE} from './ChartTooltip';
 import {TimelineMarkers} from './TimelineMarkers';
 import {axisFraction} from './timelineTicks';
@@ -67,10 +67,10 @@ const ariaValueText = ({value}: {value: number}) => formatInstant(value);
 //    That padding shrinks the control, which is the box zag measures, so the ends of
 //    the axis leave exactly the room a grip needs. The track is pulled back out over
 //    the padding (mx below) so the strip itself still spans the full width.
-//  · Alignment is "center", so a thumb's offset is the plain value percentage — the
-//    same coordinate Slider.Range is laid out in, which is what lets the two abut
-//    exactly. ("contain" insets the thumbs but not the range, so under it the two
-//    disagree by up to half a thumb.)
+//  · Alignment is "center", so a thumb's offset is the plain value percentage — which
+//    is what lets the crop's two layers be laid out in that same percentage and abut
+//    the thumbs exactly (see CROP_SPAN). ("contain" insets the thumbs but not those, so
+//    under it the two would disagree by up to half a thumb.)
 //  · Each thumb's box is the one-pixel column its value occupies, and a grip hangs
 //    off the side of it. zag centres a thumb with a translate of its own width, so
 //    the box can be widened for a hit area without moving what's drawn in it — which
@@ -80,6 +80,37 @@ const HANDLE_W = 12;
 const PLAYHEAD_W = 1;
 const PLAYHEAD_HIT = 11;
 
+// The hairline around the strip, and the one the lit window is banded with. One constant
+// because the second is positioned by the first: the band draws on the inner edge of the
+// frame, so the range has to be inset by exactly the frame's own width to have an inner
+// edge at all.
+const FRAME_W = 1;
+
+// Where the crop's two layers — the wash and the band over it — begin and end.
+//
+// Off the pair of custom properties zag keeps the range's own ends in, which it sets on
+// the Root: so both follow the selection without recomputing it, and cannot come out a
+// rounding apart from each other.
+//
+// Read where their percentages resolve against the *Control*, which is the axis the thumbs
+// are placed on — so a layer ends exactly on the thumb it is drawn to. That is the whole
+// reason neither of these is `Slider.Range` any more. zag makes the track
+// `position: relative`, so a range inside it resolves the same two percentages against the
+// track's box instead, and the track is pulled a grip's width past the axis at each end
+// (mx below). Same fraction of a box 22 px wider: the ends land up to 11 px off the thumbs
+// they are supposed to meet, out by nothing in the middle of the strip and by the whole of
+// it at either end. On the far side of centre that overshoots, which a grip hides; on the
+// near side it falls short, which is a gap of bare toolbar between the wash and the grip.
+//
+// Half a pixel out at each end, because a thumb marks a one-pixel column and a layer has
+// to cover the whole of the two it ends on — otherwise the playhead standing on one would
+// half hang out of the lit part, and the grip that abuts it would clip that half.
+const CROP_SPAN = {
+  left: 'var(--slider-range-start)',
+  right: 'var(--slider-range-end)',
+  mx: '-0.5px',
+} as const;
+
 // Each thumb carries its own readout, hidden until it is being pointed at or moved:
 // three pills standing open over a 44 px strip would cover the very thing they label,
 // and while dragging one the other two are not what anyone is reading. Hoisted, so
@@ -87,7 +118,7 @@ const PLAYHEAD_HIT = 11;
 //
 // Four ways to be "now": hovered, dragged by zag (which flags the thumb it is moving),
 // stepped with the keyboard (focus-visible, so the value is readable while arrowing),
-// and moved by one of this file's own gestures, which zag knows nothing about — hence
+// and carried by a scrub off the strip itself, which zag knows nothing about — hence
 // data-moving below.
 const READOUT_ATTR = 'data-readout';
 const READOUT_CSS = {
@@ -157,6 +188,7 @@ function useFrameCommit(onCommit: (selection: ProjectSelection) => void) {
 export function ProjectTimeline({
   window,
   selection,
+  gaps,
   onCommit,
 }: {
   // The pickable window, which is not the project's own: it stops at the current
@@ -164,6 +196,10 @@ export function ProjectTimeline({
   // strip shows by simply ending there.
   window: {start: number; end: number};
   selection: ProjectSelection;
+  // The stretches of the event nobody reported in, shaded behind the ticks so the strip
+  // says where there is anything to look at as well as when. Straight through to
+  // TimelineMarkers, which is the layer that draws in the axis' own coordinates.
+  gaps?: readonly LogGap[];
   onCommit: (selection: ProjectSelection) => void;
 }) {
   // A degenerate window — a project that hasn't started — would have zag dividing by
@@ -179,13 +215,6 @@ export function ProjectTimeline({
   const thumbs = selectionThumbs(selection, false);
   const {onFrame, onceNow} = useFrameCommit(onCommit);
 
-  // Dragging the lit part means one of two things, and which one depends on whether
-  // there is a crop to slide: with the whole strip selected there is no window to
-  // move, so a drag inside it places the playhead; once it has been cropped, the
-  // window itself is what the pointer takes hold of. Either way the edges and the
-  // playhead keep their own thumbs, so nothing here is the only way to do anything.
-  const cropped = isCropped(selection, window);
-
   // What a thumb does when it runs into its neighbour, which differs by thumb — so
   // it is set as the drag starts rather than once for the slider.
   //
@@ -198,27 +227,19 @@ export function ProjectTimeline({
   // neighbour, so arrow keys on an edge still can't push the playhead past itself.
   const [collision, setCollision] = useState<'none' | 'push'>('none');
 
-  // Which of this file's own gestures is in flight, if any — a pan moves both edges, a
-  // scrub the playhead, and each should show the readout of what it is moving. State
-  // and not the ref below, because it is read while rendering; set twice per gesture,
-  // not per move.
-  const [moving, setMoving] = useState<'pan' | 'scrub' | null>(null);
+  // Whether a scrub off the strip itself is in flight, so the playhead can show its
+  // readout while it travels — zag flags the thumb *it* is dragging, and it is not
+  // involved in this one. State and not the ref below, because it is read while
+  // rendering; set twice per gesture, not per move.
+  const [scrubbing, setScrubbing] = useState(false);
 
-  // The gesture in flight, if any: which pointer owns it, which of the two it is,
-  // and — since a pan is relative — where on the strip it was grabbed together with
-  // the selection it was grabbed from. Both halves of that pair matter now that a pan
-  // commits on every move: measuring the shift against the *live* selection would
-  // apply it again to a selection that has already been shifted, and the window would
-  // run away from the pointer.
+  // Which pointer owns that scrub, if any. Nothing else needs remembering: a scrub is
+  // absolute — it reads an instant off the pointer and writes it to `current` — so
+  // there is no origin to measure against and no starting selection to hold on to.
   //
   // A ref because it gates the pointerdown handler synchronously, and nothing renders
   // from it.
-  const gesture = useRef<{
-    pointerId: number;
-    mode: 'pan' | 'scrub';
-    grabbedAt: number;
-    from: ProjectSelection;
-  } | null>(null);
+  const scrubPointer = useRef<number | null>(null);
 
   // The instant a pointer sits over, unsnapped. Mirrors zag's own point→value math,
   // which the handler below bypasses: under thumbAlignment="center" that is the
@@ -235,20 +256,22 @@ export function ProjectTimeline({
     return window.start + ratio * (sliderMax - window.start);
   };
 
-  // Onto the quarter hour, then back inside the window — so a window narrower than a
-  // step still puts the playhead somewhere valid rather than outside its own range.
-  // snapToQuarter, because that is what the commit on release will do (see
-  // commitProjectSelection): a preview on any other grid would jump when let go.
-  const playheadAt = (ms: number) =>
-    clampTo(snapToQuarter(ms), selection.start, selection.end);
+  // The selection with its playhead moved to an instant the pointer named. Onto the
+  // quarter hour first, because that is the grid a commit on release would snap it to
+  // anyway (see commitProjectSelection) — a preview on any other would jump when let go.
+  // setSelectionCurrent does the clamping, and is the page's one rule for where the
+  // cursor may stand: the same call the row charts' hover goes through, so a window
+  // narrower than a step puts the playhead somewhere valid here for the same reason it
+  // does there.
+  const withPlayheadAt = (ms: number) =>
+    setSelectionCurrent(selection, snapToQuarter(ms));
 
-  // zag gives a track click to whichever thumb is nearest, so a click just inside
-  // the window drags that edge over to the pointer — losing a crop the user set
-  // deliberately, and with it the range the page is showing. So drags that land
-  // inside the window are taken over here: they pan the window, or move the
-  // playhead when there is no crop to pan. Outside it, zag's rule is the right one —
-  // the nearer edge stretches out to meet the pointer — so those clicks fall
-  // through untouched.
+  // zag gives a track press to whichever thumb is nearest, so a press just inside the
+  // window drags that edge over to the pointer — losing a crop the user set
+  // deliberately, and with it the range the page is showing. So presses that land inside
+  // the window are taken over here, where they set the playhead. Outside it, zag's rule
+  // is the right one — the nearer edge stretches out to meet the pointer — so those
+  // fall through untouched.
   //
   // Capture phase, since zag's own handler sits on this element and would
   // otherwise run first.
@@ -256,8 +279,7 @@ export function ProjectTimeline({
     event: React.PointerEvent<HTMLDivElement>,
   ) => {
     // A grip and the playhead each drag themselves; their pointerdown passes
-    // through here on its way down, and stealing it would freeze them. This is also
-    // what keeps the playhead grabbable while the window around it pans.
+    // through here on its way down, and stealing it would freeze them.
     if ((event.target as HTMLElement).closest('[role="slider"]')) return;
 
     const control = event.currentTarget;
@@ -266,22 +288,15 @@ export function ProjectTimeline({
 
     event.preventDefault();
     event.stopPropagation();
-    // One gesture at a time: a second finger landing on the strip would otherwise
-    // start its own and fight the first over the same selection.
-    if (gesture.current != null) return;
+    // One at a time: a second finger landing on the strip would otherwise start its own
+    // and fight the first over the same playhead.
+    if (scrubPointer.current != null) return;
 
-    const mode = cropped ? 'pan' : 'scrub';
-    gesture.current = {
-      pointerId: event.pointerId,
-      mode,
-      grabbedAt: at,
-      from: selection,
-    };
-    setMoving(mode);
-    // A pan is relative, so it does nothing until the pointer actually travels — and
-    // so a stray click on the window writes no selection at all. A scrub jumps the
-    // playhead to where it was clicked.
-    if (mode === 'scrub') onceNow({...selection, current: playheadAt(at)});
+    scrubPointer.current = event.pointerId;
+    setScrubbing(true);
+    // A press is already the whole gesture — the playhead goes where it landed, and a
+    // drag from there is that same answer repeated as the pointer travels.
+    onceNow(withPlayheadAt(at));
     // Pointer capture retargets every subsequent move and the release to the strip,
     // so a drag that wanders off it — off the page entirely — keeps tracking, and
     // the release still arrives at the handlers below. It also means those can be
@@ -290,42 +305,35 @@ export function ProjectTimeline({
     control.setPointerCapture(event.pointerId);
   };
 
-  // Only ever the pointer that started the gesture. zag drags its own thumbs off
-  // document listeners, so its gestures pass through here with `gesture` unset.
-  const ownGesture = (event: React.PointerEvent) =>
-    gesture.current?.pointerId === event.pointerId ? gesture.current : null;
+  // Only ever the pointer that started the scrub. zag drags its own thumbs off document
+  // listeners, so its gestures pass through here with `scrubPointer` unset.
+  const ownScrub = (event: React.PointerEvent) =>
+    scrubPointer.current === event.pointerId;
 
   const onControlPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    const active = ownGesture(event);
-    if (!active) return;
-    // Nothing is holding the selection any more: a release we never saw, because the
+    if (!ownScrub(event)) return;
+    // Nothing is holding the playhead any more: a release we never saw, because the
     // browser took the capture away mid-gesture. End where it stands rather than
     // following an empty pointer — and clear the gate, or no later drag can start.
-    if (event.buttons === 0) return endGesture();
+    if (event.buttons === 0) return endScrub();
     const next = pointerAt(event.currentTarget, event.clientX);
     if (next == null) return;
-    onFrame(
-      active.mode === 'pan'
-        ? // Against the selection the pan started from, so the shift is absolute
-          // rather than compounding. panProjectSelection snaps the shift itself,
-          // which is what keeps the window's length exact — putting it through
-          // commitProjectSelection would round each end on its own and stretch it.
-          panProjectSelection(active.from, next - active.grabbedAt, window)
-        : // playheadAt already lands on the quarter hour the release would snap to,
-          // so a scrub needs nothing further when it ends.
-          {...active.from, current: playheadAt(next)},
-    );
+    // Off the live selection rather than the one the press started from: a scrub only
+    // ever writes `current`, so there is nothing of the earlier copy worth keeping.
+    // Already on the quarter hour the release would snap to, so ending needs nothing
+    // further.
+    onFrame(withPlayheadAt(next));
   };
 
   // Nothing to commit here any more: every move already did. All that is left is
-  // releasing the gate, so the next pointer can start a gesture.
-  const endGesture = () => {
-    gesture.current = null;
-    setMoving(null);
+  // releasing the gate, so the next pointer can start a scrub.
+  const endScrub = () => {
+    scrubPointer.current = null;
+    setScrubbing(false);
   };
 
   const onControlPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (ownGesture(event)) endGesture();
+    if (ownScrub(event)) endScrub();
   };
 
   // Read the same way the row charts' tooltip reads it, off the same rule and the same
@@ -391,48 +399,97 @@ export function ProjectTimeline({
         <ChakraSlider.Track
           h="full"
           rounded="md"
+          // Both of the recipe's own track decorations, cleared: its `outline` variant
+          // brings a fill *and* an inset one-pixel ring (shadows.inset is literally
+          // `inset 0 0 0 1px black/5`). This strip supplies its own frame below, and the
+          // ring sat just inboard of it as a second, barely-visible border.
           bg="transparent"
+          shadow="none"
           // The same hairline the ticks are drawn in, so the frame and the grid it
           // frames read as one thing — and so a day mark running into the top or bottom
           // edge simply continues the line rather than crossing it. Opaque for that
-          // reason: see TimelineMarkers. The lit range fills the padding box inside it,
-          // so the rule stays visible all the way round however the window is cropped.
-          borderWidth="1px"
+          // reason: see TimelineMarkers. The crop's wash is held a frame's width inside
+          // it, so the rule stays visible all the way round however the window is cropped.
+          borderWidth={`${FRAME_W}px`}
           borderColor="chart.rule"
           mx={`-${HANDLE_W}px`}
-        >
-          {/* Inside it: the window. Range spans first→last thumb, which is
-                start→end whether or not the playhead sits between them. Half a pixel
-                wider at each end than those two thumbs, because a thumb marks a
-                column and the range has to cover the whole of the two it ends on —
-                otherwise the playhead standing on one would half hang out of the lit
-                part, and the grip that abuts it would clip that half. The cursor
-                names which of the two drags this is: a cropped window is grabbable,
-                an uncropped one is clickable to place the playhead. */}
-          <ChakraSlider.Range
-            // The same wash the row charts lay under their traces — see LevelTrace's
-            // `fill()`, which is a line's own colour at 15 %. Fixed, and there is not even a
-            // stroke to follow any more: the charts draw a line per picked window, each its
-            // own shade, so a strip that took one of them would be picking a favourite.
-            // `accent.solid` is the section's one accent — the
-            // grips' own fill, and the middle of the series ramp — so the crop reads as
-            // belonging to the handles that set it.
-            //
-            // Translucent, unlike everything else here, and safely so: the range fills
-            // the track's padding box, so it stops short of the rule around it and has
-            // nothing to double up against.
-            bg="accent.solid/15"
-            mx="-0.5px"
-            cursor={cropped ? 'grab' : 'pointer'}
-            _active={cropped ? {cursor: 'grabbing'} : undefined}
-          />
-        </ChakraSlider.Track>
+        />
+
+        {/* Inside it: the window, from the first thumb to the last — which is start→end
+            whether or not the playhead sits between them.
+            The same wash the row charts lay under their traces — see LevelTrace's `fill()`,
+            which is a line's own colour at 15 %. Fixed, and there is not even a stroke to
+            follow any more: the charts draw a line per picked window, each its own shade, so
+            a strip that took one of them would be picking a favourite. `accent.solid` is the
+            section's one accent — the grips' own fill, and the middle of the series ramp —
+            so the crop reads as belonging to the handles that set it.
+
+            Before the markers, so the grid draws over the top of it: a tick inside the crop
+            stays the same crisp hairline it is outside, rather than something seen through
+            15 % yellow. Which is also why the wash and the band below are two boxes and not
+            one — the band has to be over the grid, and the wash under it.
+
+            Translucent, unlike everything else here, and safely so: held a frame's width
+            inside the strip top and bottom, so it stops short of the rule around it and has
+            nothing to double up against. The crop's two accent edges are the band below, out
+            where they can reach that rule — this is only the fill.
+
+            Hit-testable, and the one thing here that is: this is the lit part, and a press
+            on it is a press on the window. The cursor says so at every crop width, because
+            there is one thing such a press does — put the playhead where it landed. */}
+        <Box
+          position="absolute"
+          top={`${FRAME_W}px`}
+          bottom={`${FRAME_W}px`}
+          {...CROP_SPAN}
+          bg="accent.solid/15"
+          cursor="pointer"
+        />
 
         {/* The clock the strip is read against. Must stay between the track and the
             thumbs — see TimelineMarkers for what rests on that. Handed sliderMax rather
             than window.end: that is the axis the thumbs are on, and a marker measured
-            against anything else would stand beside the thumb that shares its instant. */}
-        <TimelineMarkers start={window.start} end={sliderMax} />
+            against anything else would stand beside the thumb that shares its instant.
+            The grip width too, which is how far the strip reaches past that axis at either
+            end — the room the outermost labels are cut against rather than pulled in. */}
+        <TimelineMarkers
+          start={window.start}
+          end={sliderMax}
+          gaps={gaps}
+          overhang={HANDLE_W}
+        />
+
+        {/* The crop, banded top and bottom in the grips' own fill: the grips run the full
+            height of the strip, and these two lines are what carries the accent between
+            them, so the window reads as a closed figure rather than a wash with handles at
+            its ends. Opaque, and drawn *on* the frame rather than inside it — along the
+            crop the strip's own rule turns accent, which is why there is no line of the
+            frame's colour left showing under it.
+
+            Which is why it is out here and not a border on the wash. That box is held
+            inside the frame, and a line drawn on its edge is therefore always a pixel short
+            of the strip's — and the ticks, being between the two, punched a grey hole
+            through it at every crossing besides. Here it is after the markers and before
+            the thumbs, so tree order alone puts it over the grid and under both grips and
+            the playhead, and no z-index is needed anywhere.
+
+            Spanning the crop exactly as the wash does, off the same two properties — see
+            CROP_SPAN. Top and bottom to nothing, unlike the wash: these two lines are the
+            frame's own rows, which is what "drawn on the frame" means. */}
+        <Box
+          position="absolute"
+          top="0"
+          bottom="0"
+          {...CROP_SPAN}
+          borderTopWidth={`${FRAME_W}px`}
+          borderBottomWidth={`${FRAME_W}px`}
+          borderColor="accent.solid"
+          // Decorative, and over the very part of the strip a scrub starts in: the crop is
+          // already spoken by the two edge thumbs, and a box that took pointerdown here
+          // would stop a press from placing the playhead.
+          pointerEvents="none"
+          aria-hidden
+        />
 
         {thumbs.map((value, i) => {
           const playhead = i === 1;
@@ -441,12 +498,11 @@ export function ProjectTimeline({
             <ChakraSlider.Thumb
               key={i}
               index={i}
-              // Set while one of this file's own gestures is moving *this* thumb: a
-              // pan carries both edges, a scrub the playhead. zag flags the thumb it
-              // is dragging itself, but it is not involved in either of those.
-              data-moving={
-                (playhead ? moving === 'scrub' : moving === 'pan') || undefined
-              }
+              // Set while a scrub off the strip is carrying this thumb, which only the
+              // playhead ever is — pressing the window is the one gesture here that
+              // moves a thumb the pointer is not on. zag flags the thumb it is
+              // dragging itself, but it has no part in that one.
+              data-moving={(playhead && scrubbing) || undefined}
               css={READOUT_CSS}
               // Neutralize the default round knob; these are grips and a
               // playhead, drawn by the children below.
@@ -462,7 +518,7 @@ export function ProjectTimeline({
               height={`${STRIP_H}px`}
               // Above the playhead's hit area, which is wider than the line it
               // draws and overlaps a grip whenever it is parked against one. The
-              // grip has to win that: the playhead can also be placed by clicking
+              // grip has to win that: the playhead can also be placed by pressing
               // the window, while a grip is the only way to move an edge.
               zIndex={playhead ? undefined : '3'}
               display="flex"

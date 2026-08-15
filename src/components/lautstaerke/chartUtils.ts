@@ -40,9 +40,9 @@ export const dbAxis = {range: [30, 110] as const};
 // slivers, and below this the list scrolls instead.
 //
 // It includes the axis under the plot, so the trace itself gets what is left — dbAxis
-// spans 80 dB, which over that remainder is eight grid gaps of ~14 px each, still enough
+// spans 80 dB, which over that remainder is eight grid gaps of ~16 px each, still enough
 // to read a level off the grid rather than merely be reminded there is one.
-export const MIN_PLOT_HEIGHT = 128;
+export const MIN_PLOT_HEIGHT = 160;
 
 // uPlot needs a concrete pixel height, and the container is flex-sized, so it
 // can measure 0 before layout settles — fall back rather than collapse.

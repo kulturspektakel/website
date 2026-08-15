@@ -7,8 +7,8 @@ import {
   type ProjectLogs,
   type Weighting,
 } from './noise';
-import {type LevelMetric} from './level';
-import {seriesFor} from './series';
+import {LEVEL_METRICS, type LevelMetric} from './level';
+import {hasSeries, seriesFor} from './series';
 import {fromEnergy, toEnergy, usableDb, type Coverage} from './leq';
 
 // Reading the project page's numbers off the whole event, which the browser now
@@ -210,6 +210,36 @@ export function levelsByDevice(
   for (const deviceId of Object.keys(logs.devices)) {
     const db = logColumn(logs, deviceId, metric, weighting)?.[minute];
     if (db != null) out[deviceId] = db;
+  }
+  return out;
+}
+
+/**
+ * Every window at the playhead, for every device — what a location's header prints and,
+ * behind it, the rest of what the instant holds (see LocationReadings).
+ *
+ * One record and not five calls at the leaves: the minute is the same for all of them, the
+ * columns are all already in memory, and a page-wide answer is what keeps a card's tooltip
+ * from re-deriving what the card beside it just did. The whole thing costs one index per
+ * device per window, which is why it is cheaper than the single-window version was to key
+ * on the picked metric — see useProjectLogs.
+ *
+ * Only the windows the weighting *has* get a key (LCpeak has no A-weighted twin), and
+ * within one, only the devices that read something — the same "absent rather than null"
+ * rule as levelsByDevice, one level deeper, so a consumer keys on presence throughout.
+ */
+export type PlayheadLevels = Partial<
+  Record<LevelMetric, Record<string, number>>
+>;
+
+export function metricLevelsByDevice(
+  logs: ProjectLogs,
+  {weighting, minute}: {weighting: Weighting; minute: number},
+): PlayheadLevels {
+  const out: PlayheadLevels = {};
+  for (const metric of LEVEL_METRICS) {
+    if (!hasSeries(metric, weighting)) continue;
+    out[metric] = levelsByDevice(logs, {metric, weighting, minute});
   }
   return out;
 }

@@ -34,10 +34,11 @@ export const LIVE_LEVEL_WINDOW_MS = 10_000;
 // picker offers all of them and disables the ones the weighting in force has no answer
 // for — see metricOptions.
 //
-// The Leq over the selected range used to be an option too. It isn't one any more: it
-// has no line, no live counterpart and no playhead, and it is what one wants to read
-// off *every* row anyway — so the rows show it by default and the picker is left
-// meaning one thing only.
+// The Leq over the selected timeframe is picked in the same menu and is deliberately *not*
+// one of these: it has no line, no live counterpart and no playhead, so nothing downstream of
+// a LevelMetric — the series table, the traces, the chart's columns — has an answer for it.
+// It travels as its own flag beside this set (see useLevelPick) and is read off the cards
+// only, which is why the picker's list is these five plus one row that isn't a metric.
 //
 // Order is load-bearing three times over: it is the order of the picker's rows, of the
 // device page's tiles, and of the chart's columns (see traceColumn) — and, being
@@ -148,6 +149,47 @@ export const metricTag = (metric: LevelMetric, live: boolean): string =>
 // The unit a level is printed in, which is the weighting spelled out.
 export const weightingUnit = (weighting: Weighting): string =>
   weighting === 'A' ? 'dB(A)' : 'dB(C)';
+
+/**
+ * A level's full name — `LAeq,5m`, `LCFmax`, `LCpeak` — for a readout that prints it under
+ * the number instead of tagging the number with a window (see LocationReadings).
+ *
+ * The quantity spelled out is what lets the unit go unsaid: a figure under `LAeq,5m` is dB
+ * by definition and by convention, and "87.5 dB(A) 5m" repeated five times across a card is
+ * the same statement three times over.
+ *
+ * Off the series table's own spelling rather than composed here, so a rename lands in one
+ * place — the table already names all nine, and it names them for the live page. The single
+ * difference between the modes is the finest window, a second live and a stored minute,
+ * which is exactly what metricTag knows; so this swaps that window rather than restating
+ * "LAeq" and getting to disagree with the legend about it.
+ */
+export const metricLabel = (
+  metric: LevelMetric,
+  weighting: Weighting,
+  live: boolean,
+): string => {
+  const {liveLabel} = seriesFor(metric, weighting);
+  return liveLabel.replace(metricTag(metric, true), metricTag(metric, live));
+};
+
+// What the Leq over the whole picked timeframe is called where a window would be named. Not
+// a window and not a series — it has no line, no live counterpart and no playhead — but it is
+// picked alongside them and read beside them, so it is named like them. `Zeitraum` is the
+// word the page already uses for the timeframe (see coverageDetail).
+const RANGE_WINDOW = 'Zeitraum';
+
+/**
+ * Its full name, for a readout that prints the quantity under the number (see metricLabel).
+ */
+export const rangeLabel = (weighting: Weighting): string =>
+  `L${weighting}eq,${RANGE_WINDOW}`;
+
+/**
+ * And its name in the picker, which — like every option there — leaves the weighting to the
+ * dropdown beside it, so this reads as LAeq or LCeq as selected.
+ */
+export const RANGE_OPTION_LABEL = `Leq,${RANGE_WINDOW}`;
 
 // A window under a weighting is a row of the series table (seriesFor), which
 // carries both halves of the answer: `get` reads it off a live record, `col` names

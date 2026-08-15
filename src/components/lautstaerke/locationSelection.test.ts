@@ -1,13 +1,16 @@
 import {describe, expect, it} from 'vitest';
 import {
   defaultSelection,
+  focusSelection,
   parseSelection,
   resolveSelection,
+  toggledSelection,
 } from './locationSelection';
 
-// What the list opens on, and what it opens on the second time. Two rules meet here: a
-// browser that has never chosen gets the first few places in display order, and one that
-// has gets exactly what it chose — including having chosen nothing.
+// What the list opens on, what it opens on the second time, and what pressing a place in
+// the roster does to it. The rules that meet here: a browser that has never chosen gets the
+// first few places in display order, one that has gets exactly what it chose, and either
+// way the list is never empty — the last card can't be taken off it.
 
 const place = (id: string, locationName: string) => ({id, locationName});
 
@@ -36,14 +39,47 @@ describe('resolveSelection', () => {
     expect(resolveSelection(null, locations)).toEqual(['d', 'b', 'c']);
   });
 
-  it('keeps a stored empty selection empty', () => {
-    // Deselecting everything is a choice the list has a message for; putting three cards
-    // back on the next reload would undo it.
-    expect(resolveSelection([], locations)).toEqual([]);
+  it('falls back to the default rather than resolving to an empty list', () => {
+    // Two ways to get there — an entry written before the list insisted on a card, and one
+    // whose every place has since been deleted. Neither is an arrangement to restore.
+    expect(resolveSelection([], locations)).toEqual(['d', 'b', 'c']);
+    expect(resolveSelection(['gone'], locations)).toEqual(['d', 'b', 'c']);
   });
 
   it('drops ids whose location is gone and answers in display order', () => {
     expect(resolveSelection(['a', 'gone', 'b'], locations)).toEqual(['b', 'a']);
+  });
+});
+
+describe('toggledSelection', () => {
+  it('adds and removes, in display order and without the ghosts', () => {
+    expect(toggledSelection(new Set(['b']), 'a', locations)).toEqual([
+      'b',
+      'a',
+    ]);
+    expect(
+      toggledSelection(new Set(['b', 'a', 'gone']), 'a', locations),
+    ).toEqual(['b']);
+  });
+
+  it('ignores the press that would empty the list', () => {
+    expect(toggledSelection(new Set(['a']), 'a', locations)).toEqual(['a']);
+    // Same thing when what is left over is only a place that no longer exists.
+    expect(toggledSelection(new Set(['a', 'gone']), 'a', locations)).toEqual([
+      'a',
+    ]);
+  });
+});
+
+describe('focusSelection', () => {
+  it('is the pressed place alone, whatever else was on the list', () => {
+    expect(focusSelection('a', locations)).toEqual(['a']);
+  });
+
+  it('is null when nothing was handed over, or when it no longer exists', () => {
+    // Both mean the same thing to the list: nothing to override the stored selection with.
+    expect(focusSelection(undefined, locations)).toBeNull();
+    expect(focusSelection('gone', locations)).toBeNull();
   });
 });
 

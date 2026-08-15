@@ -8,7 +8,9 @@ import {
   liveDb,
   loudestIndex,
   loudestLevel,
+  metricLabel,
   metricOptions,
+  rangeLabel,
   primaryMetric,
   supportedMetric,
   supportedMetrics,
@@ -19,6 +21,7 @@ import {
   type PickedMetrics,
 } from './level';
 import {type Weighting} from './noise';
+import {LIVE_SERIES} from './series';
 
 const NOW = Date.parse('2026-07-25T20:00:00Z');
 
@@ -162,6 +165,34 @@ describe('liveDb', () => {
     expect(liveDb(record, 'eq_30m', 'C')).toBe(65);
     expect(liveDb(record, 'fmax', 'A')).toBe(90);
     expect(liveDb(record, 'peak', 'C')).toBe(105);
+  });
+});
+
+// What a card's tiles print under the number, where the picker's labels leave the weighting
+// to the other dropdown and these have to carry it (see LocationReadings).
+describe('metricLabel', () => {
+  // Derived from the series table rather than spelled again, and this is what says so: a
+  // rename in the legend has to land on the cards too, or the same quantity is called two
+  // things on one page.
+  it('is the chart legend’s own spelling, live', () => {
+    for (const series of LIVE_SERIES) {
+      expect(metricLabel(series.kind, series.weighting, true)).toBe(
+        series.label,
+      );
+    }
+  });
+
+  // The one name that depends on the mode, for the same reason metricOptions' does.
+  it('names the finest window as a stored minute', () => {
+    expect(metricLabel('eq_fast', 'A', false)).toBe('LAeq,1m');
+    expect(metricLabel('eq_fast', 'C', false)).toBe('LCeq,1m');
+    // And leaves every other name alone, mode or no mode.
+    expect(metricLabel('fmax', 'A', false)).toBe('LAFmax');
+    expect(metricLabel('peak', 'C', false)).toBe('LCpeak');
+  });
+
+  it('names the timeframe where a window would be', () => {
+    expect(rangeLabel('A')).toBe('LAeq,Zeitraum');
   });
 });
 

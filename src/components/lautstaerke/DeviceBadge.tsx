@@ -2,13 +2,14 @@ import {HStack, Text} from '@chakra-ui/react';
 import {Link} from '@tanstack/react-router';
 import {useEffect, useRef, useState} from 'react';
 import {Tooltip} from '../chakra-snippets/tooltip';
+import {formatBatteryHoursLeft, formatBatteryPercent} from './batteryCurve';
 import {useBluetooth, useDeviceState, useTick} from './context';
 import {
   compareDeviceIds,
-  formatBatteryVolts,
   formatLastSeen,
   isFresh,
   lastSeenAt,
+  NEVER_SEEN,
 } from './noise';
 import {Chip} from './Chip';
 import {LiveStatusDot} from './LiveStatusDot';
@@ -173,25 +174,18 @@ function MoreDevicesBadge({names}: {names: string[]}) {
 //                 quiet rather than turning grey, because a grey dot beside a green one is
 //                 read as a state of the same kind, and this is the absence of one — a
 //                 badge with nothing lit is the monitor that is not talking, and the row
-//                 says which those are at a glance. Since when is the tooltip's answer.
-//   the tooltip — whichever of the two facts about the monitor the dot has just raised,
-//                 because they are the same question asked either side of the dot going
-//                 out:
-//
-//                 alive   its cell voltage. In the tooltip rather than on the badge: a
-//                         row of badges is read for which monitors are here and whether
-//                         they are alive, while the charge on one of them is what you go
-//                         looking for once, about one device — printed on every badge it
-//                         cost the names the width instead. Only while alive, because it
-//                         is sent on the live stream alone (see noise.proto), so a device
-//                         that has gone quiet leaves its last reading behind in the
-//                         buffer and a voltage from twenty minutes ago shown as current
-//                         is worse than none.
-//                 offline when we last heard from it, which is the only useful thing left
-//                         to say and the first thing anyone asks of a badge with no dot.
-//                         "Since when" is what separates a monitor somebody has just
-//                         unplugged from one that has been down since yesterday, and the
-//                         missing dot alone cannot tell them apart.
+//                 says which those are at a glance.
+//   the tooltip — the answer to whichever question the dot has raised. Alive: its cell
+//                 voltage, which is sent on the live stream alone (see noise.proto), so a
+//                 monitor that has gone quiet leaves its last reading behind in the buffer
+//                 and a voltage from twenty minutes ago shown as current is worse than none.
+//                 Quiet: since when — the thing a dark badge makes you ask, answered about
+//                 the monitor it is asked of. Per badge rather than once for the location,
+//                 which is where it used to be said: a card with two monitors printed the
+//                 newer one's silence for both, and the number beside them is a level, not
+//                 a clock. In the tooltip rather than on the badge because a row of them is
+//                 read for which monitors are here and whether they are alive — either of
+//                 these printed on every badge would cost the names the width instead.
 //
 // Independent of which timeframe the page is showing, deliberately: whether a monitor is
 // powered and talking is a fact about the monitor, not about the hour being looked at, and
@@ -218,21 +212,31 @@ export function DeviceBadge({
   const bluetooth = useBluetooth();
   const now = useTick();
   const batteryMv = state?.latest.batteryMv;
-  // The record and the live store merged by the one rule for it, which is also what the
-  // "last seen" line on the other side of this header reads (see lastSeenAt).
+  // The record and the live store merged by the one rule for it (see lastSeenAt) — which is
+  // what the dot is lit from, and what the tooltip reports when it isn't.
   const seen = lastSeenAt(lastSeen, state?.lastSeen);
   const alive = isFresh(seen, now);
   const ble = deviceName === bluetooth.deviceName;
-  // Alive and mains-powered is the one case with nothing to add: the dot has said the
-  // whole of it. `disabled` then renders the badge bare rather than arming a state
-  // machine for an empty bubble.
+  // The charge while it is talking — both halves of it here, unlike the chip's tooltip, since
+  // a badge shows no charge of its own and this bubble is the only place either number
+  // appears. Nothing when it is talking but on mains, which the dot has already said the
+  // whole of, and `disabled` then renders the badge bare rather than arming a state machine
+  // for an empty bubble.
+  //
+  // And when it isn't talking, when it was last heard instead: prefixed, because a bare "vor
+  // 20 Minuten" floating beside a name says nothing about what happened 20 minutes ago.
+  //
+  // The never-heard half is NEVER_SEEN itself and not a wording of its own — the phrase for
+  // that state is written once, in noise.ts, and every place that prints it says the same
+  // words. It stands unprefixed because it is already the whole sentence: "Zuletzt gesehen
+  // nie gesehen" is what running it through the prefix would give.
   const tooltip = alive
-    ? batteryMv != null
-      ? `Akku ${formatBatteryVolts(batteryMv)}`
-      : ''
-    : seen != null
-      ? `Zuletzt gesehen ${formatLastSeen(seen, now)}`
-      : 'Nie gesehen';
+    ? batteryMv == null
+      ? ''
+      : `Akku ${formatBatteryPercent(batteryMv)} · ${formatBatteryHoursLeft(batteryMv)}`
+    : seen == null
+      ? NEVER_SEEN
+      : `Zuletzt gesehen ${formatLastSeen(seen, now)}`;
 
   return (
     <Tooltip content={tooltip} disabled={tooltip === ''} showArrow>

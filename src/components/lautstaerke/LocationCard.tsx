@@ -30,8 +30,8 @@ import {
 // of axes.
 //
 // What the card *shows* never comes and goes with the playhead — the same monitors are
-// named, the same two numbers are printed and the same ⋮ is there to press however far
-// back you have scrubbed. A card whose contents appeared and vanished as the pointer
+// named, one number per picked window is printed and the same ⋮ is there to press however
+// far back you have scrubbed. A card whose contents appeared and vanished as the pointer
 // travelled would reflow the list under the cursor.
 //
 // What those numbers *mean* does follow it, and that is the split worth knowing: the
@@ -46,7 +46,7 @@ import {
 //
 // Memoized, and its one prop is pinned by the layout for it (see ProjectViewCtx.
 // locations) — so a hover over any trace on the page, which moves the playhead on every
-// animation frame, doesn't re-render this card's ⋮ menu and its two monitors' names
+// animation frame, doesn't re-render this card's ⋮ menu and its monitors' names
 // for it. What does follow the playhead is the leaf below, and it reads
 // it itself.
 export const LocationCard = memo(function LocationCard({
@@ -75,7 +75,11 @@ export const LocationCard = memo(function LocationCard({
       display="flex"
       flexDirection="column"
       gap="2"
-      p="3"
+      px="3"
+      // Less above and below than beside: what the card is short of is height — the chart
+      // gets whatever the header leaves — and the readings now carry their own boxes, which
+      // hold the header off the border without the card's own padding doing it.
+      py="2"
       rounded="md"
       borderWidth="1px"
       borderColor="border.emphasized"
@@ -150,11 +154,12 @@ export const LocationCard = memo(function LocationCard({
   );
 });
 
-// The readings beside a location's name — the place's Leq over the crop, and what the
-// loudest monitor standing here reads at the playhead.
+// The readings beside a location's name — what the loudest monitor standing here reads at
+// the playhead, one number per window the page is drawing, and the place's Leq over the
+// crop after them.
 //
 // Its own component so that it, and not the card around it, is what re-renders as the
-// pointer travels over a trace: the second, tagged number it prints is the instant's.
+// pointer travels over a trace: every tagged number it prints is the instant's.
 // Both halves of the page's state are read here rather than passed down for the same
 // reason — the card holds still through a crop drag except for these numbers, so
 // subscribing the leaf and not its parent keeps a drag off every card's header and ⋮. Same arrangement LocationChart uses, and why both take only what is theirs.
@@ -172,17 +177,20 @@ function LocationLevels({
   // no monitor *now* and still has a crop Leq to show.
   empty: boolean;
 }) {
-  const {live, metric, weighting, locationTotals} = useProjectView();
+  const {live, metrics, weighting, locationTotals} = useProjectView();
   const levels = usePlayheadLevels();
   if (empty) return null;
 
   return (
     <LocationReadings
       assignments={assignments}
+      // Whatever there is, unconditionally: whether this reading is wanted at all is
+      // settled where it is produced, so a card has no gate of its own to get wrong (see
+      // ProjectViewCtx.locationTotals).
       total={locationTotals?.[locationId]}
       levels={levels}
       live={live}
-      metric={metric}
+      metrics={metrics}
       weighting={weighting}
     />
   );

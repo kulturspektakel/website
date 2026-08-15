@@ -48,6 +48,19 @@ const NOISE_COLORS = {
   'chart.axis': 'gray.400',
   'chart.grid': 'gray.700',
   'chart.rule': 'gray.600',
+  // The hatch the project timeline shades a stretch with no readings in (see
+  // TimelineMarkers). Its own name, because unlike every other entry here it is not drawn
+  // as a line but as texture: the stripes cover about a third of the band, so what the eye
+  // gets is their average against the ground behind rather than this value itself. Which
+  // means the step alone does not say how heavy the shading is — it is this and the pitch
+  // over in TimelineMarkers together, and they have to be changed as a pair.
+  //
+  // It lands on `grid`'s step, and that is a coincidence of value rather than a
+  // relationship: one is the faintest line a chart can be read against, this is the
+  // faintest texture a strip can be. Neither has a reason to follow the other, so they
+  // stay two names. This is meant to be read past — a missing stretch should be findable
+  // at a glance without becoming the loudest thing on a strip whose subject is the crop.
+  'chart.gap': 'gray.700',
   'chart.playhead': 'gray.50',
   'chart.readout.bg': 'gray.800',
 

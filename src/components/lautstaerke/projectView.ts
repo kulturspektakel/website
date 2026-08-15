@@ -3,7 +3,7 @@ import {locale} from '../../utils/dateUtils';
 import type {loadNoiseProject} from '../../routes/crew.lautstaerke';
 import type {LevelMetric, PickedMetrics} from './level';
 import type {Weighting} from './noise';
-import type {MetricTraces, RangeTotals} from './projectLogs';
+import type {MetricTraces, PlayheadLevels, RangeTotals} from './projectLogs';
 
 export type NoiseProject = Awaited<ReturnType<typeof loadNoiseProject>>;
 export type NoiseLocationItem = NoiseProject['locations'][number];
@@ -267,12 +267,12 @@ export type ProjectViewCtx = {
   // only for the live path.
   //
   // Two fields for one pick, and the split is worth knowing:
-  //   metrics — every window the *charts* draw, one line each in its own shade.
-  //   metric  — the primary (see primaryMetric), which every *number* is read in: the
-  //             pins, the second reading on a card, the levels at the playhead. One
-  //             number cannot be five, and the readouts have not been asked to become a
-  //             row of them, so they read the finest thing picked. Deliberate, and for
-  //             the readouts temporary.
+  //   metrics — every window the page shows: one line each on the charts, in its own
+  //             shade, and one number each on a location's header, in that same shade
+  //             (see LocationReadings).
+  //   metric  — the primary (see primaryMetric), for the one readout that has room for a
+  //             single number: a map pin, which is a badge over a place. Everything with
+  //             room for the set prints the set.
   metrics: PickedMetrics;
   metric: LevelMetric;
   weighting: Weighting;
@@ -281,7 +281,13 @@ export type ProjectViewCtx = {
   // the average of the very area its chart fills (see locationEnergyIndex). Keyed by
   // location and not by device on purpose: a monitor's own history spans every stage it
   // visited, so a per-device figure printed the same number on every card it had ever
-  // stood at. Absent while live, and while the one query behind it is in flight.
+  // stood at.
+  //
+  // Absent whenever the reading isn't wanted, and that is the whole of the rule a card has
+  // to know: while the one query behind it is in flight, while live — an instant has no
+  // range to average — and when the header's menu has the row unticked. The layout resolves
+  // all three and withholds the field (see showRangeLeq); there is deliberately no flag
+  // beside it, because a value that must not be printed is better not handed over.
   locationTotals?: Record<string, RangeTotals>;
   // Whole-project traces at stored resolution, one device record per picked window; the
   // crop is applied by the chart, not here, so these survive a timeline drag untouched.
@@ -363,11 +369,17 @@ const NO_PLAYHEAD: PlayheadSignal = (listener) => {
  */
 export const PlayheadSignalContext = createContext<PlayheadSignal>(NO_PLAYHEAD);
 
+// Every window at that minute rather than only the one the numbers used to be read in: a
+// card prints one number per picked window now, and the pins — which have room for one —
+// take the primary out of the same record (see the map view). Widening it costs an index
+// per device per window on a minute change, and it is what took `metric` out of the memo
+// behind this, so changing the pick no longer recomputes anything here.
+//
 // Absent while live, and while the project's logs are still loading — so `undefined` is
 // an ordinary answer here and there is nothing for a hook to throw about.
-export const PlayheadLevelsContext = createContext<
-  Record<string, number> | undefined
->(undefined);
+export const PlayheadLevelsContext = createContext<PlayheadLevels | undefined>(
+  undefined,
+);
 
 export const usePlayheadLevels = () => useContext(PlayheadLevelsContext);
 

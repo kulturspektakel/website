@@ -38,6 +38,10 @@ export type Weighting = 'A' | 'C';
 // Absent when the monitor is not placed anywhere, which is the ordinary state of one in a
 // cupboard.
 export type DeviceAssignment = {
+  // The spot's own id as well as its name: a chip that names a place is also the way to
+  // it, and what the project's list view is asked to put on screen is an id (see
+  // locationSelection.ts).
+  locationId: string;
   locationName: string;
   projectId: string;
   projectName: string;
@@ -158,13 +162,10 @@ export function isFresh(
   return lastSeen != null && now - lastSeen < windowMs;
 }
 
-// What the device reports as `batteryMv`, in volts. Measured through a 2:1 voltage
-// divider, so the reading is half the real cell voltage and doubling it is the whole of
-// the conversion — here rather than at each of the two places that print it, because a
-// factor applied in one of them and not the other is a monitor that looks flat on one
-// screen and full on the next.
-export const formatBatteryVolts = (mv: number): string =>
-  `${((mv * 2) / 1000).toFixed(2)} V`;
+// Nothing here formats `batteryMv` any more: a voltage is a number about the cell, and what
+// the section shows is a number about the evening. See batteryCurve.ts, which reads the
+// charge as a percentage — and note it indexes its curve with the reading *undoubled*,
+// which is the one thing the 2:1 divider on this measurement makes easy to get wrong.
 
 // Monitor ids sort the way a person reads them: `kult-2` before `kult-10`, not after it.
 // Postgres orders them lexicographically, so anything that shows a set of monitors sorts
@@ -197,7 +198,27 @@ export const lastSeenAt = (
 
 const relativeTime = new Intl.RelativeTimeFormat(locale, {numeric: 'auto'});
 
-// German relative time (e.g. "vor 5 Minuten") for a past timestamp.
+// What a monitor nothing has ever been heard from reads as. Its own name because it is said
+// in two shapes — bare, as formatSeen's answer for it, and as a whole tooltip of its own in
+// DeviceBadge, which cannot compose the two (its other half carries a prefix). One string
+// either way, so the state cannot come out worded two ways.
+export const NEVER_SEEN = 'nie gesehen';
+
+/**
+ * When a monitor was last heard from, as a reader sees it — including the case where the
+ * answer is "never".
+ *
+ * The null-tolerant one, and the one nearly every caller wants: `lastSeenAt` legitimately
+ * returns undefined, so every place that prints its answer has to say something for it. Left
+ * to the callers that was `seen != null ? formatLastSeen(seen, now) : 'nie gesehen'` copied
+ * into four components, which is four chances for the phrase to drift — and it had already
+ * drifted in one of them.
+ */
+export const formatSeen = (seen: number | undefined, now: number): string =>
+  seen == null ? NEVER_SEEN : formatLastSeen(seen, now);
+
+// German relative time (e.g. "vor 5 Minuten") for a past timestamp. Still exported, for the
+// one caller that needs the bare phrase to put inside a sentence of its own.
 export function formatLastSeen(ts: number, now: number): string {
   const diffS = Math.round((ts - now) / 1000);
   const abs = Math.abs(diffS);

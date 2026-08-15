@@ -43,6 +43,7 @@ import {
   zonedDate,
 } from './chartUtils';
 import {ChartTooltip} from './ChartTooltip';
+import {SelectionMenu} from './SelectionMenu';
 import {attachTouchGestures} from './uplotTouchGestures';
 import {usePlayheadEffect, type DeviceWindows} from './projectView';
 
@@ -177,6 +178,10 @@ const CHART_CSS = {
   // uPlot's own rubber band, which its stylesheet paints in 7 % black — invisible on
   // this chart. The playhead's colour at the same 15 % the trace fills its area with, so
   // the drag region reads as one of this chart's own marks rather than as the library's.
+  //
+  // It matters more than it did when the sweep committed a crop on mouse up and the band
+  // was gone the same frame: it now stays up for as long as the selection menu is open,
+  // as the only thing saying which range that menu is about.
   '& .u-select': {
     background: 'chart.playhead/15',
   },
@@ -184,7 +189,7 @@ const CHART_CSS = {
     position: 'absolute',
     top: 0,
     bottom: 0,
-    // A hairline: at row height the trace is only ~128 px of chart, and anything
+    // A hairline: at row height the trace is only ~160 px of chart, and anything
     // thicker reads as a band over the samples it is meant to point at.
     width: '1px',
     // Centred on its instant rather than starting at it, so it marks the sample the
@@ -260,8 +265,14 @@ type LevelTraceProps = {
       //               every editing timeline, and the fastest way to bound the crop on the
       //               peak you are looking at rather than dragging two thumbs towards it.
       //               Bound to the hover, so the keys belong to the trace and not the page.
-      //   a drag    — both ends, swept across the trace (uPlot's own rubber band), or two
-      //               fingers, which pinch and slide it.
+      //   a drag    — both ends, swept across the trace (uPlot's own rubber band). The one
+      //               gesture that does not arrive here on its own: a sweep names a range
+      //               and opens a menu over it, and this is what the menu's zoom calls.
+      //               See SelectionMenu.
+      //   two fingers — both ends, pinched and slid. Direct manipulation, so it crops as
+      //               it moves: there is no cursor left standing for a menu to open at,
+      //               and a chart that stopped following the fingers to ask would be a
+      //               gesture with a dialog in the middle of it.
       //
       // An omitted end keeps the crop's own.
       onCrop: (crop: {start?: number; end?: number}) => void;
@@ -399,10 +410,24 @@ export function LevelTrace({
     readings: Array<{deviceId: string; metric: LevelMetric; db: number}>;
   } | null>(null);
 
+  // The range a sweep has named and not yet done anything with: the crop it would make,
+  // in epoch ms, and the pixel the pointer came up on for the menu to open at. Null
+  // whenever there is no menu — the two are the same fact, and the menu is mounted from
+  // this rather than from an `open` flag beside it.
+  const [pending, setPending] = useState<{
+    start: number;
+    end: number;
+    left: number;
+    top: number;
+  } | null>(null);
+
   // The instant the pointer is on, for the keys below to read. A ref and not part of
   // `tip`: it is rewritten on every frame of a hover, and nothing renders from it.
   const hoverAtRef = useRef<number | null>(null);
   const onCropRef = useLatest(onCrop);
+  // Read by the cursor hook, which is a closure the plot keeps for its lifetime and which
+  // must not be rebuilt for a menu opening. All it wants to know is whether one is.
+  const pendingRef = useLatest(pending);
 
   // How much of the instant is worth printing, decided by how wide the window is: a
   // crop inside one day needs no date, a festival-length one would otherwise say
@@ -482,11 +507,15 @@ export function LevelTrace({
     // out itself would be the second place that decided it. A location nothing has ever
     // stood at lands here too, and comes back as empty columns over drawn axes rather than
     // as a card with a gap where a chart should be.
-    return traceData(aligned, current.map((l) => l.windows), {
-      metricCount: metrics.length,
-      envelope,
-      holdX: gapThresholdX,
-    }) as uPlot.AlignedData;
+    return traceData(
+      aligned,
+      current.map((l) => l.windows),
+      {
+        metricCount: metrics.length,
+        envelope,
+        holdX: gapThresholdX,
+      },
+    ) as uPlot.AlignedData;
     // Keyed on digests rather than on the arrays: the same monitors over the same windows
     // in the same set of quantities are the same projection, and new arrays of them every
     // render are not a new plot.
@@ -563,18 +592,34 @@ export function LevelTrace({
             (u) => {
               const {left, width} = u.select;
               if (width <= 0) return;
-              // Clear the band before committing: the crop it becomes is what the
-              // chart then shows, so a leftover overlay would sit over a scale it no
-              // longer describes. Without the hook, or this would re-enter.
-              u.setSelect({left: 0, top: 0, width: 0, height: 0}, false);
-              onCropRef.current?.({
+              // The band stays up, and no crop is committed here: the sweep has named a
+              // range, and what happens to it is the menu's to say (see SelectionMenu).
+              // Out of uPlot's seconds at this boundary, the same as everywhere else.
+              //
+              // Anchored on the pointer rather than on the band, so the menu opens where
+              // the hand already is however far the sweep travelled — u.cursor is still
+              // on the pixel the mouse came up on when this runs.
+              setPending({
                 start: u.posToVal(left, 'x') * 1000,
                 end: u.posToVal(left + width, 'x') * 1000,
+                ...cursorAnchor(
+                  u,
+                  container,
+                  u.cursor.left ?? left + width,
+                  u.cursor.top ?? 0,
+                ),
               });
+              // The tooltip would otherwise stand on the pixel the menu is about to
+              // cover, naming an instant nothing is asking about any more.
+              setTip(null);
             },
           ],
           setCursor: [
             (u) => {
+              // Frozen while a swept range is waiting on its menu: the pointer is on its
+              // way to that menu, and every pixel of the journey would otherwise move the
+              // page's playhead and print a tooltip under the thing being read.
+              if (pendingRef.current) return;
               const left = u.cursor.left;
               // Negative once the pointer leaves. The tooltip goes with it. The playhead
               // stays where it was rather than snapping back: it's the page's instant
@@ -801,6 +846,7 @@ export function LevelTrace({
     cropped,
     boundsRef,
     rangeRef,
+    pendingRef,
     positionPlayhead,
     xAxisSize,
   ]);
@@ -834,6 +880,21 @@ export function LevelTrace({
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [hovering, onCropRef]);
+
+  // Putting a swept range away, which both of the menu's outcomes start with: the band
+  // is the selection made visible, so it goes when the selection does — whether that is
+  // a zoom (the crop it becomes is what the chart then shows, and a leftover overlay
+  // would sit over a scale it no longer describes) or a dismissal. Without the hook, or
+  // this would re-enter setSelect.
+  //
+  // Guarded, because the crop effect below calls this on every timeframe there is: a
+  // timeline drag commits one per animation frame to every card on the list, and there
+  // is no reason for a dozen charts to write a style each for a band none of them has.
+  const clearSelection = useCallback(() => {
+    if (!pendingRef.current) return;
+    plotRef.current?.setSelect({left: 0, top: 0, width: 0, height: 0}, false);
+    setPending(null);
+  }, [pendingRef]);
 
   // Whether this row is anywhere near the viewport, and whether a crop arrived while
   // it wasn't. Refs, because nothing renders from either: scrolling a list must not
@@ -895,12 +956,17 @@ export function LevelTrace({
   // nobody is looking at.
   useEffect(() => {
     if (live) return;
+    // A band is a region of *this* scale, and the scale is about to move under it —
+    // whether the new crop came from this chart's own menu or from the timeline while
+    // that menu stood open. The pixels it covers would name other instants afterwards,
+    // so the selection goes with the timeframe it was drawn in.
+    clearSelection();
     if (!nearViewRef.current) {
       missedCropRef.current = true;
       return;
     }
     applyCrop();
-  }, [live, range?.start, range?.end, applyCrop]);
+  }, [live, range?.start, range?.end, applyCrop, clearSelection]);
 
   // The other half of that: scrolling a deferred row back into view is what finally
   // pays for it. Generous margin, so the crop lands before the row is actually visible
@@ -941,6 +1007,21 @@ export function LevelTrace({
         cursor="crosshair"
         css={CHART_CSS}
       />
+      {/* What a sweep across the trace opened, standing where it ended. A sibling of the
+          plot and not a child of it, for the same reason the tooltip is: uPlot owns
+          every node inside its container. Never both at once — a pending selection
+          clears the tip and holds the cursor hook off. */}
+      {pending && (
+        <SelectionMenu
+          at={pending}
+          onZoom={() => {
+            const {start, end} = pending;
+            clearSelection();
+            onCrop?.({start, end});
+          }}
+          onClose={clearSelection}
+        />
+      )}
       {tip && (
         <ChartTooltip left={tip.left} top={tip.top}>
           <Text fontSize="xs" lineHeight="1.2">
@@ -972,10 +1053,7 @@ export function LevelTrace({
                   .filter(Boolean)
                   .join(' · ')}
               </Text>
-              <Text
-                fontWeight="bold"
-                color={tokens[metrics.indexOf(metric)]}
-              >
+              <Text fontWeight="bold" color={tokens[metrics.indexOf(metric)]}>
                 {formatDb(db, unitLabel)}
               </Text>
             </HStack>

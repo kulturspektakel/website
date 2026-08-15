@@ -54,10 +54,10 @@ const STEPS_MIN = [
 export const TICK_SPACE = 15;
 
 // Roughly what a label occupies — "01.08." at the axis font, which is the widest thing
-// this axis prints, so one number covers both label kinds. Exported because the markers
-// clamp against it at the strip's ends, and two estimates of one string's width would
-// be two things to correct when the type changes.
-export const LABEL_W = 40;
+// this axis prints, so one number covers both label kinds. Only ever spacing: nothing
+// clamps against it any more, because a label that runs past the axis is cut by the strip
+// rather than moved or dropped (see TimelineMarkers).
+const LABEL_W = 40;
 
 // The closest two labels may sit: their own width, and then room to breathe. Arithmetic
 // rather than a second constant, so the gap cannot quietly become negative.

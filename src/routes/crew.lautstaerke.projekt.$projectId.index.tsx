@@ -12,6 +12,9 @@ export const Route = createFileRoute('/crew/lautstaerke/projekt/$projectId/')({
     throw redirect({
       to: '/crew/lautstaerke/projekt/$projectId/liste',
       params,
+      // No search of its own: a redirect that doesn't name one has none, and what a
+      // pinned link carries (see projectSearch.ts) is kept by the layout route's own
+      // retainSearchParams rather than by every hop that passes through here.
       replace: true,
     });
   },

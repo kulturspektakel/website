@@ -1,7 +1,12 @@
-import {createFileRoute, Outlet, useChildMatches} from '@tanstack/react-router';
+import {
+  createFileRoute,
+  Outlet,
+  retainSearchParams,
+  useChildMatches,
+} from '@tanstack/react-router';
 import {Box, Spinner, Text} from '@chakra-ui/react';
 import {useQuery, useQueryClient} from '@tanstack/react-query';
-import {useCallback, useEffect, useMemo, useState} from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {loadNoiseProject} from './crew.lautstaerke';
 import {
   NoiseToolbar,
@@ -11,10 +16,17 @@ import {formatProjectRange} from '../components/lautstaerke/timeframe';
 import {
   resolveProjectSelection,
   cropProjectSelection,
+  sameSelection,
   setSelectionCurrent,
   visibleProjectWindow,
   type ProjectSelection,
 } from '../components/lautstaerke/projectSelection';
+import {
+  projectSearchFor,
+  projectSearchSelection,
+  sameProjectSearch,
+  validateProjectSearch,
+} from '../components/lautstaerke/projectSearch';
 import {useNowAfterMount} from '../components/lautstaerke/context';
 import {
   assignmentsAt,
@@ -42,34 +54,52 @@ import {seo} from '../utils/seo';
 // sibling routes so a view is linkable and survives a reload, and so each one's markup
 // lives in its own file; the shared toolbars, timeline and data stay here (see
 // projectView.ts for what crosses the seam).
-//
-// Three choices over two routes: the list and the grid are the same route at one or two
-// columns, which travels as that route's own `spalten` search param. So a view is a
-// route *and* a search, and picking one navigates to both.
 const MAP_ROUTE = '/crew/lautstaerke/projekt/$projectId/karte';
 const LIST_ROUTE = '/crew/lautstaerke/projekt/$projectId/liste';
 
-// The list first, because that is where a project opens (see the index route) and a
+// Two choices over two routes, which is the whole of it: how wide the cards are is not a
+// third view but a way of laying them out, and it is picked where the rest of the list's
+// layout is — the toolbar at its foot, on the page it applies to, and remembered per browser
+// rather than put on the URL (see listColumns.ts). This switcher used to carry it as a
+// "Raster" entry, which put half of one view's layout in the header of both.
+//
+// The charts first, because that is where a project opens (see the index route) and a
 // dropdown that led with something else would read as if the landing view were an
 // exception. The map is a view you switch to.
 const VIEWS = [
-  {value: 'list', label: 'Liste', to: LIST_ROUTE, search: {}},
-  {value: 'grid', label: 'Raster', to: LIST_ROUTE, search: {spalten: 2}},
-  {value: 'map', label: 'Karte', to: MAP_ROUTE, search: {}},
+  {value: 'list', label: 'Graph', to: LIST_ROUTE},
+  {value: 'map', label: 'Karte', to: MAP_ROUTE},
 ] as const satisfies ReadonlyArray<{
   value: string;
   label: string;
   to: string;
-  search: {spalten?: 2};
 }>;
 
 type View = (typeof VIEWS)[number]['value'];
+
+// How long the timeline has to be still before the URL is brought up to date. Long enough
+// that a drag or a hover across a chart is one write rather than a hundred, short enough
+// that letting go and reaching for the address bar finds it already there.
+const URL_SETTLE_MS = 300;
 
 // `projekt/` is a static segment because $device already occupies the dynamic slot
 // under /crew/lautstaerke — a cuid and a device name are indistinguishable at
 // match time, so the two routes would be ambiguous. This also leaves every
 // bookmarked device URL untouched.
 export const Route = createFileRoute('/crew/lautstaerke/projekt/$projectId')({
+  // Live, and the moment being looked at while it is off — see projectSearch.ts. On the
+  // layout and not on either view, because the timeline is the layout's: both views are
+  // read at the same instant, and switching between them must not change it.
+  //
+  // No loaderDeps, deliberately: none of this fetches anything. The project's stored
+  // history is one query the browser then reads locally (see useProjectLogs), so pinning
+  // a moment is not a reason to go back to the server.
+  validateSearch: validateProjectSearch,
+  // And they stay on the URL through every navigation inside this subtree that doesn't
+  // mention them: switching view, and the index route's redirect into the list. Stated
+  // once here, where the params are declared, rather than as a `search` to remember at
+  // each link and redirect — the next one added would be the one that forgot.
+  search: {middlewares: [retainSearchParams(['live', 'from', 'to'])]},
   loader: ({params}) => loadNoiseProject({data: {projectId: params.projectId}}),
   head: ({loaderData}) =>
     seo({title: `Lautstärke – ${loaderData?.name ?? 'Projekt'}`}),
@@ -81,21 +111,123 @@ function NoiseProjectDetail() {
   const initial = Route.useLoaderData();
   const navigate = Route.useNavigate();
   const queryClient = useQueryClient();
-  // Live is the default: this page's job during a festival is watching the
-  // monitors right now, which is also what it did before there was a cursor.
-  const [live, setLive] = useState(true);
-  // How you're looking at the project, all of it component state: none of it fetches
-  // anything, because the whole event is in the browser. Only *which view* is on
-  // screen is in the URL, and that's a route.
+  const search = Route.useSearch();
+  // Live is the default: this page's job during a festival is watching the monitors
+  // right now, which is also what it did before there was a cursor. A URL that names a
+  // moment is a page someone pinned and sent, so it opens on that instead.
+  //
+  // For a festival that is over — or hasn't started — live is an empty page, so it opens
+  // on the whole event with the playhead at its end instead (see resolveProjectSelection,
+  // which is what a live-less page with no crop resolves to). That rule lived on the index
+  // route's links, which meant it held for exactly one way in: a bookmark, a pasted URL,
+  // the index route's own redirect and every future link — a pin on the map, a device's
+  // place chip — all opened a finished event live. It is a fact about the project, so it
+  // belongs on the page that has the project.
+  const [live, setLive] = useState(search.live !== false);
+  // How you're looking at the project. Component state, because none of it fetches
+  // anything — the whole event is in the browser — and because a gesture on the timeline
+  // commits per animation frame, which is more often than an address bar can be written
+  // (see the sync below). The URL is the record of it, not the source.
   //
   // One pick, two halves: `metrics` is every window the charts draw, `metric` the primary
   // the numbers are read in (see primaryMetric). Both travel through the context, because
-  // the map and the list must not answer either of them differently.
-  const {weighting, setWeighting, metrics, metric, toggleMetric} =
-    useLevelPick();
+  // the map and the list must not answer either of them differently. Neither is in the
+  // URL: they are how you read a chart, not what you are looking at.
+  const {
+    weighting,
+    setWeighting,
+    metrics,
+    metric,
+    toggleMetric,
+    rangeLeq,
+    toggleRangeLeq,
+  } = useLevelPick();
   // What the user has picked of the timeline, or null while they have picked nothing —
-  // see resolveProjectSelection for why that null carries weight.
-  const [chosen, setChosen] = useState<ProjectSelection | null>(null);
+  // see resolveProjectSelection for why that null carries weight. The crop comes from the
+  // URL on the first render rather than from an effect after it, so a pinned link's own
+  // window is what the first paint draws and hydration sees the same page the server
+  // sent; the playhead inside it is the page's alone (see projectSearch.ts).
+  const [chosen, setChosen] = useState<ProjectSelection | null>(() =>
+    projectSearchSelection(search, null),
+  );
+
+  // The URL trails the page, and it trails it late. A crop drag commits once per animation
+  // frame (see ProjectTimeline's useFrameCommit), so navigating per commit would
+  // re-render every match sixty times a second — and spend Safari's history allowance, a
+  // hundred entries per thirty seconds, in about two of them. So the pick lands in state
+  // at once and in the URL once the gesture has been still for a moment. Nothing on the
+  // page reads it back, so the delay is invisible; what it costs is a moment before the
+  // URL is worth copying.
+  //
+  // That settling is what makes the history entry below worth having: one step per
+  // gesture, rather than one per frame of it. Moving the playhead writes nothing at all —
+  // it isn't in the URL — so hovering the charts neither navigates nor pushes.
+  useEffect(() => {
+    const next = projectSearchFor(live, chosen);
+    if (sameProjectSearch(next, search)) return;
+    const timer = setTimeout(
+      () =>
+        // Only the search changes, and `unsafeRelative` is what says so: with no `to`, a
+        // navigation resolves against the route it was made from — this layout — and would
+        // take the URL up out of the child view on screen, which the index route then
+        // redirects back to the list. So touching the timeline on the map would bounce out
+        // of the map. Against the current pathname instead, whatever it is.
+        //
+        // Over the search that is there rather than instead of it: `next` names every param
+        // this page owns — including the ones it is clearing (see projectSearchFor) — and
+        // says nothing about anybody else's.
+        navigate({
+          unsafeRelative: 'path',
+          search: (prev) => ({...prev, ...next}),
+          // A step of its own, not a replace: everything that reaches here is a decision
+          // about what is being looked at — the mode, or a window someone framed — and
+          // backing out of one is what a back button is for. Back walks out of live mode
+          // and out through the crops that were picked; the adopt effect below is what
+          // puts each of them on screen as it does.
+          resetScroll: false,
+        }),
+      URL_SETTLE_MS,
+    );
+    return () => clearTimeout(timer);
+    // The crop's two ends and not `chosen` itself: the playhead inside it moves once per
+    // animation frame while a chart is hovered, and it is not in the URL — so depending on
+    // the object would restart the settle sixty times a second and a long hover would
+    // leave a crop that has already been let go of unwritten. The search is listed by its
+    // three values for the same reason the adopt effect below is: this has to re-decide
+    // when the URL moves under it, and not because a render handed it a new object.
+  }, [
+    live,
+    chosen?.start,
+    chosen?.end,
+    search.live,
+    search.from,
+    search.to,
+    navigate,
+  ]);
+
+  // And the other direction: the back button, or a link followed into a tab that is
+  // already on this page. The URL changed without this page having written it, so the
+  // page takes it — and equal values are dropped, since the page's own write arrives back
+  // here as a change like any other and would otherwise hand every consumer a new
+  // selection object for a selection that hasn't moved.
+  useEffect(() => {
+    setLive(search.live !== false);
+    // The crop is only read back while the URL is showing one. Live carries no range by
+    // construction, and the pick it leaves behind is deliberately kept in state so that
+    // switching back returns to it — reading an absent range as "nothing picked" would
+    // throw exactly that away.
+    if (search.live === false) {
+      setChosen((prev) => {
+        // Around the playhead already standing there, which is why this is computed in the
+        // updater rather than beside it: the URL says nothing about the instant, so the
+        // one to keep is whatever the page holds at the moment it takes the crop.
+        const next = projectSearchSelection(search, prev);
+        return sameSelection(prev, next) ? prev : next;
+      });
+    }
+    // The three values rather than the object: this must run when the URL moves, and not
+    // because a render handed it a new identity for the same one.
+  }, [search.live, search.from, search.to]);
 
   const {data: project} = useQuery({
     queryKey: noiseQueryKeys.project(projectId),
@@ -103,17 +235,14 @@ function NoiseProjectDetail() {
     initialData: initial,
   });
 
-  // Which view is on screen comes from the match and its search, not from state — the
-  // URL is the one place it's recorded. Anything that isn't the cards is the map; the
-  // index route is neither, and redirects to the list before this is ever asked.
+  // Which view is on screen comes from the match, not from state — the URL is the one
+  // place it's recorded. Anything that isn't the cards is the map; the index route is
+  // neither, and redirects to the list before this is ever asked. The column count is
+  // deliberately not read here: it is the list's own layout, and a switcher that changed
+  // when it did would be a control for two different things.
   const shown = useChildMatches({
-    select: (matches): View => {
-      const list = matches.find((m) => m.routeId === LIST_ROUTE);
-      if (!list) return 'map';
-      return (list.search as {spalten?: number}).spalten === 2
-        ? 'grid'
-        : 'list';
-    },
+    select: (matches): View =>
+      matches.some((m) => m.routeId === LIST_ROUTE) ? 'list' : 'map',
   });
 
   // Without a Maps key there is no map to switch to, so the list is all there is.
@@ -124,6 +253,25 @@ function NoiseProjectDetail() {
   // once a minute, so the edge keeps up during a running event.
   const now = useNowAfterMount();
   const pickable = visibleProjectWindow(project, now ?? project.end);
+
+  // The other half of the opening decision above, and it has to be an effect for the same
+  // reason `now` is null to begin with: the server has no business guessing which side of
+  // the clock the reader is on, so the first paint opens live — as it always did — and the
+  // clock corrects it once there is one.
+  //
+  // Once, ever. `now` re-ticks every minute and the guard is what keeps this an opening
+  // decision rather than a rule: a festival that ends while someone is watching it live
+  // must not throw them out of live mode as the clock passes its last minute.
+  //
+  // It runs after the adopt effect above has taken the URL, which is the order that makes
+  // the two agree: an explicit `?live=` settles the question by itself and is claimed here
+  // before this can look at a clock at all.
+  const opened = useRef(search.live != null);
+  useEffect(() => {
+    if (opened.current || now == null) return;
+    opened.current = true;
+    if (now < project.start || now > project.end) setLive(false);
+  }, [now, project.start, project.end]);
   // Memoized on the window's ends rather than on `pickable` itself, which is a fresh
   // object every render: the timeline's props, `range` and selectionRef are all derived
   // from this, and a new identity per render would put a new one in front of each.
@@ -237,11 +385,10 @@ function NoiseProjectDetail() {
   // One request for the project's whole stored history, and then nothing: every
   // number below is read out of it locally, so the timeline and both pickers cost
   // no round trip. Skipped entirely while live.
-  const {levels, locationTotals, traces, isFetching} = useProjectLogs({
+  const {levels, locationTotals, traces, gaps, isFetching} = useProjectLogs({
     projectId,
     live,
     metrics,
-    metric,
     weighting,
     selection,
     // The raw locations with their whole assignment history, not the playhead-resolved
@@ -251,6 +398,17 @@ function NoiseProjectDetail() {
     // array only so there is one of them on the page.
     locations: ordered,
   });
+
+  // Whether the cards are printing the crop's Leq at all: the menu's own pick, and a
+  // timeframe to average over — which live mode has not, an instant being no range.
+  //
+  // Combined here and nowhere else, because this is the only place that holds both halves.
+  // It used to be stated three times over: the picker re-derived it to make its "+N" count
+  // agree with the cards, and a card gated on the raw pick and came out right about live
+  // only because `useProjectLogs` happens to withhold `locationTotals` then — a correctness
+  // resting on an unrelated layer's data-availability rule, which the first change to it
+  // would have quietly broken.
+  const showRangeLeq = rangeLeq && !live;
 
   // Assigning or ending changes both this project's locations and which devices
   // are still available, on this page and on the index.
@@ -278,7 +436,10 @@ function NoiseProjectDetail() {
       locations,
       scrubTo,
       cropTo,
-      locationTotals,
+      // Withheld rather than flagged: the reading is absent at the point it is *produced*,
+      // so a card simply prints what it is given and no consumer — a pin, an export, the
+      // next one — has to rediscover the gate. See showRangeLeq.
+      locationTotals: showRangeLeq ? locationTotals : undefined,
       traces,
       refresh,
     }),
@@ -293,6 +454,7 @@ function NoiseProjectDetail() {
       locations,
       scrubTo,
       cropTo,
+      showRangeLeq,
       locationTotals,
       traces,
       refresh,
@@ -337,6 +499,11 @@ function NoiseProjectDetail() {
                   <ProjectTimeline
                     window={pickable}
                     selection={selection}
+                    // A prop rather than a field on the context below: the strip is the
+                    // only thing that draws these, and the context is read by every card
+                    // on the page (see ProjectViewCtx) — a field there would re-render all
+                    // of them the moment the payload landed.
+                    gaps={gaps}
                     // Straight into state: what the timeline hands back is exactly the
                     // override to remember, and pinning it is what stops an untouched
                     // crop from following the live edge any further. Identical values
@@ -345,12 +512,7 @@ function NoiseProjectDetail() {
                     // re-rendering the page for it would be pure waste.
                     onCommit={(next) =>
                       setChosen((prev) =>
-                        prev &&
-                        prev.start === next.start &&
-                        prev.end === next.end &&
-                        prev.current === next.current
-                          ? prev
-                          : next,
+                        sameSelection(prev, next) ? prev : next,
                       )
                     }
                   />
@@ -375,8 +537,11 @@ function NoiseProjectDetail() {
                 live={live}
                 weighting={weighting}
                 metrics={metrics}
+                rangeLeq={rangeLeq}
+                rangeLeqShown={showRangeLeq}
                 onWeighting={setWeighting}
                 onToggleMetric={toggleMetric}
+                onToggleRangeLeq={toggleRangeLeq}
               />
               {mapAvailable && (
                 <NativeSelectRoot size="xs" w="auto">
@@ -384,9 +549,15 @@ function NoiseProjectDetail() {
                     aria-label="Ansicht"
                     value={shown}
                     // The timeline and everything else page-wide survive the switch
-                    // because the layout owns them and stays mounted — only the
-                    // route and its columns travel. Not a replace: the view is part
-                    // of the URL, and back should return to the one you came from.
+                    // because the layout owns them and stays mounted — only the route
+                    // travels. Not a replace: the view is part of the URL, and back should
+                    // return to the one you came from.
+                    //
+                    // No search of its own, and neither view has one: the moment being looked
+                    // at is the layout's and rides along on its retainSearchParams, and how
+                    // the cards are laid out is remembered rather than travelling in the URL
+                    // (see listColumns.ts) — so a trip to the map and back finds the list
+                    // arranged the way it was left.
                     onChange={(e) => {
                       const view =
                         VIEWS.find((v) => v.value === e.target.value) ??
@@ -394,7 +565,7 @@ function NoiseProjectDetail() {
                       navigate({
                         to: view.to,
                         params: {projectId},
-                        search: view.search,
+                        search: {},
                       });
                     }}
                     items={VIEWS.map(({value, label}) => ({value, label}))}

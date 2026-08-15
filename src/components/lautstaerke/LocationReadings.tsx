@@ -1,21 +1,27 @@
-import {Box, HStack, Text, VStack} from '@chakra-ui/react';
-import {LuTriangleAlert} from 'react-icons/lu';
+import {Box, HStack, Text} from '@chakra-ui/react';
+// The one icon in this section that isn't lucide's, for two reasons: lucide is a stroke-only
+// set, and at the size this sits — 12px, inside a badge — an outlined triangle is a few
+// hairlines that read as a smudge. Heroicons' *mini* set is drawn for exactly this size, on a
+// 20px grid with the corners rounded and the "!" knocked out by fill-rule rather than by
+// winding — so it stays a warning sign rather than becoming a solid lozenge.
+import {HiMiniExclamationTriangle} from 'react-icons/hi2';
 import {Tooltip} from '../chakra-snippets/tooltip';
 import {useDeviceStates, useTick} from './context';
-import {formatLastSeen, lastSeenAt, type Weighting} from './noise';
+import {type Weighting} from './noise';
 import {
   displayedLevel,
   formatDb,
-  isCurrent,
+  LEVEL_METRICS,
   loudestLevel,
-  metricTag,
-  weightingUnit,
+  metricLabel,
+  rangeLabel,
   type DisplayedLevel,
-  type LevelMetric,
+  type PickedMetrics,
 } from './level';
 import {seriesFor} from './series';
+import {type ChartSeriesToken} from '../../theme-noise';
 import {coverageDetail} from './leq';
-import {type RangeTotals} from './projectLogs';
+import {type PlayheadLevels, type RangeTotals} from './projectLogs';
 import {type NoiseAssignment} from './projectView';
 
 // How loud it is at a location — the other half of its header, the half that follows the
@@ -23,27 +29,86 @@ import {type NoiseAssignment} from './projectView';
 // this was once the same component as those, back when a location was one row per device
 // standing at it, and neither half speaks for a device any more.
 
-// How loud it is *here*: two readings of the place, what they are averaged over, and —
-// when neither is of now — when we last heard from anything standing here.
+// How loud it is *here*: one reading per window the page is drawing, then what the whole
+// crop averaged. Levels and nothing else — whether a monitor is still talking, and since when
+// if it isn't, belongs to that monitor's badge (see DeviceBadge).
 //
-// Both numbers are the location's rather than a monitor's, and they are two different
-// shapes of the same rule, "the loudest of whatever is here":
+// Every number is the location's rather than a monitor's, and they are two shapes of the
+// same rule, "the loudest of whatever is here":
 //
-//   the instant — the loudest of the monitors assigned at the playhead, resolved the
-//                 same way and by the same loudestLevel a map pin uses, so the card and
-//                 the pin for one place can no longer print different numbers.
+//   the instant — for each picked window, the loudest of the monitors assigned at the
+//                 playhead, resolved the same way and by the same loudestLevel a map pin
+//                 uses, so the card and the pin for one place can no longer print
+//                 different numbers.
 //   the crop    — the energetic mean of that loudest, minute by minute, summed upstream
 //                 (see locationEnergyIndex). It is the average of the very area the
 //                 chart below fills, so the number and the picture agree by construction.
 //
+// One tile each, in the picker's order — which is the chart's order too (see
+// LEVEL_METRICS) — the value over the quantity's own name, `LAeq,5m` under 98.0. Naming it
+// is what a row of tagged figures could not do at that width: five of "87.5 dB(A) 5m" is
+// the unit said five times, and dropping the unit to fit left a run of numbers identified
+// only by their colour. Under a name the unit goes unsaid because the name implies it, and
+// the colour is left to do what it does on the chart — tie the number to its line.
+//
+// The loudest is taken per window rather than once: each of these is a self-contained
+// "loudest of whatever is here, in this window", the same question the pin asks, asked
+// once per line. Only a composite reading — a number and the coverage that qualifies it —
+// has to come off a single monitor (see loudestIndex).
+//
 // A monitor named in the header but not standing here at the playhead contributes to
-// neither: its readings from wherever it went are not this location's.
+// none of them: its readings from wherever it went are not this location's.
+
+// One tile of the row, ready to print: the level, the name that goes under it, and the shade
+// it is drawn in — its line's, or a grey for the crop's mean, which has no line.
+type PrintedLevel = {
+  key: string;
+  level: DisplayedLevel;
+  label: string;
+  color: ChartSeriesToken | 'fg.muted';
+  // What qualifies the number, for the one tile that has anything to qualify it — the
+  // coverage behind the crop's mean. Carried by the tile rather than as a flag saying
+  // "I am the last one", which is a claim about position that reordering the row would
+  // silently make false.
+  caveat?: string;
+};
+
+// The badge's corner, and the corner of the box inside it. Concentric, which means the
+// inner one is the outer less the 1px of frame between them — curve both by the same
+// radius and the frame reads as thickening at the corners.
+const BADGE_RADIUS = 'md';
+const INNER_RADIUS = `calc(var(--chakra-radii-${BADGE_RADIUS}) - 1px)`;
+
+// The most badges a row may put on one line, per breakpoint — the cap that makes five of
+// them fall onto a second row on a narrow card (see the grid below for why a cap rather
+// than wrapping).
+const GRID_CAPS = {base: 2, sm: 3, lg: Infinity} as const;
+
+// The grid a row of `n` badges is laid out in, for every count this can print: the picked
+// windows, at most LEVEL_METRICS' worth, and the crop's mean after them.
+//
+// A table rather than three template literals built where the Box is: this component
+// re-renders at least once a second from its own tick, and again on every animation frame
+// of a crop drag through the context, per card on the page — and the answer is a pure
+// function of a number between one and six. Hoisted for the same reason MARKERS_CSS and
+// CHART_CSS are, one file over: Emotion resolves it once for the session rather than
+// hashing a fresh object per card per frame.
+const GRID_COLUMNS = Array.from(
+  {length: LEVEL_METRICS.length + 2},
+  (_, n) =>
+    ({
+      base: `repeat(${Math.min(n, GRID_CAPS.base)}, 1fr)`,
+      sm: `repeat(${Math.min(n, GRID_CAPS.sm)}, 1fr)`,
+      lg: `repeat(${n}, 1fr)`,
+    }) as const,
+);
+
 export function LocationReadings({
   assignments,
   total,
   levels,
   live,
-  metric,
+  metrics,
   weighting,
 }: {
   // The monitors standing here at the instant being viewed — which while live means the
@@ -51,19 +116,21 @@ export function LocationReadings({
   // above and the chart below are drawn from, and averaging a monitor's time at another
   // stage into this place's reading is the mistake this shape exists to prevent.
   assignments: NoiseAssignment[];
-  // This location's Leq over the crop, already the envelope. Absent while live, when an
-  // instant has no range to average over it.
+  // This location's Leq over the crop, already the envelope — and a badge here for as long as
+  // there is one. Absent while live, when an instant has no range to average over it, and
+  // absent when the menu's `Leq,Zeitraum` is unticked: the caller decides whether it is asked
+  // for, and this prints whatever it is given.
   total?: RangeTotals;
-  // What the playhead's minute holds for each monitor, from the project's logs.
-  // Undefined while live and while the one query behind it is in flight.
-  levels?: Record<string, number>;
+  // What the playhead's minute holds for each monitor, window by window, from the
+  // project's logs. Undefined while live and while the one query behind it is in flight.
+  levels?: PlayheadLevels;
   // Which numbers to show is decided by displayedLevel, shared with the map pins.
   live: boolean;
-  // The primary of the header's picked windows — the second, tagged number. One window and
-  // not the set the chart draws: this is a reading, and a reading is one number. Not what
-  // the card leads with either: that one is fixed (see below), so the page-wide pick adds a
-  // reading rather than replacing the one every card is compared on.
-  metric: LevelMetric;
+  // Every window the page is showing — one number each, in that line's colour. The whole
+  // set and not just the primary: what the picker asks for is a comparison (the minute
+  // Leq against LAFmax, the 5m against the 30m), and the charts having drawn it while the
+  // header printed one of them made the numbers the odd half of the answer.
+  metrics: PickedMetrics;
   weighting: Weighting;
 }) {
   // One wake-up for the header's whole set — a location's two monitors are read
@@ -73,168 +140,243 @@ export function LocationReadings({
   // Local tick: freshness is per-card, so this doesn't re-render its siblings.
   const now = useTick();
 
-  // The lead is fixed, so the cards of a page are always comparable on it: the Leq over
-  // the selected timeframe when scrubbing, and the loudest live value when live, which
-  // is that mode's answer to the same question ("how loud is it here"). The picked
-  // window follows it as a second number — in its line's colour, so it reads against
-  // the trace under the card rather than as another anonymous dB figure.
-  const lead: DisplayedLevel = live
-    ? loudestLevel(
+  // Every tile this header prints, in the order it prints them: the picked windows at the
+  // playhead, then the crop. Built as one list because what the row does with them is the
+  // same either way, and because whether anything here is a reading of now is a question
+  // about the row rather than about any one of them.
+  //
+  // A window the page is drawing gets its badge whether or not there is anything in it: what
+  // is picked is picked, and a monitor that hasn't filled its 30-minute buffer yet, or a
+  // minute nobody reported, is a badge standing empty rather than one that isn't there. The
+  // row then holds still as the playhead crosses a gap, instead of shuffling the badges
+  // beside it along and back again.
+  const printed: PrintedLevel[] = [
+    ...metrics.map((metric) => ({
+      key: metric,
+      level: loudestLevel(
         assignments.map((a) =>
           displayedLevel({
             live,
             now,
-            metric: 'eq_fast',
+            metric,
             weighting,
             state: deviceState(a.deviceId),
+            historyDb: levels?.[metric]?.[a.deviceId],
           }),
         ),
-      )
-    : total == null
-      ? {kind: 'none'}
-      : {kind: 'history', db: total.db};
-
-  // Withheld when it would restate the lead — live at the finest window is the very
-  // number above it, and printing it twice in two colours says there are two.
-  const selected: DisplayedLevel =
-    live && metric === 'eq_fast'
-      ? {kind: 'none'}
-      : loudestLevel(
-          assignments.map((a) =>
-            displayedLevel({
-              live,
-              now,
-              metric,
-              weighting,
-              state: deviceState(a.deviceId),
-              historyDb: levels?.[a.deviceId],
-            }),
-          ),
-        );
-
-  // A Leq over a crop is an average of the minutes that were measured, so how many
-  // there were is part of the reading: without it a place monitored for two minutes of
-  // an hour is indistinguishable from one monitored throughout. Measured against the
-  // minutes a monitor was assigned *here*, so an empty stretch is the location's gap and
-  // not charged to the monitor that covered the rest. Same rule as the device page's Leq
-  // tile, thresholds included, so a shortfall too small to matter stays unsaid in both —
-  // the header just puts it behind a sign rather than printing it, having no room for a
-  // third figure beside two numbers.
-  const coverage = total ? coverageDetail(total) : undefined;
-  const unit = weightingUnit(weighting);
-  // Live, the lead is a window like any other and names itself. Scrubbing, it is the
-  // Leq over the whole crop — which has no window to name, and every word for it is
-  // longer than the number it would qualify. Left bare: the timeframe is set on the
-  // page, in one place, and the reading that follows the header's picker is the one
-  // beside it, tagged.
-  const leadUnit = live ? `${unit} ${metricTag('eq_fast', true)}` : unit;
-  // The newest of them, because this line answers "is anything still arriving here",
-  // which is a question about the place and not about whichever monitor was loudest —
-  // hence every monitor's record and every monitor's live state in one call.
-  const seen = lastSeenAt(
-    ...assignments.flatMap((a) => [
-      a.lastSeen,
-      deviceState(a.deviceId)?.lastSeen,
-    ]),
-  );
-  // Nothing here is a reading of now — either it says nothing at all, or what it says
-  // is remembered. Either way the useful thing to add is when we last heard, which is
-  // what turns a greyed-out number from "is this broken?" into "as of then".
-  const remembered = !isCurrent(lead) && !isCurrent(selected);
+      ),
+      // The quantity spelled out — `LAeq,5m` — off the series table's own naming, and
+      // in the mode's own window (a second live, a stored minute; see metricLabel).
+      label: metricLabel(metric, weighting, live),
+      // Straight from the series table too, the one place a level's colour is decided,
+      // so a number and the line it was read off cannot end up different shades.
+      color: seriesFor(metric, weighting).color,
+    })),
+    // Last, and hard against the edge of the card: the number every card is compared on
+    // lines up in one column down the page, whatever is picked above it. Named for the
+    // timeframe where the others name a window, because that is what it averages, and in a
+    // grey rather than a line's colour — it is the mean of the whole picture rather than a
+    // reading off any one line of it, and the badge has to be *some* colour to be a badge.
+    //
+    // Absent altogether while live — an instant has no range to average — and absent when
+    // the menu's `Leq,Zeitraum` is unticked. Off `total` directly rather than through a
+    // DisplayedLevel built only to be tested for emptiness: there is nothing here that
+    // could be stale or unheard, only a mean or no mean at all.
+    //
+    // Its caveat is the coverage, because a Leq over a crop is an average of the minutes
+    // that were measured and how many there were is part of the reading: without it a place
+    // monitored for two minutes of an hour is indistinguishable from one monitored
+    // throughout. Measured against the minutes a monitor was assigned *here*, so an empty
+    // stretch is the location's gap and not charged to the monitor that covered the rest.
+    // Same rule as the device page's Leq tile, thresholds included, so a shortfall too small
+    // to matter stays unsaid in both.
+    ...(total == null
+      ? []
+      : [
+          {
+            key: 'range',
+            level: {kind: 'history', db: total.db} as const,
+            label: rangeLabel(weighting),
+            color: 'fg.muted' as const,
+            caveat: coverageDetail(total),
+          },
+        ]),
+  ];
 
   return (
-    // Never squashed: what gives when the header runs out of width is the device name,
-    // which truncates, not the numbers, which don't.
-    <VStack gap="1" align="end" minW="0" flexShrink="0">
-      {/* Side by side rather than stacked: they are two readings of the same
-          monitor, not a headline and its footnote, and a header that keeps them
-          on one line stays one line tall. Baseline-aligned so the small one
-          sits on the big one's baseline instead of floating mid-cap. */}
-      <HStack gap="3" align="baseline" minW="0">
-        {selected.kind !== 'none' && (
-          // First, and the tagged one: it says which window it is, which is what
-          // makes the untagged number after it read as the one over everything.
-          //
-          // Plain, because it is a reading of one instant — whatever the picker
-          // is set to, this is what stood there at the playhead. The colour goes
-          // to the number beside it, which is the one averaged over the timeframe.
-          // Same size as the lead: side by side they are two readings of the
-          // same monitor, and a smaller one would rank it below the other
-          // rather than beside it. Weight and colour carry the difference.
+    // Side by side rather than stacked: they are several readings of one place at one instant,
+    // not a headline and its footnotes. And never squashed: what gives when the header runs out
+    // of width is the device names beside it, which truncate.
+    //
+    // A grid of equal columns rather than a row of badges, which is what makes them all one
+    // width without that width being written down anywhere: `1fr` tracks in a box sized by its
+    // own contents come out equal, and equal to the widest of them — so the longest name, which
+    // is the crop's `LAeq,Zeitraum` rather than any number, sets the size of every badge, and
+    // renaming it resizes them rather than clipping one.
+    //
+    // The column count is capped so the badges fall onto a second row where five of them would
+    // not fit a narrow card: a grid does not wrap, and this is what a wrapping row's line
+    // breaks would have done, decided by the space there is rather than found by the browser.
+    // Fewer badges than the cap is simply fewer columns.
+    //
+    // Only the readings, and nothing about the monitors: when one was last heard from is a
+    // fact about *that monitor*, so it is on its own badge (see DeviceBadge). Said here, once,
+    // it was the newer monitor's silence reported for both of a card's two — and a clock under
+    // a column of levels reads as one of them.
+    <Box
+      display="grid"
+      gridTemplateColumns={GRID_COLUMNS[printed.length]}
+      gap="1.5"
+      flexShrink="0"
+    >
+      {printed.map(({key, level, label, color, caveat}) => (
+        <ReadingTile
+          key={key}
+          db={level.kind === 'none' ? null : level.db}
+          label={label}
+          // Muted when the number is only the last thing we heard, so a reading that
+          // has stopped moving doesn't keep reading as one that hasn't — saying "not
+          // now" then matters more than which line it belongs to.
+          color={level.kind === 'stale' ? 'fg.subtle' : color}
+          // The coverage rides with the crop's Leq, inside its tile, so it reads as a
+          // caveat on that number rather than as another reading of its own.
+          caveat={caveat}
+        />
+      ))}
+    </Box>
+  );
+}
+
+// One level as a small badge: the number on the ground, and under it, on the line's own
+// colour, the name of what the number is.
+//
+// The line's colour is the badge rather than the number's ink, which is the point of the
+// shape: a legend is a swatch beside a name, and this is that swatch with the reading in it.
+// The number keeps the colour too, on the section's ground so it stays a level and not a
+// label — the darkest thing on the card is where the numbers are read, the way it is on the
+// chart below.
+//
+// Not the section's Chip, though it is the same size and sits in a row under a line of them
+// (see DeviceBadge). A chip is a solid label in one colour with the section's own fill; this
+// is two rows in two, and building it out of a Badge meant overriding the fill, the gap and
+// the direction that make a Chip a Chip.
+//
+// Right-aligned throughout, because the tiles are: the readings hang off the end of the
+// header, and a number is compared with the one above it down the page.
+//
+// Nothing here is pressable — the windows on show are chosen page-wide, in the toolbar, and a
+// tile that looked like a toggle would promise that pressing it changed this one card. The
+// exception is a badge with something to caveat, which is focusable so its warning can be
+// read without a pointer.
+function ReadingTile({
+  db,
+  label,
+  color,
+  caveat,
+}: {
+  // The level, or null where this window has nothing at the instant being viewed — an empty
+  // badge, keeping its place and its name.
+  db: number | null;
+  // What the number is — `LAeq,5m`, or the timeframe for the one averaged over all of it.
+  label: string;
+  // The line's shade. The crop's mean has no line, and takes a grey (see the caller).
+  color: string;
+  // The coverage shortfall, spelled out, where there is one worth saying.
+  caveat?: string;
+}) {
+  const badge = (
+    <Box
+      display="flex"
+      flexDirection="column"
+      alignItems="stretch"
+      rounded={BADGE_RADIUS}
+      overflow="hidden"
+      // The colour is the badge, and the hairline of it left showing around the number is
+      // what makes the two rows one object rather than a number with a bar under it.
+      bg={color}
+      p="1px"
+      textAlign="right"
+      // The badge gives back four pixels at the bottom: the header's height is set by the
+      // tallest thing in it, and a row of these was making the card taller than the name and
+      // the monitors beside them need — the chart underneath is what wants that height.
+      mb="-4px"
+      {...(caveat && {
+        // A hover target the size of the badge, rather than a sign inside it to hit: the
+        // caveat is about this reading, so the reading is what carries it. Focusable for the
+        // same reason the sign used to be — a warning nobody can read is worse than none —
+        // and `help` rather than `pointer`, which would promise it did something.
+        as: 'button' as const,
+        type: 'button' as const,
+        'aria-label': caveat,
+        cursor: 'help',
+        focusRing: 'outside' as const,
+      })}
+    >
+      {/* Air above and below the number — the badge is read as a number first, and the ground
+          it sits on is what gives it room to be one. */}
+      <Box bg="bg" px="1.5" py="0.5" roundedTop={INNER_RADIUS}>
+        {/* The sign goes to the far left, where it is out of the numbers' way: they line up
+            on the right edge of the badge and down the page, and a sign between them and
+            that edge would push the one card that has it out of the column. */}
+        <HStack gap="1.5" justify="space-between" minW="0">
+          {caveat && (
+            // It stays visible: this is what says at a glance, without hovering anything,
+            // that the average has minutes missing from it.
+            // Brighter than `fg.warning`, which is a text colour: this is a solid shape a
+            // tenth of an inch wide on the section's black ground, and at that size it has
+            // to be the loudest thing in the badge or it isn't a warning at all.
+            <Box color="yellow.300" fontSize="xs" lineHeight="1" flexShrink="0">
+              <HiMiniExclamationTriangle />
+            </Box>
+          )}
+          {/* Where there is no level: the shape of one, in its own colour and half faded, so
+              the badge reads as a reading that hasn't arrived rather than as an empty box.
+              Dashes in the digits' own places rather than the single em-dash formatDb prints
+              — that one is for a number in a sentence, and here what is wanted is the
+              instrument's blank, the same width and shape as the value it is waiting for. */}
           <Text
-            lineHeight="1"
-            whiteSpace="nowrap"
-            color={selected.kind === 'stale' ? 'fg.subtle' : undefined}
+            fontSize="lg"
+            // Every one of them the same weight: the badge's colour and its name are what tell
+            // the readings apart, and a lighter number among heavier ones read as a lesser
+            // reading rather than as a different quantity.
+            fontWeight="600"
+            lineHeight="1.2"
+            color={color}
+            opacity={db == null ? 0.5 : undefined}
+            ms="auto"
           >
-            {formatDb(selected.db, `${unit} ${metricTag(metric, live)}`)}
+            {db == null ? '--.-' : formatDb(db)}
           </Text>
-        )}
-        {lead.kind !== 'none' && (
-          // Last, and hard against the edge of the card: the numbers every card is
-          // compared on line up in one column down the page, whether or not the one
-          // beside them is there to be shown.
-          //
-          // The coverage rides with the lead, in the gap-1 pair, so it reads
-          // as a caveat on that number rather than a third reading.
-          <HStack gap="1" align="baseline" minW="0">
-            {coverage && (
-              // A sign rather than the sentence: the caveat matters, but it is not a
-              // reading, and spelling it out beside two numbers would make three.
-              // Focusable, so the tooltip is reachable by keyboard and by tap — a
-              // warning nobody can read is worse than no warning.
-              //
-              // Before the number rather than after it, so the sign is what gives way
-              // at the edge of the card: the lead stays hard against it either way, and
-              // the column of numbers down the page doesn't step sideways on the one
-              // card that has a caveat.
-              <Tooltip content={coverage} showArrow>
-                <Box
-                  asChild
-                  alignSelf="center"
-                  color="fg.warning"
-                  fontSize="sm"
-                  lineHeight="1"
-                >
-                  <button type="button" aria-label={coverage}>
-                    <LuTriangleAlert />
-                  </button>
-                </Box>
-              </Tooltip>
-            )}
-            {/* The coloured one: this is the number averaged over the whole
-                timeframe, which is what the card is compared on. Its shade is the
-                primary window's, so it reads against that line of the trace below
-                — one of however many are drawn, and the finest of them. Straight
-                from the series table, the one place a level's colour is decided.
+        </HStack>
+      </Box>
+      {/* On the colour, in the ground's own shade — the name is the swatch's label, and the
+          number above it is what is being read. Small, because it is the same word on every
+          card and what changes between them is the number. The unit is not among the words:
+          a figure under LAeq,5m is dB by definition, and printing it would be the third way
+          this badge says the same thing. */}
+      <Text
+        // Below the smallest step the scale names (`2xs`, 10px): the name is read once to
+        // learn what the badge is and then only glanced at, and the number is what the tile
+        // is for — so this is as small as it can be and still be a word.
+        fontSize="0.5625rem"
+        fontWeight="bold"
+        lineHeight="1.4"
+        color="bg"
+        px="1.5"
+        // No padding under it: the badge's own 1px of frame sits below this row in the same
+        // colour, so anything here reads as that much more space than it is — and the row is
+        // meant to be the colour running to the bottom edge, not a label floating above it.
+        whiteSpace="nowrap"
+      >
+        {label}
+      </Text>
+    </Box>
+  );
 
-                Not the average of the whole picture, and never was: the crop Leq is
-                summed off the 1-minute column whatever is picked (see
-                locationEnergyIndex), so the two agree exactly when the primary is
-                the finest window — which is the ordinary case and the default.
-
-                Muted when the number is only the last thing we heard, so a
-                reading that has stopped moving doesn't keep reading as one
-                that hasn't — saying "not now" then matters more than which
-                line it belongs to. */}
-            <Text
-              fontWeight="bold"
-              lineHeight="1"
-              color={
-                lead.kind === 'stale'
-                  ? 'fg.subtle'
-                  : seriesFor(metric, weighting).color
-              }
-            >
-              {formatDb(lead.db, leadUnit)}
-            </Text>
-          </HStack>
-        )}
-      </HStack>
-      {remembered && assignments.length > 0 && (
-        <Text fontSize="xs" color="fg.subtle" lineHeight="1">
-          {seen != null ? formatLastSeen(seen, now) : 'nie gesehen'}
-        </Text>
-      )}
-    </VStack>
+  if (!caveat) return badge;
+  return (
+    <Tooltip content={caveat} showArrow>
+      {badge}
+    </Tooltip>
   );
 }

@@ -5,6 +5,7 @@ import {
   locationRangeTotals,
   logColumn,
   logSeries,
+  metricLevelsByDevice,
   totalsByLocation,
 } from './projectLogs';
 import {LEVEL_METRICS, supportedMetric} from './level';
@@ -244,6 +245,31 @@ describe('levelsByDevice', () => {
   });
 });
 
+// A card prints one number per picked window, so the playhead's record carries them all —
+// and the weighting decides which windows exist at all.
+describe('metricLevelsByDevice', () => {
+  it('reads every window the weighting has at the playhead minute', () => {
+    expect(metricLevelsByDevice(logs, {weighting: 'C', minute: 1})).toEqual({
+      eq_fast: {'mic-1': 75},
+      eq_5m: {'mic-1': 76},
+      // Dropped from this payload entirely, and asked for all the same: an empty record
+      // says "no monitor reported it", which is what the header prints nothing for.
+      eq_30m: {},
+      fmax: {'mic-1': 95},
+      peak: {'mic-1': 101},
+    });
+  });
+
+  it('leaves out a window the weighting has no series for', () => {
+    const levels = metricLevelsByDevice(logs, {weighting: 'A', minute: 3});
+    // LCpeak has no A-weighted twin, so there is no key at all — as opposed to a key
+    // with nothing in it.
+    expect(levels.peak).toBeUndefined();
+    expect(levels.eq_fast).toEqual({'mic-1': 80, 'mic-2': 90});
+    expect(levels.fmax).toEqual({'mic-1': 100});
+  });
+});
+
 // The number every card leads with, and the reason it is no longer a picker option:
 // it answers a different question from the one above — the crop, not the instant.
 describe('totalsByLocation', () => {
@@ -312,11 +338,7 @@ describe('logSeries', () => {
   // One record per picked window, and an empty one among them disturbs nothing.
   it('answers every window asked for, in one pass over the payload', () => {
     const traces = logSeries(logs, ['eq_fast', 'eq_30m', 'eq_5m'], 'A');
-    expect(Object.keys(traces).sort()).toEqual([
-      'eq_30m',
-      'eq_5m',
-      'eq_fast',
-    ]);
+    expect(Object.keys(traces).sort()).toEqual(['eq_30m', 'eq_5m', 'eq_fast']);
     expect(traces.eq_fast!['mic-1']!.db).toEqual([60, 70, null, 80]);
     expect(traces.eq_5m!['mic-1']!.db).toEqual([null, 71, null, 81]);
     expect(traces.eq_30m).toEqual({});

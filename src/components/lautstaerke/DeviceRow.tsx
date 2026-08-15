@@ -7,7 +7,7 @@ import {BatteryChip} from './BatteryChip';
 import {Chip} from './Chip';
 import {LiveStatusDot} from './LiveStatusDot';
 import {useBluetooth, useDeviceState, useNowAfterMount} from './context';
-import {formatLastSeen, isFresh, lastSeenAt} from './noise';
+import {formatSeen, isFresh, lastSeenAt} from './noise';
 import {displayedLevel, formatDb, metricTag, weightingUnit} from './level';
 
 // One monitor in the landing page's list: what it is called, where it is standing, how
@@ -127,7 +127,7 @@ export function DeviceRow({device}: {device: NoiseMonitorDevice}) {
               down since yesterday. */}
           {now != null && !alive && (
             <Span fontSize="xs" color="fg.muted" whiteSpace="nowrap">
-              {seen != null ? formatLastSeen(seen, now) : 'nie gesehen'}
+              {formatSeen(seen, now)}
             </Span>
           )}
         </HStack>

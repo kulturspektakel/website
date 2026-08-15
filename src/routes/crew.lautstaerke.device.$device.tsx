@@ -1,6 +1,7 @@
 import {createFileRoute} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
 import {crewAuth} from '../server/crewAuth';
+import {prismaClient} from '../server/prismaClient.server';
 import {useMemo} from 'react';
 import {Box, HStack, VisuallyHidden} from '@chakra-ui/react';
 import {DeviceMenu} from '../components/lautstaerke/DeviceMenu';
@@ -15,15 +16,30 @@ import {useReferenceMic} from '../components/lautstaerke/useReferenceMic';
 import {deviceAssignment} from '../server/noiseHistory.server';
 import {seo} from '../utils/seo';
 
-// Where the monitor is placed, which is the only thing this page needs the database for —
-// everything else it shows is arriving over MQTT. See deviceAssignment for why a placement
-// is a row rather than a field.
+// Where the monitor is placed and when it was last heard from — the only two things this
+// page needs the database for, everything else it shows is arriving over MQTT. See
+// deviceAssignment for why a placement is a row rather than a field.
+//
+// The record's own "last seen" and not the stream's, because a page opened this morning has
+// nothing else to say about a monitor that went quiet last night: the live store only knows
+// what has arrived since this tab connected. The two are merged where they are read (see
+// lastSeenAt), so a device transmitting a second before the page loaded is not called
+// offline either.
 const loadDevice = createServerFn()
   .middleware([crewAuth])
   .inputValidator((device: string) => device)
-  .handler(async ({data: device}) => ({
-    assignment: await deviceAssignment(device),
-  }));
+  .handler(async ({data: device}) => {
+    const [assignment, row] = await Promise.all([
+      deviceAssignment(device),
+      // Null for a name that has never reported: nothing forbids navigating to one, and it
+      // reads as "nie gesehen" rather than as an error.
+      prismaClient.device.findUnique({
+        where: {id: device},
+        select: {lastSeen: true},
+      }),
+    ]);
+    return {assignment, lastSeen: row?.lastSeen?.getTime() ?? null};
+  });
 
 // `device/` is a static segment, and has to be: a project id and a device name are
 // indistinguishable at match time, so two dynamic routes directly under
@@ -53,7 +69,7 @@ export const Route = createFileRoute('/crew/lautstaerke/device/$device')({
 // state either way.
 function DevicePage() {
   const {device} = Route.useParams();
-  const {assignment} = Route.useLoaderData();
+  const {assignment, lastSeen} = Route.useLoaderData();
   // Which windows the chart draws and which weighting they are read in — the same coupled
   // pair the project page sets, from the one place that knows they are coupled. No primary
   // taken off the set: nothing on this page reads a single window (see DeviceViewCtx).
@@ -88,7 +104,11 @@ function DevicePage() {
           title={
             <HStack gap="2" minW="0" w="full">
               <DevicePicker device={device} />
-              <DeviceStatusLine device={device} assignment={assignment} />
+              <DeviceStatusLine
+                device={device}
+                assignment={assignment}
+                lastSeen={lastSeen}
+              />
             </HStack>
           }
         >
