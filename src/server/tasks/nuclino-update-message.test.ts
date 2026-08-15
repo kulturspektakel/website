@@ -51,6 +51,32 @@ describe('handleNuclinoUpdateMessage', () => {
     );
   });
 
+  test('covers the full 10-min cron period, not just the 5 min before settle', async () => {
+    allItems.mockResolvedValueOnce([
+      {
+        object: 'item',
+        title: 'Edited 12 min ago',
+        url: 'https://app.nuclino.com/t/x',
+        lastUpdatedUserId: 'NU1',
+        lastUpdatedAt: minutesAgo(12), // in window; missed by the old 5-10 one
+      },
+      {
+        object: 'item',
+        title: 'Edited 20 min ago',
+        url: 'https://app.nuclino.com/t/y',
+        lastUpdatedUserId: 'NU2',
+        lastUpdatedAt: minutesAgo(20), // the previous run already had it
+      },
+    ]);
+    user.mockResolvedValue({firstName: 'A', lastName: 'B'});
+
+    await handleNuclinoUpdateMessage();
+    expect(sendMessage).toHaveBeenCalledTimes(1);
+    expect(sendMessage).toHaveBeenCalledWith(
+      expect.objectContaining({text: expect.stringContaining('12 min ago')}),
+    );
+  });
+
   test('completes (204) without posting when the Nuclino API is unavailable', async () => {
     allItems.mockRejectedValueOnce(new NuclinoApiError(503, 'Service Unavailable'));
 

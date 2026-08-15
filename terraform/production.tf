@@ -171,12 +171,17 @@ resource "google_cloud_scheduler_job" "gmail_watch_refresh" {
   depends_on = [google_project_service.apis]
 }
 
-# Posts recently-edited Nuclino pages to #wiki. Polls every 5 minutes (the
-# handler only notifies pages edited 5-10 min ago, so one run catches them).
+# Posts recently-edited Nuclino pages to #wiki. Each run scans the whole Nuclino
+# workspace (~14 sequential paginated requests, ~7s) because the API has no
+# recency sort, so the poll interval is the main cost lever here.
+#
+# The handler's window is exactly one cron period wide, so this interval is
+# coupled to CRON_PERIOD_MINUTES in src/server/tasks/nuclino-update-message.ts —
+# change both together or edits falling in the gap are never announced.
 resource "google_cloud_scheduler_job" "nuclino_update_message" {
   name        = "nuclino-update-message"
   description = "Announce recently-edited Nuclino pages in #wiki."
-  schedule    = "*/5 * * * *"
+  schedule    = "*/10 * * * *"
   time_zone   = "UTC"
   region      = local.region
 

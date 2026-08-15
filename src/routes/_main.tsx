@@ -13,7 +13,14 @@ import {setResponseHeader} from '@tanstack/react-start/server';
 import {getCurrentEvent} from '../server/getCurrentEvent.server';
 
 const loadEvent = createServerFn({method: 'GET'}).handler(async () => {
-  setResponseHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600');
+  // `stale-while-revalidate` so expiry never makes a visitor wait on a cold SSR
+  // render: past the hour the edge serves the stale page immediately and
+  // refreshes behind it. Freshness is unchanged; it just removes the blocking
+  // re-render (and the origin burst) that plain `s-maxage` causes at expiry.
+  setResponseHeader(
+    'Cache-Control',
+    'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400',
+  );
   return {
     event: await getCurrentEvent(),
   };

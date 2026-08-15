@@ -32,6 +32,53 @@ export default defineConfig({
           maxDuration: 60,
         },
       },
+      // These compile into `.vercel/output/config.json` *above* the
+      // `filesystem` handle and the `/__fallback` catch-all, so they're
+      // resolved at the edge and never reach the function.
+      routeRules: {
+        // Short marketing URLs printed on menus and signage. Answering them
+        // here means the 307 — which never varies — costs no invocation, where
+        // the route files' `beforeLoad` had to boot the SSR function to emit it.
+        // src/routes/vegan.tsx and glutenfrei.tsx are kept as the `vite dev`
+        // fallback (route rules are edge-only) and as the type-checked record of
+        // these destinations; production never reaches them.
+        '/vegan': {
+          redirect: {to: '/speisekarte?filter=vegan', statusCode: 307},
+        },
+        '/glutenfrei': {
+          redirect: {to: '/speisekarte?filter=glutenfrei', statusCode: 307},
+        },
+        // Vite's content-hashed output: the hash changes whenever the bytes do,
+        // so these are safe to pin forever. Without this they went out as
+        // `max-age=0, must-revalidate` and every repeat visit revalidated every
+        // chunk.
+        '/assets/**': {
+          headers: {
+            'cache-control': 'public, max-age=31536000, immutable',
+          },
+        },
+        // `public/` files, served as-is under their own names. Not hashed, so a
+        // moderate TTL rather than `immutable` — a replaced logo or updated
+        // font stylesheet still rolls out within the day.
+        '/styles/**': {
+          headers: {'cache-control': 'public, max-age=600, s-maxage=86400'},
+        },
+        '/logos/**': {
+          headers: {'cache-control': 'public, max-age=600, s-maxage=86400'},
+        },
+        '/genre/**': {
+          headers: {'cache-control': 'public, max-age=600, s-maxage=86400'},
+        },
+        '/maizzle/**': {
+          headers: {'cache-control': 'public, max-age=600, s-maxage=86400'},
+        },
+        '/marker.png': {
+          headers: {'cache-control': 'public, max-age=600, s-maxage=86400'},
+        },
+        '/fallback.svg': {
+          headers: {'cache-control': 'public, max-age=600, s-maxage=86400'},
+        },
+      },
     }),
     viteReact(),
     // Uploads source maps to Sentry. Auto-skips upload when no auth token is
