@@ -57,10 +57,14 @@ export type LocationAssignments = {
  * energy up to each minute, the minutes that actually had a reading, and the minutes a
  * monitor was standing there at all.
  *
- * A location's level for a minute is the loudest of the monitors assigned to it then.
- * That is the quantity the card leads with and the one the chart fills the area under
- * (loudestColumn draws the same envelope), so the number and the picture are one
- * statement rather than two derivations that can drift. It is per location and not per
+ * A location's level for a minute is the loudest of the monitors assigned to it then, in the
+ * *finest* window — always eq_fast (see eqColumn), whatever the picker says. That is the
+ * quantity the card leads with, and the one the chart fills the area under while the finest
+ * window is what it is drawing (loudestColumn draws the same envelope), so the number and
+ * the picture are one statement in the ordinary case rather than two derivations that can
+ * drift. Pick a coarser window alone and the lead still reads the minute Leq: it is the
+ * number every card is compared on, and it must not move with the picker. It is per
+ * location and not per
  * device because a monitor's own history spans every stage it visited: averaged whole,
  * it would print the same figure on the card of every place it ever stood.
  *
@@ -109,7 +113,9 @@ export function locationEnergyIndex(
       // minute containing `end` belongs to whoever took over.
       const from = Math.max(0, logMinuteIndex(logs, a.start));
       const to =
-        a.end == null ? minutes : Math.min(minutes, logMinuteIndex(logs, a.end));
+        a.end == null
+          ? minutes
+          : Math.min(minutes, logMinuteIndex(logs, a.end));
       const values = eqColumn(logs, a.deviceId, weighting);
       for (let i = from; i < to; i++) {
         covered[i] = 1;
@@ -227,8 +233,14 @@ export function totalsByLocation(
 }
 
 /**
- * One trace per device, at full stored resolution over the whole project — what the
- * list draws behind its rows, in whichever window the header is set to.
+ * Every picked window's traces: one device's trace per window, at full stored resolution
+ * over the whole project — what the list draws behind its rows.
+ *
+ * Keyed by metric on the outside because that is how a chart reads it (one colour, one
+ * block of columns; see series.ts) and because it is what lets a metric the payload never
+ * carried be an empty record rather than a hole in the middle of a column list. Every
+ * *requested* metric gets an entry, so "asked for and absent" is distinguishable from
+ * "not asked for".
  *
  * The 5m and 30m lines are read straight out of their own columns rather than rolled
  * up from the 1m one: the device reports those trailing windows itself, so averaging
@@ -237,27 +249,37 @@ export function totalsByLocation(
  *
  * Deliberately not cropped or downsampled here. uPlot clips to its own x-scale by
  * binary search and reduces to min/max per pixel column, so a crop change costs it a
- * redraw and costs this nothing: the traces depend only on the payload, the window
- * and the weighting, which is what makes dragging the timeline free. It also draws
- * the peaks an averaged bucket would have flattened.
+ * redraw and costs this nothing: the traces depend only on the payload, the picked
+ * windows and the weighting, which is what makes dragging the timeline free. It also
+ * draws the peaks an averaged bucket would have flattened.
  *
- * The x column is built once and shared by every device — hence `stepMs` in the
- * payload, and hence nulls for the minutes a device has nothing.
+ * The x column is built once and shared by every device *and* every window — hence
+ * `stepMs` in the payload, and hence nulls for the minutes a device has nothing.
  */
+export type MetricTraces = Partial<
+  Record<LevelMetric, Record<string, DeviceSeries>>
+>;
+
 export function logSeries(
   logs: ProjectLogs,
-  metric: LevelMetric,
+  metrics: readonly LevelMetric[],
   weighting: Weighting,
-): Record<string, DeviceSeries> {
-  // Epoch seconds, uPlot's x unit.
+): MetricTraces {
+  // Epoch seconds, uPlot's x unit. Above both loops: one grid for the whole projection is
+  // what the aligners rely on (see alignedSeries), and five copies of a four-day festival's
+  // minutes would be five arrays of the same numbers.
   const xs = Array.from(
     {length: logs.minutes},
     (_, i) => logMinuteAt(logs, i) / 1000,
   );
-  const out: Record<string, DeviceSeries> = {};
-  for (const deviceId of Object.keys(logs.devices)) {
-    const db = logColumn(logs, deviceId, metric, weighting);
-    if (db) out[deviceId] = {xs, db};
+  const out: MetricTraces = {};
+  for (const metric of metrics) {
+    const devices: Record<string, DeviceSeries> = {};
+    for (const deviceId of Object.keys(logs.devices)) {
+      const db = logColumn(logs, deviceId, metric, weighting);
+      if (db) devices[deviceId] = {xs, db};
+    }
+    out[metric] = devices;
   }
   return out;
 }

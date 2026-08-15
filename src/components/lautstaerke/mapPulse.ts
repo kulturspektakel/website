@@ -5,11 +5,17 @@
 // every frame, and AdvancedMarkerElement (which *is* DOM) requires a mapId, which
 // would disable the custom map style. OverlayView needs neither.
 const PULSE_SIZE = 26;
-// Green, matching the header's Live switch — "live" means the same thing in both
-// places. A literal because this is plain DOM outside Chakra's provider; green.300
-// rather than the switch's green.solid (green.600), because a 2px ring fading out
-// to nothing needs to start well clear of the dark basemap.
-const PULSE_STROKE = '#86efac';
+// Green, matching the status dot, the WiFi icon and the header's Live switch —
+// "live" means the same thing everywhere on this page, so it is one colour with no
+// exceptions. The variable rather than a token, because this is plain DOM built
+// outside Chakra's provider: it is still appended into the document, so the custom
+// property set on <html> cascades to it like any other rule would.
+//
+// It runs at 0.7 opacity and fades to nothing (see the animation below), so it is
+// the one place here where a solid fill is asked to carry a fading stroke over the
+// basemap rather than sit on the page ground. Worth a look on the map if this is
+// ever restyled: a step lighter is the fix if the ring stops reading.
+const PULSE_STROKE = 'var(--chakra-colors-green-solid)';
 const PULSE_PERIOD_MS = 2000;
 // Two rings half a period apart, so there's always one on its way out rather than
 // a gap between beats.

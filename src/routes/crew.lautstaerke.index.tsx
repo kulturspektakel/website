@@ -9,18 +9,28 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import {useQuery, useQueryClient} from '@tanstack/react-query';
-import {useState} from 'react';
+import {useMemo, useState} from 'react';
 import {FaChevronRight, FaPlus} from 'react-icons/fa6';
-import {listNoiseProjects} from './crew.lautstaerke';
+import {listNoiseProjects, noiseMonitorDevices} from './crew.lautstaerke';
 import {formatProjectRange} from '../components/lautstaerke/timeframe';
 import {BluetoothMenu} from '../components/lautstaerke/BluetoothMenu';
+import {DeviceRow} from '../components/lautstaerke/DeviceRow';
 import {NoiseProjectDialog} from '../components/lautstaerke/NoiseProjectDialog';
+import {compareDeviceIds} from '../components/lautstaerke/noise';
 import {noiseQueryKeys} from '../components/lautstaerke/queries';
 
 type NoiseProjectItem = Awaited<ReturnType<typeof listNoiseProjects>>[number];
 
 export const Route = createFileRoute('/crew/lautstaerke/')({
-  loader: async () => ({projects: await listNoiseProjects()}),
+  // Both at once: two independent reads, and serially they would be two round trips
+  // deep on every navigation here.
+  loader: async () => {
+    const [projects, devices] = await Promise.all([
+      listNoiseProjects(),
+      noiseMonitorDevices(),
+    ]);
+    return {projects, devices};
+  },
   component: NoiseProjectList,
 });
 
@@ -35,6 +45,22 @@ function NoiseProjectList() {
     queryFn: () => listNoiseProjects(),
     initialData: initial.projects,
   });
+
+  // Straight from the loader, deliberately not through react-query like the projects
+  // above. The client sets refetchOnMount: false (see __root) and initialData only
+  // applies to an empty cache entry, so a session that had already opened the device
+  // picker would serve that entry here and never refresh it — and a placement made on a
+  // project page would still read as the old one on coming back. The router's stale time
+  // is 0, so this loader re-runs on every navigation instead, and nothing on this page
+  // mutates devices for anything to invalidate.
+  //
+  // Sorted the way a person reads the names — kult-2 before kult-10, which Postgres's
+  // ordering does not give us. Same collator everywhere a set of monitors is shown, so a
+  // list and a row of badges cannot disagree about the order.
+  const devices = useMemo(
+    () => [...initial.devices].sort((a, b) => compareDeviceIds(a.id, b.id)),
+    [initial.devices],
+  );
 
   return (
     // The area layout is edge-to-edge now (the project page is a map), so a page
@@ -62,11 +88,29 @@ function NoiseProjectList() {
       </HStack>
 
       {projects.length === 0 ? (
-        <Text color="gray.500">Noch keine Projekte.</Text>
+        <Text color="fg.subtle">Noch keine Projekte.</Text>
       ) : (
         <VStack align="stretch" gap="2">
           {projects.map((project) => (
             <ProjectRow key={project.id} project={project} />
+          ))}
+        </VStack>
+      )}
+
+      {/* Every monitor, under the events they are deployed at: the set is small and
+          long-lived, so this is a list of the hardware rather than of anything that
+          happened, and it is the only way to a monitor that belongs to no project.
+          Monitors appear once they have first reported in — one that has never
+          authenticated has no row to list. */}
+      <Heading size="md" color="fg.muted" mt="8" mb="3">
+        Geräte
+      </Heading>
+      {devices.length === 0 ? (
+        <Text color="fg.subtle">Noch keine Geräte.</Text>
+      ) : (
+        <VStack align="stretch" gap="2">
+          {devices.map((device) => (
+            <DeviceRow key={device.id} device={device} />
           ))}
         </VStack>
       )}
@@ -98,9 +142,9 @@ function ProjectRow({project}: {project: NoiseProjectItem}) {
       gap="3"
       rounded="md"
       borderWidth="1px"
-      borderColor="gray.700"
+      borderColor="border.emphasized"
       cursor="pointer"
-      _hover={{bg: 'gray.800'}}
+      _hover={{bg: 'bg.emphasized'}}
     >
       <Link
         to="/crew/lautstaerke/projekt/$projectId"
@@ -110,14 +154,14 @@ function ProjectRow({project}: {project: NoiseProjectItem}) {
           <Text fontWeight="bold" truncate>
             {project.name}
           </Text>
-          <Text fontSize="sm" color="gray.500">
+          <Text fontSize="sm" color="fg.subtle">
             {formatProjectRange(project.start, project.end)} ·{' '}
             {project.locationCount === 1
               ? '1 Standort'
               : `${project.locationCount} Standorte`}
           </Text>
         </Box>
-        <Span color="gray.500">
+        <Span color="fg.subtle">
           <FaChevronRight />
         </Span>
       </Link>

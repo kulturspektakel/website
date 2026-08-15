@@ -8,7 +8,7 @@ import {
   totalsByLocation,
 } from './projectLogs';
 import {LEVEL_METRICS, supportedMetric} from './level';
-import {coverageNote, energeticMeanDb} from './leq';
+import {coverageDetail, energeticMeanDb} from './leq';
 import {MINUTE_MS} from './timeframe';
 import {logMinuteIndex, type ProjectLogs} from './noise';
 
@@ -157,7 +157,7 @@ describe('locationRangeTotals', () => {
     });
     // Nothing to disclose: the place had a reading for every minute it had a monitor,
     // even though that was only half the crop.
-    expect(coverageNote(totalsOf('A', 'sued', whole)!)).toBeUndefined();
+    expect(coverageDetail(totalsOf('A', 'sued', whole)!)).toBeUndefined();
     expect(totalsOf('A', 'nord', whole)).toMatchObject({
       // Minute 2 has only mic-2's 90; minute 3 has both. Minute 2 of mic-1's own column
       // is null, but the place still had a reading.
@@ -176,7 +176,7 @@ describe('locationRangeTotals', () => {
     );
     // mic-1 is silent for minute 2 while still standing there — a gap the location is
     // charged for, which is exactly what the caveat is meant to say. (One missing
-    // minute is under the threshold worth telling anyone about; see coverageNote.)
+    // minute is under the threshold worth telling anyone about; see coverageDetail.)
     expect(partial).toMatchObject({minutes: 3, expectedMinutes: 4});
   });
 
@@ -278,7 +278,7 @@ describe('logSeries', () => {
   it('hands over the whole stored column, not a crop of it', () => {
     // uPlot clips and decimates, so this is deliberately full resolution and
     // project-length — that is what makes a crop drag cost nothing here.
-    const series = logSeries(logs, 'eq_fast', 'A');
+    const series = logSeries(logs, ['eq_fast'], 'A').eq_fast!;
     expect(series['mic-1']!.db).toEqual([60, 70, null, 80]);
     expect(series['mic-1']!.xs).toEqual(
       [at(0), at(1), at(2), at(3)].map((ms) => ms / 1000),
@@ -286,7 +286,7 @@ describe('logSeries', () => {
   });
 
   it('follows the weighting', () => {
-    expect(logSeries(logs, 'eq_fast', 'C')['mic-1']!.db).toEqual([
+    expect(logSeries(logs, ['eq_fast'], 'C').eq_fast!['mic-1']!.db).toEqual([
       65,
       75,
       null,
@@ -294,30 +294,52 @@ describe('logSeries', () => {
     ]);
   });
 
-  // The header's window picks a stored column, so a row's line is the device's own
-  // trailing Leq — never a rollup of the 1m one, which would average twice.
+  // A picked window is a stored column, so a row's line is the device's own trailing Leq —
+  // never a rollup of the 1m one, which would average twice.
   it('plots the trailing window the header asks for', () => {
-    expect(logSeries(logs, 'eq_5m', 'A')['mic-1']!.db).toEqual([
+    expect(logSeries(logs, ['eq_5m'], 'A').eq_5m!['mic-1']!.db).toEqual([
       null,
       71,
       null,
       81,
     ]);
-    // A window the payload never carried is no trace at all, not a flat line.
-    expect(logSeries(logs, 'eq_30m', 'A')).toEqual({});
+    // A window the payload never carried is no trace at all, not a flat line — but the
+    // entry is there, because it was asked for: the chart has a series for every window it
+    // ticked, and one that quietly went missing would shift every column after it.
+    expect(logSeries(logs, ['eq_30m'], 'A')).toEqual({eq_30m: {}});
+  });
+
+  // One record per picked window, and an empty one among them disturbs nothing.
+  it('answers every window asked for, in one pass over the payload', () => {
+    const traces = logSeries(logs, ['eq_fast', 'eq_30m', 'eq_5m'], 'A');
+    expect(Object.keys(traces).sort()).toEqual([
+      'eq_30m',
+      'eq_5m',
+      'eq_fast',
+    ]);
+    expect(traces.eq_fast!['mic-1']!.db).toEqual([60, 70, null, 80]);
+    expect(traces.eq_5m!['mic-1']!.db).toEqual([null, 71, null, 81]);
+    expect(traces.eq_30m).toEqual({});
   });
 
   // One array of timestamps for every device: they are all the same minutes, and a
   // copy per device would be the largest allocation on the page for no reason.
   it('shares one x column across devices', () => {
-    const series = logSeries(logs, 'eq_fast', 'A');
+    const series = logSeries(logs, ['eq_fast'], 'A').eq_fast!;
     expect(series['mic-1']!.xs).toBe(series['mic-2']!.xs);
+  });
+
+  // And across windows, which is what the aligners lean on: the projection has one x
+  // column, so five windows must not arrive on five equal-but-separate grids.
+  it('shares one x column across windows too', () => {
+    const traces = logSeries(logs, ['eq_fast', 'eq_5m'], 'A');
+    expect(traces.eq_fast!['mic-2']!.xs).toBe(traces.eq_5m!['mic-1']!.xs);
   });
 
   // The nulls travel rather than being stripped, which is what lets the x column be
   // shared — and what makes uPlot break the line where a monitor wasn't deployed.
   it('keeps a device that reported only part of the project, nulls and all', () => {
-    expect(logSeries(logs, 'eq_fast', 'A')['mic-2']!.db).toEqual([
+    expect(logSeries(logs, ['eq_fast'], 'A').eq_fast!['mic-2']!.db).toEqual([
       null,
       null,
       90,
@@ -327,6 +349,6 @@ describe('logSeries', () => {
 
   it('omits a device with no column at all', () => {
     const empty = {...logs, devices: {'mic-3': {}}};
-    expect(logSeries(empty, 'eq_fast', 'A')).toEqual({});
+    expect(logSeries(empty, ['eq_fast'], 'A')).toEqual({eq_fast: {}});
   });
 });

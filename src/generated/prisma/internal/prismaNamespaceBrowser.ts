@@ -557,7 +557,8 @@ export const NoiseLogTagScalarFieldEnum = {
   start: 'start',
   end: 'end',
   createdAt: 'createdAt',
-  createdByViewerId: 'createdByViewerId'
+  createdByViewerId: 'createdByViewerId',
+  label: 'label'
 } as const
 
 export type NoiseLogTagScalarFieldEnum = (typeof NoiseLogTagScalarFieldEnum)[keyof typeof NoiseLogTagScalarFieldEnum]
@@ -920,7 +921,8 @@ export type NoiseLogOrderByRelevanceFieldEnum = (typeof NoiseLogOrderByRelevance
 export const NoiseLogTagOrderByRelevanceFieldEnum = {
   id: 'id',
   deviceId: 'deviceId',
-  createdByViewerId: 'createdByViewerId'
+  createdByViewerId: 'createdByViewerId',
+  label: 'label'
 } as const
 
 export type NoiseLogTagOrderByRelevanceFieldEnum = (typeof NoiseLogTagOrderByRelevanceFieldEnum)[keyof typeof NoiseLogTagOrderByRelevanceFieldEnum]

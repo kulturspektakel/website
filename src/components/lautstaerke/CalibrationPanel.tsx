@@ -150,7 +150,7 @@ export function CalibrationPanel({
               {loading || !offsets ? (
                 <Center py="10">
                   {error ? (
-                    <Text color="red.500" fontSize="sm">
+                    <Text color="fg.error" fontSize="sm">
                       {error}
                     </Text>
                   ) : (
@@ -173,7 +173,7 @@ export function CalibrationPanel({
                         onValueChange={({value}) => setBand(i, value[0]!)}
                       />
                       <Text
-                        color="gray.500"
+                        color="fg.subtle"
                         fontSize="xs"
                         minW="14"
                         textAlign="end"

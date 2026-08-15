@@ -4,15 +4,16 @@ import {
   defineRecipe,
   SystemConfig,
 } from '@chakra-ui/react';
+import {noiseColors, noiseSemanticColors} from './theme-noise';
 
 const overrides: SystemConfig = {
   theme: {
     tokens: {
       colors: {
-        brand: {
-          500: {value: '#459388'},
-          900: {value: '#003638'},
-        },
+        // /crew/lautstaerke's accent scale. `brand` is deliberately absent: it
+        // means the organisation's teal (see theme.ts), and this area's yellow
+        // is a section accent rather than a second brand.
+        ...noiseColors,
       },
       fonts: {
         // The crew area uses the system-default UI font (rather than the
@@ -23,15 +24,24 @@ const overrides: SystemConfig = {
     },
     semanticTokens: {
       colors: {
+        // The `accent`, `chart.*` and `map.*` vocabulary of /crew/lautstaerke.
+        // All new names rather than overrides, so they need no scoping — see
+        // theme-noise.ts for why the section's two actual overrides (the page
+        // ground just below, and the focus ring) are `_dark` values instead.
+        ...noiseSemanticColors,
         // Nudges the light scale one step off pure white — but every entry has
         // to keep its `_dark` half. A flat value replaces Chakra's light/dark
         // pair outright, so a light grey would still be a light grey under
         // `.dark`; /crew/lautstaerke renders inside <DarkMode>, and that is what
         // put near-white surfaces (`bg.muted`) under near-white text (`fg`).
-        // Only the `_light` values differ from the defaults.
+        // Everything below the first entry differs only in its `_light` half.
         bg: {
+          // The dark half is /crew/lautstaerke's ground, declared here rather
+          // than asserted by the section's root Box. Pure black was only ever
+          // the default: the box painted itself gray.900 while html/body stayed
+          // black behind it, which iOS shows you every time the page overscrolls.
           DEFAULT: {
-            value: {_light: '{colors.gray.50}', _dark: '{colors.black}'},
+            value: {_light: '{colors.gray.50}', _dark: '{colors.gray.900}'},
           },
           subtle: {
             value: {_light: '{colors.gray.100}', _dark: '{colors.gray.950}'},
@@ -49,19 +59,35 @@ const overrides: SystemConfig = {
         // Focus rings/outlines are blue across the crew area. Components use the
         // (default) gray colorPalette, whose `focusRing` token drives
         // `--focus-ring-color`, so overriding it here recolors every focus ring.
+        //
+        // Dark is /crew/lautstaerke, where the ring is the section's accent
+        // instead. It has to be done at the token rather than by hanging a
+        // `colorPalette` on that section's root, because a colorPalette is a
+        // set of CSS variables that cascade through the DOM — and the menus,
+        // dialogs and toaster that most want a visible ring are portalled to
+        // <body>, outside any box the section could put it on.
         gray: {
-          focusRing: {value: '{colors.blue.focusRing}'},
+          focusRing: {
+            value: {
+              _light: '{colors.blue.focusRing}',
+              _dark: '{colors.accent.focusRing}',
+            },
+          },
         },
       },
     },
     recipes: {
-      // Links are blue by default across the crew area.
+      // Links are blue by default across the crew area, and the accent in
+      // /crew/lautstaerke — blue.solid only just clears 5:1 against that
+      // section's ground, and reads as a foreign colour next to everything else
+      // on the page. `_dark` compiles to `.dark &, .dark .chakra-theme:not(.light) &`,
+      // so the dialogs that opt into a light appearance keep the blue.
       link: defineRecipe({
-        base: {color: 'blue.solid'},
+        base: {color: {base: 'blue.solid', _dark: 'accent.fg'}},
         variants: {
           variant: {
-            plain: {color: 'blue.solid'},
-            underline: {color: 'blue.solid'},
+            plain: {color: {base: 'blue.solid', _dark: 'accent.fg'}},
+            underline: {color: {base: 'blue.solid', _dark: 'accent.fg'}},
           },
         },
       }),

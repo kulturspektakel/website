@@ -7,6 +7,11 @@ import {isFresh} from './noise';
 // which is "is the device alive now" — independent of which day is being viewed,
 // so it shows on every view. Turns blue while this device is the one connected
 // over Bluetooth.
+//
+// `green.solid` and not `fg.success`: this is a filled mark rather than type, and
+// the foreground shade is a pale mint meant to carry small text on a dark ground —
+// as 8 px of solid colour it reads washed out. Solid is also what the header's Live
+// switch fills itself with, so the dot and the switch are the one green.
 export function LiveStatusDot({
   lastSeen,
   ble,
@@ -17,11 +22,13 @@ export function LiveStatusDot({
   const now = useTick();
   return (
     <Box
-      w="3"
-      h="3"
+      w="2"
+      h="2"
       rounded="full"
       flexShrink="0"
-      bg={ble ? 'blue.500' : isFresh(lastSeen, now) ? 'green.500' : 'gray.400'}
+      bg={
+        ble ? 'blue.solid' : isFresh(lastSeen, now) ? 'green.solid' : 'fg.muted'
+      }
     />
   );
 }

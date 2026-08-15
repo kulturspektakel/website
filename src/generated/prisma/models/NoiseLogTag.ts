@@ -32,6 +32,7 @@ export type NoiseLogTagMinAggregateOutputType = {
   end: Date | null
   createdAt: Date | null
   createdByViewerId: string | null
+  label: string | null
 }
 
 export type NoiseLogTagMaxAggregateOutputType = {
@@ -42,6 +43,7 @@ export type NoiseLogTagMaxAggregateOutputType = {
   end: Date | null
   createdAt: Date | null
   createdByViewerId: string | null
+  label: string | null
 }
 
 export type NoiseLogTagCountAggregateOutputType = {
@@ -52,6 +54,7 @@ export type NoiseLogTagCountAggregateOutputType = {
   end: number
   createdAt: number
   createdByViewerId: number
+  label: number
   _all: number
 }
 
@@ -64,6 +67,7 @@ export type NoiseLogTagMinAggregateInputType = {
   end?: true
   createdAt?: true
   createdByViewerId?: true
+  label?: true
 }
 
 export type NoiseLogTagMaxAggregateInputType = {
@@ -74,6 +78,7 @@ export type NoiseLogTagMaxAggregateInputType = {
   end?: true
   createdAt?: true
   createdByViewerId?: true
+  label?: true
 }
 
 export type NoiseLogTagCountAggregateInputType = {
@@ -84,6 +89,7 @@ export type NoiseLogTagCountAggregateInputType = {
   end?: true
   createdAt?: true
   createdByViewerId?: true
+  label?: true
   _all?: true
 }
 
@@ -164,9 +170,10 @@ export type NoiseLogTagGroupByOutputType = {
   deviceId: string
   tag: $Enums.NoiseTag
   start: Date
-  end: Date
+  end: Date | null
   createdAt: Date
   createdByViewerId: string
+  label: string | null
   _count: NoiseLogTagCountAggregateOutputType | null
   _min: NoiseLogTagMinAggregateOutputType | null
   _max: NoiseLogTagMaxAggregateOutputType | null
@@ -195,9 +202,10 @@ export type NoiseLogTagWhereInput = {
   deviceId?: Prisma.StringFilter<"NoiseLogTag"> | string
   tag?: Prisma.EnumNoiseTagFilter<"NoiseLogTag"> | $Enums.NoiseTag
   start?: Prisma.DateTimeFilter<"NoiseLogTag"> | Date | string
-  end?: Prisma.DateTimeFilter<"NoiseLogTag"> | Date | string
+  end?: Prisma.DateTimeNullableFilter<"NoiseLogTag"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"NoiseLogTag"> | Date | string
   createdByViewerId?: Prisma.StringFilter<"NoiseLogTag"> | string
+  label?: Prisma.StringNullableFilter<"NoiseLogTag"> | string | null
   Device?: Prisma.XOR<Prisma.DeviceScalarRelationFilter, Prisma.DeviceWhereInput>
   createdByViewer?: Prisma.XOR<Prisma.ViewerScalarRelationFilter, Prisma.ViewerWhereInput>
 }
@@ -207,9 +215,10 @@ export type NoiseLogTagOrderByWithRelationInput = {
   deviceId?: Prisma.SortOrder
   tag?: Prisma.SortOrder
   start?: Prisma.SortOrder
-  end?: Prisma.SortOrder
+  end?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   createdByViewerId?: Prisma.SortOrder
+  label?: Prisma.SortOrderInput | Prisma.SortOrder
   Device?: Prisma.DeviceOrderByWithRelationInput
   createdByViewer?: Prisma.ViewerOrderByWithRelationInput
   _relevance?: Prisma.NoiseLogTagOrderByRelevanceInput
@@ -223,9 +232,10 @@ export type NoiseLogTagWhereUniqueInput = Prisma.AtLeast<{
   deviceId?: Prisma.StringFilter<"NoiseLogTag"> | string
   tag?: Prisma.EnumNoiseTagFilter<"NoiseLogTag"> | $Enums.NoiseTag
   start?: Prisma.DateTimeFilter<"NoiseLogTag"> | Date | string
-  end?: Prisma.DateTimeFilter<"NoiseLogTag"> | Date | string
+  end?: Prisma.DateTimeNullableFilter<"NoiseLogTag"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"NoiseLogTag"> | Date | string
   createdByViewerId?: Prisma.StringFilter<"NoiseLogTag"> | string
+  label?: Prisma.StringNullableFilter<"NoiseLogTag"> | string | null
   Device?: Prisma.XOR<Prisma.DeviceScalarRelationFilter, Prisma.DeviceWhereInput>
   createdByViewer?: Prisma.XOR<Prisma.ViewerScalarRelationFilter, Prisma.ViewerWhereInput>
 }, "id">
@@ -235,9 +245,10 @@ export type NoiseLogTagOrderByWithAggregationInput = {
   deviceId?: Prisma.SortOrder
   tag?: Prisma.SortOrder
   start?: Prisma.SortOrder
-  end?: Prisma.SortOrder
+  end?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   createdByViewerId?: Prisma.SortOrder
+  label?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.NoiseLogTagCountOrderByAggregateInput
   _max?: Prisma.NoiseLogTagMaxOrderByAggregateInput
   _min?: Prisma.NoiseLogTagMinOrderByAggregateInput
@@ -251,17 +262,19 @@ export type NoiseLogTagScalarWhereWithAggregatesInput = {
   deviceId?: Prisma.StringWithAggregatesFilter<"NoiseLogTag"> | string
   tag?: Prisma.EnumNoiseTagWithAggregatesFilter<"NoiseLogTag"> | $Enums.NoiseTag
   start?: Prisma.DateTimeWithAggregatesFilter<"NoiseLogTag"> | Date | string
-  end?: Prisma.DateTimeWithAggregatesFilter<"NoiseLogTag"> | Date | string
+  end?: Prisma.DateTimeNullableWithAggregatesFilter<"NoiseLogTag"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"NoiseLogTag"> | Date | string
   createdByViewerId?: Prisma.StringWithAggregatesFilter<"NoiseLogTag"> | string
+  label?: Prisma.StringNullableWithAggregatesFilter<"NoiseLogTag"> | string | null
 }
 
 export type NoiseLogTagCreateInput = {
   id?: string
   tag: $Enums.NoiseTag
   start: Date | string
-  end: Date | string
+  end?: Date | string | null
   createdAt?: Date | string
+  label?: string | null
   Device: Prisma.DeviceCreateNestedOneWithoutNoiseLogTagInput
   createdByViewer: Prisma.ViewerCreateNestedOneWithoutNoiseLogTagInput
 }
@@ -271,17 +284,19 @@ export type NoiseLogTagUncheckedCreateInput = {
   deviceId: string
   tag: $Enums.NoiseTag
   start: Date | string
-  end: Date | string
+  end?: Date | string | null
   createdAt?: Date | string
   createdByViewerId: string
+  label?: string | null
 }
 
 export type NoiseLogTagUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   tag?: Prisma.EnumNoiseTagFieldUpdateOperationsInput | $Enums.NoiseTag
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  end?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  end?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   Device?: Prisma.DeviceUpdateOneRequiredWithoutNoiseLogTagNestedInput
   createdByViewer?: Prisma.ViewerUpdateOneRequiredWithoutNoiseLogTagNestedInput
 }
@@ -291,9 +306,10 @@ export type NoiseLogTagUncheckedUpdateInput = {
   deviceId?: Prisma.StringFieldUpdateOperationsInput | string
   tag?: Prisma.EnumNoiseTagFieldUpdateOperationsInput | $Enums.NoiseTag
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  end?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  end?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdByViewerId?: Prisma.StringFieldUpdateOperationsInput | string
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type NoiseLogTagCreateManyInput = {
@@ -301,17 +317,19 @@ export type NoiseLogTagCreateManyInput = {
   deviceId: string
   tag: $Enums.NoiseTag
   start: Date | string
-  end: Date | string
+  end?: Date | string | null
   createdAt?: Date | string
   createdByViewerId: string
+  label?: string | null
 }
 
 export type NoiseLogTagUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   tag?: Prisma.EnumNoiseTagFieldUpdateOperationsInput | $Enums.NoiseTag
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  end?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  end?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type NoiseLogTagUncheckedUpdateManyInput = {
@@ -319,9 +337,10 @@ export type NoiseLogTagUncheckedUpdateManyInput = {
   deviceId?: Prisma.StringFieldUpdateOperationsInput | string
   tag?: Prisma.EnumNoiseTagFieldUpdateOperationsInput | $Enums.NoiseTag
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  end?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  end?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdByViewerId?: Prisma.StringFieldUpdateOperationsInput | string
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type NoiseLogTagListRelationFilter = {
@@ -348,6 +367,7 @@ export type NoiseLogTagCountOrderByAggregateInput = {
   end?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   createdByViewerId?: Prisma.SortOrder
+  label?: Prisma.SortOrder
 }
 
 export type NoiseLogTagMaxOrderByAggregateInput = {
@@ -358,6 +378,7 @@ export type NoiseLogTagMaxOrderByAggregateInput = {
   end?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   createdByViewerId?: Prisma.SortOrder
+  label?: Prisma.SortOrder
 }
 
 export type NoiseLogTagMinOrderByAggregateInput = {
@@ -368,6 +389,7 @@ export type NoiseLogTagMinOrderByAggregateInput = {
   end?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   createdByViewerId?: Prisma.SortOrder
+  label?: Prisma.SortOrder
 }
 
 export type NoiseLogTagCreateNestedManyWithoutCreatedByViewerInput = {
@@ -462,8 +484,9 @@ export type NoiseLogTagCreateWithoutCreatedByViewerInput = {
   id?: string
   tag: $Enums.NoiseTag
   start: Date | string
-  end: Date | string
+  end?: Date | string | null
   createdAt?: Date | string
+  label?: string | null
   Device: Prisma.DeviceCreateNestedOneWithoutNoiseLogTagInput
 }
 
@@ -472,8 +495,9 @@ export type NoiseLogTagUncheckedCreateWithoutCreatedByViewerInput = {
   deviceId: string
   tag: $Enums.NoiseTag
   start: Date | string
-  end: Date | string
+  end?: Date | string | null
   createdAt?: Date | string
+  label?: string | null
 }
 
 export type NoiseLogTagCreateOrConnectWithoutCreatedByViewerInput = {
@@ -510,17 +534,19 @@ export type NoiseLogTagScalarWhereInput = {
   deviceId?: Prisma.StringFilter<"NoiseLogTag"> | string
   tag?: Prisma.EnumNoiseTagFilter<"NoiseLogTag"> | $Enums.NoiseTag
   start?: Prisma.DateTimeFilter<"NoiseLogTag"> | Date | string
-  end?: Prisma.DateTimeFilter<"NoiseLogTag"> | Date | string
+  end?: Prisma.DateTimeNullableFilter<"NoiseLogTag"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"NoiseLogTag"> | Date | string
   createdByViewerId?: Prisma.StringFilter<"NoiseLogTag"> | string
+  label?: Prisma.StringNullableFilter<"NoiseLogTag"> | string | null
 }
 
 export type NoiseLogTagCreateWithoutDeviceInput = {
   id?: string
   tag: $Enums.NoiseTag
   start: Date | string
-  end: Date | string
+  end?: Date | string | null
   createdAt?: Date | string
+  label?: string | null
   createdByViewer: Prisma.ViewerCreateNestedOneWithoutNoiseLogTagInput
 }
 
@@ -528,9 +554,10 @@ export type NoiseLogTagUncheckedCreateWithoutDeviceInput = {
   id?: string
   tag: $Enums.NoiseTag
   start: Date | string
-  end: Date | string
+  end?: Date | string | null
   createdAt?: Date | string
   createdByViewerId: string
+  label?: string | null
 }
 
 export type NoiseLogTagCreateOrConnectWithoutDeviceInput = {
@@ -564,16 +591,18 @@ export type NoiseLogTagCreateManyCreatedByViewerInput = {
   deviceId: string
   tag: $Enums.NoiseTag
   start: Date | string
-  end: Date | string
+  end?: Date | string | null
   createdAt?: Date | string
+  label?: string | null
 }
 
 export type NoiseLogTagUpdateWithoutCreatedByViewerInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   tag?: Prisma.EnumNoiseTagFieldUpdateOperationsInput | $Enums.NoiseTag
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  end?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  end?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   Device?: Prisma.DeviceUpdateOneRequiredWithoutNoiseLogTagNestedInput
 }
 
@@ -582,8 +611,9 @@ export type NoiseLogTagUncheckedUpdateWithoutCreatedByViewerInput = {
   deviceId?: Prisma.StringFieldUpdateOperationsInput | string
   tag?: Prisma.EnumNoiseTagFieldUpdateOperationsInput | $Enums.NoiseTag
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  end?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  end?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type NoiseLogTagUncheckedUpdateManyWithoutCreatedByViewerInput = {
@@ -591,25 +621,28 @@ export type NoiseLogTagUncheckedUpdateManyWithoutCreatedByViewerInput = {
   deviceId?: Prisma.StringFieldUpdateOperationsInput | string
   tag?: Prisma.EnumNoiseTagFieldUpdateOperationsInput | $Enums.NoiseTag
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  end?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  end?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type NoiseLogTagCreateManyDeviceInput = {
   id?: string
   tag: $Enums.NoiseTag
   start: Date | string
-  end: Date | string
+  end?: Date | string | null
   createdAt?: Date | string
   createdByViewerId: string
+  label?: string | null
 }
 
 export type NoiseLogTagUpdateWithoutDeviceInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   tag?: Prisma.EnumNoiseTagFieldUpdateOperationsInput | $Enums.NoiseTag
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  end?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  end?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdByViewer?: Prisma.ViewerUpdateOneRequiredWithoutNoiseLogTagNestedInput
 }
 
@@ -617,18 +650,20 @@ export type NoiseLogTagUncheckedUpdateWithoutDeviceInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   tag?: Prisma.EnumNoiseTagFieldUpdateOperationsInput | $Enums.NoiseTag
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  end?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  end?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdByViewerId?: Prisma.StringFieldUpdateOperationsInput | string
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type NoiseLogTagUncheckedUpdateManyWithoutDeviceInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   tag?: Prisma.EnumNoiseTagFieldUpdateOperationsInput | $Enums.NoiseTag
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  end?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  end?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdByViewerId?: Prisma.StringFieldUpdateOperationsInput | string
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 
@@ -641,6 +676,7 @@ export type NoiseLogTagSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   end?: boolean
   createdAt?: boolean
   createdByViewerId?: boolean
+  label?: boolean
   Device?: boolean | Prisma.DeviceDefaultArgs<ExtArgs>
   createdByViewer?: boolean | Prisma.ViewerDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["noiseLogTag"]>
@@ -653,6 +689,7 @@ export type NoiseLogTagSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   end?: boolean
   createdAt?: boolean
   createdByViewerId?: boolean
+  label?: boolean
   Device?: boolean | Prisma.DeviceDefaultArgs<ExtArgs>
   createdByViewer?: boolean | Prisma.ViewerDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["noiseLogTag"]>
@@ -665,6 +702,7 @@ export type NoiseLogTagSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   end?: boolean
   createdAt?: boolean
   createdByViewerId?: boolean
+  label?: boolean
   Device?: boolean | Prisma.DeviceDefaultArgs<ExtArgs>
   createdByViewer?: boolean | Prisma.ViewerDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["noiseLogTag"]>
@@ -677,9 +715,10 @@ export type NoiseLogTagSelectScalar = {
   end?: boolean
   createdAt?: boolean
   createdByViewerId?: boolean
+  label?: boolean
 }
 
-export type NoiseLogTagOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "deviceId" | "tag" | "start" | "end" | "createdAt" | "createdByViewerId", ExtArgs["result"]["noiseLogTag"]>
+export type NoiseLogTagOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "deviceId" | "tag" | "start" | "end" | "createdAt" | "createdByViewerId" | "label", ExtArgs["result"]["noiseLogTag"]>
 export type NoiseLogTagInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   Device?: boolean | Prisma.DeviceDefaultArgs<ExtArgs>
   createdByViewer?: boolean | Prisma.ViewerDefaultArgs<ExtArgs>
@@ -704,9 +743,10 @@ export type $NoiseLogTagPayload<ExtArgs extends runtime.Types.Extensions.Interna
     deviceId: string
     tag: $Enums.NoiseTag
     start: Date
-    end: Date
+    end: Date | null
     createdAt: Date
     createdByViewerId: string
+    label: string | null
   }, ExtArgs["result"]["noiseLogTag"]>
   composites: {}
 }
@@ -1139,6 +1179,7 @@ export interface NoiseLogTagFieldRefs {
   readonly end: Prisma.FieldRef<"NoiseLogTag", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"NoiseLogTag", 'DateTime'>
   readonly createdByViewerId: Prisma.FieldRef<"NoiseLogTag", 'String'>
+  readonly label: Prisma.FieldRef<"NoiseLogTag", 'String'>
 }
     
 

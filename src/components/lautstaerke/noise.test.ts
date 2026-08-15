@@ -1,5 +1,11 @@
 import {describe, expect, it} from 'vitest';
-import {ACTIVE_WINDOW_MS, decodeDb, formatLastSeen, isFresh} from './noise';
+import {
+  ACTIVE_WINDOW_MS,
+  decodeDb,
+  formatLastSeen,
+  isFresh,
+  lastSeenAt,
+} from './noise';
 
 describe('decodeDb', () => {
   // The device sends (dB - 20) * 2 in one byte. The history query decodes the
@@ -46,6 +52,33 @@ describe('isFresh', () => {
   // "recently heard from", not stale.
   it('treats a future timestamp as fresh', () => {
     expect(isFresh(NOW + 1_000, NOW)).toBe(true);
+  });
+});
+
+describe('lastSeenAt', () => {
+  // Two sources, and the rule is "whichever is later" — a page opened this morning knows
+  // last night from the record, and a monitor still transmitting is only in the live store.
+  it('takes the later of the record and the live store', () => {
+    expect(lastSeenAt(100, 200)).toBe(200);
+    expect(lastSeenAt(300, 200)).toBe(300);
+  });
+
+  it('falls back to whichever source knows anything', () => {
+    expect(lastSeenAt(null, 200)).toBe(200);
+    expect(lastSeenAt(100, undefined)).toBe(100);
+  });
+
+  // Undefined and not 0: "never heard from" is a different statement from "heard from at
+  // the epoch", and every caller prints the two differently.
+  it('is undefined when nothing has ever heard from it', () => {
+    expect(lastSeenAt()).toBeUndefined();
+    expect(lastSeenAt(null, undefined)).toBeUndefined();
+  });
+
+  // A location asks the question of its whole set at once, so the answer is the newest of
+  // every monitor's every source.
+  it('answers for a whole set of monitors', () => {
+    expect(lastSeenAt(100, undefined, null, 500, 300)).toBe(500);
   });
 });
 

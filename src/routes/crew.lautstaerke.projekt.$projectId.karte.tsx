@@ -5,7 +5,6 @@ import {toaster} from '../components/chakra-snippets/toaster';
 import LocationsMap, {
   type Coordinates,
 } from '../components/lautstaerke/LocationsMap';
-import {MAP_BACKGROUND} from '../components/lautstaerke/mapStyle';
 import {NoiseLocationDialog} from '../components/lautstaerke/NoiseLocationDialog';
 import {
   usePlayheadLevels,
@@ -74,7 +73,7 @@ function ProjectMapView() {
   // another one.
   if (!project.apiKey) {
     return (
-      <Text color="gray.500">
+      <Text color="fg.subtle">
         Ohne Google-Maps-Schlüssel ist die Karte nicht verfügbar.
       </Text>
     );
@@ -98,7 +97,7 @@ function ProjectMapView() {
         position="relative"
         // Same color the map style paints the ground, so the box doesn't flash
         // white while the first tiles load.
-        bg={MAP_BACKGROUND}
+        bg="map.ground"
       >
         <LocationsMap
           apiKey={project.apiKey}

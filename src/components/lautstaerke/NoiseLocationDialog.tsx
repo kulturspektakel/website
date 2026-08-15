@@ -191,7 +191,7 @@ export function NoiseLocationDialog({
                   </Stack>
                 </DialogBody>
                 <DialogFooter>
-                  <Text fontSize="xs" color="gray.500" mr="auto">
+                  <Text fontSize="xs" color="fg.muted" mr="auto">
                     {point.latitude.toFixed(5)}, {point.longitude.toFixed(5)}
                   </Text>
                   <Button type="submit" loading={saveMutation.isPending}>

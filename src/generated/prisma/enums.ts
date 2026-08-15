@@ -10,11 +10,8 @@
 */
 
 export const NoiseTag = {
-  SOUNDCHECK: 'SOUNDCHECK',
-  BAND_PLAYING: 'BAND_PLAYING',
-  DJ: 'DJ',
   EXCLUDED: 'EXCLUDED',
-  CALIBRATION: 'CALIBRATION'
+  CUSTOM_LABEL: 'CUSTOM_LABEL'
 } as const
 
 export type NoiseTag = (typeof NoiseTag)[keyof typeof NoiseTag]

@@ -1,4 +1,6 @@
-import {Button, HStack, Text} from '@chakra-ui/react';
+import {Box, HStack, Text} from '@chakra-ui/react';
+import {LuMapPin} from 'react-icons/lu';
+import {Chip} from './Chip';
 import type {NoiseLocationItem} from './projectView';
 
 /**
@@ -13,6 +15,11 @@ import type {NoiseLocationItem} from './projectView';
  *
  * Every chip is here whatever the crop or the playhead says — the list is a set of
  * places, not of whatever is measuring at this instant.
+ *
+ * The same chips as everywhere else in the section (see Chip), pin included: these name
+ * places, and so does the one in a device page's toolbar, so they are one kind of object at
+ * two sizes rather than a roster that happens to be built out of buttons. What is theirs
+ * alone is the lit state and the colour of it.
  */
 export function LocationPicker({
   locations,
@@ -37,9 +44,9 @@ export function LocationPicker({
       bottom="0"
       zIndex="2"
       flexShrink="0"
-      bg="gray.900"
+      bg="bg"
       borderTopWidth="1px"
-      borderColor="gray.800"
+      borderColor="border"
       // Scrolls sideways rather than wrapping: a festival with a dozen stages would
       // otherwise grow a toolbar three rows tall and take that height off the charts,
       // which is the space this control exists to hand out.
@@ -49,24 +56,36 @@ export function LocationPicker({
       {locations.map((location) => {
         const on = shown.has(location.id);
         return (
-          <Button
+          // Lit yellow when it is on the list, an empty outline when it isn't — one
+          // pressed state rather than two different controls, which is also what
+          // `aria-pressed` says to a screen reader. The off chips being outlines is what
+          // makes the roster readable at a glance: the places you are watching are the
+          // solid ones. `md`, so the chips keep the height the buttons here had — a roster
+          // is pressed at, not just read.
+          <Chip
             key={location.id}
-            size="xs"
+            asChild
+            pressable
+            selected={on}
+            size="md"
             flexShrink="0"
-            // Lit when it is on the list, outlined when it isn't — a pressed state
-            // rather than two different controls, which is also what `aria-pressed`
-            // says to a screen reader.
-            variant={on ? 'solid' : 'outline'}
-            colorPalette={on ? 'yellow' : undefined}
-            aria-pressed={on}
-            onClick={() => onToggle(location.id)}
+            colorPalette={on ? 'accent' : 'gray'}
           >
-            {location.locationName}
-          </Button>
+            <button
+              type="button"
+              aria-pressed={on}
+              onClick={() => onToggle(location.id)}
+            >
+              <Box asChild flexShrink="0">
+                <LuMapPin />
+              </Box>
+              {location.locationName}
+            </button>
+          </Chip>
         );
       })}
       {locations.length === 0 && (
-        <Text fontSize="sm" color="gray.500">
+        <Text fontSize="sm" color="fg.subtle">
           Noch keine Standorte.
         </Text>
       )}

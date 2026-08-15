@@ -1,11 +1,8 @@
-import {useState} from 'react';
 import {SimpleGrid, Text, chakra} from '@chakra-ui/react';
-import type uPlot from 'uplot';
 import {formatDb} from './level';
 import {type Weighting} from './noise';
-import {type SeriesKind} from './series';
+import {type ChartSeries, type SeriesKind} from './series';
 
-// Shared by both tile variants so they can't drift apart visually.
 const tileBase = {
   display: 'flex',
   flexDirection: 'column',
@@ -20,47 +17,44 @@ const tileBase = {
 
 // A real <button> (keyboard focusable + Enter/Space activatable) with the
 // native chrome stripped, laid out as a centered column. Built from Chakra's
-// factory so it picks up the design system's tokens and focus ring.
-const ToggleButton = chakra('button', {
+// factory so it picks up the design system's tokens and focus ring — including
+// the ring itself, which the theme colours for the whole section (see
+// theme-crew's `gray.focusRing`) rather than each control naming a hue.
+const PickButton = chakra('button', {
   base: {
     ...tileBase,
     cursor: 'pointer',
-    _focusVisible: {
-      outlineWidth: '2px',
-      outlineStyle: 'solid',
-      outlineColor: 'blue.400',
-      outlineOffset: '2px',
-    },
+    focusRing: 'outside',
   },
 });
 
-// Same tile, but for a value with no chart line behind it — a dead button would
-// be a keyboard trap and read as pressable to assistive tech, so it isn't one.
-const StaticTile = chakra('div', {base: tileBase});
-
-// Usually doubles as the chart legend: shows the value (live, or at the cursor
-// while hovering) and toggles the matching chart line on click. Dimmed when
-// hidden; `aria-pressed` exposes the on/off state to assistive tech. Omit
-// `onClick` for a value that has no line to toggle (the timeframe Leq) — it then
-// renders as a plain, always-full-opacity tile.
-export function BigNumber({
+// One reading, and the chart line it stands for: the value (live, or at the cursor while
+// hovering) over the window's name, dimmed while the chart is not plotting it. Pressing it
+// is how that window is added or dropped, so it is a button — and `aria-pressed` is what
+// says which ones are drawn to a reader that cannot see the dimming.
+function BigNumber({
   value,
   label,
   color,
-  enabled = true,
+  enabled,
   onClick,
-  sub,
 }: {
   value: number | null;
   label: string;
   color: string;
-  enabled?: boolean;
-  onClick?: () => void;
-  // Small note under the label, e.g. how much of the window had data.
-  sub?: string;
+  enabled: boolean;
+  onClick: () => void;
 }) {
-  const body = (
-    <>
+  return (
+    <PickButton
+      type="button"
+      onClick={onClick}
+      aria-pressed={enabled}
+      flex="1"
+      minW="0"
+      opacity={enabled ? 1 : 0.2}
+      _hover={{opacity: enabled ? 0.8 : 0.4}}
+    >
       <Text
         fontSize={{
           base: 'clamp(1rem, 7vw, 2rem)',
@@ -74,140 +68,54 @@ export function BigNumber({
       <Text fontSize="sm" color={color} fontWeight="bold">
         {label}
       </Text>
-      {sub && (
-        <Text fontSize="xs" color="gray.500" lineHeight="1">
-          {sub}
-        </Text>
-      )}
-    </>
-  );
-
-  if (!onClick) {
-    return (
-      <StaticTile flex="1" minW="0">
-        {body}
-      </StaticTile>
-    );
-  }
-  return (
-    <ToggleButton
-      type="button"
-      onClick={onClick}
-      aria-pressed={enabled}
-      flex="1"
-      minW="0"
-      opacity={enabled ? 1 : 0.2}
-      _hover={{opacity: enabled ? 0.8 : 0.4}}
-    >
-      {body}
-    </ToggleButton>
+    </PickButton>
   );
 }
 
-// The big-number row that doubles as the chart legend, shared by the live and
-// historical views. For each series of the current weighting it shows the value
-// at the hovered sample (column i+1 mirrors series[i]), or — while not hovering
-// — the optional `liveValue` (the live latest reading; omitted for historical,
-// where the numbers stay blank until hover). Clicking toggles the series.
-export function BigNumberRow<
-  S extends {
-    kind: SeriesKind;
-    label: string;
-    weighting: Weighting;
-    stroke: string;
-  },
->({
+// The big-number row above the chart, which doubles as its legend: what every window of
+// the current weighting is reading right now, with the drawn ones lit and pressing one
+// being how that is chosen (see LiveView).
+//
+// A set again, as it was when the chart plotted nine lines at once — but bounded to the
+// five windows of a weighting, each with a colour of its own, so which line is which is
+// answered by the colour rather than by hovering. The tiles are the legend that makes that
+// work, and they are the other entrance to the same choice the toolbar's menu sets.
+//
+// The numbers do not follow the chart's cursor, though they once did: the trace under this
+// reports a hovered sample itself now (see LevelTrace's tooltip), so these are the latest
+// reading and nothing else — every window's, whatever is lit.
+export function BigNumberRow({
   series,
   weighting,
-  shown,
-  toggle,
-  cursorIdx,
-  data,
-  liveValue,
-  aggregate,
+  picked,
+  onPick,
+  value,
 }: {
-  series: ReadonlyArray<S>;
+  series: ReadonlyArray<ChartSeries>;
   weighting: Weighting;
-  shown: Record<SeriesKind, boolean>;
-  toggle: (kind: SeriesKind) => void;
-  cursorIdx: number | 'gap' | null;
-  data: uPlot.AlignedData;
-  liveValue?: (s: S) => number | null;
-  // A tile with no data column behind it: a value over the whole window, so it
-  // ignores the cursor and isn't toggleable. Inserted after the series of kind
-  // `after` (falling back to the end) to keep the 1m → 5m → 30m → total reading
-  // order. Deliberately not a `series` entry: those are index-coupled to the
-  // aligned columns and shared with the chart, which would plot a phantom line.
-  aggregate?: {
-    after: SeriesKind;
-    label: string;
-    color: string;
-    value: number | null;
-    sub?: string;
-  };
+  // The windows the chart is plotting, which are the tiles that stay lit.
+  picked: readonly SeriesKind[];
+  // Adds or drops one. The last lit tile cannot be turned off — which the caller enforces,
+  // as clicking a checked radio does nothing rather than being refused here.
+  onPick: (kind: SeriesKind) => void;
+  // What to print for a series — null where the device has not reported it yet, which
+  // the 5m and 30m windows do until their buffers fill.
+  value: (s: ChartSeries) => number | null;
 }) {
-  const items: Array<{
-    label: string;
-    color: string;
-    value: number | null;
-    // Absent for the aggregate tile — nothing to toggle.
-    kind?: SeriesKind;
-    sub?: string;
-  }> = series
-    .map((s, i) => ({s, i}))
-    .filter(({s}) => s.weighting === weighting)
-    .map(({s, i}) => {
-      const value =
-        cursorIdx === 'gap'
-          ? null
-          : cursorIdx != null
-            ? ((data[i + 1]?.[cursorIdx] ?? null) as number | null)
-            : liveValue
-              ? liveValue(s)
-              : null;
-      return {kind: s.kind, label: s.label, color: s.stroke, value};
-    });
-
-  if (aggregate) {
-    const at = items.findIndex((n) => n.kind === aggregate.after);
-    items.splice(at < 0 ? items.length : at + 1, 0, {
-      label: aggregate.label,
-      color: aggregate.color,
-      value: aggregate.value,
-      sub: aggregate.sub,
-    });
-  }
+  const items = series.filter((s) => s.weighting === weighting);
 
   return (
     <SimpleGrid columns={items.length || 1} gap="3" mb="3">
-      {items.map((n) => (
+      {items.map((s) => (
         <BigNumber
-          key={n.label}
-          value={n.value}
-          label={n.label}
-          color={n.color}
-          sub={n.sub}
-          enabled={n.kind == null || shown[n.kind]}
-          onClick={n.kind == null ? undefined : () => toggle(n.kind!)}
+          key={s.label}
+          value={value(s)}
+          label={s.label}
+          color={s.color}
+          enabled={picked.includes(s.kind)}
+          onClick={() => onPick(s.kind)}
         />
       ))}
     </SimpleGrid>
   );
-}
-
-// Visibility keyed by weighting-independent series kind, so the toggle state
-// mirrors what's plotted and carries across the dB(A)/dB(C) switch.
-export function useSeriesToggle(
-  series: ReadonlyArray<{kind: SeriesKind; hidden?: boolean}>,
-) {
-  const [shown, setShown] = useState<Record<SeriesKind, boolean>>(() => {
-    const m = {} as Record<SeriesKind, boolean>;
-    for (const s of series) m[s.kind] = !s.hidden;
-    return m;
-  });
-  return {
-    shown,
-    toggle: (kind: SeriesKind) =>
-      setShown((prev) => ({...prev, [kind]: !prev[kind]})),
-  };
 }

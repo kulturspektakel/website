@@ -4,18 +4,13 @@ import {prismaClient} from './prismaClient.server';
 import {
   decodeDb,
   logMinuteIndex,
-  type DeviceLocationRecord,
-  type HistoryRow,
+  type DeviceAssignment,
   type LevelColumn,
   type LogGrid,
   type ProjectLogs,
 } from '../components/lautstaerke/noise';
 import {visibleProjectWindow} from '../components/lautstaerke/projectSelection';
-import {
-  MAX_RANGE_DAYS,
-  MAX_RANGE_MS,
-  MINUTE_MS,
-} from '../components/lautstaerke/timeframe';
+import {MINUTE_MS} from '../components/lautstaerke/timeframe';
 
 // The displayable levels, as the wire names them against the Prisma field each comes
 // from. One table rather than the same names spelled out in the select, the
@@ -70,63 +65,141 @@ const LEVEL_SELECT = {
 // in a date, not a real event.
 const MAX_PROJECT_LOG_MINUTES = 200_000;
 
-// NoiseLog already holds one 60-second aggregate per row (measuredAt = the start
-// of that minute), and every level — the 1m Leq, the device's trailing 5m/30m
-// windows, and the max/peak values — is stored per row. So this is a straight
-// per-row decode for one device over the requested UTC range: no aggregation and
-// deliberately no downsampling, since each row is already the minute. Stored ints
-// are encoded as (dB - 20) * 2, so dB = 20 + val/2; the 5m/30m columns are null
-// until the device's buffer has filled (and for rows ingested before those
-// columns existed), which decodes to null and simply leaves a gap in that line.
-//
-// The WHERE clause is a single range scan on the @@unique([deviceId, measuredAt])
-// index (~1440 rows/day), so this stays cheap for the ranges MAX_RANGE_MS allows.
-export async function noiseHistory(
+/**
+ * Where a monitor is standing *right now*, or null if it is standing nowhere.
+ *
+ * "Assigned" is a row, not a field: NoiseLocationAssignment carries [start, end) per device
+ * per location. So the question is which of a monitor's rows covers this instant, and both
+ * halves of that need saying:
+ *
+ *   started — its own `start` if it has one, and otherwise the event's: a placement typed in
+ *             for tomorrow is not where the monitor is today, and one left blank means "from
+ *             the beginning", whenever the beginning turns out to be.
+ *   not over — its own `end` if it has one, and otherwise the event's. An open row means
+ *              "still there" only for as long as there is an event to be there for: a
+ *              festival that finished in July does not leave a monitor standing at a stage
+ *              that no longer exists, however the row was left.
+ *
+ * Both bounds fall back to the project's, which is the whole reason it is joined rather than
+ * just named: a placement is bounded by the thing it belongs to, and nothing else knows where
+ * those boundaries are. It is also why the columns are nullable — see the schema: an event
+ * whose dates move takes its placements with it.
+ *
+ * Deliberately *not* the same test as assignableNoiseDevices, which asks whether a monitor
+ * has an open row *anywhere* — a stricter question, and the right one there: an open row
+ * left behind by a finished festival should be closed rather than quietly written over with
+ * a second one. So a monitor can read as free to place and still be standing nowhere, which
+ * is exactly the state a forgotten row leaves it in.
+ *
+ * One row taken, latest start first, blanks last — a blank start is the event's own, so it is
+ * the earliest a placement can begin and the least specific claim on this instant. A monitor
+ * can carry two that overlap: the assignments dialog permits the mistake and warns about it
+ * rather than preventing it (see overlappingAssignments), because a contradiction somebody
+ * typed is theirs to resolve. Where there is one, the most recently started is the likeliest
+ * truth.
+ */
+export async function deviceAssignment(
   deviceId: string,
-  start: Date,
-  end: Date,
-): Promise<HistoryRow[]> {
-  // Backstop only: parseRangeSearch already rejects over-cap ranges at every
-  // entry point, so reaching this means a caller bypassed it.
-  if (end.getTime() - start.getTime() > MAX_RANGE_MS) {
-    throw new Error(`noiseHistory: range exceeds ${MAX_RANGE_DAYS} days`);
-  }
-  return prismaClient.$queryRaw<HistoryRow[]>`
-    SELECT
-      extract(epoch FROM "measuredAt")::float8 AS minute_epoch,
-      (20 + laeq / 2.0)::float8 AS laeq_1m,
-      (20 + lceq / 2.0)::float8 AS lceq_1m,
-      (20 + laeq5m / 2.0)::float8 AS laeq_5m,
-      (20 + lceq5m / 2.0)::float8 AS lceq_5m,
-      (20 + laeq30m / 2.0)::float8 AS laeq_30m,
-      (20 + lceq30m / 2.0)::float8 AS lceq_30m,
-      (20 + lafmax / 2.0)::float8 AS lafmax,
-      (20 + lcfmax / 2.0)::float8 AS lcfmax,
-      (20 + lcpeak / 2.0)::float8 AS lcpeak
-    FROM "NoiseLog"
-    WHERE "deviceId" = ${deviceId}
-      AND "measuredAt" >= ${start}
-      AND "measuredAt" < ${end}
-    ORDER BY "measuredAt"
-  `;
+): Promise<DeviceAssignment | null> {
+  const row = await prismaClient.noiseLocationAssignment.findFirst({
+    where: {deviceId, ...currentAssignmentWhere(new Date())},
+    orderBy: CURRENT_ASSIGNMENT_ORDER,
+    select: CURRENT_ASSIGNMENT_SELECT,
+  });
+  return row ? toDeviceAssignment(row) : null;
 }
 
-// A device's full location history (few rows), oldest first. The label shown for
-// a given day is resolved client-side from this (see resolveLocation) since a
-// device can be relocated over time.
-export async function deviceLocations(
-  deviceId: string,
-): Promise<DeviceLocationRecord[]> {
-  const rows = await prismaClient.deviceLocation.findMany({
-    where: {deviceId},
-    orderBy: {createdAt: 'asc'},
-    select: {locationName: true, createdAt: true},
+/**
+ * The same question of every monitor at once — what the device list on the section's
+ * landing page reads, where a row per device would be a query per device. See
+ * deviceAssignment above for why a placement is a row and what its blank bounds mean;
+ * this only differs in three ways.
+ *
+ * One `now` for the whole set, so no two rows of the list can be resolved against
+ * different instants — a monitor whose placement ends this second must not be able to
+ * show up as both placed and not, depending on where in the list it fell.
+ *
+ * Keyed by device, first row per device wins, which is `findFirst` with the same
+ * ordering: latest start first, blanks last. Where a monitor carries two overlapping
+ * placements — permitted, and warned about rather than prevented (see
+ * overlappingAssignments) — both genuinely cover this instant, and the most recently
+ * started is the likeliest truth.
+ *
+ * Absent from the map rather than null, so a device with no placement is one the caller
+ * doesn't find. Only monitors that have one appear at all.
+ */
+export async function deviceAssignments(): Promise<
+  Map<string, DeviceAssignment>
+> {
+  const rows = await prismaClient.noiseLocationAssignment.findMany({
+    where: currentAssignmentWhere(new Date()),
+    orderBy: CURRENT_ASSIGNMENT_ORDER,
+    select: {deviceId: true, ...CURRENT_ASSIGNMENT_SELECT},
   });
-  return rows.map((r) => ({
-    name: r.locationName,
-    createdAt: r.createdAt.getTime(),
-  }));
+  const assignments = new Map<string, DeviceAssignment>();
+  for (const row of rows) {
+    // Not `set` unconditionally: the order above puts the likeliest first, so the
+    // second row of an overlapping pair must not overwrite it.
+    if (!assignments.has(row.deviceId)) {
+      assignments.set(row.deviceId, toDeviceAssignment(row));
+    }
+  }
+  return assignments;
 }
+
+// The instant test both of the above ask, shared so that "is this monitor standing
+// here now" cannot come to mean two different things depending on how many devices
+// were asked about. One clause per bound, each "the row's own, or the event's where it
+// has none". Two ORs, so they are spelled as an AND of them rather than merged — a
+// single OR list would read as "either bound holds", which is not the question.
+const currentAssignmentWhere = (
+  now: Date,
+): Prisma.NoiseLocationAssignmentWhereInput => ({
+  AND: [
+    {
+      OR: [
+        {start: {lte: now}},
+        {start: null, NoiseLocation: {NoiseProject: {start: {lte: now}}}},
+      ],
+    },
+    {
+      OR: [
+        {end: {gt: now}},
+        {end: null, NoiseLocation: {NoiseProject: {end: {gt: now}}}},
+      ],
+    },
+  ],
+});
+
+// Latest start first, blanks last — a blank start is the event's own, so it is the
+// earliest a placement can begin and the least specific claim on this instant.
+const CURRENT_ASSIGNMENT_ORDER = {
+  start: {sort: 'desc', nulls: 'last'},
+} as const satisfies Prisma.NoiseLocationAssignmentOrderByWithRelationInput;
+
+// A placement names both the spot and the festival it is a spot at, which is what
+// makes it worth showing (see DeviceAssignment).
+const CURRENT_ASSIGNMENT_SELECT = {
+  NoiseLocation: {
+    select: {
+      locationName: true,
+      projectId: true,
+      NoiseProject: {select: {name: true}},
+    },
+  },
+} as const satisfies Prisma.NoiseLocationAssignmentSelect;
+
+const toDeviceAssignment = (row: {
+  NoiseLocation: {
+    locationName: string;
+    projectId: string;
+    NoiseProject: {name: string};
+  };
+}): DeviceAssignment => ({
+  locationName: row.NoiseLocation.locationName,
+  projectId: row.NoiseLocation.projectId,
+  projectName: row.NoiseLocation.NoiseProject.name,
+});
 
 // Every stored level of one project, as one minute-indexed column per device per
 // weighting — the single payload the project page reads when live mode is off. It
@@ -185,7 +258,9 @@ export async function projectLogs(projectId: string): Promise<ProjectLogs> {
   const spans = project.NoiseLocation.flatMap((l) =>
     l.NoiseLocationAssignment.map((a) => ({
       deviceId: a.deviceId,
-      from: new Date(Math.max(a.start.getTime(), start)),
+      // A null start is the event's own, and `start` is already the event's start (capped
+      // at now), so the clamp below is the whole of what resolving it takes.
+      from: new Date(Math.max(a.start?.getTime() ?? start, start)),
       to: new Date(Math.min(a.end?.getTime() ?? end, end)),
     })),
   ).filter((s) => s.to > s.from);

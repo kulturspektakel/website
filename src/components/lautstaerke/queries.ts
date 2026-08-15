@@ -11,8 +11,13 @@ export const noiseQueryKeys = {
   // dialog, which is placing a spot that has nobody standing at it yet.
   assignableDevices: ['assignableNoiseDevices'] as const,
   // Every monitor, assigned or not — the assignments dialog's picker. Separate from
-  // `assignableDevices` because the two answer different questions, and this one
-  // changes only when a monitor first reports in, so no mutation invalidates it.
+  // `assignableDevices` because the two answer different questions.
+  //
+  // The set itself changes only when a monitor first reports in, but the payload now
+  // carries where each one is standing (see noiseMonitorDevices), which an assignment
+  // edit changes — so what is cached here can lag one, and nothing invalidates it. The
+  // pickers that read it show names and do not mind. The landing page's device list does
+  // mind, and so reads the same server function through its route loader instead.
   monitorDevices: ['noiseMonitorDevices'] as const,
   project: (projectId: string) => ['noiseProject', projectId] as const,
   // A project's whole stored history, and deliberately keyed on nothing else. The

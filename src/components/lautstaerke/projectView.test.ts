@@ -21,7 +21,17 @@ const assignment = (
   start: number,
   end: number | null,
   deviceId = `dev-${id}`,
-): NoiseAssignment => ({id, deviceId, start, end, lastSeen: null});
+  // Every window here is an explicit one: what a blank start means is the loader's business
+  // (it resolves it to the event's), and by the time these functions see a row it is an
+  // instant like any other.
+): NoiseAssignment => ({
+  id,
+  deviceId,
+  start,
+  startsWithProject: false,
+  end,
+  lastSeen: null,
+});
 
 // One monitor stood here until 18:00, another took over at exactly 18:00.
 const before = assignment('a', Date.parse('2026-07-25T12:00:00Z'), MOVED_AT);

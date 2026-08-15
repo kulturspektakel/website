@@ -12,6 +12,8 @@ import {
 } from './projectSelection';
 import {instantLabel} from './chartUtils';
 import {CHART_READOUT_STYLE} from './ChartTooltip';
+import {TimelineMarkers} from './TimelineMarkers';
+import {axisFraction} from './timelineTicks';
 
 // The slider speaks epoch milliseconds, the same unit as everything it is handed,
 // and steps one of them at a time. It has no unit of its own and so nothing to
@@ -227,7 +229,9 @@ export function ProjectTimeline({
   const pointerAt = (control: HTMLElement, clientX: number): number | null => {
     const {left, width} = control.getBoundingClientRect();
     if (width <= 0) return null;
-    const ratio = clampTo((clientX - left) / width, 0, 1);
+    // The same normalization the markers and the readout use, asked in pixels: where
+    // the pointer stands between the control's two edges.
+    const ratio = axisFraction(clientX, left, left + width);
     return window.start + ratio * (sliderMax - window.start);
   };
 
@@ -324,11 +328,6 @@ export function ProjectTimeline({
     if (ownGesture(event)) endGesture();
   };
 
-  // Where a thumb stands on the strip, 0…1 — which is also how far its readout is
-  // pulled back over itself (see the pill below).
-  const readoutShift = (value: number) =>
-    clampTo((value - window.start) / (sliderMax - window.start), 0, 1);
-
   // Read the same way the row charts' tooltip reads it, off the same rule and the same
   // span — the crop, which is what those charts are showing. A hover writes both at
   // once, and one of them saying 22:15 while the other says 09.08. 22:15 would read as
@@ -383,13 +382,23 @@ export function ProjectTimeline({
         // away, so it is the one signal a scrub can't end without.
         onLostPointerCapture={onControlPointerUp}
       >
-        {/* Outside the selection: the span you could pick, dimmed. Back out over
-              the root's padding, so the strip is the whole window even though the
-              axis inside it stops a grip short of either end. */}
+        {/* Outside the selection: the span you could pick, left as the toolbar's own
+              ground and merely outlined. Nothing is drawn there because nothing is
+              *there* — the lit window is the figure, and giving the rest a fill of its
+              own made the strip a second bar competing with it. Back out over the root's
+              padding, so the strip is the whole window even though the axis inside it
+              stops a grip short of either end. */}
         <ChakraSlider.Track
           h="full"
           rounded="md"
-          bg="gray.950"
+          bg="transparent"
+          // The same hairline the ticks are drawn in, so the frame and the grid it
+          // frames read as one thing — and so a day mark running into the top or bottom
+          // edge simply continues the line rather than crossing it. Opaque for that
+          // reason: see TimelineMarkers. The lit range fills the padding box inside it,
+          // so the rule stays visible all the way round however the window is cropped.
+          borderWidth="1px"
+          borderColor="chart.rule"
           mx={`-${HANDLE_W}px`}
         >
           {/* Inside it: the window. Range spans first→last thumb, which is
@@ -401,12 +410,29 @@ export function ProjectTimeline({
                 names which of the two drags this is: a cropped window is grabbable,
                 an uncropped one is clickable to place the playhead. */}
           <ChakraSlider.Range
-            bg="gray.700"
+            // The same wash the row charts lay under their traces — see LevelTrace's
+            // `fill()`, which is a line's own colour at 15 %. Fixed, and there is not even a
+            // stroke to follow any more: the charts draw a line per picked window, each its
+            // own shade, so a strip that took one of them would be picking a favourite.
+            // `accent.solid` is the section's one accent — the
+            // grips' own fill, and the middle of the series ramp — so the crop reads as
+            // belonging to the handles that set it.
+            //
+            // Translucent, unlike everything else here, and safely so: the range fills
+            // the track's padding box, so it stops short of the rule around it and has
+            // nothing to double up against.
+            bg="accent.solid/15"
             mx="-0.5px"
             cursor={cropped ? 'grab' : 'pointer'}
             _active={cropped ? {cursor: 'grabbing'} : undefined}
           />
         </ChakraSlider.Track>
+
+        {/* The clock the strip is read against. Must stay between the track and the
+            thumbs — see TimelineMarkers for what rests on that. Handed sliderMax rather
+            than window.end: that is the axis the thumbs are on, and a marker measured
+            against anything else would stand beside the thumb that shares its instant. */}
+        <TimelineMarkers start={window.start} end={sliderMax} />
 
         {thumbs.map((value, i) => {
           const playhead = i === 1;
@@ -472,7 +498,7 @@ export function ProjectTimeline({
               // otherwise turn blue along with the thing it labels.
               _focusVisible={{
                 outline: 'none',
-                [`& > *:not([${READOUT_ATTR}])`]: {bg: 'blue.400'},
+                [`& > *:not([${READOUT_ATTR}])`]: {bg: 'accent.focusRing'},
               }}
             >
               <ChakraSlider.HiddenInput />
@@ -497,7 +523,7 @@ export function ProjectTimeline({
                 pointerEvents="none"
                 zIndex="4"
                 style={{
-                  transform: `translateX(-${readoutShift(value) * 100}%)`,
+                  transform: `translateX(-${axisFraction(value, window.start, sliderMax) * 100}%)`,
                 }}
               >
                 {labelFormat(value)}
@@ -509,7 +535,7 @@ export function ProjectTimeline({
                 // CHART_CSS): one instant, standing in several places at once, and
                 // it should be recognisably the same mark in each of them. It is
                 // the grips' yellow that tells it apart from an edge here.
-                <Box w={`${PLAYHEAD_W}px`} h="full" bg="gray.50" />
+                <Box w={`${PLAYHEAD_W}px`} h="full" bg="chart.playhead" />
               ) : (
                 // A trim bracket, the full height of the strip, so the window's
                 // edge is something you can obviously take hold of. Alongside its
@@ -526,14 +552,14 @@ export function ProjectTimeline({
                     : {left: '100%', roundedRight: 'md'})}
                   w={`${HANDLE_W}px`}
                   h="full"
-                  bg="yellow.400"
+                  bg="accent.solid"
                   display="flex"
                   alignItems="center"
                   justifyContent="center"
                 >
                   {/* Its own hue rather than a neutral, so the notch stays legible
                         on the yellow at the same contrast the grey pair had. */}
-                  <Box w="2px" h="14px" rounded="full" bg="yellow.800" />
+                  <Box w="2px" h="14px" rounded="full" bg="accent.800" />
                 </Box>
               )}
             </ChakraSlider.Thumb>

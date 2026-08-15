@@ -1,12 +1,42 @@
 import {createContext, useContext, useEffect} from 'react';
+import {locale} from '../../utils/dateUtils';
 import type {loadNoiseProject} from '../../routes/crew.lautstaerke';
-import type {LevelMetric} from './level';
-import type {DeviceSeries, Weighting} from './noise';
-import type {RangeTotals} from './projectLogs';
+import type {LevelMetric, PickedMetrics} from './level';
+import type {Weighting} from './noise';
+import type {MetricTraces, RangeTotals} from './projectLogs';
 
 export type NoiseProject = Awaited<ReturnType<typeof loadNoiseProject>>;
 export type NoiseLocationItem = NoiseProject['locations'][number];
 export type NoiseAssignment = NoiseLocationItem['assignments'][number];
+
+/**
+ * The order locations are shown in — the one place it is decided.
+ *
+ * By name, the way a person reads it: `Bühne 2` before `Bühne 10`, which lexicographic
+ * order (what Postgres would hand back) gets backwards. Same rule and same reason as
+ * compareDeviceIds in noise.ts.
+ *
+ * It matters that this is a single answer rather than one per view. The cards, the roster
+ * of chips under them and the pins on the map are three renderings of the same set, and a
+ * list that disagreed with its own toolbar about which place comes first would be read as
+ * a bug in one of them. It is also what "the first three" means when a project is opened
+ * for the first time (see locationSelection.ts) — so changing the rule here changes which
+ * locations a fresh browser starts on, which is deliberate.
+ */
+export function compareLocations(
+  a: {locationName: string},
+  b: {locationName: string},
+): number {
+  return a.locationName.localeCompare(b.locationName, locale, {numeric: true});
+}
+
+// A sorted copy: what comes in is a query's array, shared with the cache, and sorting it
+// in place would reorder it under everything else holding the same reference.
+export function orderLocations<T extends {locationName: string}>(
+  locations: readonly T[],
+): T[] {
+  return [...locations].sort(compareLocations);
+}
 
 /**
  * Which monitors stood at a location at one instant — `at: null` (live mode) meaning
@@ -76,6 +106,29 @@ export function locationLines(
       });
   }
   return [...byDevice.values()];
+}
+
+/**
+ * One monitor, unclipped: the same shape for a chart that is *about* that monitor rather
+ * than about a place it stood — its own page (see LiveView).
+ *
+ * The open window is the whole difference between the two. A location's line is cut to the
+ * stretches that monitor stood *there*, because a chart of a place must not plot the noise
+ * of another stage; a chart of the instrument is about the instrument, so every reading it
+ * has ever sent belongs on it wherever it was standing at the time.
+ *
+ * An array of one, like locationLines above, because that is what a trace takes.
+ */
+export function deviceLines(deviceId: string): DeviceWindows[] {
+  return [
+    {
+      deviceId,
+      // Only a location card's header prints this; a device page has its own dot and its
+      // own "last seen" in the toolbar over the chart.
+      lastSeen: null,
+      windows: [{start: 0, end: null}],
+    },
+  ];
 }
 
 // The part of an assignment a clash is decided on. Structural rather than
@@ -208,10 +261,19 @@ export type ProjectViewCtx = {
   // came from the in/out keys (one end) or a drag across the trace (both). An omitted
   // end stays where it was; the playhead follows only if the crop leaves it outside.
   cropTo: (crop: {start?: number; end?: number}) => void;
-  // What the header's two dropdowns are set to: which Leq window and which frequency
-  // weighting every pin and row on the page shows. The layout owns the choice so the
-  // map and the list can't drift apart, and it resolves `totals`/`traces` against it
-  // — the views need them only for the live path.
+  // What the header's two controls are set to: which frequency weighting the page is read
+  // in, and which Leq windows it shows. The layout owns the choice so the map and the list
+  // can't drift apart, and it resolves `totals`/`traces` against it — the views need them
+  // only for the live path.
+  //
+  // Two fields for one pick, and the split is worth knowing:
+  //   metrics — every window the *charts* draw, one line each in its own shade.
+  //   metric  — the primary (see primaryMetric), which every *number* is read in: the
+  //             pins, the second reading on a card, the levels at the playhead. One
+  //             number cannot be five, and the readouts have not been asked to become a
+  //             row of them, so they read the finest thing picked. Deliberate, and for
+  //             the readouts temporary.
+  metrics: PickedMetrics;
   metric: LevelMetric;
   weighting: Weighting;
   // Each *location's* Leq over the crop — the energetic mean of its per-minute
@@ -221,9 +283,9 @@ export type ProjectViewCtx = {
   // visited, so a per-device figure printed the same number on every card it had ever
   // stood at. Absent while live, and while the one query behind it is in flight.
   locationTotals?: Record<string, RangeTotals>;
-  // Whole-project traces at stored resolution; the crop is applied by the chart, not
-  // here, so these survive a timeline drag untouched.
-  traces?: Record<string, DeviceSeries>;
+  // Whole-project traces at stored resolution, one device record per picked window; the
+  // crop is applied by the chart, not here, so these survive a timeline drag untouched.
+  traces?: MetricTraces;
   // Re-reads what an assignment change invalidates. Lives on the layout because
   // it also invalidates lists rendered outside this route.
   refresh: () => Promise<void>;

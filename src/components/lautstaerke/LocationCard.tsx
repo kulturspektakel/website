@@ -7,7 +7,8 @@ import {
   MenuRoot,
   MenuTrigger,
 } from '../chakra-snippets/menu';
-import {DeviceIdentity, LocationReadings} from './LocationReadings';
+import {LocationReadings} from './LocationReadings';
+import {DeviceBadges} from './DeviceBadge';
 import {LocationChart} from './LocationChart';
 import {LocationAssignmentsDialog} from './LocationAssignmentsDialog';
 import {
@@ -77,7 +78,7 @@ export const LocationCard = memo(function LocationCard({
       p="3"
       rounded="md"
       borderWidth="1px"
-      borderColor="gray.700"
+      borderColor="border.emphasized"
       // The cards share the page equally, which the grid around them does by making
       // every row the same height (see the list view) — including the width, at two
       // columns. All this has to do is not insist on being taller than its share; the
@@ -86,25 +87,21 @@ export const LocationCard = memo(function LocationCard({
       minH="0"
     >
       <HStack justify="space-between" align="center" gap="3">
-        {/* Nothing clickable in here any more: the name and its monitors are what the
-            card is about, and the two things you can do to it — take it off the list,
-            edit it — are the toolbar below and the ⋮ beside it. */}
-        <HStack flex="1" minW="0" gap="2">
-          <Box minW="0" flex="1">
-            <Text fontWeight="bold" truncate>
-              {location.locationName}
-            </Text>
-            {/* Which monitors have stood here, always — the coordinates this line used
-                to fall back to were placed on the map, never change, and are not
-                something anyone reads a noise list for. Wrapped rather than truncated
-                as a set: with two monitors the second name is not a detail. */}
-            <HStack gap="3" wrap="wrap" minW="0">
-              {lines.map(({deviceId}) => (
-                <DeviceIdentity key={deviceId} deviceName={deviceId} />
-              ))}
-            </HStack>
-          </Box>
-        </HStack>
+        {/* The place's own name isn't clickable: a location has no page of its own, and
+            the two things you can do to it — take it off the list, edit it — are the
+            toolbar below and the ⋮ beside it. The monitors under it do have a page each,
+            and their badges link to it. */}
+        <Box flex="1" minW="0">
+          <Text fontWeight="bold" truncate>
+            {location.locationName}
+          </Text>
+          {/* Which monitors have stood here — the coordinates this line used to fall
+                back to were placed on the map, never change, and are not something
+                anyone reads a noise list for. One line of them, as many as fit at a
+                width that still names them; the rest are behind the ⋮ (see
+                DeviceBadges). */}
+          <DeviceBadges lines={lines} />
+        </Box>
         <LocationLevels
           locationId={location.id}
           assignments={assignments}

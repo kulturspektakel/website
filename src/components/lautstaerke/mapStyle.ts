@@ -1,8 +1,14 @@
+import {themeHex} from '../../theme-noise';
+
 // A dark, deliberately quiet basemap for the noise-project overview.
 //
-// Colors are the same Chakra grays the crew UI is built from (gray.900 for the
-// page, gray.800 for raised surfaces, gray.700 for borders, gray.400/500 for
-// text), so the map reads as part of the page rather than an embedded widget.
+// Two kinds of colour here, kept apart on purpose. The four that have to agree
+// with the rest of the page — the ground the tiles fade in from, and the type
+// over it — are theme tokens, so the map reads as part of the page rather than
+// an embedded widget. Everything else is MAP_RAMP below: a lightness ladder for
+// basemap hierarchy, which has one consumer and means nothing outside this file.
+// Promoting those to the design system would put a dozen single-use names into
+// a vocabulary the rest of the app has to read past.
 //
 // Two rules shape the rest: buildings must stay — you place a microphone
 // relative to the building it hangs on, so the footprints are the map's actual
@@ -16,12 +22,37 @@
 // changed in this repo. Note the tradeoff: `styles` is ignored when a `mapId` is
 // set, and `mapId` is what AdvancedMarkerElement requires — so this map stays on
 // google.maps.Marker (deprecated but supported, and what GoogleMaps.tsx uses).
-export const DARK_MAP_STYLE: google.maps.MapTypeStyle[] = [
+// The basemap's own ladder, darkest to lightest, so it reads as a ladder rather
+// than as a dozen hexes scattered through a hundred lines of style objects. The
+// ground it is built around is `map.ground`; mapStyle.test.ts pins that ordering
+// so the ramp can be retuned without drifting off the page it sits on.
+const MAP_RAMP = {
+  water: '#0d0d10',
+  natural: '#17171a',
+  town: '#202024',
+  poi: '#26262b',
+  park: '#1e2620',
+  road: '#2e2e33',
+  roadLocal: '#33333a',
+  roadArterial: '#41414a',
+  roadHighway: '#52525b',
+  // Bright for a gray this dark, on purpose: a building footprint is a hairline,
+  // so it needs the contrast to survive antialiasing.
+  buildings: '#7c7c88',
+  roadLabel: '#8a8a94',
+} as const;
+
+// Built at map-init rather than kept as a module constant, so the dependency on
+// the theme is visible where the map is created. Called twice a session.
+export const darkMapStyle = (): google.maps.MapTypeStyle[] => [
   // Ground plane and label defaults; the stroke is a halo in the ground color so
   // text stays legible wherever it lands.
-  {elementType: 'geometry', stylers: [{color: '#18181b'}]},
-  {elementType: 'labels.text.fill', stylers: [{color: '#a1a1aa'}]},
-  {elementType: 'labels.text.stroke', stylers: [{color: '#18181b'}]},
+  {elementType: 'geometry', stylers: [{color: themeHex('map.ground')}]},
+  {elementType: 'labels.text.fill', stylers: [{color: themeHex('map.label')}]},
+  {
+    elementType: 'labels.text.stroke',
+    stylers: [{color: themeHex('map.ground')}],
+  },
   // No pictograms anywhere — the location pins should be the only icons.
   {elementType: 'labels.icon', stylers: [{visibility: 'off'}]},
 
@@ -34,30 +65,32 @@ export const DARK_MAP_STYLE: google.maps.MapTypeStyle[] = [
   {
     featureType: 'landscape.man_made',
     elementType: 'geometry.fill',
-    stylers: [{color: '#202024'}],
+    stylers: [{color: MAP_RAMP.town}],
   },
   {
     featureType: 'landscape.man_made',
     elementType: 'geometry.stroke',
-    // Bright for a gray this dark, on purpose: the footprint outline is a
-    // hairline, so it needs the contrast to survive antialiasing.
-    stylers: [{color: '#7c7c88'}],
+    stylers: [{color: MAP_RAMP.buildings}],
   },
   // A touch darker than the town, so the built-up edge is visible at low zoom.
   {
     featureType: 'landscape.natural',
     elementType: 'geometry',
-    stylers: [{color: '#17171a'}],
+    stylers: [{color: MAP_RAMP.natural}],
   },
 
   // POI: keep the polygons, drop the names and pins.
-  {featureType: 'poi', elementType: 'geometry', stylers: [{color: '#26262b'}]},
+  {
+    featureType: 'poi',
+    elementType: 'geometry',
+    stylers: [{color: MAP_RAMP.poi}],
+  },
   {featureType: 'poi', elementType: 'labels', stylers: [{visibility: 'off'}]},
   // A hint of green so parks and sports grounds don't read as more buildings.
   {
     featureType: 'poi.park',
     elementType: 'geometry',
-    stylers: [{color: '#1e2620'}],
+    stylers: [{color: MAP_RAMP.park}],
   },
   {featureType: 'transit', stylers: [{visibility: 'off'}]},
   // Municipal boundaries and lot lines add lines without adding information.
@@ -78,7 +111,7 @@ export const DARK_MAP_STYLE: google.maps.MapTypeStyle[] = [
   {
     featureType: 'road',
     elementType: 'geometry.fill',
-    stylers: [{color: '#2e2e33'}],
+    stylers: [{color: MAP_RAMP.road}],
   },
   {
     featureType: 'road',
@@ -88,33 +121,33 @@ export const DARK_MAP_STYLE: google.maps.MapTypeStyle[] = [
   {
     featureType: 'road',
     elementType: 'labels.text.fill',
-    stylers: [{color: '#8a8a94'}],
+    stylers: [{color: MAP_RAMP.roadLabel}],
   },
   {
     featureType: 'road.local',
     elementType: 'geometry.fill',
-    stylers: [{color: '#33333a'}],
+    stylers: [{color: MAP_RAMP.roadLocal}],
   },
   {
     featureType: 'road.arterial',
     elementType: 'geometry.fill',
-    stylers: [{color: '#41414a'}],
+    stylers: [{color: MAP_RAMP.roadArterial}],
   },
   {
     featureType: 'road.highway',
     elementType: 'geometry.fill',
-    stylers: [{color: '#52525b'}],
+    stylers: [{color: MAP_RAMP.roadHighway}],
   },
 
   // Water sits below the ground plane rather than above it.
   {
     featureType: 'water',
     elementType: 'geometry',
-    stylers: [{color: '#0d0d10'}],
+    stylers: [{color: MAP_RAMP.water}],
   },
   {featureType: 'water', elementType: 'labels', stylers: [{visibility: 'off'}]},
 ];
 
-// Matches the map div's background so tiles fade in from the page color instead
+// Matches the map div's background so tiles fade in from the page colour instead
 // of flashing Google's default off-white.
-export const MAP_BACKGROUND = '#18181b';
+export const mapBackground = (): string => themeHex('map.ground');

@@ -1,17 +1,35 @@
 import {createContext, useContext} from 'react';
-import {type DeviceLocationRecord, type Weighting} from './noise';
-import {timeZone} from '../../utils/dateUtils';
+import {type Weighting} from './noise';
+import {type LevelMetric, type PickedMetrics} from './level';
+import {type ReferenceMicSlice} from './useReferenceMic';
 
-// The weighting toggle lives in the shared header (the $device layout route),
-// but drives the charts in the child views. Share it through this context so the
-// header and the live/historical views stay in sync, and the choice persists
-// when navigating between them. `peaks` similarly toggles the live band chart's
-// peak-hold overlay from the header menu.
+// What the device page is showing, picked in its toolbar (the device layout route) and
+// read by the charts below it. Here rather than passed down because the toolbar and the
+// view are siblings — the layout owns both — and because the choice has to survive the
+// view being replaced.
+//
+// The same choices the project page's toolbar sets, and deliberately: a window and a
+// weighting mean one thing across this section, so a monitor's chart and a location's
+// row are read in the same terms.
+//
+// No single `metric` here, unlike the project page's context: nothing on this page reads
+// one. Its numbers are the tile row, which prints every window of the weighting whatever is
+// picked, so the pick is only ever the set of lines to draw and the set of tiles to light.
 export type DeviceViewCtx = {
   weighting: Weighting;
-  toggleWeighting: () => void;
-  peaks: boolean;
-  togglePeaks: () => void;
+  // Not a plain setter: the two choices are coupled, since LCpeak has no A-weighted
+  // counterpart, so setting one may drop it from the set (see supportedMetrics).
+  setWeighting: (weighting: Weighting) => void;
+  // Which windows the chart draws, in LEVEL_METRICS order and never empty.
+  metrics: PickedMetrics;
+  // Adds or removes one — pressing a tile and ticking a box are the same commit.
+  toggleMetric: (metric: LevelMetric) => void;
+  // The microphone on this computer that the monitor is being measured against, if any.
+  // This page's alone — nowhere else in the section compares a monitor to anything — and
+  // here for the same sibling reason as the pair above: it is picked in the toolbar's menu
+  // and drawn by the chart underneath. Owned by the device route rather than the section
+  // layout, so that navigating away releases it.
+  referenceMic: ReferenceMicSlice;
 };
 
 export const DeviceViewContext = createContext<DeviceViewCtx | null>(null);
@@ -19,46 +37,7 @@ export const DeviceViewContext = createContext<DeviceViewCtx | null>(null);
 export function useDeviceView() {
   const ctx = useContext(DeviceViewContext);
   if (!ctx) {
-    throw new Error('useDeviceView must be used within the $device layout');
+    throw new Error('useDeviceView must be used within the device layout');
   }
   return ctx;
-}
-
-// yyyy-mm-dd in the festival timezone, for comparing a placement's day against
-// the selected day. Also the basis for turning a URL timeframe back into a local
-// day (see timeframe.ts), hence exported.
-const dayKeyFmt = new Intl.DateTimeFormat('sv-SE', {timeZone});
-export const dayKey = (ms: number) => dayKeyFmt.format(new Date(ms));
-
-// The location in effect on `date` (yyyy-mm-dd), or the latest known location
-// for the live view (`date` null): the most recent placement on or before the
-// selected day. `locations` must be oldest-first (as deviceLocations returns
-// them), so the in-effect one is simply the last that qualifies. Null when the
-// device had no location by then.
-export function resolveLocation(
-  locations: ReadonlyArray<DeviceLocationRecord>,
-  date: string | null,
-): string | null {
-  // Oldest-first, so the in-effect placement is the last one that qualifies.
-  for (let i = locations.length - 1; i >= 0; i--) {
-    const loc = locations[i]!;
-    if (date == null || dayKey(loc.createdAt) <= date) return loc.name;
-  }
-  return null;
-}
-
-// Page title for a device: its location on the viewed day when known, else the
-// bare device id. The /crew/lautstaerke/$device layout loader provides the
-// location history, so route `head()` functions (which can't read React
-// context) resolve it from the match chain rather than issuing another query.
-export function deviceTitle(
-  matches: ReadonlyArray<{routeId: string; loaderData?: unknown}>,
-  device: string,
-  date: string | null,
-): string {
-  const layout = matches.find((m) => m.routeId === '/crew/lautstaerke/$device');
-  const locations = (
-    layout?.loaderData as {locations?: DeviceLocationRecord[]} | undefined
-  )?.locations;
-  return resolveLocation(locations ?? [], date) ?? device;
 }

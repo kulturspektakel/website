@@ -1,9 +1,13 @@
 import {describe, expect, it} from 'vitest';
+import type uPlot from 'uplot';
 import {
+  dayOf,
   fmtDayHourMinute,
   fmtHourMinute,
   fmtTime,
+  gridStep,
   instantLabel,
+  labelStride,
   spanTimeFormat,
   timeGridStepS,
   zonedDate,
@@ -29,6 +33,7 @@ describe('axis formatters', () => {
   it('render local time at their own precision', () => {
     expect(fmtTime(t)).toBe('18:05:09');
     expect(fmtHourMinute(t)).toBe('18:05');
+    expect(dayOf(zonedDate(t))).toBe('24.07.');
     expect(fmtDayHourMinute(t)).toBe('24.07. 18:05');
   });
 
@@ -36,6 +41,7 @@ describe('axis formatters', () => {
     // 07:04:03 Berlin on the 3rd — every component is single-digit.
     const early = secs('2026-03-03T06:04:03Z');
     expect(fmtTime(early)).toBe('07:04:03');
+    expect(dayOf(zonedDate(early))).toBe('03.03.');
     expect(fmtDayHourMinute(early)).toBe('03.03. 07:04');
   });
 
@@ -48,6 +54,47 @@ describe('axis formatters', () => {
   it('cross midnight into the next local day', () => {
     // 22:30 UTC is 00:30 the next day in Berlin.
     expect(fmtDayHourMinute(secs('2026-07-24T22:30:00Z'))).toBe('25.07. 00:30');
+    // Which is the instant the timeline draws a day mark on, so its date has to turn
+    // over there too rather than two hours later.
+    expect(dayOf(zonedDate(secs('2026-07-24T22:00:00Z')))).toBe('25.07.');
+  });
+});
+
+describe('gridStep', () => {
+  // The row charts' dB grid, which answers to height the way the time grid answers to
+  // width: 30–110 dB up whatever box the chart was given, at least 14 px between lines.
+  // The two heights that matter are the card floor and a device page's panel — the same
+  // component, a factor of five apart, which is why the step cannot be a constant.
+  const db = (heightPx: number) => gridStep([5, 10, 20, 40], 80, heightPx, 14);
+
+  it('goes finer as the chart gets taller', () => {
+    expect(db(113)).toBe(10); // a card at its minimum height
+    expect(db(200)).toBe(10);
+    expect(db(300)).toBe(5); // a device page's panel
+    expect(db(800)).toBe(5); // and nothing finer than the ladder's floor
+  });
+
+  it('thins out rather than crowding a squeezed chart', () => {
+    expect(db(90)).toBe(20);
+    expect(db(40)).toBe(40);
+  });
+
+  it('never draws lines closer than the minimum spacing', () => {
+    for (const h of [40, 90, 113, 150, 200, 300, 450, 600, 800]) {
+      expect((db(h) * h) / 80).toBeGreaterThanOrEqual(14);
+    }
+  });
+
+  // Every step divides the one above it, so growing a chart splits its gaps rather than
+  // moving every line to a new offset.
+  it('keeps the lines it had when it goes finer', () => {
+    for (const [finer, coarser] of [
+      [5, 10],
+      [10, 20],
+      [20, 40],
+    ]) {
+      expect(coarser! % finer!).toBe(0);
+    }
   });
 });
 
@@ -141,5 +188,38 @@ describe('instantLabel', () => {
   it('otherwise carries the date exactly when the span does', () => {
     expect(instantLabel(false, 23.99 * HOUR)(ms)).toBe('20:05');
     expect(instantLabel(false, 24 * HOUR)(ms)).toBe('24.07. 20:05');
+  });
+});
+
+// Which grid lines get a label, on all three axes in the section — the trace's time and
+// dB axes and the spectrum's frequency one. It reaches uPlot only through valToPos, so a
+// stub that scales a value into a pixel is the whole of what it needs.
+describe('labelStride', () => {
+  // `pxPerUnit` pixels per unit of the scale, which is all valToPos means here.
+  const plotAt = (pxPerUnit: number) =>
+    ({valToPos: (v: number) => v * pxPerUnit}) as unknown as uPlot;
+
+  it('labels every line where the lines already clear the minimum', () => {
+    // 10 dB apart at 4 px/dB is 40 px between labels, and 26 is what they need.
+    expect(labelStride(plotAt(4), [30, 40, 50, 60], 'y', 26)).toBe(1);
+  });
+
+  it('skips as few as it can where they do not', () => {
+    // 5 px between lines, 26 px wanted: every 6th survives.
+    expect(labelStride(plotAt(0.5), [30, 40, 50, 60], 'y', 26)).toBe(6);
+    // Exactly on the minimum is close enough — no line is skipped for a rounding.
+    expect(labelStride(plotAt(2.6), [30, 40], 'y', 26)).toBe(1);
+  });
+
+  it('reads a descending axis by the gap and not its sign', () => {
+    // uPlot's y grows downwards, so its pixels fall as the value rises.
+    expect(labelStride(plotAt(-4), [30, 40, 50], 'y', 26)).toBe(1);
+  });
+
+  it('labels the line it has when there is nothing to measure against', () => {
+    expect(labelStride(plotAt(4), [], 'x', 26)).toBe(1);
+    expect(labelStride(plotAt(4), [30], 'x', 26)).toBe(1);
+    // A collapsed scale: two splits on the same pixel would divide by zero.
+    expect(labelStride(plotAt(0), [30, 40], 'x', 26)).toBe(1);
   });
 });

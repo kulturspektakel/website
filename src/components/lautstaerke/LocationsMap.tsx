@@ -14,7 +14,7 @@ import {
   type LevelMetric,
 } from './level';
 import {type Weighting} from './noise';
-import {DARK_MAP_STYLE, MAP_BACKGROUND} from './mapStyle';
+import {darkMapStyle, mapBackground} from './mapStyle';
 import {NO_LEVEL_LABEL, pinIcon, pinLabel} from './mapPin';
 import {pulseOverlay} from './mapPulse';
 import {useSamplePins} from './mapDevPins';
@@ -122,8 +122,8 @@ function MapCanvas({
     if (!containerRef.current || mapRef.current) return;
     const maps = window.google.maps;
     mapRef.current = new maps.Map(containerRef.current, {
-      styles: DARK_MAP_STYLE,
-      backgroundColor: MAP_BACKGROUND,
+      styles: darkMapStyle(),
+      backgroundColor: mapBackground(),
       // The map takes the whole view here, so a plain wheel scroll zooms rather
       // than asking for a modifier key first. On a viewport short enough that
       // the page scrolls, the map is still tall enough to scroll past.
@@ -153,7 +153,7 @@ function MapCanvas({
       // The custom palette describes the roadmap base. Left applied over imagery
       // it would repaint the label overlay in mid-greys on a bright photo, so
       // hand labels back to Google's treatment, which is designed for satellite.
-      styles: mapTypeId === 'roadmap' ? DARK_MAP_STYLE : [],
+      styles: mapTypeId === 'roadmap' ? darkMapStyle() : [],
     });
   }, [mapTypeId]);
 
@@ -413,13 +413,18 @@ function MapCanvas({
           >
             {/* A toggle, and it says so: armed it is solid and its icon turns from
                 "add" into "cancel", so the mode is visible from the button as well
-                as from the cursor — which a touch device doesn't have. */}
+                as from the cursor — which a touch device doesn't have.
+
+                Lit in the accent rather than in green: green on this page means a
+                monitor is reporting (see LiveStatusDot and the map's own pulse
+                rings), and being armed to drop a pin is a mode this control is in,
+                not something the site is doing. */}
             <IconButton
               aria-label={placeLabel}
               size="xs"
               shadow="md"
               variant={placing ? 'solid' : 'surface'}
-              colorPalette={placing ? 'green' : undefined}
+              colorPalette={placing ? 'accent' : undefined}
               onClick={() => onPlacingChange?.(!placing)}
             >
               {placing ? <LuX /> : <LuPlus />}

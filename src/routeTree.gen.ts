@@ -41,7 +41,6 @@ import { Route as CrewProdukteIndexRouteImport } from './routes/crew.produkte.in
 import { Route as CrewLautstaerkeIndexRouteImport } from './routes/crew.lautstaerke.index'
 import { Route as MainLineupIndexRouteImport } from './routes/_main.lineup.index'
 import { Route as CrewProdukteListIdRouteImport } from './routes/crew.produkte.$listId'
-import { Route as CrewLautstaerkeDeviceRouteImport } from './routes/crew.lautstaerke.$device'
 import { Route as CrewBookingEventIdRouteImport } from './routes/crew.booking.$eventId'
 import { Route as ApiTwilioScreenRouteImport } from './routes/api.twilio.screen'
 import { Route as ApiTwilioLegStatusRouteImport } from './routes/api.twilio.leg-status'
@@ -89,9 +88,8 @@ import { Route as MainLineupYearRouteImport } from './routes/_main.lineup.$year'
 import { Route as MainEventsIdRouteImport } from './routes/_main.events_.$id'
 import { Route as MainCardHashRouteImport } from './routes/_main.card.$hash'
 import { Route as MainBookingApplicationTypeRouteImport } from './routes/_main.booking_.$applicationType'
-import { Route as CrewLautstaerkeDeviceIndexRouteImport } from './routes/crew.lautstaerke.$device.index'
 import { Route as CrewLautstaerkeProjektProjectIdRouteImport } from './routes/crew.lautstaerke.projekt.$projectId'
-import { Route as CrewLautstaerkeDeviceDateRouteImport } from './routes/crew.lautstaerke.$device.$date'
+import { Route as CrewLautstaerkeDeviceDeviceRouteImport } from './routes/crew.lautstaerke.device.$device'
 import { Route as CrewBookingEventIdApplicationIdRouteImport } from './routes/crew.booking.$eventId.$applicationId'
 import { Route as ApiSpendenQuittungIdRouteImport } from './routes/api.spenden.quittung.$id'
 import { Route as MainSpendenQuittungIdRouteImport } from './routes/_main.spenden_.quittung.$id'
@@ -262,11 +260,6 @@ const CrewProdukteListIdRoute = CrewProdukteListIdRouteImport.update({
   id: '/$listId',
   path: '/$listId',
   getParentRoute: () => CrewProdukteRoute,
-} as any)
-const CrewLautstaerkeDeviceRoute = CrewLautstaerkeDeviceRouteImport.update({
-  id: '/$device',
-  path: '/$device',
-  getParentRoute: () => CrewLautstaerkeRoute,
 } as any)
 const CrewBookingEventIdRoute = CrewBookingEventIdRouteImport.update({
   id: '/booking/$eventId',
@@ -517,23 +510,17 @@ const MainBookingApplicationTypeRoute =
     path: '/booking/$applicationType',
     getParentRoute: () => MainRoute,
   } as any)
-const CrewLautstaerkeDeviceIndexRoute =
-  CrewLautstaerkeDeviceIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => CrewLautstaerkeDeviceRoute,
-  } as any)
 const CrewLautstaerkeProjektProjectIdRoute =
   CrewLautstaerkeProjektProjectIdRouteImport.update({
     id: '/projekt/$projectId',
     path: '/projekt/$projectId',
     getParentRoute: () => CrewLautstaerkeRoute,
   } as any)
-const CrewLautstaerkeDeviceDateRoute =
-  CrewLautstaerkeDeviceDateRouteImport.update({
-    id: '/$date',
-    path: '/$date',
-    getParentRoute: () => CrewLautstaerkeDeviceRoute,
+const CrewLautstaerkeDeviceDeviceRoute =
+  CrewLautstaerkeDeviceDeviceRouteImport.update({
+    id: '/device/$device',
+    path: '/device/$device',
+    getParentRoute: () => CrewLautstaerkeRoute,
   } as any)
 const CrewBookingEventIdApplicationIdRoute =
   CrewBookingEventIdApplicationIdRouteImport.update({
@@ -672,7 +659,6 @@ export interface FileRoutesByFullPath {
   '/api/twilio/leg-status': typeof ApiTwilioLegStatusRoute
   '/api/twilio/screen': typeof ApiTwilioScreenRoute
   '/crew/booking/$eventId': typeof CrewBookingEventIdRouteWithChildren
-  '/crew/lautstaerke/$device': typeof CrewLautstaerkeDeviceRouteWithChildren
   '/crew/produkte/$listId': typeof CrewProdukteListIdRoute
   '/lineup/': typeof MainLineupIndexRoute
   '/crew/lautstaerke/': typeof CrewLautstaerkeIndexRoute
@@ -684,9 +670,8 @@ export interface FileRoutesByFullPath {
   '/spenden/quittung/$id': typeof MainSpendenQuittungIdRoute
   '/api/spenden/quittung/$id': typeof ApiSpendenQuittungIdRoute
   '/crew/booking/$eventId/$applicationId': typeof CrewBookingEventIdApplicationIdRouteWithChildren
-  '/crew/lautstaerke/$device/$date': typeof CrewLautstaerkeDeviceDateRoute
+  '/crew/lautstaerke/device/$device': typeof CrewLautstaerkeDeviceDeviceRoute
   '/crew/lautstaerke/projekt/$projectId': typeof CrewLautstaerkeProjektProjectIdRouteWithChildren
-  '/crew/lautstaerke/$device/': typeof CrewLautstaerkeDeviceIndexRoute
   '/crew/booking/$eventId/$applicationId/contact': typeof CrewBookingEventIdApplicationIdContactRoute
   '/crew/lautstaerke/projekt/$projectId/karte': typeof CrewLautstaerkeProjektProjectIdKarteRoute
   '/crew/lautstaerke/projekt/$projectId/liste': typeof CrewLautstaerkeProjektProjectIdListeRoute
@@ -774,8 +759,7 @@ export interface FileRoutesByTo {
   '/spenden/quittung/$id': typeof MainSpendenQuittungIdRoute
   '/api/spenden/quittung/$id': typeof ApiSpendenQuittungIdRoute
   '/crew/booking/$eventId/$applicationId': typeof CrewBookingEventIdApplicationIdRouteWithChildren
-  '/crew/lautstaerke/$device/$date': typeof CrewLautstaerkeDeviceDateRoute
-  '/crew/lautstaerke/$device': typeof CrewLautstaerkeDeviceIndexRoute
+  '/crew/lautstaerke/device/$device': typeof CrewLautstaerkeDeviceDeviceRoute
   '/crew/booking/$eventId/$applicationId/contact': typeof CrewBookingEventIdApplicationIdContactRoute
   '/crew/lautstaerke/projekt/$projectId/karte': typeof CrewLautstaerkeProjektProjectIdKarteRoute
   '/crew/lautstaerke/projekt/$projectId/liste': typeof CrewLautstaerkeProjektProjectIdListeRoute
@@ -858,7 +842,6 @@ export interface FileRoutesById {
   '/api/twilio/leg-status': typeof ApiTwilioLegStatusRoute
   '/api/twilio/screen': typeof ApiTwilioScreenRoute
   '/crew/booking/$eventId': typeof CrewBookingEventIdRouteWithChildren
-  '/crew/lautstaerke/$device': typeof CrewLautstaerkeDeviceRouteWithChildren
   '/crew/produkte/$listId': typeof CrewProdukteListIdRoute
   '/_main/lineup/': typeof MainLineupIndexRoute
   '/crew/lautstaerke/': typeof CrewLautstaerkeIndexRoute
@@ -870,9 +853,8 @@ export interface FileRoutesById {
   '/_main/spenden_/quittung/$id': typeof MainSpendenQuittungIdRoute
   '/api/spenden/quittung/$id': typeof ApiSpendenQuittungIdRoute
   '/crew/booking/$eventId/$applicationId': typeof CrewBookingEventIdApplicationIdRouteWithChildren
-  '/crew/lautstaerke/$device/$date': typeof CrewLautstaerkeDeviceDateRoute
+  '/crew/lautstaerke/device/$device': typeof CrewLautstaerkeDeviceDeviceRoute
   '/crew/lautstaerke/projekt/$projectId': typeof CrewLautstaerkeProjektProjectIdRouteWithChildren
-  '/crew/lautstaerke/$device/': typeof CrewLautstaerkeDeviceIndexRoute
   '/crew/booking/$eventId/$applicationId/contact': typeof CrewBookingEventIdApplicationIdContactRoute
   '/crew/lautstaerke/projekt/$projectId/karte': typeof CrewLautstaerkeProjektProjectIdKarteRoute
   '/crew/lautstaerke/projekt/$projectId/liste': typeof CrewLautstaerkeProjektProjectIdListeRoute
@@ -955,7 +937,6 @@ export interface FileRouteTypes {
     | '/api/twilio/leg-status'
     | '/api/twilio/screen'
     | '/crew/booking/$eventId'
-    | '/crew/lautstaerke/$device'
     | '/crew/produkte/$listId'
     | '/lineup/'
     | '/crew/lautstaerke/'
@@ -967,9 +948,8 @@ export interface FileRouteTypes {
     | '/spenden/quittung/$id'
     | '/api/spenden/quittung/$id'
     | '/crew/booking/$eventId/$applicationId'
-    | '/crew/lautstaerke/$device/$date'
+    | '/crew/lautstaerke/device/$device'
     | '/crew/lautstaerke/projekt/$projectId'
-    | '/crew/lautstaerke/$device/'
     | '/crew/booking/$eventId/$applicationId/contact'
     | '/crew/lautstaerke/projekt/$projectId/karte'
     | '/crew/lautstaerke/projekt/$projectId/liste'
@@ -1057,8 +1037,7 @@ export interface FileRouteTypes {
     | '/spenden/quittung/$id'
     | '/api/spenden/quittung/$id'
     | '/crew/booking/$eventId/$applicationId'
-    | '/crew/lautstaerke/$device/$date'
-    | '/crew/lautstaerke/$device'
+    | '/crew/lautstaerke/device/$device'
     | '/crew/booking/$eventId/$applicationId/contact'
     | '/crew/lautstaerke/projekt/$projectId/karte'
     | '/crew/lautstaerke/projekt/$projectId/liste'
@@ -1140,7 +1119,6 @@ export interface FileRouteTypes {
     | '/api/twilio/leg-status'
     | '/api/twilio/screen'
     | '/crew/booking/$eventId'
-    | '/crew/lautstaerke/$device'
     | '/crew/produkte/$listId'
     | '/_main/lineup/'
     | '/crew/lautstaerke/'
@@ -1152,9 +1130,8 @@ export interface FileRouteTypes {
     | '/_main/spenden_/quittung/$id'
     | '/api/spenden/quittung/$id'
     | '/crew/booking/$eventId/$applicationId'
-    | '/crew/lautstaerke/$device/$date'
+    | '/crew/lautstaerke/device/$device'
     | '/crew/lautstaerke/projekt/$projectId'
-    | '/crew/lautstaerke/$device/'
     | '/crew/booking/$eventId/$applicationId/contact'
     | '/crew/lautstaerke/projekt/$projectId/karte'
     | '/crew/lautstaerke/projekt/$projectId/liste'
@@ -1412,13 +1389,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/crew/produkte/$listId'
       preLoaderRoute: typeof CrewProdukteListIdRouteImport
       parentRoute: typeof CrewProdukteRoute
-    }
-    '/crew/lautstaerke/$device': {
-      id: '/crew/lautstaerke/$device'
-      path: '/$device'
-      fullPath: '/crew/lautstaerke/$device'
-      preLoaderRoute: typeof CrewLautstaerkeDeviceRouteImport
-      parentRoute: typeof CrewLautstaerkeRoute
     }
     '/crew/booking/$eventId': {
       id: '/crew/booking/$eventId'
@@ -1749,13 +1719,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainBookingApplicationTypeRouteImport
       parentRoute: typeof MainRoute
     }
-    '/crew/lautstaerke/$device/': {
-      id: '/crew/lautstaerke/$device/'
-      path: '/'
-      fullPath: '/crew/lautstaerke/$device/'
-      preLoaderRoute: typeof CrewLautstaerkeDeviceIndexRouteImport
-      parentRoute: typeof CrewLautstaerkeDeviceRoute
-    }
     '/crew/lautstaerke/projekt/$projectId': {
       id: '/crew/lautstaerke/projekt/$projectId'
       path: '/projekt/$projectId'
@@ -1763,12 +1726,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrewLautstaerkeProjektProjectIdRouteImport
       parentRoute: typeof CrewLautstaerkeRoute
     }
-    '/crew/lautstaerke/$device/$date': {
-      id: '/crew/lautstaerke/$device/$date'
-      path: '/$date'
-      fullPath: '/crew/lautstaerke/$device/$date'
-      preLoaderRoute: typeof CrewLautstaerkeDeviceDateRouteImport
-      parentRoute: typeof CrewLautstaerkeDeviceRoute
+    '/crew/lautstaerke/device/$device': {
+      id: '/crew/lautstaerke/device/$device'
+      path: '/device/$device'
+      fullPath: '/crew/lautstaerke/device/$device'
+      preLoaderRoute: typeof CrewLautstaerkeDeviceDeviceRouteImport
+      parentRoute: typeof CrewLautstaerkeRoute
     }
     '/crew/booking/$eventId/$applicationId': {
       id: '/crew/booking/$eventId/$applicationId'
@@ -1936,21 +1899,6 @@ const MainRouteChildren: MainRouteChildren = {
 
 const MainRouteWithChildren = MainRoute._addFileChildren(MainRouteChildren)
 
-interface CrewLautstaerkeDeviceRouteChildren {
-  CrewLautstaerkeDeviceDateRoute: typeof CrewLautstaerkeDeviceDateRoute
-  CrewLautstaerkeDeviceIndexRoute: typeof CrewLautstaerkeDeviceIndexRoute
-}
-
-const CrewLautstaerkeDeviceRouteChildren: CrewLautstaerkeDeviceRouteChildren = {
-  CrewLautstaerkeDeviceDateRoute: CrewLautstaerkeDeviceDateRoute,
-  CrewLautstaerkeDeviceIndexRoute: CrewLautstaerkeDeviceIndexRoute,
-}
-
-const CrewLautstaerkeDeviceRouteWithChildren =
-  CrewLautstaerkeDeviceRoute._addFileChildren(
-    CrewLautstaerkeDeviceRouteChildren,
-  )
-
 interface CrewLautstaerkeProjektProjectIdRouteChildren {
   CrewLautstaerkeProjektProjectIdKarteRoute: typeof CrewLautstaerkeProjektProjectIdKarteRoute
   CrewLautstaerkeProjektProjectIdListeRoute: typeof CrewLautstaerkeProjektProjectIdListeRoute
@@ -1973,14 +1921,14 @@ const CrewLautstaerkeProjektProjectIdRouteWithChildren =
   )
 
 interface CrewLautstaerkeRouteChildren {
-  CrewLautstaerkeDeviceRoute: typeof CrewLautstaerkeDeviceRouteWithChildren
   CrewLautstaerkeIndexRoute: typeof CrewLautstaerkeIndexRoute
+  CrewLautstaerkeDeviceDeviceRoute: typeof CrewLautstaerkeDeviceDeviceRoute
   CrewLautstaerkeProjektProjectIdRoute: typeof CrewLautstaerkeProjektProjectIdRouteWithChildren
 }
 
 const CrewLautstaerkeRouteChildren: CrewLautstaerkeRouteChildren = {
-  CrewLautstaerkeDeviceRoute: CrewLautstaerkeDeviceRouteWithChildren,
   CrewLautstaerkeIndexRoute: CrewLautstaerkeIndexRoute,
+  CrewLautstaerkeDeviceDeviceRoute: CrewLautstaerkeDeviceDeviceRoute,
   CrewLautstaerkeProjektProjectIdRoute:
     CrewLautstaerkeProjektProjectIdRouteWithChildren,
 }

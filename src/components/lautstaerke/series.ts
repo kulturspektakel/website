@@ -1,4 +1,5 @@
 import {type NoiseRecording} from '../../proto/noise';
+import {type ChartSeriesToken} from '../../theme-noise';
 import {
   decodeDb,
   type DeviceBuffer,
@@ -7,7 +8,10 @@ import {
   type Weighting,
 } from './noise';
 
-// The one table to edit when adding, recolouring or reordering a chart line.
+// The one table to edit when adding or reordering a chart line. Recolouring is
+// theme-noise's — a line's colour is `chart.series.<kind>` and nothing here
+// picks it, which is what stopped the two weightings of one kind from being
+// able to drift apart.
 //
 // The live and historical pages plot the same nine series — the only difference
 // is the fast window (one second live, one minute in history) and where the
@@ -16,8 +20,11 @@ import {
 // lockstep edit across two lists with nothing checking they still matched.
 //
 // Order is load-bearing: it is the legend order within a weighting, and it is
-// the column order of the aligned chart data (column i+1 mirrors SERIES[i]),
-// which nothing in the type system enforces — see series.test.ts.
+// the column order of the live buffers (column i+1 mirrors SERIES[i]), which
+// nothing in the type system enforces — see series.test.ts.
+//
+// A chart's columns are laid out here too, one per (metric, device) — see the aligners
+// and traceColumn below.
 
 // The weighting-independent identity of a series, so the legend's toggle state
 // carries across the dB(A)/dB(C) switch: hiding LAFmax hides LCFmax too.
@@ -26,119 +33,101 @@ export type SeriesKind = 'eq_fast' | 'eq_5m' | 'eq_30m' | 'fmax' | 'peak';
 export type NoiseSeries = {
   kind: SeriesKind;
   weighting: Weighting;
-  stroke: string;
-  // Hidden from the chart by default; still toggleable via the legend.
-  hidden?: boolean;
+  // The theme token this line is drawn in. Derived from `kind` below rather
+  // than written per row: a kind's two weightings are the same measurement
+  // under a different filter and must be the same colour, and the rows can't
+  // disagree about something none of them states.
+  color: ChartSeriesToken;
   liveLabel: string;
-  historyLabel: string;
   // The live value, off a decoded MQTT record.
   get: (d: NoiseRecording) => number | null;
   // The historical value's column; the query decodes it to dB per row.
   col: keyof HistoryRow;
 };
 
-// Each Leq is a shade of yellow (lighter → darker as the window grows); max and
-// peak are shades of orange. All lines are solid.
-export const SERIES: readonly NoiseSeries[] = [
+// The ramp runs yellow → orange → red, lightest at the shortest averaging
+// window, with max and peak at the red end. All lines are solid. The shades
+// themselves live in theme-noise.ts, which is also where the reasoning about
+// them being legible against this section's ground is written down.
+const TABLE: readonly Omit<NoiseSeries, 'color'>[] = [
   {
     kind: 'eq_fast',
     weighting: 'A',
-    stroke: '#fef08a',
     liveLabel: 'LAeq,1s',
-    historyLabel: 'LAeq,1m',
     get: (d) => decodeDb(d.laeq),
     col: 'laeq_1m',
   },
   {
     kind: 'eq_5m',
     weighting: 'A',
-    stroke: '#eab308',
     liveLabel: 'LAeq,5m',
-    historyLabel: 'LAeq,5m',
     get: (d) => (d.laeq5m == null ? null : decodeDb(d.laeq5m)),
     col: 'laeq_5m',
   },
   {
     kind: 'eq_30m',
     weighting: 'A',
-    stroke: '#a16207',
     liveLabel: 'LAeq,30m',
-    historyLabel: 'LAeq,30m',
     get: (d) => (d.laeq30m == null ? null : decodeDb(d.laeq30m)),
     col: 'laeq_30m',
   },
   {
     kind: 'fmax',
     weighting: 'A',
-    stroke: '#f87171',
-    hidden: true,
     liveLabel: 'LAFmax',
-    historyLabel: 'LAFmax',
     get: (d) => decodeDb(d.lafmax),
     col: 'lafmax',
   },
   {
     kind: 'eq_fast',
     weighting: 'C',
-    stroke: '#fef08a',
     liveLabel: 'LCeq,1s',
-    historyLabel: 'LCeq,1m',
     get: (d) => decodeDb(d.lceq),
     col: 'lceq_1m',
   },
   {
     kind: 'eq_5m',
     weighting: 'C',
-    stroke: '#eab308',
     liveLabel: 'LCeq,5m',
-    historyLabel: 'LCeq,5m',
     get: (d) => (d.lceq5m == null ? null : decodeDb(d.lceq5m)),
     col: 'lceq_5m',
   },
   {
     kind: 'eq_30m',
     weighting: 'C',
-    stroke: '#a16207',
     liveLabel: 'LCeq,30m',
-    historyLabel: 'LCeq,30m',
     get: (d) => (d.lceq30m == null ? null : decodeDb(d.lceq30m)),
     col: 'lceq_30m',
   },
   {
     kind: 'fmax',
     weighting: 'C',
-    stroke: '#f87171',
-    hidden: true,
     liveLabel: 'LCFmax',
-    historyLabel: 'LCFmax',
     get: (d) => decodeDb(d.lcfmax),
     col: 'lcfmax',
   },
   {
     kind: 'peak',
     weighting: 'C',
-    stroke: '#b91c1c',
-    hidden: true,
     liveLabel: 'LCpeak',
-    historyLabel: 'LCpeak',
     get: (d) => decodeDb(d.lcpeak),
     col: 'lcpeak',
   },
 ];
 
-// A series with its label resolved for one of the two pages. Both views want
-// the same shape, so the charts and the big-number row are written once against
-// this rather than twice against two tables.
+export const SERIES: readonly NoiseSeries[] = TABLE.map((s) => ({
+  ...s,
+  color: `chart.series.${s.kind}`,
+}));
+
+// A series with its label resolved. Kept apart from the table itself because a label is a
+// presentation of a series rather than part of one — the table carries what to plot, this
+// carries what to call it.
 export type ChartSeries = NoiseSeries & {label: string};
 
 export const LIVE_SERIES: readonly ChartSeries[] = SERIES.map((s) => ({
   ...s,
   label: s.liveLabel,
-}));
-
-export const HISTORY_SERIES: readonly ChartSeries[] = SERIES.map((s) => ({
-  ...s,
-  label: s.historyLabel,
 }));
 
 // A live buffer with no samples in it: the timestamp column plus one column per
@@ -152,7 +141,7 @@ export const emptyBuffer = (): DeviceBuffer => [
 // One row of the table, by what it *is* rather than by where it sits. Every
 // (kind, weighting) pair that this file lists exists — see series.test.ts — which
 // is what makes the assertion safe, and it is the only place the pair is looked
-// up: level.ts reads `get`/`col` off it, the charts read `stroke`.
+// up: level.ts reads `get`/`col` off it, the charts read `color`.
 export const seriesFor = (
   kind: SeriesKind,
   weighting: Weighting,
@@ -166,53 +155,82 @@ export const hasSeries = (kind: SeriesKind, weighting: Weighting): boolean =>
   SERIES.some((s) => s.kind === kind && s.weighting === weighting);
 
 // Which live-buffer column holds a series: column 0 is the timestamps and column
-// i+1 mirrors SERIES[i]. That convention is this file's (see emptyBuffer above and
-// rowsToAligned below), so reading it is too — a chart that worked the +1 out for
-// itself would keep plotting a plausible-looking wrong line if the layout changed.
+// i+1 mirrors SERIES[i]. That convention is this file's (see emptyBuffer above), so
+// reading it is too — a chart that worked the +1 out for itself would keep plotting a
+// plausible-looking wrong line if the layout changed.
 export const bufferColumn = (kind: SeriesKind, weighting: Weighting): number =>
   SERIES.indexOf(seriesFor(kind, weighting)) + 1;
 
-// Several devices in one chart, which uPlot's aligned data means one x column and a
-// y column per device. Both aligners live here for the same reason rowsToAligned
-// does: the column layout is this file's convention, and a chart that joined the
-// data itself would be the second place that decides it.
+// Several metrics and several devices in one chart, which in uPlot's aligned data means
+// one x column and a y column per pair of them. Both aligners live here for the same
+// reason bufferColumn does: the column layout is this file's convention, and a chart that
+// joined the data itself would be the second place that decides it.
+//
+// The layout is metric-major — every device of the first metric, then every device of the
+// second, and so on (see traceColumn, which is the one place that arithmetic is written).
+// Chosen over device-major because that is the shape both sources arrive in: a live column
+// is one bufferColumn read across every device, and a stored group is one metric's record
+// across every device. Device-major would mean interleaving after alignment, i.e. a second
+// ordering convention to keep in step with this one. It also means a metric's lines are a
+// run of consecutive series, so the stroke is fixed per block rather than per column.
+//
+// Both take *every* metric in one call rather than being called once each, so there is one
+// x column by construction instead of several that happen to be equal — which is the whole
+// reason this file owns the join.
 
 /**
- * Stored traces → [xs, ...one column per device], in the order asked for.
+ * Stored traces → [xs, ...one column per (metric, device)], metric-major.
  *
- * No joining, because there is nothing to join: logSeries builds the minute grid once
- * and hands every device the same `xs` array, with nulls for the minutes it has
- * nothing (see projectLogs.ts). A device with no trace at all — one that measured
- * nothing in the project — is padded to that grid so its column still lines up.
+ * `groups` is one entry per metric, each holding one entry per device in the chart's own
+ * order — so `groups[m]![d]` is the trace to draw for metric m at device d.
+ *
+ * No joining, because there is nothing to join: logSeries builds the minute grid once and
+ * hands every device of every metric the same `xs` array, with nulls for the minutes it
+ * has nothing (see projectLogs.ts). A device with no trace at all — one that measured
+ * nothing in the project — is padded to that grid so its column still lines up, and so is
+ * a metric the payload never carried.
  */
 export function alignedSeries(
-  series: Array<DeviceSeries | undefined>,
+  groups: ReadonlyArray<ReadonlyArray<DeviceSeries | undefined>>,
 ): (number | null)[][] {
-  const xs = series.find((s) => s != null)?.xs ?? [];
-  return [xs, ...series.map((s) => s?.db ?? nulls(xs.length))];
+  // From wherever it can be found: one grid is shared across metrics as well as devices,
+  // so the first trace that exists anywhere carries the x of all of them.
+  const xs = groups.flat().find((s) => s != null)?.xs ?? [];
+  return [
+    xs,
+    ...groups.flatMap((group) => group.map((s) => s?.db ?? nulls(xs.length))),
+  ];
 }
 
 const nulls = (length: number): (number | null)[] =>
   new Array<number | null>(length).fill(null);
 
 /**
- * Live buffers → [xs, ...one column per device], reading `col` out of each.
+ * Live buffers → [xs, ...one column per (metric, device)], metric-major, reading `cols`
+ * out of each buffer — one buffer column per metric, in the chart's own metric order (see
+ * bufferColumn).
  *
  * Unlike the stored traces these share no grid: every device is appended to on its
  * own message, so their timestamps interleave. The union of them is the x column, and
  * a device is null at the instants that belong to the others — which is why the
  * series drawn from this want makeSampleGapsRefiner rather than uPlot's own nulls.
  *
+ * That union is computed once for every metric, which is the other half of why the metric
+ * list is a parameter: a device's samples are the same instants whichever quantity is read
+ * off them, so building the grid per metric would be the same sort several times over.
+ *
  * One device is the overwhelmingly common case and is handed back untouched: its own
  * timestamps already are the union, and its columns are what the chart would build.
  */
 export function alignedBuffers(
   buffers: Array<DeviceBuffer | undefined>,
-  col: number,
+  cols: readonly number[],
 ): (number | null)[][] {
   if (buffers.length === 1) {
     const only = buffers[0];
-    return only ? [only[0]!, only[col]!] : [[], []];
+    return only
+      ? [only[0]!, ...cols.map((col) => only[col]!)]
+      : [[], ...cols.map(() => [])];
   }
   // Sorted and deduplicated rather than merged pairwise: a window holds a few hundred
   // samples per device and this runs once a second per chart, so the clearer of the
@@ -222,21 +240,23 @@ export function alignedBuffers(
   ) as number[];
   return [
     xs,
-    ...buffers.map((buffer) => {
-      const out = nulls(xs.length);
-      if (!buffer) return out;
-      const times = buffer[0]!;
-      const values = buffer[col]!;
-      // Both sides are sorted, so one pass with a pointer into the union places every
-      // sample: equal timestamps from two devices share the slot they were merged into.
-      let at = 0;
-      for (let i = 0; i < times.length; i++) {
-        while (at < xs.length && xs[at]! < (times[i] as number)) at++;
-        if (at >= xs.length) break;
-        out[at] = values[i] ?? null;
-      }
-      return out;
-    }),
+    ...cols.flatMap((col) =>
+      buffers.map((buffer) => {
+        const out = nulls(xs.length);
+        if (!buffer) return out;
+        const times = buffer[0]!;
+        const values = buffer[col]!;
+        // Both sides are sorted, so one pass with a pointer into the union places every
+        // sample: equal timestamps from two devices share the slot they were merged into.
+        let at = 0;
+        for (let i = 0; i < times.length; i++) {
+          while (at < xs.length && xs[at]! < (times[i] as number)) at++;
+          if (at >= xs.length) break;
+          out[at] = values[i] ?? null;
+        }
+        return out;
+      }),
+    ),
   ];
 }
 
@@ -290,6 +310,11 @@ export function maskToWindows(
  * what a chart of its monitors fills the area under: the lines all being one colour,
  * two filled areas would stack into a shade that looks like it means something.
  *
+ * Only ever called for a chart drawing *one* metric, which is what makes "the lines are
+ * all one colour" true. Several metrics have several colours and are nested besides
+ * (Peak ≥ Fmax ≥ Leq), so there the fill is dropped rather than recoloured — see
+ * traceData, and LevelTrace's series list for what an area over a quieter line would do.
+ *
  * A monitor counts as still being at its last reading until `holdX` past it. Without
  * that this would sawtooth rather than trace anything: live buffers interleave, so at
  * most instants exactly one monitor has a value and a plain pointwise max would follow
@@ -325,17 +350,63 @@ export function loudestColumn(
   return out;
 }
 
-// History rows → uPlot's column-major shape: [xs, ...one column per series].
-// Only minutes that had data are present, so gaps are rendered by
-// NoiseTimeChart's gap refiner (a > threshold jump between consecutive x
-// values), no explicit null rows needed. Individual nulls (a missing 5m/30m
-// value on an otherwise-present minute) break just that line. The view casts
-// the result to uPlot.AlignedData at the chart edge.
-//
-// Lives here rather than beside the query because it is a projection of the
-// series table, and because this side is importable without Prisma.
-export function rowsToAligned(rows: HistoryRow[]): (number | null)[][] {
-  const xs = rows.map((r) => r.minute_epoch);
-  const cols = SERIES.map((s) => rows.map((r) => r[s.col]));
-  return [xs, ...cols];
+/**
+ * Where one monitor's line for one metric sits in a metric-major projection — the reverse
+ * of the layout traceData builds, for a caller reading a value back out of it (see
+ * LevelTrace's tooltip).
+ *
+ * Here rather than worked out at the two ends, because a projection whose writer and whose
+ * reader disagree about this by one draws a plausible-looking wrong chart: the numbers are
+ * all real levels, just attributed to the wrong monitor or the wrong quantity.
+ */
+export const traceColumn = (
+  metricIndex: number,
+  deviceIndex: number,
+  deviceCount: number,
+  envelope: boolean,
+): number => (envelope ? 2 : 1) + metricIndex * deviceCount + deviceIndex;
+
+/**
+ * An aligner's output → what uPlot is handed: every column clipped to its own monitor's
+ * windows, with the envelope in front of them where there is one.
+ *
+ * The clipping is what makes this a chart of a *location* rather than of its monitors: a
+ * monitor's history covers the event wherever it stood, and every metric of it has to be
+ * cut to the same windows, so the mask is per device and applied once per block.
+ *
+ * `envelope` is the caller's decision and means "one metric, several monitors" — the only
+ * shape a single filled area describes (see loudestColumn). It is passed rather than
+ * derived so that this, the series list and the tooltip all read one flag.
+ *
+ * A location nothing has ever stood at still gets one empty column *per metric*, not one
+ * column: uPlot indexes data by series, so a projection narrower than the series list
+ * throws on the first draw and a wider one silently never draws its tail.
+ */
+export function traceData(
+  aligned: (number | null)[][],
+  // One entry per device, in the same order the aligner was given them.
+  windows: ReadonlyArray<readonly {start: number; end: number | null}[]>,
+  {
+    metricCount,
+    envelope,
+    holdX,
+  }: {metricCount: number; envelope: boolean; holdX: number},
+): (number | null)[][] {
+  const xs = (aligned[0] ?? []) as number[];
+  const deviceCount = windows.length;
+  if (deviceCount === 0) {
+    return [xs, ...Array.from({length: metricCount}, () => [])];
+  }
+  // Nested rather than a walk of `aligned` with a modulo: the loop *is* the layout, so
+  // the block order is written the same way here as it is read in traceColumn.
+  const columns: (number | null)[][] = [];
+  for (let m = 0; m < metricCount; m++) {
+    for (let d = 0; d < deviceCount; d++) {
+      columns.push(
+        maskToWindows(xs, aligned[1 + m * deviceCount + d] ?? [], windows[d]!),
+      );
+    }
+  }
+  if (!envelope) return [xs, ...columns];
+  return [xs, loudestColumn(xs, columns, holdX), ...columns];
 }

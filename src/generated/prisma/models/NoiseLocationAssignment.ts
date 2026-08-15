@@ -151,7 +151,7 @@ export type NoiseLocationAssignmentGroupByOutputType = {
   id: string
   locationId: string
   deviceId: string
-  start: Date
+  start: Date | null
   end: Date | null
   _count: NoiseLocationAssignmentCountAggregateOutputType | null
   _min: NoiseLocationAssignmentMinAggregateOutputType | null
@@ -180,7 +180,7 @@ export type NoiseLocationAssignmentWhereInput = {
   id?: Prisma.StringFilter<"NoiseLocationAssignment"> | string
   locationId?: Prisma.StringFilter<"NoiseLocationAssignment"> | string
   deviceId?: Prisma.StringFilter<"NoiseLocationAssignment"> | string
-  start?: Prisma.DateTimeFilter<"NoiseLocationAssignment"> | Date | string
+  start?: Prisma.DateTimeNullableFilter<"NoiseLocationAssignment"> | Date | string | null
   end?: Prisma.DateTimeNullableFilter<"NoiseLocationAssignment"> | Date | string | null
   NoiseLocation?: Prisma.XOR<Prisma.NoiseLocationScalarRelationFilter, Prisma.NoiseLocationWhereInput>
   Device?: Prisma.XOR<Prisma.DeviceScalarRelationFilter, Prisma.DeviceWhereInput>
@@ -190,7 +190,7 @@ export type NoiseLocationAssignmentOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   locationId?: Prisma.SortOrder
   deviceId?: Prisma.SortOrder
-  start?: Prisma.SortOrder
+  start?: Prisma.SortOrderInput | Prisma.SortOrder
   end?: Prisma.SortOrderInput | Prisma.SortOrder
   NoiseLocation?: Prisma.NoiseLocationOrderByWithRelationInput
   Device?: Prisma.DeviceOrderByWithRelationInput
@@ -204,7 +204,7 @@ export type NoiseLocationAssignmentWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.NoiseLocationAssignmentWhereInput | Prisma.NoiseLocationAssignmentWhereInput[]
   locationId?: Prisma.StringFilter<"NoiseLocationAssignment"> | string
   deviceId?: Prisma.StringFilter<"NoiseLocationAssignment"> | string
-  start?: Prisma.DateTimeFilter<"NoiseLocationAssignment"> | Date | string
+  start?: Prisma.DateTimeNullableFilter<"NoiseLocationAssignment"> | Date | string | null
   end?: Prisma.DateTimeNullableFilter<"NoiseLocationAssignment"> | Date | string | null
   NoiseLocation?: Prisma.XOR<Prisma.NoiseLocationScalarRelationFilter, Prisma.NoiseLocationWhereInput>
   Device?: Prisma.XOR<Prisma.DeviceScalarRelationFilter, Prisma.DeviceWhereInput>
@@ -214,7 +214,7 @@ export type NoiseLocationAssignmentOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   locationId?: Prisma.SortOrder
   deviceId?: Prisma.SortOrder
-  start?: Prisma.SortOrder
+  start?: Prisma.SortOrderInput | Prisma.SortOrder
   end?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.NoiseLocationAssignmentCountOrderByAggregateInput
   _max?: Prisma.NoiseLocationAssignmentMaxOrderByAggregateInput
@@ -228,13 +228,13 @@ export type NoiseLocationAssignmentScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"NoiseLocationAssignment"> | string
   locationId?: Prisma.StringWithAggregatesFilter<"NoiseLocationAssignment"> | string
   deviceId?: Prisma.StringWithAggregatesFilter<"NoiseLocationAssignment"> | string
-  start?: Prisma.DateTimeWithAggregatesFilter<"NoiseLocationAssignment"> | Date | string
+  start?: Prisma.DateTimeNullableWithAggregatesFilter<"NoiseLocationAssignment"> | Date | string | null
   end?: Prisma.DateTimeNullableWithAggregatesFilter<"NoiseLocationAssignment"> | Date | string | null
 }
 
 export type NoiseLocationAssignmentCreateInput = {
   id?: string
-  start: Date | string
+  start?: Date | string | null
   end?: Date | string | null
   NoiseLocation: Prisma.NoiseLocationCreateNestedOneWithoutNoiseLocationAssignmentInput
   Device: Prisma.DeviceCreateNestedOneWithoutNoiseLocationAssignmentInput
@@ -244,13 +244,13 @@ export type NoiseLocationAssignmentUncheckedCreateInput = {
   id?: string
   locationId: string
   deviceId: string
-  start: Date | string
+  start?: Date | string | null
   end?: Date | string | null
 }
 
 export type NoiseLocationAssignmentUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  start?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   end?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   NoiseLocation?: Prisma.NoiseLocationUpdateOneRequiredWithoutNoiseLocationAssignmentNestedInput
   Device?: Prisma.DeviceUpdateOneRequiredWithoutNoiseLocationAssignmentNestedInput
@@ -260,7 +260,7 @@ export type NoiseLocationAssignmentUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   locationId?: Prisma.StringFieldUpdateOperationsInput | string
   deviceId?: Prisma.StringFieldUpdateOperationsInput | string
-  start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  start?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   end?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
@@ -268,13 +268,13 @@ export type NoiseLocationAssignmentCreateManyInput = {
   id?: string
   locationId: string
   deviceId: string
-  start: Date | string
+  start?: Date | string | null
   end?: Date | string | null
 }
 
 export type NoiseLocationAssignmentUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  start?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   end?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
@@ -282,7 +282,7 @@ export type NoiseLocationAssignmentUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   locationId?: Prisma.StringFieldUpdateOperationsInput | string
   deviceId?: Prisma.StringFieldUpdateOperationsInput | string
-  start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  start?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   end?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
@@ -412,7 +412,7 @@ export type NoiseLocationAssignmentUncheckedUpdateManyWithoutNoiseLocationNested
 
 export type NoiseLocationAssignmentCreateWithoutDeviceInput = {
   id?: string
-  start: Date | string
+  start?: Date | string | null
   end?: Date | string | null
   NoiseLocation: Prisma.NoiseLocationCreateNestedOneWithoutNoiseLocationAssignmentInput
 }
@@ -420,7 +420,7 @@ export type NoiseLocationAssignmentCreateWithoutDeviceInput = {
 export type NoiseLocationAssignmentUncheckedCreateWithoutDeviceInput = {
   id?: string
   locationId: string
-  start: Date | string
+  start?: Date | string | null
   end?: Date | string | null
 }
 
@@ -457,13 +457,13 @@ export type NoiseLocationAssignmentScalarWhereInput = {
   id?: Prisma.StringFilter<"NoiseLocationAssignment"> | string
   locationId?: Prisma.StringFilter<"NoiseLocationAssignment"> | string
   deviceId?: Prisma.StringFilter<"NoiseLocationAssignment"> | string
-  start?: Prisma.DateTimeFilter<"NoiseLocationAssignment"> | Date | string
+  start?: Prisma.DateTimeNullableFilter<"NoiseLocationAssignment"> | Date | string | null
   end?: Prisma.DateTimeNullableFilter<"NoiseLocationAssignment"> | Date | string | null
 }
 
 export type NoiseLocationAssignmentCreateWithoutNoiseLocationInput = {
   id?: string
-  start: Date | string
+  start?: Date | string | null
   end?: Date | string | null
   Device: Prisma.DeviceCreateNestedOneWithoutNoiseLocationAssignmentInput
 }
@@ -471,7 +471,7 @@ export type NoiseLocationAssignmentCreateWithoutNoiseLocationInput = {
 export type NoiseLocationAssignmentUncheckedCreateWithoutNoiseLocationInput = {
   id?: string
   deviceId: string
-  start: Date | string
+  start?: Date | string | null
   end?: Date | string | null
 }
 
@@ -504,13 +504,13 @@ export type NoiseLocationAssignmentUpdateManyWithWhereWithoutNoiseLocationInput 
 export type NoiseLocationAssignmentCreateManyDeviceInput = {
   id?: string
   locationId: string
-  start: Date | string
+  start?: Date | string | null
   end?: Date | string | null
 }
 
 export type NoiseLocationAssignmentUpdateWithoutDeviceInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  start?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   end?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   NoiseLocation?: Prisma.NoiseLocationUpdateOneRequiredWithoutNoiseLocationAssignmentNestedInput
 }
@@ -518,27 +518,27 @@ export type NoiseLocationAssignmentUpdateWithoutDeviceInput = {
 export type NoiseLocationAssignmentUncheckedUpdateWithoutDeviceInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   locationId?: Prisma.StringFieldUpdateOperationsInput | string
-  start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  start?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   end?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type NoiseLocationAssignmentUncheckedUpdateManyWithoutDeviceInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   locationId?: Prisma.StringFieldUpdateOperationsInput | string
-  start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  start?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   end?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type NoiseLocationAssignmentCreateManyNoiseLocationInput = {
   id?: string
   deviceId: string
-  start: Date | string
+  start?: Date | string | null
   end?: Date | string | null
 }
 
 export type NoiseLocationAssignmentUpdateWithoutNoiseLocationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  start?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   end?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   Device?: Prisma.DeviceUpdateOneRequiredWithoutNoiseLocationAssignmentNestedInput
 }
@@ -546,14 +546,14 @@ export type NoiseLocationAssignmentUpdateWithoutNoiseLocationInput = {
 export type NoiseLocationAssignmentUncheckedUpdateWithoutNoiseLocationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   deviceId?: Prisma.StringFieldUpdateOperationsInput | string
-  start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  start?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   end?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type NoiseLocationAssignmentUncheckedUpdateManyWithoutNoiseLocationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   deviceId?: Prisma.StringFieldUpdateOperationsInput | string
-  start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  start?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   end?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
@@ -621,7 +621,7 @@ export type $NoiseLocationAssignmentPayload<ExtArgs extends runtime.Types.Extens
     id: string
     locationId: string
     deviceId: string
-    start: Date
+    start: Date | null
     end: Date | null
   }, ExtArgs["result"]["noiseLocationAssignment"]>
   composites: {}

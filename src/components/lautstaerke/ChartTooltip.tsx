@@ -6,9 +6,9 @@ import {type ReactNode} from 'react';
 // isn't floating — the timeline's playhead label sits in the layout — and it names the
 // very instant the row charts' tooltips do. Two looks for one number would read as two.
 export const CHART_READOUT_STYLE = {
-  bg: 'gray.800',
+  bg: 'chart.readout.bg',
   borderWidth: '1px',
-  borderColor: 'gray.600',
+  borderColor: 'chart.rule',
   rounded: 'md',
   px: '2',
   py: '1',

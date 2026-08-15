@@ -100,7 +100,7 @@ export function NoiseProjectDialog({
                     required
                     type="datetime-local"
                   />
-                  <Text fontSize="sm" color="gray.500">
+                  <Text fontSize="sm" color="fg.muted">
                     Zeiten in {timeZone}.
                   </Text>
                 </Stack>

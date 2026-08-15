@@ -84,7 +84,7 @@ export function WifiDialog({
                 onChange={(e) => setPassword(e.target.value)}
               />
             </Field>
-            <Text fontSize="sm" color="gray.500">
+            <Text fontSize="sm" color="fg.muted">
               Das Gerät startet nach dem Speichern neu, um sich mit dem neuen
               Netzwerk zu verbinden.
             </Text>

@@ -1,4 +1,4 @@
-import {MAP_BACKGROUND} from './mapStyle';
+import {themeHex} from '../../theme-noise';
 import './mapPin.css';
 
 // A pin carries its location's current level, so the pill is wide enough for "87.3".
@@ -7,14 +7,17 @@ import './mapPin.css';
 // is exactly what someone scanning the map is looking for, and a bare dot said that by
 // being smaller — which reads as "less" rather than "missing". So it keeps its badge,
 // greyed like a remembered reading, and says so in place of a number.
-export const PIN_FILL = '#fafafa';
-export const PIN_LABEL = '#18181b';
+//
+// Resolved from the theme once at module load, not per marker: pinIcon and
+// pinLabel run for every pin on every live update, so this must stay a lookup.
+export const PIN_FILL = themeHex('map.pin.fill');
+export const PIN_LABEL = themeHex('map.pin.label');
 // The same pin carrying a level we only remember: a greyed-down version of the
 // pair above rather than a different shape, so it reads as the same badge turned
 // down. Keeping dark-on-light means the number stays as legible as a live one —
 // it's the badge that recedes into the basemap, not the digits.
-const PIN_FILL_STALE = '#a1a1aa';
-const PIN_LABEL_STALE = '#3f3f46';
+const PIN_FILL_STALE = themeHex('map.pin.fillStale');
+const PIN_LABEL_STALE = themeHex('map.pin.labelStale');
 // Rounded rect 56×26, centred on the location.
 const PILL_PATH =
   'M -15,-13 h 30 a 13,13 0 0 1 0,26 h -30 a 13,13 0 0 1 0,-26 z';
@@ -45,7 +48,7 @@ export const pinIcon = (
   fillColor: stale ? PIN_FILL_STALE : PIN_FILL,
   fillOpacity: 1,
   // A ring in the ground color separates overlapping pins.
-  strokeColor: MAP_BACKGROUND,
+  strokeColor: themeHex('map.ground'),
   strokeWeight: 2,
   path: PILL_PATH,
   labelOrigin: new maps.Point(0, 0),

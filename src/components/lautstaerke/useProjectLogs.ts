@@ -7,10 +7,11 @@ import {
   logSeries,
   totalsByLocation,
   type LocationAssignments,
+  type MetricTraces,
   type RangeTotals,
 } from './projectLogs';
 import {noiseQueryKeys} from './queries';
-import {logMinuteIndex, type DeviceSeries, type Weighting} from './noise';
+import {logMinuteIndex, type Weighting} from './noise';
 import {type LevelMetric} from './level';
 import type {ProjectSelection} from './projectSelection';
 
@@ -32,14 +33,16 @@ const LOGS_CACHE = {
  * Nothing is fetched while live mode is on — `enabled` is doing exactly what it is
  * for, and it also means SSR never touches this. The four derived shapes are memoized
  * apart because they change on very different things: the levels follow the playhead's
- * *minute* and both dropdowns, the running totals the payload, the weighting and the
- * assignments, the crop's Leq those totals and the crop, the traces only the payload and the
- * dropdowns. So dragging the timeline leaves the levels and the traces alone, and
- * scrubbing recomputes one small record — and only when it crosses into a new minute.
+ * *minute*, the primary window and the weighting; the running totals the payload, the
+ * weighting and the assignments; the crop's Leq those totals and the crop; the traces only
+ * the payload, the picked windows and the weighting. So dragging the timeline leaves the
+ * levels and the traces alone, and scrubbing recomputes one small record — and only when it
+ * crosses into a new minute.
  */
 export function useProjectLogs({
   projectId,
   live,
+  metrics,
   metric,
   weighting,
   selection,
@@ -47,6 +50,9 @@ export function useProjectLogs({
 }: {
   projectId: string;
   live: boolean;
+  // Every window the charts draw, and the primary the numbers are read in — the two halves
+  // of one pick (see useLevelPick), and they key different memos below.
+  metrics: readonly LevelMetric[];
   metric: LevelMetric;
   weighting: Weighting;
   selection: ProjectSelection;
@@ -57,7 +63,7 @@ export function useProjectLogs({
 }): {
   levels?: Record<string, number>;
   locationTotals?: Record<string, RangeTotals>;
-  traces?: Record<string, DeviceSeries>;
+  traces?: MetricTraces;
   isFetching: boolean;
 } {
   const {data: logs, isFetching} = useQuery({
@@ -100,12 +106,18 @@ export function useProjectLogs({
   );
 
   // Not keyed on the crop or the playhead: uPlot does the cropping, so dragging the
-  // timeline leaves this memo untouched and no trace is rebuilt. Switching the window
-  // does rebuild them — that is a different column of the payload, not a different
-  // slice of the same one.
+  // timeline leaves this memo untouched and no trace is rebuilt. Ticking a window does
+  // rebuild them — those are other columns of the payload, not another slice of the same
+  // one — and it rebuilds every window's, not just the new one's. A cache per window was
+  // the alternative: a second index to invalidate, for copying columns that are already in
+  // memory, on a gesture nobody makes twice a second.
+  //
+  // Keyed on a string rather than on the array, in case a caller ever builds it inline —
+  // the same trick, and the same reason, as `linesKey` in LevelTrace.
+  const metricsKey = metrics.join(' ');
   const traces = useMemo(
-    () => logs && logSeries(logs, metric, weighting),
-    [logs, metric, weighting],
+    () => logs && logSeries(logs, metrics, weighting),
+    [logs, metricsKey, weighting],
   );
 
   return {levels, locationTotals, traces, isFetching};

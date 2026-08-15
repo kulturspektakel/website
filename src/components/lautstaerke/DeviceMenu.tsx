@@ -1,82 +1,58 @@
-import {useNavigate, useRouter, useSearch} from '@tanstack/react-router';
-import {useMemo, useState} from 'react';
+import {useNavigate} from '@tanstack/react-router';
+import {useState} from 'react';
 import {LuEllipsisVertical} from 'react-icons/lu';
 import {IconButton} from '@chakra-ui/react';
 import {
-  MenuCheckboxItem,
   MenuContent,
   MenuItem,
-  MenuRadioItem,
-  MenuRadioItemGroup,
   MenuRoot,
   MenuSeparator,
   MenuTrigger,
-  MenuTriggerItem,
 } from '../chakra-snippets/menu';
-import {setDeviceLocation} from '../../routes/crew.lautstaerke';
 import {toaster} from '../chakra-snippets/toaster';
 import {errorToast} from './toast';
-import {formatTimeframeRange, rangeSearch} from './timeframe';
 import {CalibrationPanel} from './CalibrationPanel';
-import {TimeframeDialog} from './TimeframeDialog';
 import {WifiDialog} from './WifiDialog';
 import {useBluetooth, useNoiseLive} from './context';
-import {decodeDb, isFresh} from './noise';
-import {WEIGHTING_OPTIONS, weightingUnit} from './level';
 import {useDeviceView} from './deviceView';
+import {decodeDb, isFresh} from './noise';
 import {BAND_FREQUENCIES} from './bluetooth';
 
-// The single header menu for a device view, consolidating what used to be four
-// separate controls: Bluetooth (connect / calibrate / WLAN / disconnect),
-// location, the live/history view picker, and the A/C weighting toggle.
-export function DeviceMenu({
-  device,
-  currentLocation,
-}: {
-  device: string;
-  currentLocation?: string | null;
-}) {
-  // This menu already navigates to the $device route, so it reads the viewed
-  // timeframe from there rather than having it threaded down as a prop. Memoized
-  // so TimeframeDialog's seed effect doesn't re-run on unrelated re-renders.
-  const search = useSearch({from: '/crew/lautstaerke/$device'});
-  const range = useMemo(
-    () =>
-      search.start && search.end
-        ? {start: Date.parse(search.start), end: Date.parse(search.end)}
-        : null,
-    [search.start, search.end],
-  );
+// Everything you can *do* to a monitor, behind the one ⋮ at the end of its toolbar: pair
+// with it over Bluetooth and then calibrate it or set up its WLAN, and the one thing that
+// belongs to the band chart rather than to the page.
+//
+// Where it stands is not among them any more: that is a placement at an event, made in the
+// project page's assignments dialog, and the free-text label this used to write was a
+// second answer to the same question that no reading was ever filed under.
+//
+// What the page is *showing* is not in here — the weighting and the window are the
+// toolbar's two dropdowns, beside this button. The menu used to carry them as
+// submenus, and a timeframe item besides, from when this page had a historical view and
+// no toolbar to put a picker in.
+export function DeviceMenu({device}: {device: string}) {
   // The store rather than a subscription: the one thing here that reads a record does
   // it inside a click handler (see copyBands), so nothing about this menu changes when
   // one arrives.
   const live = useNoiseLive();
   const bluetooth = useBluetooth();
-  const {weighting, toggleWeighting, peaks, togglePeaks} = useDeviceView();
+  const {referenceMic} = useDeviceView();
   const navigate = useNavigate();
-  const router = useRouter();
   const [calibrating, setCalibrating] = useState(false);
   const [wifiOpen, setWifiOpen] = useState(false);
-  const [timeframeOpen, setTimeframeOpen] = useState(false);
-  const [savingLocation, setSavingLocation] = useState(false);
 
   const bleConnected = bluetooth.deviceName != null;
 
+  // Pairing lands you on the paired monitor's page: whichever device you have just
+  // picked out of the browser's chooser is the one you meant to be looking at.
   const connectBle = async () => {
     const name = await bluetooth.connect();
     if (name) {
-      void navigate({to: '/crew/lautstaerke/$device', params: {device: name}});
+      void navigate({
+        to: '/crew/lautstaerke/device/$device',
+        params: {device: name},
+      });
     }
-  };
-
-  // The timeframe is a search param: an explicit UTC range shows history, no range
-  // at all shows live.
-  const setRange = (next: {start: Date; end: Date} | null) => {
-    void navigate({
-      to: '/crew/lautstaerke/$device',
-      params: {device},
-      search: next ? rangeSearch(next) : {},
-    });
   };
 
   // Copy the live per-band spectrum as TSV (Hz<tab>dB, one band per line) so it
@@ -100,26 +76,6 @@ export function DeviceMenu({
     }
   };
 
-  const editLocation = async () => {
-    const input = window.prompt(
-      'Standort für dieses Gerät festlegen:',
-      currentLocation ?? '',
-    );
-    if (input == null) return; // cancelled
-    const locationName = input.trim();
-    if (!locationName || locationName === currentLocation) return;
-    setSavingLocation(true);
-    try {
-      await setDeviceLocation({data: {device, locationName}});
-      await router.invalidate();
-      toaster.create({type: 'success', title: 'Standort gespeichert'});
-    } catch (e) {
-      errorToast('Standort konnte nicht gespeichert werden')(e);
-    } finally {
-      setSavingLocation(false);
-    }
-  };
-
   return (
     <>
       <MenuRoot>
@@ -130,78 +86,34 @@ export function DeviceMenu({
             size="sm"
             flexShrink="0"
             variant="outline"
-            loading={bluetooth.connecting || savingLocation}
+            loading={bluetooth.connecting}
           >
             <LuEllipsisVertical />
           </IconButton>
         </MenuTrigger>
         <MenuContent>
-          {/* View: live, or an arbitrary timeframe picked in the dialog. */}
-          <MenuItem value="timeframe" onClick={() => setTimeframeOpen(true)}>
-            Zeitraum:{' '}
-            {range ? formatTimeframeRange(range.start, range.end) : 'Live'}
-          </MenuItem>
-          {range && (
-            <MenuItem value="live" onClick={() => setRange(null)}>
-              Live anzeigen
+          {/* The two items that belong to the band chart rather than to the monitor: a
+              second spectrum to draw over it, and the one it is already drawing as numbers.
+              The second is unconditional — this page has one view and that view has that
+              chart. The first is dropped rather than disabled where the browser cannot
+              capture at all, there being nothing behind it and nothing to go and enable. */}
+          {referenceMic.supported && (
+            <MenuItem
+              value="reference-mic"
+              onClick={() => {
+                void referenceMic.open();
+              }}
+            >
+              Referenzmikrofon…
             </MenuItem>
           )}
-
-          {/* Frequency weighting (A/C). */}
-          <MenuRoot positioning={{placement: 'left-start', gutter: 2}}>
-            <MenuTriggerItem value="weighting">
-              Frequenzbewertung: {weightingUnit(weighting)}
-            </MenuTriggerItem>
-            <MenuContent>
-              <MenuRadioItemGroup
-                value={weighting}
-                onValueChange={(e) => {
-                  if (e.value !== weighting) toggleWeighting();
-                }}
-              >
-                {/* Same two labels the project page's picker offers, from one list:
-                    how a weighting is spelled is one decision. */}
-                {WEIGHTING_OPTIONS.map((option) => (
-                  <MenuRadioItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuRadioItem>
-                ))}
-              </MenuRadioItemGroup>
-            </MenuContent>
-          </MenuRoot>
-
-          {/* Peak-hold overlay on the live frequency chart. Only the live view
-              has that chart, so the toggle is hidden on historical days. */}
-          {range == null && (
-            <>
-              <MenuCheckboxItem
-                value="peaks"
-                checked={peaks}
-                onCheckedChange={togglePeaks}
-                closeOnSelect={false}
-              >
-                Peaks anzeigen
-              </MenuCheckboxItem>
-              <MenuItem
-                value="copy-bands"
-                onClick={() => {
-                  void copyBands();
-                }}
-              >
-                Frequenzbänder kopieren
-              </MenuItem>
-            </>
-          )}
-
-          <MenuSeparator />
-
           <MenuItem
-            value="location"
+            value="copy-bands"
             onClick={() => {
-              void editLocation();
+              void copyBands();
             }}
           >
-            Standort festlegen…
+            Frequenzbänder kopieren
           </MenuItem>
 
           <MenuSeparator />
@@ -220,8 +132,8 @@ export function DeviceMenu({
               </MenuItem>
               <MenuItem
                 value="disconnect"
-                color="red.400"
-                _hover={{bg: 'red.950', color: 'red.300'}}
+                color="fg.error"
+                _hover={{bg: 'bg.error', color: 'red.fg'}}
                 onClick={() => {
                   void bluetooth.disconnect();
                 }}
@@ -242,12 +154,6 @@ export function DeviceMenu({
           )}
         </MenuContent>
       </MenuRoot>
-      <TimeframeDialog
-        open={timeframeOpen}
-        onClose={() => setTimeframeOpen(false)}
-        onApply={setRange}
-        current={range}
-      />
       <CalibrationPanel
         open={calibrating}
         onClose={() => setCalibrating(false)}

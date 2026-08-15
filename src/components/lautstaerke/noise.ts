@@ -31,14 +31,21 @@ export const decodeDb = (byte: number) => 20 + byte / 2;
 
 export type Weighting = 'A' | 'C';
 
-// A device's location history; `createdAt` is epoch ms. Fetched by
-// deviceLocations (noiseHistory.server) and resolved per viewed day by
-// resolveLocation (deviceView).
-export type DeviceLocationRecord = {name: string; createdAt: number};
+// Where a monitor is standing *for an event*, which is a different fact from the free-text
+// label above and the one that means something: a NoiseLocation belongs to a NoiseProject,
+// so a placement names both the spot and the festival it is a spot at.
+//
+// Absent when the monitor is not placed anywhere, which is the ordinary state of one in a
+// cupboard.
+export type DeviceAssignment = {
+  locationName: string;
+  projectId: string;
+  projectName: string;
+};
 
-// One row (one 60s aggregate) from the historical query; every level is already
-// decoded to dB. The `col` fields of SERIES map onto these keys, and the query
-// that produces it is in noiseHistory.server.ts.
+// One row — one 60s aggregate — as the stored levels are named, every one already decoded
+// to dB. The `col` fields of SERIES map onto these keys, and LevelColumn is keyed off
+// them, which is what keeps the wire names, the table and the project payload agreeing.
 export type HistoryRow = {
   minute_epoch: number;
   laeq_1m: number;
@@ -150,6 +157,43 @@ export function isFresh(
 ): boolean {
   return lastSeen != null && now - lastSeen < windowMs;
 }
+
+// What the device reports as `batteryMv`, in volts. Measured through a 2:1 voltage
+// divider, so the reading is half the real cell voltage and doubling it is the whole of
+// the conversion — here rather than at each of the two places that print it, because a
+// factor applied in one of them and not the other is a monitor that looks flat on one
+// screen and full on the next.
+export const formatBatteryVolts = (mv: number): string =>
+  `${((mv * 2) / 1000).toFixed(2)} V`;
+
+// Monitor ids sort the way a person reads them: `kult-2` before `kult-10`, not after it.
+// Postgres orders them lexicographically, so anything that shows a set of monitors sorts
+// them again here — a list and a row of badges disagreeing about the order is the one thing
+// this prevents.
+export const compareDeviceIds = (a: string, b: string): number =>
+  a.localeCompare(b, locale, {numeric: true});
+
+/**
+ * When a monitor was last heard from, out of everything that might know.
+ *
+ * Two sources, and neither is sufficient alone. The record (a device row, an assignment)
+ * carries what the database saw, which is all a freshly-opened page knows about a monitor
+ * that went quiet before it loaded. The live store carries what has arrived since this tab
+ * connected, which is all that is true of a monitor still transmitting. So the answer is
+ * the later of them — and a page that consulted only one would either call a device that
+ * reported a second before the page loaded offline, or forget everything before that.
+ *
+ * Variadic because a location may have several monitors and the question is asked of the
+ * place: "is anything still arriving here" is answered by the newest of them, whichever
+ * monitor and whichever source it came from.
+ *
+ * Undefined when nothing has ever heard from it, which is a different statement from "not
+ * recently" and reads differently wherever it is printed.
+ */
+export const lastSeenAt = (
+  ...candidates: Array<number | null | undefined>
+): number | undefined =>
+  Math.max(0, ...candidates.map((c) => c ?? 0)) || undefined;
 
 const relativeTime = new Intl.RelativeTimeFormat(locale, {numeric: 'auto'});
 

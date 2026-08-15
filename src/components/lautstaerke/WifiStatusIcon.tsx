@@ -9,9 +9,9 @@ const CONFIG: Record<
   WifiStatus,
   {icon: typeof LuWifi; color: string; label: string}
 > = {
-  connected: {icon: LuWifi, color: 'green.400', label: 'WLAN verbunden'},
-  connecting: {icon: LuWifi, color: 'orange.400', label: 'WLAN verbindet'},
-  disconnected: {icon: LuWifiOff, color: 'gray.500', label: 'WLAN getrennt'},
+  connected: {icon: LuWifi, color: 'green.solid', label: 'WLAN verbunden'},
+  connecting: {icon: LuWifi, color: 'fg.warning', label: 'WLAN verbindet'},
+  disconnected: {icon: LuWifiOff, color: 'fg.subtle', label: 'WLAN getrennt'},
 };
 
 export function WifiStatusIcon({status}: {status: WifiStatus}) {

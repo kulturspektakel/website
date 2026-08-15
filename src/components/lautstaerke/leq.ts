@@ -1,50 +1,23 @@
-import {MINUTE_MS} from './timeframe';
-import {type HistoryRow} from './noise';
-
-// The Leq for a whole selected timeframe, plus how it's computed. Lives here,
-// beside the energetic mean it's built on and away from the Prisma import, so
-// the view can type its loader data and the maths can be unit-tested.
-export type HistoryTotals = {
-  // Leq over the whole window, per weighting; null when the window had no data.
-  laeq: number | null;
-  lceq: number | null;
-  // Minutes that actually have a reading, against the minutes we could expect
-  // one for. The Leq averages only the former, so the view surfaces the ratio
-  // rather than letting a half-offline window read as "it was quiet then".
+// How much of a window a Leq actually had to work with, and how to say so. The mean
+// itself is below; this half is about the caveat on it.
+//
+// A Leq over a crop is an average of the minutes that were *measured*, so how many there
+// were is part of the reading: without it a place monitored for two minutes of an hour is
+// indistinguishable from one monitored throughout. Treating a gap as silence would drag
+// the level down instead, which is worse than disclosing the gap.
+export type Coverage = {
+  // Minutes that actually have a reading, against the minutes we could expect one for.
   minutes: number;
   expectedMinutes: number;
 };
 
-// How many one-minute readings a window could have produced by now. Measured
-// against *elapsed* time, not the window's full span: a window ending in the
-// future (every poll, and the picker's "last hour" default) hasn't missed the
-// minutes that haven't happened yet, and would otherwise always look gappy.
-export function expectedMinutes(start: Date, end: Date, now: number): number {
-  const elapsedMs = Math.min(end.getTime(), now) - start.getTime();
-  return Math.max(0, Math.round(elapsedMs / MINUTE_MS));
-}
-
-// How much of the window went unmeasured, as a note for the Leq tile — or
-// undefined when the shortfall isn't worth disclosing.
-//
-// Both thresholds are needed. A window's bounds are arbitrary (a drag-zoom writes
-// them straight into the URL) while the data is minute-resolution, so
-// expectedMinutes is only good to ±1: on a ratio test alone a 90-second zoom
-// holding its one whole minute would report "50 % Daten". And a single minute
-// dropped from an hour is noise, not a caveat worth printing.
+// Whether the shortfall is worth mentioning at all, and both thresholds are needed. The
+// bounds of a crop are arbitrary while the data is minute-resolution, so the expected
+// count is only good to ±1: on a ratio test alone a 90-second crop holding its one whole
+// minute would report "50 % gemessen". And a single minute dropped from an hour is noise,
+// not a caveat worth printing.
 const MIN_MISSING_MINUTES = 2;
 const MIN_COVERAGE = 0.95;
-
-// The two fields the note is computed from. Named so a caller that has measured a
-// window but isn't a full HistoryTotals — the project page's per-device crop totals —
-// can use the same rule rather than reimplementing the thresholds.
-export type Coverage = Pick<HistoryTotals, 'minutes' | 'expectedMinutes'>;
-
-export function coverageNote(totals: Coverage): string | undefined {
-  return worthDisclosing(totals)
-    ? `${coveredPercent(totals)} % Daten`
-    : undefined;
-}
 
 /**
  * The same shortfall spelled out, for somewhere with room for a sentence — the list
@@ -109,29 +82,4 @@ export function energeticMeanDb(
     n++;
   }
   return n === 0 ? null : fromEnergy(sum / n);
-}
-
-// The single Leq for the selected timeframe, both weightings so the A/C toggle
-// needs no refetch. Read off the named HistoryRow fields rather than the aligned
-// columns, so a SERIES reorder can't silently change which level this averages.
-// Rows are already one-per-minute and equally weighted, so this is a plain
-// energetic mean — see energeticMeanDb for why it isn't an arithmetic one.
-//
-// A gap is an *absent row*, not a null: NoiseLog.laeq/lceq are NOT NULL, so unlike
-// the 5m/30m columns these two are always present on a row that exists. The mean is
-// therefore over the minutes that were measured (standard Leq-over-measured-time) —
-// treating a gap as silence would drag the level down and misrepresent it, so the
-// caller gets `minutes`/`expectedMinutes` to disclose how much was actually covered.
-export function historyTotals(
-  rows: HistoryRow[],
-  start: Date,
-  end: Date,
-  now = Date.now(),
-): HistoryTotals {
-  return {
-    laeq: energeticMeanDb(rows.map((r) => r.laeq_1m)),
-    lceq: energeticMeanDb(rows.map((r) => r.lceq_1m)),
-    minutes: rows.length,
-    expectedMinutes: expectedMinutes(start, end, now),
-  };
 }

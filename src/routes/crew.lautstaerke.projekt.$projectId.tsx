@@ -1,22 +1,12 @@
-import {
-  createFileRoute,
-  Link,
-  Outlet,
-  useChildMatches,
-} from '@tanstack/react-router';
-import {
-  Box,
-  Heading,
-  HStack,
-  IconButton,
-  Spinner,
-  Text,
-  VStack,
-} from '@chakra-ui/react';
+import {createFileRoute, Outlet, useChildMatches} from '@tanstack/react-router';
+import {Box, Spinner, Text} from '@chakra-ui/react';
 import {useQuery, useQueryClient} from '@tanstack/react-query';
 import {useCallback, useEffect, useMemo, useState} from 'react';
-import {LuArrowLeft} from 'react-icons/lu';
 import {loadNoiseProject} from './crew.lautstaerke';
+import {
+  NoiseToolbar,
+  ToolbarTitle,
+} from '../components/lautstaerke/NoiseToolbar';
 import {formatProjectRange} from '../components/lautstaerke/timeframe';
 import {
   resolveProjectSelection,
@@ -28,6 +18,7 @@ import {
 import {useNowAfterMount} from '../components/lautstaerke/context';
 import {
   assignmentsAt,
+  orderLocations,
   createPlayheadSignal,
   PlayheadLevelsContext,
   PlayheadSignalContext,
@@ -35,13 +26,8 @@ import {
   type ProjectViewCtx,
 } from '../components/lautstaerke/projectView';
 import {ProjectTimeline} from '../components/lautstaerke/ProjectTimeline';
-import {LevelPicker} from '../components/lautstaerke/LevelPicker';
+import {LevelPicker, useLevelPick} from '../components/lautstaerke/LevelPicker';
 import {useProjectLogs} from '../components/lautstaerke/useProjectLogs';
-import {
-  supportedMetric,
-  type LevelMetric,
-} from '../components/lautstaerke/level';
-import {type Weighting} from '../components/lautstaerke/noise';
 import {
   NativeSelectField,
   NativeSelectRoot,
@@ -63,10 +49,13 @@ import {seo} from '../utils/seo';
 const MAP_ROUTE = '/crew/lautstaerke/projekt/$projectId/karte';
 const LIST_ROUTE = '/crew/lautstaerke/projekt/$projectId/liste';
 
+// The list first, because that is where a project opens (see the index route) and a
+// dropdown that led with something else would read as if the landing view were an
+// exception. The map is a view you switch to.
 const VIEWS = [
-  {value: 'map', label: 'Karte', to: MAP_ROUTE, search: {}},
   {value: 'list', label: 'Liste', to: LIST_ROUTE, search: {}},
   {value: 'grid', label: 'Raster', to: LIST_ROUTE, search: {spalten: 2}},
+  {value: 'map', label: 'Karte', to: MAP_ROUTE, search: {}},
 ] as const satisfies ReadonlyArray<{
   value: string;
   label: string;
@@ -98,8 +87,12 @@ function NoiseProjectDetail() {
   // How you're looking at the project, all of it component state: none of it fetches
   // anything, because the whole event is in the browser. Only *which view* is on
   // screen is in the URL, and that's a route.
-  const [weighting, setWeighting] = useState<Weighting>('A');
-  const [metric, setMetric] = useState<LevelMetric>('eq_fast');
+  //
+  // One pick, two halves: `metrics` is every window the charts draw, `metric` the primary
+  // the numbers are read in (see primaryMetric). Both travel through the context, because
+  // the map and the list must not answer either of them differently.
+  const {weighting, setWeighting, metrics, metric, toggleMetric} =
+    useLevelPick();
   // What the user has picked of the timeline, or null while they have picked nothing —
   // see resolveProjectSelection for why that null carries weight.
   const [chosen, setChosen] = useState<ProjectSelection | null>(null);
@@ -111,8 +104,8 @@ function NoiseProjectDetail() {
   });
 
   // Which view is on screen comes from the match and its search, not from state — the
-  // URL is the one place it's recorded. Anything that isn't the cards is the map,
-  // including the index route, which redirects to it.
+  // URL is the one place it's recorded. Anything that isn't the cards is the map; the
+  // index route is neither, and redirects to the list before this is ever asked.
   const shown = useChildMatches({
     select: (matches): View => {
       const list = matches.find((m) => m.routeId === LIST_ROUTE);
@@ -169,7 +162,16 @@ function NoiseProjectDetail() {
   // exactly the same rows. Keyed on the rows' ids and not on their devices, because two
   // abutting assignments of one monitor are two different rows — and one of them is
   // closed, which is what decides whether the ⋮ offers to end it.
-  const locationsKey = project.locations
+  //
+  // Sorted before any of that, and here rather than in each view: the cards, the roster
+  // of chips under them and the pins on the map are three renderings of one set, and
+  // there is exactly one place that decides its order (see compareLocations). Not left
+  // to the query either — Postgres sorts `Bühne 10` before `Bühne 2`.
+  const ordered = useMemo(
+    () => orderLocations(project.locations),
+    [project.locations],
+  );
+  const locationsKey = ordered
     .map(
       (l) =>
         `${l.id}:${assignmentsAt(l.assignments, viewedAt)
@@ -177,18 +179,18 @@ function NoiseProjectDetail() {
           .join(',')}`,
     )
     .join('|');
-  // `project.locations` is a dependency as well as the key, and has to be: a refetch
-  // after an assignment change hands back an equal-but-new graph carrying the same ids,
-  // so a memo watching the key alone would go on serving the previous render's rows,
-  // with the lastSeen and the open/closed flag they had before the change that caused
-  // the refetch. viewedAt is deliberately absent — the key already says when it matters.
+  // `ordered` is a dependency as well as the key, and has to be: a refetch after an
+  // assignment change hands back an equal-but-new graph carrying the same ids, so a memo
+  // watching the key alone would go on serving the previous render's rows, with the
+  // lastSeen and the open/closed flag they had before the change that caused the
+  // refetch. viewedAt is deliberately absent — the key already says when it matters.
   const locations = useMemo(
     () =>
-      project.locations.map((location) => ({
+      ordered.map((location) => ({
         location,
         assignments: assignmentsAt(location.assignments, viewedAt),
       })),
-    [locationsKey, project.locations],
+    [locationsKey, ordered],
   );
 
   // Read by scrubTo so it can start from the selection in effect without depending on
@@ -233,18 +235,21 @@ function NoiseProjectDetail() {
   );
 
   // One request for the project's whole stored history, and then nothing: every
-  // number below is read out of it locally, so the timeline and both dropdowns cost
+  // number below is read out of it locally, so the timeline and both pickers cost
   // no round trip. Skipped entirely while live.
   const {levels, locationTotals, traces, isFetching} = useProjectLogs({
     projectId,
     live,
+    metrics,
     metric,
     weighting,
     selection,
     // The raw locations with their whole assignment history, not the playhead-resolved
     // `locations` below: the crop Leq is summed over every minute a monitor stood at a
-    // place, which has nothing to do with the instant being viewed.
-    locations: project.locations,
+    // place, which has nothing to do with the instant being viewed. Everything it
+    // returns is keyed by location id, so the order is immaterial — it takes the sorted
+    // array only so there is one of them on the page.
+    locations: ordered,
   });
 
   // Assigning or ending changes both this project's locations and which devices
@@ -265,6 +270,7 @@ function NoiseProjectDetail() {
     () => ({
       project,
       live,
+      metrics,
       metric,
       weighting,
       range,
@@ -279,6 +285,7 @@ function NoiseProjectDetail() {
     [
       project,
       live,
+      metrics,
       metric,
       weighting,
       range,
@@ -311,119 +318,22 @@ function NoiseProjectDetail() {
               long list ran past it. At least the viewport (so the map has a full one to
               fill), and as tall as the list when there is more. */}
           <Box display="flex" flexDirection="column" flex="1 0 auto">
-            {/* Both strips in one sticky box rather than two stacked ones: the second
-                would need the first's height as its `top`, and the first has no fixed
-                height — its controls wrap onto a second line at phone width. Stuck to
-                the area layout's scroll box, which is the only thing that scrolls, so
-                the list runs under the toolbars and the map never leaves them. */}
-            <Box
-              position="sticky"
-              top="0"
-              zIndex="2"
-              flexShrink="0"
-              // Opaque, because content passes underneath. Same ground as the layout,
-              // so the toolbars read as the top of the page rather than as a card over
-              // it — the rule under them is what separates the two.
-              bg="gray.900"
-            >
-              <HStack
-                align="center"
-                gap="3"
-                px="4"
-                py="2"
-                borderBottomWidth="1px"
-                borderColor="gray.800"
-              >
-                <IconButton
-                  asChild
-                  aria-label="Zurück zur Projektliste"
-                  variant="ghost"
-                  size="sm"
-                >
-                  <Link to="/crew/lautstaerke">
-                    <LuArrowLeft />
-                  </Link>
-                </IconButton>
-                {/* A toolbar's title, not a page heading: one line, sized to sit level
-                    with the controls beside it. The project's dates go with it — they
-                    say which festival this is, which is the same thing the name does. */}
-                <VStack align="start" gap="0" flex="1" minW="0">
-                  <Heading as="h1" size="md" truncate w="full" lineHeight="1.2">
-                    {project.name}
-                  </Heading>
-                  <Text fontSize="xs" color="gray.500" truncate w="full">
-                    {formatProjectRange(project.start, project.end)}
-                  </Text>
-                </VStack>
-                {/* Wraps rather than squeezing: four controls is more than a phone's
-              header width, and the heading beside them already takes what it needs. */}
-                <HStack gap="3" flexShrink="0" wrap="wrap" justify="flex-end">
-                  <Switch
-                    size="sm"
-                    checked={live}
-                    // The window survives the switch: every one of them exists in both
-                    // modes (the finest simply gets finer), so there is nothing to reset.
-                    onCheckedChange={(e) => setLive(e.checked)}
-                    colorPalette="green"
-                  >
-                    <Text fontSize="sm">Live</Text>
-                  </Switch>
-                  {/* The one moment this page waits for anything: the project's whole
-                history, on the first switch out of live. Nothing is torn down while
-                it loads — the pins simply have no number yet. */}
-                  {isFetching && <Spinner size="xs" color="gray.500" />}
-                  <LevelPicker
-                    live={live}
-                    weighting={weighting}
-                    metric={metric}
-                    onWeighting={(next) => {
-                      setWeighting(next);
-                      // Switching to dB(A) with LCpeak selected leaves the picker pointing
-                      // at a series that doesn't exist, which everything downstream resolves
-                      // through the series table and would trip over. So the pick follows
-                      // the weighting to its nearest kin.
-                      setMetric((m) => supportedMetric(m, next));
-                    }}
-                    onMetric={setMetric}
-                  />
-                  {mapAvailable && (
-                    <NativeSelectRoot size="xs" w="auto">
-                      <NativeSelectField
-                        aria-label="Ansicht"
-                        value={shown}
-                        // The timeline and everything else page-wide survive the switch
-                        // because the layout owns them and stays mounted — only the
-                        // route and its columns travel. Not a replace: the view is part
-                        // of the URL, and back should return to the one you came from.
-                        onChange={(e) => {
-                          const view =
-                            VIEWS.find((v) => v.value === e.target.value) ??
-                            VIEWS[0];
-                          navigate({
-                            to: view.to,
-                            params: {projectId},
-                            search: view.search,
-                          });
-                        }}
-                        items={VIEWS.map(({value, label}) => ({value, label}))}
-                      />
-                    </NativeSelectRoot>
-                  )}
-                </HStack>
-              </HStack>
-
-              {/* A second toolbar, and only while scrubbing. Live mode reads what is
-                  arriving now — there is no instant to point at and no crop to pick, so
-                  the strip had nothing left to do but take up the room the map wants.
-                  The selection it edits is not lost with it: the layout owns it, so
-                  switching back returns to the crop and the instant you left. */}
-              {!live && (
-                <Box
-                  px="4"
-                  py="2"
-                  borderBottomWidth="1px"
-                  borderColor="gray.800"
-                >
+            <NoiseToolbar
+              title={<ToolbarTitle>{project.name}</ToolbarTitle>}
+              // The project's dates: they say which festival this is, which is the same
+              // thing its name does.
+              sub={
+                <Text truncate w="full">
+                  {formatProjectRange(project.start, project.end)}
+                </Text>
+              }
+              below={
+                /* A second toolbar, and only while scrubbing. Live mode reads what is
+                   arriving now — there is no instant to point at and no crop to pick, so
+                   the strip had nothing left to do but take up the room the map wants.
+                   The selection it edits is not lost with it: the layout owns it, so
+                   switching back returns to the crop and the instant you left. */
+                !live && (
                   <ProjectTimeline
                     window={pickable}
                     selection={selection}
@@ -444,9 +354,54 @@ function NoiseProjectDetail() {
                       )
                     }
                   />
-                </Box>
+                )
+              }
+            >
+              <Switch
+                size="sm"
+                checked={live}
+                // The window survives the switch: every one of them exists in both
+                // modes (the finest simply gets finer), so there is nothing to reset.
+                onCheckedChange={(e) => setLive(e.checked)}
+                colorPalette="green"
+              >
+                <Text fontSize="sm">Live</Text>
+              </Switch>
+              {/* The one moment this page waits for anything: the project's whole
+                  history, on the first switch out of live. Nothing is torn down while
+                  it loads — the pins simply have no number yet. */}
+              {isFetching && <Spinner size="xs" color="fg.subtle" />}
+              <LevelPicker
+                live={live}
+                weighting={weighting}
+                metrics={metrics}
+                onWeighting={setWeighting}
+                onToggleMetric={toggleMetric}
+              />
+              {mapAvailable && (
+                <NativeSelectRoot size="xs" w="auto">
+                  <NativeSelectField
+                    aria-label="Ansicht"
+                    value={shown}
+                    // The timeline and everything else page-wide survive the switch
+                    // because the layout owns them and stays mounted — only the
+                    // route and its columns travel. Not a replace: the view is part
+                    // of the URL, and back should return to the one you came from.
+                    onChange={(e) => {
+                      const view =
+                        VIEWS.find((v) => v.value === e.target.value) ??
+                        VIEWS[0];
+                      navigate({
+                        to: view.to,
+                        params: {projectId},
+                        search: view.search,
+                      });
+                    }}
+                    items={VIEWS.map(({value, label}) => ({value, label}))}
+                  />
+                </NativeSelectRoot>
               )}
-            </Box>
+            </NoiseToolbar>
 
             {/* Everything the toolbars left over, edge to edge: the map fills it, and
                 the list sets its own gutter. No padding and no frame here — a border

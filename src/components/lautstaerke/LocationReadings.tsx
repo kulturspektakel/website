@@ -1,13 +1,8 @@
 import {Box, HStack, Text, VStack} from '@chakra-ui/react';
 import {LuTriangleAlert} from 'react-icons/lu';
 import {Tooltip} from '../chakra-snippets/tooltip';
-import {
-  useBluetooth,
-  useDeviceState,
-  useDeviceStates,
-  useTick,
-} from './context';
-import {formatLastSeen, type Weighting} from './noise';
+import {useDeviceStates, useTick} from './context';
+import {formatLastSeen, lastSeenAt, type Weighting} from './noise';
 import {
   displayedLevel,
   formatDb,
@@ -22,37 +17,11 @@ import {seriesFor} from './series';
 import {coverageDetail} from './leq';
 import {type RangeTotals} from './projectLogs';
 import {type NoiseAssignment} from './projectView';
-import {BatteryChip} from './BatteryChip';
-import {LiveStatusDot} from './LiveStatusDot';
 
-// The two things a location's header says: which monitors have stood there, and how
-// loud it is there. This was the two halves of a per-monitor row, back when a location
-// was one row per device standing at it — nothing renders a monitor as a row of its own
-// any more, and neither of these speaks for a device.
-
-// Who the monitor is: whether it is alive, what it is called, and what its battery
-// is at. Everything comes out of the live context, so the only thing a caller needs
-// to know is the device's name.
-//
-// Secondary type, because the name is not the point: the reading beside it is.
-export function DeviceIdentity({deviceName}: {deviceName: string}) {
-  const state = useDeviceState(deviceName);
-  const bluetooth = useBluetooth();
-  const batteryMv = state?.latest.batteryMv;
-
-  return (
-    <HStack gap="2" flex="1" minW="0">
-      <LiveStatusDot
-        lastSeen={state?.lastSeen}
-        ble={deviceName === bluetooth.deviceName}
-      />
-      <Text fontSize="sm" color="gray.500" truncate minW="0">
-        {deviceName}
-      </Text>
-      {batteryMv != null && <BatteryChip mv={batteryMv} />}
-    </HStack>
-  );
-}
+// How loud it is at a location — the other half of its header, the half that follows the
+// playhead. Which monitors have stood there is the badges beside it (see DeviceBadge);
+// this was once the same component as those, back when a location was one row per device
+// standing at it, and neither half speaks for a device any more.
 
 // How loud it is *here*: two readings of the place, what they are averaged over, and —
 // when neither is of now — when we last heard from anything standing here.
@@ -90,9 +59,10 @@ export function LocationReadings({
   levels?: Record<string, number>;
   // Which numbers to show is decided by displayedLevel, shared with the map pins.
   live: boolean;
-  // The header's window — the second, tagged number. Not what the card leads with:
-  // that one is fixed (see below), so the page-wide pick adds a reading rather than
-  // replacing the one every card is compared on.
+  // The primary of the header's picked windows — the second, tagged number. One window and
+  // not the set the chart draws: this is a reading, and a reading is one number. Not what
+  // the card leads with either: that one is fixed (see below), so the page-wide pick adds a
+  // reading rather than replacing the one every card is compared on.
   metric: LevelMetric;
   weighting: Weighting;
 }) {
@@ -159,12 +129,13 @@ export function LocationReadings({
   // beside it, tagged.
   const leadUnit = live ? `${unit} ${metricTag('eq_fast', true)}` : unit;
   // The newest of them, because this line answers "is anything still arriving here",
-  // which is a question about the place and not about whichever monitor was loudest.
-  const seen = Math.max(
-    0,
-    ...assignments.map((a) =>
-      Math.max(a.lastSeen ?? 0, deviceState(a.deviceId)?.lastSeen ?? 0),
-    ),
+  // which is a question about the place and not about whichever monitor was loudest —
+  // hence every monitor's record and every monitor's live state in one call.
+  const seen = lastSeenAt(
+    ...assignments.flatMap((a) => [
+      a.lastSeen,
+      deviceState(a.deviceId)?.lastSeen,
+    ]),
   );
   // Nothing here is a reading of now — either it says nothing at all, or what it says
   // is remembered. Either way the useful thing to add is when we last heard, which is
@@ -193,7 +164,7 @@ export function LocationReadings({
           <Text
             lineHeight="1"
             whiteSpace="nowrap"
-            color={selected.kind === 'stale' ? 'gray.500' : undefined}
+            color={selected.kind === 'stale' ? 'fg.subtle' : undefined}
           >
             {formatDb(selected.db, `${unit} ${metricTag(metric, live)}`)}
           </Text>
@@ -220,7 +191,7 @@ export function LocationReadings({
                 <Box
                   asChild
                   alignSelf="center"
-                  color="orange.400"
+                  color="fg.warning"
                   fontSize="sm"
                   lineHeight="1"
                 >
@@ -231,10 +202,15 @@ export function LocationReadings({
               </Tooltip>
             )}
             {/* The coloured one: this is the number averaged over the whole
-                timeframe, which is what the card is compared on and what the
-                trace under it adds up to — so it carries the trace's shade and
-                the instant beside it stays plain. Straight from the series
-                table, the one place a level's colour is decided.
+                timeframe, which is what the card is compared on. Its shade is the
+                primary window's, so it reads against that line of the trace below
+                — one of however many are drawn, and the finest of them. Straight
+                from the series table, the one place a level's colour is decided.
+
+                Not the average of the whole picture, and never was: the crop Leq is
+                summed off the 1-minute column whatever is picked (see
+                locationEnergyIndex), so the two agree exactly when the primary is
+                the finest window — which is the ordinary case and the default.
 
                 Muted when the number is only the last thing we heard, so a
                 reading that has stopped moving doesn't keep reading as one
@@ -245,8 +221,8 @@ export function LocationReadings({
               lineHeight="1"
               color={
                 lead.kind === 'stale'
-                  ? 'gray.500'
-                  : seriesFor(metric, weighting).stroke
+                  ? 'fg.subtle'
+                  : seriesFor(metric, weighting).color
               }
             >
               {formatDb(lead.db, leadUnit)}
@@ -255,8 +231,8 @@ export function LocationReadings({
         )}
       </HStack>
       {remembered && assignments.length > 0 && (
-        <Text fontSize="xs" color="gray.500" lineHeight="1">
-          {seen > 0 ? formatLastSeen(seen, now) : 'nie gesehen'}
+        <Text fontSize="xs" color="fg.subtle" lineHeight="1">
+          {seen != null ? formatLastSeen(seen, now) : 'nie gesehen'}
         </Text>
       )}
     </VStack>

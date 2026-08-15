@@ -9,10 +9,14 @@ import {
   loudestIndex,
   loudestLevel,
   metricOptions,
+  primaryMetric,
   supportedMetric,
+  supportedMetrics,
+  toggledMetrics,
   weightingUnit,
   type DisplayedLevel,
   type LevelMetric,
+  type PickedMetrics,
 } from './level';
 import {type Weighting} from './noise';
 
@@ -204,6 +208,67 @@ describe('supportedMetric', () => {
   // Peaks are maxima, so dB(A)'s answer to them is LAFmax — not the page default.
   it('falls back to the nearest kin when it cannot', () => {
     expect(supportedMetric('peak', 'A')).toBe('fmax');
+  });
+});
+
+// The picked set, and the two rules that keep it usable: it is in LEVEL_METRICS order
+// whatever order it was pressed in, and it is never empty. Both helpers hand back the very
+// array they were given where nothing changed — a fresh one would be a new context value for
+// every card on the project page and a rebuilt uPlot behind each of them, so the identity is
+// part of the contract rather than an implementation detail.
+describe('toggledMetrics', () => {
+  it('adds in the table’s order, not the order pressed', () => {
+    expect(toggledMetrics(['eq_30m'], 'eq_fast')).toEqual([
+      'eq_fast',
+      'eq_30m',
+    ]);
+    expect(toggledMetrics(['eq_fast', 'fmax'], 'eq_5m')).toEqual([
+      'eq_fast',
+      'eq_5m',
+      'fmax',
+    ]);
+  });
+
+  it('removes one that was already picked', () => {
+    expect(toggledMetrics(['eq_fast', 'eq_5m', 'fmax'], 'eq_5m')).toEqual([
+      'eq_fast',
+      'fmax',
+    ]);
+  });
+
+  // A chart of nothing is not a state the page has anything to say in.
+  it('refuses to remove the last, and says so by identity', () => {
+    const only: PickedMetrics = ['eq_5m'];
+    expect(toggledMetrics(only, 'eq_5m')).toBe(only);
+  });
+});
+
+describe('supportedMetrics', () => {
+  it('is untouched, and the same array, where the weighting answers all of it', () => {
+    const picked: PickedMetrics = ['eq_fast', 'fmax'];
+    expect(supportedMetrics(picked, 'A')).toBe(picked);
+    expect(supportedMetrics(picked, 'C')).toBe(picked);
+  });
+
+  // The one pair that doesn't exist. What was asked for besides it is still drawable, so
+  // that is what is kept — nothing falls back.
+  it('drops what the weighting has no series for', () => {
+    expect(supportedMetrics(['eq_fast', 'peak'], 'A')).toEqual(['eq_fast']);
+  });
+
+  // Only when dropping would leave nothing does the nearest kin stand in — the
+  // single-metric rule, reached through the same function.
+  it('falls back to the nearest kin rather than emptying the set', () => {
+    expect(supportedMetrics(['peak'], 'A')).toEqual(['fmax']);
+  });
+});
+
+describe('primaryMetric', () => {
+  // LEVEL_METRICS is finest-first, so the primary is the finest thing picked: adding a
+  // coarser line leaves every number on the page where it was.
+  it('is the first of the set', () => {
+    expect(primaryMetric(['eq_5m', 'fmax'])).toBe('eq_5m');
+    expect(primaryMetric(['fmax'])).toBe('fmax');
   });
 });
 

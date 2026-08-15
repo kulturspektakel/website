@@ -19,7 +19,7 @@ import {useBleDevice} from '../components/lautstaerke/useBleDevice';
 import {createServerFn} from '@tanstack/react-start';
 import {crewAuth} from '../server/crewAuth';
 import {prismaClient} from '../server/prismaClient.server';
-import {projectLogs} from '../server/noiseHistory.server';
+import {deviceAssignments, projectLogs} from '../server/noiseHistory.server';
 import {Toaster} from '../components/chakra-snippets/toaster';
 import {END_BEFORE_START} from '../components/lautstaerke/timeframe';
 
@@ -98,8 +98,11 @@ export const loadNoiseProject = createServerFn()
         name: true,
         start: true,
         end: true,
+        // Unordered on purpose: what order locations are shown in is decided in one
+        // place, and it isn't here (see compareLocations). Postgres would sort
+        // `Bühne 10` before `Bühne 2`, and a second opinion in the query is a second
+        // thing to keep in step with the first.
         NoiseLocation: {
-          orderBy: {locationName: 'asc'},
           select: {
             id: true,
             locationName: true,
@@ -145,7 +148,17 @@ export const loadNoiseProject = createServerFn()
         assignments: l.NoiseLocationAssignment.map((a) => ({
           id: a.id,
           deviceId: a.deviceId,
-          start: a.start.getTime(),
+          // Resolved here and nowhere else: a null start means the event's own (see the
+          // schema), and every reader of a placement's window wants an instant — the
+          // charts' clipping, assignmentsAt, the overlap warnings. This is the one place
+          // that has both the row and the project in hand, so it is the one place that
+          // has to know.
+          start: a.start?.getTime() ?? project.start.getTime(),
+          // Whether that came from the row or from the event, which the resolved number
+          // above cannot say. Only the assignments dialog asks: a blank field is what
+          // "from the beginning, whenever that turns out to be" looks like, and writing
+          // the resolved instant back would pin a placement that was meant to follow.
+          startsWithProject: a.start == null,
           // Null means still standing there; every other field is epoch ms, as
           // everything that crosses this wire is.
           end: a.end?.getTime() ?? null,
@@ -181,7 +194,7 @@ export const createNoiseLocation = createServerFn()
 
 // Every stored level of one project, in one payload: the page then answers its own
 // questions locally (see projectLogs.ts). No window and no weighting in the input —
-// the whole event travels, so scrubbing, cropping and the header's dropdowns never
+// the whole event travels, so scrubbing, cropping and the header's pickers never
 // come back here. Only sent when live mode is off.
 export const noiseProjectLogs = createServerFn()
   .middleware([crewAuth])
@@ -207,46 +220,50 @@ export const assignableNoiseDevices = createServerFn()
     }));
   });
 
-// Every monitor there is, assigned or not — what the assignments dialog picks from.
-// Deliberately not `assignableNoiseDevices`: recording a placement that has already
-// ended is half of what that dialog is for, and the device standing somewhere today
-// is usually the one whose past you are correcting.
+// Every monitor there is, assigned or not — what the landing page lists and what the
+// assignments dialog picks from. Deliberately not `assignableNoiseDevices`: recording a
+// placement that has already ended is half of what that dialog is for, and the device
+// standing somewhere today is usually the one whose past you are correcting.
+//
+// Where each one is standing rides along, because that is most of what a list of
+// monitors is read for — "which of these is at the Hauptbühne" is the question, and a
+// list that made you open every device page to answer it would not be worth having. One
+// extra findMany for the whole set (see deviceAssignments), so the two pickers pay a
+// small join they then ignore rather than this being split into two near-identical
+// server functions that both have to be kept in step.
 export const noiseMonitorDevices = createServerFn()
   .middleware([crewAuth])
   .handler(async () => {
-    const devices = await prismaClient.device.findMany({
-      where: {type: 'NOISE_MONITOR'},
-      orderBy: {id: 'asc'},
-      select: {id: true, lastSeen: true},
-    });
+    const [devices, assignments] = await Promise.all([
+      prismaClient.device.findMany({
+        where: {type: 'NOISE_MONITOR'},
+        orderBy: {id: 'asc'},
+        select: {id: true, lastSeen: true},
+      }),
+      deviceAssignments(),
+    ]);
     return devices.map((d) => ({
       id: d.id,
       lastSeen: d.lastSeen?.getTime() ?? null,
+      // Null for a monitor in a cupboard, which is the ordinary state of one between
+      // festivals.
+      assignment: assignments.get(d.id) ?? null,
     }));
   });
 
-// What a blank field means, in the two shapes the column can take it.
-//
-// An omitted start means "from the beginning of the event", which `start` cannot hold —
-// it is non-nullable — so the project's own start is written instead. Both writers below
-// resolve it from a row they had to read anyway, so knowing what blank means never costs
-// a query of its own.
-//
-// An omitted end needs no such trick: `null` there already means "still assigned", which
-// for a project that has finished reads as its end.
-const resolveAssignmentEnd = (end: number | null | undefined): Date | null =>
-  end == null ? null : new Date(end);
+// Named here rather than restated by every reader: the row shape is this function's to
+// define, and a list, a menu and a dialog all render one.
+export type NoiseMonitorDevice = Awaited<
+  ReturnType<typeof noiseMonitorDevices>
+>[number];
 
-// The event's start, reached from one of its assignments — what an edit that blanked the
-// start is asking for, and the only reason such an edit needs a read at all.
-async function projectStartOfAssignment(assignmentId: string): Promise<Date> {
-  const assignment = await prismaClient.noiseLocationAssignment.findUnique({
-    where: {id: assignmentId},
-    select: {NoiseLocation: {select: {NoiseProject: {select: {start: true}}}}},
-  });
-  if (!assignment) throw notFound();
-  return assignment.NoiseLocation.NoiseProject.start;
-}
+// A blank bound, stored blank. Both ends of a placement mean "the event's own" when they
+// are null (see the schema), so neither writer resolves anything and neither needs to read
+// the project to save a row — which is the point: a placement typed as "the whole time"
+// keeps following the event's dates instead of being pinned to whatever they were on the
+// day somebody filled the form in.
+const instantOrNull = (ms: number | null | undefined): Date | null =>
+  ms == null ? null : new Date(ms);
 
 export const assignNoiseDevice = createServerFn()
   .middleware([crewAuth])
@@ -264,10 +281,7 @@ export const assignNoiseDevice = createServerFn()
     const [location, device] = await Promise.all([
       prismaClient.noiseLocation.findUnique({
         where: {id: data.locationId},
-        // The project's start comes along with the existence check rather than in a
-        // second lookup of the same row: an omitted start is written as it (see
-        // resolveAssignmentStart), and the check has to happen either way.
-        select: {NoiseProject: {select: {start: true}}},
+        select: {id: true},
       }),
       prismaClient.device.findUnique({
         where: {id: data.deviceId},
@@ -288,11 +302,8 @@ export const assignNoiseDevice = createServerFn()
       data: {
         locationId: data.locationId,
         deviceId: data.deviceId,
-        start:
-          data.start == null
-            ? location.NoiseProject.start
-            : new Date(data.start),
-        end: resolveAssignmentEnd(data.end),
+        start: instantOrNull(data.start),
+        end: instantOrNull(data.end),
       },
     });
   });
@@ -310,36 +321,14 @@ export const updateNoiseAssignment = createServerFn()
     }),
   )
   .handler(async ({data}) => {
-    // Read only when the start was left blank: a typed start needs nothing from the
-    // project, so the ordinary edit is one write rather than a walk down to the event
-    // and back. A row that has vanished throws from there, and from the update
-    // otherwise — which is the same answer either way.
-    const start =
-      data.start == null
-        ? await projectStartOfAssignment(data.assignmentId)
-        : new Date(data.start);
+    // One write, whatever was typed: a blank bound is a blank column now, so an edit that
+    // clears the start no longer has to walk down to the event and back for a value to
+    // put there.
     await prismaClient.noiseLocationAssignment.update({
       where: {id: data.assignmentId},
-      data: {start, end: resolveAssignmentEnd(data.end)},
-    });
-  });
-
-// Records a new location for a device. DeviceLocation is history — each call
-// appends a placement (latitude/longitude left null for now); resolveLocation
-// picks the one in effect on the viewed day. id/createdAt have no DB default,
-// so we set them here.
-export const setDeviceLocation = createServerFn()
-  .middleware([crewAuth])
-  .inputValidator(
-    z.object({device: z.string(), locationName: z.string().trim().min(1)}),
-  )
-  .handler(async ({data}) => {
-    await prismaClient.deviceLocation.create({
       data: {
-        id: crypto.randomUUID(),
-        deviceId: data.device,
-        locationName: data.locationName,
-        createdAt: new Date(),
+        start: instantOrNull(data.start),
+        end: instantOrNull(data.end),
       },
     });
   });
@@ -413,13 +402,12 @@ function LautstaerkeLayout() {
           {/* No padding of its own: the page inside decides where its edges are. The
               project page is a toolbar over an edge-to-edge map, which a gutter here
               would either cut into or leave scrolling content peeking past; the pages
-              that do want one set it themselves. This box is only the dark ground, the
-              viewport height, and the one thing that scrolls — which is also what the
-              toolbars stick to. */}
+              that do want one set it themselves. The ground is the theme's (`bg`
+              under `.dark`, which globalCss also paints html/body with, so the
+              overscroll gutter matches); this box is only the viewport height and
+              the one thing that scrolls — which is also what the toolbars stick to. */}
           <Box
             fontVariantNumeric="tabular-nums"
-            bg="gray.900"
-            color="gray.100"
             h="100vh"
             display="flex"
             flexDirection="column"

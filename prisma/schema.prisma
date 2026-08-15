@@ -396,12 +396,18 @@ model NoiseLocation {
 // devices can be assigned to the same location simultaneously, and a device
 // moves between locations over the course of a project, so this is a
 // many-to-many-over-time table rather than a field on either side.
-// `end == null` means the device is still assigned.
+//
+// Both bounds are nullable, and each means "the event's own": a null `start` is
+// the project's start and a null `end` is "still there", which for a finished
+// project reads as its end. Stored that way rather than resolved on write so
+// that moving an event's dates moves its placements with it — a monitor that
+// stood there "the whole time" should not have to be re-typed because the
+// festival now begins an hour earlier.
 model NoiseLocationAssignment {
   id         String    @id @default(cuid())
   locationId String
   deviceId   String
-  start      DateTime
+  start      DateTime?
   end        DateTime?
 
   NoiseLocation NoiseLocation @relation(fields: [locationId], references: [id])

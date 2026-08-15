@@ -20,8 +20,31 @@ import {useProjectView, type DeviceWindows} from './projectView';
 // says "nothing was measured here", and a card that simply omits the chart says nothing
 // and jumps a hundred pixels the moment a monitor is assigned.
 export function LocationChart({lines}: {lines: DeviceWindows[]}) {
-  const {live, metric, weighting, range, bounds, traces, scrubTo, cropTo} =
+  const {live, metrics, weighting, range, bounds, traces, scrubTo, cropTo} =
     useProjectView();
+
+  // Which of the chart's two modes this card is in, as the one object that decides it:
+  // live is the rolling window and has nothing to point at, and a crop is a timeframe
+  // with a playhead in it and gestures to move both (see LevelTrace, whose props are
+  // this pair of shapes). Spread rather than branched into two elements, so the props
+  // every mode shares are written once.
+  const mode = live
+    ? ({live: true} as const)
+    : ({
+        live: false,
+        // The crop — the same one the traces were built for.
+        range,
+        // How far a finger may take that crop: the whole pickable project rather than the
+        // part on screen, so a pinch has somewhere to widen into.
+        bounds,
+        // Hovering any trace moves the page's playhead, which is what puts the line in
+        // the same place on every other card and on the timeline.
+        onScrub: scrubTo,
+        // `i`/`o` over the trace, a drag across it, or two fingers on it crop the page's
+        // timeframe to what was pointed at.
+        onCrop: cropTo,
+        series: traces,
+      } as const);
 
   return (
     // Unframed: the card is already a bordered box and the chart is nearly all of it,
@@ -32,33 +55,18 @@ export function LocationChart({lines}: {lines: DeviceWindows[]}) {
     <Box flex="1" minH="0">
       <LevelTrace
         // Grouped by the card above, which names the same monitors in the same order —
-        // the chart's lines and the header's names are one list, not two derivations
-        // of it. The whole assignment history, not the monitors resolved at the
-        // playhead: the chart spans the crop, so what stood here an hour ago is part
-        // of it even while you are looking at now.
+        // the chart's lines and the header's names are one list, not two derivations of
+        // it. The whole assignment history, not the monitors resolved at the playhead:
+        // the chart spans the crop, so what stood here an hour ago is part of it even
+        // while you are looking at now.
         lines={lines}
-        live={live}
-        // The header's window — the same one the traces were built for, and the same
-        // one the coloured number above is read in.
-        metric={metric}
+        // Every window the header has ticked, one line each per monitor. The coloured
+        // number in the card above is the first of them (the primary) — one of these lines
+        // and not a sixth quantity, which is what keeps the header and the chart one
+        // statement while the readouts stay single.
+        metrics={metrics}
         weighting={weighting}
-        range={range}
-        // How far a finger may take the crop, and — being present at all — what installs
-        // the touch gestures: one finger reads the trace, two crop and slide it. The whole
-        // pickable project rather than the crop, so a pinch has somewhere to widen into.
-        // Withheld while live for the same reason as the two callbacks below, and the same
-        // reason there is no timeline to drag then.
-        bounds={live ? undefined : bounds}
-        // Hovering any trace moves the page's playhead, which is what puts the line in
-        // the same place on every other card and on the timeline. Withheld while live
-        // for the same reason there is no line then: there is nothing for it to move.
-        onScrub={live ? undefined : scrubTo}
-        // `i`/`o` over the trace, or a drag across it, crop the page's timeframe to
-        // what was pointed at. Withheld while live for the same reason as the
-        // playhead: the window follows the clock then, and a crop inside it would be
-        // overwritten a second later.
-        onCrop={live ? undefined : cropTo}
-        series={traces}
+        {...mode}
       />
     </Box>
   );

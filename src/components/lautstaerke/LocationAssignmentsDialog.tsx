@@ -51,8 +51,8 @@ const NO_DEVICE = '';
 // for one added here; `key` is what React and the overlap check identify it by, and a new
 // row needs one of those before it has an id.
 //
-// `start` is nullable here though the column is not: an omitted bound means the edge of
-// the event, and the project's own start is what the server writes for it.
+// `start` null means the same thing here as in the column behind it: the edge of the event,
+// whenever that turns out to be.
 type DraftRow = {
   key: string;
   id: string | null;
@@ -136,9 +136,7 @@ function AssignmentsForm({
   const [original] = useState(() =>
     [...location.assignments].sort((a, b) => a.start - b.start),
   );
-  const [rows, setRows] = useState<DraftRow[]>(() =>
-    original.map((a) => toDraft(a, project.start)),
-  );
+  const [rows, setRows] = useState<DraftRow[]>(() => original.map(toDraft));
   // Only has to outlive the rows on screen, and a row added after one was binned must
   // not reuse the key it had — React would keep the old field's draft string.
   const nextKey = useRef(0);
@@ -215,7 +213,7 @@ function AssignmentsForm({
             </Table.Body>
           </Table.Root>
           {rows.length === 0 && (
-            <Text fontSize="sm" color="gray.500">
+            <Text fontSize="sm" color="fg.muted">
               Hier stand noch kein Gerät.
             </Text>
           )}
@@ -329,8 +327,8 @@ function AssignmentRow({
           aria-label={`Zuweisung von ${who} löschen`}
           size="sm"
           variant="ghost"
-          color="red.500"
-          _hover={{bg: 'red.50'}}
+          color="fg.error"
+          _hover={{bg: 'bg.error'}}
           onClick={onRemove}
         >
           <LuTrash2 />
@@ -364,8 +362,8 @@ function ConflictWarning({
         aria-label={text}
         size="sm"
         variant="ghost"
-        color="orange.500"
-        _hover={{bg: 'orange.50'}}
+        color="fg.warning"
+        _hover={{bg: 'bg.warning'}}
       >
         <LuTriangleAlert />
       </IconButton>
@@ -446,16 +444,20 @@ function TimeField({
 
 const hasDevice = (row: DraftRow) => row.deviceId !== NO_DEVICE;
 
-// `start` is not nullable in the database, so an omitted one was stored as the project's
-// own start — the same statement. Showing it back as empty is what makes the field
-// round-trip: blank it, save, and it comes back blank rather than filled in with a time
-// you didn't type.
-function toDraft(assignment: NoiseAssignment, projectStart: number): DraftRow {
+// A blank start comes back blank, which is what makes the field round-trip: blank it, save,
+// and it is still blank rather than filled in with a time you didn't type — and the
+// placement still follows the event's dates rather than being pinned to what they were.
+//
+// The loader says which it is (`startsWithProject`) rather than this comparing the resolved
+// instant against the project's, which is what it used to do when the column could not hold
+// a blank: a placement deliberately pinned to the event's exact start was indistinguishable
+// from one that had none, and saving either wrote a fixed time.
+function toDraft(assignment: NoiseAssignment): DraftRow {
   return {
     key: assignment.id,
     id: assignment.id,
     deviceId: assignment.deviceId,
-    start: assignment.start === projectStart ? null : assignment.start,
+    start: assignment.startsWithProject ? null : assignment.start,
     end: assignment.end,
   };
 }

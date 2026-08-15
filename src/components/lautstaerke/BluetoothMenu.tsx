@@ -27,7 +27,10 @@ export function BluetoothMenu() {
   const connect = async () => {
     const name = await bluetooth.connect();
     if (name) {
-      void navigate({to: '/crew/lautstaerke/$device', params: {device: name}});
+      void navigate({
+        to: '/crew/lautstaerke/device/$device',
+        params: {device: name},
+      });
     }
   };
 
@@ -73,8 +76,8 @@ export function BluetoothMenu() {
           </MenuItem>
           <MenuItem
             value="disconnect"
-            color="red.400"
-            _hover={{bg: 'red.950', color: 'red.300'}}
+            color="fg.error"
+            _hover={{bg: 'bg.error', color: 'red.fg'}}
             onClick={() => {
               void bluetooth.disconnect();
             }}
