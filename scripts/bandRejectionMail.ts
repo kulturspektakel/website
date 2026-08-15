@@ -7,7 +7,7 @@
  * Set `EVENT_ID` before running. `yarn email:band-rejection` to run.
  */
 import 'dotenv/config';
-import {google} from 'googleapis';
+import {gmailClient} from '../src/server/gmail.server';
 import {prismaClient} from '../src/server/prismaClient.server';
 import {sendMail} from '../src/server/sendMail.server';
 
@@ -29,15 +29,9 @@ async function main() {
   });
   console.log(`Sending ${data.length} rejections for ${event.name}`);
 
-  const client = new google.auth.JWT({
-    email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-    key: process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY.replace(/\\n/g, '\n'),
-    scopes: ['https://www.googleapis.com/auth/gmail.readonly'],
-    subject: account,
-  });
-  await client.authorize();
-
-  const gmail = google.gmail({auth: client, version: 'v1'});
+  // Same delegated read-only client the app uses; `gmailClient` defaults to the
+  // `gmail.readonly` scope this script needs.
+  const gmail = await gmailClient(account);
 
   const res = await gmail.users.messages.list({
     userId: account,

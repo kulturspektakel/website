@@ -1,4 +1,12 @@
-import {gmail_v1, google} from 'googleapis';
+// `@googleapis/gmail` rather than the `googleapis` metapackage: the latter
+// bundles every Google API and was 43 MB of the ~103 MB function, for the two
+// APIs we actually call (Gmail here, Admin Directory in addToMailingList).
+//
+// `auth` (the package's own AuthPlus) rather than a top-level
+// `google-auth-library` import: `googleapis-common` carries a nested copy of
+// that library, and a `JWT` built from the hoisted one is a structurally
+// distinct class the client factory rejects.
+import {auth, gmail, gmail_v1} from '@googleapis/gmail';
 import TurndownService from 'turndown';
 import {slackifyMarkdown} from 'slackify-markdown';
 import {ApiError} from './apiError.server';
@@ -55,14 +63,14 @@ export async function gmailClient(
       'GOOGLE_SERVICE_ACCOUNT_EMAIL / GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY not set',
     );
   }
-  const auth = new google.auth.JWT({
+  const jwt = new auth.JWT({
     email,
     key,
     scopes,
     subject: account,
   });
-  await auth.authorize();
-  return google.gmail({auth, version: 'v1'});
+  await jwt.authorize();
+  return gmail({auth: jwt, version: 'v1'});
 }
 
 /**

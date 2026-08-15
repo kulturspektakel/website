@@ -1,4 +1,5 @@
-import {google} from 'googleapis';
+// Scoped package instead of the `googleapis` metapackage — see gmail.server.ts.
+import {admin, auth} from '@googleapis/admin';
 
 /**
  * Migrated from `~/api.kulturspektakel.de/src/utils/addToMailingList.ts`.
@@ -22,17 +23,18 @@ export async function addToMailingList(email: string): Promise<boolean> {
     );
   }
 
-  const auth = new google.auth.JWT({
+  const jwt = new auth.JWT({
     email: serviceAccountEmail,
     key,
     scopes: ['https://www.googleapis.com/auth/admin.directory.group.member'],
   });
-  await auth.authorize();
+  await jwt.authorize();
 
   try {
-    await google
-      .admin({auth, version: 'directory_v1'})
-      .members.insert({groupKey: GROUP_KEY, requestBody: {email}});
+    await admin({auth: jwt, version: 'directory_v1'}).members.insert({
+      groupKey: GROUP_KEY,
+      requestBody: {email},
+    });
     return true;
   } catch (e) {
     if ((e as {code?: number}).code === 409) {

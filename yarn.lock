@@ -1993,6 +1993,20 @@
   dependencies:
     google-gax "^5.0.0"
 
+"@googleapis/admin@^32.0.0":
+  version "32.0.0"
+  resolved "https://registry.yarnpkg.com/@googleapis/admin/-/admin-32.0.0.tgz#f69c50186b75a99b5b6a5134c595bfa44dc70118"
+  integrity sha512-OzdRZF9lXm7AYGEKSpx8gjDV3Kv6ktIHA+f73cDIP1xrjBelnV1wgjTos8IMXBgoDX5r4c3HpTbLDBtllsf6rA==
+  dependencies:
+    googleapis-common "^8.0.0"
+
+"@googleapis/gmail@^18.0.0":
+  version "18.0.0"
+  resolved "https://registry.yarnpkg.com/@googleapis/gmail/-/gmail-18.0.0.tgz#ab0bb2922ed89c1379c012d91f526bc58d43a174"
+  integrity sha512-qC8CaF3mgi8ZMm7IYK1Pk6AF3z2v1IE++8rtn+Mmpx+zIhbS9MMazY7+WicwgLKKskn5zQLXCoNv0Jn7OdFfPg==
+  dependencies:
+    googleapis-common "^8.0.0"
+
 "@googlemaps/js-api-loader@^1.16.6":
   version "1.16.8"
   resolved "https://registry.yarnpkg.com/@googlemaps/js-api-loader/-/js-api-loader-1.16.8.tgz#1595a2af80ca07e551fc961d921a2437d1cb3643"
@@ -8586,7 +8600,7 @@ globby@^16.1.0:
     slash "^5.1.0"
     unicorn-magic "^0.4.0"
 
-google-auth-library@^10.1.0, google-auth-library@^10.2.0:
+google-auth-library@^10.1.0:
   version "10.6.2"
   resolved "https://registry.yarnpkg.com/google-auth-library/-/google-auth-library-10.6.2.tgz#44557c536aec626b7cda48a85b5d026e2c9b74c4"
   integrity sha512-e27Z6EThmVNNvtYASwQxose/G57rkRuaRbQyxM2bvYLLX/GqWZ5chWq2EBoUchJbCc57eC9ArzO5wMsEmWftCw==
@@ -8642,14 +8656,6 @@ googleapis-common@^8.0.0:
     google-auth-library "^10.1.0"
     qs "^6.7.0"
     url-template "^2.0.8"
-
-googleapis@^173.0.0:
-  version "173.0.0"
-  resolved "https://registry.yarnpkg.com/googleapis/-/googleapis-173.0.0.tgz#b58932e82fcf9cbaa6024b464122803b0333b9e1"
-  integrity sha512-xEJJYLZ4qeenVyfzispNfRjCe9bsv7CzBv5zYFLvScOze9snJ8S9W6hjQ729CWPQt5mvn/JrcRaCHzQiukt0ng==
-  dependencies:
-    google-auth-library "^10.2.0"
-    googleapis-common "^8.0.0"
 
 gopd@^1.0.1, gopd@^1.2.0:
   version "1.2.0"
