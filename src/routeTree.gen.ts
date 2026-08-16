@@ -16,7 +16,7 @@ import { Route as MainRouteImport } from './routes/_main'
 import { Route as CrewIndexRouteImport } from './routes/crew.index'
 import { Route as MainIndexRouteImport } from './routes/_main.index'
 import { Route as CrewProdukteRouteImport } from './routes/crew.produkte'
-import { Route as CrewLautstaerkeRouteImport } from './routes/crew.lautstaerke'
+import { Route as CrewNoiseRouteImport } from './routes/crew.noise'
 import { Route as CrewAuthReturnRouteImport } from './routes/crew.auth-return'
 import { Route as ApiTasksRouteImport } from './routes/api.tasks'
 import { Route as ApiOwntracksRouteImport } from './routes/api.owntracks'
@@ -38,7 +38,7 @@ import { Route as MainAngebotRouteImport } from './routes/_main.angebot'
 import { Route as MainRouteRouteImport } from './routes/_main.Route'
 import { Route as MainSlugRouteImport } from './routes/_main.$slug'
 import { Route as CrewProdukteIndexRouteImport } from './routes/crew.produkte.index'
-import { Route as CrewLautstaerkeIndexRouteImport } from './routes/crew.lautstaerke.index'
+import { Route as CrewNoiseIndexRouteImport } from './routes/crew.noise.index'
 import { Route as MainLineupIndexRouteImport } from './routes/_main.lineup.index'
 import { Route as CrewProdukteListIdRouteImport } from './routes/crew.produkte.$listId'
 import { Route as CrewBookingEventIdRouteImport } from './routes/crew.booking.$eventId'
@@ -88,8 +88,8 @@ import { Route as MainLineupYearRouteImport } from './routes/_main.lineup.$year'
 import { Route as MainEventsIdRouteImport } from './routes/_main.events_.$id'
 import { Route as MainCardHashRouteImport } from './routes/_main.card.$hash'
 import { Route as MainBookingApplicationTypeRouteImport } from './routes/_main.booking_.$applicationType'
-import { Route as CrewLautstaerkeProjektProjectIdRouteImport } from './routes/crew.lautstaerke.projekt.$projectId'
-import { Route as CrewLautstaerkeDeviceDeviceRouteImport } from './routes/crew.lautstaerke.device.$device'
+import { Route as CrewNoiseProjectProjectIdRouteImport } from './routes/crew.noise.project.$projectId'
+import { Route as CrewNoiseDeviceDeviceRouteImport } from './routes/crew.noise.device.$device'
 import { Route as CrewBookingEventIdApplicationIdRouteImport } from './routes/crew.booking.$eventId.$applicationId'
 import { Route as ApiSpendenQuittungIdRouteImport } from './routes/api.spenden.quittung.$id'
 import { Route as MainSpendenQuittungIdRouteImport } from './routes/_main.spenden_.quittung.$id'
@@ -97,9 +97,9 @@ import { Route as MainLineupYearSlugRouteImport } from './routes/_main.lineup.$y
 import { Route as MainCardHashKultRouteImport } from './routes/_main.card.$hash.kult'
 import { Route as MainCardHashCrewRouteImport } from './routes/_main.card.$hash.crew'
 import { Route as MainBookingApplicationTypeDankeRouteImport } from './routes/_main.booking_.$applicationType_.danke'
-import { Route as CrewLautstaerkeProjektProjectIdIndexRouteImport } from './routes/crew.lautstaerke.projekt.$projectId.index'
-import { Route as CrewLautstaerkeProjektProjectIdListeRouteImport } from './routes/crew.lautstaerke.projekt.$projectId.liste'
-import { Route as CrewLautstaerkeProjektProjectIdKarteRouteImport } from './routes/crew.lautstaerke.projekt.$projectId.karte'
+import { Route as CrewNoiseProjectProjectIdIndexRouteImport } from './routes/crew.noise.project.$projectId.index'
+import { Route as CrewNoiseProjectProjectIdMapRouteImport } from './routes/crew.noise.project.$projectId.map'
+import { Route as CrewNoiseProjectProjectIdListRouteImport } from './routes/crew.noise.project.$projectId.list'
 import { Route as CrewBookingEventIdApplicationIdContactRouteImport } from './routes/crew.booking.$eventId.$applicationId.contact'
 
 const VeganRoute = VeganRouteImport.update({
@@ -136,9 +136,9 @@ const CrewProdukteRoute = CrewProdukteRouteImport.update({
   path: '/produkte',
   getParentRoute: () => CrewRoute,
 } as any)
-const CrewLautstaerkeRoute = CrewLautstaerkeRouteImport.update({
-  id: '/lautstaerke',
-  path: '/lautstaerke',
+const CrewNoiseRoute = CrewNoiseRouteImport.update({
+  id: '/noise',
+  path: '/noise',
   getParentRoute: () => CrewRoute,
 } as any)
 const CrewAuthReturnRoute = CrewAuthReturnRouteImport.update({
@@ -246,10 +246,10 @@ const CrewProdukteIndexRoute = CrewProdukteIndexRouteImport.update({
   path: '/',
   getParentRoute: () => CrewProdukteRoute,
 } as any)
-const CrewLautstaerkeIndexRoute = CrewLautstaerkeIndexRouteImport.update({
+const CrewNoiseIndexRoute = CrewNoiseIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => CrewLautstaerkeRoute,
+  getParentRoute: () => CrewNoiseRoute,
 } as any)
 const MainLineupIndexRoute = MainLineupIndexRouteImport.update({
   id: '/',
@@ -510,18 +510,17 @@ const MainBookingApplicationTypeRoute =
     path: '/booking/$applicationType',
     getParentRoute: () => MainRoute,
   } as any)
-const CrewLautstaerkeProjektProjectIdRoute =
-  CrewLautstaerkeProjektProjectIdRouteImport.update({
-    id: '/projekt/$projectId',
-    path: '/projekt/$projectId',
-    getParentRoute: () => CrewLautstaerkeRoute,
+const CrewNoiseProjectProjectIdRoute =
+  CrewNoiseProjectProjectIdRouteImport.update({
+    id: '/project/$projectId',
+    path: '/project/$projectId',
+    getParentRoute: () => CrewNoiseRoute,
   } as any)
-const CrewLautstaerkeDeviceDeviceRoute =
-  CrewLautstaerkeDeviceDeviceRouteImport.update({
-    id: '/device/$device',
-    path: '/device/$device',
-    getParentRoute: () => CrewLautstaerkeRoute,
-  } as any)
+const CrewNoiseDeviceDeviceRoute = CrewNoiseDeviceDeviceRouteImport.update({
+  id: '/device/$device',
+  path: '/device/$device',
+  getParentRoute: () => CrewNoiseRoute,
+} as any)
 const CrewBookingEventIdApplicationIdRoute =
   CrewBookingEventIdApplicationIdRouteImport.update({
     id: '/$applicationId',
@@ -559,23 +558,23 @@ const MainBookingApplicationTypeDankeRoute =
     path: '/booking/$applicationType/danke',
     getParentRoute: () => MainRoute,
   } as any)
-const CrewLautstaerkeProjektProjectIdIndexRoute =
-  CrewLautstaerkeProjektProjectIdIndexRouteImport.update({
+const CrewNoiseProjectProjectIdIndexRoute =
+  CrewNoiseProjectProjectIdIndexRouteImport.update({
     id: '/',
     path: '/',
-    getParentRoute: () => CrewLautstaerkeProjektProjectIdRoute,
+    getParentRoute: () => CrewNoiseProjectProjectIdRoute,
   } as any)
-const CrewLautstaerkeProjektProjectIdListeRoute =
-  CrewLautstaerkeProjektProjectIdListeRouteImport.update({
-    id: '/liste',
-    path: '/liste',
-    getParentRoute: () => CrewLautstaerkeProjektProjectIdRoute,
+const CrewNoiseProjectProjectIdMapRoute =
+  CrewNoiseProjectProjectIdMapRouteImport.update({
+    id: '/map',
+    path: '/map',
+    getParentRoute: () => CrewNoiseProjectProjectIdRoute,
   } as any)
-const CrewLautstaerkeProjektProjectIdKarteRoute =
-  CrewLautstaerkeProjektProjectIdKarteRouteImport.update({
-    id: '/karte',
-    path: '/karte',
-    getParentRoute: () => CrewLautstaerkeProjektProjectIdRoute,
+const CrewNoiseProjectProjectIdListRoute =
+  CrewNoiseProjectProjectIdListRouteImport.update({
+    id: '/list',
+    path: '/list',
+    getParentRoute: () => CrewNoiseProjectProjectIdRoute,
   } as any)
 const CrewBookingEventIdApplicationIdContactRoute =
   CrewBookingEventIdApplicationIdContactRouteImport.update({
@@ -609,7 +608,7 @@ export interface FileRoutesByFullPath {
   '/api/owntracks': typeof ApiOwntracksRouteWithChildren
   '/api/tasks': typeof ApiTasksRouteWithChildren
   '/crew/auth-return': typeof CrewAuthReturnRoute
-  '/crew/lautstaerke': typeof CrewLautstaerkeRouteWithChildren
+  '/crew/noise': typeof CrewNoiseRouteWithChildren
   '/crew/produkte': typeof CrewProdukteRouteWithChildren
   '/crew/': typeof CrewIndexRoute
   '/booking/$applicationType': typeof MainBookingApplicationTypeRoute
@@ -661,7 +660,7 @@ export interface FileRoutesByFullPath {
   '/crew/booking/$eventId': typeof CrewBookingEventIdRouteWithChildren
   '/crew/produkte/$listId': typeof CrewProdukteListIdRoute
   '/lineup/': typeof MainLineupIndexRoute
-  '/crew/lautstaerke/': typeof CrewLautstaerkeIndexRoute
+  '/crew/noise/': typeof CrewNoiseIndexRoute
   '/crew/produkte/': typeof CrewProdukteIndexRoute
   '/booking/$applicationType/danke': typeof MainBookingApplicationTypeDankeRoute
   '/card/$hash/crew': typeof MainCardHashCrewRoute
@@ -670,12 +669,12 @@ export interface FileRoutesByFullPath {
   '/spenden/quittung/$id': typeof MainSpendenQuittungIdRoute
   '/api/spenden/quittung/$id': typeof ApiSpendenQuittungIdRoute
   '/crew/booking/$eventId/$applicationId': typeof CrewBookingEventIdApplicationIdRouteWithChildren
-  '/crew/lautstaerke/device/$device': typeof CrewLautstaerkeDeviceDeviceRoute
-  '/crew/lautstaerke/projekt/$projectId': typeof CrewLautstaerkeProjektProjectIdRouteWithChildren
+  '/crew/noise/device/$device': typeof CrewNoiseDeviceDeviceRoute
+  '/crew/noise/project/$projectId': typeof CrewNoiseProjectProjectIdRouteWithChildren
   '/crew/booking/$eventId/$applicationId/contact': typeof CrewBookingEventIdApplicationIdContactRoute
-  '/crew/lautstaerke/projekt/$projectId/karte': typeof CrewLautstaerkeProjektProjectIdKarteRoute
-  '/crew/lautstaerke/projekt/$projectId/liste': typeof CrewLautstaerkeProjektProjectIdListeRoute
-  '/crew/lautstaerke/projekt/$projectId/': typeof CrewLautstaerkeProjektProjectIdIndexRoute
+  '/crew/noise/project/$projectId/list': typeof CrewNoiseProjectProjectIdListRoute
+  '/crew/noise/project/$projectId/map': typeof CrewNoiseProjectProjectIdMapRoute
+  '/crew/noise/project/$projectId/': typeof CrewNoiseProjectProjectIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/glutenfrei': typeof GlutenfreiRoute
@@ -750,7 +749,7 @@ export interface FileRoutesByTo {
   '/crew/booking/$eventId': typeof CrewBookingEventIdRouteWithChildren
   '/crew/produkte/$listId': typeof CrewProdukteListIdRoute
   '/lineup': typeof MainLineupIndexRoute
-  '/crew/lautstaerke': typeof CrewLautstaerkeIndexRoute
+  '/crew/noise': typeof CrewNoiseIndexRoute
   '/crew/produkte': typeof CrewProdukteIndexRoute
   '/booking/$applicationType/danke': typeof MainBookingApplicationTypeDankeRoute
   '/card/$hash/crew': typeof MainCardHashCrewRoute
@@ -759,11 +758,11 @@ export interface FileRoutesByTo {
   '/spenden/quittung/$id': typeof MainSpendenQuittungIdRoute
   '/api/spenden/quittung/$id': typeof ApiSpendenQuittungIdRoute
   '/crew/booking/$eventId/$applicationId': typeof CrewBookingEventIdApplicationIdRouteWithChildren
-  '/crew/lautstaerke/device/$device': typeof CrewLautstaerkeDeviceDeviceRoute
+  '/crew/noise/device/$device': typeof CrewNoiseDeviceDeviceRoute
   '/crew/booking/$eventId/$applicationId/contact': typeof CrewBookingEventIdApplicationIdContactRoute
-  '/crew/lautstaerke/projekt/$projectId/karte': typeof CrewLautstaerkeProjektProjectIdKarteRoute
-  '/crew/lautstaerke/projekt/$projectId/liste': typeof CrewLautstaerkeProjektProjectIdListeRoute
-  '/crew/lautstaerke/projekt/$projectId': typeof CrewLautstaerkeProjektProjectIdIndexRoute
+  '/crew/noise/project/$projectId/list': typeof CrewNoiseProjectProjectIdListRoute
+  '/crew/noise/project/$projectId/map': typeof CrewNoiseProjectProjectIdMapRoute
+  '/crew/noise/project/$projectId': typeof CrewNoiseProjectProjectIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -791,7 +790,7 @@ export interface FileRoutesById {
   '/api/owntracks': typeof ApiOwntracksRouteWithChildren
   '/api/tasks': typeof ApiTasksRouteWithChildren
   '/crew/auth-return': typeof CrewAuthReturnRoute
-  '/crew/lautstaerke': typeof CrewLautstaerkeRouteWithChildren
+  '/crew/noise': typeof CrewNoiseRouteWithChildren
   '/crew/produkte': typeof CrewProdukteRouteWithChildren
   '/_main/': typeof MainIndexRoute
   '/crew/': typeof CrewIndexRoute
@@ -844,7 +843,7 @@ export interface FileRoutesById {
   '/crew/booking/$eventId': typeof CrewBookingEventIdRouteWithChildren
   '/crew/produkte/$listId': typeof CrewProdukteListIdRoute
   '/_main/lineup/': typeof MainLineupIndexRoute
-  '/crew/lautstaerke/': typeof CrewLautstaerkeIndexRoute
+  '/crew/noise/': typeof CrewNoiseIndexRoute
   '/crew/produkte/': typeof CrewProdukteIndexRoute
   '/_main/booking_/$applicationType_/danke': typeof MainBookingApplicationTypeDankeRoute
   '/_main/card/$hash/crew': typeof MainCardHashCrewRoute
@@ -853,12 +852,12 @@ export interface FileRoutesById {
   '/_main/spenden_/quittung/$id': typeof MainSpendenQuittungIdRoute
   '/api/spenden/quittung/$id': typeof ApiSpendenQuittungIdRoute
   '/crew/booking/$eventId/$applicationId': typeof CrewBookingEventIdApplicationIdRouteWithChildren
-  '/crew/lautstaerke/device/$device': typeof CrewLautstaerkeDeviceDeviceRoute
-  '/crew/lautstaerke/projekt/$projectId': typeof CrewLautstaerkeProjektProjectIdRouteWithChildren
+  '/crew/noise/device/$device': typeof CrewNoiseDeviceDeviceRoute
+  '/crew/noise/project/$projectId': typeof CrewNoiseProjectProjectIdRouteWithChildren
   '/crew/booking/$eventId/$applicationId/contact': typeof CrewBookingEventIdApplicationIdContactRoute
-  '/crew/lautstaerke/projekt/$projectId/karte': typeof CrewLautstaerkeProjektProjectIdKarteRoute
-  '/crew/lautstaerke/projekt/$projectId/liste': typeof CrewLautstaerkeProjektProjectIdListeRoute
-  '/crew/lautstaerke/projekt/$projectId/': typeof CrewLautstaerkeProjektProjectIdIndexRoute
+  '/crew/noise/project/$projectId/list': typeof CrewNoiseProjectProjectIdListRoute
+  '/crew/noise/project/$projectId/map': typeof CrewNoiseProjectProjectIdMapRoute
+  '/crew/noise/project/$projectId/': typeof CrewNoiseProjectProjectIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -887,7 +886,7 @@ export interface FileRouteTypes {
     | '/api/owntracks'
     | '/api/tasks'
     | '/crew/auth-return'
-    | '/crew/lautstaerke'
+    | '/crew/noise'
     | '/crew/produkte'
     | '/crew/'
     | '/booking/$applicationType'
@@ -939,7 +938,7 @@ export interface FileRouteTypes {
     | '/crew/booking/$eventId'
     | '/crew/produkte/$listId'
     | '/lineup/'
-    | '/crew/lautstaerke/'
+    | '/crew/noise/'
     | '/crew/produkte/'
     | '/booking/$applicationType/danke'
     | '/card/$hash/crew'
@@ -948,12 +947,12 @@ export interface FileRouteTypes {
     | '/spenden/quittung/$id'
     | '/api/spenden/quittung/$id'
     | '/crew/booking/$eventId/$applicationId'
-    | '/crew/lautstaerke/device/$device'
-    | '/crew/lautstaerke/projekt/$projectId'
+    | '/crew/noise/device/$device'
+    | '/crew/noise/project/$projectId'
     | '/crew/booking/$eventId/$applicationId/contact'
-    | '/crew/lautstaerke/projekt/$projectId/karte'
-    | '/crew/lautstaerke/projekt/$projectId/liste'
-    | '/crew/lautstaerke/projekt/$projectId/'
+    | '/crew/noise/project/$projectId/list'
+    | '/crew/noise/project/$projectId/map'
+    | '/crew/noise/project/$projectId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/glutenfrei'
@@ -1028,7 +1027,7 @@ export interface FileRouteTypes {
     | '/crew/booking/$eventId'
     | '/crew/produkte/$listId'
     | '/lineup'
-    | '/crew/lautstaerke'
+    | '/crew/noise'
     | '/crew/produkte'
     | '/booking/$applicationType/danke'
     | '/card/$hash/crew'
@@ -1037,11 +1036,11 @@ export interface FileRouteTypes {
     | '/spenden/quittung/$id'
     | '/api/spenden/quittung/$id'
     | '/crew/booking/$eventId/$applicationId'
-    | '/crew/lautstaerke/device/$device'
+    | '/crew/noise/device/$device'
     | '/crew/booking/$eventId/$applicationId/contact'
-    | '/crew/lautstaerke/projekt/$projectId/karte'
-    | '/crew/lautstaerke/projekt/$projectId/liste'
-    | '/crew/lautstaerke/projekt/$projectId'
+    | '/crew/noise/project/$projectId/list'
+    | '/crew/noise/project/$projectId/map'
+    | '/crew/noise/project/$projectId'
   id:
     | '__root__'
     | '/_main'
@@ -1068,7 +1067,7 @@ export interface FileRouteTypes {
     | '/api/owntracks'
     | '/api/tasks'
     | '/crew/auth-return'
-    | '/crew/lautstaerke'
+    | '/crew/noise'
     | '/crew/produkte'
     | '/_main/'
     | '/crew/'
@@ -1121,7 +1120,7 @@ export interface FileRouteTypes {
     | '/crew/booking/$eventId'
     | '/crew/produkte/$listId'
     | '/_main/lineup/'
-    | '/crew/lautstaerke/'
+    | '/crew/noise/'
     | '/crew/produkte/'
     | '/_main/booking_/$applicationType_/danke'
     | '/_main/card/$hash/crew'
@@ -1130,12 +1129,12 @@ export interface FileRouteTypes {
     | '/_main/spenden_/quittung/$id'
     | '/api/spenden/quittung/$id'
     | '/crew/booking/$eventId/$applicationId'
-    | '/crew/lautstaerke/device/$device'
-    | '/crew/lautstaerke/projekt/$projectId'
+    | '/crew/noise/device/$device'
+    | '/crew/noise/project/$projectId'
     | '/crew/booking/$eventId/$applicationId/contact'
-    | '/crew/lautstaerke/projekt/$projectId/karte'
-    | '/crew/lautstaerke/projekt/$projectId/liste'
-    | '/crew/lautstaerke/projekt/$projectId/'
+    | '/crew/noise/project/$projectId/list'
+    | '/crew/noise/project/$projectId/map'
+    | '/crew/noise/project/$projectId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1215,11 +1214,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrewProdukteRouteImport
       parentRoute: typeof CrewRoute
     }
-    '/crew/lautstaerke': {
-      id: '/crew/lautstaerke'
-      path: '/lautstaerke'
-      fullPath: '/crew/lautstaerke'
-      preLoaderRoute: typeof CrewLautstaerkeRouteImport
+    '/crew/noise': {
+      id: '/crew/noise'
+      path: '/noise'
+      fullPath: '/crew/noise'
+      preLoaderRoute: typeof CrewNoiseRouteImport
       parentRoute: typeof CrewRoute
     }
     '/crew/auth-return': {
@@ -1369,12 +1368,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrewProdukteIndexRouteImport
       parentRoute: typeof CrewProdukteRoute
     }
-    '/crew/lautstaerke/': {
-      id: '/crew/lautstaerke/'
+    '/crew/noise/': {
+      id: '/crew/noise/'
       path: '/'
-      fullPath: '/crew/lautstaerke/'
-      preLoaderRoute: typeof CrewLautstaerkeIndexRouteImport
-      parentRoute: typeof CrewLautstaerkeRoute
+      fullPath: '/crew/noise/'
+      preLoaderRoute: typeof CrewNoiseIndexRouteImport
+      parentRoute: typeof CrewNoiseRoute
     }
     '/_main/lineup/': {
       id: '/_main/lineup/'
@@ -1719,19 +1718,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainBookingApplicationTypeRouteImport
       parentRoute: typeof MainRoute
     }
-    '/crew/lautstaerke/projekt/$projectId': {
-      id: '/crew/lautstaerke/projekt/$projectId'
-      path: '/projekt/$projectId'
-      fullPath: '/crew/lautstaerke/projekt/$projectId'
-      preLoaderRoute: typeof CrewLautstaerkeProjektProjectIdRouteImport
-      parentRoute: typeof CrewLautstaerkeRoute
+    '/crew/noise/project/$projectId': {
+      id: '/crew/noise/project/$projectId'
+      path: '/project/$projectId'
+      fullPath: '/crew/noise/project/$projectId'
+      preLoaderRoute: typeof CrewNoiseProjectProjectIdRouteImport
+      parentRoute: typeof CrewNoiseRoute
     }
-    '/crew/lautstaerke/device/$device': {
-      id: '/crew/lautstaerke/device/$device'
+    '/crew/noise/device/$device': {
+      id: '/crew/noise/device/$device'
       path: '/device/$device'
-      fullPath: '/crew/lautstaerke/device/$device'
-      preLoaderRoute: typeof CrewLautstaerkeDeviceDeviceRouteImport
-      parentRoute: typeof CrewLautstaerkeRoute
+      fullPath: '/crew/noise/device/$device'
+      preLoaderRoute: typeof CrewNoiseDeviceDeviceRouteImport
+      parentRoute: typeof CrewNoiseRoute
     }
     '/crew/booking/$eventId/$applicationId': {
       id: '/crew/booking/$eventId/$applicationId'
@@ -1782,26 +1781,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainBookingApplicationTypeDankeRouteImport
       parentRoute: typeof MainRoute
     }
-    '/crew/lautstaerke/projekt/$projectId/': {
-      id: '/crew/lautstaerke/projekt/$projectId/'
+    '/crew/noise/project/$projectId/': {
+      id: '/crew/noise/project/$projectId/'
       path: '/'
-      fullPath: '/crew/lautstaerke/projekt/$projectId/'
-      preLoaderRoute: typeof CrewLautstaerkeProjektProjectIdIndexRouteImport
-      parentRoute: typeof CrewLautstaerkeProjektProjectIdRoute
+      fullPath: '/crew/noise/project/$projectId/'
+      preLoaderRoute: typeof CrewNoiseProjectProjectIdIndexRouteImport
+      parentRoute: typeof CrewNoiseProjectProjectIdRoute
     }
-    '/crew/lautstaerke/projekt/$projectId/liste': {
-      id: '/crew/lautstaerke/projekt/$projectId/liste'
-      path: '/liste'
-      fullPath: '/crew/lautstaerke/projekt/$projectId/liste'
-      preLoaderRoute: typeof CrewLautstaerkeProjektProjectIdListeRouteImport
-      parentRoute: typeof CrewLautstaerkeProjektProjectIdRoute
+    '/crew/noise/project/$projectId/map': {
+      id: '/crew/noise/project/$projectId/map'
+      path: '/map'
+      fullPath: '/crew/noise/project/$projectId/map'
+      preLoaderRoute: typeof CrewNoiseProjectProjectIdMapRouteImport
+      parentRoute: typeof CrewNoiseProjectProjectIdRoute
     }
-    '/crew/lautstaerke/projekt/$projectId/karte': {
-      id: '/crew/lautstaerke/projekt/$projectId/karte'
-      path: '/karte'
-      fullPath: '/crew/lautstaerke/projekt/$projectId/karte'
-      preLoaderRoute: typeof CrewLautstaerkeProjektProjectIdKarteRouteImport
-      parentRoute: typeof CrewLautstaerkeProjektProjectIdRoute
+    '/crew/noise/project/$projectId/list': {
+      id: '/crew/noise/project/$projectId/list'
+      path: '/list'
+      fullPath: '/crew/noise/project/$projectId/list'
+      preLoaderRoute: typeof CrewNoiseProjectProjectIdListRouteImport
+      parentRoute: typeof CrewNoiseProjectProjectIdRoute
     }
     '/crew/booking/$eventId/$applicationId/contact': {
       id: '/crew/booking/$eventId/$applicationId/contact'
@@ -1899,42 +1898,38 @@ const MainRouteChildren: MainRouteChildren = {
 
 const MainRouteWithChildren = MainRoute._addFileChildren(MainRouteChildren)
 
-interface CrewLautstaerkeProjektProjectIdRouteChildren {
-  CrewLautstaerkeProjektProjectIdKarteRoute: typeof CrewLautstaerkeProjektProjectIdKarteRoute
-  CrewLautstaerkeProjektProjectIdListeRoute: typeof CrewLautstaerkeProjektProjectIdListeRoute
-  CrewLautstaerkeProjektProjectIdIndexRoute: typeof CrewLautstaerkeProjektProjectIdIndexRoute
+interface CrewNoiseProjectProjectIdRouteChildren {
+  CrewNoiseProjectProjectIdListRoute: typeof CrewNoiseProjectProjectIdListRoute
+  CrewNoiseProjectProjectIdMapRoute: typeof CrewNoiseProjectProjectIdMapRoute
+  CrewNoiseProjectProjectIdIndexRoute: typeof CrewNoiseProjectProjectIdIndexRoute
 }
 
-const CrewLautstaerkeProjektProjectIdRouteChildren: CrewLautstaerkeProjektProjectIdRouteChildren =
+const CrewNoiseProjectProjectIdRouteChildren: CrewNoiseProjectProjectIdRouteChildren =
   {
-    CrewLautstaerkeProjektProjectIdKarteRoute:
-      CrewLautstaerkeProjektProjectIdKarteRoute,
-    CrewLautstaerkeProjektProjectIdListeRoute:
-      CrewLautstaerkeProjektProjectIdListeRoute,
-    CrewLautstaerkeProjektProjectIdIndexRoute:
-      CrewLautstaerkeProjektProjectIdIndexRoute,
+    CrewNoiseProjectProjectIdListRoute: CrewNoiseProjectProjectIdListRoute,
+    CrewNoiseProjectProjectIdMapRoute: CrewNoiseProjectProjectIdMapRoute,
+    CrewNoiseProjectProjectIdIndexRoute: CrewNoiseProjectProjectIdIndexRoute,
   }
 
-const CrewLautstaerkeProjektProjectIdRouteWithChildren =
-  CrewLautstaerkeProjektProjectIdRoute._addFileChildren(
-    CrewLautstaerkeProjektProjectIdRouteChildren,
+const CrewNoiseProjectProjectIdRouteWithChildren =
+  CrewNoiseProjectProjectIdRoute._addFileChildren(
+    CrewNoiseProjectProjectIdRouteChildren,
   )
 
-interface CrewLautstaerkeRouteChildren {
-  CrewLautstaerkeIndexRoute: typeof CrewLautstaerkeIndexRoute
-  CrewLautstaerkeDeviceDeviceRoute: typeof CrewLautstaerkeDeviceDeviceRoute
-  CrewLautstaerkeProjektProjectIdRoute: typeof CrewLautstaerkeProjektProjectIdRouteWithChildren
+interface CrewNoiseRouteChildren {
+  CrewNoiseIndexRoute: typeof CrewNoiseIndexRoute
+  CrewNoiseDeviceDeviceRoute: typeof CrewNoiseDeviceDeviceRoute
+  CrewNoiseProjectProjectIdRoute: typeof CrewNoiseProjectProjectIdRouteWithChildren
 }
 
-const CrewLautstaerkeRouteChildren: CrewLautstaerkeRouteChildren = {
-  CrewLautstaerkeIndexRoute: CrewLautstaerkeIndexRoute,
-  CrewLautstaerkeDeviceDeviceRoute: CrewLautstaerkeDeviceDeviceRoute,
-  CrewLautstaerkeProjektProjectIdRoute:
-    CrewLautstaerkeProjektProjectIdRouteWithChildren,
+const CrewNoiseRouteChildren: CrewNoiseRouteChildren = {
+  CrewNoiseIndexRoute: CrewNoiseIndexRoute,
+  CrewNoiseDeviceDeviceRoute: CrewNoiseDeviceDeviceRoute,
+  CrewNoiseProjectProjectIdRoute: CrewNoiseProjectProjectIdRouteWithChildren,
 }
 
-const CrewLautstaerkeRouteWithChildren = CrewLautstaerkeRoute._addFileChildren(
-  CrewLautstaerkeRouteChildren,
+const CrewNoiseRouteWithChildren = CrewNoiseRoute._addFileChildren(
+  CrewNoiseRouteChildren,
 )
 
 interface CrewProdukteRouteChildren {
@@ -1980,7 +1975,7 @@ const CrewBookingEventIdRouteWithChildren =
 
 interface CrewRouteChildren {
   CrewAuthReturnRoute: typeof CrewAuthReturnRoute
-  CrewLautstaerkeRoute: typeof CrewLautstaerkeRouteWithChildren
+  CrewNoiseRoute: typeof CrewNoiseRouteWithChildren
   CrewProdukteRoute: typeof CrewProdukteRouteWithChildren
   CrewIndexRoute: typeof CrewIndexRoute
   CrewBookingEventIdRoute: typeof CrewBookingEventIdRouteWithChildren
@@ -1988,7 +1983,7 @@ interface CrewRouteChildren {
 
 const CrewRouteChildren: CrewRouteChildren = {
   CrewAuthReturnRoute: CrewAuthReturnRoute,
-  CrewLautstaerkeRoute: CrewLautstaerkeRouteWithChildren,
+  CrewNoiseRoute: CrewNoiseRouteWithChildren,
   CrewProdukteRoute: CrewProdukteRouteWithChildren,
   CrewIndexRoute: CrewIndexRoute,
   CrewBookingEventIdRoute: CrewBookingEventIdRouteWithChildren,

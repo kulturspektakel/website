@@ -6,6 +6,7 @@ import {
 } from '@tanstack/react-start/server';
 import {wrapFetchWithSentry} from '@sentry/tanstackstart-react';
 import {shortUrlRedirect} from './server/shortUrlRedirect';
+import {legacyNoiseRedirect} from './server/legacyNoiseRedirect';
 
 const handler = createStartHandler(defaultStreamHandler);
 
@@ -15,6 +16,12 @@ export default wrapFetchWithSentry({
     const shortUrl = await shortUrlRedirect(request);
     if (shortUrl) {
       return shortUrl;
+    }
+
+    // /crew/lautstaerke/** → /crew/noise/** (no-op for every other path)
+    const legacyNoise = legacyNoiseRedirect(request);
+    if (legacyNoise) {
+      return legacyNoise;
     }
 
     const url = new URL(request.url);

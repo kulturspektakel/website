@@ -16,7 +16,7 @@ export const Route = createFileRoute('/crew/auth-return')({
     const dest =
       search.to && /^\/crew(\/|$)/.test(search.to)
         ? search.to
-        : '/crew/lautstaerke';
+        : '/crew/noise';
     throw redirect({href: dest});
   },
 });

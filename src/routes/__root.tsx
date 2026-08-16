@@ -25,7 +25,7 @@ const queryClient = new QueryClient({
   },
 });
 
-// Lautstärke is the one always-dark area. The scope has to sit on <html> rather
+// The noise area is the one always-dark area. The scope has to sit on <html> rather
 // than on a wrapper inside the layout: Chakra portals menus, dialogs and the
 // toaster to document.body, so anything scoped further down leaves them light.
 // `color-scheme` comes along for the native UI a class can't reach — scrollbars,
@@ -39,7 +39,7 @@ const queryClient = new QueryClient({
 //
 // Matching by route id rather than pathname so it can't drift from the layout
 // route that owns the area.
-const DARK_ROUTE_ID = '/crew/lautstaerke';
+const DARK_ROUTE_ID = '/crew/noise';
 
 function RootComponent() {
   const dark = useRouterState({
@@ -47,8 +47,12 @@ function RootComponent() {
   });
 
   return (
+    // The noise area is the only English part of the site, and it happens to be
+    // the same area `dark` already identifies — so one flag decides both. `lang`
+    // is what a screen reader picks its pronunciation from, and German vowels
+    // over English copy are unintelligible.
     <html
-      lang="de"
+      lang={dark ? 'en' : 'de'}
       className={dark ? 'dark' : undefined}
       style={dark ? {colorScheme: 'dark'} : undefined}
     >

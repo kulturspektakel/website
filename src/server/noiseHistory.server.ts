@@ -8,9 +8,9 @@ import {
   type LevelColumn,
   type LogGrid,
   type ProjectLogs,
-} from '../components/lautstaerke/noise';
-import {visibleProjectWindow} from '../components/lautstaerke/projectSelection';
-import {MINUTE_MS} from '../components/lautstaerke/timeframe';
+} from '../components/noise/noise';
+import {visibleProjectWindow} from '../components/noise/projectSelection';
+import {MINUTE_MS} from '../components/noise/timeframe';
 
 // The displayable levels, as the wire names them against the Prisma field each comes
 // from. One table rather than the same names spelled out in the select, the

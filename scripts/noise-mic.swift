@@ -3,7 +3,7 @@
  * Turns this Mac's microphone into a simulated Lärmmessgerät: it measures real
  * sound levels and publishes them once a second as the same protobuf
  * `NoiseRecording` the hardware monitors send, on the same broker and topic —
- * so `/crew/lautstaerke/<device>` shows a live device without one on the desk.
+ * so `/crew/noise/<device>` shows a live device without one on the desk.
  *
  * `yarn noise:mic --device SIM-1` to run, `--help` for the options, and
  * `--selftest` to check the filters, the transform and the wire encoding
@@ -30,7 +30,7 @@ import os
 
 // MARK: - Wire contract
 //
-// Mirrors src/proto/noise.proto and src/components/lautstaerke/noise.ts. The
+// Mirrors src/proto/noise.proto and src/components/noise/noise.ts. The
 // levels cross as one byte each, and the UI decodes them with
 // `decodeDb = (byte) => 20 + byte / 2` — so this is the inverse of that.
 
@@ -202,7 +202,7 @@ Publishes this Mac's microphone as a simulated noise monitor.
 
 Options
   --device <id>       Device id; the topic becomes noise/<id>/record and the
-                      live view is /crew/lautstaerke/<id>.       (SIM-1)
+                      live view is /crew/noise/<id>.       (SIM-1)
   --input <name>      Microphone to listen on, matched as a case-insensitive
                       substring. Defaults to the system input, which is worth
                       checking: an audio interface with nothing plugged in and

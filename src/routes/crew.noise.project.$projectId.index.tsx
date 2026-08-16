@@ -1,0 +1,21 @@
+import {createFileRoute, redirect} from '@tanstack/react-router';
+
+// A project has no view of its own — it is either its map or its list. Every link still
+// points here, so this is the one place that decides which one you land on, and it is the
+// list: during an event the question is what the stages are reading, and that is a column
+// of charts. The map is a view you switch to (and the one place that still needs a Maps
+// key, which is why this no longer has to ask whether there is one).
+export const Route = createFileRoute('/crew/noise/project/$projectId/')({
+  // replace, so the back button returns to wherever you came from instead of bouncing
+  // through here again.
+  loader: ({params}) => {
+    throw redirect({
+      to: '/crew/noise/project/$projectId/list',
+      params,
+      // No search of its own: a redirect that doesn't name one has none, and what a
+      // pinned link carries (see projectSearch.ts) is kept by the layout route's own
+      // retainSearchParams rather than by every hop that passes through here.
+      replace: true,
+    });
+  },
+});

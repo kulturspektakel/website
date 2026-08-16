@@ -6,7 +6,7 @@ import {
   themeHex,
   type NoiseColorToken,
 } from './theme-noise';
-import {SERIES} from './components/lautstaerke/series';
+import {SERIES} from './components/noise/series';
 
 type Token = {
   value?: string;

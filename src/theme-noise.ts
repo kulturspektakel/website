@@ -1,13 +1,13 @@
 import {defaultConfig} from '@chakra-ui/react';
 
-// The colour vocabulary of /crew/lautstaerke, in the one place that decides it.
+// The colour vocabulary of /crew/noise, in the one place that decides it.
 //
 // The section renders dark throughout — __root.tsx puts `.dark` on <html> for
 // exactly this route subtree — so everything here is a dark-only decision and
 // none of it carries a light half. That is also why the two *overrides* the
 // section needs (the page ground and the focus ring) live in theme-crew.ts as
 // `_dark` values rather than here: the dark half of a crew token is, by
-// construction, the Lautstärke value. If /crew ever goes dark somewhere else
+// construction, the noise area's value. If /crew ever goes dark somewhere else
 // that stops being true, and the fix is a custom condition —
 // `conditions: {noise: '.noise &'}` on the system, `_noise` on those two
 // tokens, and the class alongside `.dark` in __root.tsx.
