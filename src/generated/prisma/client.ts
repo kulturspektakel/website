@@ -202,6 +202,11 @@ export type NoiseLocation = Prisma.NoiseLocationModel
  */
 export type NoiseLocationAssignment = Prisma.NoiseLocationAssignmentModel
 /**
+ * Model NoiseLocationLimit
+ * 
+ */
+export type NoiseLocationLimit = Prisma.NoiseLocationLimitModel
+/**
  * Model DeviceLocation
  * 
  */

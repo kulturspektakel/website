@@ -94,8 +94,8 @@ export function resolveSelection(
  * Ignored rather than refused, and the row stays tickable to be ignored: a whole menu of
  * places with one greyed row reads as if that row were unavailable, when what is true is
  * the opposite — it is the only one being shown. Pressing it simply leaves it ticked, which
- * is also what a list of one means. (The windows picker settles the same question the same
- * way — see toggledMetrics.)
+ * is also what a list of one means. (The level picker settles the same question the same
+ * way — see toggledSeries.)
  *
  * Answers with the ids in display order and only the places that still exist, which is
  * both what the list renders and what is worth storing: an arrangement rather than a set

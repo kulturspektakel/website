@@ -14,8 +14,8 @@ import {logMinuteAt, type ProjectLogs} from './noise';
 // this section: `end` is the first instant that has a reading again.
 export type LogGap = {start: number; end: number};
 
-// The column presence is read off, and it is deliberately not resolved through
-// seriesFor: NoiseLog.laeq is non-nullable in the database, so a non-null `laeq_1m` at
+// The column presence is read off, and it is deliberately not resolved through the series
+// table: NoiseLog.laeq is non-nullable in the database, so a non-null `laeq_1m` at
 // minute i means exactly "a row was stored for that minute". Every other column can be
 // null for a reason that is not absence — the trailing 5m and 30m windows are null until
 // the device's own ring buffer has filled — so any of them would report a monitor that

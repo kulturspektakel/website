@@ -31,6 +31,12 @@ export const decodeDb = (byte: number) => 20 + byte / 2;
 
 export type Weighting = 'A' | 'C';
 
+// The two of them as a list, in the order everything that groups by weighting groups by:
+// the picker's blocks, the device page's tile rows and the limits dialog's optgroups. One
+// list rather than an `['A', 'C'] as const` at each of those, so a tile row and the menu
+// row it is meant to stand level with cannot come out in different orders.
+export const WEIGHTINGS = ['A', 'C'] as const satisfies readonly Weighting[];
+
 // Where a monitor is standing *for an event*, which is a different fact from the free-text
 // label above and the one that means something: a NoiseLocation belongs to a NoiseProject,
 // so a placement names both the spot and the festival it is a spot at.

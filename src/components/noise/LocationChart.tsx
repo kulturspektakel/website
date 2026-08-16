@@ -1,6 +1,10 @@
 import {Box} from '@chakra-ui/react';
 import {LevelTrace} from './LevelTrace';
-import {useProjectView, type DeviceWindows} from './projectView';
+import {
+  useProjectView,
+  type DeviceWindows,
+  type NoiseLimit,
+} from './projectView';
 
 // A location's levels over the crop, as one chart of the place.
 //
@@ -19,8 +23,16 @@ import {useProjectView, type DeviceWindows} from './projectView';
 // Always drawn, including for a location nothing has stood at yet: an empty pair of axes
 // says "nothing was measured here", and a card that simply omits the chart says nothing
 // and jumps a hundred pixels the moment a monitor is assigned.
-export function LocationChart({lines}: {lines: DeviceWindows[]}) {
-  const {live, metrics, weighting, range, bounds, traces, scrubTo, cropTo} =
+export function LocationChart({
+  lines,
+  limits,
+}: {
+  lines: DeviceWindows[];
+  // What this place is permitted, whole — the same history-not-instant treatment the lines
+  // get. A limit that ended at midnight is still part of a crop that covers midnight.
+  limits: readonly NoiseLimit[];
+}) {
+  const {live, picked, range, bounds, traces, scrubTo, cropTo} =
     useProjectView();
 
   // Which of the chart's two modes this card is in, as the one object that decides it:
@@ -43,7 +55,7 @@ export function LocationChart({lines}: {lines: DeviceWindows[]}) {
         // `i`/`o` over the trace, a drag across it, or two fingers on it crop the page's
         // timeframe to what was pointed at.
         onCrop: cropTo,
-        series: traces,
+        traces,
       } as const);
 
   return (
@@ -60,12 +72,16 @@ export function LocationChart({lines}: {lines: DeviceWindows[]}) {
         // the chart spans the crop, so what stood here an hour ago is part of it even
         // while you are looking at now.
         lines={lines}
-        // Every window the header has ticked, one line each per monitor. The coloured
-        // number in the card above is the first of them (the primary) — one of these lines
-        // and not a sixth quantity, which is what keeps the header and the chart one
-        // statement while the readouts stay single.
-        metrics={metrics}
-        weighting={weighting}
+        // Every series the header has ticked, one line each per monitor. The card above
+        // prints one number per line in the same shade, and the pin on the map reads the
+        // first of them — one of these lines and not a tenth quantity, which is what keeps
+        // the header, the chart and the map one statement.
+        picked={picked}
+        // What the place is allowed to be, as a dashed rule across the hours each limit
+        // applies to, in the shade of the series it is written against — and only for the
+        // series `picked` above, so a rule and the line it bounds come into view together
+        // (see drawLimits).
+        limits={limits}
         {...mode}
       />
     </Box>

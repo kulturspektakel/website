@@ -57,6 +57,12 @@ export function DevicePicker({device}: {device: string}) {
           gap="1"
           minW="0"
           maxW="full"
+          // Against Chakra's button recipe, which pins every button at `flex-shrink: 0`
+          // — right for a control in a row of controls, wrong for this one: it is the
+          // page's title, the widest thing in the strip and the only thing in it that
+          // can be abbreviated and still be read. Without this the name holds its full
+          // width on a phone and pushes the chips beside it off the edge.
+          flexShrink="1"
           fontSize="md"
           fontWeight="bold"
         >

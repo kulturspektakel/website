@@ -137,6 +137,9 @@ describe('overlappingAssignments', () => {
     latitude: 0,
     longitude: 0,
     assignments,
+    // Nothing to do with an overlap — limits are allowed to overlap and are not
+    // checked against each other — but a location carries them.
+    limits: [],
   });
 
   it('does not clash two abutting windows', () => {

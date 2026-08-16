@@ -8,6 +8,7 @@ import {
   usePlayheadLevels,
   useProjectView,
 } from '../components/noise/projectView';
+import {primarySeries} from '../components/noise/level';
 
 export const Route = createFileRoute('/crew/noise/project/$projectId/map')({
   component: ProjectMapView,
@@ -18,8 +19,10 @@ const PLACE_TOAST = 'noise-place-location';
 
 function ProjectMapView() {
   const {projectId} = Route.useParams();
-  const {project, live, metric, weighting, locations, refresh} =
-    useProjectView();
+  const {project, live, picked, locations, refresh} = useProjectView();
+  // A pin has room for one number, so it reads the first of the picked set (see
+  // primarySeries) — the same one every other single-number readout on the page follows.
+  const primary = primarySeries(picked);
   // Read here rather than inside the map: what a pin shows at the playhead is a
   // question about this page, and LocationsMap is a map — it takes levels, not a
   // project. This view re-renders as the playhead crosses a minute either way.
@@ -121,11 +124,10 @@ function ProjectMapView() {
           apiKey={project.apiKey}
           locations={mapLocations}
           live={live}
-          metric={metric}
-          weighting={weighting}
-          // Only the primary window: a pin is a badge over a place, with room for one
-          // number. The cards print every picked window, out of the same record.
-          history={levels?.[metric]}
+          // Only the primary series: a pin is a badge over a place, with room for one
+          // number. The cards print every picked series, out of the same record.
+          series={primary}
+          history={levels?.[primary]}
           placing={placing}
           onPlacingChange={setPlacing}
           onCreateAt={setCreateAt}

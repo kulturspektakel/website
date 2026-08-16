@@ -416,6 +416,7 @@ export const ModelName = {
   NoiseProject: 'NoiseProject',
   NoiseLocation: 'NoiseLocation',
   NoiseLocationAssignment: 'NoiseLocationAssignment',
+  NoiseLocationLimit: 'NoiseLocationLimit',
   DeviceLocation: 'DeviceLocation',
   NoiseLog: 'NoiseLog',
   NoiseLogTag: 'NoiseLogTag'
@@ -434,7 +435,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "viewer" | "area" | "areaOpeningHour" | "page" | "productList" | "product" | "productAdditives" | "device" | "order" | "orderItem" | "cardTransaction" | "crewCard" | "deviceLog" | "bandApplication" | "bandApplicationTag" | "bandApplicationRating" | "bandApplicationComment" | "event" | "bandPlaying" | "nonce" | "nonceRequest" | "gmailReminders" | "deviceConfigVersion" | "news" | "twoFactor" | "itemLocation" | "viewerLocation" | "shortDomainRedirect" | "donation" | "noiseProject" | "noiseLocation" | "noiseLocationAssignment" | "deviceLocation" | "noiseLog" | "noiseLogTag"
+    modelProps: "viewer" | "area" | "areaOpeningHour" | "page" | "productList" | "product" | "productAdditives" | "device" | "order" | "orderItem" | "cardTransaction" | "crewCard" | "deviceLog" | "bandApplication" | "bandApplicationTag" | "bandApplicationRating" | "bandApplicationComment" | "event" | "bandPlaying" | "nonce" | "nonceRequest" | "gmailReminders" | "deviceConfigVersion" | "news" | "twoFactor" | "itemLocation" | "viewerLocation" | "shortDomainRedirect" | "donation" | "noiseProject" | "noiseLocation" | "noiseLocationAssignment" | "noiseLocationLimit" | "deviceLocation" | "noiseLog" | "noiseLogTag"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2806,6 +2807,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    NoiseLocationLimit: {
+      payload: Prisma.$NoiseLocationLimitPayload<ExtArgs>
+      fields: Prisma.NoiseLocationLimitFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.NoiseLocationLimitFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoiseLocationLimitPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.NoiseLocationLimitFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoiseLocationLimitPayload>
+        }
+        findFirst: {
+          args: Prisma.NoiseLocationLimitFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoiseLocationLimitPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.NoiseLocationLimitFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoiseLocationLimitPayload>
+        }
+        findMany: {
+          args: Prisma.NoiseLocationLimitFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoiseLocationLimitPayload>[]
+        }
+        create: {
+          args: Prisma.NoiseLocationLimitCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoiseLocationLimitPayload>
+        }
+        createMany: {
+          args: Prisma.NoiseLocationLimitCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.NoiseLocationLimitCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoiseLocationLimitPayload>[]
+        }
+        delete: {
+          args: Prisma.NoiseLocationLimitDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoiseLocationLimitPayload>
+        }
+        update: {
+          args: Prisma.NoiseLocationLimitUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoiseLocationLimitPayload>
+        }
+        deleteMany: {
+          args: Prisma.NoiseLocationLimitDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.NoiseLocationLimitUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.NoiseLocationLimitUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoiseLocationLimitPayload>[]
+        }
+        upsert: {
+          args: Prisma.NoiseLocationLimitUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoiseLocationLimitPayload>
+        }
+        aggregate: {
+          args: Prisma.NoiseLocationLimitAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateNoiseLocationLimit>
+        }
+        groupBy: {
+          args: Prisma.NoiseLocationLimitGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.NoiseLocationLimitGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.NoiseLocationLimitCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.NoiseLocationLimitCountAggregateOutputType> | number
+        }
+      }
+    }
     DeviceLocation: {
       payload: Prisma.$DeviceLocationPayload<ExtArgs>
       fields: Prisma.DeviceLocationFieldRefs
@@ -3482,6 +3557,18 @@ export const NoiseLocationAssignmentScalarFieldEnum = {
 export type NoiseLocationAssignmentScalarFieldEnum = (typeof NoiseLocationAssignmentScalarFieldEnum)[keyof typeof NoiseLocationAssignmentScalarFieldEnum]
 
 
+export const NoiseLocationLimitScalarFieldEnum = {
+  id: 'id',
+  locationId: 'locationId',
+  series: 'series',
+  decibels: 'decibels',
+  start: 'start',
+  end: 'end'
+} as const
+
+export type NoiseLocationLimitScalarFieldEnum = (typeof NoiseLocationLimitScalarFieldEnum)[keyof typeof NoiseLocationLimitScalarFieldEnum]
+
+
 export const DeviceLocationScalarFieldEnum = {
   id: 'id',
   deviceId: 'deviceId',
@@ -3862,6 +3949,15 @@ export const NoiseLocationAssignmentOrderByRelevanceFieldEnum = {
 } as const
 
 export type NoiseLocationAssignmentOrderByRelevanceFieldEnum = (typeof NoiseLocationAssignmentOrderByRelevanceFieldEnum)[keyof typeof NoiseLocationAssignmentOrderByRelevanceFieldEnum]
+
+
+export const NoiseLocationLimitOrderByRelevanceFieldEnum = {
+  id: 'id',
+  locationId: 'locationId',
+  series: 'series'
+} as const
+
+export type NoiseLocationLimitOrderByRelevanceFieldEnum = (typeof NoiseLocationLimitOrderByRelevanceFieldEnum)[keyof typeof NoiseLocationLimitOrderByRelevanceFieldEnum]
 
 
 export const DeviceLocationOrderByRelevanceFieldEnum = {
@@ -4325,6 +4421,7 @@ export type GlobalOmitConfig = {
   noiseProject?: Prisma.NoiseProjectOmit
   noiseLocation?: Prisma.NoiseLocationOmit
   noiseLocationAssignment?: Prisma.NoiseLocationAssignmentOmit
+  noiseLocationLimit?: Prisma.NoiseLocationLimitOmit
   deviceLocation?: Prisma.DeviceLocationOmit
   noiseLog?: Prisma.NoiseLogOmit
   noiseLogTag?: Prisma.NoiseLogTagOmit

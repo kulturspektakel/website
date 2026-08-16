@@ -215,6 +215,12 @@ export function ProjectTimeline({
   const thumbs = selectionThumbs(selection, false);
   const {onFrame, onceNow} = useFrameCommit(onCommit);
 
+  // Whether there is a playhead to draw at all: it exists only while something is
+  // pointing at the event — this strip or a row chart — and so the strip is a plain two
+  // handled crop the rest of the time (see ProjectSelection). Which is why the middle
+  // thumb cannot be recognised by its index: without a cursor, index 1 is the end.
+  const hasPlayhead = selection.current != null;
+
   // What a thumb does when it runs into its neighbour, which differs by thumb — so
   // it is set as the drag starts rather than once for the slider.
   //
@@ -232,6 +238,17 @@ export function ProjectTimeline({
   // involved in this one. State and not the ref below, because it is read while
   // rendering; set twice per gesture, not per move.
   const [scrubbing, setScrubbing] = useState(false);
+
+  // The same thing for a mouse that is merely over the crop, which moves the playhead
+  // without pressing anything (see onControlPointerMove). Separate from `scrubbing`
+  // because a hover ends by the pointer leaving and a scrub by it being released, and
+  // either can be true without the other: a hover over the strip that never presses,
+  // and a drag that has wandered off it under pointer capture.
+  //
+  // Set on every move and re-rendered on two of them: React bails out of a setState to the
+  // value the state already holds, so a hover costs one render entering the crop and one
+  // leaving it rather than one per frame.
+  const [hovering, setHovering] = useState(false);
 
   // Which pointer owns that scrub, if any. Nothing else needs remembering: a scrub is
   // absolute — it reads an instant off the pointer and writes it to `current` — so
@@ -256,15 +273,24 @@ export function ProjectTimeline({
     return window.start + ratio * (sliderMax - window.start);
   };
 
-  // The selection with its playhead moved to an instant the pointer named. Onto the
+  // The selection with its playhead moved to an instant the pointer named — or, with
+  // null, with no playhead at all, which is what the pointer leaving names. Onto the
   // quarter hour first, because that is the grid a commit on release would snap it to
   // anyway (see commitProjectSelection) — a preview on any other would jump when let go.
-  // setSelectionCurrent does the clamping, and is the page's one rule for where the
-  // cursor may stand: the same call the row charts' hover goes through, so a window
-  // narrower than a step puts the playhead somewhere valid here for the same reason it
-  // does there.
-  const withPlayheadAt = (ms: number) =>
-    setSelectionCurrent(selection, snapToQuarter(ms));
+  // setSelectionCurrent does the clamping and takes the null, and is the page's one rule
+  // for where the cursor may stand: the same call the row charts' hover goes through, so a
+  // window narrower than a step puts the playhead somewhere valid here for the same reason
+  // it does there.
+  const withPlayheadAt = (ms: number | null) =>
+    setSelectionCurrent(selection, ms == null ? null : snapToQuarter(ms));
+
+  // Whether an instant is somewhere the playhead may stand: strictly inside the lit window.
+  // One definition, asked by the press and by the hover below, so the touch gesture and the
+  // mouse one cannot come to disagree about where the crop ends. Open at both ends, which is
+  // also what keeps a hover over a grip clearing the playhead rather than moving it — the
+  // grips stand outside the range they bound.
+  const insideCrop = (at: number | null): at is number =>
+    at != null && at > selection.start && at < selection.end;
 
   // zag gives a track press to whichever thumb is nearest, so a press just inside the
   // window drags that edge over to the pointer — losing a crop the user set
@@ -272,6 +298,11 @@ export function ProjectTimeline({
   // the window are taken over here, where they set the playhead. Outside it, zag's rule
   // is the right one — the nearer edge stretches out to meet the pointer — so those
   // fall through untouched.
+  //
+  // Which is also the touch gesture: a finger cannot hover, so pressing and dragging is
+  // how a touch screen puts the playhead somewhere. A mouse gets there without pressing
+  // (see onControlPointerMove) and this still has to hold for it — otherwise a click
+  // inside a crop would hand it to zag and pull an edge over.
   //
   // Capture phase, since zag's own handler sits on this element and would
   // otherwise run first.
@@ -284,7 +315,7 @@ export function ProjectTimeline({
 
     const control = event.currentTarget;
     const at = pointerAt(control, event.clientX);
-    if (at == null || at <= selection.start || at >= selection.end) return;
+    if (!insideCrop(at)) return;
 
     event.preventDefault();
     event.stopPropagation();
@@ -310,8 +341,52 @@ export function ProjectTimeline({
   const ownScrub = (event: React.PointerEvent) =>
     scrubPointer.current === event.pointerId;
 
+  // A mouse over the lit window carries the playhead with it, no press involved: what the
+  // strip is mostly used for is reading the evening, and the charts under it already answer
+  // a plain hover that way (see LevelTrace's setCursor). Confined to the crop, on the same
+  // test the press above uses: the playhead marks an instant *in the window*, so the dim
+  // ground either side is not somewhere it can stand, and crossing onto it takes the
+  // playhead away exactly as leaving the strip altogether does. Which also means a hover
+  // over a grip clears it before that grip can be dragged — the grips stand outside the
+  // range they bound.
+  //
+  // `buttons === 0` is the whole of how a mouse is told from a finger, and there is
+  // deliberately no pointerType test or media query anywhere here: a touch pointer only
+  // ever moves while it is down, so a move with nothing held is a hover by construction.
+  // The same test is what keeps this out of the way of a drag — zag moves its grips off
+  // document listeners, but the pointer is still over this control while it does.
+  const onHoverMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.buttons !== 0) return;
+    const at = pointerAt(event.currentTarget, event.clientX);
+    // Written as the guard rather than as a flag, so `at` is an instant below — the same
+    // test the press above uses (see insideCrop).
+    if (!insideCrop(at)) {
+      setHovering(false);
+      // Cheap when it is already gone: React drops a setState to the value it holds, and
+      // the page drops a selection equal to the one it holds (see the route's onCommit), so
+      // a pointer idling on the dim ground commits nothing and renders nothing.
+      return onceNow(withPlayheadAt(null));
+    }
+    setHovering(true);
+    onFrame(withPlayheadAt(at));
+  };
+
+  // The pointer has gone, and the playhead goes with it: it marks where a hand is
+  // pointing, so there is nothing for it to stand on once nothing is. The instant is not
+  // kept anywhere — the next hover names a new one — which is what makes "no readings"
+  // the page's resting state rather than a stale number from the last time it was touched.
+  //
+  // A button still down is not the end of anything: it is zag dragging a grip off the edge
+  // of the strip, which is most edge drags. Clearing then would take the playhead's thumb
+  // out of the slider mid-drag and renumber the two that are left, moving the wrong end.
+  const onControlPointerLeave = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.buttons !== 0) return;
+    setHovering(false);
+    onceNow(withPlayheadAt(null));
+  };
+
   const onControlPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (!ownScrub(event)) return;
+    if (!ownScrub(event)) return onHoverMove(event);
     // Nothing is holding the playhead any more: a release we never saw, because the
     // browser took the capture away mid-gesture. End where it stands rather than
     // following an empty pointer — and clear the gate, or no later drag can start.
@@ -336,11 +411,10 @@ export function ProjectTimeline({
     if (ownScrub(event)) endScrub();
   };
 
-  // Read the same way the row charts' tooltip reads it, off the same rule and the same
-  // span — the crop, which is what those charts are showing. A hover writes both at
-  // once, and one of them saying 22:15 while the other says 09.08. 22:15 would read as
-  // two different instants.
-  const labelFormat = instantLabel(false, selection.end - selection.start);
+  // Read the same way the row charts' tooltip reads it, off the same rule. A hover
+  // writes both at once, and one of them saying 22:15 while the other says
+  // Sa 09.08. 22:15 would read as two different instants.
+  const labelFormat = instantLabel(false);
 
   return (
     <ChakraSlider.Root
@@ -378,12 +452,19 @@ export function ProjectTimeline({
       // range is laid out in too. See the note above the constants for what rests
       // on that.
       thumbAlignment="center"
-      aria-label={['Start', 'Moment', 'End']}
+      // One label per thumb, so the list is as long as the thumbs are — the middle one is
+      // there only while something is pointing at the event, and a fixed triple would call
+      // the end grip "Moment" the rest of the time.
+      aria-label={hasPlayhead ? ['Start', 'Moment', 'End'] : ['Start', 'End']}
     >
       <ChakraSlider.Control
         height={`${STRIP_H}px`}
         onPointerDownCapture={onControlPointerDownCapture}
         onPointerMove={onControlPointerMove}
+        // Fires for a lifted finger too — the browser removes a touch pointer once it is
+        // up, and leaving is part of removing it — so a tap's playhead goes when the
+        // finger does, the same as a mouse's.
+        onPointerLeave={onControlPointerLeave}
         onPointerUp={onControlPointerUp}
         onPointerCancel={onControlPointerUp}
         // Fires on the ordinary release and whenever the browser takes the capture
@@ -434,16 +515,17 @@ export function ProjectTimeline({
             nothing to double up against. The crop's two accent edges are the band below, out
             where they can reach that rule — this is only the fill.
 
-            Hit-testable, and the one thing here that is: this is the lit part, and a press
-            on it is a press on the window. The cursor says so at every crop width, because
-            there is one thing such a press does — put the playhead where it landed. */}
+            Hit-testable, and the one thing here that is: this is the lit part, and pointing
+            at it is pointing at the window. The cursor says so at every crop width — the
+            same crosshair the row charts carry, because it is the same gesture reading the
+            same instant, and a mouse here need not press at all (see onHoverMove). */}
         <Box
           position="absolute"
           top={`${FRAME_W}px`}
           bottom={`${FRAME_W}px`}
           {...CROP_SPAN}
           bg="accent.solid/15"
-          cursor="pointer"
+          cursor="crosshair"
         />
 
         {/* The clock the strip is read against. Must stay between the track and the
@@ -492,17 +574,21 @@ export function ProjectTimeline({
         />
 
         {thumbs.map((value, i) => {
-          const playhead = i === 1;
+          const playhead = hasPlayhead && i === 1;
           const start = i === 0;
           return (
             <ChakraSlider.Thumb
               key={i}
               index={i}
-              // Set while a scrub off the strip is carrying this thumb, which only the
-              // playhead ever is — pressing the window is the one gesture here that
-              // moves a thumb the pointer is not on. zag flags the thumb it is
-              // dragging itself, but it has no part in that one.
-              data-moving={(playhead && scrubbing) || undefined}
+              // Set while a gesture off the strip is carrying this thumb, which only the
+              // playhead ever is — pressing or hovering the window are the two gestures
+              // here that move a thumb the pointer is not on. zag flags the thumb it is
+              // dragging itself, but it has no part in either.
+              //
+              // The hover needs saying as much as the scrub does: it snaps to the quarter
+              // hour, so the mark can stand up to half a step from the pointer and its own
+              // :hover would blink out as it went.
+              data-moving={(playhead && (scrubbing || hovering)) || undefined}
               css={READOUT_CSS}
               // Neutralize the default round knob; these are grips and a
               // playhead, drawn by the children below.
@@ -524,8 +610,14 @@ export function ProjectTimeline({
               display="flex"
               alignItems="center"
               justifyContent="center"
-              cursor={playhead ? 'grab' : 'ew-resize'}
-              _active={playhead ? {cursor: 'grabbing'} : undefined}
+              // The crop's own crosshair on the playhead, rather than the grab it used to
+              // carry: a hover now keeps the mark under the pointer, so its 11 px box is
+              // where the pointer usually is — and a cursor that changed there would flicker
+              // between the two the whole way across the strip, over a gesture that is one
+              // gesture. Dragging it still works; there is just no longer anything a mouse
+              // has to take hold of. The grips keep theirs — they stand outside the crop,
+              // where the hover doesn't reach.
+              cursor={playhead ? 'crosshair' : 'ew-resize'}
               // Before zag reads it: a discrete event's state update is flushed
               // before the browser dispatches the first move of the drag, and the
               // behaviour is consulted per move rather than once at the start.

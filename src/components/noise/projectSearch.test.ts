@@ -36,13 +36,13 @@ describe('validateProjectSearch', () => {
 describe('projectSearchSelection', () => {
   const search = {live: false, from, to} as const;
 
-  // A pinned link opened cold has no cursor to keep, and an untouched selection stands at
-  // its own right edge.
-  it('stands the playhead at the crop’s end with no page to keep', () => {
+  // A pinned link opened cold has no cursor to keep and does not invent one: a URL
+  // carries the window, and the playhead is where a pointer is.
+  it('arrives with no playhead when there is no page to keep one from', () => {
     expect(projectSearchSelection(search, null)).toEqual({
       start: from,
       end: to,
-      current: to,
+      current: null,
     });
   });
 

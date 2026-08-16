@@ -2,14 +2,12 @@ import {describe, expect, it} from 'vitest';
 import type uPlot from 'uplot';
 import {
   dayOf,
-  fmtDayHourMinute,
   fmtHourMinute,
-  fmtTime,
   gridStep,
   instantLabel,
   labelStride,
-  spanTimeFormat,
   timeGridStepS,
+  weekdayOf,
   zonedDate,
 } from './chartUtils';
 
@@ -31,18 +29,16 @@ describe('axis formatters', () => {
   const t = secs('2026-07-24T16:05:09Z'); // 18:05:09 Berlin
 
   it('render local time at their own precision', () => {
-    expect(fmtTime(t)).toBe('18:05:09');
     expect(fmtHourMinute(t)).toBe('18:05');
     expect(dayOf(zonedDate(t))).toBe('24.07.');
-    expect(fmtDayHourMinute(t)).toBe('24.07. 18:05');
+    expect(weekdayOf(zonedDate(t))).toBe('Fr');
   });
 
   it('zero-pad every field', () => {
     // 07:04:03 Berlin on the 3rd — every component is single-digit.
     const early = secs('2026-03-03T06:04:03Z');
-    expect(fmtTime(early)).toBe('07:04:03');
+    expect(fmtHourMinute(early)).toBe('07:04');
     expect(dayOf(zonedDate(early))).toBe('03.03.');
-    expect(fmtDayHourMinute(early)).toBe('03.03. 07:04');
   });
 
   it('follow the offset across a DST boundary', () => {
@@ -52,11 +48,12 @@ describe('axis formatters', () => {
   });
 
   it('cross midnight into the next local day', () => {
-    // 22:30 UTC is 00:30 the next day in Berlin.
-    expect(fmtDayHourMinute(secs('2026-07-24T22:30:00Z'))).toBe('25.07. 00:30');
-    // Which is the instant the timeline draws a day mark on, so its date has to turn
-    // over there too rather than two hours later.
-    expect(dayOf(zonedDate(secs('2026-07-24T22:00:00Z')))).toBe('25.07.');
+    // 22:00 UTC is midnight in Berlin, which is the instant the timeline draws a day
+    // mark on — so both the date and the weekday have to turn over there rather than
+    // two hours later.
+    const midnight = zonedDate(secs('2026-07-24T22:00:00Z'));
+    expect(dayOf(midnight)).toBe('25.07.');
+    expect(weekdayOf(midnight)).toBe('Sa');
   });
 });
 
@@ -150,44 +147,27 @@ describe('timeGridStepS', () => {
   });
 });
 
-// Which label a window that wide wants. The boundary is the whole point: at a day the
-// same clock time comes round again, so HH:MM stops being an answer.
-describe('spanTimeFormat', () => {
-  const HOUR = 60 * 60 * 1000;
-  const ts = Date.parse('2026-07-24T18:05:09Z') / 1000;
-
-  it('leaves the date off a window shorter than a day', () => {
-    expect(spanTimeFormat(6 * HOUR)(ts)).toBe('20:05');
-    expect(spanTimeFormat(23.99 * HOUR)(ts)).toBe('20:05');
-  });
-
-  it('carries the date from a day upwards', () => {
-    expect(spanTimeFormat(24 * HOUR)(ts)).toBe('24.07. 20:05');
-    expect(spanTimeFormat(4 * 24 * HOUR)(ts)).toBe('24.07. 20:05');
-  });
-});
-
 // The one formatter here that speaks milliseconds, because it is shared with a readout
 // that never had seconds to hand. Reading its argument in the wrong unit puts the label
 // in 1970 rather than making it look wrong, so the unit is pinned first.
 describe('instantLabel', () => {
-  const HOUR = 60 * 60 * 1000;
-  const ms = Date.parse('2026-07-24T18:05:09Z'); // 20:05:09 Berlin
+  const ms = Date.parse('2026-07-24T18:05:09Z'); // Friday, 20:05:09 Berlin
 
   it('takes milliseconds where the axis formatters take seconds', () => {
-    expect(instantLabel(false, 6 * HOUR)(ms)).toBe('20:05');
-    expect(instantLabel(false, 6 * HOUR)(ms)).toBe(
-      spanTimeFormat(6 * HOUR)(ms / 1000),
+    expect(instantLabel(false)(ms)).toBe('Fr 24.07. 20:05');
+    // Seconds would land in 1970 — a label that is wrong rather than one that looks it.
+    expect(instantLabel(false)(ms / 1000)).not.toContain('24.07.');
+  });
+
+  it('names the day whatever the window, that being the point', () => {
+    // No span to consult any more: a crop of one evening says which evening.
+    expect(instantLabel(false)(Date.parse('2026-07-25T22:30:00Z'))).toBe(
+      'So 26.07. 00:30',
     );
   });
 
-  it('reads to the second while live, that window being minutes wide', () => {
-    expect(instantLabel(true, 5 * 60 * 1000)(ms)).toBe('20:05:09');
-  });
-
-  it('otherwise carries the date exactly when the span does', () => {
-    expect(instantLabel(false, 23.99 * HOUR)(ms)).toBe('20:05');
-    expect(instantLabel(false, 24 * HOUR)(ms)).toBe('24.07. 20:05');
+  it('reads to the second while live, and still names the day', () => {
+    expect(instantLabel(true)(ms)).toBe('Fr 24.07. 20:05:09');
   });
 });
 

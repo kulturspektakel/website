@@ -56,13 +56,13 @@ describe('resolveProjectSelection', () => {
     end: Date.parse('2026-07-27T16:00:00Z'),
   };
 
-  it('defaults to the whole window with the cursor at its right edge', () => {
-    // Not the left edge: for a running festival the right one is now, so the first
-    // switch out of live mode freezes the moment you were watching.
+  it('defaults to the whole window with no cursor in it', () => {
+    // Not either edge: the playhead is where a pointer is pointing, and nothing is
+    // pointing at a page just arrived at.
     expect(resolveProjectSelection(null, window)).toEqual({
       start: window.start,
       end: window.end,
-      current: window.end,
+      current: null,
     });
   });
 
@@ -73,7 +73,7 @@ describe('resolveProjectSelection', () => {
     expect(resolveProjectSelection(null, later)).toEqual({
       start: later.start,
       end: later.end,
-      current: later.end,
+      current: null,
     });
   });
 
@@ -173,7 +173,7 @@ describe('commitProjectSelection', () => {
       previous,
       window,
     );
-    expect(new Date(next.current).toISOString()).toBe(
+    expect(new Date(next.current!).toISOString()).toBe(
       '2026-07-25T19:00:00.000Z',
     );
   });
@@ -365,6 +365,21 @@ describe('selectionThumbs / thumbsToSelection', () => {
       end,
     );
   });
+
+  // A playhead nobody is pointing at is null (see ProjectSelection), and then the strip
+  // is a plain two-handled crop even out of live mode — so index 1 is the end here too,
+  // and dragging an edge while nothing is hovered must not invent a cursor.
+  it('drops to two thumbs when there is no cursor, live or not', () => {
+    const idle = {...selection, current: null};
+    expect(selectionThumbs(idle, false)).toEqual([idle.start, idle.end]);
+
+    const end = Date.parse('2026-07-25T23:00:00Z');
+    expect(thumbsToSelection([idle.start, end], false, idle)).toEqual({
+      start: idle.start,
+      current: null,
+      end,
+    });
+  });
 });
 
 // What hovering a row chart commits. Unlike every gesture on the timeline itself it
@@ -391,6 +406,15 @@ describe('setSelectionCurrent', () => {
     expect(
       setSelectionCurrent(selection, Date.parse('2026-07-25T23:00:00Z')),
     ).toEqual({...selection, current: selection.end});
+  });
+
+  // What leaving a chart or the strip commits: the same call, with no instant. The crop
+  // is untouched, so letting the playhead go doesn't unpick the window it stood in.
+  it('takes the playhead away entirely when handed no instant', () => {
+    expect(setSelectionCurrent(selection, null)).toEqual({
+      ...selection,
+      current: null,
+    });
   });
 });
 

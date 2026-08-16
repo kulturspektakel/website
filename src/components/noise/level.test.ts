@@ -1,27 +1,28 @@
 import {describe, expect, it} from 'vitest';
 import {NoiseRecording} from '../../proto/noise';
 import {
-  LEVEL_METRICS,
   LIVE_LEVEL_WINDOW_MS,
   displayedLevel,
   formatDb,
   liveDb,
   loudestIndex,
   loudestLevel,
-  metricLabel,
-  metricOptions,
   rangeLabel,
-  primaryMetric,
-  supportedMetric,
-  supportedMetrics,
-  toggledMetrics,
+  primarySeries,
+  seriesLabel,
+  seriesOptions,
+  toggledSeries,
   weightingUnit,
   type DisplayedLevel,
-  type LevelMetric,
-  type PickedMetrics,
+  type PickedSeries,
 } from './level';
-import {type Weighting} from './noise';
-import {LIVE_SERIES} from './series';
+import {
+  LIVE_SERIES,
+  seriesByKey,
+  seriesKey,
+  SERIES_KEYS,
+  type SeriesKey,
+} from './series';
 
 const NOW = Date.parse('2026-07-25T20:00:00Z');
 
@@ -40,11 +41,10 @@ const state = (db: number, ageMs: number, laeq5m?: number) => ({
 const shows = (args: {
   live: boolean;
   now: number;
-  metric?: LevelMetric;
-  weighting?: Weighting;
+  series?: SeriesKey;
   state?: ReturnType<typeof state>;
   historyDb?: number | null;
-}) => displayedLevel({metric: 'eq_fast', weighting: 'A', ...args});
+}) => displayedLevel({series: 'eq_fast:A', ...args});
 
 describe('displayedLevel', () => {
   it('shows the latest MQTT record while live', () => {
@@ -57,7 +57,7 @@ describe('displayedLevel', () => {
   // The selected window is what live reads off the record, not just the 1 s value.
   it('reads the selected window off the live record', () => {
     const s = state(87.5, 1_000, 71.5);
-    expect(shows({live: true, now: NOW, metric: 'eq_5m', state: s})).toEqual({
+    expect(shows({live: true, now: NOW, series: 'eq_5m:A', state: s})).toEqual({
       kind: 'live',
       db: 71.5,
     });
@@ -70,7 +70,7 @@ describe('displayedLevel', () => {
       shows({
         live: true,
         now: NOW,
-        metric: 'eq_30m',
+        series: 'eq_30m:A',
         state: state(87.5, 1_000),
       }),
     ).toEqual({kind: 'none'});
@@ -135,8 +135,8 @@ describe('displayedLevel', () => {
   });
 });
 
-// Every combination the picker leaves enabled has to resolve, or seriesFor's
-// assertion is a crash waiting for someone to switch weighting.
+// Every row the picker offers has to resolve, or seriesByKey's assertion is a crash
+// waiting for someone to tick a box.
 describe('liveDb', () => {
   const record = {
     laeq: encoded(80),
@@ -150,156 +150,122 @@ describe('liveDb', () => {
     lcpeak: encoded(105),
   } as NoiseRecording;
 
-  it('resolves every enabled option under both weightings', () => {
-    for (const metric of LEVEL_METRICS) {
-      for (const weighting of ['A', 'C'] as const) {
-        if (supportedMetric(metric, weighting) !== metric) continue;
-        expect(liveDb(record, metric, weighting)).toBeTypeOf('number');
-      }
+  it('resolves every series the picker offers', () => {
+    for (const key of SERIES_KEYS) {
+      expect(liveDb(record, key)).toBeTypeOf('number');
     }
   });
 
-  it('reads the weighting the caller asked for', () => {
-    expect(liveDb(record, 'eq_fast', 'A')).toBe(80);
-    expect(liveDb(record, 'eq_fast', 'C')).toBe(85);
-    expect(liveDb(record, 'eq_30m', 'C')).toBe(65);
-    expect(liveDb(record, 'fmax', 'A')).toBe(90);
-    expect(liveDb(record, 'peak', 'C')).toBe(105);
+  it('reads the weighting named in the key', () => {
+    expect(liveDb(record, 'eq_fast:A')).toBe(80);
+    expect(liveDb(record, 'eq_fast:C')).toBe(85);
+    expect(liveDb(record, 'eq_30m:C')).toBe(65);
+    expect(liveDb(record, 'fmax:A')).toBe(90);
+    expect(liveDb(record, 'peak:C')).toBe(105);
   });
 });
 
-// What a card's tiles print under the number, where the picker's labels leave the weighting
-// to the other dropdown and these have to carry it (see LocationReadings).
-describe('metricLabel', () => {
+// What a card's tiles print under the number, and what the picker's own rows read — the one
+// spelling of a series, and the only thing distinguishing a kind's two weightings anywhere
+// they are drawn (they share a colour).
+describe('seriesLabel', () => {
   // Derived from the series table rather than spelled again, and this is what says so: a
   // rename in the legend has to land on the cards too, or the same quantity is called two
   // things on one page.
   it('is the chart legend’s own spelling, live', () => {
     for (const series of LIVE_SERIES) {
-      expect(metricLabel(series.kind, series.weighting, true)).toBe(
+      expect(seriesLabel(seriesKey(series.kind, series.weighting), true)).toBe(
         series.label,
       );
     }
   });
 
-  // The one name that depends on the mode, for the same reason metricOptions' does.
+  // The one name that depends on the mode, for the same reason seriesOptions' does.
   it('names the finest window as a stored minute', () => {
-    expect(metricLabel('eq_fast', 'A', false)).toBe('LAeq,1m');
-    expect(metricLabel('eq_fast', 'C', false)).toBe('LCeq,1m');
+    expect(seriesLabel('eq_fast:A', false)).toBe('LAeq,1m');
+    expect(seriesLabel('eq_fast:C', false)).toBe('LCeq,1m');
     // And leaves every other name alone, mode or no mode.
-    expect(metricLabel('fmax', 'A', false)).toBe('LAFmax');
-    expect(metricLabel('peak', 'C', false)).toBe('LCpeak');
+    expect(seriesLabel('fmax:A', false)).toBe('LAFmax');
+    expect(seriesLabel('peak:C', false)).toBe('LCpeak');
   });
 
-  it('names the timeframe where a window would be', () => {
+  // The crop's Leq names the timeframe where a window would be — and carries a weighting
+  // like everything else, because it is an energetic mean over one weighting's minute
+  // column. Which one follows the primary, so the menu row and the card tile are renamed
+  // together by whatever is ticked above them.
+  it('names the timeframe where a window would be, weighted', () => {
     expect(rangeLabel('A')).toBe('LAeq,Range');
+    expect(rangeLabel('C')).toBe('LCeq,Range');
+    expect(
+      rangeLabel(seriesByKey(primarySeries(['fmax:C', 'peak:C'])).weighting),
+    ).toBe('LCeq,Range');
   });
 });
 
-describe('metricOptions', () => {
-  // The one option whose label depends on the mode: a live record is per-second, a
-  // stored row is per-minute, and the user picked "as fine as it gets" either way.
-  it('labels the finest window for the mode', () => {
-    expect(metricOptions(true, 'A')[0]?.label).toBe('Leq,1s');
-    expect(metricOptions(false, 'A')[0]?.label).toBe('Leq,1m');
-  });
-
-  // The mode never disables anything: the Leq over the timeframe, the one thing live
-  // had no answer for, is shown on the rows themselves and is not picked here.
-  it('offers every series in either mode', () => {
-    for (const live of [true, false]) {
-      expect(metricOptions(live, 'C').map((o) => o.label)).toEqual([
-        live ? 'Leq,1s' : 'Leq,1m',
-        'Leq,5m',
-        'Leq,30m',
-        'Fmax',
-        'Peak',
-      ]);
-    }
-  });
-
-  // The weighting does: a peak is C-weighted by definition, so under dB(A) it is
-  // offered and greyed out rather than quietly missing.
-  it('disables what the weighting has no series for', () => {
-    const disabled = (weighting: Weighting) =>
-      metricOptions(false, weighting)
-        .filter((o) => o.disabled)
-        .map((o) => o.value);
-    expect(disabled('A')).toEqual(['peak']);
-    expect(disabled('C')).toEqual([]);
-  });
-});
-
-describe('supportedMetric', () => {
-  it('keeps a pick the weighting can answer', () => {
-    expect(supportedMetric('eq_5m', 'A')).toBe('eq_5m');
-    expect(supportedMetric('peak', 'C')).toBe('peak');
-  });
-
-  // Peaks are maxima, so dB(A)'s answer to them is LAFmax — not the page default.
-  it('falls back to the nearest kin when it cannot', () => {
-    expect(supportedMetric('peak', 'A')).toBe('fmax');
-  });
-});
-
-// The picked set, and the two rules that keep it usable: it is in LEVEL_METRICS order
-// whatever order it was pressed in, and it is never empty. Both helpers hand back the very
-// array they were given where nothing changed — a fresh one would be a new context value for
-// every card on the project page and a rebuilt uPlot behind each of them, so the identity is
-// part of the contract rather than an implementation detail.
-describe('toggledMetrics', () => {
-  it('adds in the table’s order, not the order pressed', () => {
-    expect(toggledMetrics(['eq_30m'], 'eq_fast')).toEqual([
-      'eq_fast',
-      'eq_30m',
+describe('seriesOptions', () => {
+  // Two blocks headed by their unit, A first, and every series there is — nine rows, not a
+  // weighting's five, because the weighting is part of what is picked now rather than a mode
+  // beside the picking. Nothing is disabled: the pair that doesn't exist (LApeak) is simply
+  // not a row.
+  it('is every series, in two blocks headed by their unit', () => {
+    expect(
+      seriesOptions(false).map(({unit, options}) => [
+        unit,
+        options.map((o) => o.label),
+      ]),
+    ).toEqual([
+      ['dB(A)', ['LAeq,1m', 'LAeq,5m', 'LAeq,30m', 'LAFmax']],
+      ['dB(C)', ['LCeq,1m', 'LCeq,5m', 'LCeq,30m', 'LCFmax', 'LCpeak']],
     ]);
-    expect(toggledMetrics(['eq_fast', 'fmax'], 'eq_5m')).toEqual([
-      'eq_fast',
-      'eq_5m',
-      'fmax',
+  });
+
+  // The one label that depends on the mode: a live record is per-second, a stored row is
+  // per-minute, and the user picked "as fine as it gets" either way.
+  it('labels the finest window for the mode', () => {
+    expect(seriesOptions(true)[0]?.options[0]?.label).toBe('LAeq,1s');
+    expect(seriesOptions(false)[0]?.options[0]?.label).toBe('LAeq,1m');
+  });
+});
+
+// The picked set, and the two rules that keep it usable: it is in SERIES_KEYS order whatever
+// order it was pressed in, and it is never empty. The refusal hands back the very array it
+// was given — a fresh one would be a new context value for every card on the project page
+// and a rebuilt uPlot behind each of them, so the identity is part of the contract rather
+// than an implementation detail.
+describe('toggledSeries', () => {
+  it('adds in the table\u2019s order, not the order pressed', () => {
+    expect(toggledSeries(['eq_30m:A'], 'eq_fast:A')).toEqual([
+      'eq_fast:A',
+      'eq_30m:A',
+    ]);
+    // And the table's order puts every A-weighted row above every C-weighted one, which is
+    // what makes the primary of a mixed pick the A-weighted one.
+    expect(toggledSeries(['eq_fast:C'], 'fmax:A')).toEqual([
+      'fmax:A',
+      'eq_fast:C',
     ]);
   });
 
   it('removes one that was already picked', () => {
-    expect(toggledMetrics(['eq_fast', 'eq_5m', 'fmax'], 'eq_5m')).toEqual([
-      'eq_fast',
-      'fmax',
-    ]);
+    expect(
+      toggledSeries(['eq_fast:A', 'eq_5m:A', 'eq_5m:C'], 'eq_5m:A'),
+    ).toEqual(['eq_fast:A', 'eq_5m:C']);
   });
 
   // A chart of nothing is not a state the page has anything to say in.
   it('refuses to remove the last, and says so by identity', () => {
-    const only: PickedMetrics = ['eq_5m'];
-    expect(toggledMetrics(only, 'eq_5m')).toBe(only);
+    const only: PickedSeries = ['eq_5m:A'];
+    expect(toggledSeries(only, 'eq_5m:A')).toBe(only);
   });
 });
 
-describe('supportedMetrics', () => {
-  it('is untouched, and the same array, where the weighting answers all of it', () => {
-    const picked: PickedMetrics = ['eq_fast', 'fmax'];
-    expect(supportedMetrics(picked, 'A')).toBe(picked);
-    expect(supportedMetrics(picked, 'C')).toBe(picked);
-  });
-
-  // The one pair that doesn't exist. What was asked for besides it is still drawable, so
-  // that is what is kept — nothing falls back.
-  it('drops what the weighting has no series for', () => {
-    expect(supportedMetrics(['eq_fast', 'peak'], 'A')).toEqual(['eq_fast']);
-  });
-
-  // Only when dropping would leave nothing does the nearest kin stand in — the
-  // single-metric rule, reached through the same function.
-  it('falls back to the nearest kin rather than emptying the set', () => {
-    expect(supportedMetrics(['peak'], 'A')).toEqual(['fmax']);
-  });
-});
-
-describe('primaryMetric', () => {
-  // LEVEL_METRICS is finest-first, so the primary is the finest thing picked: adding a
-  // coarser line leaves every number on the page where it was.
-  it('is the first of the set', () => {
-    expect(primaryMetric(['eq_5m', 'fmax'])).toBe('eq_5m');
-    expect(primaryMetric(['fmax'])).toBe('fmax');
+describe('primarySeries', () => {
+  // The table is A-block-first and finest-first within each, so the primary of a pick is
+  // the finest A-weighted thing in it — and only a pick with no A-weighted row at all reads
+  // in dB(C). Which is what decides the map pin and the weighting of the crop's Leq.
+  it('is the first of the set in table order', () => {
+    expect(primarySeries(['eq_5m:A', 'fmax:C'])).toBe('eq_5m:A');
+    expect(primarySeries(['fmax:C', 'peak:C'])).toBe('fmax:C');
   });
 });
 

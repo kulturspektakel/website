@@ -390,6 +390,7 @@ model NoiseLocation {
   locationName            String
   NoiseProject            NoiseProject              @relation(fields: [projectId], references: [id])
   NoiseLocationAssignment NoiseLocationAssignment[]
+  NoiseLocationLimit      NoiseLocationLimit[]
 }
 
 // Assigns a noise monitor to a `NoiseLocation` for a timeframe. Multiple
@@ -414,6 +415,40 @@ model NoiseLocationAssignment {
   Device        Device        @relation(fields: [deviceId], references: [id])
 
   @@index([deviceId, start])
+  @@index([locationId, start])
+}
+
+// How loud a `NoiseLocation` is permitted to be over a timeframe — the number a
+// permit is written with, which until now lived only in the permit. Entered by crew
+// and drawn as a dashed rule over the place's own trace, and over the trace of
+// whichever monitor is standing there.
+//
+// Both bounds are nullable and mean exactly what they mean on
+// NoiseLocationAssignment above: a null `start` is the project's start and a null
+// `end` its end, so a limit that holds for the whole event is two blank fields — and
+// stays that way if the event's dates move.
+//
+// Limits may overlap, deliberately. Which of two applies is for the reader to decide,
+// and the record has to be able to say something odd while it is half corrected.
+model NoiseLocationLimit {
+  id         String    @id @default(cuid())
+  locationId String
+  // Which series the figure is written against — a `SeriesKey`, e.g. `eq_fast:A` or
+  // `peak:C`. Text and not an enum: the name is `${kind}:${weighting}`, which a Postgres
+  // enum cannot spell, and the nine of them are a table in code (see series.ts) rather
+  // than a fact about the database. Both the writer and the reader narrow it through
+  // isSeriesKey, so nothing downstream has to cope with a name that is not a row.
+  //
+  // Required, because a bare dB figure is not comparable with anything: an LAeq over a
+  // minute and an LCpeak are different measurements of the same evening, and a limit that
+  // did not say which could be read against either.
+  series     String
+  decibels   Float
+  start      DateTime?
+  end        DateTime?
+
+  NoiseLocation NoiseLocation @relation(fields: [locationId], references: [id])
+
   @@index([locationId, start])
 }
 

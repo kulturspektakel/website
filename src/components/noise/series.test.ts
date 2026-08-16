@@ -2,11 +2,15 @@ import {describe, expect, it} from 'vitest';
 import {
   LIVE_SERIES,
   SERIES,
+  SERIES_KEYS,
   alignedBuffers,
   alignedSeries,
+  bufferColumn,
   emptyBuffer,
   loudestColumn,
   maskToWindows,
+  seriesByKey,
+  seriesKey,
   traceColumn,
   traceData,
   type SeriesKind,
@@ -39,6 +43,22 @@ describe('SERIES', () => {
     expect(new Set(seen).size).toBe(SERIES.length);
   });
 
+  // The names the pages pick by, and the two things they have to promise: that a key names
+  // exactly the row it was built from — seriesByKey asserts totality, so a key that missed
+  // would be a crash the moment someone ticked it — and that a key's buffer column is the
+  // row's own position, the +1 convention emptyBuffer lays down. Both are read on every
+  // frame of a live chart, and neither is anything the type system can see.
+  it('names every row, and names it back to its own buffer column', () => {
+    expect(SERIES_KEYS).toHaveLength(SERIES.length);
+    expect(new Set(SERIES_KEYS).size).toBe(SERIES.length);
+    SERIES.forEach((s, i) => {
+      const key = seriesKey(s.kind, s.weighting);
+      expect(SERIES_KEYS[i]).toBe(key);
+      expect(seriesByKey(key)).toBe(s);
+      expect(bufferColumn(key)).toBe(i + 1);
+    });
+  });
+
   // One list, four uses: the picker's rows, the device page's tiles, the chart's column
   // blocks, and — being finest-first — which of a picked set the numbers are read in. All
   // four are this order, so a kind added here without being added there would be a series
@@ -47,13 +67,14 @@ describe('SERIES', () => {
     expect([...new Set(SERIES.map((s) => s.kind))]).toEqual([...LEVEL_METRICS]);
   });
 
-  // A window is picked by kind alone, so the A and C entries of one kind must agree on
-  // everything the chart reads from them: picking LAFmax and switching weighting has to
-  // land on a line of the same colour, not a different-looking measurement.
+  // A kind's two weightings are one measurement under a different filter, so they are one
+  // colour: what a shade says on a chart is which quantity, and the name beside it says
+  // which filter. Since both can now be drawn at once, this is also what makes the labels
+  // load-bearing — two lines of one shade are told apart by the tooltip, not the ink.
   //
-  // The colour is derived from the kind now, so this holds by construction rather than
-  // by two rows being kept in step. Kept as the guard against someone reintroducing a
-  // per-row value — which is how the two used to be able to drift.
+  // The colour is derived from the kind, so this holds by construction rather than by two
+  // rows being kept in step. Kept as the guard against someone reintroducing a per-row
+  // value — which is how the two used to be able to drift.
   it('gives both weightings of a kind the same colour', () => {
     for (const kind of new Set(SERIES.map((s) => s.kind))) {
       const [a, c] = SERIES.filter((s) => s.kind === kind);

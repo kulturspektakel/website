@@ -5,12 +5,14 @@ import {
   MenuContent,
   MenuItem,
   MenuRoot,
+  MenuSeparator,
   MenuTrigger,
 } from '../chakra-snippets/menu';
 import {LocationReadings} from './LocationReadings';
 import {DeviceBadges} from './DeviceBadge';
 import {LocationChart} from './LocationChart';
 import {LocationAssignmentsDialog} from './LocationAssignmentsDialog';
+import {LocationLimitsDialog} from './LocationLimitsDialog';
 import {
   locationLines,
   usePlayheadLevels,
@@ -52,14 +54,28 @@ import {
 export const LocationCard = memo(function LocationCard({
   location,
   assignments,
+  onHide,
+  hideable,
 }: {
   location: NoiseLocationItem;
   // The monitors standing here at the instant being viewed, resolved by the layout for
   // the whole page. Only the numbers use them: the names and the chart are the place's
   // whole history, and are not allowed to come and go as the pointer travels.
   assignments: NoiseAssignment[];
+  // Takes this card off the list — the same decision the roster in the toolbar makes, and
+  // the same stored arrangement (see locationSelection.ts). Handed down as the toggle
+  // itself rather than as a closure over this location's id: the list view re-renders on
+  // every frame of a crop drag, and a fresh function per card would cost this card's memo
+  // exactly the re-render it exists to avoid.
+  onHide: (locationId: string) => void;
+  // Whether taking it off is a thing that can happen — false for the last card, which the
+  // list keeps (see toggledSelection).
+  hideable: boolean;
 }) {
-  const [editing, setEditing] = useState(false);
+  // One nullable pick rather than a boolean each, so the two editors of this location
+  // cannot be open over one another — and so the next thing behind the ⋮ is a name in
+  // this union rather than a third piece of state.
+  const [dialog, setDialog] = useState<'devices' | 'limits' | null>(null);
 
   // Every monitor this location has ever had, once each and in the order it first had
   // them. Grouped once here and handed to both the names and the chart, so the two are
@@ -67,10 +83,11 @@ export const LocationCard = memo(function LocationCard({
   const lines = locationLines(location.assignments);
 
   return (
-    // A card is either on the list or not on it at all — which of them are is picked in
-    // the toolbar at the foot of the view (see LocationPicker), not by folding them one
-    // at a time. So there is no disclosure here any more: a card that is here is open,
-    // and a chart nobody wants is one that was never mounted.
+    // A card is either on the list or not on it at all, never folded shut: there is no
+    // disclosure here, a card that is here is open, and a chart nobody wants is one that
+    // was never mounted. Which of them are on the list is the roster in the toolbar at the
+    // foot of the view (see LocationPicker), and — for the one in front of you — the ⋮
+    // below, which is that same decision reached from the other end.
     <Box
       display="flex"
       flexDirection="column"
@@ -115,9 +132,9 @@ export const LocationCard = memo(function LocationCard({
             you came to the card to assign one to, and a labelled button that appeared
             only there would move the whole right-hand side of the row the moment it
             got one.
-            A menu even at one entry — everything else this card will grow (renaming
-            the place, moving its pin, deleting it) belongs behind the same ⋮, and a
-            button that opened a dialog directly would have to become one anyway. */}
+            Everything else this card will grow (renaming the place, moving its pin,
+            deleting it) belongs behind the same ⋮ — as does taking this card off the
+            list, which is the one item there that isn't about the location at all. */}
         <MenuRoot>
           <MenuTrigger asChild>
             <IconButton
@@ -131,16 +148,45 @@ export const LocationCard = memo(function LocationCard({
             </IconButton>
           </MenuTrigger>
           <MenuContent>
-            <MenuItem value="devices" onClick={() => setEditing(true)}>
+            <MenuItem value="devices" onClick={() => setDialog('devices')}>
               Manage devices
+            </MenuItem>
+            {/* What this place is permitted, which the chart below draws as a rule per
+                limit over the hours it covers. Only the timing and the number are edited
+                here — a limit is read off the trace it is a limit on, not off a list. */}
+            <MenuItem value="limits" onClick={() => setDialog('limits')}>
+              Manage limits
+            </MenuItem>
+            {/* Ruled off and last: the two above edit the place, this one only dismisses
+                the card. Nothing is deleted and nobody else's page changes — it is the
+                roster's untick, reached from the card instead of from a dozen rows at
+                the foot of the page, and the roster is where it is undone.
+                Greyed out on the last card rather than quietly doing nothing, which is
+                where this parts company with the roster: there, a dead row among many
+                would read as "unavailable" when the truth is the opposite, so the tick
+                stays live and is ignored (see toggledSelection). Here the menu is this
+                card's and the hide is the only one in it — a press that visibly did
+                nothing would just be a broken button. */}
+            <MenuSeparator />
+            <MenuItem
+              value="hide"
+              disabled={!hideable}
+              onClick={() => onHide(location.id)}
+            >
+              Hide
             </MenuItem>
           </MenuContent>
         </MenuRoot>
       </HStack>
 
       <LocationAssignmentsDialog
-        open={editing}
-        onClose={() => setEditing(false)}
+        open={dialog === 'devices'}
+        onClose={() => setDialog(null)}
+        location={location}
+      />
+      <LocationLimitsDialog
+        open={dialog === 'limits'}
+        onClose={() => setDialog(null)}
         location={location}
       />
 
@@ -149,7 +195,10 @@ export const LocationCard = memo(function LocationCard({
           location, because it is a chart of the place rather than of its monitors. */}
       {/* The card's one growing part, so the height it was given lands on the chart
           rather than as a gap under it. */}
-      <LocationChart lines={lines} />
+      {/* The place's whole permit, not the limits in force at the playhead: the chart
+          spans the crop, so a limit that lapsed at midnight belongs on a crop that covers
+          midnight — the same reason `lines` is the whole assignment history. */}
+      <LocationChart lines={lines} limits={location.limits} />
     </Box>
   );
 });
@@ -177,7 +226,7 @@ function LocationLevels({
   // no monitor *now* and still has a crop Leq to show.
   empty: boolean;
 }) {
-  const {live, metrics, weighting, locationTotals} = useProjectView();
+  const {live, picked, locationTotals} = useProjectView();
   const levels = usePlayheadLevels();
   if (empty) return null;
 
@@ -190,8 +239,7 @@ function LocationLevels({
       total={locationTotals?.[locationId]}
       levels={levels}
       live={live}
-      metrics={metrics}
-      weighting={weighting}
+      picked={picked}
     />
   );
 }

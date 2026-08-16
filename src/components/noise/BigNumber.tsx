@@ -1,7 +1,7 @@
-import {SimpleGrid, Text, chakra} from '@chakra-ui/react';
+import {SimpleGrid, Stack, Text, chakra} from '@chakra-ui/react';
 import {formatDb} from './level';
-import {type Weighting} from './noise';
-import {type ChartSeries, type SeriesKind} from './series';
+import {WEIGHTINGS} from './noise';
+import {seriesKey, type ChartSeries, type SeriesKey} from './series';
 
 const tileBase = {
   display: 'flex',
@@ -72,50 +72,71 @@ function BigNumber({
   );
 }
 
-// The big-number row above the chart, which doubles as its legend: what every window of
-// the current weighting is reading right now, with the drawn ones lit and pressing one
-// being how that is chosen (see LiveView).
+// The big-number rows above the chart, which double as its legend: what every series is
+// reading right now, with the drawn ones lit and pressing one being how that is chosen
+// (see LiveView).
 //
-// A set again, as it was when the chart plotted nine lines at once — but bounded to the
-// five windows of a weighting, each with a colour of its own, so which line is which is
-// answered by the colour rather than by hovering. The tiles are the legend that makes that
-// work, and they are the other entrance to the same choice the toolbar's menu sets.
+// All nine, since the weighting stopped being a mode of the page: what used to be one row
+// of five under a dB(A)/dB(C) switch is now a row per weighting, stacked. Nine tiles across
+// one grid would be too narrow to read a number off, and the split is the same one the
+// toolbar's menu makes — so a tile and the row it is in stand exactly where the menu's row
+// and its heading do.
+//
+// The two rows are what the weighting is said by. A kind's two weightings share a colour by
+// design, so LAFmax and LCFmax are the same red one above the other: the label under each
+// names it in full, and the row it is in is the block it belongs to.
 //
 // The numbers do not follow the chart's cursor, though they once did: the trace under this
 // reports a hovered sample itself now (see LevelTrace's tooltip), so these are the latest
-// reading and nothing else — every window's, whatever is lit.
+// reading and nothing else — every series', whatever is lit.
 export function BigNumberRow({
   series,
-  weighting,
   picked,
   onPick,
   value,
 }: {
   series: ReadonlyArray<ChartSeries>;
-  weighting: Weighting;
-  // The windows the chart is plotting, which are the tiles that stay lit.
-  picked: readonly SeriesKind[];
+  // The series the chart is plotting, which are the tiles that stay lit.
+  picked: readonly SeriesKey[];
   // Adds or drops one. The last lit tile cannot be turned off — which the caller enforces,
   // as clicking a checked radio does nothing rather than being refused here.
-  onPick: (kind: SeriesKind) => void;
+  onPick: (key: SeriesKey) => void;
   // What to print for a series — null where the device has not reported it yet, which
   // the 5m and 30m windows do until their buffers fill.
   value: (s: ChartSeries) => number | null;
 }) {
-  const items = series.filter((s) => s.weighting === weighting);
+  // One row per weighting, each in the table's order — which within a weighting is
+  // finest-first, the same order the menu lists them in and the chart lays its columns
+  // out in.
+  const rows = WEIGHTINGS.map((weighting) => ({
+    weighting,
+    items: series.filter((s) => s.weighting === weighting),
+  }));
+  // Both rows on the wider one's grid — five, dB(A) having no peak — so a kind sits in the
+  // same column in both and the two readings of one quantity are read down the page rather
+  // than hunted for. The A row simply ends one tile short, which is what "there is no
+  // LApeak" looks like.
+  const columns = Math.max(...rows.map((r) => r.items.length));
 
   return (
-    <SimpleGrid columns={items.length || 1} gap="3" mb="3">
-      {items.map((s) => (
-        <BigNumber
-          key={s.label}
-          value={value(s)}
-          label={s.label}
-          color={s.color}
-          enabled={picked.includes(s.kind)}
-          onClick={() => onPick(s.kind)}
-        />
+    <Stack gap="3" mb="3">
+      {rows.map(({weighting, items}) => (
+        <SimpleGrid key={weighting} columns={columns} gap="3">
+          {items.map((s) => {
+            const key = seriesKey(s.kind, s.weighting);
+            return (
+              <BigNumber
+                key={key}
+                value={value(s)}
+                label={s.label}
+                color={s.color}
+                enabled={picked.includes(key)}
+                onClick={() => onPick(key)}
+              />
+            );
+          })}
+        </SimpleGrid>
       ))}
-    </SimpleGrid>
+    </Stack>
   );
 }

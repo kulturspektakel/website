@@ -4,7 +4,7 @@ import {
   retainSearchParams,
   useChildMatches,
 } from '@tanstack/react-router';
-import {Box, Spinner, Text} from '@chakra-ui/react';
+import {Box, Text} from '@chakra-ui/react';
 import {useQuery, useQueryClient} from '@tanstack/react-query';
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {loadNoiseProject} from './crew.noise';
@@ -126,19 +126,12 @@ function NoiseProjectDetail() {
   // commits per animation frame, which is more often than an address bar can be written
   // (see the sync below). The URL is the record of it, not the source.
   //
-  // One pick, two halves: `metrics` is every window the charts draw, `metric` the primary
-  // the numbers are read in (see primaryMetric). Both travel through the context, because
-  // the map and the list must not answer either of them differently. Neither is in the
-  // URL: they are how you read a chart, not what you are looking at.
-  const {
-    weighting,
-    setWeighting,
-    metrics,
-    metric,
-    toggleMetric,
-    rangeLeq,
-    toggleRangeLeq,
-  } = useLevelPick();
+  // `picked` is every series the charts draw — weighting included, there being no page-wide
+  // weighting any more. It travels through the context, because the map and the list must
+  // not answer it differently, and the single-number readouts take their one series off it
+  // where they need one (see primarySeries). Not in the URL: it is how you read a chart, not
+  // what you are looking at.
+  const {picked, toggleSeries, rangeLeq, toggleRangeLeq} = useLevelPick();
   // What the user has picked of the timeline, or null while they have picked nothing —
   // see resolveProjectSelection for why that null carries weight. The crop comes from the
   // URL on the first render rather than from an effect after it, so a pinned link's own
@@ -352,8 +345,12 @@ function NoiseProjectDetail() {
   // the live edge any further. An unchanged instant keeps whatever was there before —
   // that's most frames of a slow hover, and it also means merely passing the pointer
   // over the playhead where it already stands doesn't pin an untouched timeline.
+  //
+  // Which is what makes the null — the pointer leaving — free on a page nobody has
+  // touched yet: there was no playhead to take away, so the equality below keeps the
+  // untouched pick and the crop goes on following the live edge.
   const scrubTo = useCallback(
-    (at: number) => {
+    (at: number | null) => {
       setChosen((prev) => {
         const from = selectionRef.current;
         const next = setSelectionCurrent(from, at);
@@ -385,8 +382,7 @@ function NoiseProjectDetail() {
   const {levels, locationTotals, traces, gaps, isFetching} = useProjectLogs({
     projectId,
     live,
-    metrics,
-    weighting,
+    picked,
     selection,
     // The raw locations with their whole assignment history, not the playhead-resolved
     // `locations` below: the crop Leq is summed over every minute a monitor stood at a
@@ -425,9 +421,7 @@ function NoiseProjectDetail() {
     () => ({
       project,
       live,
-      metrics,
-      metric,
-      weighting,
+      picked,
       range,
       bounds,
       locations,
@@ -443,9 +437,7 @@ function NoiseProjectDetail() {
     [
       project,
       live,
-      metrics,
-      metric,
-      weighting,
+      picked,
       range,
       bounds,
       locations,
@@ -478,11 +470,19 @@ function NoiseProjectDetail() {
               fill), and as tall as the list when there is more. */}
           <Box display="flex" flexDirection="column" flex="1 0 auto">
             <NoiseToolbar
-              title={<ToolbarTitle>{project.name}</ToolbarTitle>}
+              // Both gone at phone width: the controls beside them need every pixel of
+              // the strip, and neither line tells you anything you don't know — you
+              // arrived here by picking this festival by name a moment ago. The back
+              // arrow stays, so the way out of the page you are on is still there.
+              title={
+                <Box hideBelow="sm" w="full" minW="0">
+                  <ToolbarTitle>{project.name}</ToolbarTitle>
+                </Box>
+              }
               // The project's dates: they say which festival this is, which is the same
               // thing its name does.
               sub={
-                <Text truncate w="full">
+                <Text truncate w="full" hideBelow="sm">
                   {formatProjectRange(project.start, project.end)}
                 </Text>
               }
@@ -516,28 +516,12 @@ function NoiseProjectDetail() {
                 )
               }
             >
-              <Switch
-                size="sm"
-                checked={live}
-                // The window survives the switch: every one of them exists in both
-                // modes (the finest simply gets finer), so there is nothing to reset.
-                onCheckedChange={(e) => setLive(e.checked)}
-                colorPalette="green"
-              >
-                <Text fontSize="sm">Live</Text>
-              </Switch>
-              {/* The one moment this page waits for anything: the project's whole
-                  history, on the first switch out of live. Nothing is torn down while
-                  it loads — the pins simply have no number yet. */}
-              {isFetching && <Spinner size="xs" color="fg.subtle" />}
               <LevelPicker
                 live={live}
-                weighting={weighting}
-                metrics={metrics}
+                picked={picked}
                 rangeLeq={rangeLeq}
                 rangeLeqShown={showRangeLeq}
-                onWeighting={setWeighting}
-                onToggleMetric={toggleMetric}
+                onToggleSeries={toggleSeries}
                 onToggleRangeLeq={toggleRangeLeq}
               />
               {mapAvailable && (
@@ -569,6 +553,39 @@ function NoiseProjectDetail() {
                   />
                 </NativeSelectRoot>
               )}
+              {/* Last, hard against the right edge: it decides what the whole page is
+                  doing, and the controls beside it only dress up what it lets through. */}
+              <Switch
+                size="sm"
+                checked={live}
+                // The one moment this page waits for anything: the project's whole
+                // history, on the first switch out of live. The switch goes dead for it
+                // rather than growing a spinner — a control that appears and disappears
+                // shoves everything else in the strip sideways while it loads, and this
+                // is the control being waited on anyway. Nothing else is torn down: the
+                // pins simply have no number yet.
+                disabled={isFetching}
+                _disabled={{cursor: 'progress'}}
+                // The window survives the switch: every one of them exists in both
+                // modes (the finest simply gets finer), so there is nothing to reset.
+                onCheckedChange={(e) => setLive(e.checked)}
+                colorPalette="green"
+                // Stacked, with the word under the switch rather than beside it: it is
+                // the widest control in the strip and the one that has to survive a
+                // phone, and a caption costs height the strip already has to spare.
+                flexDirection="column"
+                gap="0.5"
+              >
+                <Text
+                  fontSize="2xs"
+                  fontWeight="medium"
+                  letterSpacing="wide"
+                  color="fg"
+                  lineHeight="1"
+                >
+                  LIVE
+                </Text>
+              </Switch>
             </NoiseToolbar>
 
             {/* Everything the toolbars left over, edge to edge: the map fills it, and

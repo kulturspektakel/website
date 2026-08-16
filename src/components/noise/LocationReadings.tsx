@@ -7,18 +7,17 @@ import {Box, HStack, Text} from '@chakra-ui/react';
 import {HiMiniExclamationTriangle} from 'react-icons/hi2';
 import {Tooltip} from '../chakra-snippets/tooltip';
 import {useDeviceStates, useTick} from './context';
-import {type Weighting} from './noise';
 import {
   displayedLevel,
   formatDb,
-  LEVEL_METRICS,
   loudestLevel,
-  metricLabel,
+  primaryWeighting,
   rangeLabel,
+  seriesLabel,
   type DisplayedLevel,
-  type PickedMetrics,
+  type PickedSeries,
 } from './level';
-import {seriesFor} from './series';
+import {seriesByKey, SERIES} from './series';
 import {type ChartSeriesToken} from '../../theme-noise';
 import {coverageDetail} from './leq';
 import {type PlayheadLevels, type RangeTotals} from './projectLogs';
@@ -29,30 +28,37 @@ import {type NoiseAssignment} from './projectView';
 // this was once the same component as those, back when a location was one row per device
 // standing at it, and neither half speaks for a device any more.
 
-// How loud it is *here*: one reading per window the page is drawing, then what the whole
+// How loud it is *here*: one reading per series the page is drawing, then what the whole
 // crop averaged. Levels and nothing else — whether a monitor is still talking, and since when
 // if it isn't, belongs to that monitor's badge (see DeviceBadge).
 //
 // Every number is the location's rather than a monitor's, and they are two shapes of the
 // same rule, "the loudest of whatever is here":
 //
-//   the instant — for each picked window, the loudest of the monitors assigned at the
+//   the instant — for each picked series, the loudest of the monitors assigned at the
 //                 playhead, resolved the same way and by the same loudestLevel a map pin
 //                 uses, so the card and the pin for one place can no longer print
 //                 different numbers.
 //   the crop    — the energetic mean of that loudest, minute by minute, summed upstream
-//                 (see locationEnergyIndex). It is the average of the very area the
-//                 chart below fills, so the number and the picture agree by construction.
+//                 (see locationEnergyIndex), in the primary's weighting — one mean has room
+//                 for one. It is the average of the very area the chart below fills while
+//                 the primary is what that area is drawn from, so the number and the picture
+//                 agree in the ordinary case.
 //
-// One tile each, in the picker's order — which is the chart's order too (see
-// LEVEL_METRICS) — the value over the quantity's own name, `LAeq,5m` under 98.0. Naming it
-// is what a row of tagged figures could not do at that width: five of "87.5 dB(A) 5m" is
-// the unit said five times, and dropping the unit to fit left a run of numbers identified
-// only by their colour. Under a name the unit goes unsaid because the name implies it, and
-// the colour is left to do what it does on the chart — tie the number to its line.
+// One tile each, in the picker's order — which is the chart's order too (see SERIES) — the
+// value over the quantity's own name, `LAeq,5m` under 98.0. Naming it is what a row of
+// tagged figures could not do at that width: five of "87.5 dB(A) 5m" is the unit said five
+// times, and dropping the unit to fit left a run of numbers identified only by their colour.
+// Under a name the unit goes unsaid because the name implies it, and the colour is left to do
+// what it does on the chart — tie the number to its line.
 //
-// The loudest is taken per window rather than once: each of these is a self-contained
-// "loudest of whatever is here, in this window", the same question the pin asks, asked
+// The name is doing more work than it was: a kind's two weightings share a colour, so with
+// both picked the tiles for `LAeq,5m` and `LCeq,5m` are the same shade and it is the letter
+// in the middle that tells them apart. Which is the same thing that tells their two lines
+// apart on the chart, and why the tooltip there prints the name in full too.
+//
+// The loudest is taken per series rather than once: each of these is a self-contained
+// "loudest of whatever is here, in this series", the same question the pin asks, asked
 // once per line. Only a composite reading — a number and the coverage that qualifies it —
 // has to come off a single monitor (see loudestIndex).
 //
@@ -85,7 +91,7 @@ const INNER_RADIUS = `calc(var(--chakra-radii-${BADGE_RADIUS}) - 1px)`;
 const GRID_CAPS = {base: 2, sm: 3, lg: Infinity} as const;
 
 // The grid a row of `n` badges is laid out in, for every count this can print: the picked
-// windows, at most LEVEL_METRICS' worth, and the crop's mean after them.
+// series, at most the whole table's worth, and the crop's mean after them.
 //
 // A table rather than three template literals built where the Box is: this component
 // re-renders at least once a second from its own tick, and again on every animation frame
@@ -94,7 +100,7 @@ const GRID_CAPS = {base: 2, sm: 3, lg: Infinity} as const;
 // CHART_CSS are, one file over: Emotion resolves it once for the session rather than
 // hashing a fresh object per card per frame.
 const GRID_COLUMNS = Array.from(
-  {length: LEVEL_METRICS.length + 2},
+  {length: SERIES.length + 2},
   (_, n) =>
     ({
       base: `repeat(${Math.min(n, GRID_CAPS.base)}, 1fr)`,
@@ -108,8 +114,7 @@ export function LocationReadings({
   total,
   levels,
   live,
-  metrics,
-  weighting,
+  picked,
 }: {
   // The monitors standing here at the instant being viewed — which while live means the
   // ones standing here now. Not the location's whole history: that is what the names
@@ -121,17 +126,17 @@ export function LocationReadings({
   // absent when the menu's `Leq,Range` is unticked: the caller decides whether it is asked
   // for, and this prints whatever it is given.
   total?: RangeTotals;
-  // What the playhead's minute holds for each monitor, window by window, from the
+  // What the playhead's minute holds for each monitor, series by series, from the
   // project's logs. Undefined while live and while the one query behind it is in flight.
   levels?: PlayheadLevels;
   // Which numbers to show is decided by displayedLevel, shared with the map pins.
   live: boolean;
-  // Every window the page is showing — one number each, in that line's colour. The whole
-  // set and not just the primary: what the picker asks for is a comparison (the minute
-  // Leq against LAFmax, the 5m against the 30m), and the charts having drawn it while the
-  // header printed one of them made the numbers the odd half of the answer.
-  metrics: PickedMetrics;
-  weighting: Weighting;
+  // Every series the page is showing — one number each, in that line's colour. The whole
+  // set and not just the primary: what the picker asks for is a comparison (dB(A) against
+  // dB(C), the minute Leq against LAFmax, the 5m against the 30m), and the charts having
+  // drawn it while the header printed one of them made the numbers the odd half of the
+  // answer.
+  picked: PickedSeries;
 }) {
   // One wake-up for the header's whole set — a location's two monitors are read
   // together and printed as one reading, so there is nothing to gain from rendering
@@ -140,37 +145,36 @@ export function LocationReadings({
   // Local tick: freshness is per-card, so this doesn't re-render its siblings.
   const now = useTick();
 
-  // Every tile this header prints, in the order it prints them: the picked windows at the
+  // Every tile this header prints, in the order it prints them: the picked series at the
   // playhead, then the crop. Built as one list because what the row does with them is the
   // same either way, and because whether anything here is a reading of now is a question
   // about the row rather than about any one of them.
   //
-  // A window the page is drawing gets its badge whether or not there is anything in it: what
+  // A series the page is drawing gets its badge whether or not there is anything in it: what
   // is picked is picked, and a monitor that hasn't filled its 30-minute buffer yet, or a
   // minute nobody reported, is a badge standing empty rather than one that isn't there. The
   // row then holds still as the playhead crosses a gap, instead of shuffling the badges
   // beside it along and back again.
   const printed: PrintedLevel[] = [
-    ...metrics.map((metric) => ({
-      key: metric,
+    ...picked.map((series) => ({
+      key: series,
       level: loudestLevel(
         assignments.map((a) =>
           displayedLevel({
             live,
             now,
-            metric,
-            weighting,
+            series,
             state: deviceState(a.deviceId),
-            historyDb: levels?.[metric]?.[a.deviceId],
+            historyDb: levels?.[series]?.[a.deviceId],
           }),
         ),
       ),
       // The quantity spelled out — `LAeq,5m` — off the series table's own naming, and
-      // in the mode's own window (a second live, a stored minute; see metricLabel).
-      label: metricLabel(metric, weighting, live),
+      // in the mode's own window (a second live, a stored minute; see seriesLabel).
+      label: seriesLabel(series, live),
       // Straight from the series table too, the one place a level's colour is decided,
       // so a number and the line it was read off cannot end up different shades.
-      color: seriesFor(metric, weighting).color,
+      color: seriesByKey(series).color,
     })),
     // Last, and hard against the edge of the card: the number every card is compared on
     // lines up in one column down the page, whatever is picked above it. Named for the
@@ -196,7 +200,10 @@ export function LocationReadings({
           {
             key: 'range',
             level: {kind: 'history', db: total.db} as const,
-            label: rangeLabel(weighting),
+            // In the primary's weighting, that being the one it was summed in — so ticking
+            // a C-weighted row to the top of the pick relabels this LCeq,Range and the
+            // number under it changes with the name.
+            label: rangeLabel(primaryWeighting(picked)),
             // The one reading with no line of its own, so it takes a neutral rather than a
             // place on the series ramp — but at full `fg` rather than muted: it is the
             // number the card is summed up by, and a grey among five saturated badges read

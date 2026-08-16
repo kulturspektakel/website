@@ -9,6 +9,7 @@ import {
   type LogGrid,
   type ProjectLogs,
 } from '../components/noise/noise';
+import {limitLine, type LimitLine} from '../components/noise/limitLines';
 import {visibleProjectWindow} from '../components/noise/projectSelection';
 import {MINUTE_MS} from '../components/noise/timeframe';
 
@@ -147,7 +148,56 @@ export async function deviceAssignments(): Promise<
   return assignments;
 }
 
-// The instant test both of the above ask, shared so that "is this monitor standing
+/**
+ * What the place this monitor is standing at right now is permitted, if it is standing
+ * anywhere — the rules drawn over its live trace on its own page.
+ *
+ * A query of its own rather than a wider CURRENT_ASSIGNMENT_SELECT: that select is shared
+ * with deviceAssignments(), which every row of the landing page's monitor list goes
+ * through, and none of those rows wants a location's permit. It asks the same instant
+ * question through the same `currentAssignmentWhere`, so a device cannot be placed for the
+ * purposes of its chip and unplaced for the purposes of its chart.
+ *
+ * Both bounds resolved here, because this is the one place holding the row and the event at
+ * once — the same division crew.noise.tsx's loader makes for a location's own limits. A
+ * blank start is the event's start and a blank end its end; a limit does not run on past
+ * the festival the way a monitor left standing does.
+ *
+ * Unlike the assignment above, every limit is taken, not one: a place permitted 100 dB by
+ * day and 90 after ten has two, both of them true, and which applies at an instant is the
+ * chart's to show rather than this to choose. An empty array for a monitor standing
+ * nowhere — a place with no permit, rather than a permit of none.
+ */
+export async function deviceLimits(deviceId: string): Promise<LimitLine[]> {
+  const now = new Date();
+  const rows = await prismaClient.noiseLocationLimit.findMany({
+    where: {
+      NoiseLocation: {
+        NoiseLocationAssignment: {
+          some: {deviceId, ...currentAssignmentWhere(now)},
+        },
+      },
+    },
+    orderBy: {start: 'asc'},
+    select: {
+      series: true,
+      decibels: true,
+      start: true,
+      end: true,
+      NoiseLocation: {
+        select: {NoiseProject: {select: {start: true, end: true}}},
+      },
+    },
+  });
+  // Both bounds resolved and the series narrowed by the one helper the project page's
+  // loader uses too (see limitLine) — the column is text, and a blank bound is the edge
+  // of the event either side.
+  return rows.flatMap(
+    (row) => limitLine(row, row.NoiseLocation.NoiseProject) ?? [],
+  );
+}
+
+// The instant test all three of the above ask, shared so that "is this monitor standing
 // here now" cannot come to mean two different things depending on how many devices
 // were asked about. One clause per bound, each "the row's own, or the event's where it
 // has none". Two ORs, so they are spelled as an AND of them rather than merged — a

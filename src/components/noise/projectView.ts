@@ -1,13 +1,14 @@
 import {createContext, useContext, useEffect} from 'react';
 import {locale} from '../../utils/dateUtils';
 import type {loadNoiseProject} from '../../routes/crew.noise';
-import type {LevelMetric, PickedMetrics} from './level';
-import type {Weighting} from './noise';
-import type {MetricTraces, PlayheadLevels, RangeTotals} from './projectLogs';
+import type {PickedSeries} from './level';
+import type {SeriesKey} from './series';
+import type {PlayheadLevels, RangeTotals, SeriesTraces} from './projectLogs';
 
 export type NoiseProject = Awaited<ReturnType<typeof loadNoiseProject>>;
 export type NoiseLocationItem = NoiseProject['locations'][number];
 export type NoiseAssignment = NoiseLocationItem['assignments'][number];
+export type NoiseLimit = NoiseLocationItem['limits'][number];
 
 /**
  * The order locations are shown in — the one place it is decided.
@@ -223,7 +224,7 @@ export type ResolvedLocation = {
 // made in either view is picked up by both), the live/scrub toggle, the selected
 // timeframe, and everything read off the project's logs. Share it through this
 // context so switching views neither refetches the project nor resets the timeline —
-// the same reason the $device layout shares its weighting toggle (see deviceView.ts).
+// the same reason the $device layout shares its level pick (see deviceView.ts).
 //
 // Everything here holds still while the pointer travels over a row chart. What moves
 // with the playhead is in the two contexts below, and it is split off precisely because
@@ -253,29 +254,27 @@ export type ProjectViewCtx = {
   // here is what keeps a scrub out of the cards entirely.
   locations: ResolvedLocation[];
   // Moves the playhead — and only the playhead — to an instant, which is what a row
-  // chart reports as the pointer travels over it. The crop stays where it was, so
+  // chart reports as the pointer travels over it, or takes it away entirely with null,
+  // which is what the pointer leaving reports. The crop stays where it was either way, so
   // hovering reads the project rather than re-picking it. Not called while live: there
   // is no instant to point at then, and the views withhold it.
-  scrubTo: (at: number) => void;
+  scrubTo: (at: number | null) => void;
   // Crops the timeframe, exactly where asked — what a row chart commits, whether that
   // came from the in/out keys (one end) or a drag across the trace (both). An omitted
   // end stays where it was; the playhead follows only if the crop leaves it outside.
   cropTo: (crop: {start?: number; end?: number}) => void;
-  // What the header's two controls are set to: which frequency weighting the page is read
-  // in, and which Leq windows it shows. The layout owns the choice so the map and the list
-  // can't drift apart, and it resolves `totals`/`traces` against it — the views need them
-  // only for the live path.
+  // What the header's menu is set to: which series the page shows, weighting and all. The
+  // layout owns the choice so the map and the list can't drift apart, and it resolves
+  // `locationTotals`/`traces` against it — the views need them only for the live path.
   //
-  // Two fields for one pick, and the split is worth knowing:
-  //   metrics — every window the page shows: one line each on the charts, in its own
-  //             shade, and one number each on a location's header, in that same shade
-  //             (see LocationReadings).
-  //   metric  — the primary (see primaryMetric), for the one readout that has room for a
-  //             single number: a map pin, which is a badge over a place. Everything with
-  //             room for the set prints the set.
-  metrics: PickedMetrics;
-  metric: LevelMetric;
-  weighting: Weighting;
+  // Every series the page shows: one line each on the charts, in its own shade, and one
+  // number each on a location's header, in that same shade (see LocationReadings).
+  //
+  // One field and not this plus its first: the readouts with room for a single number — a
+  // map pin, and the crop's Leq, which is one energetic mean and so has one weighting — take
+  // it off the set themselves (see primarySeries and primaryWeighting), which is one call
+  // rather than a derived value carried alongside the thing it is derived from.
+  picked: PickedSeries;
   // Each *location's* Leq over the crop — the energetic mean of its per-minute
   // loudest, which is the number every card leads with whatever the picker says, and
   // the average of the very area its chart fills (see locationEnergyIndex). Keyed by
@@ -289,9 +288,9 @@ export type ProjectViewCtx = {
   // all three and withholds the field (see showRangeLeq); there is deliberately no flag
   // beside it, because a value that must not be printed is better not handed over.
   locationTotals?: Record<string, RangeTotals>;
-  // Whole-project traces at stored resolution, one device record per picked window; the
+  // Whole-project traces at stored resolution, one device record per picked series; the
   // crop is applied by the chart, not here, so these survive a timeline drag untouched.
-  traces?: MetricTraces;
+  traces?: SeriesTraces;
   // Re-reads what an assignment change invalidates. Lives on the layout because
   // it also invalidates lists rendered outside this route.
   refresh: () => Promise<void>;
@@ -369,11 +368,11 @@ const NO_PLAYHEAD: PlayheadSignal = (listener) => {
  */
 export const PlayheadSignalContext = createContext<PlayheadSignal>(NO_PLAYHEAD);
 
-// Every window at that minute rather than only the one the numbers used to be read in: a
-// card prints one number per picked window now, and the pins — which have room for one —
+// Every series at that minute rather than only the one the numbers used to be read in: a
+// card prints one number per picked series now, and the pins — which have room for one —
 // take the primary out of the same record (see the map view). Widening it costs an index
-// per device per window on a minute change, and it is what took `metric` out of the memo
-// behind this, so changing the pick no longer recomputes anything here.
+// per device per series on a minute change, and it is what took the pick out of the memo
+// behind this altogether, so ticking a box recomputes nothing here.
 //
 // Absent while live, and while the project's logs are still loading — so `undefined` is
 // an ordinary answer here and there is nothing for a hook to throw about.

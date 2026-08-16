@@ -5,10 +5,10 @@ import {
   locationRangeTotals,
   logColumn,
   logSeries,
-  metricLevelsByDevice,
+  seriesLevelsByDevice,
   totalsByLocation,
 } from './projectLogs';
-import {LEVEL_METRICS, supportedMetric} from './level';
+import {SERIES_KEYS} from './series';
 import {coverageDetail, energeticMeanDb} from './leq';
 import {MINUTE_MS} from './timeframe';
 import {logMinuteIndex, type ProjectLogs} from './noise';
@@ -62,32 +62,27 @@ describe('logMinuteIndex', () => {
 });
 
 describe('logColumn', () => {
-  // The picker's metric→column mapping goes through the series table, so every
-  // enabled combination has to resolve — otherwise switching to dB(C) reads nothing.
-  it('resolves every enabled option under both weightings', () => {
-    for (const metric of LEVEL_METRICS) {
-      for (const weighting of ['A', 'C'] as const) {
-        // LCpeak has no A-weighted twin, and the picker disables it there rather
-        // than asking for it.
-        if (supportedMetric(metric, weighting) !== metric) continue;
-        // eq_30m was dropped from this payload, so absent is a valid answer; what
-        // must not happen is resolving to the wrong column.
-        const column = logColumn(logs, 'mic-1', metric, weighting);
-        if (metric === 'eq_30m') expect(column).toBeUndefined();
-        else expect(column).toHaveLength(logs.minutes);
-      }
+  // The picker's series→column mapping goes through the series table, so every row it
+  // offers has to resolve — otherwise ticking a dB(C) line reads nothing.
+  it('resolves every series the picker offers', () => {
+    for (const key of SERIES_KEYS) {
+      // eq_30m was dropped from this payload, so absent is a valid answer; what
+      // must not happen is resolving to the wrong column.
+      const column = logColumn(logs, 'mic-1', key);
+      if (key.startsWith('eq_30m')) expect(column).toBeUndefined();
+      else expect(column).toHaveLength(logs.minutes);
     }
   });
 
-  it('reads the weighting the caller asked for', () => {
-    expect(logColumn(logs, 'mic-1', 'eq_fast', 'A')?.[1]).toBe(70);
-    expect(logColumn(logs, 'mic-1', 'eq_fast', 'C')?.[1]).toBe(75);
-    expect(logColumn(logs, 'mic-1', 'eq_5m', 'C')?.[1]).toBe(76);
-    expect(logColumn(logs, 'mic-1', 'peak', 'C')?.[1]).toBe(101);
+  it('reads the weighting named in the key', () => {
+    expect(logColumn(logs, 'mic-1', 'eq_fast:A')?.[1]).toBe(70);
+    expect(logColumn(logs, 'mic-1', 'eq_fast:C')?.[1]).toBe(75);
+    expect(logColumn(logs, 'mic-1', 'eq_5m:C')?.[1]).toBe(76);
+    expect(logColumn(logs, 'mic-1', 'peak:C')?.[1]).toBe(101);
   });
 
   it('has nothing for an unknown device', () => {
-    expect(logColumn(logs, 'nobody', 'eq_fast', 'A')).toBeUndefined();
+    expect(logColumn(logs, 'nobody', 'eq_fast:A')).toBeUndefined();
   });
 });
 
@@ -218,55 +213,57 @@ describe('locationRangeTotals', () => {
 });
 
 describe('levelsByDevice', () => {
-  it('reads the playhead minute for the selected window', () => {
-    expect(
-      levelsByDevice(logs, {metric: 'eq_fast', weighting: 'A', minute: 1}),
-    ).toEqual({'mic-1': 70});
+  it('reads the playhead minute for the selected series', () => {
+    expect(levelsByDevice(logs, {series: 'eq_fast:A', minute: 1})).toEqual({
+      'mic-1': 70,
+    });
   });
 
   it('follows the weighting and the window', () => {
-    expect(
-      levelsByDevice(logs, {metric: 'eq_5m', weighting: 'C', minute: 3}),
-    ).toEqual({'mic-1': 86});
+    expect(levelsByDevice(logs, {series: 'eq_5m:C', minute: 3})).toEqual({
+      'mic-1': 86,
+    });
   });
 
   // A device with no reading for the selected minute is left out rather than carried
   // as null: absent and unmeasured render identically, and consumers key on presence.
   it('omits a device with no value at the playhead', () => {
-    expect(
-      levelsByDevice(logs, {metric: 'eq_fast', weighting: 'A', minute: 2}),
-    ).toEqual({'mic-2': 90});
-  });
-
-  it('omits everyone for a window no device reports', () => {
-    expect(
-      levelsByDevice(logs, {metric: 'eq_30m', weighting: 'A', minute: 1}),
-    ).toEqual({});
-  });
-});
-
-// A card prints one number per picked window, so the playhead's record carries them all —
-// and the weighting decides which windows exist at all.
-describe('metricLevelsByDevice', () => {
-  it('reads every window the weighting has at the playhead minute', () => {
-    expect(metricLevelsByDevice(logs, {weighting: 'C', minute: 1})).toEqual({
-      eq_fast: {'mic-1': 75},
-      eq_5m: {'mic-1': 76},
-      // Dropped from this payload entirely, and asked for all the same: an empty record
-      // says "no monitor reported it", which is what the header prints nothing for.
-      eq_30m: {},
-      fmax: {'mic-1': 95},
-      peak: {'mic-1': 101},
+    expect(levelsByDevice(logs, {series: 'eq_fast:A', minute: 2})).toEqual({
+      'mic-2': 90,
     });
   });
 
-  it('leaves out a window the weighting has no series for', () => {
-    const levels = metricLevelsByDevice(logs, {weighting: 'A', minute: 3});
-    // LCpeak has no A-weighted twin, so there is no key at all — as opposed to a key
-    // with nothing in it.
-    expect(levels.peak).toBeUndefined();
-    expect(levels.eq_fast).toEqual({'mic-1': 80, 'mic-2': 90});
-    expect(levels.fmax).toEqual({'mic-1': 100});
+  it('omits everyone for a series no device reports', () => {
+    expect(levelsByDevice(logs, {series: 'eq_30m:A', minute: 1})).toEqual({});
+  });
+});
+
+// A card prints one number per picked series, so the playhead's record carries every
+// series there is — the pick is no part of this, which is what keeps ticking a box from
+// recomputing it.
+describe('seriesLevelsByDevice', () => {
+  it('reads every series at the playhead minute', () => {
+    expect(seriesLevelsByDevice(logs, {minute: 1})).toEqual({
+      'eq_fast:A': {'mic-1': 70},
+      'eq_fast:C': {'mic-1': 75},
+      'eq_5m:A': {'mic-1': 71},
+      'eq_5m:C': {'mic-1': 76},
+      // Dropped from this payload entirely, and answered all the same: an empty record
+      // says "no monitor reported it", which is what the header prints nothing for.
+      'eq_30m:A': {},
+      'eq_30m:C': {},
+      'fmax:A': {'mic-1': 90},
+      'fmax:C': {'mic-1': 95},
+      'peak:C': {'mic-1': 101},
+    });
+  });
+
+  // Both weightings of a kind side by side, which is the whole point of the pick being a
+  // set of series: a card showing LAeq,1m and LCeq,1m reads both out of this one record.
+  it('carries a kind\u2019s two weightings apart', () => {
+    const levels = seriesLevelsByDevice(logs, {minute: 3});
+    expect(levels['eq_fast:A']).toEqual({'mic-1': 80, 'mic-2': 90});
+    expect(levels['eq_fast:C']).toEqual({'mic-1': 85, 'mic-2': 95});
   });
 });
 
@@ -304,15 +301,15 @@ describe('logSeries', () => {
   it('hands over the whole stored column, not a crop of it', () => {
     // uPlot clips and decimates, so this is deliberately full resolution and
     // project-length — that is what makes a crop drag cost nothing here.
-    const series = logSeries(logs, ['eq_fast'], 'A').eq_fast!;
+    const series = logSeries(logs, ['eq_fast:A'])['eq_fast:A']!;
     expect(series['mic-1']!.db).toEqual([60, 70, null, 80]);
     expect(series['mic-1']!.xs).toEqual(
       [at(0), at(1), at(2), at(3)].map((ms) => ms / 1000),
     );
   });
 
-  it('follows the weighting', () => {
-    expect(logSeries(logs, ['eq_fast'], 'C').eq_fast!['mic-1']!.db).toEqual([
+  it('follows the weighting named in the key', () => {
+    expect(logSeries(logs, ['eq_fast:C'])['eq_fast:C']!['mic-1']!.db).toEqual([
       65,
       75,
       null,
@@ -320,48 +317,55 @@ describe('logSeries', () => {
     ]);
   });
 
-  // A picked window is a stored column, so a row's line is the device's own trailing Leq —
+  // A picked series is a stored column, so a row's line is the device's own trailing Leq —
   // never a rollup of the 1m one, which would average twice.
   it('plots the trailing window the header asks for', () => {
-    expect(logSeries(logs, ['eq_5m'], 'A').eq_5m!['mic-1']!.db).toEqual([
+    expect(logSeries(logs, ['eq_5m:A'])['eq_5m:A']!['mic-1']!.db).toEqual([
       null,
       71,
       null,
       81,
     ]);
-    // A window the payload never carried is no trace at all, not a flat line — but the
-    // entry is there, because it was asked for: the chart has a series for every window it
+    // A series the payload never carried is no trace at all, not a flat line — but the
+    // entry is there, because it was asked for: the chart has a column for every series it
     // ticked, and one that quietly went missing would shift every column after it.
-    expect(logSeries(logs, ['eq_30m'], 'A')).toEqual({eq_30m: {}});
+    expect(logSeries(logs, ['eq_30m:A'])).toEqual({'eq_30m:A': {}});
   });
 
-  // One record per picked window, and an empty one among them disturbs nothing.
-  it('answers every window asked for, in one pass over the payload', () => {
-    const traces = logSeries(logs, ['eq_fast', 'eq_30m', 'eq_5m'], 'A');
-    expect(Object.keys(traces).sort()).toEqual(['eq_30m', 'eq_5m', 'eq_fast']);
-    expect(traces.eq_fast!['mic-1']!.db).toEqual([60, 70, null, 80]);
-    expect(traces.eq_5m!['mic-1']!.db).toEqual([null, 71, null, 81]);
-    expect(traces.eq_30m).toEqual({});
+  // One record per picked series, and an empty one among them disturbs nothing. Two
+  // weightings of one kind are two of them, which is what a mixed pick asks for.
+  it('answers every series asked for, in one pass over the payload', () => {
+    const traces = logSeries(logs, ['eq_fast:A', 'eq_30m:A', 'eq_fast:C']);
+    expect(Object.keys(traces).sort()).toEqual([
+      'eq_30m:A',
+      'eq_fast:A',
+      'eq_fast:C',
+    ]);
+    expect(traces['eq_fast:A']!['mic-1']!.db).toEqual([60, 70, null, 80]);
+    expect(traces['eq_fast:C']!['mic-1']!.db).toEqual([65, 75, null, 85]);
+    expect(traces['eq_30m:A']).toEqual({});
   });
 
   // One array of timestamps for every device: they are all the same minutes, and a
   // copy per device would be the largest allocation on the page for no reason.
   it('shares one x column across devices', () => {
-    const series = logSeries(logs, ['eq_fast'], 'A').eq_fast!;
+    const series = logSeries(logs, ['eq_fast:A'])['eq_fast:A']!;
     expect(series['mic-1']!.xs).toBe(series['mic-2']!.xs);
   });
 
-  // And across windows, which is what the aligners lean on: the projection has one x
-  // column, so five windows must not arrive on five equal-but-separate grids.
-  it('shares one x column across windows too', () => {
-    const traces = logSeries(logs, ['eq_fast', 'eq_5m'], 'A');
-    expect(traces.eq_fast!['mic-2']!.xs).toBe(traces.eq_5m!['mic-1']!.xs);
+  // And across series, which is what the aligners lean on: the projection has one x
+  // column, so several picks must not arrive on several equal-but-separate grids.
+  it('shares one x column across series too', () => {
+    const traces = logSeries(logs, ['eq_fast:A', 'eq_5m:C']);
+    expect(traces['eq_fast:A']!['mic-2']!.xs).toBe(
+      traces['eq_5m:C']!['mic-1']!.xs,
+    );
   });
 
   // The nulls travel rather than being stripped, which is what lets the x column be
   // shared — and what makes uPlot break the line where a monitor wasn't deployed.
   it('keeps a device that reported only part of the project, nulls and all', () => {
-    expect(logSeries(logs, ['eq_fast'], 'A').eq_fast!['mic-2']!.db).toEqual([
+    expect(logSeries(logs, ['eq_fast:A'])['eq_fast:A']!['mic-2']!.db).toEqual([
       null,
       null,
       90,
@@ -371,6 +375,6 @@ describe('logSeries', () => {
 
   it('omits a device with no column at all', () => {
     const empty = {...logs, devices: {'mic-3': {}}};
-    expect(logSeries(empty, ['eq_fast'], 'A')).toEqual({eq_fast: {}});
+    expect(logSeries(empty, ['eq_fast:A'])).toEqual({'eq_fast:A': {}});
   });
 });

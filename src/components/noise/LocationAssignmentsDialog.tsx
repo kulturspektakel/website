@@ -1,8 +1,7 @@
-import {useEffect, useRef, useState} from 'react';
+import {useRef, useState} from 'react';
 import {
   Button,
   IconButton,
-  Input,
   NativeSelectField,
   Stack,
   Table,
@@ -30,12 +29,9 @@ import {
 } from '../../routes/crew.noise';
 import {noiseQueryKeys} from './queries';
 import {errorToast} from './toast';
-import {
-  formatInstant,
-  formatTimeframeRange,
-  fromLocalInput,
-  toLocalInput,
-} from './timeframe';
+import {TimeField} from './TimeField';
+import {applyEdits, hasEdits} from './draftTable';
+import {formatInstant, formatTimeframeRange} from './timeframe';
 import {
   overlappingAssignments,
   useProjectView,
@@ -142,7 +138,7 @@ function AssignmentsForm({
   const nextKey = useRef(0);
 
   const save = useMutation({
-    mutationFn: () => applyEdits(original, rows, location.id, project.start),
+    mutationFn: () => saveAssignments(original, rows, location.id, project.start),
     onSuccess: async () => {
       await refresh();
       toaster.create({type: 'success', title: 'Assignments saved'});
@@ -166,7 +162,9 @@ function AssignmentsForm({
   );
 
   const incomplete = rows.some((r) => r.deviceId === NO_DEVICE);
-  const dirty = hasEdits(original, rows, project.start);
+  const dirty = hasEdits(original, rows, (row, was) =>
+    isUnchanged(row, was, project.start),
+  );
 
   return (
     <>
@@ -384,64 +382,6 @@ function conflictMessage(
     : `Overlaps with ${assignment.deviceId} (${when}).`;
 }
 
-// One end of a placement, which may legitimately be empty — an omitted bound means the
-// edge of the event, so a monitor that stood there throughout is two blank fields.
-//
-// It keeps its own draft string for the reason ProjectTimeline's BoundField does: a
-// datetime-local reports '' for a half-filled value, so a field driven straight off the
-// committed time would snap back between keystrokes. Unlike that one it reports the
-// cleared field on blur rather than on change, because '' is ambiguous — mid-edit and
-// emptied look the same, and only one of them means the edge of the event.
-function TimeField({
-  label,
-  value,
-  window,
-  onChange,
-}: {
-  // Not rendered: the column heading says which end this is, and the row says which
-  // monitor, but neither is attached to the input for anyone not reading the table.
-  label: string;
-  value: number | null;
-  window: {start: number; end: number};
-  onChange: (value: number | null) => void;
-}) {
-  const [draft, setDraft] = useState(() =>
-    value == null ? '' : toLocalInput(value),
-  );
-  useEffect(() => setDraft(value == null ? '' : toLocalInput(value)), [value]);
-
-  return (
-    <Input
-      type="datetime-local"
-      aria-label={label}
-      size="sm"
-      minW="52"
-      // Native bounds, so the picker offers the event rather than the century. Typed
-      // input outside it is still accepted — a monitor may have been carried out
-      // before the gates opened.
-      min={toLocalInput(window.start)}
-      max={toLocalInput(window.end)}
-      value={draft}
-      onChange={(e) => {
-        setDraft(e.target.value);
-        const parsed = fromLocalInput(e.target.value);
-        if (parsed) onChange(parsed.getTime());
-      }}
-      onBlur={() => {
-        if (draft === '') {
-          onChange(null);
-          return;
-        }
-        // Never leave a value on screen that isn't the one in effect: a draft that
-        // never parsed is abandoned rather than guessed at.
-        if (!fromLocalInput(draft)) {
-          setDraft(value == null ? '' : toLocalInput(value));
-        }
-      }}
-    />
-  );
-}
-
 const hasDevice = (row: DraftRow) => row.deviceId !== NO_DEVICE;
 
 // A blank start comes back blank, which is what makes the field round-trip: blank it, save,
@@ -471,10 +411,10 @@ const toWindow = (row: DraftRow, projectStart: number): AssignmentWindow => ({
   end: row.end,
 });
 
-// Whether a row still says what the server has. One definition, asked by both the
-// Save button (is there anything to save at all) and the save itself (which rows
-// need a write) — so the button can't offer a save that turns out to be nothing, and the
-// save can't skip a row the button counted.
+// Whether a row still says what the server has, with the draft's blank start resolved the
+// way the loader resolved the saved row's. The end is compared raw: an open placement is
+// genuinely open — "still standing" is not an instant — so null there is the value rather
+// than a stand-in for one.
 const isUnchanged = (
   row: DraftRow,
   was: NoiseAssignment,
@@ -482,53 +422,30 @@ const isUnchanged = (
 ): boolean =>
   (row.start ?? projectStart) === was.start && (row.end ?? null) === was.end;
 
-function hasEdits(
-  original: NoiseAssignment[],
-  rows: DraftRow[],
-  projectStart: number,
-): boolean {
-  if (rows.length !== original.length) return true;
-  return rows.some((row) => {
-    const was = original.find((a) => a.id === row.id);
-    return !was || !isUnchanged(row, was, projectStart);
-  });
-}
-
-// The whole table in one press: what was binned is deleted, what was retimed is updated,
-// what was added is created. Sequential rather than in parallel, so a rejected write
-// stops the rest — half a correction applied is worse than none of it, and the dialog
-// stays open on what the user typed either way.
-async function applyEdits(
+// One press, over the protocol both dialogs share (see applyEdits). All this supplies is
+// the three mutations and what counts as a change. The device is not among the updatable
+// fields on purpose: which monitor a saved row is about is not editable, since that would
+// be a different placement (see the picker above).
+const saveAssignments = (
   original: NoiseAssignment[],
   rows: DraftRow[],
   locationId: string,
   projectStart: number,
-): Promise<void> {
-  const kept = new Set(rows.map((r) => r.id));
-  for (const was of original) {
-    if (!kept.has(was.id)) {
-      await deleteNoiseAssignment({data: {assignmentId: was.id}});
-    }
-  }
-  for (const row of rows) {
-    if (row.id == null) {
-      await assignNoiseDevice({
+): Promise<void> =>
+  applyEdits(original, rows, {
+    isUnchanged: (row, was) => isUnchanged(row, was, projectStart),
+    create: (row) =>
+      assignNoiseDevice({
         data: {
           locationId,
           deviceId: row.deviceId,
           start: row.start,
           end: row.end,
         },
-      });
-      continue;
-    }
-    // Only the rows that actually moved: correcting one handover in a location that
-    // has had five monitors is one request, not five. `isUnchanged` is the same test
-    // the Save button asked, so the two cannot disagree about what an edit is.
-    const was = original.find((a) => a.id === row.id);
-    if (was && isUnchanged(row, was, projectStart)) continue;
-    await updateNoiseAssignment({
-      data: {assignmentId: row.id, start: row.start, end: row.end},
-    });
-  }
-}
+      }),
+    update: (row, assignmentId) =>
+      updateNoiseAssignment({
+        data: {assignmentId, start: row.start, end: row.end},
+      }),
+    remove: (was) => deleteNoiseAssignment({data: {assignmentId: was.id}}),
+  });

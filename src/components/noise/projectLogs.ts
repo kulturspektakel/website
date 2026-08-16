@@ -7,8 +7,7 @@ import {
   type ProjectLogs,
   type Weighting,
 } from './noise';
-import {LEVEL_METRICS, type LevelMetric} from './level';
-import {hasSeries, seriesFor} from './series';
+import {seriesByKey, seriesKey, SERIES_KEYS, type SeriesKey} from './series';
 import {fromEnergy, toEnergy, usableDb, type Coverage} from './leq';
 
 // Reading the project page's numbers off the whole event, which the browser now
@@ -20,22 +19,22 @@ import {fromEnergy, toEnergy, usableDb, type Coverage} from './leq';
 // React-free on purpose: this is where the maths lives, the hook beside it
 // (useProjectLogs.ts) only decides when to recompute.
 
-// The column one window occupies under one weighting, resolved through the series
-// table so the mapping lives in the one place that already owns it. Undefined when
-// the device has no entry, or when that column was null throughout and so was left
-// out of the payload.
+// The column one series occupies, resolved through the series table so the mapping
+// lives in the one place that already owns it. Undefined when the device has no entry,
+// or when that column was null throughout and so was left out of the payload.
 export const logColumn = (
   logs: ProjectLogs,
   deviceId: string,
-  metric: LevelMetric,
-  weighting: Weighting,
+  key: SeriesKey,
 ): (number | null)[] | undefined =>
-  logs.devices[deviceId]?.[seriesFor(metric, weighting).col as LevelColumn];
+  logs.devices[deviceId]?.[seriesByKey(key).col as LevelColumn];
 
 // The 1-minute column, the only one an aggregate over a range may average: 5m and 30m
-// are trailing windows the device reports, so averaging those would average twice.
+// are trailing windows the device reports, so averaging those would average twice. In
+// the weighting the caller asked for, which for the crop's Leq is the primary pick's —
+// one mean cannot be in two.
 const eqColumn = (logs: ProjectLogs, deviceId: string, weighting: Weighting) =>
-  logColumn(logs, deviceId, 'eq_fast', weighting);
+  logColumn(logs, deviceId, seriesKey('eq_fast', weighting));
 
 // A crop's Leq for one device, carrying how much of the crop it was actually
 // measured over — which is the caveat that keeps the number honest.
@@ -63,10 +62,12 @@ export type LocationAssignments = {
  * window is what it is drawing (loudestColumn draws the same envelope), so the number and
  * the picture are one statement in the ordinary case rather than two derivations that can
  * drift. Pick a coarser window alone and the lead still reads the minute Leq: it is the
- * number every card is compared on, and it must not move with the picker. It is per
- * location and not per
- * device because a monitor's own history spans every stage it visited: averaged whole,
- * it would print the same figure on the card of every place it ever stood.
+ * number every card is compared on, and it must not move with the picker. Its *weighting*
+ * does follow the pick — the primary's, an energetic mean having room for exactly one —
+ * which is why the card names this tile LAeq,Range or LCeq,Range rather than leaving it
+ * unqualified. It is per location and not per device because a monitor's own history
+ * spans every stage it visited: averaged whole, it would print the same figure on the
+ * card of every place it ever stood.
  *
  * Built once per payload, weighting and set of assignments — none of which a timeline
  * drag changes. That is what keeps the drag cheap: re-averaging the crop for every
@@ -183,8 +184,8 @@ export function locationRangeTotals(
 }
 
 /**
- * What each device read at the playhead, in whatever window the header's two
- * dropdowns are set to — the number the pins carry and the coloured one on each row.
+ * What each device read at the playhead, in one series — the number the pins carry and
+ * the coloured one on each row.
  *
  * Devices with no value are left out rather than carried as null: absent and
  * unmeasured render identically, and every consumer keys on presence. Same shape the
@@ -194,52 +195,48 @@ export function locationRangeTotals(
 export function levelsByDevice(
   logs: ProjectLogs,
   {
-    metric,
-    weighting,
+    series,
     // The playhead's minute, not its instant: the payload has no finer resolution, so
     // the caller resolves it once and can then hold this answer still for every frame
     // of a hover that stays inside the same minute (see useProjectLogs).
     minute,
   }: {
-    metric: LevelMetric;
-    weighting: Weighting;
+    series: SeriesKey;
     minute: number;
   },
 ): Record<string, number> {
   const out: Record<string, number> = {};
   for (const deviceId of Object.keys(logs.devices)) {
-    const db = logColumn(logs, deviceId, metric, weighting)?.[minute];
+    const db = logColumn(logs, deviceId, series)?.[minute];
     if (db != null) out[deviceId] = db;
   }
   return out;
 }
 
 /**
- * Every window at the playhead, for every device — what a location's header prints and,
+ * Every series at the playhead, for every device — what a location's header prints and,
  * behind it, the rest of what the instant holds (see LocationReadings).
  *
- * One record and not five calls at the leaves: the minute is the same for all of them, the
- * columns are all already in memory, and a page-wide answer is what keeps a card's tooltip
- * from re-deriving what the card beside it just did. The whole thing costs one index per
- * device per window, which is why it is cheaper than the single-window version was to key
- * on the picked metric — see useProjectLogs.
+ * One record and not a call per series at the leaves: the minute is the same for all of
+ * them, the columns are all already in memory, and a page-wide answer is what keeps a
+ * card's tooltip from re-deriving what the card beside it just did. The whole thing costs
+ * one index per device per series, which is why it is cheaper than the single-series
+ * version was to key on the pick — see useProjectLogs, where this depends on the minute
+ * alone and so survives every change to what the header is showing.
  *
- * Only the windows the weighting *has* get a key (LCpeak has no A-weighted twin), and
- * within one, only the devices that read something — the same "absent rather than null"
- * rule as levelsByDevice, one level deeper, so a consumer keys on presence throughout.
+ * Every series gets a key, the pick being no part of this; within one, only the devices
+ * that read something — the same "absent rather than null" rule as levelsByDevice, one
+ * level deeper, so a consumer keys on presence throughout.
  */
-export type PlayheadLevels = Partial<
-  Record<LevelMetric, Record<string, number>>
->;
+export type PlayheadLevels = Partial<Record<SeriesKey, Record<string, number>>>;
 
-export function metricLevelsByDevice(
+export function seriesLevelsByDevice(
   logs: ProjectLogs,
-  {weighting, minute}: {weighting: Weighting; minute: number},
+  {minute}: {minute: number},
 ): PlayheadLevels {
   const out: PlayheadLevels = {};
-  for (const metric of LEVEL_METRICS) {
-    if (!hasSeries(metric, weighting)) continue;
-    out[metric] = levelsByDevice(logs, {metric, weighting, minute});
+  for (const series of SERIES_KEYS) {
+    out[series] = levelsByDevice(logs, {series, minute});
   }
   return out;
 }
@@ -263,13 +260,13 @@ export function totalsByLocation(
 }
 
 /**
- * Every picked window's traces: one device's trace per window, at full stored resolution
+ * Every picked series' traces: one device's trace per series, at full stored resolution
  * over the whole project — what the list draws behind its rows.
  *
- * Keyed by metric on the outside because that is how a chart reads it (one colour, one
- * block of columns; see series.ts) and because it is what lets a metric the payload never
+ * Keyed by series on the outside because that is how a chart reads it (one colour, one
+ * block of columns; see series.ts) and because it is what lets a series the payload never
  * carried be an empty record rather than a hole in the middle of a column list. Every
- * *requested* metric gets an entry, so "asked for and absent" is distinguishable from
+ * *requested* series gets an entry, so "asked for and absent" is distinguishable from
  * "not asked for".
  *
  * The 5m and 30m lines are read straight out of their own columns rather than rolled
@@ -279,37 +276,36 @@ export function totalsByLocation(
  *
  * Deliberately not cropped or downsampled here. uPlot clips to its own x-scale by
  * binary search and reduces to min/max per pixel column, so a crop change costs it a
- * redraw and costs this nothing: the traces depend only on the payload, the picked
- * windows and the weighting, which is what makes dragging the timeline free. It also
- * draws the peaks an averaged bucket would have flattened.
+ * redraw and costs this nothing: the traces depend only on the payload and the pick,
+ * which is what makes dragging the timeline free. It also draws the peaks an averaged
+ * bucket would have flattened.
  *
- * The x column is built once and shared by every device *and* every window — hence
+ * The x column is built once and shared by every device *and* every series — hence
  * `stepMs` in the payload, and hence nulls for the minutes a device has nothing.
  */
-export type MetricTraces = Partial<
-  Record<LevelMetric, Record<string, DeviceSeries>>
+export type SeriesTraces = Partial<
+  Record<SeriesKey, Record<string, DeviceSeries>>
 >;
 
 export function logSeries(
   logs: ProjectLogs,
-  metrics: readonly LevelMetric[],
-  weighting: Weighting,
-): MetricTraces {
+  picked: readonly SeriesKey[],
+): SeriesTraces {
   // Epoch seconds, uPlot's x unit. Above both loops: one grid for the whole projection is
-  // what the aligners rely on (see alignedSeries), and five copies of a four-day festival's
-  // minutes would be five arrays of the same numbers.
+  // what the aligners rely on (see alignedSeries), and a copy per picked series of a
+  // four-day festival's minutes would be several arrays of the same numbers.
   const xs = Array.from(
     {length: logs.minutes},
     (_, i) => logMinuteAt(logs, i) / 1000,
   );
-  const out: MetricTraces = {};
-  for (const metric of metrics) {
+  const out: SeriesTraces = {};
+  for (const key of picked) {
     const devices: Record<string, DeviceSeries> = {};
     for (const deviceId of Object.keys(logs.devices)) {
-      const db = logColumn(logs, deviceId, metric, weighting);
+      const db = logColumn(logs, deviceId, key);
       if (db) devices[deviceId] = {xs, db};
     }
-    out[metric] = devices;
+    out[key] = devices;
   }
   return out;
 }

@@ -13,7 +13,6 @@ import {
   type Columns,
 } from '../components/noise/listColumns';
 import {
-  defaultSelection,
   focusSelection,
   readSelection,
   resolveSelection,
@@ -30,6 +29,10 @@ const COLUMN_OPTIONS = COLUMNS.map((n) => ({
   value: String(n),
   label: n === 1 ? '1 column' : `${n} columns`,
 }));
+
+// What is on the list before there is a list — the frame before the store has been read.
+// One set rather than a fresh one per render, because it is a prop of a memoized picker.
+const NOTHING_SHOWN: ReadonlySet<string> = new Set();
 
 export const Route = createFileRoute('/crew/noise/project/$projectId/list')({
   // No search of its own any more: the column count used to live here, and is now stored per
@@ -70,15 +73,27 @@ function ProjectListView() {
   // is the decision that governs whether the view is readable at all, and having it back
   // at everything after a trip to the map meant re-making it every time. A fresh browser
   // starts on the first three.
-  const [selected, setSelected] = useState<ReadonlySet<string>>(
-    () => new Set(defaultSelection(roster)),
-  );
+  //
+  // Empty until the store has been read, which is the frame after mount (see the effect),
+  // and empty renders no cards. Not the default set standing in for the answer: that put
+  // three particular charts on screen and then replaced them a frame later with the ones
+  // you had arranged, which reads as the page changing its mind about what you asked for.
+  // An empty grid for a frame is the honest version — it says nothing rather than
+  // something wrong — and it is the same frame the column count arrives on, so the first
+  // cards painted are the right cards at the right width.
+  //
+  // Empty and not a separate null, though it was: "nothing yet" and "nothing" are the same
+  // state to everything downstream, and the two spellings meant three null branches and
+  // this constant for one frame of one render. An empty set is otherwise unreachable — a
+  // project with no locations returns early below, and toggledSelection refuses to remove
+  // the last id.
+  const [selected, setSelected] = useState<ReadonlySet<string>>(NOTHING_SHOWN);
 
   // The stored value is read after mount rather than in the initializer above, and that
   // is the whole reason this is an effect: the page is server-rendered, and a lazy
   // initializer reading localStorage would hand hydration a different set of cards than
-  // the server sent. Same shape as CrewCardInfo. The default is on screen for the frame
-  // in between.
+  // the server sent. Same shape as CrewCardInfo. No cards are on screen for the frame in
+  // between, which is why the state starts null rather than on the default.
   // And the same effect is where a handed-over location lands, because the two are one
   // decision — what the list opens on — and running them in either order would show the
   // stored arrangement for a frame before replacing it. Stored as well as shown, so it is
@@ -106,6 +121,11 @@ function ProjectListView() {
   // Pinned like the roster above, and for the same reason: it is the picker's other prop.
   const toggle = useCallback(
     (locationId: string) => {
+      // Nothing to toggle before the store has been read: the arrangement this would be
+      // amending does not exist yet, and taking the press as "this one alone" would write
+      // over what is about to arrive. One frame's worth of presses, and the roster shows
+      // nothing ticked during it, so there is nothing on screen inviting one.
+      if (selected.size === 0) return;
       const next = toggledSelection(selected, locationId, roster);
       setSelected(new Set(next));
       writeSelection(project.id, next);
@@ -164,14 +184,24 @@ function ProjectListView() {
         {/* Never none of them: the picker refuses to take the last card off the list and
             a stored arrangement that resolves to nothing falls back to the default (see
             locationSelection.ts), so there is no empty state here to write. What is left
-            is the frame after a navigation to another project, where this still holds the
-            previous one's ids — an empty grid for one paint, and a message would be a
-            sentence flashing up instead. */}
+            are two frames: before the store has been read, and after a navigation to
+            another project, where this still holds the previous one's ids. Both are one
+            paint of an empty grid, and a message would be a sentence flashing up
+            instead. */}
         {shown.map(({location, assignments}) => (
           <LocationCard
             key={location.id}
             location={location}
             assignments={assignments}
+            // The same toggle the roster is given, so the ⋮ on a card and the tick in
+            // the menu are one decision written down once. Pinned like the picker's
+            // props, which is what keeps the card's memo through a crop drag.
+            onHide={toggle}
+            // The list keeps its last card (see toggledSelection), so that card's menu
+            // says so instead of offering a press that would be ignored. Counted off
+            // what is on screen rather than off the selection: the two differ only by
+            // the ghosts of deleted locations.
+            hideable={shown.length > 1}
           />
         ))}
       </Box>
@@ -208,7 +238,11 @@ function ProjectListView() {
             straight is one representation of "what is on the list" instead of two that
             have to be kept in step — and it is the stable one, which is what the memo on
             the picker needs. */}
-        <LocationPicker locations={roster} shown={selected} onToggle={toggle} />
+        <LocationPicker
+          locations={roster}
+          shown={selected}
+          onToggle={toggle}
+        />
         <ColumnPicker cols={cols} onPick={pickCols} />
       </HStack>
     </Box>

@@ -1,6 +1,16 @@
 import {type NoiseRecording} from '../../proto/noise';
-import {isFresh, type DeviceState, type Weighting} from './noise';
-import {hasSeries, seriesFor, type SeriesKind} from './series';
+import {
+  isFresh,
+  WEIGHTINGS,
+  type DeviceState,
+  type Weighting,
+} from './noise';
+import {
+  seriesByKey,
+  SERIES_KEYS,
+  type SeriesKey,
+  type SeriesKind,
+} from './series';
 
 // How old a live record may be and still count as "right now". Records arrive about
 // once a second, so ten seconds is several missed messages in a row. Past it the
@@ -12,37 +22,18 @@ import {hasSeries, seriesFor, type SeriesKind} from './series';
 // few seconds, rather than both vanishing on the same frame.
 export const LIVE_LEVEL_WINDOW_MS = 10_000;
 
-// Which levels the project page displays, as the two controls in its header put it: one
-// frequency weighting, and a *set* of series. Page-wide, so a pin and the row beside it
-// can never be showing different quantities.
+// The quantities this section knows, apart from the filter they are measured through:
+// the three Leq windows and the two maxima. Not what is *picked* — that is a set of
+// series, weighting included (see PickedSeries) — but the kinds those series are of, and
+// so what a colour, a tag and a tile row are per.
 //
-// Every option is a SERIES kind — the very quantities the device charts plot — so a
-// metric *is* one, and resolves through the series table rather than restating its
-// getters and its columns. That the two coincide is the point: what is picked here is
-// the set of lines the charts draw, each in its own shade off that table.
+// Order is load-bearing: it is the order of the kinds within each of the picker's two
+// weighting blocks, of the device page's tiles, and of the chart's columns (see
+// traceColumn). Finest first, which is what makes the primary of a pick the finest thing
+// in it.
 //
-// Several at once because the interesting question is usually a comparison — the minute
-// Leq against LAFmax, or the 5m against the 30m — and with one pick that meant working
-// the dropdown back and forth and holding the last picture in your head. Every column is
-// already in the browser either way (the stored payload carries all nine and so do the
-// live buffers), so a second line costs a projection and not a request.
-//
-// The numbers beside the charts still read one of them, the *primary* — see
-// primaryMetric. That split is deliberate and, for the readouts, temporary.
-//
-// Not every kind exists under both weightings (LCpeak has no A-weighted twin), so the
-// picker offers all of them and disables the ones the weighting in force has no answer
-// for — see metricOptions.
-//
-// The Leq over the selected timeframe is picked in the same menu and is deliberately *not*
-// one of these: it has no line, no live counterpart and no playhead, so nothing downstream of
-// a LevelMetric — the series table, the traces, the chart's columns — has an answer for it.
-// It travels as its own flag beside this set (see useLevelPick) and is read off the cards
-// only, which is why the picker's list is these five plus one row that isn't a metric.
-//
-// Order is load-bearing three times over: it is the order of the picker's rows, of the
-// device page's tiles, and of the chart's columns (see traceColumn) — and, being
-// finest-first, it is what makes primaryMetric's answer the finest thing picked.
+// SERIES is the same five kinds crossed with the two weightings, in this order within
+// each — series.test.ts holds the two lists to it.
 export const LEVEL_METRICS = [
   'eq_fast',
   'eq_5m',
@@ -53,85 +44,85 @@ export const LEVEL_METRICS = [
 export type LevelMetric = (typeof LEVEL_METRICS)[number];
 
 /**
- * What is picked: in LEVEL_METRICS order, and never empty.
+ * What the header's menu picks: a set of *series* — a quantity and the weighting it is
+ * read through, together — in SERIES_KEYS order, and never empty. Page-wide, so a pin and
+ * the row beside it can never be showing different lines.
+ *
+ * One control and one set, because the weighting is not a mode of the page: `LAeq,5m` and
+ * `LCeq,5m` are two measurements, and the interesting question is usually a comparison —
+ * the A against the C, the minute Leq against LAFmax, the 5m against the 30m. That the
+ * pick is a subset of the series table is the point: what is picked *is* the set of lines
+ * the charts draw, each resolving through that table to its column, its getter and its
+ * shade. Every column is already in the browser (the stored payload carries all nine and
+ * so do the live buffers), so a second line costs a projection and not a request.
  *
  * A tuple rather than an array so the "never empty" half is the compiler's business and
- * primaryMetric needs no fallback. Only useLevelPick has to prove it, which it does by
+ * primarySeries needs no fallback. Only useLevelPick has to prove it, which it does by
  * being the one thing that produces these — everything downstream is handed one.
  *
- * The order is not a nicety either: the chart's columns are laid out in it (traceColumn),
- * and the first element is the metric every number on the page is read in.
+ * The Leq over the selected timeframe is picked in the same menu and is deliberately not
+ * one of these: it has no line, no live counterpart and no playhead, so nothing downstream
+ * of a series — the table, the traces, the chart's columns — has an answer for it. It
+ * travels as its own flag beside this set (see useLevelPick) and is read off the cards
+ * only, which is why the menu is nine rows plus one that isn't a series.
  */
-export type PickedMetrics = readonly [LevelMetric, ...LevelMetric[]];
+export type PickedSeries = readonly [SeriesKey, ...SeriesKey[]];
 
 /**
- * The one metric the *numbers* are read in, of however many the charts are drawing: the
- * finest of them, LEVEL_METRICS being finest-first.
+ * The one series the *single* numbers are read in, of however many the charts are
+ * drawing: the first of them in table order, which is the finest A-weighted thing picked
+ * where there is one and the finest C-weighted thing otherwise.
  *
- * Derived rather than picked separately, so there is no second piece of state and no
- * "the primary must be one of the picked" invariant to keep. The consequence is worth
- * knowing: adding a coarser line leaves every readout where it was, and only removing
- * the finest thing you had moves them. The picker's trigger names it for that reason.
+ * Derived rather than picked separately, so there is no second piece of state and no "the
+ * primary must be one of the picked" invariant to keep. Two things read it: a map pin,
+ * which is a badge over a place and has room for one number, and the crop's Leq, which is
+ * one energetic mean and so has to be in one weighting (see locationEnergyIndex). The
+ * picker's trigger names it for that reason.
  */
-export const primaryMetric = (metrics: PickedMetrics): LevelMetric =>
-  metrics[0];
+export const primarySeries = (picked: PickedSeries): SeriesKey => picked[0];
 
 /**
- * The set with one metric added or taken away — what pressing a checkbox or a tile does.
+ * Which weighting the *single* numbers come out in, which is the primary's.
  *
- * Built by filtering LEVEL_METRICS rather than by appending and sorting, so the order is
- * the table's by construction whatever order they were pressed in.
+ * Its own function because three places want it and none of them wants the series: the hook
+ * that sums the crop's Leq (one energetic mean has room for exactly one weighting), the
+ * picker's row for that mean, and the card's badge under it. Two of those only name the
+ * number the third computed, so a rule derived three ways is how a card comes to print
+ * `LAeq,Range` over a C-weighted figure — a wrong label on a right number, which is the
+ * failure nobody notices.
+ */
+export const primaryWeighting = (picked: PickedSeries): Weighting =>
+  seriesByKey(primarySeries(picked)).weighting;
+
+/**
+ * The set with one series added or taken away — what pressing a checkbox or a tile does.
+ *
+ * Built by filtering SERIES_KEYS rather than by appending and sorting, so the order is the
+ * table's by construction whatever order they were pressed in — which is also what keeps
+ * the primary from depending on the order someone happened to tick.
  *
  * Removing the last is refused, because a chart of nothing is not a state the page has
  * anything to say in — and the refusal returns the very array it was given rather than an
  * equal one: a fresh array here would be a new context value for every card on the page
  * (see ProjectViewCtx) and a rebuilt uPlot behind each of them.
  */
-export const toggledMetrics = (
-  metrics: PickedMetrics,
-  metric: LevelMetric,
-): PickedMetrics => {
-  if (!metrics.includes(metric)) {
-    return nonEmpty(
-      LEVEL_METRICS.filter((m) => m === metric || metrics.includes(m)),
-    );
+export const toggledSeries = (
+  picked: PickedSeries,
+  key: SeriesKey,
+): PickedSeries => {
+  if (!picked.includes(key)) {
+    return nonEmpty(SERIES_KEYS.filter((k) => k === key || picked.includes(k)));
   }
   // The last one stays lit, and the same array comes back — see above.
-  if (metrics.length === 1) return metrics;
-  return nonEmpty(metrics.filter((m) => m !== metric));
+  if (picked.length === 1) return picked;
+  return nonEmpty(picked.filter((k) => k !== key));
 };
 
 // filter() cannot know that what it kept is non-empty, and every caller here has just
 // established that it is by a different argument. Asserted in the one place rather than
 // at each of them, so the reasoning sits next to the type it is standing in for.
-const nonEmpty = (metrics: readonly LevelMetric[]): PickedMetrics =>
-  metrics as PickedMetrics;
-
-/**
- * The set to keep when the weighting changes out from under it: whatever the new
- * weighting has a series for, and — only if that would leave nothing — the nearest kin of
- * what was dropped (see supportedMetric).
- *
- * In practice this is the one pair that doesn't exist, LCpeak under dB(A). Someone
- * watching peaks alone gets LAFmax; someone watching peaks *and* the minute Leq simply
- * loses the peak, because the rest of what they asked for is still there to draw.
- *
- * Lossy on purpose, exactly as the single-metric rule was: switching to dB(A) and back
- * does not restore the peak. Remembering it would mean carrying a pick the page is not
- * showing, which is a second kind of state for a case worth one dropdown press.
- *
- * Returns the array it was given when nothing is dropped — the identity matters for the
- * same reason it does in toggledMetrics.
- */
-export const supportedMetrics = (
-  metrics: PickedMetrics,
-  weighting: Weighting,
-): PickedMetrics => {
-  const kept = metrics.filter((m) => hasSeries(m, weighting));
-  if (kept.length === metrics.length) return metrics;
-  if (kept.length === 0) return [supportedMetric(metrics[0], weighting)];
-  return nonEmpty(kept);
-};
+const nonEmpty = (keys: readonly SeriesKey[]): PickedSeries =>
+  keys as PickedSeries;
 
 // How a metric is written where it trails a number, e.g. "87.5 dB(A) 5m". The finest
 // Leq is a second live and a stored minute, which is the one place the mode shows.
@@ -151,8 +142,10 @@ export const weightingUnit = (weighting: Weighting): string =>
   weighting === 'A' ? 'dB(A)' : 'dB(C)';
 
 /**
- * A level's full name — `LAeq,5m`, `LCFmax`, `LCpeak` — for a readout that prints it under
- * the number instead of tagging the number with a window (see LocationReadings).
+ * A series' full name — `LAeq,5m`, `LCFmax`, `LCpeak` — for a readout that prints it under
+ * the number instead of tagging the number with a window (see LocationReadings), and for
+ * the picker's own rows, where the name is the whole of what distinguishes a weighting's
+ * row from its twin in the other block (the two share a colour by design).
  *
  * The quantity spelled out is what lets the unit go unsaid: a figure under `LAeq,5m` is dB
  * by definition and by convention, and "87.5 dB(A) 5m" repeated five times across a card is
@@ -164,13 +157,9 @@ export const weightingUnit = (weighting: Weighting): string =>
  * which is exactly what metricTag knows; so this swaps that window rather than restating
  * "LAeq" and getting to disagree with the legend about it.
  */
-export const metricLabel = (
-  metric: LevelMetric,
-  weighting: Weighting,
-  live: boolean,
-): string => {
-  const {liveLabel} = seriesFor(metric, weighting);
-  return liveLabel.replace(metricTag(metric, true), metricTag(metric, live));
+export const seriesLabel = (key: SeriesKey, live: boolean): string => {
+  const {kind, liveLabel} = seriesByKey(key);
+  return liveLabel.replace(metricTag(kind, true), metricTag(kind, live));
 };
 
 // What the Leq over the whole picked timeframe is called where a window would be named. Not
@@ -180,31 +169,28 @@ export const metricLabel = (
 const RANGE_WINDOW = 'Range';
 
 /**
- * Its full name, for a readout that prints the quantity under the number (see metricLabel).
+ * Its full name, for a readout that prints the quantity under the number (see seriesLabel)
+ * — and for the picker's own row, which is the same name because it is the same reading.
+ *
+ * Weighted like everything else here, and it has to be: it is an energetic mean over one
+ * weighting's minute column, so `Leq,Range` on its own would be the one row in a menu of
+ * ten not saying which it was. The weighting is the primary pick's rather than a choice of
+ * its own — a mean has room for exactly one, and following the primary is what every other
+ * single-number readout on the page does (see primarySeries and showRangeLeq). So the row
+ * is one row, and it is renamed by whatever is ticked above it.
  */
 export const rangeLabel = (weighting: Weighting): string =>
   `L${weighting}eq,${RANGE_WINDOW}`;
 
-/**
- * And its name in the picker, which — like every option there — leaves the weighting to the
- * dropdown beside it, so this reads as LAeq or LCeq as selected.
- */
-export const RANGE_OPTION_LABEL = `Leq,${RANGE_WINDOW}`;
-
-// A window under a weighting is a row of the series table (seriesFor), which
-// carries both halves of the answer: `get` reads it off a live record, `col` names
-// the stored field holding it.
+// A series is a row of the table (seriesByKey), which carries both halves of the
+// answer: `get` reads it off a live record, `col` names the stored field holding it.
 
 /**
- * The live value for the chosen metric, off a device's newest record. Null when the
- * device hasn't filled that trailing window yet — 5m/30m only arrive once its ring
- * buffer has.
+ * The live value for a series, off a device's newest record. Null when the device hasn't
+ * filled that trailing window yet — 5m/30m only arrive once its ring buffer has.
  */
-export const liveDb = (
-  record: NoiseRecording,
-  metric: LevelMetric,
-  weighting: Weighting,
-): number | null => seriesFor(metric, weighting).get(record);
+export const liveDb = (record: NoiseRecording, key: SeriesKey): number | null =>
+  seriesByKey(key).get(record);
 
 export type DisplayedLevel =
   // The latest MQTT record, recent enough to count as now.
@@ -238,8 +224,7 @@ export const isCurrent = (level: DisplayedLevel): boolean =>
 export function displayedLevel({
   live,
   now,
-  metric,
-  weighting,
+  series,
   state,
   historyDb,
 }: {
@@ -247,21 +232,19 @@ export function displayedLevel({
   // Passed in rather than read here, so every level on a page is decided against
   // the same instant and the caller owns the tick.
   now: number;
-  // Which of the page's Leq windows to read, and under which weighting. Only the
-  // live branch needs them: the stored value arrives already resolved (levelsByDevice
-  // picked the column).
-  metric: LevelMetric;
-  weighting: Weighting;
+  // Which of the page's series to read. Only the live branch needs it: the stored
+  // value arrives already resolved (levelsByDevice picked the column).
+  series: SeriesKey;
   // Live MQTT state for this device, if any has arrived this session.
   state?: DeviceState;
-  // Stored dB for the selected metric, already decoded. Undefined while it's
+  // Stored dB for the selected series, already decoded. Undefined while it's
   // loading.
   historyDb?: number | null;
 }): DisplayedLevel {
   if (live) {
     if (!state) return {kind: 'none'};
     // A window the device can't report yet reads as no level, not as a zero.
-    const db = liveDb(state.latest, metric, weighting);
+    const db = liveDb(state.latest, series);
     if (db == null) return {kind: 'none'};
     // Past the window the last record is no longer "right now" — but it is still
     // the last thing this monitor said, which is more use than a blank.
@@ -272,59 +255,44 @@ export function displayedLevel({
   return historyDb != null ? {kind: 'history', db: historyDb} : {kind: 'none'};
 }
 
-// The picker's rows, finest first, built off the same list and the same tag the
-// numbers are printed with, so a label and the value under it can't disagree. The
-// labels carry no weighting letter — that's the other dropdown — so 'Leq' reads as
-// LAeq or LCeq as selected, and 'Fmax' as LAFmax or LCFmax. The finest window is one
-// option under two labels: per-second live and per-minute stored is the same intent
-// either way ("as fine as this goes"), and the label says which you get.
-//
-// Every option every time, checked or not: the picker is a set now, so what is *not*
-// being drawn has to be as legible as what is (see LevelPicker).
-//
-// Disabled rather than dropped where the weighting has no such series: a peak is
-// C-weighted by definition, and an option that vanishes reads as a bug, while a
-// greyed-out one says the weighting is what's in the way.
-export const metricOptions = (
-  live: boolean,
-  weighting: Weighting,
-): Array<{value: LevelMetric; label: string; disabled?: boolean}> =>
-  LEVEL_METRICS.map((value) => {
-    const tag = metricTag(value, live);
-    return {
-      value,
-      // Only the Leq windows are named after a window; the maxima are named outright.
-      label: isEq(value) ? `Leq,${tag}` : tag,
-      disabled: !hasSeries(value, weighting),
-    };
-  });
-
-const isEq = (metric: LevelMetric) => metric.startsWith('eq_');
-
 /**
- * The metric to fall back to when the weighting changes out from under one — LCpeak under
- * dB(A), the only pair that doesn't exist. Its nearest kin rather than the page default:
- * someone reading peaks is looking at maxima, and LAFmax is the A-weighted answer to that,
- * not the 1-minute Leq.
+ * The picker's rows: every series there is, in two blocks — the four A-weighted ones, then
+ * the five C-weighted — each block headed by the unit its rows are read in.
  *
- * About one metric, and reached only where a set has been emptied — see supportedMetrics,
- * which is what the picker actually calls.
+ * Grouped rather than one flat list of nine, and the grouping is the whole reason a single
+ * control works at all: `LAeq,5m` and `LCeq,5m` differ by one letter in the middle of a
+ * name, and nine of those in a column is a list nobody can scan. Under a `dB(A)` and a
+ * `dB(C)` heading the letter is the block you are in, and the rows read as the five
+ * quantities twice over.
+ *
+ * Named in full rather than as bare windows — this used to be `Leq,5m`, with the weighting
+ * left to the dropdown beside it. There is no dropdown beside it any more, and with both
+ * weightings on offer at once a row that didn't say which it was would be one of a pair of
+ * identical labels. Off seriesLabel, so a row, the tile that prints its number and the
+ * chart's tooltip all spell it the one way.
+ *
+ * Every row every time, checked or not: the pick is a set, so what is *not* being drawn has
+ * to be as legible as what is (see LevelPicker). And no disabled rows left — a pair the
+ * table has no entry for (LCpeak's A-weighted twin) is simply not a row, where it used to
+ * be a greyed one saying the *other* control was in the way.
+ *
+ * The finest window is one row under two labels: per-second live and per-minute stored is
+ * the same intent either way ("as fine as this goes"), and the label says which you get.
  */
-export const supportedMetric = (
-  metric: LevelMetric,
-  weighting: Weighting,
-): LevelMetric =>
-  hasSeries(metric, weighting)
-    ? metric
-    : hasSeries('fmax', weighting)
-      ? 'fmax'
-      : 'eq_fast';
-
-// Labelled by weightingUnit rather than restating its two strings: the dropdown and
-// every number printed beside it are the same decision about how a weighting is spelt.
-export const WEIGHTING_OPTIONS: Array<{value: Weighting; label: string}> = (
-  ['A', 'C'] as const
-).map((value) => ({value, label: weightingUnit(value)}));
+export const seriesOptions = (
+  live: boolean,
+): Array<{
+  weighting: Weighting;
+  unit: string;
+  options: Array<{key: SeriesKey; label: string}>;
+}> =>
+  WEIGHTINGS.map((weighting) => ({
+    weighting,
+    unit: weightingUnit(weighting),
+    options: SERIES_KEYS.filter(
+      (key) => seriesByKey(key).weighting === weighting,
+    ).map((key) => ({key, label: seriesLabel(key, live)})),
+  }));
 
 /**
  * One pin stands for a location, which may hold several monitors. The loudest is

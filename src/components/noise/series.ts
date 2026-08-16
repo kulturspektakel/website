@@ -19,16 +19,35 @@ import {
 // Both used to be their own nine-entry table, which meant every change was a
 // lockstep edit across two lists with nothing checking they still matched.
 //
-// Order is load-bearing: it is the legend order within a weighting, and it is
-// the column order of the live buffers (column i+1 mirrors SERIES[i]), which
-// nothing in the type system enforces — see series.test.ts.
+// Order is load-bearing three times over: it is the column order of the live
+// buffers (column i+1 mirrors SERIES[i]), which nothing in the type system
+// enforces — see series.test.ts; it is the order the picker lists its rows in,
+// A-weighted block first and finest window first within each; and because of
+// that it is what decides the *primary* of a pick, the first of it in this
+// order (see primarySeries). So the table is grouped by weighting rather than
+// interleaved by kind, and that grouping is what the menu's two blocks are.
 //
 // A chart's columns are laid out here too, one per (metric, device) — see the aligners
 // and traceColumn below.
 
-// The weighting-independent identity of a series, so the legend's toggle state
-// carries across the dB(A)/dB(C) switch: hiding LAFmax hides LCFmax too.
+// What a series measures, apart from the filter it is measured through: the quantity
+// and the window, which is what the two weightings of one row have in common — and so
+// what they share a colour for (see below).
 export type SeriesKind = 'eq_fast' | 'eq_5m' | 'eq_30m' | 'fmax' | 'peak';
+
+/**
+ * One row of the table, named — the whole of what the pages pick, since the weighting
+ * stopped being a mode of the page and became part of what a line *is* (see level.ts).
+ *
+ * A string rather than a `{kind, weighting}` pair for two reasons that are the same
+ * reason: it can key a Record — the playhead's levels and the stored traces are both
+ * keyed by one — and it can go into the `join(' ')` digests every memo in this section
+ * uses in place of an array identity.
+ */
+export type SeriesKey = `${SeriesKind}:${Weighting}`;
+
+export const seriesKey = (kind: SeriesKind, weighting: Weighting): SeriesKey =>
+  `${kind}:${weighting}`;
 
 export type NoiseSeries = {
   kind: SeriesKind;
@@ -120,6 +139,34 @@ export const SERIES: readonly NoiseSeries[] = TABLE.map((s) => ({
   color: `chart.series.${s.kind}`,
 }));
 
+// Every row's name, in the table's order — which is the picker's order, and so the
+// order a pick is kept in (see toggledSeries). The one list anything enumerating the
+// section's quantities walks.
+export const SERIES_KEYS: readonly SeriesKey[] = SERIES.map((s) =>
+  seriesKey(s.kind, s.weighting),
+);
+
+// Names resolved back to rows once, so a lookup is not a scan of the table: this is
+// read per device per window on every minute the playhead crosses, and per line on
+// every rebuild of every chart on the list.
+const BY_KEY = new Map<SeriesKey, NoiseSeries>(
+  SERIES.map((s) => [seriesKey(s.kind, s.weighting), s]),
+);
+
+// A name back to what it names. Total by construction — the only keys that exist are
+// the ones SERIES_KEYS produced, and a `SeriesKey` that isn't one of them cannot be
+// written down without asserting it (series.test.ts checks the pair round-trips).
+export const seriesByKey = (key: SeriesKey): NoiseSeries => BY_KEY.get(key)!;
+
+// Whether a name from outside this program names a row of the table — which is a question
+// only for values that were not written down as `SeriesKey`s. There is exactly one such
+// source: a stored loudness limit names the series it is written against, and a column of
+// text is not a union (see NoiseLocationLimit). Both the server fn that accepts one and the
+// loader that reads one back go through this, so a series that has been renamed out of the
+// table cannot arrive at a chart as a colour lookup that misses.
+export const isSeriesKey = (value: string): value is SeriesKey =>
+  BY_KEY.has(value as SeriesKey);
+
 // A series with its label resolved. Kept apart from the table itself because a label is a
 // presentation of a series rather than part of one — the table carries what to plot, this
 // carries what to call it.
@@ -138,28 +185,18 @@ export const emptyBuffer = (): DeviceBuffer => [
   ...SERIES.map(() => [] as number[]),
 ];
 
-// One row of the table, by what it *is* rather than by where it sits. Every
-// (kind, weighting) pair that this file lists exists — see series.test.ts — which
-// is what makes the assertion safe, and it is the only place the pair is looked
-// up: level.ts reads `get`/`col` off it, the charts read `color`.
-export const seriesFor = (
-  kind: SeriesKind,
-  weighting: Weighting,
-): NoiseSeries =>
-  SERIES.find((s) => s.kind === kind && s.weighting === weighting)!;
-
-// Not every kind exists under both weightings — a peak is only ever C-weighted, which
-// is why seriesFor's assertion needs a way to be checked rather than trusted. The
-// picker asks this to decide what it may offer for the weighting in force.
-export const hasSeries = (kind: SeriesKind, weighting: Weighting): boolean =>
-  SERIES.some((s) => s.kind === kind && s.weighting === weighting);
+// Rows are looked up by name and only by name — see seriesByKey above. There used to be a
+// `seriesFor(kind, weighting)` beside it and a `hasSeries` to guard it, because the pages
+// held a kind and a weighting apart and could ask for the one pair that doesn't exist
+// (LCpeak's A-weighted twin). A key is a row that is already known to be there, so both
+// questions went with the two controls that raised them.
 
 // Which live-buffer column holds a series: column 0 is the timestamps and column
 // i+1 mirrors SERIES[i]. That convention is this file's (see emptyBuffer above), so
 // reading it is too — a chart that worked the +1 out for itself would keep plotting a
 // plausible-looking wrong line if the layout changed.
-export const bufferColumn = (kind: SeriesKind, weighting: Weighting): number =>
-  SERIES.indexOf(seriesFor(kind, weighting)) + 1;
+export const bufferColumn = (key: SeriesKey): number =>
+  SERIES_KEYS.indexOf(key) + 1;
 
 // Several metrics and several devices in one chart, which in uPlot's aligned data means
 // one x column and a y column per pair of them. Both aligners live here for the same

@@ -13,12 +13,17 @@ import {NoiseToolbar} from '../components/noise/NoiseToolbar';
 import {DeviceViewContext} from '../components/noise/deviceView';
 import {ReferenceMicPanel} from '../components/noise/ReferenceMicPanel';
 import {useReferenceMic} from '../components/noise/useReferenceMic';
-import {deviceAssignment} from '../server/noiseHistory.server';
+import {deviceAssignment, deviceLimits} from '../server/noiseHistory.server';
 import {seo} from '../utils/seo';
 
-// Where the monitor is placed and when it was last heard from — the only two things this
-// page needs the database for, everything else it shows is arriving over MQTT. See
-// deviceAssignment for why a placement is a row rather than a field.
+// Where the monitor is placed, what that place is permitted, and when it was last heard
+// from — the only three things this page needs the database for, everything else it shows
+// is arriving over MQTT. See deviceAssignment for why a placement is a row rather than a
+// field.
+//
+// The limits come from the placement rather than from this page's own idea of one: they are
+// a property of the location, so a monitor standing nowhere has none, and the two are
+// resolved against one instant by the same clause (see deviceLimits).
 //
 // The record's own "last seen" and not the stream's, because a page opened this morning has
 // nothing else to say about a monitor that went quiet last night: the live store only knows
@@ -29,8 +34,9 @@ const loadDevice = createServerFn()
   .middleware([crewAuth])
   .inputValidator((device: string) => device)
   .handler(async ({data: device}) => {
-    const [assignment, row] = await Promise.all([
+    const [assignment, limits, row] = await Promise.all([
       deviceAssignment(device),
+      deviceLimits(device),
       // Null for a name that has never reported: nothing forbids navigating to one, and it
       // reads as "nie gesehen" rather than as an error.
       prismaClient.device.findUnique({
@@ -38,7 +44,7 @@ const loadDevice = createServerFn()
         select: {lastSeen: true},
       }),
     ]);
-    return {assignment, lastSeen: row?.lastSeen?.getTime() ?? null};
+    return {assignment, limits, lastSeen: row?.lastSeen?.getTime() ?? null};
   });
 
 // `device/` is a static segment, and has to be: a project id and a device name are
@@ -57,8 +63,7 @@ export const Route = createFileRoute('/crew/noise/device/$device')({
     }),
 });
 
-// The page for one monitor: what it is reading now, in the window and weighting the
-// toolbar is set to. Live and nothing else — a monitor's past is read at the place it was
+// The page for one monitor: what it is reading now, in the series the toolbar is set to. Live and nothing else — a monitor's past is read at the place it was
 // standing, on the project page, where a reading has a location and a timeframe to mean
 // anything against. This page is the instrument, not the record.
 //
@@ -67,11 +72,11 @@ export const Route = createFileRoute('/crew/noise/device/$device')({
 // state either way.
 function DevicePage() {
   const {device} = Route.useParams();
-  const {assignment, lastSeen} = Route.useLoaderData();
-  // Which windows the chart draws and which weighting they are read in — the same coupled
-  // pair the project page sets, from the one place that knows they are coupled. No primary
-  // taken off the set: nothing on this page reads a single window (see DeviceViewCtx).
-  const {weighting, setWeighting, metrics, toggleMetric} = useLevelPick();
+  const {assignment, limits, lastSeen} = Route.useLoaderData();
+  // Which series the chart draws — the same pick the project page sets, from the one place
+  // that owns it. No primary taken off the set: nothing on this page reads a single series
+  // (see DeviceViewCtx).
+  const {picked, toggleSeries} = useLevelPick();
   // The microphone the monitor can be measured against. Here rather than in the section
   // layout on purpose: a page is the only thing that measures, and a microphone left open
   // behind a page nobody is looking at keeps the browser's recording indicator lit.
@@ -79,8 +84,8 @@ function DevicePage() {
 
   // Pinned, so the charts below are not handed a new context on every render of the page.
   const view = useMemo(
-    () => ({weighting, setWeighting, metrics, toggleMetric, referenceMic}),
-    [weighting, setWeighting, metrics, toggleMetric, referenceMic],
+    () => ({picked, toggleSeries, referenceMic}),
+    [picked, toggleSeries, referenceMic],
   );
 
   return (
@@ -110,20 +115,14 @@ function DevicePage() {
             </HStack>
           }
         >
-          {/* The two choices the charts below are drawn from. `live` only labels them —
-              the finest window is a second here, where the project page's stored one is
-              a minute. No live switch beside them: this page has no other mode.
+          {/* What the charts below are drawn from. `live` only labels the rows — the
+              finest window is a second here, where the project page's stored one is a
+              minute. No live switch beside it: this page has no other mode.
 
               The same set the tile row above the chart lights, and either control sets it:
-              a menu is how you pick a window that is not on screen, a tile is how you drop
+              a menu is how you pick a series that is not on screen, a tile is how you drop
               one you can see. */}
-          <LevelPicker
-            live
-            weighting={weighting}
-            metrics={metrics}
-            onWeighting={setWeighting}
-            onToggleMetric={toggleMetric}
-          />
+          <LevelPicker live picked={picked} onToggleSeries={toggleSeries} />
           <DeviceMenu device={device} />
         </NoiseToolbar>
         {/* Its own gutter, unlike the project page's edge-to-edge map: what is below is
@@ -136,7 +135,13 @@ function DevicePage() {
           p="4"
           gap="2"
         >
-          <LiveView device={device} />
+          {/* What the place it is standing at is permitted, drawn over what it is
+              reading. This chart is a rolling window of the last few minutes, so what
+              belongs on it is the permit in force now — which is why the placement is
+              resolved on the server at load rather than asked about per instant, as the
+              project page's charts do for a crop. Empty for a monitor standing
+              nowhere. */}
+          <LiveView device={device} limits={limits} />
         </Box>
       </Box>
       {/* Rendered here rather than by the ⋮ that opens it: whether it is showing, and with it

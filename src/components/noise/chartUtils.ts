@@ -1,7 +1,7 @@
 import uPlot from 'uplot';
 import {useRef, type MutableRefObject} from 'react';
 import {TZDate} from '@date-fns/tz';
-import {timeZone} from '../../utils/dateUtils';
+import {locale, timeZone} from '../../utils/dateUtils';
 import {themeHex} from '../../theme-noise';
 
 // All noise charts render in festival-local time regardless of the viewer's
@@ -284,23 +284,20 @@ export const dayOf = (d: TZDate) =>
   `${pad2(d.getDate())}.${pad2(d.getMonth() + 1)}.`;
 export const hourMinuteOf = (d: TZDate) =>
   `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-
-// HH:MM:SS — live chart x-axis (rolling seconds window), in `timeZone`.
-export const fmtTime = (ts: number) => {
-  const d = zonedDate(ts);
-  return `${hourMinuteOf(d)}:${pad2(d.getSeconds())}`;
-};
+// The third field, and the only one not spelled out in digits here: an abbreviated
+// weekday in the festival's locale, which is what a date on a readout is actually read
+// as — "which night was that" rather than "which number was that". Intl and not a table
+// of our own, off the same options `formatInstant` labels the timeline's thumbs with, so
+// the two say the same word for the same day. A `TZDate` is a `Date`, so the formatter
+// takes it directly and resolves the zone itself.
+const weekdayFmt = new Intl.DateTimeFormat(locale, {
+  timeZone,
+  weekday: 'short',
+});
+export const weekdayOf = (d: TZDate) => weekdayFmt.format(d);
 
 // HH:MM — historical chart x-axis (per-minute, within a day), in `timeZone`.
 export const fmtHourMinute = (ts: number) => hourMinuteOf(zonedDate(ts));
-
-// dd.MM. HH:MM — historical x-axis for a timeframe spanning more than a day,
-// where a bare HH:MM would repeat and read ambiguously. One `zonedDate` for both
-// halves: this runs per tick on every redraw.
-export const fmtDayHourMinute = (ts: number) => {
-  const d = zonedDate(ts);
-  return `${dayOf(d)} ${hourMinuteOf(d)}`;
-};
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -314,29 +311,34 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 // labels said "time" would be describing two different windows.
 export const spanWithinDay = (spanMs: number): boolean => spanMs < DAY_MS;
 
-// Which of the two a window that wide wants to be labelled with.
-export const spanTimeFormat = (spanMs: number): ((ts: number) => string) =>
-  spanWithinDay(spanMs) ? fmtHourMinute : fmtDayHourMinute;
-
 // How a single pointed-at instant reads, decided once for everything that points at
 // one. The row charts' tooltip and the timeline's playhead readout show the same
 // instant at the same moment — a hover writes both — so they cannot be allowed to
 // print it two different ways.
 //
-// The rule: live is a rolling window of minutes, which wants seconds; otherwise the
-// crop's own width decides, by spanTimeFormat's above. Pass the same span both are
-// looking at, which on the project page is the crop, not the whole festival.
+// Always the whole instant, weekday and date included, however narrow the window it was
+// pointed at in. This used to be span-dependent — a crop inside one day printed a bare
+// 22:15, on the argument that no two points in it could share a clock time — but that
+// answers the wrong question. Nothing on the chart says which day is on screen: the
+// x-axis is clock time by design (see LevelTrace), and a crop of one evening is the
+// ordinary case, so the rule left the tooltip mute about the day almost always. It costs
+// eight characters on a line that has them.
 //
-// In milliseconds, unlike the formatters it composes: that is the unit an instant
-// travels this page in, and uPlot's seconds are a local fact of the chart. Converting
-// here rather than at each caller is what lets the readout share this at all.
-export const instantLabel = (
-  live: boolean,
-  spanMs: number,
-): ((ms: number) => string) => {
-  const format = live ? fmtTime : spanTimeFormat(spanMs);
-  return (ms) => format(ms / 1000);
-};
+// Live keeps its seconds, that window being minutes wide, and takes the date on the same
+// terms as everything else: one shape for the readout rather than one per mode.
+//
+// In milliseconds, unlike the field helpers above: that is the unit an instant travels
+// this page in, and uPlot's seconds are a local fact of the chart. Converting here rather
+// than at each caller is what lets the readout share this at all.
+export const instantLabel =
+  (live: boolean): ((ms: number) => string) =>
+  (ms) => {
+    const d = zonedDate(ms / 1000);
+    const clock = live
+      ? `${hourMinuteOf(d)}:${pad2(d.getSeconds())}`
+      : hourMinuteOf(d);
+    return `${weekdayOf(d)} ${dayOf(d)} ${clock}`;
+  };
 
 // Vertical-grid steps in seconds, smallest first, for the row charts' time axis.
 // A fixed ladder rather than a fixed line count, so the grid reads as clock time:

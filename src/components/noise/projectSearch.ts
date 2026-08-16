@@ -60,7 +60,8 @@ export const validateProjectSearch = (
 // that still contains it. Through setSelectionCurrent, which is the page's one rule for
 // putting a playhead in a crop — it pulls one the arriving crop has left behind to the
 // nearest edge, exactly as a pan does. With no page to keep — the first render of a
-// pinned link — the instant is the crop's own end, where an untouched selection stands.
+// pinned link — there is no instant at all: the playhead is where a pointer is, and a URL
+// carries a window, not a hand (see ProjectSelection).
 //
 // Not clamped to the project's window here, only to the crop: that is
 // resolveProjectSelection's, and it is the only one that knows the window.
@@ -70,8 +71,8 @@ export const projectSearchSelection = (
 ): ProjectSelection | null =>
   search.from != null && search.to != null
     ? setSelectionCurrent(
-        {start: search.from, current: search.to, end: search.to},
-        previous?.current ?? search.to,
+        {start: search.from, current: null, end: search.to},
+        previous?.current ?? null,
       )
     : null;
 

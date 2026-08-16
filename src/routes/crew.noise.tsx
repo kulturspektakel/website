@@ -22,6 +22,8 @@ import {prismaClient} from '../server/prismaClient.server';
 import {deviceAssignments, projectLogs} from '../server/noiseHistory.server';
 import {Toaster} from '../components/chakra-snippets/toaster';
 import {END_BEFORE_START} from '../components/noise/timeframe';
+import {isSeriesKey, type SeriesKey} from '../components/noise/series';
+import {limitLine} from '../components/noise/limitLines';
 
 // The section's data layer lives in this layout file and is imported by the leaf
 // routes, as in crew.produkte.tsx. Every DateTime crosses the wire as epoch ms
@@ -127,6 +129,19 @@ export const loadNoiseProject = createServerFn()
                 Device: {select: {lastSeen: true}},
               },
             },
+            // What each place is permitted. They travel with the location because they
+            // belong to it, so the card's chart draws them and its ⋮ edits them without
+            // either fetching per card.
+            NoiseLocationLimit: {
+              orderBy: {start: 'asc'},
+              select: {
+                id: true,
+                series: true,
+                decibels: true,
+                start: true,
+                end: true,
+              },
+            },
           },
         },
       },
@@ -164,6 +179,29 @@ export const loadNoiseProject = createServerFn()
           end: a.end?.getTime() ?? null,
           lastSeen: a.Device.lastSeen?.getTime() ?? null,
         })),
+        // Both bounds resolved and the series narrowed by the shared helper (see
+        // limitLine), which the device page's loader calls too — so a limit reaches a
+        // chart as the same shape from either end, and a blank bound means the edge of
+        // the event in one place rather than in three.
+        //
+        // Unlike a placement, whose open end is genuinely unresolvable ("still standing"),
+        // *both* of a limit's blanks are the event's own — so both are resolved, and the
+        // two flags beside them are what the editor needs to leave a field blank when it
+        // was blank. Writing a resolved instant back would pin a limit that was meant to
+        // follow the event's dates.
+        limits: l.NoiseLocationLimit.flatMap((x) => {
+          const line = limitLine(x, project);
+          return line
+            ? [
+                {
+                  id: x.id,
+                  ...line,
+                  startsWithProject: x.start == null,
+                  endsWithProject: x.end == null,
+                },
+              ]
+            : [];
+        }),
       })),
     };
   });
@@ -345,6 +383,108 @@ export const deleteNoiseAssignment = createServerFn()
   .handler(async ({data}) => {
     await prismaClient.noiseLocationAssignment.deleteMany({
       where: {id: data.assignmentId},
+    });
+  });
+
+// A dB figure, and never z.coerce.number() for the reason the coordinates aren't
+// either (see createNoiseLocationInput): Number('') is 0, and a coercing schema would
+// turn an emptied field into a limit of absolute silence — the one wrong value that
+// looks like a real one. The dialog parses its string and only then sends a number.
+//
+// Bounded loosely rather than to what a permit plausibly says: the point of the range
+// is to catch the finger that typed the year into the field, not to have an opinion
+// about how loud an event is allowed to be.
+//
+// The pair is exported because the dialog's field checks it too — not to enforce it a
+// second time, but so a typo leaves Save disabled rather than producing a rejection with
+// nothing attached to it. Off the schema's own numbers, so widening the range here widens
+// what the field will hold rather than leaving it quietly refusing values the server takes.
+export const NOISE_LIMIT_DB = {min: 0, max: 200};
+
+export const noiseLimitDecibels = z
+  .number()
+  .min(NOISE_LIMIT_DB.min)
+  .max(NOISE_LIMIT_DB.max);
+
+// Which series the figure is written against, checked against the one table that says what
+// a series is (see isSeriesKey). The column is text, so this is the only thing standing
+// between a typo in a request and a row nothing can draw — and it is `z.custom` rather than
+// a `z.enum` of the nine names so that the list stays derived from the table rather than
+// spelled out a second time here.
+const noiseLimitSeries = z.custom<SeriesKey>(
+  (v) => typeof v === 'string' && isSeriesKey(v),
+  'Unknown series',
+);
+
+export const createNoiseLimit = createServerFn()
+  .middleware([crewAuth])
+  .inputValidator(
+    z.object({
+      locationId: z.string().min(1),
+      series: noiseLimitSeries,
+      decibels: noiseLimitDecibels,
+      // Both optional, as on a placement: a number and nothing else records "this is
+      // the limit for the whole event".
+      start: z.number().int().nullish(),
+      end: z.number().int().nullish(),
+    }),
+  )
+  .handler(async ({data}) => {
+    // The FK would reject an unknown location anyway; a 404 is the honest answer for
+    // a page whose project has been deleted under it.
+    const location = await prismaClient.noiseLocation.findUnique({
+      where: {id: data.locationId},
+      select: {id: true},
+    });
+    if (!location) throw notFound();
+    await prismaClient.noiseLocationLimit.create({
+      data: {
+        locationId: data.locationId,
+        series: data.series,
+        decibels: data.decibels,
+        start: instantOrNull(data.start),
+        end: instantOrNull(data.end),
+      },
+    });
+  });
+
+// Unlike a placement — where which device a saved row is about is not editable, since
+// that is a different placement — everything about a limit is. The series is as much a
+// correction as the number: a permit read as an LAeq that turns out to be written against
+// LCpeak is the same row with the wrong quantity on it, not a different limit.
+//
+// Nullable and not nullish on the bounds: an update says what the row now is in full, so
+// clearing one is a stated null rather than an omission.
+export const updateNoiseLimit = createServerFn()
+  .middleware([crewAuth])
+  .inputValidator(
+    z.object({
+      limitId: z.string().min(1),
+      series: noiseLimitSeries,
+      decibels: noiseLimitDecibels,
+      start: z.number().int().nullable(),
+      end: z.number().int().nullable(),
+    }),
+  )
+  .handler(async ({data}) => {
+    await prismaClient.noiseLocationLimit.update({
+      where: {id: data.limitId},
+      data: {
+        series: data.series,
+        decibels: data.decibels,
+        start: instantOrNull(data.start),
+        end: instantOrNull(data.end),
+      },
+    });
+  });
+
+// deleteMany, so a double-tap or a stale list deletes nothing twice.
+export const deleteNoiseLimit = createServerFn()
+  .middleware([crewAuth])
+  .inputValidator(z.object({limitId: z.string().min(1)}))
+  .handler(async ({data}) => {
+    await prismaClient.noiseLocationLimit.deleteMany({
+      where: {id: data.limitId},
     });
   });
 

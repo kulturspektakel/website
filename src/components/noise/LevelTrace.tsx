@@ -2,29 +2,26 @@ import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {Box, HStack, Text} from '@chakra-ui/react';
 import uPlot from 'uplot';
 import {subscribeToClock, useNoiseBuffers} from './context';
-import {
-  GAP_THRESHOLD_S,
-  STORED_GAP_THRESHOLD_S,
-  WINDOW_S,
-  type Weighting,
-} from './noise';
+import {GAP_THRESHOLD_S, STORED_GAP_THRESHOLD_S, WINDOW_S} from './noise';
 import {
   alignedBuffers,
   alignedSeries,
   bufferColumn,
-  seriesFor,
+  seriesByKey,
   traceColumn,
   traceData,
+  type SeriesKey,
 } from './series';
 import {
   formatDb,
   metricTag,
+  seriesLabel,
   weightingUnit,
-  type LevelMetric,
-  type PickedMetrics,
+  type PickedSeries,
 } from './level';
-import {type MetricTraces} from './projectLogs';
+import {type SeriesTraces} from './projectLogs';
 import {themeHex} from '../../theme-noise';
+import {limitSegments, type LimitLine} from './limitLines';
 import {
   axisBase,
   CHART_PADDING,
@@ -61,30 +58,38 @@ import {usePlayheadEffect, type DeviceWindows} from './projectView';
 // is nothing to plot, because an empty pair of axes says "nothing was measured here" and
 // a missing chart says nothing at all.
 //
-// Which quantities it plots is the header's choice: every picked window is a column — of
+// Which quantities it plots is the header's choice: every picked series is a column — of
 // the stored payload when not live, of the rolling buffer when live — and neither side
 // computes anything the device did not report. Usually one, because usually one is the
 // question; several when the question is a comparison, which is the reason the pick is a
 // set at all.
 //
-// Colour attributes the window and the name attributes the monitor, which is the whole
+// Colour attributes the quantity and the name attributes the monitor, which is the whole
 // legend this chart has:
 //
-//   across windows — each is its own shade off the series table (yellow through red, see
-//                    theme-noise), the same shade the number in it is printed in, so three
-//                    lines are told apart without a key.
-//   within one     — every monitor of a window draws in that one colour: two monitors at a
-//                    location are two readings of the same place, and the useful thing to
-//                    see is the envelope they make. Which of them is which is what the
-//                    header's names and this one's tooltip are for.
+//   across kinds     — each is its own shade off the series table (yellow through red, see
+//                      theme-noise), the same shade the number in it is printed in, so
+//                      three lines are told apart without a key.
+//   across weightings — nothing: a kind's dB(A) and dB(C) are one measurement under a
+//                      different filter and share a colour by design, so LAeq,5m and
+//                      LCeq,5m drawn together are two lines of one shade. They are nested
+//                      the way the windows are (C ≥ A, the weighting being what is
+//                      subtracted), so which is which is legible from the picture; what
+//                      names them is the card's readouts and this one's tooltip, which
+//                      prints the series in full for exactly this reason.
+//   within one       — every monitor of a series draws in that one colour: two monitors at
+//                      a location are two readings of the same place, and the useful thing
+//                      to see is the envelope they make. Which of them is which is what the
+//                      header's names and this one's tooltip are for.
 //
 // So there is still no legend of its own: at row height it would cost more of the trace
 // than it explained, and on the device page the tile row above the chart already is one.
 //
-// The filled area under the trace belongs to a *single* window (see the series list): the
-// windows are nested — Peak ≥ Fmax ≥ Leq,1m ≳ Leq,5m ≳ Leq,30m — so an area under any one
-// of several paints over the quieter lines, and two at 15 % stack into a shade that reads
-// as data. One window keeps the fill it always had; several are lines only.
+// The filled area under the trace belongs to a *single* series (see the series list): they
+// are nested — Peak ≥ Fmax ≥ Leq,1m ≳ Leq,5m ≳ Leq,30m, and dB(C) ≥ dB(A) throughout — so
+// an area under any one of several paints over the quieter lines, and two at 15 % stack
+// into a shade that reads as data. One series keeps the fill it always had; several are
+// lines only.
 //
 // Two sources, one shape, chosen by `live`:
 //   live off — the devices' whole stored history at one point per minute, already on a
@@ -94,12 +99,12 @@ import {usePlayheadEffect, type DeviceWindows} from './projectView';
 //   live on  — the layout's rolling MQTT buffers, merged onto one x and re-projected
 //              once a second over their last WINDOW_S, so a row moves while you watch.
 
-// What each monitor read at the sample the cursor is on, in each window drawn — the body of
-// the tooltip, and the only place this chart names its monitors. Colour already says which
-// window a line is (see above), but every monitor of a window shares it, so with two
-// standing at a location the trace alone cannot be attributed; hovering is how you ask.
+// What each monitor read at the sample the cursor is on, in each series drawn — the body of
+// the tooltip, and the only place this chart names either its monitors or its series in
+// full. Colour says which *kind* a line is (see above) and nothing else: every monitor of a
+// series shares it, and so do a kind's two weightings, so a hover is how both are asked.
 //
-// Monitor-outer, window-inner, so a monitor's readings arrive as a run: the tooltip is read
+// Monitor-outer, series-inner, so a monitor's readings arrive as a run: the tooltip is read
 // as "what is this one saying", not as "what is the 5-minute Leq everywhere".
 //
 // uPlot snaps `idx` to the nearest sample however far away it is, so a hover over a gap
@@ -112,23 +117,23 @@ import {usePlayheadEffect, type DeviceWindows} from './projectView';
 function readingsAt(
   u: uPlot,
   lines: DeviceWindows[],
-  metrics: readonly LevelMetric[],
+  picked: readonly SeriesKey[],
   envelope: boolean,
   gapThresholdX: number,
-): Array<{deviceId: string; metric: LevelMetric; db: number}> {
+): Array<{deviceId: string; series: SeriesKey; db: number}> {
   const idx = u.cursor.idx;
   if (idx == null) return [];
   const dataX = u.data[0]![idx] as number | undefined;
   const cursorX = u.posToVal(u.cursor.left ?? -1, 'x');
   if (dataX == null || Math.abs(cursorX - dataX) > gapThresholdX) return [];
-  const out: Array<{deviceId: string; metric: LevelMetric; db: number}> = [];
+  const out: Array<{deviceId: string; series: SeriesKey; db: number}> = [];
   for (const [d, {deviceId}] of lines.entries()) {
-    for (const [m, metric] of metrics.entries()) {
+    for (const [s, series] of picked.entries()) {
       // Never counted out here: where a column sits is the projection's layout, and a
       // reader that worked it out for itself would go on printing plausible levels
       // attributed to the wrong monitor the day the layout moved.
-      const db = u.data[traceColumn(m, d, lines.length, envelope)]?.[idx];
-      if (db != null) out.push({deviceId, metric, db});
+      const db = u.data[traceColumn(s, d, lines.length, envelope)]?.[idx];
+      if (db != null) out.push({deviceId, series, db});
     }
   }
   return out;
@@ -162,6 +167,94 @@ const DRAG_MIN_PX = 6;
 // timeGridStepS' ladder. Generous, because a row is only a few hundred pixels wide
 // and the grid is orientation, not a scale to measure against.
 const X_GRID_SPACE = 56;
+
+// A limit's dash, on and off. Short enough to read as a rule at row height rather than as
+// a row of ticks, and the pattern is what carries "this is not a measurement" where the
+// colour cannot — colour is never the only cue in this section.
+const LIMIT_DASH = [4, 3];
+
+/**
+ * The permitted levels, over the traces they are permitted for.
+ *
+ * Each in the shade of the series it is written against and dashed where that series' own
+ * line is solid, which between them are the two things a rule has to say: which of the lines
+ * on this chart it bounds, and that it is not one of them. Only the limits whose series is
+ * picked are drawn at all (see limitSegments) — so the header's menu brings a rule and the
+ * line it belongs to into view together.
+ *
+ * The line alone, with no figure lettered on it. What a rule is for is seeing at a glance
+ * whether the trace is under it, and for that the height *is* the reading — the dB grid
+ * beside it already places the line on the axis, and a number repeated on every rule on
+ * every card was type in the middle of the plot competing with the levels it was describing.
+ * The figure is edited, and read back, in the dialog that sets it.
+ *
+ * A `draw` hook, where the playhead above is deliberately a DOM line — and the difference
+ * is worth stating, because the two look like the same problem. That comment is about cost
+ * per pointer frame: the playhead moves with the hand, and a full redraw of every card's
+ * plot to move one line is what it buys its way out of. A limit moves only when the x scale
+ * or the plot's size does, which is when uPlot redraws anyway, so the hook here is free —
+ * and it draws the thing a `<div>` would make awkward: a rule bounded at both ends in x.
+ *
+ * Device pixels throughout, which is the whole of what makes canvas work here and the one
+ * thing easy to get silently wrong. Positions come from valToPos' third argument, the `true`
+ * makeSampleGapsRefiner also passes; the stroke and the dash are written in CSS pixels and
+ * scaled by `uPlot.pxRatio`, exactly as uPlot scales its own stroke widths. Skip that and on
+ * a retina screen the rule comes out a hairline, which looks like a styling choice rather
+ * than a bug.
+ */
+function drawLimits(
+  u: uPlot,
+  limits: readonly LimitLine[],
+  picked: PickedSeries,
+): void {
+  if (limits.length === 0) return;
+  const {min, max} = u.scales.x;
+  if (min == null || max == null) return;
+  const segments = limitSegments(limits, picked, min, max);
+  if (segments.length === 0) return;
+
+  // Read per draw rather than closed over: uPlot itself re-reads it on a dppxchange, which
+  // is what dragging a window between two displays fires.
+  const ratio = uPlot.pxRatio;
+  const ctx = u.ctx;
+  ctx.save();
+  // The plotting area and nothing else: a rule is drawn in the scale's own coordinates,
+  // and the axes' gutters are not part of it.
+  ctx.beginPath();
+  ctx.rect(u.bbox.left, u.bbox.top, u.bbox.width, u.bbox.height);
+  ctx.clip();
+
+  ctx.lineWidth = ratio;
+  ctx.setLineDash(LIMIT_DASH.map((d) => d * ratio));
+
+  const [floor, ceiling] = dbAxis.range;
+  for (const {series, decibels, from, to} of segments) {
+    // The shade of the line it bounds, which is what ties the two together where several
+    // series are picked and each has a limit of its own: a rule and its trace are one
+    // statement about one quantity. What keeps it from reading as a sixth measurement is
+    // the dash — the form, not the hue. Two weightings of a quantity share a shade by
+    // design (see the series table), and so do their limits.
+    ctx.strokeStyle = themeHex(seriesByKey(series).color);
+
+    // Clamped to the axis, which is fixed at 30–110 (see dbAxis): a peak limit written at
+    // 120 has to be drawn somewhere, and hard against the top of the plot is the honest
+    // place. Dropping the line instead would be the worse answer — a limit nobody can see
+    // is one nobody knows is set — and a rule pinned to the top edge reads as "above
+    // anything this chart can show", which is what it is.
+    const y = Math.round(u.valToPos(Math.min(Math.max(decibels, floor), ceiling), 'y', true)); // prettier-ignore
+    const x0 = Math.round(u.valToPos(from, 'x', true));
+    const x1 = Math.round(u.valToPos(to, 'x', true));
+
+    // Half the stroke down from a whole pixel, so it lands on a row of them rather than
+    // straddling two — the same reason the playhead carries a negative half-pixel margin.
+    ctx.beginPath();
+    ctx.moveTo(x0, y + ratio / 2);
+    ctx.lineTo(x1, y + ratio / 2);
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
 
 // The playhead, drawn as a DOM line over the canvas rather than in it. A `draw` hook
 // would mean a full redraw of every row's plot per pointer frame for a line that
@@ -213,17 +306,21 @@ type LevelTraceProps = {
   // line each, clipped to those windows; one line is the ordinary case, and none — a
   // location nothing has stood at yet — draws an empty chart rather than nothing.
   lines: DeviceWindows[];
-  // Which Leq windows and which weighting the page is showing. `series` was already
-  // resolved for both; this pair is what picks the matching columns out of the live buffer,
-  // and what colours each line — the same shade the number in that window is printed in, so
-  // a row says which is which without a legend.
+  // Which series the page is showing. `traces` below was already resolved for them; this is what
+  // picks the matching columns out of the live buffer, and what colours each line — the
+  // same shade the number for that series is printed in.
   //
-  // Every window here has a series under this weighting. `setWeighting` is what keeps that
-  // true, by moving both in one update (see useLevelPick) — so nothing is filtered here: a
-  // chart that dropped a column its series list still had would draw a monitor's readings
-  // under another monitor's name.
-  metrics: PickedMetrics;
-  weighting: Weighting;
+  // Every entry names a row of the table by construction (see SeriesKey), so nothing is
+  // filtered here: a chart that dropped a column its series list still had would draw a
+  // monitor's readings under another monitor's name.
+  picked: PickedSeries;
+  // What this place is permitted, as rules over the trace. In the common part of the shape
+  // below rather than in either arm: a limit is a fact about the location and is drawn the
+  // same way whether the chart is showing a crop or the last few minutes.
+  //
+  // Optional because one caller genuinely has none to give — a monitor standing nowhere has
+  // no limits, which is a place with no permit rather than a permit of none.
+  limits?: readonly LimitLine[];
   // How much height to give the time axis, for the one caller that cannot take the
   // default. A chart's bottom gutter comes out of its plot area, so two charts side by
   // side draw their grids at different heights unless they reserve the same — and on the
@@ -242,7 +339,7 @@ type LevelTraceProps = {
       bounds?: never;
       onScrub?: never;
       onCrop?: never;
-      series?: never;
+      traces?: never;
     }
   | {
       live: false;
@@ -256,8 +353,10 @@ type LevelTraceProps = {
       // nothing to do.
       bounds: {start: number; end: number};
       // Where the pointer is, in epoch ms, once per animation frame while it's over the
-      // plot (uPlot batches its own cursor updates to a frame).
-      onScrub: (at: number) => void;
+      // plot (uPlot batches its own cursor updates to a frame) — and null when it is no
+      // longer over it, which is as much a statement about the page's instant as a
+      // position is: the playhead is where a pointer is pointing, and nothing is.
+      onScrub: (at: number | null) => void;
       // Crops the page's timeframe to what this trace was pointed at, in epoch ms. Two
       // gestures, one answer, because they differ only in how much of the crop they name:
       //
@@ -276,23 +375,27 @@ type LevelTraceProps = {
       //
       // An omitted end keeps the crop's own.
       onCrop: (crop: {start?: number; end?: number}) => void;
-      // Every device's whole stored trace, at one point per minute, per picked window — the
+      // Every device's whole stored trace, at one point per minute, per picked series — the
       // page's own record, passed through rather than picked apart here. Absent while it
       // loads, and missing an entry for a device that measured nothing in the project.
-      series?: MetricTraces;
+      //
+      // Named for what it holds and not `series`, which since the pick carries its own
+      // weighting means a row of the table: `picked` above names the series, this is the
+      // data for them.
+      traces?: SeriesTraces;
     }
 );
 
 export function LevelTrace({
   lines,
   live,
-  metrics,
-  weighting,
+  picked,
+  limits,
   range,
   bounds,
   onScrub,
   onCrop,
-  series,
+  traces,
   xAxisSize = X_AXIS_H,
 }: LevelTraceProps) {
   // The buffers alone: a chart has nothing to say about a record arriving — the
@@ -305,13 +408,24 @@ export function LevelTrace({
   // new range never leaves them stale and never rebuilds the plot. `live` is deliberately
   // not one of them: the gap threshold below is derived from it and is baked into the
   // series at construction, so switching source rebuilds the plot either way.
-  const seriesRef = useLatest(series);
+  const tracesRef = useLatest(traces);
   const rangeRef = useLatest(range);
   // Through a ref for the same reason as the range, and read only from inside a gesture:
   // the window's right edge follows the clock on a running festival, so the object is new
   // every minute and a dependency on it would rebuild the plot for a number no gesture
   // was using at the time.
   const boundsRef = useLatest(bounds);
+  // And the limits, which is what keeps them out of the plot-build dependencies below: a
+  // limit saved in the dialog must repaint the rule, not tear the chart down and build a
+  // new one under the pointer. The effect further down asks for that repaint.
+  const limitsRef = useLatest(limits);
+  // The set they are drawn against, through a ref for the same reason — a limit is drawn
+  // only where its series is (see limitSegments), so the draw hook needs the current pick
+  // and not the one the plot was built on. Read off a ref rather than the closure, which is
+  // what this used to be: that was fresh only transitively, because `strokes` is derived
+  // from the pick and is in the plot's dependencies — a hidden dependency of the limits'
+  // correctness on an unrelated memo.
+  const pickedRef = useLatest(picked);
   // Whether this chart has a crop to move, which is everything uPlot has to be built
   // differently for: its own drag-select, and the touch gestures. Both were their own
   // derived flag (`selectable`, `touchable`) back when a caller could withhold either
@@ -336,53 +450,53 @@ export function LevelTrace({
         .join(' '),
     [lines],
   );
-  // The picked windows the same way, and for the same reason: this component re-renders on
-  // every frame of a hover, and everything below derived from the set — the colours, the
-  // buffer columns, the effect that builds the plot — would otherwise be recomputed or torn
-  // down for a set that had not changed.
-  const metricsKey = metrics.join(' ');
-  // How many monitors the plot has a line for, per window. At least one, so a location with
+  // The pick the same way, and for the same reason: this component re-renders on every
+  // frame of a hover, and everything below derived from the set — the colours, the buffer
+  // columns, the effect that builds the plot — would otherwise be recomputed or torn down
+  // for a set that had not changed.
+  const pickedKey = picked.join(' ');
+  // How many monitors the plot has a line for, per series. At least one, so a location with
   // no monitor yet still has a series to be empty in rather than an axis pair uPlot would
   // reject.
   const lineCount = Math.max(1, lines.length);
   // Whether the filled area is a series of its own — which it is for exactly one shape:
-  // one window, several monitors, where the area belongs under the loudest of them rather
+  // one series, several monitors, where the area belongs under the loudest of them rather
   // than under each (see the series list). One flag rather than a monitor count and a
-  // window count consulted separately, because the projection, that list and the tooltip
+  // series count consulted separately, because the projection, that list and the tooltip
   // all have to agree about whether the column is there at all.
-  const envelope = lines.length > 1 && metrics.length === 1;
-  // Through a ref like the rest: switching weighting swaps which buffer columns are
-  // plotted, and it must not tear the plot down to do it. The live projection reruns
-  // every second anyway, and a new `series` lands with it when not live. (Ticking a
-  // *window* does rebuild the plot — see the strokes below — but this still has to
-  // be right on the frame it is rebuilt on.)
+  const envelope = lines.length > 1 && picked.length === 1;
+  // Through a ref like the rest: it must not tear the plot down to swap which buffer
+  // columns are plotted. The live projection reruns every second anyway, and a new
+  // `series` lands with it when not live. (Ticking a box does rebuild the plot — see the
+  // strokes below — but this still has to be right on the frame it is rebuilt on.)
   const colsRef = useLatest(
-    useMemo(
-      () => metrics.map((m) => bufferColumn(m, weighting)),
-      [metricsKey, weighting],
-    ),
+    useMemo(() => picked.map(bufferColumn), [pickedKey]),
   );
-  // Each window's colour from the shared table, so the row and the device page draw the
-  // same line in the same shade. uPlot bakes a series' stroke in at construction, so unlike
-  // the columns these do rebuild the plot; they change only when someone ticks a box, and at
-  // this size a rebuild is cheap. (A weighting flip does not change them — a kind's two
-  // weightings are one measurement under a different filter, and one colour.)
+  // Each line's colour from the shared table, so the row and the device page draw the same
+  // line in the same shade. uPlot bakes a series' stroke in at construction, so unlike the
+  // columns these do rebuild the plot; they change only when someone ticks a box, and at
+  // this size a rebuild is cheap. (A kind's two weightings resolve to the same shade — one
+  // measurement under a different filter, and one colour; the tooltip below is what tells
+  // them apart.)
   //
   // Two forms of the same colours: the tokens for the tooltip, which is Chakra and wants
   // the name, and the hexes for the canvas, which cannot take one. Memoized so the array
   // identity is stable, the plot-building effect depending on it directly.
   const tokens = useMemo(
-    () => metrics.map((m) => seriesFor(m, weighting).color),
-    [metricsKey, weighting],
+    () => picked.map((key) => seriesByKey(key).color),
+    [pickedKey],
   );
   const strokes = useMemo(() => tokens.map(themeHex), [tokens]);
-  // What the tooltip's numbers are in, spelled the same way the card's header spells it
-  // — the two are readings of the same quantity and must not look like different ones.
-  // The window's own tag rides along only where there is one window: with several, the tag
-  // is what names the row, and printing it twice per line would say there were two.
-  const unit = weightingUnit(weighting);
-  const unitLabel =
-    metrics.length === 1 ? `${unit} ${metricTag(metrics[0], live)}` : unit;
+  // What the tooltip's numbers are in. With one line there is one weighting and one window
+  // to state, so the number carries both — `87.5 dB(A) 5m`, spelled the way the card's
+  // header spells it. With several the row already names the series in full beside it, and
+  // a name says its own unit: a figure under `LCeq,5m` is dB by definition, and repeating
+  // the weighting after the number would be the second place a line says which it is — and
+  // the wrong place, the lines no longer sharing one.
+  const only = picked.length === 1 ? seriesByKey(picked[0]) : null;
+  const unitLabel = only
+    ? `${weightingUnit(only.weighting)} ${metricTag(only.kind, live)}`
+    : 'dB';
   const onScrubRef = useLatest(onScrub);
   // Where the line stands: the instant the page is looking at, written by the
   // subscription below rather than taken as a prop. The playhead is page state that moves
@@ -400,14 +514,14 @@ export function LevelTrace({
   // this is what a particular moment of the trace was.
   //
   // The readings are here rather than only in the card's header because the header prints
-  // one number for the whole location, in one window (the loudest monitor's, in the
-  // primary), while this chart may be drawing a line per monitor per window: what the
-  // tooltip answers is which line is which, which is also what the chart has no legend for.
+  // one number per series for the whole location (the loudest monitor's), while this chart
+  // may be drawing a line per monitor per series: what the tooltip answers is which line is
+  // which, which is also what the chart has no legend for.
   const [tip, setTip] = useState<{
     left: number;
     top: number;
     label: string;
-    readings: Array<{deviceId: string; metric: LevelMetric; db: number}>;
+    readings: Array<{deviceId: string; series: SeriesKey; db: number}>;
   } | null>(null);
 
   // The range a sweep has named and not yet done anything with: the crop it would make,
@@ -429,14 +543,11 @@ export function LevelTrace({
   // must not be rebuilt for a menu opening. All it wants to know is whether one is.
   const pendingRef = useLatest(pending);
 
-  // How much of the instant is worth printing, decided by how wide the window is: a
-  // crop inside one day needs no date, a festival-length one would otherwise say
-  // 22:15 four times over. Shared with the timeline's readout, which labels the same
-  // instant a hover here puts under the playhead — see instantLabel.
-  // Live's label is seconds whatever the span, so the missing crop costs nothing there.
-  const formatRef = useLatest(
-    instantLabel(live, range ? range.end - range.start : 0),
-  );
+  // How the pointed-at instant reads — weekday, date and clock, whatever the crop, plus
+  // seconds while live. Shared with the timeline's readout, which labels the same instant
+  // a hover here puts under the playhead, and which is why the rule lives in instantLabel
+  // rather than here.
+  const formatRef = useLatest(instantLabel(live));
 
   const playheadRef = useRef<HTMLDivElement | null>(null);
 
@@ -497,8 +608,8 @@ export function LevelTrace({
           colsRef.current,
         )
       : alignedSeries(
-          metrics.map((m) =>
-            current.map((l) => seriesRef.current?.[m]?.[l.deviceId]),
+          picked.map((key) =>
+            current.map((l) => tracesRef.current?.[key]?.[l.deviceId]),
           ),
         );
     // The clipping — each monitor drawing only where it stood here, which is what makes
@@ -511,7 +622,7 @@ export function LevelTrace({
       aligned,
       current.map((l) => l.windows),
       {
-        metricCount: metrics.length,
+        metricCount: picked.length,
         envelope,
         holdX: gapThresholdX,
       },
@@ -521,12 +632,12 @@ export function LevelTrace({
     // render are not a new plot.
   }, [
     linesKey,
-    metricsKey,
+    pickedKey,
     linesRef,
     deviceData,
     live,
     envelope,
-    seriesRef,
+    tracesRef,
     colsRef,
     gapThresholdX,
   ]);
@@ -588,6 +699,12 @@ export function LevelTrace({
           },
         },
         hooks: {
+          // After the series, so a rule sits over the trace it bounds rather than under
+          // the area — a limit the level has already crossed is exactly the one that has
+          // to stay visible.
+          draw: [
+            (u) => drawLimits(u, limitsRef.current ?? [], pickedRef.current),
+          ],
           setSelect: [
             (u) => {
               const {left, width} = u.select;
@@ -621,16 +738,21 @@ export function LevelTrace({
               // page's playhead and print a tooltip under the thing being read.
               if (pendingRef.current) return;
               const left = u.cursor.left;
-              // Negative once the pointer leaves. The tooltip goes with it. The playhead
-              // stays where it was rather than snapping back: it's the page's instant
-              // now, and the row you hovered is usually the one you then want to read a
-              // number off — except while live, where it was never the page's.
+              // Negative once the pointer leaves — a lifted finger included, which the
+              // touch gestures report by parking the cursor off the plot. The tooltip goes
+              // with it, and so does the page's playhead: it marks the instant something is
+              // pointing at, and when nothing is there is no instant. The cards' readings
+              // and the pins' numbers go quiet with it, which is the resting state of a
+              // page nobody is reading.
               if (left == null || left < 0) {
                 hoverAtRef.current = null;
                 setTip(null);
-                // Live's line is the pointer's own and goes with it, unlike the page's
-                // playhead: there is no instant for it to be left standing on, and the
-                // window slides out from under it a second later anyway.
+                // Withheld while live, where the line was never the page's — hence the
+                // optional call, and positionPlayhead below for that case.
+                onScrubRef.current?.(null);
+                // Live's line is the pointer's own, so this chart takes it down itself.
+                // Every other line on the page is drawn from the signal the call above
+                // just emptied, and goes down with it.
                 if (live) positionPlayhead(null);
                 return;
               }
@@ -653,7 +775,7 @@ export function LevelTrace({
                 readings: readingsAt(
                   u,
                   linesRef.current,
-                  metrics,
+                  picked,
                   envelope,
                   gapThresholdX,
                 ),
@@ -848,8 +970,19 @@ export function LevelTrace({
     rangeRef,
     pendingRef,
     positionPlayhead,
+    limitsRef,
     xAxisSize,
   ]);
+
+  // A limit added, retimed or binned in the dialog, made visible. The draw hook reads the
+  // ref, so nothing else about the plot has to change — and `false` because the data has
+  // not: the scales here are fixed functions, so there is no range to re-accumulate.
+  //
+  // Its own effect rather than a line in the one that pushes data: that one runs on every
+  // arriving record while live, and a limit is edited by hand a few times an evening.
+  useEffect(() => {
+    plotRef.current?.redraw(false);
+  }, [limits]);
 
   // In and out points, bound to the hover rather than to the page: `i` crops the
   // timeframe to start at the instant under the pointer, `o` to end there.
@@ -921,7 +1054,7 @@ export function LevelTrace({
     return subscribeToClock(1000, () => {
       if (nearViewRef.current) apply();
     });
-  }, [project, live, series]);
+  }, [project, live, traces]);
 
   const applyCrop = useCallback(() => {
     const range = rangeRef.current;
@@ -1027,19 +1160,24 @@ export function LevelTrace({
           <Text fontSize="xs" lineHeight="1.2">
             {tip.label}
           </Text>
-          {/* One line per monitor per window with something to say at that instant, the
+          {/* One line per monitor per series with something to say at that instant, the
               value in that line's own colour. Spread to the pill's full width so the
               numbers line up under each other rather than after names of different
               lengths.
 
               What goes on the left is whatever the colour and the card don't already say:
-              the monitor's name, which several lines of one window share; and the window's
-              tag, where there are several windows. Never both when one of them is the only
-              one there is — a lone monitor's name on all five rows, or a lone window's tag,
-              is a column of the same word down a tooltip that has a few lines to spare. */}
-          {tip.readings.map(({deviceId, metric, db}) => (
+              the monitor's name, which several lines of one series share; and the series'
+              own name, where there are several series. Never both when one of them is the
+              only one there is — a lone monitor's name on all five rows, or a lone series'
+              name, is a column of the same word down a tooltip that has a few lines to
+              spare.
+
+              Named in full — `LCeq,5m`, not `5m` — because that is the only thing here
+              that distinguishes a series from its twin in the other weighting: the two
+              share a colour, and a tag would print the same string for both. */}
+          {tip.readings.map(({deviceId, series, db}) => (
             <HStack
-              key={`${deviceId} ${metric}`}
+              key={`${deviceId} ${series}`}
               gap="3"
               justify="space-between"
               fontSize="xs"
@@ -1047,13 +1185,13 @@ export function LevelTrace({
             >
               <Text color="fg.muted">
                 {[
-                  lines.length > 1 || metrics.length === 1 ? deviceId : null,
-                  metrics.length > 1 ? metricTag(metric, live) : null,
+                  lines.length > 1 || picked.length === 1 ? deviceId : null,
+                  picked.length > 1 ? seriesLabel(series, live) : null,
                 ]
                   .filter(Boolean)
                   .join(' · ')}
               </Text>
-              <Text fontWeight="bold" color={tokens[metrics.indexOf(metric)]}>
+              <Text fontWeight="bold" color={tokens[picked.indexOf(series)]}>
                 {formatDb(db, unitLabel)}
               </Text>
             </HStack>

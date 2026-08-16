@@ -24,7 +24,21 @@ export function visibleProjectWindow(
   };
 }
 
-export type ProjectSelection = {start: number; current: number; end: number};
+// `current` is null whenever nothing is pointing at the event: the playhead exists only
+// while a pointer is over a row chart or over the timeline's own crop, and goes with it
+// (see LevelTrace's setCursor hook and the timeline's onHoverMove). So it is not a
+// position the page remembers between gestures — it is where the hand is, and a page
+// nobody is pointing at has no instant, only a range.
+//
+// Which is what every reader downstream already had to handle: live mode has never had
+// an instant either (see the project route's `viewedAt`), so a null here reaches the
+// pins, the cards' readings and the playhead signal through the same path as a live page
+// and needs nothing new of any of them.
+export type ProjectSelection = {
+  start: number;
+  current: number | null;
+  end: number;
+};
 
 // Whether two picks are the same pick, "nothing picked" included. Every writer here
 // builds a fresh object — per frame of a drag, per navigation — and what matters is
@@ -42,9 +56,9 @@ export const sameSelection = (
     a.current === b.current);
 
 // What the user picked, resolved against the window — or, where they have picked
-// nothing, the whole window with the cursor at its right edge, which for a running
-// festival is now: the first switch out of live mode then freezes the moment you were
-// watching rather than jumping to the festival's opening minute.
+// nothing, the whole window with no cursor in it: an instant is what a pointer names, and
+// there is no pointer on a page just arrived at. The first hover over a chart or the strip
+// puts one there.
 //
 // The null is load-bearing, and the reason the page stores a pick rather than a
 // resolved selection: the window's right edge follows the clock during a running
@@ -56,31 +70,40 @@ export function resolveProjectSelection(
   // orderSelection does the clamping and the ordering, so a pick made against a wider
   // window collapses the range rather than inverting it.
   return orderSelection(
-    chosen ?? {start: window.start, end: window.end, current: window.end},
+    chosen ?? {start: window.start, end: window.end, current: null},
     window,
   );
 }
 
-// The slider's thumbs, and back again. The thumb count depends on the mode — live
-// mode has no instant to point at, so it drops the cursor and leaves [start, end]
-// — which means the indices aren't fixed and these two are the only places that
-// know the mapping.
+// The slider's thumbs, and back again. The thumb count is not fixed, so these two are
+// the only places that know the mapping — and they have to answer it the same way, which
+// is what `cursorless` is.
+//
+// Two reasons there may be no cursor thumb, and they are the same reason twice: nothing
+// to point at. Live mode reads what is arriving now, and a scrubbing page nobody is
+// pointing at has let its playhead go (see the type above). Either way the slider is a
+// plain [start, end] range, and the middle index is the *end* rather than the cursor —
+// which is why nothing may derive the playhead from a bare index without asking here.
+const cursorless = (selection: ProjectSelection, live: boolean) =>
+  live || selection.current == null;
+
 export const selectionThumbs = (
   selection: ProjectSelection,
   live: boolean,
 ): number[] =>
-  live
+  cursorless(selection, live)
     ? [selection.start, selection.end]
-    : [selection.start, selection.current, selection.end];
+    : [selection.start, selection.current!, selection.end];
 
 export const thumbsToSelection = (
   thumbs: number[],
   live: boolean,
   previous: ProjectSelection,
 ): ProjectSelection =>
-  live
-    ? // The cursor is carried over, not discarded, so turning live off again returns
-      // to the instant you were last looking at.
+  cursorless(previous, live)
+    ? // The cursor is carried over, not discarded: turning live off again returns to the
+      // instant you were last looking at, and a grip dragged while nothing is hovered
+      // must not invent one.
       {start: thumbs[0]!, end: thumbs[1]!, current: previous.current}
     : {start: thumbs[0]!, current: thumbs[1]!, end: thumbs[2]!};
 
@@ -93,7 +116,14 @@ const orderSelection = (
 ): ProjectSelection => {
   const start = clampTo(selection.start, window.start, window.end);
   const end = Math.max(clampTo(selection.end, window.start, window.end), start);
-  return {start, end, current: clampTo(selection.current, start, end)};
+  return {
+    start,
+    end,
+    // No cursor stays no cursor: this orders a selection, and there is nothing here from
+    // which to invent an instant nobody is pointing at.
+    current:
+      selection.current == null ? null : clampTo(selection.current, start, end),
+  };
 };
 
 // What the slider commits on release. Only what the user actually moved snaps to a
@@ -105,15 +135,27 @@ export function commitProjectSelection(
   previous: ProjectSelection,
   window: {start: number; end: number},
 ): ProjectSelection {
-  const moved = (key: keyof ProjectSelection) =>
+  const moved = (key: 'start' | 'end') =>
     next[key] === previous[key] ? next[key] : snapToQuarter(next[key]);
   return orderSelection(
-    {start: moved('start'), end: moved('end'), current: moved('current')},
+    {
+      start: moved('start'),
+      end: moved('end'),
+      // The same rule as the bounds, with the absent case first: a playhead nobody is
+      // holding is null, not an instant to round.
+      current:
+        next.current == null || next.current === previous.current
+          ? next.current
+          : snapToQuarter(next.current),
+    },
     window,
   );
 }
 
-// The playhead moved and nothing else: what hovering a row chart commits.
+// The playhead moved and nothing else: what hovering a row chart commits — and, with
+// `at` null, what leaving one commits. Both directions through one function, because
+// "where the playhead is" is one rule and a pointer that has gone is as much an answer
+// to it as a pointer that has moved.
 //
 // Deliberately unsnapped, unlike every gesture on the timeline itself. A hover reads
 // an instant off a trace under the pointer, and rounding it to the quarter hour would
@@ -122,10 +164,10 @@ export function commitProjectSelection(
 // pointer sits on the plot's very edge.
 export const setSelectionCurrent = (
   selection: ProjectSelection,
-  at: number,
+  at: number | null,
 ): ProjectSelection => ({
   ...selection,
-  current: clampTo(at, selection.start, selection.end),
+  current: at == null ? null : clampTo(at, selection.start, selection.end),
 });
 
 // The grid every gesture on this page lands on. Exported because the timeline's

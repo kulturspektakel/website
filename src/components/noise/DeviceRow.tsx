@@ -8,7 +8,8 @@ import {Chip} from './Chip';
 import {LiveStatusDot} from './LiveStatusDot';
 import {useBluetooth, useDeviceState, useNowAfterMount} from './context';
 import {formatSeen, isFresh, lastSeenAt} from './noise';
-import {displayedLevel, formatDb, metricTag, weightingUnit} from './level';
+import {displayedLevel, formatDb, weightingUnit} from './level';
+import {seriesByKey} from './series';
 
 // One monitor in the landing page's list: what it is called, where it is standing, how
 // loud it is and whether we are still hearing from it. The way into a device's page, and
@@ -45,8 +46,7 @@ export function DeviceRow({device}: {device: NoiseMonitorDevice}) {
       : displayedLevel({
           live: true,
           now,
-          metric: 'eq_fast',
-          weighting: 'A',
+          series: 'eq_fast:A',
           state,
         });
   const batteryMv = state?.latest.batteryMv;
@@ -110,16 +110,23 @@ export function DeviceRow({device}: {device: NoiseMonitorDevice}) {
         </HStack>
         <HStack gap="2" flexShrink="0">
           {level.kind !== 'none' && (
+            // Drawn in the series' own colour rather than tagged with its window: this
+            // page shows one quantity and never says which, and the yellow LAeq,1s is
+            // drawn in everywhere it has a line is the same statement as a "1s" after
+            // the unit, in the language the rest of the section already speaks.
+            //
             // Muted once it is only the last thing this monitor said, so a number that
-            // has stopped moving doesn't keep reading as one that hasn't.
+            // has stopped moving doesn't keep reading as one that hasn't — and the
+            // colour goes with the liveness it stands for.
             <Text
               whiteSpace="nowrap"
-              color={level.kind === 'stale' ? 'fg.subtle' : undefined}
+              color={
+                level.kind === 'stale'
+                  ? 'fg.subtle'
+                  : seriesByKey('eq_fast:A').color
+              }
             >
-              {formatDb(
-                level.db,
-                `${weightingUnit('A')} ${metricTag('eq_fast', true)}`,
-              )}
+              {formatDb(level.db, weightingUnit('A'))}
             </Text>
           )}
           {/* Where the light at the front isn't: since when we haven't heard from it,

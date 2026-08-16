@@ -57,7 +57,7 @@ export function SelectionMenu({
       </MenuTrigger>
       <MenuContent>
         <MenuItem value="zoom" onClick={onZoom}>
-          Hineinzoomen
+          Zoom in
         </MenuItem>
       </MenuContent>
     </MenuRoot>

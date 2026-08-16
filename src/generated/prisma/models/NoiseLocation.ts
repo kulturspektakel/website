@@ -222,6 +222,7 @@ export type NoiseLocationWhereInput = {
   locationName?: Prisma.StringFilter<"NoiseLocation"> | string
   NoiseProject?: Prisma.XOR<Prisma.NoiseProjectScalarRelationFilter, Prisma.NoiseProjectWhereInput>
   NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentListRelationFilter
+  NoiseLocationLimit?: Prisma.NoiseLocationLimitListRelationFilter
 }
 
 export type NoiseLocationOrderByWithRelationInput = {
@@ -232,6 +233,7 @@ export type NoiseLocationOrderByWithRelationInput = {
   locationName?: Prisma.SortOrder
   NoiseProject?: Prisma.NoiseProjectOrderByWithRelationInput
   NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentOrderByRelationAggregateInput
+  NoiseLocationLimit?: Prisma.NoiseLocationLimitOrderByRelationAggregateInput
   _relevance?: Prisma.NoiseLocationOrderByRelevanceInput
 }
 
@@ -246,6 +248,7 @@ export type NoiseLocationWhereUniqueInput = Prisma.AtLeast<{
   locationName?: Prisma.StringFilter<"NoiseLocation"> | string
   NoiseProject?: Prisma.XOR<Prisma.NoiseProjectScalarRelationFilter, Prisma.NoiseProjectWhereInput>
   NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentListRelationFilter
+  NoiseLocationLimit?: Prisma.NoiseLocationLimitListRelationFilter
 }, "id">
 
 export type NoiseLocationOrderByWithAggregationInput = {
@@ -279,6 +282,7 @@ export type NoiseLocationCreateInput = {
   locationName: string
   NoiseProject: Prisma.NoiseProjectCreateNestedOneWithoutNoiseLocationInput
   NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentCreateNestedManyWithoutNoiseLocationInput
+  NoiseLocationLimit?: Prisma.NoiseLocationLimitCreateNestedManyWithoutNoiseLocationInput
 }
 
 export type NoiseLocationUncheckedCreateInput = {
@@ -288,6 +292,7 @@ export type NoiseLocationUncheckedCreateInput = {
   longitude: number
   locationName: string
   NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentUncheckedCreateNestedManyWithoutNoiseLocationInput
+  NoiseLocationLimit?: Prisma.NoiseLocationLimitUncheckedCreateNestedManyWithoutNoiseLocationInput
 }
 
 export type NoiseLocationUpdateInput = {
@@ -297,6 +302,7 @@ export type NoiseLocationUpdateInput = {
   locationName?: Prisma.StringFieldUpdateOperationsInput | string
   NoiseProject?: Prisma.NoiseProjectUpdateOneRequiredWithoutNoiseLocationNestedInput
   NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentUpdateManyWithoutNoiseLocationNestedInput
+  NoiseLocationLimit?: Prisma.NoiseLocationLimitUpdateManyWithoutNoiseLocationNestedInput
 }
 
 export type NoiseLocationUncheckedUpdateInput = {
@@ -306,6 +312,7 @@ export type NoiseLocationUncheckedUpdateInput = {
   longitude?: Prisma.FloatFieldUpdateOperationsInput | number
   locationName?: Prisma.StringFieldUpdateOperationsInput | string
   NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentUncheckedUpdateManyWithoutNoiseLocationNestedInput
+  NoiseLocationLimit?: Prisma.NoiseLocationLimitUncheckedUpdateManyWithoutNoiseLocationNestedInput
 }
 
 export type NoiseLocationCreateManyInput = {
@@ -442,12 +449,27 @@ export type NoiseLocationUpdateOneRequiredWithoutNoiseLocationAssignmentNestedIn
   update?: Prisma.XOR<Prisma.XOR<Prisma.NoiseLocationUpdateToOneWithWhereWithoutNoiseLocationAssignmentInput, Prisma.NoiseLocationUpdateWithoutNoiseLocationAssignmentInput>, Prisma.NoiseLocationUncheckedUpdateWithoutNoiseLocationAssignmentInput>
 }
 
+export type NoiseLocationCreateNestedOneWithoutNoiseLocationLimitInput = {
+  create?: Prisma.XOR<Prisma.NoiseLocationCreateWithoutNoiseLocationLimitInput, Prisma.NoiseLocationUncheckedCreateWithoutNoiseLocationLimitInput>
+  connectOrCreate?: Prisma.NoiseLocationCreateOrConnectWithoutNoiseLocationLimitInput
+  connect?: Prisma.NoiseLocationWhereUniqueInput
+}
+
+export type NoiseLocationUpdateOneRequiredWithoutNoiseLocationLimitNestedInput = {
+  create?: Prisma.XOR<Prisma.NoiseLocationCreateWithoutNoiseLocationLimitInput, Prisma.NoiseLocationUncheckedCreateWithoutNoiseLocationLimitInput>
+  connectOrCreate?: Prisma.NoiseLocationCreateOrConnectWithoutNoiseLocationLimitInput
+  upsert?: Prisma.NoiseLocationUpsertWithoutNoiseLocationLimitInput
+  connect?: Prisma.NoiseLocationWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.NoiseLocationUpdateToOneWithWhereWithoutNoiseLocationLimitInput, Prisma.NoiseLocationUpdateWithoutNoiseLocationLimitInput>, Prisma.NoiseLocationUncheckedUpdateWithoutNoiseLocationLimitInput>
+}
+
 export type NoiseLocationCreateWithoutNoiseProjectInput = {
   id?: string
   latitude: number
   longitude: number
   locationName: string
   NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentCreateNestedManyWithoutNoiseLocationInput
+  NoiseLocationLimit?: Prisma.NoiseLocationLimitCreateNestedManyWithoutNoiseLocationInput
 }
 
 export type NoiseLocationUncheckedCreateWithoutNoiseProjectInput = {
@@ -456,6 +478,7 @@ export type NoiseLocationUncheckedCreateWithoutNoiseProjectInput = {
   longitude: number
   locationName: string
   NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentUncheckedCreateNestedManyWithoutNoiseLocationInput
+  NoiseLocationLimit?: Prisma.NoiseLocationLimitUncheckedCreateNestedManyWithoutNoiseLocationInput
 }
 
 export type NoiseLocationCreateOrConnectWithoutNoiseProjectInput = {
@@ -501,6 +524,7 @@ export type NoiseLocationCreateWithoutNoiseLocationAssignmentInput = {
   longitude: number
   locationName: string
   NoiseProject: Prisma.NoiseProjectCreateNestedOneWithoutNoiseLocationInput
+  NoiseLocationLimit?: Prisma.NoiseLocationLimitCreateNestedManyWithoutNoiseLocationInput
 }
 
 export type NoiseLocationUncheckedCreateWithoutNoiseLocationAssignmentInput = {
@@ -509,6 +533,7 @@ export type NoiseLocationUncheckedCreateWithoutNoiseLocationAssignmentInput = {
   latitude: number
   longitude: number
   locationName: string
+  NoiseLocationLimit?: Prisma.NoiseLocationLimitUncheckedCreateNestedManyWithoutNoiseLocationInput
 }
 
 export type NoiseLocationCreateOrConnectWithoutNoiseLocationAssignmentInput = {
@@ -533,6 +558,7 @@ export type NoiseLocationUpdateWithoutNoiseLocationAssignmentInput = {
   longitude?: Prisma.FloatFieldUpdateOperationsInput | number
   locationName?: Prisma.StringFieldUpdateOperationsInput | string
   NoiseProject?: Prisma.NoiseProjectUpdateOneRequiredWithoutNoiseLocationNestedInput
+  NoiseLocationLimit?: Prisma.NoiseLocationLimitUpdateManyWithoutNoiseLocationNestedInput
 }
 
 export type NoiseLocationUncheckedUpdateWithoutNoiseLocationAssignmentInput = {
@@ -541,6 +567,59 @@ export type NoiseLocationUncheckedUpdateWithoutNoiseLocationAssignmentInput = {
   latitude?: Prisma.FloatFieldUpdateOperationsInput | number
   longitude?: Prisma.FloatFieldUpdateOperationsInput | number
   locationName?: Prisma.StringFieldUpdateOperationsInput | string
+  NoiseLocationLimit?: Prisma.NoiseLocationLimitUncheckedUpdateManyWithoutNoiseLocationNestedInput
+}
+
+export type NoiseLocationCreateWithoutNoiseLocationLimitInput = {
+  id?: string
+  latitude: number
+  longitude: number
+  locationName: string
+  NoiseProject: Prisma.NoiseProjectCreateNestedOneWithoutNoiseLocationInput
+  NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentCreateNestedManyWithoutNoiseLocationInput
+}
+
+export type NoiseLocationUncheckedCreateWithoutNoiseLocationLimitInput = {
+  id?: string
+  projectId: string
+  latitude: number
+  longitude: number
+  locationName: string
+  NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentUncheckedCreateNestedManyWithoutNoiseLocationInput
+}
+
+export type NoiseLocationCreateOrConnectWithoutNoiseLocationLimitInput = {
+  where: Prisma.NoiseLocationWhereUniqueInput
+  create: Prisma.XOR<Prisma.NoiseLocationCreateWithoutNoiseLocationLimitInput, Prisma.NoiseLocationUncheckedCreateWithoutNoiseLocationLimitInput>
+}
+
+export type NoiseLocationUpsertWithoutNoiseLocationLimitInput = {
+  update: Prisma.XOR<Prisma.NoiseLocationUpdateWithoutNoiseLocationLimitInput, Prisma.NoiseLocationUncheckedUpdateWithoutNoiseLocationLimitInput>
+  create: Prisma.XOR<Prisma.NoiseLocationCreateWithoutNoiseLocationLimitInput, Prisma.NoiseLocationUncheckedCreateWithoutNoiseLocationLimitInput>
+  where?: Prisma.NoiseLocationWhereInput
+}
+
+export type NoiseLocationUpdateToOneWithWhereWithoutNoiseLocationLimitInput = {
+  where?: Prisma.NoiseLocationWhereInput
+  data: Prisma.XOR<Prisma.NoiseLocationUpdateWithoutNoiseLocationLimitInput, Prisma.NoiseLocationUncheckedUpdateWithoutNoiseLocationLimitInput>
+}
+
+export type NoiseLocationUpdateWithoutNoiseLocationLimitInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  latitude?: Prisma.FloatFieldUpdateOperationsInput | number
+  longitude?: Prisma.FloatFieldUpdateOperationsInput | number
+  locationName?: Prisma.StringFieldUpdateOperationsInput | string
+  NoiseProject?: Prisma.NoiseProjectUpdateOneRequiredWithoutNoiseLocationNestedInput
+  NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentUpdateManyWithoutNoiseLocationNestedInput
+}
+
+export type NoiseLocationUncheckedUpdateWithoutNoiseLocationLimitInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  projectId?: Prisma.StringFieldUpdateOperationsInput | string
+  latitude?: Prisma.FloatFieldUpdateOperationsInput | number
+  longitude?: Prisma.FloatFieldUpdateOperationsInput | number
+  locationName?: Prisma.StringFieldUpdateOperationsInput | string
+  NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentUncheckedUpdateManyWithoutNoiseLocationNestedInput
 }
 
 export type NoiseLocationCreateManyNoiseProjectInput = {
@@ -556,6 +635,7 @@ export type NoiseLocationUpdateWithoutNoiseProjectInput = {
   longitude?: Prisma.FloatFieldUpdateOperationsInput | number
   locationName?: Prisma.StringFieldUpdateOperationsInput | string
   NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentUpdateManyWithoutNoiseLocationNestedInput
+  NoiseLocationLimit?: Prisma.NoiseLocationLimitUpdateManyWithoutNoiseLocationNestedInput
 }
 
 export type NoiseLocationUncheckedUpdateWithoutNoiseProjectInput = {
@@ -564,6 +644,7 @@ export type NoiseLocationUncheckedUpdateWithoutNoiseProjectInput = {
   longitude?: Prisma.FloatFieldUpdateOperationsInput | number
   locationName?: Prisma.StringFieldUpdateOperationsInput | string
   NoiseLocationAssignment?: Prisma.NoiseLocationAssignmentUncheckedUpdateManyWithoutNoiseLocationNestedInput
+  NoiseLocationLimit?: Prisma.NoiseLocationLimitUncheckedUpdateManyWithoutNoiseLocationNestedInput
 }
 
 export type NoiseLocationUncheckedUpdateManyWithoutNoiseProjectInput = {
@@ -580,10 +661,12 @@ export type NoiseLocationUncheckedUpdateManyWithoutNoiseProjectInput = {
 
 export type NoiseLocationCountOutputType = {
   NoiseLocationAssignment: number
+  NoiseLocationLimit: number
 }
 
 export type NoiseLocationCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   NoiseLocationAssignment?: boolean | NoiseLocationCountOutputTypeCountNoiseLocationAssignmentArgs
+  NoiseLocationLimit?: boolean | NoiseLocationCountOutputTypeCountNoiseLocationLimitArgs
 }
 
 /**
@@ -603,6 +686,13 @@ export type NoiseLocationCountOutputTypeCountNoiseLocationAssignmentArgs<ExtArgs
   where?: Prisma.NoiseLocationAssignmentWhereInput
 }
 
+/**
+ * NoiseLocationCountOutputType without action
+ */
+export type NoiseLocationCountOutputTypeCountNoiseLocationLimitArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.NoiseLocationLimitWhereInput
+}
+
 
 export type NoiseLocationSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -612,6 +702,7 @@ export type NoiseLocationSelect<ExtArgs extends runtime.Types.Extensions.Interna
   locationName?: boolean
   NoiseProject?: boolean | Prisma.NoiseProjectDefaultArgs<ExtArgs>
   NoiseLocationAssignment?: boolean | Prisma.NoiseLocation$NoiseLocationAssignmentArgs<ExtArgs>
+  NoiseLocationLimit?: boolean | Prisma.NoiseLocation$NoiseLocationLimitArgs<ExtArgs>
   _count?: boolean | Prisma.NoiseLocationCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["noiseLocation"]>
 
@@ -645,6 +736,7 @@ export type NoiseLocationOmit<ExtArgs extends runtime.Types.Extensions.InternalA
 export type NoiseLocationInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   NoiseProject?: boolean | Prisma.NoiseProjectDefaultArgs<ExtArgs>
   NoiseLocationAssignment?: boolean | Prisma.NoiseLocation$NoiseLocationAssignmentArgs<ExtArgs>
+  NoiseLocationLimit?: boolean | Prisma.NoiseLocation$NoiseLocationLimitArgs<ExtArgs>
   _count?: boolean | Prisma.NoiseLocationCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type NoiseLocationIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -659,6 +751,7 @@ export type $NoiseLocationPayload<ExtArgs extends runtime.Types.Extensions.Inter
   objects: {
     NoiseProject: Prisma.$NoiseProjectPayload<ExtArgs>
     NoiseLocationAssignment: Prisma.$NoiseLocationAssignmentPayload<ExtArgs>[]
+    NoiseLocationLimit: Prisma.$NoiseLocationLimitPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1062,6 +1155,7 @@ export interface Prisma__NoiseLocationClient<T, Null = never, ExtArgs extends ru
   readonly [Symbol.toStringTag]: "PrismaPromise"
   NoiseProject<T extends Prisma.NoiseProjectDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.NoiseProjectDefaultArgs<ExtArgs>>): Prisma.Prisma__NoiseProjectClient<runtime.Types.Result.GetResult<Prisma.$NoiseProjectPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   NoiseLocationAssignment<T extends Prisma.NoiseLocation$NoiseLocationAssignmentArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.NoiseLocation$NoiseLocationAssignmentArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NoiseLocationAssignmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  NoiseLocationLimit<T extends Prisma.NoiseLocation$NoiseLocationLimitArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.NoiseLocation$NoiseLocationLimitArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NoiseLocationLimitPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1518,6 +1612,30 @@ export type NoiseLocation$NoiseLocationAssignmentArgs<ExtArgs extends runtime.Ty
   take?: number
   skip?: number
   distinct?: Prisma.NoiseLocationAssignmentScalarFieldEnum | Prisma.NoiseLocationAssignmentScalarFieldEnum[]
+}
+
+/**
+ * NoiseLocation.NoiseLocationLimit
+ */
+export type NoiseLocation$NoiseLocationLimitArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the NoiseLocationLimit
+   */
+  select?: Prisma.NoiseLocationLimitSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the NoiseLocationLimit
+   */
+  omit?: Prisma.NoiseLocationLimitOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.NoiseLocationLimitInclude<ExtArgs> | null
+  where?: Prisma.NoiseLocationLimitWhereInput
+  orderBy?: Prisma.NoiseLocationLimitOrderByWithRelationInput | Prisma.NoiseLocationLimitOrderByWithRelationInput[]
+  cursor?: Prisma.NoiseLocationLimitWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.NoiseLocationLimitScalarFieldEnum | Prisma.NoiseLocationLimitScalarFieldEnum[]
 }
 
 /**

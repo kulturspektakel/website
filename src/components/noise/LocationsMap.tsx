@@ -7,14 +7,8 @@ import {Tooltip} from '../chakra-snippets/tooltip';
 import {KULT_LOCATION} from '../../utils/kultLocation';
 import {useLatest} from './chartUtils';
 import {useDeviceStates, useTick} from './context';
-import {
-  displayedLevel,
-  formatDb,
-  isCurrent,
-  loudestLevel,
-  type LevelMetric,
-} from './level';
-import {type Weighting} from './noise';
+import {displayedLevel, formatDb, isCurrent, loudestLevel} from './level';
+import {type SeriesKey} from './series';
 import {darkMapStyle, mapBackground} from './mapStyle';
 import {NO_LEVEL_LABEL, pinIcon, pinLabel} from './mapPin';
 import {pulseOverlay} from './mapPulse';
@@ -58,13 +52,13 @@ const MAP_TYPES: Array<{value: MapTypeId; label: string}> = [
  * read — panning to a stage, reading a pin — and a surface where every stray click
  * opened a dialog made that reading nervous.
  */
-// live/metric/weighting/history are the same four inputs the list rows get;
-// displayedLevel turns them into a number.
+// live/series/history are the same three inputs the list rows get; displayedLevel turns
+// them into a number. One series and not the page's whole pick: a pin is a badge over a
+// place and has room for a single reading, so it carries the primary (see primarySeries).
 type MapCanvasProps = {
   locations: MapLocation[];
   live: boolean;
-  metric: LevelMetric;
-  weighting: Weighting;
+  series: SeriesKey;
   history?: Record<string, number>;
   // Whether the create tool is armed. Owned by the caller, because what disarms it
   // is the dialog it opens closing again — which the map knows nothing about.
@@ -95,8 +89,7 @@ export default memo(LocationsMap);
 function MapCanvas({
   locations,
   live,
-  metric,
-  weighting,
+  series,
   history,
   placing = false,
   onPlacingChange,
@@ -314,8 +307,7 @@ function MapCanvas({
         displayedLevel({
           live,
           now,
-          metric,
-          weighting,
+          series,
           state: deviceState(deviceId),
           historyDb: history?.[deviceId],
         }),
