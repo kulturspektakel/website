@@ -558,11 +558,21 @@ function NoiseLayout() {
               `overscrollBehavior` because the ground stops at this box now: globalCss
               paints html/body too, but with the *light* `bg`, so a rubber-banded
               scroll would show a pale gutter past the edges on iOS. Containing the
-              scroll chain keeps the bounce inside the dark scope. */}
+              scroll chain keeps the bounce inside the dark scope.
+
+              `dvh` rather than `vh`, and that unit is the whole of why the foot bars
+              are reachable on a phone: `100vh` is the *large* viewport, the height the
+              page would have with Safari's chrome collapsed, so the box overhangs the
+              visible one by the height of that chrome. body sets no height, so the
+              overhang becomes a second scroll of its own and the bars that stick to
+              the foot of *this* box stick to an edge underneath the toolbar. Sized to
+              what is actually visible, it fits — so body never overflows, the chrome
+              is never scrolled away, and the unit doesn't move under the layout.
+              `svh` would be the pale gutter again, in the one state where it differs. */}
           <Theme
             appearance="dark"
             fontVariantNumeric="tabular-nums"
-            h="100vh"
+            h="100dvh"
             display="flex"
             flexDirection="column"
             overflow="auto"

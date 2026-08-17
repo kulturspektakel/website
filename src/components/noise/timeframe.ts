@@ -1,4 +1,4 @@
-import {format, roundToNearestMinutes} from 'date-fns';
+import {format, roundToNearestMinutes, type NearestMinutes} from 'date-fns';
 import {TZDate, tz} from '@date-fns/tz';
 import {locale, timeZone} from '../../utils/dateUtils';
 
@@ -19,12 +19,22 @@ import {locale, timeZone} from '../../utils/dateUtils';
 export const MINUTE_MS = 60_000;
 export const QUARTER_MINUTES = 15;
 
-// Lands on a wall-clock :00/:15/:30/:45 in `timeZone`, whatever the offset.
+// The nearest wall-clock multiple of `minutes` in `timeZone`, whatever the offset — which
+// is what keeps a snap DST-correct without any offset arithmetic. The two grids the page
+// picks on are named below; nothing calls this with a third. date-fns' own union of the
+// divisors of an hour is the parameter's type, so a third grid has to be one of those.
+const snapTo = (ms: number, minutes: NearestMinutes): number =>
+  roundToNearestMinutes(ms, {nearestTo: minutes, in: tz(timeZone)}).getTime();
+
+// Lands on a wall-clock :00/:15/:30/:45: the grid a crop's grips and the arrow keys step by.
 export const snapToQuarter = (ms: number): number =>
-  roundToNearestMinutes(ms, {
-    nearestTo: QUARTER_MINUTES,
-    in: tz(timeZone),
-  }).getTime();
+  snapTo(ms, QUARTER_MINUTES);
+
+// The whole minute, which is as fine as anything here is worth resolving: the loggers
+// report once a minute and every readout prints minutes, so a bound held to the second is
+// a distinction nobody can see and no data can answer. What a window drawn in one drag
+// lands on, and where the timeline's playhead stands.
+export const snapToMinute = (ms: number): number => snapTo(ms, 1);
 
 // Exported for projectSelection.ts, which clamps a three-thumb selection into
 // the project's window with the same rule.
@@ -83,7 +93,7 @@ export function formatTimeframeRange(startMs: number, endMs: number): string {
 }
 
 // A single instant at minute precision, carrying its weekday and date whatever the
-// window around it — the timeline's playhead thumbs say this to a screen reader, which
+// window around it — the timeline's two grips say this to a screen reader, which
 // has no strip in front of it to take the day from. What that readout *prints* is
 // chartUtils' instantLabel, so that it and the row charts' tooltip agree.
 const instantFmt = new Intl.DateTimeFormat(locale, {

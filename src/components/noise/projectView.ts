@@ -261,7 +261,8 @@ export type ProjectViewCtx = {
   scrubTo: (at: number | null) => void;
   // Crops the timeframe, exactly where asked — what a row chart commits, whether that
   // came from the in/out keys (one end) or a drag across the trace (both). An omitted
-  // end stays where it was; the playhead follows only if the crop leaves it outside.
+  // end stays where it was, and the playhead stays where it is: it marks where a hand is
+  // pointing, and may stand outside the crop (see ProjectSelection).
   cropTo: (crop: {start?: number; end?: number}) => void;
   // What the header's menu is set to: which series the page shows, weighting and all. The
   // layout owns the choice so the map and the list can't drift apart, and it resolves

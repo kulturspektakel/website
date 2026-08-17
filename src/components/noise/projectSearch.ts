@@ -1,4 +1,4 @@
-import {setSelectionCurrent, type ProjectSelection} from './projectSelection';
+import type {ProjectSelection} from './projectSelection';
 
 // What a project page's URL says about how it is being looked at: whether it is live,
 // and — while it is not — which slice of the event is on screen. Those two are the page's
@@ -55,25 +55,24 @@ export const validateProjectSearch = (
 // page's "nothing picked yet", which is what an unpinned URL means and is load-bearing
 // (see resolveProjectSelection).
 //
-// The instant is kept rather than reset: following a link or stepping back changes which
-// window is on screen, and there is no reason for it to also move the cursor inside one
-// that still contains it. Through setSelectionCurrent, which is the page's one rule for
-// putting a playhead in a crop — it pulls one the arriving crop has left behind to the
-// nearest edge, exactly as a pan does. With no page to keep — the first render of a
-// pinned link — there is no instant at all: the playhead is where a pointer is, and a URL
-// carries a window, not a hand (see ProjectSelection).
+// The instant is kept rather than reset, and kept as it is: following a link or stepping
+// back changes which window is on screen, and there is no reason for it to also move the
+// cursor — which need not be inside the arriving crop to be somewhere worth keeping (see
+// ProjectSelection). With no page to keep — the first render of a pinned link — there is no
+// instant at all: the playhead is where a pointer is, and a URL carries a window, not a hand.
 //
-// Not clamped to the project's window here, only to the crop: that is
-// resolveProjectSelection's, and it is the only one that knows the window.
+// Not clamped to anything here: the only bound left on a playhead is the project's window,
+// and resolveProjectSelection is the one that knows it.
 export const projectSearchSelection = (
   search: ProjectSearch,
   previous: ProjectSelection | null,
 ): ProjectSelection | null =>
   search.from != null && search.to != null
-    ? setSelectionCurrent(
-        {start: search.from, current: null, end: search.to},
-        previous?.current ?? null,
-      )
+    ? {
+        start: search.from,
+        current: previous?.current ?? null,
+        end: search.to,
+      }
     : null;
 
 // And back the other way. The crop only travels while the page is pinned: live means

@@ -29,6 +29,7 @@ import {
   cursorAnchor,
   dbAxis,
   dbLevelAxis,
+  DRAG_MIN_PX,
   fmtHourMinute,
   instantLabel,
   labelStride,
@@ -158,11 +159,6 @@ const fill = (stroke: string) => `${stroke}26`;
 // unlabelled between them. Sized for "22:15" at the axis font with room to breathe —
 // the axis prints nothing wider, whatever the crop.
 const X_LABEL_SPACE = 48;
-
-// How far the pointer must travel before a press counts as a selection rather than a
-// click. A few pixels: the gesture is a deliberate sweep across a peak, and anything
-// shorter than this on a row-height chart is a hand not quite still.
-const DRAG_MIN_PX = 6;
 
 // Minimum pixels between vertical lines, which is what picks the step off
 // timeGridStepS' ladder. Generous, because a row is only a few hundred pixels wide

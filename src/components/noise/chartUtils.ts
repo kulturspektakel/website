@@ -86,6 +86,18 @@ export const cursorAnchor = (
 // caption to it.
 export const AXIS_GAP = 6;
 
+// How far a pointer must travel before a press counts as a drag rather than a click. A few
+// pixels: a sweep across a peak, or across the timeline strip, is a deliberate gesture, and
+// anything shorter than this is a hand not quite still.
+//
+// One number for the whole section, because the row charts and the timeline sit on the same
+// page and answer the same question about the same hand — a sweep that crops a trace has to be
+// a sweep on the strip too, or the page has two ideas of what a click is. Read by uPlot's
+// `drag.dist` on the charts (see LevelTrace) and by the strip's own press handling (see
+// ProjectTimeline). In pixels, deliberately: "released where it was pressed" is a pixel
+// question, and the same drag covers a quarter hour or a whole evening depending on the crop.
+export const DRAG_MIN_PX = 6;
+
 // What every gutter in this section costs: the air above, plus the type it has to hold —
 // "110" at the font above, and one line of it under the plot. Both come out of the box,
 // so the plot is that much smaller than the layout gave it, and because the two charts on
