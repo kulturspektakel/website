@@ -32,14 +32,16 @@ const overrides: SystemConfig = {
         // Nudges the light scale one step off pure white — but every entry has
         // to keep its `_dark` half. A flat value replaces Chakra's light/dark
         // pair outright, so a light grey would still be a light grey under
-        // `.dark`; /crew/noise renders inside <DarkMode>, and that is what
+        // `.dark`; /crew/noise's page renders in a dark scope, and that is what
         // put near-white surfaces (`bg.muted`) under near-white text (`fg`).
         // Everything below the first entry differs only in its `_light` half.
         bg: {
-          // The dark half is /crew/noise's ground, declared here rather
-          // than asserted by the section's root Box. Pure black was only ever
-          // the default: the box painted itself gray.900 while html/body stayed
-          // black behind it, which iOS shows you every time the page overscrolls.
+          // The dark half is /crew/noise's ground, declared here rather than
+          // asserted by the section's root. Pure black was only ever the default:
+          // the wrapper painted itself gray.900 while html/body stayed black
+          // behind it, which iOS shows you every time the page overscrolls. (The
+          // page's scroll chain is contained now, so the two no longer have to
+          // agree — see crew.noise.)
           DEFAULT: {
             value: {_light: '{colors.gray.50}', _dark: '{colors.gray.900}'},
           },
@@ -60,12 +62,13 @@ const overrides: SystemConfig = {
         // (default) gray colorPalette, whose `focusRing` token drives
         // `--focus-ring-color`, so overriding it here recolors every focus ring.
         //
-        // Dark is /crew/noise, where the ring is the section's accent
-        // instead. It has to be done at the token rather than by hanging a
-        // `colorPalette` on that section's root, because a colorPalette is a
-        // set of CSS variables that cascade through the DOM — and the menus,
-        // dialogs and toaster that most want a visible ring are portalled to
-        // <body>, outside any box the section could put it on.
+        // Dark is /crew/noise's page, where the ring is the section's accent
+        // instead — blue against gray.900 is the ring you have to look for. Done
+        // at the token rather than by hanging a `colorPalette` on that page's
+        // root so that the pair travels with the colour mode rather than with the
+        // DOM: the page's own controls get the accent ring, and the menus,
+        // dialogs and toaster it opens — portalled to <body> and light — get the
+        // blue one that belongs on a light surface.
         gray: {
           focusRing: {
             value: {
@@ -78,10 +81,11 @@ const overrides: SystemConfig = {
     },
     recipes: {
       // Links are blue by default across the crew area, and the accent in
-      // /crew/noise — blue.solid only just clears 5:1 against that
-      // section's ground, and reads as a foreign colour next to everything else
-      // on the page. `_dark` compiles to `.dark &, .dark .chakra-theme:not(.light) &`,
-      // so the dialogs that opt into a light appearance keep the blue.
+      // /crew/noise — blue.solid only just clears 5:1 against that section's
+      // ground, and reads as a foreign colour next to everything else on the page.
+      // `_dark` compiles to `.dark &, .dark .chakra-theme:not(.light) &`, so only
+      // links inside that page turn; the ones in its dialogs and menus, which sit
+      // outside the scope, stay blue.
       link: defineRecipe({
         base: {color: {base: 'blue.solid', _dark: 'accent.fg'}},
         variants: {
@@ -104,6 +108,33 @@ const overrides: SystemConfig = {
       // change that mounts a map, say) it stays that way. Painting both in one
       // rule means they can never disagree. The indicator is then redundant, so
       // it's hidden rather than left to animate behind an opaque item.
+      // A table's rows are the surface they sit on, not the page behind them.
+      //
+      // Chakra's `line` variant paints each row `bg`, which reads as "the default
+      // background" — and for stock Chakra it is white, so the rule is invisible. Here
+      // `bg` is the page ground (gray.50 light, gray.900 dark, just above), which made
+      // every row a grey band across whatever panel it was in — a dialog, a card.
+      //
+      // `bg.panel` instead: the token the surfaces themselves use, so a row matches the
+      // thing it is drawn on and follows it into a forced light or dark appearance. It has
+      // to go on the variant rather than `base`, because a variant's styles win over base.
+      table: {
+        slots: [
+          'root',
+          'header',
+          'body',
+          'row',
+          'columnHeader',
+          'cell',
+          'footer',
+          'caption',
+        ],
+        variants: {
+          variant: {
+            line: {row: {bg: 'bg.panel'}},
+          },
+        },
+      },
       segmentGroup: {
         slots: [
           'root',

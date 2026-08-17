@@ -57,6 +57,7 @@ export function CalibrationResultChart({result}: {result: CalibrationResult}) {
     idx: number;
     left: number;
     top: number;
+    fraction: number;
   } | null>(null);
 
   const {difference} = result;
@@ -160,7 +161,11 @@ export function CalibrationResultChart({result}: {result: CalibrationResult}) {
     <Box position="relative" w="full" h="200px">
       <Box position="absolute" inset="0" ref={containerRef} overflow="hidden" />
       {hover && (
-        <ChartTooltip left={hover.left} top={hover.top}>
+        <ChartTooltip
+          left={hover.left}
+          top={hover.top}
+          fraction={hover.fraction}
+        >
           <Text fontSize="xs" color="fg.muted" lineHeight="1.2">
             {fmtHz(FREQS[hover.idx] ?? 0)} Hz
           </Text>

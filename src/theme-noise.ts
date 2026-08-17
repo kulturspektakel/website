@@ -2,15 +2,19 @@ import {defaultConfig} from '@chakra-ui/react';
 
 // The colour vocabulary of /crew/noise, in the one place that decides it.
 //
-// The section renders dark throughout — __root.tsx puts `.dark` on <html> for
-// exactly this route subtree — so everything here is a dark-only decision and
-// none of it carries a light half. That is also why the two *overrides* the
-// section needs (the page ground and the focus ring) live in theme-crew.ts as
-// `_dark` values rather than here: the dark half of a crew token is, by
-// construction, the noise area's value. If /crew ever goes dark somewhere else
-// that stops being true, and the fix is a custom condition —
-// `conditions: {noise: '.noise &'}` on the system, `_noise` on those two
-// tokens, and the class alongside `.dark` in __root.tsx.
+// The section's *page* renders dark — crew.noise.tsx wraps the layout in
+// <Theme appearance="dark"> — so everything here is a dark-only decision and none
+// of it carries a light half. That is also why the two *overrides* the section
+// needs (the page ground and the focus ring) live in theme-crew.ts as `_dark`
+// values rather than here: the dark half of a crew token is, by construction, the
+// noise area's value. If /crew ever goes dark somewhere else that stops being
+// true, and the fix is a custom condition — `conditions: {noise: '.noise &'}` on
+// the system, `_noise` on those two tokens, and the class on that wrapper.
+//
+// "Page", not "area", is the load-bearing word: the overlays Chakra portals to
+// <body> land outside that scope and render light, so anything reaching for a name
+// from here has to be inside the page. The two floating panels are the exception
+// and wrap themselves in <Theme appearance="dark"> to earn it.
 //
 // Everything below is a *new* name rather than an override, so it needs no
 // scoping at all: nothing outside this section refers to `chart.*` or `map.*`,
@@ -63,6 +67,17 @@ const NOISE_COLORS = {
   'chart.gap': 'gray.700',
   'chart.playhead': 'gray.50',
   'chart.readout.bg': 'gray.800',
+  // The ground a plot is drawn on, as a value the canvas can stroke with — the same step
+  // the section's `bg` resolves to in dark, which is the only mode this section has. Only
+  // the limit rules ask for it, and they ask for it as a casing: a dashed line in a series'
+  // own shade, laid over a filled trace in a neighbouring shade, is a rule you have to look
+  // for. A pixel of the ground either side of it is what separates the two without giving
+  // the rule a colour of its own to be confused with a sixth measurement (see drawLimits).
+  //
+  // Not `map.ground`, though it is the same step today: that one is the basemap's ground and
+  // answers to mapStyle.ts's lightness ladder. Two names because the two have no reason to
+  // follow each other.
+  'chart.ground': 'gray.900',
 
   // The band spectrum's bars are the fast-window shade — it is the same
   // measurement, drawn against frequency instead of time.

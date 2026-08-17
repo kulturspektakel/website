@@ -25,37 +25,26 @@ const queryClient = new QueryClient({
   },
 });
 
-// The noise area is the one always-dark area. The scope has to sit on <html> rather
-// than on a wrapper inside the layout: Chakra portals menus, dialogs and the
-// toaster to document.body, so anything scoped further down leaves them light.
-// `color-scheme` comes along for the native UI a class can't reach — scrollbars,
-// and the <select> the header's view switch falls back to on phones.
+// The noise area is the only English part of the site. Matching by route id
+// rather than pathname so it can't drift from the layout route that owns the area.
 //
-// The area's dialogs are the one deliberate exception: they pass
-// appearance="light" to DialogContent, which re-scopes the tokens on a wrapper of
-// its own (see the snippet). A sheet of paper over a dark app, and they are the
-// surfaces full of form fields. Menus, popovers and the toaster all still follow
-// the scope set here.
-//
-// Matching by route id rather than pathname so it can't drift from the layout
-// route that owns the area.
-const DARK_ROUTE_ID = '/crew/noise';
+// Nothing about colour is decided here. The area is dark, but that scope lives on
+// the layout's own root (see crew.noise) rather than on <html>, and deliberately:
+// Chakra portals menus, dialogs, popovers and the toaster to document.body, so a
+// scope inside the layout is exactly what leaves those light. The dark page with
+// ordinary light overlays over it is the wanted arrangement, not a compromise —
+// which is why the area's dialogs no longer have to re-scope themselves back out.
+const NOISE_ROUTE_ID = '/crew/noise';
 
 function RootComponent() {
-  const dark = useRouterState({
-    select: (s) => s.matches.some((m) => m.routeId === DARK_ROUTE_ID),
+  const english = useRouterState({
+    select: (s) => s.matches.some((m) => m.routeId === NOISE_ROUTE_ID),
   });
 
   return (
-    // The noise area is the only English part of the site, and it happens to be
-    // the same area `dark` already identifies — so one flag decides both. `lang`
-    // is what a screen reader picks its pronunciation from, and German vowels
-    // over English copy are unintelligible.
-    <html
-      lang={dark ? 'en' : 'de'}
-      className={dark ? 'dark' : undefined}
-      style={dark ? {colorScheme: 'dark'} : undefined}
-    >
+    // `lang` is what a screen reader picks its pronunciation from, and German
+    // vowels over English copy are unintelligible.
+    <html lang={english ? 'en' : 'de'}>
       <head>
         <HeadContent />
       </head>

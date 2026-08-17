@@ -4,7 +4,7 @@ import {
   Outlet,
   useBlocker,
 } from '@tanstack/react-router';
-import {Box} from '@chakra-ui/react';
+import {Theme} from '@chakra-ui/react';
 import {z} from 'zod';
 import {useRef} from 'react';
 import 'uplot/dist/uPlot.min.css';
@@ -527,8 +527,18 @@ function NoiseLayout() {
     <NoiseBuffersContext.Provider value={deviceData}>
       <NoiseLiveContext.Provider value={live}>
         <BluetoothContext.Provider value={bluetooth}>
-          {/* The dark scope itself lives on <html> (see __root), so portalled
-            menus, dialogs and toasts get it too. */}
+          {/* The area's dark scope, and the whole of it. <Theme> is Chakra's own
+            wrapper for this: it sets the class the `_dark` condition looks for, the
+            native `color-scheme` a class can't reach (the scrollbar just below, and
+            the <select> the header's view switch falls back to on phones), and
+            paints `bg` — so it replaces the plain Box this used to be rather than
+            adding an element.
+
+            Scoped here rather than on <html> so that everything Chakra portals to
+            <body> — the dialogs, the menus, the popovers, the toaster below — lands
+            outside it and renders light. The two floating panels are the one
+            exception and ask for dark themselves: they draw canvas charts in fixed
+            dark hexes (see theme-noise). */}
           {/* Tabular figures for the whole area, inherited rather than repeated on
             every readout. The levels, the clock and the battery all change in place
             — a proportional '1' is narrower than a '4', so without this every number
@@ -542,19 +552,24 @@ function NoiseLayout() {
           {/* No padding of its own: the page inside decides where its edges are. The
               project page is a toolbar over an edge-to-edge map, which a gutter here
               would either cut into or leave scrolling content peeking past; the pages
-              that do want one set it themselves. The ground is the theme's (`bg`
-              under `.dark`, which globalCss also paints html/body with, so the
-              overscroll gutter matches); this box is only the viewport height and
-              the one thing that scrolls — which is also what the toolbars stick to. */}
-          <Box
+              that do want one set it themselves. This box is only the viewport height
+              and the one thing that scrolls — which is also what the toolbars stick to.
+
+              `overscrollBehavior` because the ground stops at this box now: globalCss
+              paints html/body too, but with the *light* `bg`, so a rubber-banded
+              scroll would show a pale gutter past the edges on iOS. Containing the
+              scroll chain keeps the bounce inside the dark scope. */}
+          <Theme
+            appearance="dark"
             fontVariantNumeric="tabular-nums"
             h="100vh"
             display="flex"
             flexDirection="column"
             overflow="auto"
+            overscrollBehavior="contain"
           >
             <Outlet />
-          </Box>
+          </Theme>
           <Toaster />
         </BluetoothContext.Provider>
       </NoiseLiveContext.Provider>

@@ -3,6 +3,7 @@ import {useRef, type MutableRefObject} from 'react';
 import {TZDate} from '@date-fns/tz';
 import {locale, timeZone} from '../../utils/dateUtils';
 import {themeHex} from '../../theme-noise';
+import {clampTo} from './timeframe';
 
 // All noise charts render in festival-local time regardless of the viewer's
 // timezone. The data x-values are unix epoch seconds; we reinterpret them in
@@ -51,15 +52,31 @@ export const plotHeight = (container: HTMLElement, fallback: number): number =>
 
 // uPlot's cursor coordinates are relative to the plotting area; offset by it to
 // anchor a React tooltip in container coordinates.
+//
+// `fraction` is how far along the container that x sits, 0…1, which is what keeps a readout
+// centred on it from hanging out of the box (see ChartTooltip). Resolved here because this
+// is already the one place that knows both the point and the box it is in — a caller
+// working it out again would be measuring the same element a second time.
+//
+// The same quantity axisFraction answers for the timeline, spelled out here rather than
+// imported from it: timelineTicks already imports this module, and a cycle between the two
+// is not worth saving one call of `clampTo`.
 export const cursorAnchor = (
   u: uPlot,
   container: HTMLElement,
   left: number,
   top: number,
-): {left: number; top: number} => {
+): {left: number; top: number; fraction: number} => {
   const over = u.over.getBoundingClientRect();
   const root = container.getBoundingClientRect();
-  return {left: over.left - root.left + left, top: over.top - root.top + top};
+  const x = over.left - root.left + left;
+  return {
+    left: x,
+    top: over.top - root.top + top,
+    // A container measured at zero — the frame before layout settles — would make this
+    // NaN, and a NaN in a transform silently drops the whole rule.
+    fraction: root.width > 0 ? clampTo(x / root.width, 0, 1) : 0.5,
+  };
 };
 
 // How far a label sits off the plot it is describing — every axis in the section, both

@@ -4,7 +4,7 @@ import {
   retainSearchParams,
   useChildMatches,
 } from '@tanstack/react-router';
-import {Box, Text} from '@chakra-ui/react';
+import {AbsoluteCenter, Box, Spinner, Text} from '@chakra-ui/react';
 import {useQuery, useQueryClient} from '@tanstack/react-query';
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {loadNoiseProject} from './crew.noise';
@@ -554,38 +554,62 @@ function NoiseProjectDetail() {
                 </NativeSelectRoot>
               )}
               {/* Last, hard against the right edge: it decides what the whole page is
-                  doing, and the controls beside it only dress up what it lets through. */}
-              <Switch
-                size="sm"
-                checked={live}
-                // The one moment this page waits for anything: the project's whole
-                // history, on the first switch out of live. The switch goes dead for it
-                // rather than growing a spinner — a control that appears and disappears
-                // shoves everything else in the strip sideways while it loads, and this
-                // is the control being waited on anyway. Nothing else is torn down: the
-                // pins simply have no number yet.
-                disabled={isFetching}
-                _disabled={{cursor: 'progress'}}
-                // The window survives the switch: every one of them exists in both
-                // modes (the finest simply gets finer), so there is nothing to reset.
-                onCheckedChange={(e) => setLive(e.checked)}
-                colorPalette="green"
-                // Stacked, with the word under the switch rather than beside it: it is
-                // the widest control in the strip and the one that has to survive a
-                // phone, and a caption costs height the strip already has to spare.
-                flexDirection="column"
-                gap="0.5"
+                  doing, and the controls beside it only dress up what it lets through.
+
+                  The one moment this page waits for anything: the project's whole history,
+                  on the first switch out of live. A spinner stands in for the switch and
+                  its caption while that arrives — the control being waited on is the one
+                  that says so, rather than a second thing appearing beside it.
+
+                  Relative, and the switch is hidden rather than unmounted, which is the
+                  whole of how the strip holds still: the switch and the word under it go on
+                  laying this item out at exactly the width they do the rest of the time, so
+                  the spinner over them shoves nothing sideways and the controls to the left
+                  don't shuffle along and back. `visibility` and not `opacity`, which would
+                  leave a control that is invisible and still live under the spinner.
+                  `disabled` alongside it says the same thing semantically — a hidden subtree
+                  is already unfocusable — and is what the switch would need if it were ever
+                  shown while waiting. Nothing else is torn down: the pins simply have no
+                  number yet. */}
+              <Box
+                position="relative"
+                display="flex"
+                cursor={isFetching ? 'progress' : undefined}
               >
-                <Text
-                  fontSize="2xs"
-                  fontWeight="medium"
-                  letterSpacing="wide"
-                  color="fg"
-                  lineHeight="1"
+                <Switch
+                  size="sm"
+                  checked={live}
+                  disabled={isFetching}
+                  visibility={isFetching ? 'hidden' : undefined}
+                  // The window survives the switch: every one of them exists in both
+                  // modes (the finest simply gets finer), so there is nothing to reset.
+                  onCheckedChange={(e) => setLive(e.checked)}
+                  colorPalette="green"
+                  // Stacked, with the word under the switch rather than beside it: it is
+                  // the widest control in the strip and the one that has to survive a
+                  // phone, and a caption costs height the strip already has to spare.
+                  flexDirection="column"
+                  gap="0.5"
                 >
-                  LIVE
-                </Text>
-              </Switch>
+                  <Text
+                    fontSize="2xs"
+                    fontWeight="medium"
+                    letterSpacing="wide"
+                    color="fg"
+                    lineHeight="1"
+                  >
+                    LIVE
+                  </Text>
+                </Switch>
+                {isFetching && (
+                  <AbsoluteCenter>
+                    {/* Muted rather than the switch's green: green is what this control
+                        says when live is *on*, and a green spinner in its place would read
+                        as the state instead of as the wait for one. */}
+                    <Spinner size="sm" color="fg.muted" />
+                  </AbsoluteCenter>
+                )}
+              </Box>
             </NoiseToolbar>
 
             {/* Everything the toolbars left over, edge to edge: the map fills it, and

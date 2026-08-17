@@ -22,6 +22,7 @@ import {
 import {type SeriesTraces} from './projectLogs';
 import {themeHex} from '../../theme-noise';
 import {limitSegments, type LimitLine} from './limitLines';
+import {clampTo} from './timeframe';
 import {
   axisBase,
   CHART_PADDING,
@@ -173,6 +174,19 @@ const X_GRID_SPACE = 56;
 // colour cannot — colour is never the only cue in this section.
 const LIMIT_DASH = [4, 3];
 
+// The rule's own width, and the halo's, in CSS pixels. Odd widths both, so the two stay
+// concentric about the same row of pixels.
+//
+// A hard casing alone was tried at 3 against 1 and is not enough: a pixel of ground either
+// side of a dash reads as anti-aliasing rather than as separation, and the shade that ties a
+// rule to its trace still buries it in one. The blur is what makes it a halo — the ground
+// fades out over a few pixels, so the eye gets a gap around the dash whatever is behind it,
+// which is the thing a fixed one-pixel outline cannot promise against a fill of similar
+// value.
+const LIMIT_WIDTH_PX = 1;
+const LIMIT_HALO_PX = 3;
+const LIMIT_HALO_BLUR_PX = 4;
+
 /**
  * The permitted levels, over the traces they are permitted for.
  *
@@ -181,6 +195,12 @@ const LIMIT_DASH = [4, 3];
  * on this chart it bounds, and that it is not one of them. Only the limits whose series is
  * picked are drawn at all (see limitSegments) — so the header's menu brings a rule and the
  * line it belongs to into view together.
+ *
+ * Over a halo in the ground's own colour, because the shade that ties a rule to its trace is
+ * also what buries it in one: a yellow dash over a yellow envelope is a rule you have to hunt
+ * for, and the fill under it is exactly where a limit matters most. The ground fading out
+ * around each dash separates the two without giving the rule a hue of its own to be mistaken
+ * for a sixth measurement — see chart.ground.
  *
  * The line alone, with no figure lettered on it. What a rule is for is seeing at a glance
  * whether the trace is under it, and for that the height *is* the reading — the dB grid
@@ -224,32 +244,73 @@ function drawLimits(
   ctx.rect(u.bbox.left, u.bbox.top, u.bbox.width, u.bbox.height);
   ctx.clip();
 
-  ctx.lineWidth = ratio;
   ctx.setLineDash(LIMIT_DASH.map((d) => d * ratio));
 
   const [floor, ceiling] = dbAxis.range;
-  for (const {series, decibels, from, to} of segments) {
+  // Positions once, since both passes below stroke the same geometry.
+  const rules = segments.map(({series, decibels, from, to}) => ({
     // The shade of the line it bounds, which is what ties the two together where several
     // series are picked and each has a limit of its own: a rule and its trace are one
     // statement about one quantity. What keeps it from reading as a sixth measurement is
     // the dash — the form, not the hue. Two weightings of a quantity share a shade by
     // design (see the series table), and so do their limits.
-    ctx.strokeStyle = themeHex(seriesByKey(series).color);
-
+    stroke: themeHex(seriesByKey(series).color),
     // Clamped to the axis, which is fixed at 30–110 (see dbAxis): a peak limit written at
     // 120 has to be drawn somewhere, and hard against the top of the plot is the honest
     // place. Dropping the line instead would be the worse answer — a limit nobody can see
     // is one nobody knows is set — and a rule pinned to the top edge reads as "above
     // anything this chart can show", which is what it is.
-    const y = Math.round(u.valToPos(Math.min(Math.max(decibels, floor), ceiling), 'y', true)); // prettier-ignore
-    const x0 = Math.round(u.valToPos(from, 'x', true));
-    const x1 = Math.round(u.valToPos(to, 'x', true));
-
+    //
     // Half the stroke down from a whole pixel, so it lands on a row of them rather than
     // straddling two — the same reason the playhead carries a negative half-pixel margin.
+    y: Math.round(u.valToPos(clampTo(decibels, floor, ceiling), 'y', true)) + ratio / 2, // prettier-ignore
+    x0: Math.round(u.valToPos(from, 'x', true)),
+    x1: Math.round(u.valToPos(to, 'x', true)),
+  }));
+
+  const trace = ({y, x0, x1}: (typeof rules)[number]) => {
+    ctx.moveTo(x0, y);
+    ctx.lineTo(x1, y);
+  };
+
+  // Every halo, then every rule — two passes over the list rather than a halo and its rule
+  // per segment. Limits are allowed to overlap (see the schema), and the axis is fixed at
+  // 80 dB over a chart that may be 160 px tall, so two decibels can be four pixels: well
+  // inside the blur. Interleaved, the second rule's halo would land over the first one's
+  // line, and the thing that made one legible would be what dimmed the other.
+  //
+  // The halo is a stroke of the ground *plus* its own shadow of the same colour, which is
+  // what spreads it: canvas paints the shadow around the stroke, so three pixels of solid
+  // ground fade out over four more. Dashed along with the rule rather than solid under it, so
+  // it thickens each dash instead of filling the gaps between them — the trace stays
+  // readable through the rule, which is the whole point of dashing it.
+  //
+  // One path for all of them and one stroke, because `shadowBlur` is the expensive call on a
+  // canvas — each stroke is rendered to a scratch surface and gaussian-blurred, and Skia has
+  // no fast path for a blurred *dashed* stroke. A timeline drag commits a crop per animation
+  // frame to every card near the viewport (see applyCrop), so per-rule strokes made that a
+  // shadow layer per limit per card per frame. Batched it is one, for the same pixels: the
+  // dash phase restarts per subpath, so the dashes are unchanged, and overlapping halos now
+  // composite in a single layer instead of darkening each other.
+  const ground = themeHex('chart.ground');
+  ctx.lineWidth = LIMIT_HALO_PX * ratio;
+  ctx.strokeStyle = ground;
+  ctx.shadowColor = ground;
+  ctx.shadowBlur = LIMIT_HALO_BLUR_PX * ratio;
+  ctx.beginPath();
+  rules.forEach(trace);
+  ctx.stroke();
+
+  // The rules themselves cannot be batched the same way — each is stroked in its own series'
+  // shade — but they carry no shadow, so they are ordinary line drawing. No shadow on
+  // purpose: the halo is already under them, and a coloured line casting a dark blur of its
+  // own would read as the line being out of focus.
+  ctx.shadowBlur = 0;
+  ctx.lineWidth = LIMIT_WIDTH_PX * ratio;
+  for (const rule of rules) {
+    ctx.strokeStyle = rule.stroke;
     ctx.beginPath();
-    ctx.moveTo(x0, y + ratio / 2);
-    ctx.lineTo(x1, y + ratio / 2);
+    trace(rule);
     ctx.stroke();
   }
 
@@ -520,6 +581,9 @@ export function LevelTrace({
   const [tip, setTip] = useState<{
     left: number;
     top: number;
+    // How far along the card that pixel sits, which is what keeps the readout inside it
+    // (see ChartTooltip). Straight off cursorAnchor with the two coordinates.
+    fraction: number;
     label: string;
     readings: Array<{deviceId: string; series: SeriesKey; db: number}>;
   } | null>(null);
@@ -1156,7 +1220,7 @@ export function LevelTrace({
         />
       )}
       {tip && (
-        <ChartTooltip left={tip.left} top={tip.top}>
+        <ChartTooltip left={tip.left} top={tip.top} fraction={tip.fraction}>
           <Text fontSize="xs" lineHeight="1.2">
             {tip.label}
           </Text>

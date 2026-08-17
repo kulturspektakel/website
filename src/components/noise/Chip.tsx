@@ -18,9 +18,10 @@ import {Badge, type BadgeProps} from '@chakra-ui/react';
 //          rather than by brightening, and it cannot brighten anyway.
 //
 // The raw palette steps (600) are there because the semantic surface tokens stop at
-// `emphasized`: this section renders dark throughout, where 600 is the step above it. In a
-// light theme that number would be a step *down*, which is the one thing to know before
-// reusing this outside /crew.
+// `emphasized`: /crew/noise's page renders dark, where 600 is the step above it. In a light
+// theme that number would be a step *down*, which is the one thing to know before reusing
+// this outside that page — including inside the page's own menus and dialogs, which portal
+// to <body> and are light (see crew.noise). Every caller today is page content.
 const LOOKS = {
   plain: {
     bg: 'colorPalette.emphasized',

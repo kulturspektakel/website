@@ -93,8 +93,7 @@ export function LocationAssignmentsDialog({
       placement="center"
       size="xl"
     >
-      {/* Light, though the area around it is dark — see DARK_ROUTE_ID in __root. */}
-      <DialogContent appearance="light">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Devices at {location.locationName}</DialogTitle>
         </DialogHeader>
@@ -138,7 +137,8 @@ function AssignmentsForm({
   const nextKey = useRef(0);
 
   const save = useMutation({
-    mutationFn: () => saveAssignments(original, rows, location.id, project.start),
+    mutationFn: () =>
+      saveAssignments(original, rows, location.id, project.start),
     onSuccess: async () => {
       await refresh();
       toaster.create({type: 'success', title: 'Assignments saved'});
@@ -170,46 +170,53 @@ function AssignmentsForm({
     <>
       <DialogBody>
         <Stack gap="3" align="start">
-          <Table.Root size="sm">
-            <Table.Header>
-              <Table.Row>
-                <Table.ColumnHeader>Device</Table.ColumnHeader>
-                <Table.ColumnHeader>Start</Table.ColumnHeader>
-                <Table.ColumnHeader>End</Table.ColumnHeader>
-                {/* The warning and the bin: both one icon wide, and neither needs
+          {/* Scrolls sideways rather than pushing the dialog wider than the screen, the
+              same as the limits table beside it and for the same cause: a datetime-local
+              is as wide as the browser draws it, and two of them in a row is more than a
+              phone has. The two editors are the same table of the same pair of fields (see
+              TimeField), so what one of them has to do about its width the other does. */}
+          <Table.ScrollArea w="full">
+            <Table.Root size="sm">
+              <Table.Header>
+                <Table.Row>
+                  <Table.ColumnHeader>Device</Table.ColumnHeader>
+                  <Table.ColumnHeader>Start</Table.ColumnHeader>
+                  <Table.ColumnHeader>End</Table.ColumnHeader>
+                  {/* The warning and the bin: both one icon wide, and neither needs
                       saying twice at the top of the table. */}
-                <Table.ColumnHeader w="0" />
-                <Table.ColumnHeader w="0" />
-              </Table.Row>
-            </Table.Header>
-            <Table.Body>
-              {rows.map((row) => (
-                <AssignmentRow
-                  key={row.key}
-                  row={row}
-                  devices={devices}
-                  conflicts={
-                    hasDevice(row)
-                      ? overlappingAssignments(
-                          toWindow(row, project.start),
-                          location.id,
-                          pending,
-                        )
-                      : []
-                  }
-                  window={project}
-                  onChange={(next) =>
-                    setRows((rs) =>
-                      rs.map((r) => (r.key === row.key ? next : r)),
-                    )
-                  }
-                  onRemove={() =>
-                    setRows((rs) => rs.filter((r) => r.key !== row.key))
-                  }
-                />
-              ))}
-            </Table.Body>
-          </Table.Root>
+                  <Table.ColumnHeader w="0" />
+                  <Table.ColumnHeader w="0" />
+                </Table.Row>
+              </Table.Header>
+              <Table.Body>
+                {rows.map((row) => (
+                  <AssignmentRow
+                    key={row.key}
+                    row={row}
+                    devices={devices}
+                    conflicts={
+                      hasDevice(row)
+                        ? overlappingAssignments(
+                            toWindow(row, project.start),
+                            location.id,
+                            pending,
+                          )
+                        : []
+                    }
+                    window={project}
+                    onChange={(next) =>
+                      setRows((rs) =>
+                        rs.map((r) => (r.key === row.key ? next : r)),
+                      )
+                    }
+                    onRemove={() =>
+                      setRows((rs) => rs.filter((r) => r.key !== row.key))
+                    }
+                  />
+                ))}
+              </Table.Body>
+            </Table.Root>
+          </Table.ScrollArea>
           {rows.length === 0 && (
             <Text fontSize="sm" color="fg.muted">
               No device has stood here yet.

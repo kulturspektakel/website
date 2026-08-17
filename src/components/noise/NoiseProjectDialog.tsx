@@ -69,8 +69,7 @@ export function NoiseProjectDialog({
       onOpenChange={(e) => !e.open && onClose()}
       placement="center"
     >
-      {/* Light, though the area around it is dark — see DARK_ROUTE_ID in __root. */}
-      <DialogContent appearance="light">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>New project</DialogTitle>
         </DialogHeader>

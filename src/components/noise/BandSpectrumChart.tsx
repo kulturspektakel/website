@@ -71,6 +71,7 @@ export function BandSpectrumChart({state}: {state: DeviceState | undefined}) {
     idx: number;
     left: number;
     top: number;
+    fraction: number;
   } | null>(null);
   const now = useTick();
   const {referenceMic} = useDeviceView();
@@ -256,7 +257,7 @@ function BandTooltip({
   reference,
   showReference,
 }: {
-  hover: {idx: number; left: number; top: number};
+  hover: {idx: number; left: number; top: number; fraction: number};
   state: DeviceState | undefined;
   now: number;
   // The microphone's latest second. Null both when no microphone is open and when one is
@@ -272,7 +273,7 @@ function BandTooltip({
   const db = band == null ? null : decodeDb(band);
   const ref = reference?.[hover.idx] ?? null;
   return (
-    <ChartTooltip left={hover.left} top={hover.top}>
+    <ChartTooltip left={hover.left} top={hover.top} fraction={hover.fraction}>
       <Text fontSize="xs" color="fg.muted" lineHeight="1.2">
         {fmtHz(FREQS[hover.idx] ?? 0)} Hz
       </Text>

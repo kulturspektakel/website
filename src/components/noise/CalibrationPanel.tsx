@@ -9,6 +9,7 @@ import {
   Spinner,
   Stack,
   Text,
+  Theme,
 } from '@chakra-ui/react';
 import {CloseButton} from '../chakra-snippets/close-button';
 import {Slider} from '../chakra-snippets/slider';
@@ -132,88 +133,93 @@ export function CalibrationPanel({
       minSize={{width: 300, height: 220}}
     >
       <Portal>
-        <FloatingPanel.Positioner>
-          {/* Its own, because a portal hangs off <body> and so misses the layout's
-              (see crew.noise). The live level in here ticks like any other. */}
-          <FloatingPanel.Content fontVariantNumeric="tabular-nums">
-            <FloatingPanel.Header>
-              <FloatingPanel.DragTrigger>
-                <FloatingPanel.Title>Kalibrierung</FloatingPanel.Title>
-              </FloatingPanel.DragTrigger>
-              <FloatingPanel.Control>
-                <FloatingPanel.CloseTrigger asChild>
-                  <CloseButton size="xs" />
-                </FloatingPanel.CloseTrigger>
-              </FloatingPanel.Control>
-            </FloatingPanel.Header>
-            <FloatingPanel.Body overflowY="auto">
-              {loading || !offsets ? (
-                <Center py="10">
-                  {error ? (
-                    <Text color="fg.error" fontSize="sm">
-                      {error}
-                    </Text>
-                  ) : (
-                    <Spinner size="lg" />
-                  )}
-                </Center>
-              ) : (
-                <Stack gap="4">
-                  {BAND_FREQUENCIES.map((hz, i) => (
-                    <HStack key={hz} gap="3">
-                      <Box minW="16" flexShrink="0" textAlign="end">
-                        {formatBandFrequency(hz)}
-                      </Box>
-                      <Slider
-                        flex="1"
-                        value={[offsets[i]!]}
-                        min={-CAL_MAX_DB}
-                        max={CAL_MAX_DB}
-                        step={CAL_STEP_DB}
-                        onValueChange={({value}) => setBand(i, value[0]!)}
-                      />
-                      <Text
-                        color="fg.subtle"
-                        fontSize="xs"
-                        minW="14"
-                        textAlign="end"
-                        flexShrink="0"
-                      >
-                        {offsets[i]! > 0 ? '+' : ''}
-                        {offsets[i]!.toFixed(1)} dB
+        {/* Dark, when every other portalled surface in the area is light: the live level
+            and the trims are read against the chart.* vocabulary, which has no light
+            half (see theme-noise and ReferenceMicPanel, which does the same). */}
+        <Theme appearance="dark" hasBackground={false}>
+          <FloatingPanel.Positioner>
+            {/* Its own, because a portal hangs off <body> and so misses the layout's
+                (see crew.noise). The live level in here ticks like any other. */}
+            <FloatingPanel.Content fontVariantNumeric="tabular-nums">
+              <FloatingPanel.Header>
+                <FloatingPanel.DragTrigger>
+                  <FloatingPanel.Title>Kalibrierung</FloatingPanel.Title>
+                </FloatingPanel.DragTrigger>
+                <FloatingPanel.Control>
+                  <FloatingPanel.CloseTrigger asChild>
+                    <CloseButton size="xs" />
+                  </FloatingPanel.CloseTrigger>
+                </FloatingPanel.Control>
+              </FloatingPanel.Header>
+              <FloatingPanel.Body overflowY="auto">
+                {loading || !offsets ? (
+                  <Center py="10">
+                    {error ? (
+                      <Text color="fg.error" fontSize="sm">
+                        {error}
                       </Text>
-                    </HStack>
-                  ))}
-                </Stack>
-              )}
-            </FloatingPanel.Body>
-            <HStack
-              justify="flex-end"
-              gap="2"
-              p="3"
-              borderTopWidth="1px"
-              flexShrink="0"
-            >
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={reset}
-                disabled={!offsets || saving}
+                    ) : (
+                      <Spinner size="lg" />
+                    )}
+                  </Center>
+                ) : (
+                  <Stack gap="4">
+                    {BAND_FREQUENCIES.map((hz, i) => (
+                      <HStack key={hz} gap="3">
+                        <Box minW="16" flexShrink="0" textAlign="end">
+                          {formatBandFrequency(hz)}
+                        </Box>
+                        <Slider
+                          flex="1"
+                          value={[offsets[i]!]}
+                          min={-CAL_MAX_DB}
+                          max={CAL_MAX_DB}
+                          step={CAL_STEP_DB}
+                          onValueChange={({value}) => setBand(i, value[0]!)}
+                        />
+                        <Text
+                          color="fg.subtle"
+                          fontSize="xs"
+                          minW="14"
+                          textAlign="end"
+                          flexShrink="0"
+                        >
+                          {offsets[i]! > 0 ? '+' : ''}
+                          {offsets[i]!.toFixed(1)} dB
+                        </Text>
+                      </HStack>
+                    ))}
+                  </Stack>
+                )}
+              </FloatingPanel.Body>
+              <HStack
+                justify="flex-end"
+                gap="2"
+                p="3"
+                borderTopWidth="1px"
+                flexShrink="0"
               >
-                Reset
-              </Button>
-              <Button
-                size="sm"
-                onClick={apply}
-                loading={saving}
-                disabled={!dirty}
-              >
-                Save
-              </Button>
-            </HStack>
-            <FloatingPanel.ResizeTriggers />
-          </FloatingPanel.Content>
-        </FloatingPanel.Positioner>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={reset}
+                  disabled={!offsets || saving}
+                >
+                  Reset
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={apply}
+                  loading={saving}
+                  disabled={!dirty}
+                >
+                  Save
+                </Button>
+              </HStack>
+              <FloatingPanel.ResizeTriggers />
+            </FloatingPanel.Content>
+          </FloatingPanel.Positioner>
+        </Theme>
       </Portal>
     </FloatingPanel.Root>
   );

@@ -103,10 +103,13 @@ export function LocationLimitsDialog({
       open={open}
       onOpenChange={(e) => !e.open && onClose()}
       placement="center"
-      size="lg"
+      // As wide as the assignments dialog: this table is that one's two datetime fields
+      // plus two more columns, and at `lg` most of the row was behind a sideways scroll.
+      // A preference and not a constraint — the ScrollArea below is what makes any width
+      // safe, so this only decides how much of the table you see without dragging it.
+      size="xl"
     >
-      {/* Light, though the area around it is dark — see DARK_ROUTE_ID in __root. */}
-      <DialogContent appearance="light">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Limits at {location.locationName}</DialogTitle>
         </DialogHeader>
@@ -164,38 +167,43 @@ function LimitsForm({
     <>
       <DialogBody>
         <Stack gap="3" align="start">
-          <Table.Root size="sm">
-            <Table.Header>
-              <Table.Row>
-                {/* Which quantity first, then how much of it: a limit is read as "LAeq,1m
-                    up to 95", and the number means nothing without the column to its
-                    left. */}
-                <Table.ColumnHeader>Series</Table.ColumnHeader>
-                <Table.ColumnHeader>Limit (dB)</Table.ColumnHeader>
-                <Table.ColumnHeader>Start</Table.ColumnHeader>
-                <Table.ColumnHeader>End</Table.ColumnHeader>
-                {/* The bin: one icon wide, and it doesn't need saying at the top. */}
-                <Table.ColumnHeader w="0" />
-              </Table.Row>
-            </Table.Header>
-            <Table.Body>
-              {rows.map((row) => (
-                <LimitRow
-                  key={row.key}
-                  row={row}
-                  window={project}
-                  onChange={(next) =>
-                    setRows((rs) =>
-                      rs.map((r) => (r.key === row.key ? next : r)),
-                    )
-                  }
-                  onRemove={() =>
-                    setRows((rs) => rs.filter((r) => r.key !== row.key))
-                  }
-                />
-              ))}
-            </Table.Body>
-          </Table.Root>
+          {/* Scrolls sideways rather than pushing the dialog wider than the screen: a
+              datetime-local is as wide as the browser draws it, and two of them beside a
+              series name is more than a phone has. */}
+          <Table.ScrollArea w="full">
+            <Table.Root size="sm">
+              <Table.Header>
+                <Table.Row>
+                  {/* Which quantity first, then how much of it: a limit is read as
+                      "LAeq,1m up to 95", and the number means nothing without the
+                      column to its left. */}
+                  <Table.ColumnHeader>Series</Table.ColumnHeader>
+                  <Table.ColumnHeader>Limit (dB)</Table.ColumnHeader>
+                  <Table.ColumnHeader>Start</Table.ColumnHeader>
+                  <Table.ColumnHeader>End</Table.ColumnHeader>
+                  {/* The bin: one icon wide, and it doesn't need saying at the top. */}
+                  <Table.ColumnHeader w="0" />
+                </Table.Row>
+              </Table.Header>
+              <Table.Body>
+                {rows.map((row) => (
+                  <LimitRow
+                    key={row.key}
+                    row={row}
+                    window={project}
+                    onChange={(next) =>
+                      setRows((rs) =>
+                        rs.map((r) => (r.key === row.key ? next : r)),
+                      )
+                    }
+                    onRemove={() =>
+                      setRows((rs) => rs.filter((r) => r.key !== row.key))
+                    }
+                  />
+                ))}
+              </Table.Body>
+            </Table.Root>
+          </Table.ScrollArea>
           {rows.length === 0 && (
             <Text fontSize="sm" color="fg.muted">
               No limit set for this location.

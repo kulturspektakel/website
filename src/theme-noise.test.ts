@@ -155,6 +155,10 @@ describe('theme-noise', () => {
     expect(themeHex('chart.grid')).toBe(darkHex('colors.border.emphasized'));
     expect(themeHex('chart.playhead')).toBe(darkHex('colors.fg'));
     expect(themeHex('map.ground')).toBe(darkHex('colors.bg'));
+    // The load-bearing one: the limit rules' halo is only invisible *as* a halo while it is
+    // the ground behind the plot. Let `bg` move without this and every dash on every chart
+    // grows a grey outline — the one thing the halo exists to avoid, and silent.
+    expect(themeHex('chart.ground')).toBe(darkHex('colors.bg'));
   });
 });
 
