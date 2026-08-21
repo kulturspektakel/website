@@ -47,7 +47,6 @@ function NavItems() {
     <>
       <Item to="/angebot">Angebot</Item>
       <Item to="/lineup">Lineup</Item>
-      <Item to="/awareness">Awareness</Item>
       <Item to="/events">Veranstaltungen</Item>
       <Item to="/infos">Infos</Item>
     </>

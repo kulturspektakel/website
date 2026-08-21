@@ -11,9 +11,9 @@ import {
 } from '@chakra-ui/react';
 import {FaSpotify, FaYoutube, FaInstagram, FaFacebook} from 'react-icons/fa6';
 import vpby from './vpby.svg';
-import bkm from './bkm.svg';
-import initiativeMusik from './initiative-musik.svg';
-import stmwk from './stmwk.png';
+// import bkm from './bkm.svg';
+// import initiativeMusik from './initiative-musik.svg';
+// import stmwk from './stmwk.png';
 import LinkButton from '../LinkButton';
 import {Link as RouterLink, useLocation} from '@tanstack/react-router';
 
@@ -122,6 +122,7 @@ export default function Footer() {
             flexWrap="wrap"
             justify={{base: 'center', md: 'flex-end'}}
           >
+            {/*
             <Link
               href="https://www.bundesregierung.de/breg-de/bundesregierung/staatsministerin-fuer-kultur-und-medien"
               target="_blank"
@@ -158,6 +159,7 @@ export default function Footer() {
                 height="40px"
               />
             </Link>
+            */}
             <Link
               href="https://popkultur.bayern"
               target="_blank"
