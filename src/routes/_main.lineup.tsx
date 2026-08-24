@@ -14,7 +14,13 @@ import {Suspense, useState} from 'react';
 import {Tooltip} from '../components/chakra-snippets/tooltip';
 
 import {Alert, AlertProps} from '../components/chakra-snippets/alert';
-import {createFileRoute, Link, Outlet, useMatch} from '@tanstack/react-router';
+import {
+  createFileRoute,
+  Link,
+  Outlet,
+  useLoaderData,
+  useMatch,
+} from '@tanstack/react-router';
 import {useSuspenseQuery} from '@tanstack/react-query';
 import {createServerFn, useServerFn} from '@tanstack/react-start';
 import {prismaClient} from '../server/prismaClient.server';
@@ -51,7 +57,7 @@ export const Route = createFileRoute('/_main/lineup')({
 });
 
 function Lineup() {
-  const event = Route.useRouteContext().event;
+  const {event} = useLoaderData({from: '/_main'});
   const matchYear = useMatch({from: '/_main/lineup/$year', shouldThrow: false});
   const matchSlug = useMatch({
     from: '/_main/lineup/$year_/$slug',

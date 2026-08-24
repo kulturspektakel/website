@@ -19,7 +19,12 @@ import ReloadWarning from '../components/ReloadWarning';
 import Steps from '../components/Steps';
 import {FaTriangleExclamation} from 'react-icons/fa6';
 import {Alert} from '../components/chakra-snippets/alert';
-import {createFileRoute, notFound, useNavigate} from '@tanstack/react-router';
+import {
+  createFileRoute,
+  notFound,
+  useLoaderData,
+  useNavigate,
+} from '@tanstack/react-router';
 import useIsDJ from '../components/booking/useIsDJ';
 import {useMutation} from '@tanstack/react-query';
 import {createServerFn} from '@tanstack/react-start';
@@ -88,7 +93,7 @@ function BookingForm() {
   const [currentStep, setCurrentStep] = useState(0);
   const {applicationType} = Route.useParams();
   const isDJ = useIsDJ();
-  const {event} = Route.useRouteContext();
+  const {event} = useLoaderData({from: '/_main'});
   const {isPending, isSuccess, mutate, error, isError} = useMutation<
     void,
     Error,

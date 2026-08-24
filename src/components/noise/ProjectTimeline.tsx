@@ -230,36 +230,104 @@ function useFrameCommit(onCommit: (selection: ProjectSelection) => void) {
   };
 }
 
+// The right-hand end of the value axis, which is the window's own — except on a window
+// with no width at all. A project that hasn't started collapses to a point (see
+// visibleProjectWindow), and every fraction on this strip is a division by the span: zag
+// would divide by it too, and axisFraction would hand back a NaN to place a mark at. One
+// step wide instead, which nothing can be picked in either way.
+const axisEnd = (window: {start: number; end: number}) =>
+  Math.max(window.end, window.start + STEP_MS);
+
+// The instant a pointer sits over, unsnapped. Mirrors zag's own point→value math, which
+// the crop strip's handlers bypass: under thumbAlignment="center" the axis is the
+// measured element's own box, with no inset of its own — the room the grips need is
+// padding on the element outside it, and so already outside this box. Unsnapped because
+// the first thing a press decides is which side of an edge it is on, and on a narrow
+// window the grid would answer that wrong.
+//
+// The two ends as numbers rather than the window object, because the axis' right-hand end
+// is `axisEnd` above and not `window.end` — passing the window would invite the caller to
+// think otherwise.
+const instantAt = (
+  control: HTMLElement,
+  clientX: number,
+  start: number,
+  end: number,
+): number | null => {
+  const {left, width} = control.getBoundingClientRect();
+  if (width <= 0) return null;
+  // The same normalization the markers and the readout use, asked in pixels: where
+  // the pointer stands between the control's two edges.
+  const ratio = axisFraction(clientX, left, left + width);
+  return start + ratio * (end - start);
+};
+
+// The selection with its playhead moved to an instant the pointer named — or, with null,
+// with no playhead at all, which is what the pointer leaving names. To the minute, like
+// the window a drag draws (see drawProjectSelection): nothing snaps a pointer to the
+// quarter hour on this strip any more, and a mark that stepped in quarters while the same
+// hover over a row chart slid smoothly would be two answers to one question.
+//
+// setSelectionCurrent does the clamping and takes the null, and is the page's one rule for
+// where the cursor may stand — the same call the row charts' hover goes through. The
+// window is its bound, not the crop: the strip can be pointed at end to end.
+const playheadAt = (selection: ProjectSelection, ms: number | null) =>
+  setSelectionCurrent(selection, ms == null ? null : snapToMinute(ms));
+
 /**
- * Picks a sub-range of a noise project's window, and carries the cursor that says which
- * instant the page is reading: two thumbs on one track, and a mark drawn between or beside
- * them.
+ * The instant the page is reading, drawn across the strip: a hairline the full height of
+ * it, so it reads as a position in time rather than a draggable edge. The same width and
+ * the same near-white as the one the row charts draw (see LevelTrace's CHART_CSS): one
+ * instant, standing in several places at once, and it should be recognisably the same mark
+ * in each of them. On the crop strip it is the grips' yellow that tells it apart from an edge.
  *
- * Mounted only while scrubbing. Live mode reads what is arriving now, which is neither
- * a range nor an instant anyone picked, so the page leaves this out entirely rather
- * than showing a strip with nothing to point at — hence no `live` anywhere below.
+ * Drawn rather than dragged, which is the whole reason it is not one of the crop's thumbs:
+ * it may stand outside the crop, and zag's thumbs are one ascending list — an edge could
+ * never be dragged *through* a thumb, whatever the collision behaviour. Nothing is lost in
+ * the trade, because a hover already places it anywhere on the strip and a press anywhere
+ * in the crop does too, so there was never anything a hand had to take hold of.
  *
- * The strip is the whole component: it is the page's second toolbar, and what a mark
- * stands on is read off the mark itself (see Readout) rather than from a line of
- * text beside it. The two date fields that used to sit under it are gone — every
- * instant they set can be dragged, and a toolbar is not where a form belongs.
+ * Placed by the two rules zag places a thumb by — a left of its value percentage, then back
+ * half its own width — so it lands in exactly the column a thumb would have. As a negative
+ * margin rather than a translate, deliberately: a transform would make this a stacking
+ * context, and the readout inside it needs to stand above the strip's own layers rather
+ * than above this hairline's. The percentage is inline, because it changes per frame of a
+ * hover and a style prop would have Emotion hash a class for each one.
  *
- * Three gestures, and every one of them a pointer on the strip: each grip drags its own end;
- * a drag anywhere else draws a whole new window between where it started and where it is let
- * go (see onControlPointerDownCapture); and simply pointing at the strip — hovering it, or
- * tapping inside the crop — puts the cursor on an instant, anywhere from one end of the
- * evening to the other. A press only becomes the second of those once it has actually
- * travelled, so a click stays the click it has always been.
- *
- * `onCommit` fires as the drag moves rather than on release, so the page follows the
- * pointer; see useFrameCommit for the rate that happens at.
+ * No z-index, so the crop strip's thumbs (the recipe gives them 2) pass over it: a mark
+ * parked against an edge must not draw over the thing that moves that edge. And
+ * pointerEvents none, so the strip under it goes on answering the hover that is carrying it.
  */
-export function ProjectTimeline({
-  window,
-  selection,
-  gaps,
-  onCommit,
+function Playhead({
+  fraction,
+  label,
 }: {
+  fraction: number;
+  // What the pill over the mark says, or null for no pill at all — which is how the
+  // playhead's readout is hidden, where a grip's is left to READOUT_CSS. A row chart's
+  // hover sets this same playhead and the line following along here is the point of that,
+  // but a pill over the strip naming an instant the hand is nowhere near is not.
+  label: string | null;
+}) {
+  return (
+    <Box
+      position="absolute"
+      top="0"
+      bottom="0"
+      w={`${PLAYHEAD_W}px`}
+      ml={`-${PLAYHEAD_W / 2}px`}
+      bg="chart.playhead"
+      pointerEvents="none"
+      style={{left: `${fraction * 100}%`}}
+    >
+      {label != null && <Readout fraction={fraction}>{label}</Readout>}
+    </Box>
+  );
+}
+
+// What the strip is handed, in both of its forms. Stated once because the two differ by
+// exactly one prop and everything else about them is the same toolbar.
+type TimelineProps = {
   // The pickable window, which is not the project's own: it stops at the current
   // time while the event is still running (see visibleProjectWindow) — which the
   // strip shows by simply ending there.
@@ -270,11 +338,58 @@ export function ProjectTimeline({
   // TimelineMarkers, which is the layer that draws in the axis' own coordinates.
   gaps?: readonly LogGap[];
   onCommit: (selection: ProjectSelection) => void;
+};
+
+/**
+ * The project page's second toolbar: the evening as a strip, with the cursor that says
+ * which instant the page is reading drawn on it — and, where the view has any use for one,
+ * the crop that says which stretch of it the charts draw.
+ *
+ * Mounted only while scrubbing. Live mode reads what is arriving now, which is neither
+ * a range nor an instant anyone picked, so the page leaves this out entirely rather
+ * than showing a strip with nothing to point at — hence no `live` anywhere below.
+ *
+ * The strip is the whole component: what a mark stands on is read off the mark itself
+ * (see Readout) rather than from a line of text beside it. The two date fields that used
+ * to sit under it are gone — every instant they set can be dragged, and a toolbar is not
+ * where a form belongs.
+ *
+ * `onCommit` fires as a gesture moves rather than on release, so the page follows the
+ * pointer; see useFrameCommit for the rate that happens at.
+ */
+export function ProjectTimeline({
+  croppable,
+  ...props
+}: TimelineProps & {
+  // Whether the strip offers the crop as well as the playhead. The list's charts are drawn
+  // over the crop and their Leqs averaged across it, so there it is half of what the
+  // toolbar is for; the map has no charts — a pin shows what stood there at the playhead,
+  // read off the whole payload and not the crop (see useProjectLogs) — so a window picked
+  // there would change nothing on screen.
+  //
+  // Decided by the view and passed down rather than read off the route here, because the
+  // strip belongs to the layout and the layout is the one place that knows which view is
+  // up. What is picked survives the switch either way: the selection is the layout's, so
+  // the crop is still there when the list comes back.
+  croppable: boolean;
 }) {
-  // A degenerate window — a project that hasn't started — would have zag dividing by
-  // its own span, so give it one unit to work with. Nothing is pickable in it either
-  // way.
-  const sliderMax = Math.max(window.end, window.start + STEP_MS);
+  return croppable ? <CropTimeline {...props} /> : <ScrubTimeline {...props} />;
+}
+
+/**
+ * The full strip: two thumbs on one track, and the playhead drawn between or beside them.
+ *
+ * Three gestures, and every one of them a pointer on the strip: each grip drags its own end;
+ * a drag anywhere else draws a whole new window between where it started and where it is let
+ * go (see onControlPointerDownCapture); and simply pointing at the strip — hovering it, or
+ * tapping inside the crop — puts the cursor on an instant, anywhere from one end of the
+ * evening to the other. A press only becomes the second of those once it has actually
+ * travelled, so a click stays the click it has always been.
+ */
+function CropTimeline({window, selection, gaps, onCommit}: TimelineProps) {
+  // The axis' right-hand end, which is also the slider's max — see axisEnd for the one
+  // window where that is not `window.end`.
+  const sliderMax = axisEnd(window);
 
   // Every gesture commits as it moves, so `selection` is the only truth there is —
   // there is no in-flight copy to preview from. It used to be one: while the
@@ -328,32 +443,12 @@ export function ProjectTimeline({
     drawing: boolean;
   } | null>(null);
 
-  // The instant a pointer sits over, unsnapped. Mirrors zag's own point→value math,
-  // which the handler below bypasses: under thumbAlignment="center" that is the
-  // control's own box end to end, with no inset of its own — the room the grips need
-  // is padding on the root, and so already outside the box this measures. Unsnapped
-  // because the first thing it decides is which side of an edge the pointer is on,
-  // and on a narrow window the grid would answer that wrong.
-  const pointerAt = (control: HTMLElement, clientX: number): number | null => {
-    const {left, width} = control.getBoundingClientRect();
-    if (width <= 0) return null;
-    // The same normalization the markers and the readout use, asked in pixels: where
-    // the pointer stands between the control's two edges.
-    const ratio = axisFraction(clientX, left, left + width);
-    return window.start + ratio * (sliderMax - window.start);
-  };
+  // The strip's two shared rules, bound to this axis and this selection — see instantAt
+  // and playheadAt for what each of them is.
+  const pointerAt = (control: HTMLElement, clientX: number) =>
+    instantAt(control, clientX, window.start, sliderMax);
 
-  // The selection with its playhead moved to an instant the pointer named — or, with
-  // null, with no playhead at all, which is what the pointer leaving names. To the minute,
-  // like the window a drag draws (see drawProjectSelection): nothing snaps a pointer to the
-  // quarter hour on this strip any more, and a mark that stepped in quarters while the same
-  // hover over a row chart slid smoothly would be two answers to one question.
-  //
-  // setSelectionCurrent does the clamping and takes the null, and is the page's one rule for
-  // where the cursor may stand — the same call the row charts' hover goes through. The window
-  // is its bound, not the crop: the strip can be pointed at end to end.
-  const withPlayheadAt = (ms: number | null) =>
-    setSelectionCurrent(selection, ms == null ? null : snapToMinute(ms));
+  const withPlayheadAt = (ms: number | null) => playheadAt(selection, ms);
 
   // Where along the strip an instant stands, 0…1: what places a mark and pulls its readout
   // back over it. Against sliderMax rather than window.end, because that is the axis the
@@ -686,51 +781,23 @@ export function ProjectTimeline({
           aria-hidden
         />
 
-        {/* The playhead: a hairline across the whole strip, so it reads as a position in time
-            rather than a draggable edge. The same width and the same near-white as the one the
-            row charts draw (see LevelTrace's CHART_CSS): one instant, standing in several
-            places at once, and it should be recognisably the same mark in each of them. It is
-            the grips' yellow that tells it apart from an edge here.
+        {/* Where the page is reading, drawn between or beside the grips — see Playhead. Here
+            in the tree so the markers are under it and the thumbs, carrying the recipe's own
+            z-index, are over it.
 
-            Drawn rather than dragged, which is the whole reason it is not a thumb: it may stand
-            outside the crop now, and zag's thumbs are one ascending list — an edge could never
-            be dragged *through* a thumb, whatever the collision behaviour. Nothing is lost in
-            the trade, because a hover already places it anywhere on the strip and a press
-            anywhere in the crop does too, so there was never anything a hand had to take hold
-            of.
-
-            Placed by the two rules zag places a thumb by — a left of its value percentage, then
-            back half its own width — so it lands in exactly the column a thumb would have. As a
-            negative margin rather than a translate, deliberately: a transform would make this a
-            stacking context, and the readout inside it needs to stand above the strip's own
-            layers rather than above this hairline's. The percentage is inline, because it
-            changes per frame of a hover and a style prop would have Emotion hash a class for
-            each one.
-
-            No z-index, so the recipe's own (2, on the thumbs) puts both grips over it: a mark
-            parked against an edge must not draw over the thing that moves that edge. And
-            pointerEvents none, so the strip under it goes on answering the hover that is
-            carrying it. */}
+            Its pill only while this strip is the thing being pointed at: a hover, or a press
+            that has placed the mark and not yet turned into a drawn window. A row chart's
+            hover sets the same playhead and the line following along here is the point of
+            that, but a pill naming an instant the hand is nowhere near is not. */}
         {selection.current != null && (
-          <Box
-            position="absolute"
-            top="0"
-            bottom="0"
-            w={`${PLAYHEAD_W}px`}
-            ml={`-${PLAYHEAD_W / 2}px`}
-            bg="chart.playhead"
-            pointerEvents="none"
-            style={{left: `${fractionOf(selection.current) * 100}%`}}
-          >
-            {/* Only while this strip is the thing being pointed at. A row chart's hover sets
-                the same playhead, and the line following along here is the point of that —
-                but a pill over the strip naming an instant the hand is nowhere near is not. */}
-            {(hovering || gesture === 'scrub') && (
-              <Readout fraction={fractionOf(selection.current)}>
-                {labelFormat(selection.current)}
-              </Readout>
-            )}
-          </Box>
+          <Playhead
+            fraction={fractionOf(selection.current)}
+            label={
+              hovering || gesture === 'scrub'
+                ? labelFormat(selection.current)
+                : null
+            }
+          />
         )}
 
         {thumbs.map((value, i) => {
@@ -814,5 +881,174 @@ export function ProjectTimeline({
         })}
       </ChakraSlider.Control>
     </ChakraSlider.Root>
+  );
+}
+
+/**
+ * The same strip with the crop taken out of it: a clock you point at, and nothing to pick.
+ *
+ * What the map wants of the timeline. A pin has room for one number and shows what stood
+ * at that place at the playhead, read off the whole payload rather than the crop — so the
+ * crop changes nothing the map draws, and two grips sitting over it would be a control for
+ * the other view. What it does still want is the playhead itself, because that is the
+ * question the map cannot answer on its own: which moment the pins are showing.
+ *
+ * Not the crop strip with its thumbs hidden. With nothing to drag there is no slider left
+ * — a zag root with an empty value list is a range control speaking about a range nobody
+ * can reach, and a hidden thumb is still one a keyboard finds. What is left is a box that
+ * takes pointers, which is what this is.
+ *
+ * Its geometry is deliberately the crop strip's, to the pixel: the same inset at each end,
+ * the same frame pulled back out over it, the same overhang the outermost tick labels are
+ * cut in. The toolbar belongs to the layout and stays mounted across a view switch, so an
+ * axis that moved a grip's width when the map came up would slide the whole evening —
+ * ticks, gaps and the playhead standing on one of them — sideways under the reader.
+ *
+ * There is nothing here for a keyboard, and nothing is claimed: the crop strip's two thumbs
+ * are what a keyboard reaches there, and they move the crop — the playhead has never been
+ * one of them, being where a hand is pointing rather than a value anyone sets (see
+ * ProjectSelection). So this offers a pointer affordance and no role, rather than a slider
+ * role over something that would not answer a key.
+ */
+function ScrubTimeline({window, selection, gaps, onCommit}: TimelineProps) {
+  const axisMax = axisEnd(window);
+  const {onFrame, onceNow} = useFrameCommit(onCommit);
+
+  // Whether a pointer is on the strip, which is the whole of what shows the pill here.
+  // The crop strip needs a second flag for the gesture in flight because a press there may
+  // turn into a drawn window; a press here is a scrub from the first pixel to the last, so
+  // "something is pointing at this strip" is one answer.
+  //
+  // Set on every move and re-rendered on two of them: React bails out of a setState to the
+  // value the state already holds, so a pass across the strip costs one render arriving and
+  // one leaving rather than one per frame.
+  const [pointing, setPointing] = useState(false);
+
+  // The press in flight, if any — just its pointer id, there being no threshold to cross
+  // and no anchor to keep. It is what tells our own drag from somebody else's passing over
+  // the strip with a button down, and a ref because the move handler reads it several times
+  // a frame and nothing renders from it.
+  const pressed = useRef<number | null>(null);
+
+  const at = (event: React.PointerEvent<HTMLDivElement>) =>
+    instantAt(event.currentTarget, event.clientX, window.start, axisMax);
+
+  // A press puts the mark down at once, as it does inside the crop on the other strip, and
+  // then carries it: there is no other thing a press here could become, so nothing waits on
+  // a threshold.
+  //
+  // Pointer capture retargets every subsequent move and the release to the strip, so a drag
+  // that wanders off it — off the page entirely — keeps tracking, and the release still
+  // arrives at the handlers below. It also means those can be ordinary React props on this
+  // element: no listeners to add, and so none that could outlive the gesture.
+  const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    const ms = at(event);
+    if (ms == null) return;
+    event.preventDefault();
+    // One at a time: a second finger landing on the strip would otherwise drag the mark
+    // against the first.
+    if (pressed.current != null) return;
+    pressed.current = event.pointerId;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setPointing(true);
+    onceNow(playheadAt(selection, ms));
+  };
+
+  const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    // Two pointers are answered and no others: a mouse merely hovering, and the press we
+    // took. `buttons === 0` is the whole of how the first is told from a finger — a touch
+    // pointer only ever moves while it is down, so a move with nothing held is a hover by
+    // construction — and anything else held is a drag that began elsewhere, passing over.
+    if (event.buttons !== 0 && pressed.current !== event.pointerId) return;
+    const ms = at(event);
+    // Only a strip with no width to measure, which is nowhere to point at.
+    if (ms == null) return;
+    setPointing(true);
+    onFrame(playheadAt(selection, ms));
+  };
+
+  // The pointer has gone, and the mark goes with it: it says where a hand is pointing, so
+  // there is nothing for it to stand on once nothing is. The instant is not kept anywhere —
+  // the next hover names a new one — which is what makes "no readings" the map's resting
+  // state rather than a stale number from the last time the strip was touched.
+  //
+  // A button still down is not the end of anything: it is a scrub dragged off the edge,
+  // which is most edge drags, and the hand has not gone anywhere. Fires for a lifted finger
+  // too — the browser removes a touch pointer once it is up, and leaving is part of removing
+  // it — so a tap's mark goes when the finger does, the same as a mouse's.
+  const onPointerLeave = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.buttons !== 0) return;
+    setPointing(false);
+    onceNow(playheadAt(selection, null));
+  };
+
+  // Nothing to commit at the end of a scrub — every frame of it has already landed. All this
+  // does is open the gate again, and it is wired to lost capture as well as to up and cancel,
+  // that being the one signal a press cannot end without.
+  const endPress = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (pressed.current === event.pointerId) pressed.current = null;
+  };
+
+  return (
+    // The grip width held back at each end, the way the crop strip's root holds it. There
+    // are no grips here to leave room for; the axis stands in the same place in both views
+    // because it is the same evening, and this is also the room the outermost tick labels
+    // are cut in rather than pulled inside.
+    <Box px={`${HANDLE_W}px`}>
+      <Box
+        position="relative"
+        height={`${STRIP_H}px`}
+        // The whole strip is pointable, end to end, and says so — the same crosshair the row
+        // charts and the other strip carry.
+        cursor="crosshair"
+        // Two things zag puts on its own control, and this strip needs both for the same
+        // reason it needs them: a horizontal drag here is a scrub, so the browser must not
+        // read it as a pan and take the gesture away, and there is type on the strip (the
+        // tick labels) that a drag would otherwise select rather than scrub past.
+        touchAction="none"
+        userSelect="none"
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerLeave={onPointerLeave}
+        onPointerUp={endPress}
+        onPointerCancel={endPress}
+        onLostPointerCapture={endPress}
+      >
+        {/* The frame, and the only thing drawn on the ground here: with no window picked
+            there is no figure to set off, so the strip is the toolbar's own ground with the
+            clock on it. Back out over the padding, so it is the whole width even though the
+            axis inside it stops a grip's width short of either end. */}
+        <Box
+          position="absolute"
+          top="0"
+          bottom="0"
+          left={`-${HANDLE_W}px`}
+          right={`-${HANDLE_W}px`}
+          rounded="md"
+          borderWidth={`${FRAME_W}px`}
+          borderColor="chart.rule"
+        />
+
+        {/* The clock the strip is read against, in the axis' own coordinates — this box is
+            that axis, which is what lets every fraction inside be a plain percentage. Handed
+            the same overhang the frame above reaches by. */}
+        <TimelineMarkers
+          start={window.start}
+          end={axisMax}
+          gaps={gaps}
+          overhang={HANDLE_W}
+        />
+
+        {/* Last, so it draws over the grid — there are no thumbs here to pass over it. Its
+            pill whenever the mark is on this strip at all, which on this strip is the same
+            question as whether a hand is on it. */}
+        {selection.current != null && (
+          <Playhead
+            fraction={axisFraction(selection.current, window.start, axisMax)}
+            label={pointing ? labelFormat(selection.current) : null}
+          />
+        )}
+      </Box>
+    </Box>
   );
 }

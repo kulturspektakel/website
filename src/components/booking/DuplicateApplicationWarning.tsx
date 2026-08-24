@@ -1,5 +1,5 @@
 import {Alert} from '../chakra-snippets/alert';
-import {useRouteContext} from '@tanstack/react-router';
+import {useLoaderData} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
 import {prismaClient} from '../../server/prismaClient.server';
 import {useQuery} from '@tanstack/react-query';
@@ -38,7 +38,7 @@ const getDuplicateApplication = createServerFn()
   });
 
 export default function DuplicateWarning(props: {bandname?: string}) {
-  const {event} = useRouteContext({from: '/_main/booking_/$applicationType'});
+  const {event} = useLoaderData({from: '/_main'});
 
   const {data} = useQuery({
     queryKey: ['duplicateApplication', props.bandname, event.id],

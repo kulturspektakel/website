@@ -86,9 +86,16 @@ function BigNumber({
 // design, so LAFmax and LCFmax are the same red one above the other: the label under each
 // names it in full, and the row it is in is the block it belongs to.
 //
-// The numbers do not follow the chart's cursor, though they once did: the trace under this
-// reports a hovered sample itself now (see LevelTrace's tooltip), so these are the latest
-// reading and nothing else — every series', whatever is lit.
+// What they print is whatever the caller is reading at: the latest record while nothing is
+// pointing at the trace, and the sample under the pointer while something is (see
+// LiveView). All nine either way — the tooltip under the pointer names only the lines that
+// are drawn, and these are the row that answers for the rest.
+//
+// And nothing at all where there is nothing: a monitor that has gone quiet, or an instant
+// it was quiet through, blanks every tile rather than leaving its last reading standing
+// under labels that say `LAeq,1s`. That is what `value` returning null is for, and why it
+// is the caller's decision — this row prints a level, it does not decide whether there is
+// one.
 export function BigNumberRow({
   series,
   picked,

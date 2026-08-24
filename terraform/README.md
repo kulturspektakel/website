@@ -11,11 +11,11 @@ Task handlers live in `src/routes/api.tasks.*.ts` and
 
 ## File layout
 
-| File | What's in it |
-|---|---|
-| `main.tf` | Providers, locals (`project_id`, `region`, `site_url`), API enablement |
-| `production.tf` | Runtime infra: `tasks-invoker` SA, queue, scheduler, Pub/Sub, API keys, monitoring; plus the `env_vars` output (non-secret config for the app) |
-| `deployment.tf` | CI plumbing: `ci-secret-pusher` SA + key, plus a `ci_secret_pusher_key` output used to refresh the `GCP_SA_KEY` GH Actions secret on rotation |
+| File                  | What's in it                                                                                                                                                                              |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `main.tf`             | Providers, locals (`project_id`, `region`, `site_url`), API enablement                                                                                                                    |
+| `production.tf`       | Runtime infra: `tasks-invoker` SA, queue, scheduler, Pub/Sub, API keys, monitoring; plus the `env_vars` output (non-secret config for the app)                                            |
+| `deployment.tf`       | CI plumbing: `ci-secret-pusher` SA + key, plus a `ci_secret_pusher_key` output used to refresh the `GCP_SA_KEY` GH Actions secret on rotation                                             |
 | `scripts/sync-env.js` | The `ENV_VARS` manifest (every var + its source) → reads the `env_vars` terraform output + Secret Manager → writes `.env` + `types/env.d.ts` (types `process.env`) + optional Vercel push |
 
 ## Monitoring
@@ -26,7 +26,7 @@ the `Task failures` alert. Console-managed duplicates of all three (created
 2026-08-10 — they were notifying Slack twice per event. Don't recreate monitors
 in the console; add them to `production.tf`.
 
-The uptime alert deliberately fires on a *sustained* drop in success rate
+The uptime alert deliberately fires on a _sustained_ drop in success rate
 rather than on failed probes: every deploy cold-starts the SSR function per
 edge region, and the first request into a region routinely exceeds the check's
 20s timeout. Replayed over 30 days, the worst deploy scores 0.722 against the
@@ -36,6 +36,71 @@ loosening the check timeout.
 
 The `api.kulturspektakel.de` check + alert are still console-managed; retire
 them with the legacy API.
+
+The `Task failures` alert is log-based, so it only works if the queues actually
+write logs — hence `stackdriver_logging_config { sampling_ratio = 1.0 }` on
+both `google_cloud_tasks_queue` resources. Sampling defaults to `0.0`, and
+until 2026-08-24 it was unset: Cloud Tasks emitted nothing, so the
+`resource.type="cloud_tasks_queue"` half of that policy's filter could never
+match and no Cloud Tasks failure had ever alerted. If you add a queue, set
+sampling on it too.
+
+## Sentry alerting (console-managed)
+
+Not Terraform-managed — the `google` provider can't reach Sentry, and adding a
+second provider for one rule isn't worth it. Documented here so it isn't lost.
+
+`apiErrorBoundary` (`src/server/apiError.server.ts`) is the capture point for
+every `/api/*` and task/cron error: it calls `Sentry.captureException` before
+swallowing the throw into an HTTP response, so these never reach Sentry's
+global request middleware. Capture is confirmed working in production.
+
+Alerting is the gap. On 2026-08-23 the `instagram-follower` task failed all 25
+attempts (Instagram began rejecting Node's `fetch` over its `Sec-Fetch-*`
+headers). Sentry recorded the events; nothing notified anyone, and GCP couldn't
+either — see the queue-logging note above. The rule to keep in place:
+
+- **Trigger on event frequency**, e.g. "an issue is seen more than 5 times in
+  1 hour" — not on new-issue (and not only on regression). This is the actual
+  2026-08-23 failure mode: the project's rule fired only for _new_ issues, and
+  the task's throw site had been grouped into a long-lived issue years earlier,
+  so 25 events arrived on an already-open issue and matched nothing. A
+  regression trigger would not have helped either — the issue had never been
+  resolved, so it never transitioned back to unresolved. Add regression as a
+  second trigger for the case where someone does resolve it, but frequency is
+  the one that catches a re-break.
+
+  Tune the threshold against the retry schedule, not intuition: the scrapers
+  queue backs off 30s → 1h, so a wedged task lands ~7–8 events in the first
+  hour and one per hour after that.
+
+- **Action** → the same `Monitoring` Slack channel the GCP alerts use, not
+  member email.
+- **Do not** filter on `environment`. Neither `instrument.server.ts` nor
+  `instrument.client.ts` passes `environment` to `Sentry.init`, so everything
+  reports as `production` — and `enabled: import.meta.env.PROD` is true for
+  Vercel preview builds as well, so preview errors are indistinguishable from
+  real ones. Pass `environment` from `VERCEL_ENV` in both inits before relying
+  on any environment filter.
+
+Expect double-notification once both paths work: GCP catches retry exhaustion
+and unreachable targets, Sentry catches the exception and stack. That overlap
+is intentional.
+
+### Why new-issue alerts don't work for the scraper tasks
+
+The scrapers signal failure by rethrowing the response body from a single site
+— `throw new Error(res.body)` on the non-2xx branch. Sentry groups exceptions
+by stack trace, not message, so every distinct upstream failure at that line
+(policy rejection, rate limit, auth change, unexpected JSON) collapses into one
+issue that stays open for years. New-issue alerts therefore fire once, on the
+first failure ever, and never again — which is exactly what happened here.
+
+If you want new-issue alerting to be meaningful on these, give the throws
+distinguishable fingerprints — either `Sentry.withScope` + `setFingerprint`
+keyed on the upstream status, or distinct error subclasses per failure mode, so
+"Instagram rejected our headers" and "Instagram rate-limited us" are separate
+issues. Until then, prefer the frequency rule above.
 
 ## How auth works (for tasks)
 

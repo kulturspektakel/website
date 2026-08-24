@@ -229,6 +229,9 @@ export function computedTagsFor(r: BandApplicationRow): ComputedTag[] {
 export const Route = createFileRoute('/crew/booking/$eventId')({
   component: BookingPage,
   loader: ({params}) => loadBandApplications({data: params.eventId}),
+  // Layout route: opts out of pending UI so its shell survives child navigation.
+  // See the same line on `/_main` and `/crew`.
+  pendingMs: Infinity,
   head: () => seo({title: 'Bandbewerbungen'}),
 });
 

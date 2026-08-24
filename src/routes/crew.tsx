@@ -57,6 +57,10 @@ export const Route = createFileRoute('/crew')({
     }
   },
   loader: () => loadCrewViewer(),
+  // Layout routes opt out of pending UI: `pendingComponent` replaces the route's own
+  // component, which for a layout means its whole shell. The children below it have
+  // their own pending views; this one just waits, as it always has.
+  pendingMs: Infinity,
   component: CrewLayout,
 });
 

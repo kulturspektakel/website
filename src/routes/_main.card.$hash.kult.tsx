@@ -5,6 +5,7 @@ import {seo} from '../utils/seo';
 import {CardDetails} from '../components/kultcard/CardDetails';
 import {createServerFn} from '@tanstack/react-start';
 import {queryCardTransactions} from '../server/cardUtils.server';
+import {currentEventQuery} from '../server/currentEvent';
 import {
   hasNewerTransactions,
   transformCardAvtivities,
@@ -46,8 +47,10 @@ export const currencyFormatter = new Intl.NumberFormat('de-DE', {
 
 export const Route = createFileRoute('/_main/card/$hash/kult')({
   component: KultCard,
-  loader: async ({params: {hash}, context: {event}}) =>
-    await loader({data: {hash, event}}),
+  loader: async ({params: {hash}, context}) => {
+    const {event} = await context.queryClient.ensureQueryData(currentEventQuery);
+    return await loader({data: {hash, event}});
+  },
   head: ({loaderData}) =>
     loaderData
       ? seo({

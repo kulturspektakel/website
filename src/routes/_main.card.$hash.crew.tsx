@@ -14,6 +14,7 @@ import {CardDetails} from '../components/kultcard/CardDetails';
 import {CrewCardInfo} from '../components/kultcard/CrewCardInfo';
 import {createServerFn} from '@tanstack/react-start';
 import {queryCrewCard, orderToCardActivity} from '../server/cardUtils.server';
+import {currentEventQuery} from '../server/currentEvent';
 import {stringToByteArray} from '../utils/cardUtils';
 import {decodePayload} from '../utils/decodePayload';
 
@@ -49,8 +50,10 @@ const loader = createServerFn()
 
 export const Route = createFileRoute('/_main/card/$hash/crew')({
   component: CrewCard,
-  loader: async ({params, context}) =>
-    await loader({data: {event: context.event, hash: params.hash}}),
+  loader: async ({params, context}) => {
+    const {event} = await context.queryClient.ensureQueryData(currentEventQuery);
+    return await loader({data: {event, hash: params.hash}});
+  },
   head: () =>
     seo({
       title: 'CrewCard',

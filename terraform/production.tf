@@ -78,6 +78,20 @@ resource "google_cloud_tasks_queue" "default" {
     max_doublings = 16
   }
 
+  # Log every dispatch attempt to Cloud Logging (CreateTask / DeleteTask /
+  # AttemptDispatch / AttemptResponse, including the target's status code).
+  # Sampling defaults to 0.0 — i.e. Cloud Tasks writes nothing at all — which
+  # is why the instagram-follower task could fail every attempt in complete
+  # silence. Volume is negligible next to the 50 GiB/month free tier.
+  #
+  # Whether these entries land at severity>=ERROR (and so trip the
+  # `task_failures` alert policy below) is undocumented; confirm against a
+  # real failure and, if they come in at INFO, match on the response status
+  # field in that policy's filter instead.
+  stackdriver_logging_config {
+    sampling_ratio = 1.0
+  }
+
   depends_on = [google_project_service.apis]
 }
 
@@ -101,6 +115,12 @@ resource "google_cloud_tasks_queue" "scrapers" {
     min_backoff   = "30s"
     max_backoff   = "3600s"
     max_doublings = 16
+  }
+
+  # Same as the default queue — see the note there. Matters more here: a
+  # scraper wedged on a 4xx burns all 25 attempts over ~10h in silence.
+  stackdriver_logging_config {
+    sampling_ratio = 1.0
   }
 
   depends_on = [google_project_service.apis]

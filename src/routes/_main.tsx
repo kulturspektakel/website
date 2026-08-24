@@ -8,38 +8,33 @@ import Footer from '../components/Footer/Footer';
 import photoswipeCSS from 'photoswipe/dist/photoswipe.css?url';
 import {dateStringComponents} from '../components/DateString';
 import {seo} from '../utils/seo';
-import {createServerFn} from '@tanstack/react-start';
-import {setResponseHeader} from '@tanstack/react-start/server';
-import {getCurrentEvent} from '../server/getCurrentEvent.server';
-
-const loadEvent = createServerFn({method: 'GET'}).handler(async () => {
-  // `stale-while-revalidate` so expiry never makes a visitor wait on a cold SSR
-  // render: past the hour the edge serves the stale page immediately and
-  // refreshes behind it. Freshness is unchanged; it just removes the blocking
-  // re-render (and the origin burst) that plain `s-maxage` causes at expiry.
-  setResponseHeader(
-    'Cache-Control',
-    'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400',
-  );
-  return {
-    event: await getCurrentEvent(),
-  };
-});
+import {
+  CURRENT_EVENT_STALE_TIME,
+  currentEventQuery,
+} from '../server/currentEvent';
 
 export const Route = createFileRoute('/_main')({
-  beforeLoad: () => loadEvent(),
-  head: ({match: {context}}) => {
+  loader: ({context}) => context.queryClient.ensureQueryData(currentEventQuery),
+  // Layout routes opt out of pending UI: `pendingComponent` replaces the route's own
+  // component, which for a layout means its whole shell. The children below it have
+  // their own pending views; this one just waits, as it always has.
+  pendingMs: Infinity,
+  // Without this the loader re-runs on every navigation. It would only ever be a
+  // cache hit, but skipping it outright means the data hydrated from SSR is reused
+  // as-is and a same-session visitor never re-fetches the event at all.
+  staleTime: CURRENT_EVENT_STALE_TIME,
+  head: ({loaderData}) => {
     let title = 'Kulturspektakel Gauting';
     let description =
       'Open-Air-Musikfestival mit freiem Eintritt, Workshops, Kinderprogramm und mehr';
-    if (context.event) {
+    if (loaderData) {
       const {
         date,
         connector = '',
         to = '',
       } = dateStringComponents({
-        date: context.event.start,
-        to: context.event.end,
+        date: loaderData.event.start,
+        to: loaderData.event.end,
         until: '-',
       });
       title = `${title} ${date}${connector}${to}`;
@@ -65,7 +60,7 @@ export const Route = createFileRoute('/_main')({
 });
 
 function MainLayout() {
-  const context = Route.useRouteContext();
+  const {event} = Route.useLoaderData();
   const router = useRouter();
   const progressBar = useRef<ProgressBar | null>(null);
 
@@ -78,7 +73,12 @@ function MainLayout() {
       }
     });
 
-    const unsubRendered = router.subscribe('onRendered', () => {
+    // `onResolved`, not `onRendered`: `onRendered` only fires when the resolved
+    // href actually changes, while `onBeforeNavigate` fires on every load. So a
+    // navigation that lands on the current URL started the bar and never
+    // finished it, leaving it stuck until the next navigation. `onResolved`
+    // fires on every pending -> idle edge, so it mirrors the start exactly.
+    const unsubResolved = router.subscribe('onResolved', () => {
       if (typeof window !== 'undefined') {
         progressBar.current?.finish();
         progressBar.current = null;
@@ -87,14 +87,14 @@ function MainLayout() {
 
     return () => {
       unsubBefore();
-      unsubRendered();
+      unsubResolved();
     };
   }, [router]);
 
   return (
     <ChakraProvider value={theme}>
       <Flex direction="column" minHeight="100vh">
-        <Header event={context.event} />
+        <Header event={event} />
         <Box
           flex="1 1 0"
           ml="auto"

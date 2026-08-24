@@ -1,12 +1,13 @@
-import {useMemo} from 'react';
+import {useCallback, useMemo, useState} from 'react';
 import {Flex} from '@chakra-ui/react';
-import {useDeviceState} from './context';
-import {LIVE_SERIES} from './series';
+import {useDeviceState, useNoiseBuffers, useTick} from './context';
+import {bufferColumn, bufferSampleAt, LIVE_SERIES, seriesKey} from './series';
 import {BigNumberRow} from './BigNumber';
 import {LevelTrace} from './LevelTrace';
 import {BandSpectrumChart} from './BandSpectrumChart';
 import {X_AXIS_H_ROTATED} from './chartUtils';
 import {useDeviceView} from './deviceView';
+import {GAP_THRESHOLD_S, isFresh} from './noise';
 import {type LimitLine} from './limitLines';
 import {deviceLines} from './projectView';
 
@@ -32,12 +33,60 @@ export function LiveView({
   // the rolling buffer itself and redraws on its own tick.
   const deviceState = useDeviceState(device);
   const {picked, toggleSeries} = useDeviceView();
+  // The rolling samples, for the numbers to be read out of at the pointer. The chart
+  // below has them too and neither hands them to the other: they are a ref, so reading
+  // them here costs nothing and subscribes to nothing.
+  const buffers = useNoiseBuffers();
+  // Whether the latest record is still the reading *now*, which is what decides between
+  // printing it and printing nothing at all.
+  const now = useTick();
+
+  // The sample the pointer is over, whole, and null whenever it is over nothing — off
+  // the plot, or in a gap between samples wide enough that the trace itself breaks
+  // there. Held as the sample and not as the pointer's instant so that this state
+  // changes once a second at most while sweeping, rather than on every frame of the
+  // hover: what the tiles print is the reading, and between two samples there is only
+  // ever one of those.
+  const [hovered, setHovered] = useState<{
+    at: number;
+    row: (number | null)[];
+  } | null>(null);
+  const onScrub = useCallback(
+    (at: number | null) => {
+      const row =
+        at == null
+          ? null
+          : bufferSampleAt(buffers.current[device], at, GAP_THRESHOLD_S);
+      // The sample's own timestamp is the identity: the pointer travelling across the
+      // pixels of one sample is not a change, and re-rendering the row for it would put
+      // this component back on the hover's frame rate.
+      const sampleAt = row?.[0] ?? null;
+      setHovered((prev) =>
+        sampleAt == null
+          ? prev == null
+            ? prev
+            : null
+          : prev?.at === sampleAt
+            ? prev
+            : {at: sampleAt, row: row!},
+      );
+    },
+    [buffers, device],
+  );
 
   // The one monitor this page is about, in the shape a trace of several would take.
   // Stable, so the chart is not handed a new list on every arriving record.
   const lines = useMemo(() => deviceLines(device), [device]);
 
-  const latest = deviceState?.latest ?? null;
+  // What the tiles print: the sample under the pointer while there is one, and otherwise
+  // the latest record — but only while that record is still current. A monitor that has
+  // gone quiet has no reading to show, and the last thing it said, left standing under
+  // the live labels, reads as one; the trace beside it has already broken its line by
+  // then, so the same threshold decides both. Hovering a gap is the same statement about
+  // a past instant, and blanks the row for the same reason.
+  const current = isFresh(deviceState?.lastSeen, now, GAP_THRESHOLD_S * 1000)
+    ? deviceState!.latest
+    : null;
 
   return (
     <>
@@ -50,7 +99,13 @@ export function LiveView({
         series={LIVE_SERIES}
         picked={picked}
         onPick={toggleSeries}
-        value={(s) => (latest ? s.get(latest) : null)}
+        value={(s) =>
+          hovered
+            ? hovered.row[bufferColumn(seriesKey(s.kind, s.weighting))]!
+            : current
+              ? s.get(current)
+              : null
+        }
       />
       <Flex flex="1" minH="0" direction={{base: 'column', lg: 'row'}} gap="2">
         {/* Side by side where there is room for both, stacked on a phone. The trace takes
@@ -72,6 +127,11 @@ export function LiveView({
             lines={lines}
             live
             picked={picked}
+            // What the tile row above reads out while the pointer is on the trace. The
+            // numbers are this chart's legend as well as its readout (see BigNumberRow),
+            // so pointing at a sample is how a line is asked what it was, in every series
+            // and not only the picked ones the tooltip has room for.
+            onScrub={onScrub}
             // Drawn on this chart and not on the spectrum beside it: a limit is written
             // against a level over time, and the spectrum's axis is frequency.
             limits={limits}

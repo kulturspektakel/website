@@ -98,6 +98,9 @@ export const Route = createFileRoute('/crew/noise/project/$projectId')({
   // each link and redirect — the next one added would be the one that forgot.
   search: {middlewares: [retainSearchParams(['live', 'from', 'to'])]},
   loader: ({params}) => loadNoiseProject({data: {projectId: params.projectId}}),
+  // Layout route: opts out of pending UI so its shell survives child navigation.
+  // See the same line on `/_main` and `/crew`.
+  pendingMs: Infinity,
   head: ({loaderData}) =>
     seo({title: `Noise – ${loaderData?.name ?? 'Project'}`}),
   component: NoiseProjectDetail,
@@ -496,6 +499,15 @@ function NoiseProjectDetail() {
                   <ProjectTimeline
                     window={pickable}
                     selection={selection}
+                    // The crop belongs to the charts: they are drawn over it and their Leqs
+                    // averaged across it. The map has none — a pin reads what stood there at
+                    // the playhead, off the whole payload rather than the crop — so the two
+                    // grips there would pick a window nothing on screen answers to, over the
+                    // one thing the map does want the strip for. The playhead stays in both.
+                    //
+                    // Nothing is lost switching to the map: the selection is this layout's,
+                    // so the crop is still where it was left when the charts come back.
+                    croppable={shown === 'list'}
                     // A prop rather than a field on the context below: the strip is the
                     // only thing that draws these, and the context is read by every card
                     // on the page (see ProjectViewCtx) — a field there would re-render all

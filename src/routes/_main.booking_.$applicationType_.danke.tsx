@@ -1,7 +1,7 @@
 import {VStack, Heading, Text, Image} from '@chakra-ui/react';
 import Confetti from '../components/Confetti';
 import DateString from '../components/DateString';
-import {createFileRoute} from '@tanstack/react-router';
+import {createFileRoute, useLoaderData} from '@tanstack/react-router';
 import {parseBookingParams} from './_main.booking_.$applicationType';
 import useFacebookPixel from '../utils/useFacebookPixel';
 import {useEffect} from 'react';
@@ -12,7 +12,7 @@ export const Route = createFileRoute('/_main/booking_/$applicationType_/danke')(
 });
 
 function Thanks() {
-  const {event} = Route.useRouteContext();
+  const {event} = useLoaderData({from: '/_main'});
   const {applicationType} = Route.useParams();
   const applicationEnd =
     applicationType === 'dj'

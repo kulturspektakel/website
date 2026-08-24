@@ -6,7 +6,7 @@ import {BadgeActivity} from './Badges';
 import {CardActivities, CardActivity} from './CardActivities';
 import InfoText from './InfoText';
 import {useBadges} from '../../utils/useBadges';
-import {useRouteContext} from '@tanstack/react-router';
+import {useLoaderData} from '@tanstack/react-router';
 
 export function CardDetails({
   infoText,
@@ -24,9 +24,7 @@ export function CardDetails({
   cardType: 'crew' | 'regular';
   footer?: React.ReactNode;
 } & StackProps) {
-  const {event} = useRouteContext({
-    from: '/_main/card/$hash',
-  });
+  const {event} = useLoaderData({from: '/_main'});
   const TABS = useMemo(() => ['Buchungen', 'Badges'], []);
   const [active, setActive] = useState(TABS[0]);
   const {awardedBadges, unawardedBadges} = useBadges(

@@ -36,7 +36,7 @@ export const Route = createFileRoute('/_main/lineup/')({
         year: firstEvent.start.getFullYear().toString(),
       },
       // Without this the 307 goes out as `max-age=0, must-revalidate`: the
-      // header `_main` sets in `beforeLoad` doesn't survive redirect handling,
+      // header `_main` sets in its loader doesn't survive redirect handling,
       // so every hit on /lineup ran the query above and missed the CDN. Edge
       // only (`max-age=0`), so the year rolling over isn't pinned in browsers.
       headers: {

@@ -20,11 +20,12 @@ export default function ApplicationPhase<
   title: string;
   content: string;
   buttonLabel: string;
-  applicationStart: Date;
+  applicationStart?: Date | null;
   applicationEnd?: Date | null;
 }) {
   const applicationEnded = applicationEnd ? applicationEnd < new Date() : false;
-  const applicationNotStarted = applicationStart > new Date();
+  const applicationNotStarted =
+    !applicationStart || applicationStart > new Date();
   const disabled = applicationEnded || applicationNotStarted;
 
   return (

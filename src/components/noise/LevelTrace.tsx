@@ -388,13 +388,21 @@ type LevelTraceProps = {
   xAxisSize?: number;
 } & (
   | {
-      // The rolling window, on the clock: no crop to show, and so nothing to point at or
-      // to move. What a device page always is, and a location card is while the project
-      // page is live.
+      // The rolling window, on the clock: no crop to show, and so nothing to move.
+      // What a device page always is, and a location card is while the project page is
+      // live.
       live: true;
       range?: never;
       bounds?: never;
-      onScrub?: never;
+      // Where this chart's own pointer is, in epoch ms, and null when it is off the plot
+      // — the same signal and the same instants as the cropped arm's, but a statement
+      // about this chart rather than about the page: a rolling window has no playhead for
+      // the page to share, so nobody else follows it (see the setCursor hook).
+      //
+      // Optional because it is one caller's: the device page prints what the pointer is
+      // over in the numbers above the trace, and a location card in a live project has no
+      // numbers to move.
+      onScrub?: (at: number | null) => void;
       onCrop?: never;
       traces?: never;
     }
@@ -807,8 +815,10 @@ export function LevelTrace({
               if (left == null || left < 0) {
                 hoverAtRef.current = null;
                 setTip(null);
-                // Withheld while live, where the line was never the page's — hence the
-                // optional call, and positionPlayhead below for that case.
+                // Optional because a live caller need not be listening at all: the
+                // instant is the page's playhead when there is a crop, and only this
+                // chart's own pointer when there is not (see the props). positionPlayhead
+                // below is that second case's line.
                 onScrubRef.current?.(null);
                 // Live's line is the pointer's own, so this chart takes it down itself.
                 // Every other line on the page is drawn from the signal the call above
@@ -822,12 +832,12 @@ export function LevelTrace({
               hoverAtRef.current = atMs;
               onScrubRef.current?.(atMs);
               // Live has no page playhead — nothing is scrubbing a rolling window, so
-              // `scrubTo` is withheld and the signal every other chart follows stays
-              // empty. Draw the line here instead, so pointing at a live trace marks the
-              // sample you are reading in the tooltip rather than leaving the tooltip to
-              // say where it came from. This chart's own line and no other card's: what
-              // it marks is where *this* pointer is, and there is no page instant for
-              // them to share.
+              // the project page withholds `scrubTo` and the signal every other chart
+              // follows stays empty. Draw the line here instead, so pointing at a live
+              // trace marks the sample you are reading in the tooltip rather than leaving
+              // the tooltip to say where it came from. This chart's own line and no other
+              // card's: what it marks is where *this* pointer is, and there is no page
+              // instant for them to share.
               if (live) positionPlayhead(atMs);
               setTip({
                 ...cursorAnchor(u, container, left, u.cursor.top ?? 0),

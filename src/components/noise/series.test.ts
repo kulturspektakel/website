@@ -6,6 +6,7 @@ import {
   alignedBuffers,
   alignedSeries,
   bufferColumn,
+  bufferSampleAt,
   emptyBuffer,
   loudestColumn,
   maskToWindows,
@@ -139,6 +140,54 @@ describe('emptyBuffer', () => {
     const a = emptyBuffer();
     a[0]!.push(1);
     expect(emptyBuffer()[0]).toEqual([]);
+  });
+});
+
+// What the device page's numbers are read out of at the pointer, and what decides whether
+// there is anything to print at all — so the tolerance is the whole of it: the pointer is
+// somewhere between two samples on every hover, and the question is only ever which of them
+// it is on, or neither.
+describe('bufferSampleAt', () => {
+  // Two columns rather than the table's ten: what is pinned here is the search, and the
+  // row it comes back as is whatever the buffer's is.
+  const buffer = () => [
+    [100, 101, 102, 110],
+    [70, 71, 72, 73],
+    [80, null, 82, 83],
+  ];
+
+  it('reads the whole row of the nearest sample', () => {
+    expect(bufferSampleAt(buffer(), 101_400, 3)).toEqual([101, 71, null]);
+    expect(bufferSampleAt(buffer(), 101_600, 3)).toEqual([102, 72, 82]);
+  });
+
+  it('reaches either end of the buffer', () => {
+    expect(bufferSampleAt(buffer(), 99_000, 3)).toEqual([100, 70, 80]);
+    expect(bufferSampleAt(buffer(), 111_000, 3)).toEqual([110, 73, 83]);
+  });
+
+  // The far side of a gap is a reading of a different instant, and printing it under the
+  // pointer would be the chart drawing a line it deliberately breaks.
+  it('finds nothing in a gap wider than the tolerance', () => {
+    expect(bufferSampleAt(buffer(), 106_000, 3)).toBeNull();
+    expect(bufferSampleAt(buffer(), 120_000, 3)).toBeNull();
+    // ...and nothing at all where there are no samples, which is a device page opened
+    // before the monitor's first record.
+    expect(bufferSampleAt(emptyBuffer(), 100_000, 3)).toBeNull();
+    expect(bufferSampleAt(undefined, 100_000, 3)).toBeNull();
+  });
+
+  // Every series off one sample, by the column layout this file owns — the point of
+  // handing back the row rather than a value.
+  it('is indexed by bufferColumn', () => {
+    const row = bufferSampleAt(
+      [[100], ...SERIES_KEYS.map((_, i) => [i])],
+      100_000,
+      3,
+    );
+    for (const [i, key] of SERIES_KEYS.entries()) {
+      expect(row?.[bufferColumn(key)]).toBe(i);
+    }
   });
 });
 

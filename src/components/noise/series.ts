@@ -198,6 +198,52 @@ export const emptyBuffer = (): DeviceBuffer => [
 export const bufferColumn = (key: SeriesKey): number =>
   SERIES_KEYS.indexOf(key) + 1;
 
+/**
+ * One whole sample of a live buffer: the row nearest an instant, if a sample is near
+ * enough to *be* the reading at it.
+ *
+ * The row and not one series' value, because everything that asks this asks it of every
+ * series at once — the device page's tile row prints all nine — and nine searches for one
+ * instant would be nine chances to land on different samples. Indexed by bufferColumn,
+ * which is why it is returned as the buffer's own row rather than as a record: the column
+ * layout is this file's, and so is reading it.
+ *
+ * `toleranceS` is how far the nearest sample may be and still be the one under the
+ * pointer — GAP_THRESHOLD_S for a hover over the live trace, the same distance that chart
+ * breaks its line at. Past it there is nothing there: null, which is the honest answer for
+ * an instant the monitor was silent through, and not the reading on the far side of the
+ * gap.
+ */
+export function bufferSampleAt(
+  buffer: DeviceBuffer | undefined,
+  atMs: number,
+  toleranceS: number,
+): (number | null)[] | null {
+  const times = buffer?.[0];
+  if (!buffer || !times?.length) return null;
+  const at = atMs / 1000;
+  // Ascending by construction — ingest only ever appends, and trims off the front — so
+  // the sample is found rather than scanned for: a live window holds a few hundred of
+  // them and this runs on every frame of a hover.
+  let lo = 0;
+  let hi = times.length - 1;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if ((times[mid] as number) < at) lo = mid + 1;
+    else hi = mid;
+  }
+  // The first sample at or after the instant; the one before it may well be nearer, the
+  // pointer being anywhere between the two.
+  const before = lo > 0 ? lo - 1 : lo;
+  const nearest =
+    Math.abs((times[before] as number) - at) <=
+    Math.abs((times[lo] as number) - at)
+      ? before
+      : lo;
+  if (Math.abs((times[nearest] as number) - at) > toleranceS) return null;
+  return buffer.map((column) => column[nearest] ?? null);
+}
+
 // Several metrics and several devices in one chart, which in uPlot's aligned data means
 // one x column and a y column per pair of them. Both aligners live here for the same
 // reason bufferColumn does: the column layout is this file's convention, and a chart that

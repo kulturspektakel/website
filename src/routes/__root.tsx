@@ -2,12 +2,14 @@ import {
   Outlet,
   HeadContent,
   Scripts,
-  createRootRoute,
+  createRootRouteWithContext,
   useRouterState,
 } from '@tanstack/react-router';
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 
-export const Route = createRootRoute({
+export const Route = createRootRouteWithContext<{
+  queryClient: QueryClient;
+}>()({
   head: () => ({
     meta: [
       {charSet: 'utf-8'},
@@ -15,14 +17,6 @@ export const Route = createRootRoute({
     ],
   }),
   component: RootComponent,
-});
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnMount: false,
-    },
-  },
 });
 
 // The noise area is the only English part of the site. Matching by route id
@@ -37,6 +31,9 @@ const queryClient = new QueryClient({
 const NOISE_ROUTE_ID = '/crew/noise';
 
 function RootComponent() {
+  // Created per request in `getRouter`, not at module scope, so SSR can't share
+  // one visitor's query cache with the next.
+  const {queryClient} = Route.useRouteContext();
   const english = useRouterState({
     select: (s) => s.matches.some((m) => m.routeId === NOISE_ROUTE_ID),
   });
