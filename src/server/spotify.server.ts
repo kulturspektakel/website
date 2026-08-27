@@ -29,40 +29,31 @@ export async function getSpotifyToken() {
   return token.access_token;
 }
 
-// Resolves Spotify artist ids to their smallest profile picture url, batching
-// the `/v1/artists` endpoint (50 ids max per call). Returns a map of id ->
-// image url; ids without an image are absent. Unlike Instagram, Spotify image
-// urls are content-addressed (no expiry), so they're safe to cache.
-export async function fetchSpotifyArtistImages(
-  artistIds: string[],
-): Promise<Map<string, string>> {
-  const images = new Map<string, string>();
-  if (artistIds.length === 0) {
-    return images;
-  }
+// Resolves a Spotify artist id to its smallest profile picture url, or null if
+// the artist has no image. Unlike Instagram, Spotify image urls are
+// content-addressed (no expiry), so they're safe to cache.
+//
+// This used to batch ids through `/v1/artists?ids=`, but Spotify removed the
+// batch-fetch endpoints from Development Mode apps in February 2026 (it now
+// returns 403), so we fetch one artist at a time.
+export async function fetchSpotifyArtistImage(
+  artistId: string,
+): Promise<string | null> {
   const accessToken = await getSpotifyToken();
-  for (let i = 0; i < artistIds.length; i += 50) {
-    const batch = artistIds.slice(i, i + 50);
-    const res = await fetch(
-      `https://api.spotify.com/v1/artists?ids=${batch.join(',')}`,
-      {headers: {Authorization: `Bearer ${accessToken}`}},
-    );
-    if (res.status === 429) {
-      throw new Error('Spotify API limit reached');
-    } else if (res.status === 401) {
-      throw new Error('Spotify API token expired');
-    } else if (res.status !== 200) {
-      throw new Error(`Spotify API returned ${res.status}`);
-    }
-    const json: {
-      artists: Array<{id: string; images: Array<{url: string}>} | null>;
-    } = await res.json();
-    for (const artist of json.artists) {
-      const url = artist?.images.at(-1)?.url;
-      if (artist && url) {
-        images.set(artist.id, url);
-      }
-    }
+  const res = await fetch(`https://api.spotify.com/v1/artists/${artistId}`, {
+    headers: {Authorization: `Bearer ${accessToken}`},
+  });
+  if (res.status === 404) {
+    // Artist was removed or the stored id is stale — nothing to cache, and
+    // retrying won't help, so this isn't an error.
+    return null;
+  } else if (res.status === 429) {
+    throw new Error('Spotify API limit reached');
+  } else if (res.status === 401) {
+    throw new Error('Spotify API token expired');
+  } else if (res.status !== 200) {
+    throw new Error(`Spotify API returned ${res.status}`);
   }
-  return images;
+  const json: {images: Array<{url: string}>} = await res.json();
+  return json.images.at(-1)?.url ?? null;
 }

@@ -1,6 +1,6 @@
 import {prismaClient} from '../../server/prismaClient.server';
 import {readJsonPayload} from '../../server/readJsonPayload.server';
-import {fetchSpotifyArtistImages} from '../../server/spotify.server';
+import {fetchSpotifyArtistImage} from '../../server/spotify.server';
 
 export type SpotifyImagePayload = {id: string};
 
@@ -20,8 +20,7 @@ export async function handleSpotifyImage(request: Request): Promise<Response> {
     return new Response(null, {status: 204});
   }
 
-  const images = await fetchSpotifyArtistImages([application.spotifyArtist]);
-  const imageUrl = images.get(application.spotifyArtist);
+  const imageUrl = await fetchSpotifyArtistImage(application.spotifyArtist);
   if (imageUrl) {
     await prismaClient.bandApplication.update({where: {id}, data: {imageUrl}});
   }
