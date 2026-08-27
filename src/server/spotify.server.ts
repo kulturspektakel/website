@@ -1,6 +1,8 @@
 // Authenticated Spotify Web API access (client-credentials flow). Used by the
 // `spotify-image` task and the band-application search server fn.
 
+import {isValidSpotifyArtistId} from '../utils/spotifyArtistId';
+
 let token: {access_token: string; expiresAt: number} | null = null;
 
 export async function getSpotifyToken() {
@@ -39,10 +41,14 @@ export async function getSpotifyToken() {
 export async function fetchSpotifyArtistImage(
   artistId: string,
 ): Promise<string | null> {
+  if (!isValidSpotifyArtistId(artistId)) {
+    return null;
+  }
   const accessToken = await getSpotifyToken();
-  const res = await fetch(`https://api.spotify.com/v1/artists/${artistId}`, {
-    headers: {Authorization: `Bearer ${accessToken}`},
-  });
+  const res = await fetch(
+    `https://api.spotify.com/v1/artists/${encodeURIComponent(artistId)}`,
+    {headers: {Authorization: `Bearer ${accessToken}`}},
+  );
   if (res.status === 404) {
     // Artist was removed or the stored id is stale — nothing to cache, and
     // retrying won't help, so this isn't an error.

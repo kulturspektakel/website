@@ -1,5 +1,6 @@
 import {prismaClient} from '../../server/prismaClient.server';
 import {readJsonPayload} from '../../server/readJsonPayload.server';
+import {spotifyArtistUrl} from '../../utils/spotifyArtistId';
 
 export type SpotifyListenersPayload = {id: string};
 
@@ -21,7 +22,11 @@ export async function handleSpotifyListeners(
     return new Response(null, {status: 204});
   }
 
-  const url = `https://open.spotify.com/artist/${application.spotifyArtist}`;
+  const url = spotifyArtistUrl(application.spotifyArtist);
+  if (!url) {
+    // Unusable id — retrying can't fix it, so don't fail the task.
+    return new Response(null, {status: 204});
+  }
   const res = await fetch(url);
   if (!res.ok) {
     throw new Error(`HTTP${res.status} ${res.statusText}: ${url}`);

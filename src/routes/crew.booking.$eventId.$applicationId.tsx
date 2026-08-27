@@ -76,6 +76,7 @@ import {setBandApplicationStage} from '../server/setBandApplicationStage';
 import {KULT_LOCATION} from '../utils/kultLocation';
 import {meanRating} from '../utils/meanRating';
 import {normalizeBandName} from '../utils/normalizeBandName';
+import {spotifyArtistUrl} from '../utils/spotifyArtistId';
 import {computedTagsFor} from './crew.booking.$eventId';
 
 // ---------------------------------------------------------------------------
@@ -613,9 +614,9 @@ function RightColumn({data}: {data: DetailData}) {
               value={data.instagramFollower}
             />
           )}
-          {data.spotifyArtist && (
+          {data.spotifyArtist && spotifyArtistUrl(data.spotifyArtist) && (
             <SocialStat
-              href={`https://open.spotify.com/artist/${data.spotifyArtist}`}
+              href={spotifyArtistUrl(data.spotifyArtist)!}
               icon={<FaSpotify />}
               label="Spotify"
               value={data.spotifyMonthlyListeners}
