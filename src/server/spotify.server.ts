@@ -60,6 +60,6 @@ export async function fetchSpotifyArtistImage(
   } else if (res.status !== 200) {
     throw new Error(`Spotify API returned ${res.status}`);
   }
-  const json: {images: Array<{url: string}>} = await res.json();
-  return json.images.at(-1)?.url ?? null;
+  const json: {images?: Array<{url: string}>} = await res.json();
+  return json.images?.at(-1)?.url ?? null;
 }

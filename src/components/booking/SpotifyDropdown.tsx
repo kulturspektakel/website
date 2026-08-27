@@ -49,39 +49,31 @@ const getSpotifyArtists = createServerFn()
       throw new Error(`Spotify API returned ${res.status}`);
     }
 
+    // Spotify's February 2026 changes stripped the artist object down to
+    // these fields — `genres`, `popularity` and `followers` are gone, so
+    // `genre` is always null now. Both remaining fields are still read
+    // defensively: a missing one used to throw out of the server fn and
+    // surface as an opaque "Cannot read properties of undefined" in the form.
     const json: {
       artists: {
-        href: string;
         items: Array<{
-          external_urls: {
-            spotify: string;
-          };
-          genres: string[];
+          external_urls: {spotify: string};
           href: string;
           id: string;
-          images: Array<{
-            height: number;
-            url: string;
-            width: number;
-          }>;
+          images?: Array<{height: number; url: string; width: number}>;
           name: string;
-          popularity: number;
+          genres?: string[];
           type: string;
           uri: string;
         }>;
-        limit: number;
-        next: string;
-        offset: number;
-        previous: null;
-        total: number;
       };
     } = await res.json();
 
     return json.artists.items.map((artist) => ({
       name: artist.name,
       id: artist.id,
-      image: artist.images.at(artist.images.length - 1)?.url ?? null,
-      genre: artist.genres.at(0) ?? null,
+      image: artist.images?.at(-1)?.url ?? null,
+      genre: artist.genres?.at(0) ?? null,
     }));
   });
 
