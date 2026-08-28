@@ -59,6 +59,7 @@ export async function handleBandApplicationDemo(
           }
           break;
         case 'live':
+        case 'shorts':
           demoEmbed = path[2];
           demoEmbedType = DemoEmbedType.YouTubeVideo;
           break;
