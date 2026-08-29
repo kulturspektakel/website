@@ -80,6 +80,23 @@ const overrides: SystemConfig = {
       },
     },
     recipes: {
+      // A primary button is blue, across the whole crew area and in both appearances.
+      //
+      // On the variant rather than on `base`, because "primary" is what `solid` means —
+      // an outline or a ghost button is the same action offered quietly, and tinting
+      // those would make every secondary control in the area read as one more thing to
+      // press. Unlike the links below this one does not turn on the noise page: a solid
+      // button's legibility is its label against its own fill, not its fill against the
+      // ground behind it, so the reason links go accent there does not apply.
+      //
+      // `colorPalette` and not `bg`/`color` outright, so that the whole of Chakra's solid
+      // recipe — the hover, the expanded state, the contrast pair — keeps deciding how the
+      // palette is used, and so that a button that names its own palette still wins:
+      // style props are merged after recipe styles (see useResolvedProps), which is what
+      // keeps the one `colorPalette="orange"` save button orange.
+      button: defineRecipe({
+        variants: {variant: {solid: {colorPalette: 'blue'}}},
+      }),
       // Links are blue by default across the crew area, and the accent in
       // /crew/noise — blue.solid only just clears 5:1 against that section's
       // ground, and reads as a foreign colour next to everything else on the page.

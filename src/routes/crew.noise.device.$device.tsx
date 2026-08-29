@@ -147,7 +147,7 @@ function DevicePage() {
       {/* Rendered here rather than by the ⋮ that opens it: whether it is showing, and with it
           whether a microphone is held open, belongs to the slice this route owns — so no
           component's local state is what keeps the recording indicator honest. */}
-      <ReferenceMicPanel />
+      <ReferenceMicPanel device={device} />
     </DeviceViewContext.Provider>
   );
 }

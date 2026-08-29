@@ -18,19 +18,26 @@ const conditionsOf = (path: string) =>
   (system.tokens.getByName(path) as Token | undefined)?.extensions?.conditions;
 
 // The concrete colour a token renders as in this section, following the chain of
-// references down to a scale step and taking the dark half wherever a token has
+// references down to a scale step and taking the named half wherever a token has
 // two. Comparing resolved colours rather than reference strings is what lets an
 // assertion below say "the accent is the middle of the ramp" without caring how
-// many aliases apart the two are written.
-function darkHex(path: string): string {
+// many aliases apart the two are written — and, now that the accent has a light
+// half of its own, what lets the same assertion be made about blue.
+function resolvedHex(path: string, half: '_light' | '_dark'): string {
   const token = system.tokens.getByName(path) as Token | undefined;
   if (!token) throw new Error(`theme-noise.test: unknown token ${path}`);
   const conditions = conditionsOf(path);
   const raw =
-    conditions?._dark ?? conditions?.base ?? token.originalValue ?? token.value;
+    conditions?.[half] ??
+    conditions?.base ??
+    token.originalValue ??
+    token.value;
   const reference = typeof raw === 'string' && raw.match(/^\{(.+)\}$/);
-  return reference ? darkHex(reference[1]!) : String(raw);
+  return reference ? resolvedHex(reference[1]!, half) : String(raw);
 }
+
+const darkHex = (path: string) => resolvedHex(path, '_dark');
+const lightHex = (path: string) => resolvedHex(path, '_light');
 
 // The `chart.*` / `map.*` names the assembled theme actually registered, read
 // back off the token registry rather than off the table that produced them.
@@ -49,8 +56,12 @@ describe('theme-noise', () => {
   // back as `rgb(...)`, a shorthand, or an unresolved `var()` would make that a
   // silently broken string and the area would draw as black or not at all.
   it('resolves every token to a 6-digit hex', () => {
-    for (const token of NOISE_COLOR_TOKENS) {
-      expect(themeHex(token), token).toMatch(/^#[0-9a-f]{6}$/i);
+    for (const appearance of ['light', 'dark'] as const) {
+      for (const token of NOISE_COLOR_TOKENS) {
+        expect(themeHex(token, appearance), `${token} ${appearance}`).toMatch(
+          /^#[0-9a-f]{6}$/i,
+        );
+      }
     }
   });
 
@@ -99,7 +110,7 @@ describe('theme-noise', () => {
       expect(themeHex('chart.band.ref')).toBe('#67e8f9');
       const ramp = NOISE_COLOR_TOKENS.filter((t) =>
         t.startsWith('chart.series.'),
-      ).map(themeHex);
+      ).map((t) => themeHex(t));
       expect(ramp).not.toContain(themeHex('chart.band.ref'));
       expect(themeHex('chart.band.ref')).not.toBe(themeHex('chart.band.bar'));
     });
@@ -160,7 +171,104 @@ describe('theme-noise', () => {
     // grows a grey outline — the one thing the halo exists to avoid, and silent.
     expect(themeHex('chart.ground')).toBe(darkHex('colors.bg'));
   });
+
+  // The half the calibration chart draws in, which is the only thing in the section on a
+  // light ground (see CalibrationResultChart). Almost nothing has one: a token with no
+  // pair answers with its single step in both appearances, which is correct for everything
+  // that is only ever drawn on the page.
+  describe('the light half', () => {
+    // Contrast against white, WCAG's ratio. Not imported from anywhere because nothing
+    // else in the app computes one — the palette was checked once, by hand, and this is
+    // what keeps the answer from drifting.
+    const contrast = (hex: string): number => {
+      const channel = (v: number) =>
+        v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+      const n = parseInt(hex.slice(1), 16);
+      const l =
+        0.2126 * channel(((n >> 16) & 255) / 255) +
+        0.7152 * channel(((n >> 8) & 255) / 255) +
+        0.0722 * channel((n & 255) / 255);
+      return 1.05 / (l + 0.05);
+    };
+
+    // The two series in that chart. 3:1 is the floor for a mark you read as a shape — the
+    // bars — and 4.5:1 the floor for the same token lettering the two levels in the
+    // readout beside them, so both clear the higher one. yellow.600 is 2.94:1 and is why
+    // the light half is not simply the ramp's own answer one step down.
+    it('clears 4.5:1 on white for the two the chart draws in', () => {
+      expect(contrast(themeHex('chart.band.bar', 'light'))).toBeGreaterThan(
+        4.5,
+      );
+      expect(contrast(themeHex('chart.band.ref', 'light'))).toBeGreaterThan(
+        4.5,
+      );
+    });
+
+    // Axis labels are 10 px type and read as text; a grid line is meant to be read past.
+    it('keeps the axis legible and the grid faint', () => {
+      expect(contrast(themeHex('chart.axis', 'light'))).toBeGreaterThan(4.5);
+      expect(contrast(themeHex('chart.grid', 'light'))).toBeLessThan(2);
+    });
+
+    // The section's colour in light is blue, and it is one value there exactly as yellow
+    // is one value in dark: the bars of the calibration chart, the fill of a primary
+    // button, the dropzone's drag state and the progress bar are all `blue.solid`. Pinned
+    // through the accent rather than against a literal, so retuning the hue is still the
+    // one edit ACCENT_HUE_LIGHT promises.
+    it('is the same blue in the chart as in the accent', () => {
+      expect(themeHex('chart.band.bar', 'light')).toBe(
+        lightHex('colors.accent.solid'),
+      );
+      expect(lightHex('colors.accent.solid')).toBe(
+        lightHex('colors.blue.solid'),
+      );
+      // And the dark half is untouched by any of it — the page is still yellow.
+      expect(darkHex('colors.accent.solid')).toBe('#facc15');
+    });
+
+    // Warm against cool in dark, cool against warm in light. What must not happen is the
+    // two instruments landing in one hue family, which is what cyan beside blue would be.
+    it('keeps the two instruments in opposing hues', () => {
+      expect(themeHex('chart.band.ref', 'light')).not.toBe(
+        themeHex('chart.band.bar', 'light'),
+      );
+      const [barR, , barB] = rgb(themeHex('chart.band.bar', 'light'));
+      const [refR, , refB] = rgb(themeHex('chart.band.ref', 'light'));
+      expect(barB).toBeGreaterThan(barR);
+      expect(refR).toBeGreaterThan(refB);
+    });
+
+    // The readout pill is the one surface here, and its text is `fg.muted` — which follows
+    // the appearance on its own. A dark pill in a light panel is how that ends up dark on
+    // dark, so the pill has to turn with it.
+    it('turns the readout pill over with everything else', () => {
+      expect(contrast(themeHex('chart.readout.bg', 'light'))).toBeLessThan(1.2);
+      expect(contrast(themeHex('chart.readout.bg', 'dark'))).toBeGreaterThan(4);
+    });
+
+    // A pair reaches Chakra as a condition, which is what makes the CSS side need no
+    // appearance passed to it: the tooltip's `color="chart.band.bar"` follows the panel it
+    // is in. Checked on the assembled system rather than on the table that fed it.
+    it('registers a pair as a condition rather than a flat value', () => {
+      expect(conditionsOf('colors.chart.band.bar')).toEqual({
+        _light: '{colors.blue.600}',
+        _dark: '{colors.yellow.200}',
+      });
+      // And a token with no pair stays one value under `base`, which is Chakra's
+      // normalisation of a flat one — not a `_light`/`_dark` pair whose halves happen to
+      // agree. The difference matters the day one of them is edited.
+      expect(conditionsOf('colors.chart.ground')).toEqual({
+        base: '{colors.gray.900}',
+      });
+    });
+  });
 });
+
+// The three channels of a 6-digit hex, for assertions about hue rather than lightness.
+function rgb(hex: string): [number, number, number] {
+  const n = parseInt(hex.slice(1), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
 
 // Relative luminance, only precise enough to order two greys.
 function luma(hex: string): number {
@@ -168,10 +276,49 @@ function luma(hex: string): number {
   return 0.2126 * ((n >> 16) & 255) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255); // prettier-ignore
 }
 
-// Guards the cast in NOISE_HEX: the frozen record and the token list are one
-// object built two ways, and nothing else checks they stayed that.
-it('exposes a hex for every listed token', () => {
-  expect(Object.keys(NOISE_HEX).sort()).toEqual(
-    [...(NOISE_COLOR_TOKENS as NoiseColorToken[])].sort(),
-  );
+// A primary button is blue across /crew (see theme-crew), which is a claim about the
+// assembled recipe rather than about a token — so it is checked by resolving the recipe
+// the way a rendered Button would and looking at what it sets `color-palette` to.
+describe('primary buttons', () => {
+  // Chakra nests a recipe's output under its cascade layer, and types it as its own
+  // style shape rather than as a bag of declarations — which is what these two are read
+  // as here, custom properties and all.
+  const layer = (variant: string) =>
+    (
+      system.cva(system.getRecipe('button'))({variant}) as unknown as Record<
+        string,
+        Record<string, string>
+      >
+    )['@layer recipes']!;
+
+  const solid = layer('solid');
+  const outline = layer('outline');
+
+  it('fills a solid button from the blue palette', () => {
+    expect(solid['--chakra-colors-color-palette-solid']).toBe(
+      'var(--chakra-colors-blue-solid)',
+    );
+    // The fill is `colorPalette.solid` and not a colour written out, which is what leaves
+    // the hover, the expanded state and the contrast pair to Chakra's own recipe.
+    expect(solid['background']).toBe(
+      'var(--chakra-colors-color-palette-solid)',
+    );
+  });
+
+  // Only the primary one. An outline or a ghost button is the same action offered
+  // quietly, and a blue one would read as a second thing to press on every card in the
+  // area — including the Cancel beside the calibration run.
+  it('leaves the quiet variants on the default palette', () => {
+    expect(outline['--chakra-colors-color-palette-solid']).toBeUndefined();
+  });
+});
+
+// Guards the cast in NOISE_HEX: the frozen records and the token list are one
+// object built three ways, and nothing else checks they stayed that. Both halves,
+// because a token with only one of them is a colour that resolves to undefined in
+// whichever appearance was forgotten — and on a canvas that is a silent black.
+it('exposes a hex for every listed token, in both appearances', () => {
+  const tokens = [...(NOISE_COLOR_TOKENS as NoiseColorToken[])].sort();
+  expect(Object.keys(NOISE_HEX.dark).sort()).toEqual(tokens);
+  expect(Object.keys(NOISE_HEX.light).sort()).toEqual(tokens);
 });

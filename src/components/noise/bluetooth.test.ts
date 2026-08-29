@@ -1,9 +1,12 @@
 import {describe, expect, test} from 'vitest';
 import {
   CAL_BAND_COUNT,
+  CAL_MAX_DB,
+  CAL_STEP_DB,
   decodeCalibration,
   encodeCalibration,
   encodeWifiCredentials,
+  snapTrim,
 } from './bluetooth';
 
 describe('calibration codec', () => {
@@ -63,5 +66,33 @@ describe('wifi credential framing', () => {
     expect(() => encodeWifiCredentials('', 'pw')).toThrow();
     expect(() => encodeWifiCredentials('x'.repeat(33), '')).toThrow();
     expect(() => encodeWifiCredentials('ok', 'p'.repeat(64))).toThrow();
+  });
+});
+
+// The rule that keeps a computed trim and the byte it becomes the same number. Here rather
+// than beside its caller: what is under test is the wire's step and range, which this module
+// owns, and the encoder below enforces the same bound independently.
+describe('snapTrim', () => {
+  test('snaps to the step a byte can carry', () => {
+    expect(snapTrim(-0.3)).toBe(-0.5);
+    expect(snapTrim(1.24)).toBe(1);
+    expect(snapTrim(1.25)).toBe(1.5);
+    // Already on a step, so nothing to do.
+    expect(snapTrim(2.5)).toBe(2.5);
+  });
+
+  test('clamps to the range, in both directions', () => {
+    expect(snapTrim(100)).toBe(CAL_MAX_DB);
+    expect(snapTrim(-100)).toBe(-CAL_MAX_DB);
+  });
+
+  test('agrees with the encoder about where the rail is', () => {
+    // The two clamp independently, on purpose (see encodeCalibration). This is what says they
+    // still land in the same place, which is the assumption the UI's "hit the limit" count and
+    // the bytes on the wire both rest on.
+    const railed = snapTrim(1000);
+    expect(decodeCalibration(encodeCalibration([railed]))[0]).toBe(railed);
+    expect(decodeCalibration(encodeCalibration([1000]))[0]).toBe(railed);
+    expect(railed / CAL_STEP_DB).toBe(Math.round(CAL_MAX_DB / CAL_STEP_DB));
   });
 });

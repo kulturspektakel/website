@@ -11,6 +11,7 @@ import {
   DEVICE_FFT_SIZE,
   DEVICE_SAMPLE_RATE,
   interpolateCal,
+  outputChannelOptions,
   MEAN_W2_BLACKMAN,
   refCorrectionBands,
   referenceMicFor,
@@ -319,6 +320,39 @@ describe('enumerating outputs', () => {
     expect(audioOutputOptions([output('', ''), output('spk', '')])).toEqual([
       {deviceId: 'spk', label: 'Output 1'},
     ]);
+  });
+});
+
+describe('naming the channels of an output', () => {
+  it('calls a pair left and right', () => {
+    expect(outputChannelOptions(2)).toEqual([
+      {channel: 0, label: 'Left'},
+      {channel: 1, label: 'Right'},
+    ]);
+  });
+
+  // Six is 5.1 in the Web Audio specification's layout table and six outputs on an
+  // interface, and nothing in the browser says which of the two is plugged in — so the
+  // sockets are numbered rather than named after speakers that may not exist.
+  it('numbers anything wider than a pair, one-based', () => {
+    expect(outputChannelOptions(6).map((c) => c.label)).toEqual([
+      'Channel 1',
+      'Channel 2',
+      'Channel 3',
+      'Channel 4',
+      'Channel 5',
+      'Channel 6',
+    ]);
+    expect(outputChannelOptions(6).map((c) => c.channel)).toEqual([
+      0, 1, 2, 3, 4, 5,
+    ]);
+  });
+
+  // The panel shows no picker below two, so these are the shapes it never renders rather
+  // than states it has to describe — but a destination reports 0 before a context has one.
+  it('has nothing to offer for a single channel or none', () => {
+    expect(outputChannelOptions(1)).toEqual([{channel: 0, label: 'Channel 1'}]);
+    expect(outputChannelOptions(0)).toEqual([]);
   });
 });
 

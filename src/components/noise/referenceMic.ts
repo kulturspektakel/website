@@ -409,6 +409,11 @@ export type AudioInputOption = {deviceId: string; label: string};
 // signature saying `AudioInputOption[]` for a list of speakers reads as a mistake.
 export type AudioOutputOption = AudioInputOption;
 
+// One addressable output of the chosen device. Its own type rather than a number, because
+// what the panel puts in front of a reader is the name and what the audio graph wants is the
+// index, and the two are only related by the table in outputChannelOptions.
+export type OutputChannelOption = {channel: number; label: string};
+
 // Chrome's two aliases for "whatever the system picked". They point at a real device that
 // is also listed under its own id, so keeping them would offer the same microphone three
 // times — and picking one of them means the selection silently follows the system default.
@@ -471,6 +476,34 @@ export function audioOutputOptions(
     });
   }
   return options;
+}
+
+/**
+ * The channels of the chosen output, named as well as they can be named.
+ *
+ * Nothing in the browser says what a channel *is*. `maxChannelCount` is a bare number, and
+ * `MediaDeviceInfo.label` names the device rather than its sockets. The Web Audio
+ * specification does define a speaker layout, but only for one, two, four and six channels —
+ * and of those only the stereo one is safe to lean on, because a six-in/six-out interface
+ * reports six as readily as a 5.1 rig does, and calling its fourth output "LFE" would be
+ * inventing a fact about somebody's patchbay. So a pair is Left and Right and everything else
+ * is numbered, which is what is printed beside the sockets.
+ *
+ * One-based in the label and zero-based in the value, for that reason and its mirror: the
+ * first is what an interface calls its outputs, the second is what ChannelMergerNode counts
+ * inputs in.
+ */
+export function outputChannelOptions(count: number): OutputChannelOption[] {
+  if (count === 2) {
+    return [
+      {channel: 0, label: 'Left'},
+      {channel: 1, label: 'Right'},
+    ];
+  }
+  return Array.from({length: Math.max(0, count)}, (_, i) => ({
+    channel: i,
+    label: `Channel ${i + 1}`,
+  }));
 }
 
 /**

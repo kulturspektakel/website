@@ -190,9 +190,15 @@ export function BandSpectrumChart({state}: {state: DeviceState | undefined}) {
     const plot = plotRef.current;
     if (!plot) return;
     const st = stateRef.current;
-    const live = isFresh(st?.lastSeen, Date.now())
+    const fresh = isFresh(st?.lastSeen, Date.now());
+    const live = fresh
       ? Array.from(st!.latest.bands, (b) => decodeDb(b))
       : null;
+    // The monitor's published LAeq for the same second, off the same record as the bands
+    // above — the figure a calibration run compares against the microphone's own A-weighted
+    // total, and the one a permit is written against. Gated on the same freshness, so it
+    // cannot outlive the spectrum it belongs to.
+    const liveLaeq = fresh ? decodeDb(st!.latest.laeq) : null;
     // Null rather than NaN, and not interchangeably: uPlot tests for null to find a gap,
     // and a NaN reaches the canvas instead, where a non-finite lineTo is dropped and the
     // line is drawn straight *across* the hole it was supposed to leave. The bars get away
@@ -210,7 +216,7 @@ export function BandSpectrumChart({state}: {state: DeviceState | undefined}) {
     // In its own shape, not the plot's: null for an absent reading rather than a column of
     // NaN, and the record's own timestamp, so the run can tell a monitor that has stopped
     // reporting from one whose record has simply not advanced yet.
-    observeSecond(live, reference, st?.lastSeen ?? null);
+    observeSecond(live, reference, st?.lastSeen ?? null, liveLaeq);
   }, [now, xs, drain, observeSecond]);
 
   // Visibility is a series property rather than an absence of data, because uPlot cannot be

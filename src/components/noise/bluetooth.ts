@@ -41,21 +41,32 @@ export const CAL_BAND_COUNT = BAND_FREQUENCIES.length;
 export const CAL_MAX_DB = 24;
 export const CAL_STEP_DB = 0.5;
 
-// "31.5 Hz" / "1.25 kHz" / "16 kHz" — Hz below 1 kHz, kHz above.
-export function formatBandFrequency(hz: number): string {
-  return hz < 1000 ? `${hz} Hz` : `${hz / 1000} kHz`;
+// Any dB figure, as a trim the wire can carry: snapped to the byte's 0.5 dB step
+// and clamped to the range this section allows. `encodeCalibration` clamps again
+// on the way out, so this is not what keeps the device safe — it is what keeps a
+// computed trim and the byte it becomes the same number, so that what is read
+// back after a write is what was sent.
+export function snapTrim(db: number): number {
+  return Math.max(
+    -CAL_MAX_DB,
+    Math.min(CAL_MAX_DB, Math.round(db / CAL_STEP_DB) * CAL_STEP_DB),
+  );
 }
 
 // Each byte is a signed 8-bit offset in 0.5 dB steps (offset_dB = byte × 0.5).
-// Clamping to ±48 enforces the ±24 dB UI range and guarantees we never send the
-// −128 sentinel. Output is always exactly CAL_BAND_COUNT bytes.
+// Clamping enforces the ±CAL_MAX_DB range and guarantees we never send the −128
+// sentinel. Deliberately its own clamp rather than a call to snapTrim: this is
+// the last thing between a number and the device, and it should not be possible
+// for a change upstream to widen what goes on the wire. Output is always exactly
+// CAL_BAND_COUNT bytes.
 export function encodeCalibration(
   offsetsDb: number[],
 ): Uint8Array<ArrayBuffer> {
   const bytes = new Uint8Array(new ArrayBuffer(CAL_BAND_COUNT));
+  const limit = Math.round(CAL_MAX_DB / CAL_STEP_DB);
   for (let i = 0; i < CAL_BAND_COUNT; i++) {
     const step = Math.round((offsetsDb[i] ?? 0) / CAL_STEP_DB);
-    const clamped = Math.max(-48, Math.min(48, step));
+    const clamped = Math.max(-limit, Math.min(limit, step));
     bytes[i] = clamped & 0xff; // two's complement into the unsigned byte
   }
   return bytes;

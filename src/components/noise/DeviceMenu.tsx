@@ -11,16 +11,15 @@ import {
 } from '../chakra-snippets/menu';
 import {toaster} from '../chakra-snippets/toaster';
 import {errorToast} from './toast';
-import {CalibrationPanel} from './CalibrationPanel';
 import {WifiDialog} from './WifiDialog';
 import {useBluetooth, useNoiseLive} from './context';
 import {useDeviceView} from './deviceView';
 import {decodeDb, isFresh} from './noise';
 import {BAND_FREQUENCIES} from './bluetooth';
 
-// Everything you can *do* to a monitor, behind the one ⋮ at the end of its toolbar: pair
-// with it over Bluetooth and then calibrate it or set up its Wi-Fi, and the one thing that
-// belongs to the band chart rather than to the page.
+// Everything you can *do* to a monitor, behind the one ⋮ at the end of its toolbar: measure
+// it against a reference microphone, pair with it over Bluetooth and set up its Wi-Fi, and
+// the one thing that belongs to the band chart rather than to the page.
 //
 // Where it stands is not among them any more: that is a placement at an event, made in the
 // project page's assignments dialog, and the free-text label this used to write was a
@@ -38,7 +37,6 @@ export function DeviceMenu({device}: {device: string}) {
   const bluetooth = useBluetooth();
   const {referenceMic} = useDeviceView();
   const navigate = useNavigate();
-  const [calibrating, setCalibrating] = useState(false);
   const [wifiOpen, setWifiOpen] = useState(false);
 
   const bleConnected = bluetooth.deviceName != null;
@@ -99,9 +97,9 @@ export function DeviceMenu({device}: {device: string}) {
               first is dropped rather than disabled where the browser cannot capture at all,
               there being nothing behind it and nothing to go and enable.
 
-              Note the "Kalibrieren" item further down is a different thing: that one writes the
-              monitor's own per-band trims over Bluetooth. This one measures what those trims
-              ought to be, and writes nothing. */}
+              Calibration in the whole section means this one item: it measures what the
+              monitor's per-band trims ought to be and, with Bluetooth connected, writes
+              them. */}
           {referenceMic.supported && (
             <MenuItem
               value="reference-mic"
@@ -123,15 +121,12 @@ export function DeviceMenu({device}: {device: string}) {
 
           <MenuSeparator />
 
-          {/* Bluetooth: connect while disconnected, else calibrate/Wi-Fi/disconnect.
-              The connect item always shows, but is disabled when the browser
-              lacks Web Bluetooth support. Being connected implies support, so
-              the calibrate/Wi-Fi/disconnect branch needs no extra guard. */}
+          {/* Bluetooth: connect while disconnected, else Wi-Fi/disconnect. The connect
+              item always shows, but is disabled when the browser lacks Web Bluetooth
+              support. Being connected implies support, so the Wi-Fi/disconnect branch
+              needs no extra guard. */}
           {bleConnected ? (
             <>
-              <MenuItem value="calibrate" onClick={() => setCalibrating(true)}>
-                Kalibrieren
-              </MenuItem>
               <MenuItem value="wifi" onClick={() => setWifiOpen(true)}>
                 Set up Wi-Fi
               </MenuItem>
@@ -159,11 +154,6 @@ export function DeviceMenu({device}: {device: string}) {
           )}
         </MenuContent>
       </MenuRoot>
-      <CalibrationPanel
-        open={calibrating}
-        onClose={() => setCalibrating(false)}
-        bluetooth={bluetooth}
-      />
       {bluetooth.deviceName != null && (
         <WifiDialog
           open={wifiOpen}

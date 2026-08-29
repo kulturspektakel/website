@@ -1,5 +1,5 @@
 import {useEffect, useMemo, useRef, useState} from 'react';
-import {Box, Text} from '@chakra-ui/react';
+import {Box, HStack, Stack, Text} from '@chakra-ui/react';
 import uPlot from 'uplot';
 import {BAND_FREQUENCIES} from './bluetooth';
 import {
@@ -33,9 +33,12 @@ const FREQS = BAND_FREQUENCIES;
 // Zero always in the middle, and the scale no tighter than this either side. Two instruments
 // that agree to within a dB would otherwise be drawn as a mountain range of half-decibel bars
 // filling the plot — the auto-range would be doing exactly its job and the chart would be
-// lying about the size of what it shows. Six is a bit more than the trim range anybody would
-// act on, so a well-matched pair reads as flat.
-const MIN_SPAN_DB = 6;
+// lying about the size of what it shows.
+//
+// Three rather than six: a floor high enough to flatten a good result also flattens a real
+// one, and a couple of decibels in a band is worth trimming. Still enough that a sub-decibel
+// result cannot fill the plot, which is the only thing this is here to prevent.
+const MIN_SPAN_DB = 3;
 
 // The y grid's ladder, coarsening as the difference grows. Every step divides the one above it,
 // so a wider result thins its grid out rather than moving every line somewhere new — the same
@@ -50,6 +53,12 @@ const DELTA_LABEL_SPACE = 22;
 // than the "110" that one is sized for.
 const DELTA_AXIS_W = AXIS_GAP + 26;
 
+// The one chart in the section drawn on a light ground: its panel is portalled and no
+// longer re-establishes the dark scope the page has (see ReferenceMicPanel). Said here
+// rather than sniffed, because a canvas has no appearance to read — see themeHex, which
+// is where the two halves of every colour below are kept.
+const APPEARANCE = 'light';
+
 export function CalibrationResultChart({result}: {result: CalibrationResult}) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const xs = useMemo(() => FREQS.map((_, i) => i), []);
@@ -60,7 +69,7 @@ export function CalibrationResultChart({result}: {result: CalibrationResult}) {
     fraction: number;
   } | null>(null);
 
-  const {difference} = result;
+  const {difference, laeq} = result;
   // Symmetric about zero, off the largest bar there is. Recomputed with the result rather than
   // read off the scale, because the plot below is rebuilt per result anyway — a finished run is
   // a still picture, not a stream.
@@ -90,9 +99,9 @@ export function CalibrationResultChart({result}: {result: CalibrationResult}) {
           y: {range: () => [-span, span]},
         },
         axes: [
-          bandAxis(FREQS),
+          bandAxis(FREQS, APPEARANCE),
           {
-            ...axisBase(),
+            ...axisBase(APPEARANCE),
             size: DELTA_AXIS_W,
             incrs: (_self, _idx, scaleMin, scaleMax, fullDim) => [
               gridStep(
@@ -122,8 +131,8 @@ export function CalibrationResultChart({result}: {result: CalibrationResult}) {
           },
           {
             label: 'Difference',
-            stroke: themeHex('chart.band.bar'),
-            fill: themeHex('chart.band.bar'),
+            stroke: themeHex('chart.band.bar', APPEARANCE),
+            fill: themeHex('chart.band.bar', APPEARANCE),
             paths: uPlot.paths.bars!({size: [0.85, 60]}),
             points: {show: false},
             value: (_u, v) => formatDeltaDb(v ?? null),
@@ -157,33 +166,95 @@ export function CalibrationResultChart({result}: {result: CalibrationResult}) {
     };
   }, [xs, difference, span]);
 
+  // The two levels and what separates them. The difference is the finding, so it is uncoloured
+  // and carries its sign — the same treatment it gets in the tooltip, where it leads the bands'
+  // own two levels for the same reason.
+  const cells = [
+    {
+      label: 'Monitor',
+      value: formatDb(laeq.device, 'dB(A)'),
+      color: 'chart.band.bar',
+    },
+    {
+      label: 'Reference',
+      value: formatDb(laeq.reference, 'dB(A)'),
+      color: 'chart.band.ref',
+    },
+    {
+      label: 'Difference',
+      value: formatDeltaDb(laeq.difference, 'dB(A)'),
+      color: undefined,
+    },
+  ];
+
   return (
-    <Box position="relative" w="full" h="200px">
-      <Box position="absolute" inset="0" ref={containerRef} overflow="hidden" />
-      {hover && (
-        <ChartTooltip
-          left={hover.left}
-          top={hover.top}
-          fraction={hover.fraction}
-        >
-          <Text fontSize="xs" color="fg.muted" lineHeight="1.2">
-            {fmtHz(FREQS[hover.idx] ?? 0)} Hz
-          </Text>
-          {/* The difference first and in bold, since it is the finding, and both levels under
+    <Stack gap="2" w="full">
+      {/* The A-weighted comparison, over the spectrum it is the sum of.
+
+          Above the chart and not in it: two of the three are absolute levels where every bar
+          below is a difference, so there is no axis they could share — and the one number a
+          permit is written against should not have to be hovered for. Three equal cells
+          because the row is read across: two levels and what separates them, in the colours
+          the bands' own readout names the instruments in. */}
+      <HStack gap="2" w="full">
+        {cells.map(({label, value, color}) => (
+          // `1 1 0` and not `1`: an equal share of the row rather than an equal share of what
+          // is left over, so the three stay the same width whatever they happen to read —
+          // "—" in one and "+10.4 dB(A)" in another would otherwise size them differently.
+          <Box key={label} flex="1 1 0" textAlign="center">
+            <Text fontSize="xs" color="fg.subtle" lineHeight="1.2">
+              {label}
+            </Text>
+            <Text
+              fontSize="sm"
+              fontWeight="bold"
+              color={color}
+              lineHeight="1.3"
+            >
+              {value}
+            </Text>
+          </Box>
+        ))}
+      </HStack>
+      <Box position="relative" w="full" h="200px">
+        <Box
+          position="absolute"
+          inset="0"
+          ref={containerRef}
+          overflow="hidden"
+        />
+        {hover && (
+          <ChartTooltip
+            left={hover.left}
+            top={hover.top}
+            fraction={hover.fraction}
+          >
+            <Text fontSize="xs" color="fg.muted" lineHeight="1.2">
+              {fmtHz(FREQS[hover.idx] ?? 0)} Hz
+            </Text>
+            {/* The difference first and in bold, since it is the finding, and both levels under
               it in the colours the live chart draws them in — a difference on its own cannot be
               sanity-checked, and a band where both instruments are near their floor produces
-              one that looks like any other. */}
-          <Text fontWeight="bold" lineHeight="1.2">
-            {formatDeltaDb(result.difference[hover.idx] ?? null)}
-          </Text>
-          <Text fontSize="xs" color="chart.band.bar" lineHeight="1.2">
-            {formatDb(result.device[hover.idx] ?? null, 'dB')}
-          </Text>
-          <Text fontSize="xs" color="chart.band.ref" lineHeight="1.2">
-            {formatDb(result.reference[hover.idx] ?? null, 'dB')}
-          </Text>
-        </ChartTooltip>
-      )}
-    </Box>
+              one that looks like any other.
+
+              Named as well as coloured, unlike the live chart's readout above: there the two
+              lines are on screen beside the pill in those same colours, so the colour is a
+              pointer at something visible. Here the finding is a single set of bars and the two
+              levels behind it are not drawn at all, which leaves the colour matching nothing —
+              and "which of these is the monitor" is the whole question a reader checking a
+              suspicious band has come to the tooltip to ask. */}
+            <Text fontWeight="bold" lineHeight="1.2">
+              {formatDeltaDb(difference[hover.idx] ?? null)}
+            </Text>
+            <Text fontSize="xs" color="chart.band.bar" lineHeight="1.2">
+              Monitor {formatDb(result.device[hover.idx] ?? null, 'dB')}
+            </Text>
+            <Text fontSize="xs" color="chart.band.ref" lineHeight="1.2">
+              Reference {formatDb(result.reference[hover.idx] ?? null, 'dB')}
+            </Text>
+          </ChartTooltip>
+        )}
+      </Box>
+    </Stack>
   );
 }

@@ -2,7 +2,7 @@ import uPlot from 'uplot';
 import {useRef, type MutableRefObject} from 'react';
 import {TZDate} from '@date-fns/tz';
 import {locale, timeZone} from '../../utils/dateUtils';
-import {themeHex} from '../../theme-noise';
+import {themeHex, type Appearance} from '../../theme-noise';
 import {clampTo} from './timeframe';
 
 // All noise charts render in festival-local time regardless of the viewer's
@@ -147,13 +147,17 @@ export const CHART_PADDING: uPlot.Padding = [
 // in `chart.axis` too, so every axis on the page agrees by construction.
 //
 // A fresh object per call, and per axis: uPlot mutates the axis objects it is handed.
-export const axisBase = (): uPlot.Axis => ({
+//
+// `dark` unless told otherwise, which is every chart on the section's page. The one that
+// is drawn on a light ground says so (see CalibrationResultChart) — a canvas cannot read
+// the appearance it is mounted under, so the caller passes it (see themeHex).
+export const axisBase = (appearance: Appearance = 'dark'): uPlot.Axis => ({
   show: true,
   gap: AXIS_GAP,
   font: AXIS_FONT,
   ticks: {show: false},
-  stroke: themeHex('chart.axis'),
-  grid: {show: true, stroke: themeHex('chart.grid'), width: 1},
+  stroke: themeHex('chart.axis', appearance),
+  grid: {show: true, stroke: themeHex('chart.grid', appearance), width: 1},
 });
 
 // Label every nth grid line, n being the fewest that leaves `minSpace` between the ones
@@ -233,10 +237,11 @@ export const dbLevelAxis = (): uPlot.Axis => ({
   },
 });
 
-// Short form for a band centre, where there is room for "16k" and not for "16 kHz". The
-// calibration dialog's slider labels have a whole column each and use formatBandFrequency
-// instead. German throughout, so that the thirds below a kilohertz read as "31,5" rather than
-// falling back to a decimal point beside the "12,5k" further along the same axis.
+// Short form for a band centre, where there is room for "16k" and not for "16 kHz" — which
+// is every axis in the section, now that the one place a band had a whole column to itself
+// (the trim sliders) is gone. German throughout, so that the thirds below a kilohertz read as
+// "31,5" rather than falling back to a decimal point beside the "12,5k" further along the
+// same axis.
 export const fmtHz = (f: number) =>
   f >= 1000
     ? `${(f / 1000).toLocaleString('de-DE')}k`
@@ -273,14 +278,17 @@ const OCTAVE = 3;
  * an axis whose candidates are all rejected is one uPlot draws no labels, no grid and no ticks
  * for.
  */
-export const bandAxis = (freqs: readonly number[]): uPlot.Axis => ({
-  ...axisBase(),
+export const bandAxis = (
+  freqs: readonly number[],
+  appearance: Appearance = 'dark',
+): uPlot.Axis => ({
+  ...axisBase(appearance),
   size: X_AXIS_H_ROTATED,
   rotate: BAND_LABEL_ROTATE,
   incrs: [1],
   space: 1,
   grid: {
-    ...axisBase().grid,
+    ...axisBase(appearance).grid,
     // Octaves only, whatever is lettered below. Same length as the splits, a null where no line
     // is wanted — see uPlot's drawOrthoLines.
     filter: (_u, splits) =>

@@ -548,7 +548,7 @@ function NoiseLayout() {
 
             Portalled surfaces don't inherit it (they hang off <body>): the menus and
             dialogs show identifiers rather than ticking numbers, so they don't need
-            it — CalibrationPanel is the exception and sets it itself. */}
+            it — ReferenceMicPanel is the exception and sets it itself. */}
           {/* No padding of its own: the page inside decides where its edges are. The
               project page is a toolbar over an edge-to-edge map, which a gutter here
               would either cut into or leave scrolling content peeking past; the pages

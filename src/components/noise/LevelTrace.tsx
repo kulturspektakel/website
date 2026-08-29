@@ -551,7 +551,9 @@ export function LevelTrace({
     () => picked.map((key) => seriesByKey(key).color),
     [pickedKey],
   );
-  const strokes = useMemo(() => tokens.map(themeHex), [tokens]);
+  // Wrapped rather than passed point-free: themeHex takes an appearance second, and
+  // `map` would hand it the index.
+  const strokes = useMemo(() => tokens.map((t) => themeHex(t)), [tokens]);
   // What the tooltip's numbers are in. With one line there is one weighting and one window
   // to state, so the number carries both — `87.5 dB(A) 5m`, spelled the way the card's
   // header spells it. With several the row already names the series in full beside it, and

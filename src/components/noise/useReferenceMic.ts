@@ -24,6 +24,7 @@ import {
 import {useLatest} from './chartUtils';
 import {PINK_NOISE_SECONDS, pinkNoiseLoop} from './pinkNoise';
 import {
+  aWeightedDb,
   CALIBRATION_SAMPLES,
   createCalibrationRun,
   type BandReading,
@@ -68,6 +69,19 @@ import {
 // a tab nobody is looking at is exactly when that is hardest to notice.
 const FRAME_MS = 45;
 
+// How often the input meter is recomputed, as a number of frames. The monitor's own fast
+// window is 125 ms, so three frames (~135 ms) is the same integration this section's other
+// instrument uses — fast enough to follow a hand over the capsule, slow enough that the
+// figure beside the bar is readable rather than flickering through three digits.
+//
+// Frames and not milliseconds: the accumulator's mean is unbiased in the frame count (see
+// createBandAccumulator), so counting frames stays correct across an interval the browser
+// let drift, where a wall-clock deadline would average a varying number of them.
+//
+// Strictly this makes the meter a fast-weighted A level rather than an Leq over any useful
+// window — which is what a meter should be. The run's LAeq, the one that ends up in a
+// result, is still averaged over its thirty seconds (see bandCalibration).
+const METER_FRAMES = 3;
 export type ReferenceMicSlice = {
   // Whether this browser can capture at all. False until the first effect runs, so that
   // the server and the first client paint agree (see useBleDevice, same reason).
@@ -135,10 +149,26 @@ export type ReferenceMicSlice = {
    * Called every second whether or not anything is being measured: it is also what maintains
    * `calibration.ready`, i.e. whether there is anything to measure with.
    */
+  /**
+   * The input's own A-weighted level as of the last second — what the meter in the Input
+   * section shows (see InputLevelMeter).
+   *
+   * A function and not a value, because it is written several times a second by the frame loop
+   * and nothing needs to render when it is: the meter reads it on its own clock, which is how
+   * the charts on the page behind this one take their data. As state it would re-render the
+   * whole panel at the frame rate to move one bar.
+   *
+   * Null where the microphone reported nothing — none picked, or none delivering.
+   */
+  inputLaeq: () => number | null;
   observeSecond: (
     device: BandReading | null,
     reference: BandReading | null,
     deviceLastSeen: number | null,
+    // The monitor's published LAeq for this second. Passed alongside the spectrum rather than
+    // derived from it: it is the figure the monitor's firmware computes and reports, which is
+    // what makes comparing it to the microphone worth doing (see CalibrationResult.laeq).
+    deviceLaeq: number | null,
   ) => void;
   /**
    * Measuring this monitor against the reference microphone: thirty seconds of both, and the
@@ -168,10 +198,27 @@ export type ReferenceMicSlice = {
   // above is fixed at null and the picker is not worth showing.
   outputSelectable: boolean;
   selectOutput: (deviceId: string | null) => Promise<void>;
+  /**
+   * Which channel of that output the noise is put on, and how many there are to choose from.
+   *
+   * `outputChannels` is the device's own `maxChannelCount` and not an assumption: a laptop's
+   * speakers say two, HDMI says six or eight, and the sort of interface somebody doing this
+   * has plugged in says rather more. Zero until a context exists to ask, and the panel shows
+   * no picker below two — one channel is not a choice.
+   *
+   * `channel` is null for all of them, which is the default and what a measurement wants: the
+   * pink noise is one mono buffer, so all of them means both speakers of a pair and the mic
+   * hears their sum in the room. Naming one halves the acoustic power and moves the source,
+   * so a result taken on one channel is not comparable with one taken on the pair — which is
+   * why this is for checking what is wired where rather than for measuring through.
+   */
+  outputChannels: number;
+  channel: number | null;
+  selectChannel: (channel: number | null) => void;
 };
 
 // Nothing, running, or holding a finished reading. No 'settling' among them: settling is the
-// first three seconds of a run and not a state of its own — see SETTLE_SAMPLES, and the progress
+// first seconds of a run and not a state of its own — see SETTLE_SAMPLES, and the progress
 // bar, which says so out of `seconds`.
 export type CalibrationPhase = 'idle' | 'running' | 'done';
 
@@ -189,6 +236,16 @@ export type CalibrationSlice = {
   result: CalibrationResult | null;
   start: () => Promise<void>;
   cancel: () => void;
+  /**
+   * Throw the last finding away, as something that has been acted on rather than stopped.
+   *
+   * For the panel to call once it has written a result to the monitor: the trims it was
+   * measured against are gone, so the numbers no longer describe anything that exists, and
+   * writing them a second time would take the same correction off twice (see trimsForResult,
+   * which is relative to what it reads). `cancel` is not this — that one is for a run in
+   * progress and does nothing to a finished one.
+   */
+  clear: () => void;
 };
 
 /**
@@ -209,6 +266,10 @@ export function useReferenceMic(): ReferenceMicSlice {
   const [outputs, setOutputs] = useState<AudioOutputOption[]>([]);
   const [output, setOutput] = useState<string | null>(null);
   const [outputSelectable, setOutputSelectable] = useState(false);
+  // How many channels that output has, and which one is being driven. Read off the
+  // destination rather than assumed (see syncChannels); null is all of them.
+  const [outputChannels, setOutputChannels] = useState(0);
+  const [channel, setChannel] = useState<number | null>(null);
   const [starting, setStarting] = useState(false);
   const [sampleRate, setSampleRate] = useState<number | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
@@ -243,6 +304,10 @@ export function useReferenceMic(): ReferenceMicSlice {
   const nodesRef = useRef<AudioNode[]>([]);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const framesRef = useRef<BandAccumulator | null>(null);
+  // A second accumulator, for the meter alone. Not a faster drain of the one above: that one
+  // is emptied once a second by whatever is drawing the spectrum (see drain), and a second
+  // consumer taking frames out of it would leave that chart averaging whatever was left.
+  const meterFramesRef = useRef<BandAccumulator | null>(null);
   // One buffer for the life of the input, refilled in place ~22 times a second. Allocating
   // it per frame would be 8 KB of immediate garbage every 45 ms — 178 KB/s on a page that is
   // also decoding records and redrawing two charts.
@@ -297,6 +362,7 @@ export function useReferenceMic(): ReferenceMicSlice {
   // Read when a context is opened or noise is started, both of which happen well after the
   // render that chose the output.
   const outputRef = useLatest(output);
+  const channelRef = useLatest(channel);
   // Not merely an identity optimisation, which is why this one is written by hand: select()
   // reads it *after* an await, and persistCals writes it synchronously below, so two imports
   // landing in one tick do not lose the first.
@@ -336,6 +402,7 @@ export function useReferenceMic(): ReferenceMicSlice {
     nodesRef.current = [];
     analyserRef.current = null;
     framesRef.current = null;
+    meterFramesRef.current = null;
     spectrumRef.current = null;
     // The tracks, not just the graph: the tab's recording indicator follows the track and
     // not the AudioContext, so a page that only disconnected would look like it is still
@@ -356,11 +423,23 @@ export function useReferenceMic(): ReferenceMicSlice {
   // been stopped is spent, and start() may only be called on it once.
   const noiseBufferRef = useRef<AudioBuffer | null>(null);
   const noiseNodeRef = useRef<AudioBufferSourceNode | null>(null);
+  // The merger standing between the source and the destination when one channel has been
+  // named, and nothing when all of them are being driven (see routeNoise). Held for the same
+  // reason the source node is: a node with no reference left to it has been collected, and
+  // then gone silent, in more than one browser.
+  const noiseRouteRef = useRef<ChannelMergerNode | null>(null);
   const [noisePlaying, setNoisePlaying] = useState(false);
 
   const stopNoise = useCallback(() => {
     const node = noiseNodeRef.current;
     noiseNodeRef.current = null;
+    const merger = noiseRouteRef.current;
+    noiseRouteRef.current = null;
+    if (merger != null) {
+      try {
+        merger.disconnect();
+      } catch {}
+    }
     if (node != null) {
       try {
         node.stop();
@@ -394,6 +473,71 @@ export function useReferenceMic(): ReferenceMicSlice {
     [],
   );
 
+  /**
+   * How many channels the sink currently in force has, asked rather than assumed.
+   *
+   * Called wherever a context is opened or its sink is changed, because both change the
+   * answer: `maxChannelCount` is a property of the device the context is pointed at, and
+   * setSinkId re-points it. Two is the common answer and never the guaranteed one — HDMI
+   * says six or eight, and an interface says whatever it has.
+   *
+   * A pick past the end of the new device is dropped rather than clamped. Clamping would
+   * silently move the signal to a socket nobody chose, which on the one control whose whole
+   * job is "which socket" is the one thing it must not do; all of them is the honest answer
+   * and the one the panel started from.
+   */
+  const syncChannels = useCallback((ctx: AudioContext) => {
+    const max = ctx.destination.maxChannelCount;
+    setOutputChannels(max);
+    setChannel((prev) => (prev != null && prev >= max ? null : prev));
+  }, []);
+
+  /**
+   * Put the playing noise on the chosen channel, or on all of them.
+   *
+   * All of them is a straight connection to the destination and a channel count of two, which
+   * is the graph this had before there was anything to choose: one mono buffer up-mixed the
+   * way `speakers` up-mixes mono, i.e. the same signal out of the pair.
+   *
+   * One of them cannot be done by up-mixing at all — the destination has to be widened to the
+   * device's full width, and the source hung off the matching input of a merger whose other
+   * inputs are unconnected and therefore silent. `discrete` because at that point the counts
+   * match either way and the name should say that nothing is being folded.
+   *
+   * Rebuilt rather than adjusted, and cheap enough to be: everything here is graph wiring
+   * around a buffer that is not touched, so switching channels mid-play does not restart the
+   * loop or re-run the filter.
+   */
+  const routeNoise = useCallback(
+    (ctx: AudioContext, node: AudioNode, pick: number | null) => {
+      const dest = ctx.destination;
+      const max = dest.maxChannelCount;
+      node.disconnect();
+      const previous = noiseRouteRef.current;
+      noiseRouteRef.current = null;
+      if (previous != null) {
+        try {
+          previous.disconnect();
+        } catch {}
+      }
+      // Past the end is treated as all of them rather than as an error: a device can shrink
+      // under a pick between the render that made it and the play that acts on it.
+      if (pick == null || pick >= max) {
+        dest.channelCount = Math.min(2, max);
+        dest.channelInterpretation = 'speakers';
+        node.connect(dest);
+        return;
+      }
+      dest.channelCount = max;
+      dest.channelInterpretation = 'discrete';
+      const merger = ctx.createChannelMerger(max);
+      merger.connect(dest);
+      node.connect(merger, 0, pick);
+      noiseRouteRef.current = merger;
+    },
+    [],
+  );
+
   const selectOutput = useCallback(
     async (deviceId: string | null) => {
       setOutput(deviceId);
@@ -408,8 +552,31 @@ export function useReferenceMic(): ReferenceMicSlice {
       } catch (e) {
         errorToast('Output could not be switched')(e);
       }
+      // After the sink and not before: the new device is the one whose width is being asked
+      // about, and the answer only changes once it is in force. Outside the try, because a
+      // sink that refused to move leaves the old device in place and its width still current.
+      syncChannels(ctx);
     },
-    [applySink],
+    [applySink, syncChannels],
+  );
+
+  // Live, like selectOutput above, and for the same reason — the point of this control is
+  // hearing which socket is which, which means hearing the change.
+  const selectChannel = useCallback(
+    (pick: number | null) => {
+      setChannel(pick);
+      const ctx = ctxRef.current;
+      const node = noiseNodeRef.current;
+      // Nothing playing is nothing to move; the pick is read back out of channelRef when the
+      // noise is next started.
+      if (ctx == null || node == null) return;
+      try {
+        routeNoise(ctx, node, pick);
+      } catch (e) {
+        errorToast('Channel could not be switched')(e);
+      }
+    },
+    [routeNoise],
   );
 
   // Whether it is now playing, rather than nothing: the caller is a calibration run, and a run
@@ -432,6 +599,8 @@ export function useReferenceMic(): ReferenceMicSlice {
       } catch (e) {
         errorToast('Output could not be selected')(e);
       }
+      // With the sink settled, how wide it is — which routeNoise below is about to act on.
+      syncChannels(ctx);
 
       // At the context's own rate, so the browser has no resampling to do on the way out —
       // and rebuilt if that rate has somehow changed under us, since a buffer's rate is
@@ -449,10 +618,11 @@ export function useReferenceMic(): ReferenceMicSlice {
       // Seamlessly, which is what the crossfade in pinkNoiseLoop is for: this restarts the
       // buffer every eight seconds for as long as it plays.
       node.loop = true;
-      // Straight at the destination with no gain node in between. "Maximum" here means
-      // nothing attenuating it — the samples are already normalised to full scale — and the
-      // one volume left is the system's, which no browser can read or set.
-      node.connect(ctx.destination);
+      // At the destination with no gain node anywhere in between, whichever way routeNoise
+      // wires it. "Maximum" here means nothing attenuating it — the samples are already
+      // normalised to full scale — and the one volume left is the system's, which no browser
+      // can read or set.
+      routeNoise(ctx, node, channelRef.current);
       node.start();
       noiseNodeRef.current = node;
       setNoisePlaying(true);
@@ -462,7 +632,7 @@ export function useReferenceMic(): ReferenceMicSlice {
       errorToast('Pink noise could not be played')(e);
       return false;
     }
-  }, [stopNoise, applySink]);
+  }, [stopNoise, applySink, routeNoise, channelRef, syncChannels, outputRef]);
 
   // --- Measuring the monitor against the microphone ----------------------------------------
 
@@ -478,6 +648,10 @@ export function useReferenceMic(): ReferenceMicSlice {
   const [calSeconds, setCalSeconds] = useState(0);
   const [calReady, setCalReady] = useState(false);
   const [calResult, setCalResult] = useState<CalibrationResult | null>(null);
+  // The input's level, for the meter in the panel. A ref and not state, for the reason given
+  // on `inputLaeq`: it changes several times a second and only one small thing reads it.
+  const laeqRef = useRef<number | null>(null);
+  const inputLaeq = useCallback(() => laeqRef.current, []);
   // Read by observeSecond, which is called from a chart effect and so must not have the phase as
   // a dependency — a new identity every phase change would tear that effect down mid-run.
   const calPhaseRef = useRef<CalibrationPhase>('idle');
@@ -519,6 +693,9 @@ export function useReferenceMic(): ReferenceMicSlice {
     if (calPhaseRef.current === 'running') endRun();
     setCalResult(null);
     setPhase('idle');
+    // The meter as well as the finding: this runs when the input changes, and a level left
+    // standing would be attributed to whichever microphone is picked next.
+    laeqRef.current = null;
   }, [endRun, setPhase]);
 
   const startCalibration = useCallback(async () => {
@@ -540,6 +717,10 @@ export function useReferenceMic(): ReferenceMicSlice {
       device: BandReading | null,
       reference: BandReading | null,
       deviceLastSeen: number | null,
+      // The monitor's published LAeq for this second, which a run records beside the bands
+      // (see CalibrationResult.laeq). Null where the record is stale, on the same terms as
+      // `device` — a level from a record that has stopped arriving is not this second's.
+      deviceLaeq: number | null,
     ) => {
       // Asked every second whether or not anything is running, because this is also the answer
       // to "could a run be started" — and React bails out of a setState that changes nothing, so
@@ -570,7 +751,7 @@ export function useReferenceMic(): ReferenceMicSlice {
       }
       countedAtRef.current = deviceLastSeen;
 
-      run.add(device, reference);
+      run.add(device, reference, deviceLaeq);
       setCalSeconds(run.seconds());
       if (run.samples() >= CALIBRATION_SAMPLES) {
         setCalResult(run.result());
@@ -664,6 +845,7 @@ export function useReferenceMic(): ReferenceMicSlice {
         // A context created outside a gesture — or reused after the browser suspended it —
         // reports every bin as −Infinity and says nothing about why.
         if (ctx.state !== 'running') await ctx.resume();
+        syncChannels(ctx);
 
         const source = ctx.createMediaStreamSource(stream);
         // An AnalyserNode downmixes its input to mono as though it were a pair of
@@ -682,9 +864,9 @@ export function useReferenceMic(): ReferenceMicSlice {
         splitter.connect(analyser, 0);
         nodesRef.current = [source, splitter, analyser];
 
-        framesRef.current = createBandAccumulator(
-          bandBins(ctx.sampleRate, analyser.fftSize),
-        );
+        const bins = bandBins(ctx.sampleRate, analyser.fftSize);
+        framesRef.current = createBandAccumulator(bins);
+        meterFramesRef.current = createBandAccumulator(bins);
         spectrumRef.current = new Float32Array(
           new ArrayBuffer(
             analyser.frequencyBinCount * Float32Array.BYTES_PER_ELEMENT,
@@ -740,7 +922,7 @@ export function useReferenceMic(): ReferenceMicSlice {
         setStarting(false);
       }
     },
-    [releaseInput, clearSelection, persistCals, resetCalibration],
+    [releaseInput, clearSelection, persistCals, resetCalibration, syncChannels],
   );
 
   /**
@@ -834,8 +1016,22 @@ export function useReferenceMic(): ReferenceMicSlice {
    * speculatively, so opening the page prompts for nothing.
    */
   const open = useCallback(async () => {
-    if (await grant()) setPanelOpen(true);
-  }, [grant]);
+    if (!(await grant())) return;
+    // A context now, rather than at the first thing that needs one. Not because anything is
+    // about to play, but because the destination is the only thing that knows how many
+    // channels the output has, and a channel picker that appeared only after the first press
+    // of play would be offering the choice after the moment it was for. This is a click, so
+    // the context is allowed to start; the page keeps one and every path below reuses it.
+    try {
+      const ctx = ctxRef.current ?? openContext();
+      ctxRef.current = ctx;
+      syncChannels(ctx);
+    } catch {
+      // A context this document is not allowed to have yet. The picker stays hidden until
+      // something else opens one, which is the state this panel had before it asked at all.
+    }
+    setPanelOpen(true);
+  }, [grant, syncChannels]);
 
   const close = useCallback(() => {
     setPanelOpen(false);
@@ -850,16 +1046,34 @@ export function useReferenceMic(): ReferenceMicSlice {
   // rather than a dependency keeps a re-render from restarting the interval mid-second.
   useEffect(() => {
     if (selected == null) return;
+    // Local to the effect, so switching inputs starts the meter's window fresh rather than
+    // finishing one that is part this microphone and part the last.
+    let sinceMeter = 0;
     const id = setInterval(() => {
       const analyser = analyserRef.current;
       const frames = framesRef.current;
       // Nothing to read from a context the browser has parked — and it would answer with
       // −Infinity across the board rather than an error.
-      if (!analyser || !frames || ctxRef.current?.state !== 'running') return;
+      if (!analyser || !frames || ctxRef.current?.state !== 'running') {
+        // The meter says so, rather than holding the last level it saw: a bar frozen at 84 dB
+        // on a parked context is the one reading it must never give.
+        laeqRef.current = null;
+        return;
+      }
       const spectrum = spectrumRef.current;
       if (!spectrum) return;
       analyser.getFloatFrequencyData(spectrum);
       frames.accumulate(spectrum);
+      const meter = meterFramesRef.current;
+      meter?.accumulate(spectrum);
+      if (++sinceMeter >= METER_FRAMES) {
+        sinceMeter = 0;
+        const mean = meter?.drain();
+        // Through the same bandDb the spectrum goes through, so the meter cannot disagree
+        // with the chart or the run about what a level is: same sensitivity, same file.
+        laeqRef.current =
+          mean == null ? null : aWeightedDb(bandDb(mean, scaleRef.current));
+      }
     }, FRAME_MS);
     return () => clearInterval(id);
   }, [selected]);
@@ -931,6 +1145,7 @@ export function useReferenceMic(): ReferenceMicSlice {
       close,
       drain,
       observeSecond,
+      inputLaeq,
       calibration: {
         phase: calPhase,
         seconds: calSeconds,
@@ -938,6 +1153,7 @@ export function useReferenceMic(): ReferenceMicSlice {
         result: calResult,
         start: startCalibration,
         cancel: cancelCalibration,
+        clear: resetCalibration,
       },
       noisePlaying,
       toggleNoise,
@@ -945,6 +1161,9 @@ export function useReferenceMic(): ReferenceMicSlice {
       output,
       outputSelectable,
       selectOutput,
+      outputChannels,
+      channel,
+      selectChannel,
     }),
     [
       supported,
@@ -967,18 +1186,23 @@ export function useReferenceMic(): ReferenceMicSlice {
       close,
       drain,
       observeSecond,
+      inputLaeq,
       calPhase,
       calSeconds,
       calReady,
       calResult,
       startCalibration,
       cancelCalibration,
+      resetCalibration,
       noisePlaying,
       toggleNoise,
       outputs,
       output,
       outputSelectable,
       selectOutput,
+      outputChannels,
+      channel,
+      selectChannel,
     ],
   );
 }

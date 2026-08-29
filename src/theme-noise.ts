@@ -20,9 +20,18 @@ import {defaultConfig} from '@chakra-ui/react';
 // scoping at all: nothing outside this section refers to `chart.*` or `map.*`,
 // and `accent` is only ever asked for by name.
 
-// One literal table: a token path against the Chakra scale step it stands for.
+// One literal table: a token path against the Chakra scale step it stands for —
+// or, where the two appearances need different steps, against one for each.
 // Every other export is derived from it, so recolouring anything is one edit
 // here rather than an edit here and a matching one in the canvas layer.
+//
+// Almost every entry is a bare step, because almost every entry is only ever
+// drawn on the section's dark page. The pairs are the tokens the calibration
+// chart reaches for, which is the one thing here rendered on a light ground —
+// its panel is portalled and no longer re-establishes the dark scope (see
+// ReferenceMicPanel). A pair costs the CSS side nothing: `nest` below emits it
+// as a condition, so a Chakra consumer follows whatever appearance it is under
+// without being told. The canvas is what has to be told (see themeHex).
 //
 // Keys are spelled the way they will read as CSS variables. Chakra formats a
 // var name by joining the path with `-` and then dash-casing it, which means
@@ -49,9 +58,9 @@ const NOISE_COLORS = {
   // the project timeline draws its ticks with — one step lighter than
   // `border.emphasized`, which is what it needs to be to stay visible both over
   // the toolbar and inside the 15% accent wash of a crop window.
-  'chart.axis': 'gray.400',
-  'chart.grid': 'gray.700',
-  'chart.rule': 'gray.600',
+  'chart.axis': {_light: 'gray.600', _dark: 'gray.400'},
+  'chart.grid': {_light: 'gray.300', _dark: 'gray.700'},
+  'chart.rule': {_light: 'gray.300', _dark: 'gray.600'},
   // The hatch the project timeline shades a stretch with no readings in (see
   // TimelineMarkers). Its own name, because unlike every other entry here it is not drawn
   // as a line but as texture: the stripes cover about a third of the band, so what the eye
@@ -66,7 +75,7 @@ const NOISE_COLORS = {
   // at a glance without becoming the loudest thing on a strip whose subject is the crop.
   'chart.gap': 'gray.700',
   'chart.playhead': 'gray.50',
-  'chart.readout.bg': 'gray.800',
+  'chart.readout.bg': {_light: 'gray.50', _dark: 'gray.800'},
   // The ground a plot is drawn on, as a value the canvas can stroke with — the same step
   // the section's `bg` resolves to in dark, which is the only mode this section has. Only
   // the limit rules ask for it, and they ask for it as a casing: a dashed line in a series'
@@ -81,13 +90,26 @@ const NOISE_COLORS = {
 
   // The band spectrum's bars are the fast-window shade — it is the same
   // measurement, drawn against frequency instead of time.
-  'chart.band.bar': 'yellow.200',
+  //
+  // Its light half is off the ramp entirely, because in light the section's colour is
+  // blue rather than yellow (see the accent block below) — and it is the *same* blue,
+  // `blue.solid`, which is what a primary button is filled with. 5.17:1 on white, so it
+  // clears the 3:1 a bar has to and the 4.5:1 the same token has to as 12 px type in the
+  // readout beside it. No yellow step does both: yellow.600 is 2.94:1, and the ones that
+  // pass are browns.
+  'chart.band.bar': {_light: 'blue.600', _dark: 'yellow.200'},
   // The reference microphone's spectrum, over those bars. Off the ramp on
   // purpose: every other series colour here distinguishes one averaging window
   // from another of the same measurement, and this one distinguishes a second
   // instrument. Cyan reads at 3:1 or better against the section's ground and is
   // far enough from yellow.200 to stay legible where the two lines cross.
-  'chart.band.ref': 'cyan.300',
+  //
+  // The light half mirrors that arrangement rather than repeating its hue: the pair on
+  // the page is warm against cool, and with the monitor's own bars turning blue in light
+  // the second instrument has to go the other way to stay the other instrument. Orange
+  // against blue is also the one pair no colour-vision deficiency collapses. Cyan would
+  // have been neither — beside blue.600 it is a shade of the same thing.
+  'chart.band.ref': {_light: 'orange.700', _dark: 'cyan.300'},
 
   // The map. Only the four anchors that have to agree with the rest of the page
   // are tokens; the basemap's own lightness ladder stays local to mapStyle.ts,
@@ -100,7 +122,28 @@ const NOISE_COLORS = {
   'map.pin.labelStale': 'gray.700',
 } as const;
 
+/**
+ * Which half of a two-valued token to take.
+ *
+ * Named rather than a boolean because it is what the caller *is* — a chart on the page,
+ * a chart in a light panel — and the canvas has no way to find that out for itself. See
+ * themeHex.
+ */
+export type Appearance = 'light' | 'dark';
+
 export type NoiseColorToken = keyof typeof NOISE_COLORS;
+
+// A step, or one step per appearance. The step alone is the common case and reads as
+// "this colour does not depend on where it is drawn", which for everything on the
+// section's own page is true.
+type NoiseColorValue = string | {_light: string; _dark: string};
+
+const stepFor = (value: NoiseColorValue, appearance: Appearance): string =>
+  typeof value === 'string'
+    ? value
+    : appearance === 'light'
+      ? value._light
+      : value._dark;
 
 // The runtime half of the type above, for the tests that walk every token.
 export const NOISE_COLOR_TOKENS = Object.keys(
@@ -115,11 +158,34 @@ export type ChartSeriesToken = Extract<
   `chart.series.${string}`
 >;
 
-// The accent, and the whole of it: one hue, aliased rather than re-specified so
-// that retuning the section is a single edit. Chakra's `yellow.contrast` is
-// already black in both modes, which is what a yellow solid needs, so the
-// semantic block below only has to differ where we want it to.
+// The accent, and the whole of it: one hue per appearance, aliased rather than
+// re-specified so that retuning the section is a single edit. Chakra's
+// `yellow.contrast` is already black in both modes, which is what a yellow solid
+// needs, so the semantic block below only has to differ where we want it to.
+//
+// Two hues because the section now has two grounds. Yellow was picked against the
+// page; on white it is a highlighter — and white is where the calibration panel
+// now paints a dropzone, a progress bar and a lit toggle out of this palette.
+// Blue is what the rest of /crew already uses on a light ground (see theme-crew's
+// links and focus rings), so this is the section falling in with the area it sits
+// in rather than inventing a second light accent of its own.
 const ACCENT_HUE = 'yellow';
+const ACCENT_HUE_LIGHT = 'blue';
+
+/**
+ * One entry of the accent block: the light hue's token, and the dark hue's.
+ *
+ * Both halves are aliases rather than values, so neither palette is restated here — the
+ * day Chakra retunes either one, this follows. `dark` is given separately only where the
+ * yellow half is pinned to a step rather than to a semantic name, which is the two places
+ * the section insists on exactly #facc15.
+ */
+const accentPair = (light: string, dark: string = light) => ({
+  value: {
+    _light: `{colors.${ACCENT_HUE_LIGHT}.${light}}`,
+    _dark: `{colors.${ACCENT_HUE}.${dark}}`,
+  },
+});
 
 const SCALE = defaultConfig.theme!.tokens!.colors! as Record<
   string,
@@ -135,21 +201,44 @@ const STEPS = ['50', '100', '200', '300', '400', '500', '600', '700', '800', '90
 // node, safe under SSR, and free of a fallback colour that can drift away from
 // the token it stands in for. It also keeps a var-of-var chain off a canvas
 // `strokeStyle`, where an unresolved `var()` string fails silently to black.
-export const NOISE_HEX = Object.freeze(
+const resolve = (appearance: Appearance) =>
   Object.fromEntries(
     NOISE_COLOR_TOKENS.map((token) => {
-      const [family, step] = NOISE_COLORS[token].split('.');
-      const value = SCALE[family!]?.[step!]?.value;
+      const step = stepFor(NOISE_COLORS[token], appearance);
+      const [family, level] = step.split('.');
+      const value = SCALE[family!]?.[level!]?.value;
       if (!value) {
-        throw new Error(`theme-noise: unknown scale step ${NOISE_COLORS[token]} for ${token}`); // prettier-ignore
+        throw new Error(`theme-noise: unknown scale step ${step} for ${token}`);
       }
       return [token, value];
     }),
-  ) as Record<NoiseColorToken, string>,
-);
+  ) as Record<NoiseColorToken, string>;
 
-/** A noise token's concrete hex, for the canvas and map layers. */
-export const themeHex = (token: NoiseColorToken): string => NOISE_HEX[token];
+// Both halves resolved up front rather than on demand: the table is a few dozen
+// entries, the work is a string split and two lookups, and doing it once means a
+// canvas asking for a colour mid-draw is a property read.
+export const NOISE_HEX = Object.freeze({
+  light: Object.freeze(resolve('light')),
+  dark: Object.freeze(resolve('dark')),
+});
+
+/**
+ * A noise token's concrete hex, for the canvas and map layers.
+ *
+ * `dark` by default, which is every caller but one: the section's page renders dark, and
+ * so does everything drawn on it. The exception says so at the call site (see
+ * CalibrationResultChart) rather than sniffing the DOM for it — which is not a shortcut
+ * but the only workable answer. A canvas cannot inherit a CSS colour, and reading the
+ * variable back is worse than it looks: Chakra compiles these to `var()` chains and
+ * `getPropertyValue` returns a custom property *unresolved*, so what would reach
+ * `fillStyle` is the literal string `var(--colors-…)`, which fails silently to black.
+ * Appearance is a fact about where a chart is mounted, and the thing that mounts it is
+ * the thing that knows.
+ */
+export const themeHex = (
+  token: NoiseColorToken,
+  appearance: Appearance = 'dark',
+): string => NOISE_HEX[appearance][token];
 
 // The flat table above, folded into the nested shape Chakra wants. Written as a
 // fold rather than by hand so the two can't disagree about what exists.
@@ -161,7 +250,19 @@ const nest = (paths: readonly NoiseColorToken[]) => {
     for (const key of keys.slice(0, -1)) {
       node = (node[key] ??= {}) as Record<string, unknown>;
     }
-    node[keys[keys.length - 1]!] = {value: `{colors.${NOISE_COLORS[path]}}`};
+    const step = NOISE_COLORS[path] as NoiseColorValue;
+    // A pair becomes a condition, which is the whole of what a Chakra consumer needs:
+    // `color="chart.band.bar"` inside a light panel resolves to the light half with
+    // nothing passed to it, unlike the canvas above.
+    node[keys[keys.length - 1]!] = {
+      value:
+        typeof step === 'string'
+          ? `{colors.${step}}`
+          : {
+              _light: `{colors.${step._light}}`,
+              _dark: `{colors.${step._dark}}`,
+            },
+    };
   }
   return out;
 };
@@ -187,13 +288,18 @@ export const noiseSemanticColors = {
   // pinned by theme-noise.test.ts — and it does mean `colorPalette="accent"`
   // and `colorPalette="yellow"` are not interchangeable.
   accent: {
-    contrast: {value: `{colors.${ACCENT_HUE}.contrast}`},
-    fg: {value: `{colors.${ACCENT_HUE}.fg}`},
-    subtle: {value: `{colors.${ACCENT_HUE}.subtle}`},
-    muted: {value: `{colors.${ACCENT_HUE}.muted}`},
-    emphasized: {value: `{colors.${ACCENT_HUE}.emphasized}`},
-    solid: {value: `{colors.${ACCENT_HUE}.400}`},
-    focusRing: {value: `{colors.${ACCENT_HUE}.400}`},
-    border: {value: `{colors.${ACCENT_HUE}.border}`},
+    contrast: accentPair('contrast'),
+    fg: accentPair('fg'),
+    subtle: accentPair('subtle'),
+    muted: accentPair('muted'),
+    emphasized: accentPair('emphasized'),
+    // The two the section pins to a step rather than to a name, in dark: `solid` is the
+    // middle of the series ramp and `focusRing` is that same value again, which is the
+    // whole of what "one accent" means here. Light has no ramp to agree with, so both
+    // take blue's own semantic answer — and `solid` is then literally what fills a
+    // primary button (see theme-crew), which is the same claim made the other way round.
+    solid: accentPair('solid', '400'),
+    focusRing: accentPair('focusRing', '400'),
+    border: accentPair('border'),
   },
 };

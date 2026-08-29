@@ -205,6 +205,19 @@ resource "google_cloud_scheduler_job" "nuclino_update_message" {
   time_zone   = "UTC"
   region      = local.region
 
+  # TEMPORARY (paused 2026-08-26) — measuring how much of the site's Fluid
+  # Active CPU this job accounts for. Every route is served by one `__fallback`
+  # function and per-path CPU breakdown needs Observability Plus, which we do
+  # not have, so silencing the only fixed-schedule caller is the one way to
+  # attribute its share. Baseline to diff against: 9.37 CPU-hrs over
+  # 2026-08-01..26 (~0.36 CPU-hr/day) at fra1 rates.
+  #
+  # While paused, edits are not deferred but lost: the handler tiles fixed
+  # windows with no backfill or dedupe (see CRON_PERIOD_MINUTES in
+  # src/server/tasks/nuclino-update-message.ts), so nothing announced during the
+  # pause is ever caught up on resume. Delete this line to resume.
+  paused = true
+
   http_target {
     uri         = "${local.site_url}/api/tasks/nuclino-update-message"
     http_method = "POST"
