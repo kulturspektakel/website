@@ -1,10 +1,5 @@
 import {type NoiseRecording} from '../../proto/noise';
-import {
-  isFresh,
-  WEIGHTINGS,
-  type DeviceState,
-  type Weighting,
-} from './noise';
+import {isFresh, WEIGHTINGS, type DeviceState, type Weighting} from './noise';
 import {
   seriesByKey,
   SERIES_KEYS,
@@ -111,17 +106,38 @@ export const toggledSeries = (
   key: SeriesKey,
 ): PickedSeries => {
   if (!picked.includes(key)) {
-    return nonEmpty(SERIES_KEYS.filter((k) => k === key || picked.includes(k)));
+    return nonEmptyPick(
+      SERIES_KEYS.filter((k) => k === key || picked.includes(k)),
+    );
   }
   // The last one stays lit, and the same array comes back — see above.
   if (picked.length === 1) return picked;
-  return nonEmpty(picked.filter((k) => k !== key));
+  return nonEmptyPick(picked.filter((k) => k !== key));
 };
 
-// filter() cannot know that what it kept is non-empty, and every caller here has just
-// established that it is by a different argument. Asserted in the one place rather than
-// at each of them, so the reasoning sits next to the type it is standing in for.
-const nonEmpty = (keys: readonly SeriesKey[]): PickedSeries =>
+/**
+ * The set reduced to one series — what pressing a row does where only one may be lit.
+ *
+ * The map is the page that wants this: a pin is a badge over a place with room for a single
+ * number, so a set of five there would draw one of them and drop four without saying so (see
+ * primarySeries). Ticking is then choosing rather than adding, which is why that menu's rows
+ * are radios and not boxes.
+ *
+ * The same array comes back when the pressed row is already the lit one, for the reason
+ * toggledSeries hands back its argument: the pick goes into the project page's context, and
+ * an equal-but-new array would be a new context value for every card and pin on it.
+ */
+export const onlySeries = (
+  picked: PickedSeries,
+  key: SeriesKey,
+): PickedSeries => (picked.length === 1 && picked[0] === key ? picked : [key]);
+
+// filter() cannot know that what it kept is non-empty, and every caller has just
+// established that it is by a different argument — a key that was or wasn't already in the
+// set here, a length checked against zero in the reader of a stored pick (see
+// seriesSelection.ts). Asserted in the one place rather than at each of them, so the
+// reasoning sits next to the type it is standing in for.
+export const nonEmptyPick = (keys: readonly SeriesKey[]): PickedSeries =>
   keys as PickedSeries;
 
 // How a metric is written where it trails a number, e.g. "87.5 dB(A) 5m". The finest
@@ -206,10 +222,14 @@ export type DisplayedLevel =
   // for this device, or a trailing window it hasn't filled.
   | {kind: 'none'};
 
+// A level that is a reading of the instant being looked at, as opposed to a remembered
+// one or none at all — which is also the only kind that carries a dB, so this narrows.
+export type CurrentLevel = Extract<DisplayedLevel, {kind: 'live' | 'history'}>;
+
 // Whether a level is a reading of right now, as opposed to a remembered one. The
 // one place the distinction is spelled out, so a pin, a row and a pulse can't
 // disagree about which levels are current.
-export const isCurrent = (level: DisplayedLevel): boolean =>
+export const isCurrent = (level: DisplayedLevel): level is CurrentLevel =>
   level.kind === 'live' || level.kind === 'history';
 
 /**

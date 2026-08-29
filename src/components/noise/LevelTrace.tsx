@@ -418,9 +418,15 @@ type LevelTraceProps = {
       // nothing to do.
       bounds: {start: number; end: number};
       // Where the pointer is, in epoch ms, once per animation frame while it's over the
-      // plot (uPlot batches its own cursor updates to a frame) — and null when it is no
-      // longer over it, which is as much a statement about the page's instant as a
-      // position is: the playhead is where a pointer is pointing, and nothing is.
+      // plot (uPlot batches its own cursor updates to a frame).
+      //
+      // Only ever an instant: the pointer *leaving* is not reported here, because the
+      // playhead is no longer where a hand is pointing but the instant the page is reading
+      // — it stays on the last one it was given, which is what lets you point at a peak,
+      // take your hand off the glass and read the cards for it. The one gesture that takes
+      // it away again is a window drawn in a single drag, which states a timeframe with no
+      // instant in it (see drawProjectSelection). The null in the signature is the live
+      // arm's, whose caller is reading its own pointer rather than the page's mark.
       onScrub: (at: number | null) => void;
       // Crops the page's timeframe to what this trace was pointed at, in epoch ms. Two
       // gestures, one answer, because they differ only in how much of the crop they name:
@@ -810,22 +816,28 @@ export function LevelTrace({
               const left = u.cursor.left;
               // Negative once the pointer leaves — a lifted finger included, which the
               // touch gestures report by parking the cursor off the plot. The tooltip goes
-              // with it, and so does the page's playhead: it marks the instant something is
-              // pointing at, and when nothing is there is no instant. The cards' readings
-              // and the pins' numbers go quiet with it, which is the resting state of a
-              // page nobody is reading.
+              // with it, being anchored to a pixel there is no longer a pointer on, and so
+              // does the in/out keys' instant: those crop to what is *under the pointer*,
+              // and there is nothing under it.
+              //
+              // The page's playhead is deliberately not in that list. It marks the instant
+              // the page is reading rather than the pixel a hand is on, so it stays where
+              // it was last put — which is the whole of how a mark is parked here, and the
+              // same on a lifted finger as on a mouse leaving (see attachTouchGestures).
+              // The cards' readings and the pins' numbers stay with it, so what you pointed
+              // at is still readable with your hand out of the way.
               if (left == null || left < 0) {
                 hoverAtRef.current = null;
                 setTip(null);
-                // Optional because a live caller need not be listening at all: the
-                // instant is the page's playhead when there is a crop, and only this
-                // chart's own pointer when there is not (see the props). positionPlayhead
-                // below is that second case's line.
-                onScrubRef.current?.(null);
-                // Live's line is the pointer's own, so this chart takes it down itself.
-                // Every other line on the page is drawn from the signal the call above
-                // just emptied, and goes down with it.
-                if (live) positionPlayhead(null);
+                // Live is the one arm that does go quiet, and both of these are that arm's:
+                // its instant is this chart's own pointer rather than a page mark anyone
+                // else follows (see the props), and there is nothing to park a mark against
+                // in a window that scrolls out from under it within the minute. So the
+                // caller's numbers empty, and this chart takes its own line down.
+                if (live) {
+                  onScrubRef.current?.(null);
+                  positionPlayhead(null);
+                }
                 return;
               }
               // Out of uPlot's seconds once, here at its edge: everything downstream

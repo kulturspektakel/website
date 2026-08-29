@@ -36,6 +36,7 @@ import {
 } from '../components/noise/projectView';
 import {ProjectTimeline} from '../components/noise/ProjectTimeline';
 import {LevelPicker, useLevelPick} from '../components/noise/LevelPicker';
+import {SERIES_STORE} from '../components/noise/seriesSelection';
 import {useProjectLogs} from '../components/noise/useProjectLogs';
 import {
   NativeSelectField,
@@ -129,12 +130,6 @@ function NoiseProjectDetail() {
   // commits per animation frame, which is more often than an address bar can be written
   // (see the sync below). The URL is the record of it, not the source.
   //
-  // `picked` is every series the charts draw — weighting included, there being no page-wide
-  // weighting any more. It travels through the context, because the map and the list must
-  // not answer it differently, and the single-number readouts take their one series off it
-  // where they need one (see primarySeries). Not in the URL: it is how you read a chart, not
-  // what you are looking at.
-  const {picked, toggleSeries, rangeLeq, toggleRangeLeq} = useLevelPick();
   // What the user has picked of the timeline, or null while they have picked nothing —
   // see resolveProjectSelection for why that null carries weight. The crop comes from the
   // URL on the first render rather than from an effect after it, so a pinned link's own
@@ -236,6 +231,25 @@ function NoiseProjectDetail() {
   const shown = useChildMatches({
     select: (matches): View =>
       matches.some((m) => m.routeId === LIST_ROUTE) ? 'list' : 'map',
+  });
+
+  // `picked` is every series the charts draw — weighting included, there being no page-wide
+  // weighting any more. It travels through the context, because everything on the view below
+  // must answer it the same way, and the single-number readouts take their one series off it
+  // where they need one (see primarySeries). Not in the URL: it is how you read a chart, not
+  // what you are looking at — it is remembered instead, per browser (see seriesSelection.ts).
+  //
+  // Per view and not per project page, which is why it is read down here where the view is
+  // known: the two ask different things of a pick. The cards draw every line picked, so a set
+  // is what the list is for; a pin is a badge with room for one number, so the map takes one
+  // and stores one — and a set of five carried over from the list would have drawn its first
+  // and dropped four without saying so. Held by the layout all the same, since the control
+  // that sets it is in the layout's own header, and switching view simply re-reads the other
+  // view's remembered pick (see useLevelPick).
+  const mapOnly = shown === 'map';
+  const {picked, toggleSeries, rangeLeq, toggleRangeLeq} = useLevelPick({
+    store: mapOnly ? SERIES_STORE.map : SERIES_STORE.list,
+    single: mapOnly,
   });
 
   // Without a Maps key there is no map to switch to, so the list is all there is.
@@ -349,9 +363,9 @@ function NoiseProjectDetail() {
   // that's most frames of a slow hover, and it also means merely passing the pointer
   // over the playhead where it already stands doesn't pin an untouched timeline.
   //
-  // Which is what makes the null — the pointer leaving — free on a page nobody has
-  // touched yet: there was no playhead to take away, so the equality below keeps the
-  // untouched pick and the crop goes on following the live edge.
+  // Which is the whole of what the equality below is for now that the mark stays where it is
+  // put: nothing reports a pointer leaving any more (see the context's `scrubTo`), so the
+  // frames this drops are the repeats a slow hover makes within one minute.
   const scrubTo = useCallback(
     (at: number | null) => {
       setChosen((prev) => {
@@ -531,10 +545,19 @@ function NoiseProjectDetail() {
               <LevelPicker
                 live={live}
                 picked={picked}
-                rangeLeq={rangeLeq}
-                rangeLeqShown={showRangeLeq}
+                // Radios rather than boxes on the map, where the pin's one number is all
+                // there is to show (see the pick above).
+                single={mapOnly}
+                // The crop's Leq is a reading a *card* prints, so its row is offered where
+                // there are cards — the same reason the device page leaves it out. On the
+                // map it would also be a second value in a menu that has just promised one,
+                // and a trigger reading "+1" for a number nothing on screen shows. The pick
+                // itself is untouched by the trip: this state is the layout's, so the row
+                // comes back ticked as it was left when the cards do.
+                rangeLeq={mapOnly ? undefined : rangeLeq}
+                rangeLeqShown={mapOnly ? undefined : showRangeLeq}
                 onToggleSeries={toggleSeries}
-                onToggleRangeLeq={toggleRangeLeq}
+                onToggleRangeLeq={mapOnly ? undefined : toggleRangeLeq}
               />
               {mapAvailable && (
                 <NativeSelectRoot size="xs" w="auto">

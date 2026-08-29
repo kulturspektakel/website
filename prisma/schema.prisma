@@ -348,6 +348,11 @@ model ViewerLocation {
   longitude Float
   payload   Json
   viewer    Viewer   @relation(fields: [viewerId], references: [id])
+
+  // The OwnTracks ingest endpoint reads "latest location per viewer in the last
+  // 5h" on *every* POST, against a table that grows with every POST. Without
+  // this index that is a repeated sequential scan whose cost climbs forever.
+  @@index([viewerId, createdAt])
 }
 
 model ShortDomainRedirect {

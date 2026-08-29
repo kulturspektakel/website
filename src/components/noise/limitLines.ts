@@ -119,3 +119,40 @@ export function limitSegments(
   }
   return out;
 }
+
+/**
+ * The lowest dB this place is allowed to be over a window, for one series — or null where
+ * nothing was written against that series over those hours.
+ *
+ * What it is for is the map: a pin is a badge over a place with room for a single number
+ * (see primarySeries), and the question it cannot otherwise answer is whether that number
+ * is a problem. A chart draws every limit and lets the reader see which the trace crosses;
+ * a pin has no room to draw anything, so it needs one figure to compare against.
+ *
+ * The *lowest* of them where several are in force, and that is the one place this differs
+ * from the chart. Limits are allowed to overlap and which of two applies is deliberately
+ * left to the reader (see the schema) — but a warning is not a reading, it is "go and
+ * look", and the strictest overlapping rule is the one that raises it soonest. Erring the
+ * other way would leave a pin quiet while a stage is over one of the two numbers written
+ * for it, which is the failure that matters here.
+ *
+ * Milliseconds in and out, unlike limitSegments — this answers a question about the page's
+ * crop, which is in epoch ms everywhere outside a plot's x scale. Half-open the same way,
+ * so a limit ending exactly where the window starts is not in force over it.
+ */
+export function strictestLimit(
+  limits: readonly LimitLine[],
+  series: SeriesKey,
+  from: number,
+  to: number,
+): number | null {
+  let strictest: number | null = null;
+  for (const limit of limits) {
+    if (limit.series !== series) continue;
+    if (limit.start >= to || limit.end <= from) continue;
+    if (strictest == null || limit.decibels < strictest) {
+      strictest = limit.decibels;
+    }
+  }
+  return strictest;
+}

@@ -14,6 +14,10 @@ export const RATING_LABELS = [
   'auf jeden Fall',
 ];
 
+// Avatar slots in the rater strip; beyond this the last slot becomes a "+N"
+// chip listing the remaining names on hover.
+const MAX_AVATARS = 4;
+
 type Rater = {
   id: string;
   displayName: string;
@@ -63,6 +67,20 @@ export function BandApplicationRating({
         : others;
     return {optimisticRaters: next, optimisticAverage: meanRating(next)};
   }, [raters, averageRating, value, myViewer]);
+
+  // Keep the avatar strip to at most MAX_AVATARS slots: show every rater when
+  // they fit, otherwise trade the last slot for a "+N" chip that names the rest
+  // on hover.
+  const {shownRaters, hiddenRaters} = useMemo(
+    () =>
+      optimisticRaters.length > MAX_AVATARS
+        ? {
+            shownRaters: optimisticRaters.slice(0, MAX_AVATARS - 1),
+            hiddenRaters: optimisticRaters.slice(MAX_AVATARS - 1),
+          }
+        : {shownRaters: optimisticRaters, hiddenRaters: []},
+    [optimisticRaters],
+  );
 
   const onValueChange = async (next: number) => {
     setValue(next);
@@ -128,7 +146,7 @@ export function BandApplicationRating({
             )}
           </Box>
           <HStack gap="0">
-            {optimisticRaters.map((r, i) => (
+            {shownRaters.map((r, i) => (
               <Tooltip
                 key={r.id}
                 content={r.displayName}
@@ -145,6 +163,39 @@ export function BandApplicationRating({
                 </Box>
               </Tooltip>
             ))}
+            {hiddenRaters.length > 0 && (
+              <Tooltip
+                positioning={{placement: 'top'}}
+                content={
+                  <Box>
+                    {hiddenRaters.map((r) => (
+                      <Text key={r.id} whiteSpace="nowrap">
+                        {r.displayName}
+                      </Text>
+                    ))}
+                  </Box>
+                }
+              >
+                <Box
+                  as="span"
+                  display="inline-flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  ml="-1.5"
+                  boxSize="6"
+                  borderRadius="full"
+                  borderWidth="2px"
+                  borderColor="bg"
+                  bg="bg.emphasized"
+                  color="fg.muted"
+                  fontSize="9px"
+                  fontWeight="bold"
+                  lineHeight="1"
+                >
+                  +{hiddenRaters.length}
+                </Box>
+              </Tooltip>
+            )}
           </HStack>
         </>
       )}

@@ -253,16 +253,23 @@ export type ProjectViewCtx = {
   // answer only changes when an assignment starts or ends — so pinning its identity
   // here is what keeps a scrub out of the cards entirely.
   locations: ResolvedLocation[];
-  // Moves the playhead — and only the playhead — to an instant, which is what a row
-  // chart reports as the pointer travels over it, or takes it away entirely with null,
-  // which is what the pointer leaving reports. The crop stays where it was either way, so
-  // hovering reads the project rather than re-picking it. Not called while live: there
-  // is no instant to point at then, and the views withhold it.
+  // Moves the playhead — and only the playhead — to an instant, which is what a row chart
+  // reports as the pointer travels over it. The crop stays where it was, so hovering reads the
+  // project rather than re-picking it. Not called while live: there is no instant to point at
+  // then, and the views withhold it.
+  //
+  // Only ever an instant in practice. The null is what a pointer leaving a chart used to
+  // report, and the mark went with it; it stays now, because it says which instant the page is
+  // reading rather than where a hand is — so a peak can be pointed at and then studied with
+  // the hand off the glass. Nothing takes it away but a window drawn in one drag, which states
+  // a timeframe with no instant in it (see drawProjectSelection). The signature keeps the null
+  // because the charts' `onScrub` does, that prop being shared with a live chart reporting its
+  // own pointer (see LevelTrace).
   scrubTo: (at: number | null) => void;
   // Crops the timeframe, exactly where asked — what a row chart commits, whether that
   // came from the in/out keys (one end) or a drag across the trace (both). An omitted
-  // end stays where it was, and the playhead stays where it is: it marks where a hand is
-  // pointing, and may stand outside the crop (see ProjectSelection).
+  // end stays where it was, and the playhead stays where it is: it marks the instant being
+  // read, and may stand outside the crop (see ProjectSelection).
   cropTo: (crop: {start?: number; end?: number}) => void;
   // What the header's menu is set to: which series the page shows, weighting and all. The
   // layout owns the choice so the map and the list can't drift apart, and it resolves

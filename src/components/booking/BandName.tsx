@@ -1,6 +1,9 @@
 import {Flex, HStack, Image, Text} from '@chakra-ui/react';
 import {GenreCategory} from '../../generated/prisma/browser';
-import {GENRE_CATEGORY_ICONS} from '../../utils/genreCategories';
+import {
+  GENRE_CATEGORY_ICONS,
+  GENRE_CATEGORY_LABELS,
+} from '../../utils/genreCategories';
 import {Avatar} from '../chakra-snippets/avatar';
 import {CopyToClipboard} from '../CopyToClipboard';
 
@@ -22,6 +25,10 @@ export function BandName({
   size?: 'sm' | 'md';
   copyableName?: boolean;
 }) {
+  // Bands don't always fill in the free-text genre — fall back to the label of
+  // the genre category they picked so the line below the name is never empty.
+  const genreLabel = genre?.trim() || GENRE_CATEGORY_LABELS.get(genreCategory);
+
   const name = (
     <Text
       as="span"
@@ -60,7 +67,7 @@ export function BandName({
         ) : (
           name
         )}
-        {genre && (
+        {genreLabel && (
           <Text
             fontSize="sm"
             color="fg.muted"
@@ -68,7 +75,7 @@ export function BandName({
             truncate
             lineHeight="1.2"
           >
-            {genre}
+            {genreLabel}
           </Text>
         )}
       </Flex>

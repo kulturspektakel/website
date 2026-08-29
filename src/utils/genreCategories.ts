@@ -33,6 +33,10 @@ export const GENRE_CATEGORY_ICONS = new Map<GenreCategory, string>(
   ENTRIES.map(([value, {icon}]) => [value, icon]),
 );
 
+export const GENRE_CATEGORY_LABELS = new Map<GenreCategory, string>(
+  ENTRIES.map(([value, {label}]) => [value, label]),
+);
+
 // Genre options excluding DJ (the band booking form and the crew booking table
 // both deal with bands only — DJs apply/are handled through a separate flow).
 export const BAND_GENRE_CATEGORY_OPTIONS = ENTRIES.filter(

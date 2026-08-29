@@ -111,15 +111,52 @@ const NOISE_COLORS = {
   // have been neither — beside blue.600 it is a shade of the same thing.
   'chart.band.ref': {_light: 'orange.700', _dark: 'cyan.300'},
 
-  // The map. Only the four anchors that have to agree with the rest of the page
-  // are tokens; the basemap's own lightness ladder stays local to mapStyle.ts,
-  // where it has one consumer and means nothing to anything else.
+  // The map. Only the anchors that have to agree with the rest of the page are tokens —
+  // the ground, the labels, the pin's two greys and the ramp its levels are coloured by;
+  // the basemap's own lightness ladder stays local to mapStyle.ts, where it has one
+  // consumer and means nothing to anything else.
   'map.ground': 'gray.900',
   'map.label': 'gray.400',
   'map.pin.fill': 'gray.50',
   'map.pin.label': 'gray.900',
   'map.pin.fillStale': 'gray.400',
   'map.pin.labelStale': 'gray.700',
+
+  // The pin ramp: how loud, as a colour, so a site can be read at a glance without
+  // reading six numbers. Cool to hot in even 10 dB steps from 60 (see pinScale), which is
+  // the convention every noise map uses and the one thing about this scale nobody has to
+  // be told.
+  //
+  // It is a *sequential* ramp and not the chart's five series shades: those five say which
+  // measurement, this says how much of it, and they are read on different surfaces. Two
+  // adjacent steps here are a step apart in hue and lightness both, and under a red-green
+  // deficiency the cool half still separates from the warm half — but the honest reason
+  // this is legible at six steps is that colour is never the only cue: every pin prints
+  // its own number, and the legend at the corner of the map spells the boundaries.
+  //
+  // Every step takes the dark `map.pin.label` over it (4.9:1 at the worst of them, band 6,
+  // which is what stops the ramp before red). One label colour for the ramp is also what
+  // keeps a pin from changing two things at once as a stage gets louder.
+  //
+  // Numbered rather than named — `quiet`/`loud` would be six adjectives for what is one
+  // ordered scale, and the numbers are the order.
+  'map.pin.band.1': 'blue.200',
+  'map.pin.band.2': 'cyan.300',
+  'map.pin.band.3': 'green.300',
+  'map.pin.band.4': 'yellow.300',
+  'map.pin.band.5': 'orange.400',
+  'map.pin.band.6': 'orange.600',
+
+  // Over the limit written for that place: the triangle inside the pin, just before the
+  // number it is warning about — the same sign the cards print beside theirs (see
+  // LocationReadings), so one page has one mark for over the limit.
+  //
+  // Yellow like the cards', but a dark step of it rather than their `yellow.300`: the cards
+  // draw theirs on the section's black ground, and this one lands on whichever band the pill
+  // is filled from — one of which *is* yellow.300 (band 4), where a bright yellow sign would
+  // vanish into the badge it is on. Dark yellow reads on all six, and stays out of the
+  // ramp's own vocabulary: the scale is cool→hot and stops short of this.
+  'map.pin.over': 'yellow.600',
 } as const;
 
 /**

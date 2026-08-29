@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest';
-import {limitSegments, type LimitLine} from './limitLines';
+import {limitSegments, strictestLimit, type LimitLine} from './limitLines';
 import {type SeriesKey} from './series';
 
 // Three things this has to get right that a chart cannot show you it got wrong: a limit half
@@ -103,5 +103,48 @@ describe('limitSegments', () => {
       {series: 'eq_fast:A', decibels: 100, from: CROP_START, to: changeover},
       {series: 'eq_fast:A', decibels: 90, from: changeover, to: CROP_END},
     ]);
+  });
+});
+
+// What a map pin is judged against, which is the same window question asked for one figure
+// instead of a set of lines — plus the tie-break a chart never has to make.
+describe('strictestLimit', () => {
+  const RANGE_START = at('2026-07-25T20:00:00Z');
+  const RANGE_END = at('2026-07-25T23:00:00Z');
+
+  it('takes the lowest of two limits in force over the range', () => {
+    expect(
+      strictestLimit(
+        [
+          limit(
+            'eq_fast:A',
+            100,
+            '2026-07-25T20:00:00Z',
+            '2026-07-25T22:00:00Z',
+          ),
+          limit(
+            'eq_fast:A',
+            90,
+            '2026-07-25T22:00:00Z',
+            '2026-07-26T00:00:00Z',
+          ),
+        ],
+        'eq_fast:A',
+        RANGE_START,
+        RANGE_END,
+      ),
+    ).toBe(90);
+  });
+
+  // A permit written for another quantity is not a bound on this one, and a permit written
+  // for other hours is not a bound on these.
+  it('ignores another series and a limit outside the range', () => {
+    const limits = [
+      limit('peak:C', 130, '2026-07-25T20:00:00Z', '2026-07-25T23:00:00Z'),
+      limit('eq_fast:A', 85, '2026-07-25T18:00:00Z', '2026-07-25T20:00:00Z'),
+    ];
+    expect(strictestLimit(limits, 'eq_fast:A', RANGE_START, RANGE_END)).toBe(
+      null,
+    );
   });
 });

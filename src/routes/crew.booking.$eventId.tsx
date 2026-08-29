@@ -131,7 +131,8 @@ const loadBandApplications = createServerFn()
         },
         BandApplicationTag: {select: {tag: true}},
       },
-      orderBy: {bandname: 'asc'},
+      // Oldest first so the newest applications land at the bottom of the table.
+      orderBy: {createdAt: 'asc'},
     });
 
     if (applications.length === 0) {
@@ -187,7 +188,8 @@ export type BandApplicationRow = Awaited<
 type ComputedTag = {label: string; colorPalette: string};
 
 type Row = BandApplicationRow & {
-  popularityScore: number;
+  // undefined when the band has no reach numbers on any channel.
+  popularityScore: number | undefined;
   computedTags: ComputedTag[];
   // Computed + manual tag labels, combined once for faceting and filtering.
   tagLabels: string[];
@@ -421,30 +423,55 @@ const RATING_FILTER_OPTIONS = [
   {value: HIDE_REJECTED, label: '1,0-Bewertungen ausblenden'},
 ];
 
-// Normalise instagram/facebook/spotify reach against the dataset maxima, then take
-// the 6th root to get a 0..1 popularity score (mirrors the old GraphQL booking page).
-function decorateRows(rows: BandApplicationRow[]): Row[] {
-  const {maxIg, maxFb, maxSp} = rows.reduce(
-    (m, r) => ({
-      maxIg: Math.max(m.maxIg, r.instagramFollower),
-      maxFb: Math.max(m.maxFb, r.facebookLikes),
-      maxSp: Math.max(m.maxSp, r.spotifyMonthlyListeners),
-    }),
-    {maxIg: 1, maxFb: 1, maxSp: 1},
+// The log-space window each reach number is scored across: `floor` maps to 0,
+// `ceiling` to 1. Both are fixed rather than derived from the current
+// applications — normalising against the dataset maximum meant any band that
+// topped a channel scored a perfect 1.0 (with sparse data, most of them, since
+// bands rarely have numbers for the same channel) and rescaled every flame
+// whenever a new application came in.
+//
+// Calibrated against all 3390 applications on record, using the 10th and 99th
+// percentile of the non-zero values per channel. Percentiles rather than the
+// observed range because the top of each channel is contaminated by
+// wrong-artist Spotify matches (98M and 30M monthly listeners, plus a "Test"
+// entry) that a min/max scale would anchor the whole festival to. Spotify sits
+// on a very different scale from the two follower counts — median 129 against
+// 621 and 532 — which is why it gets its own window; as calibrated, equal
+// percentiles across the three channels land on near-equal scores.
+const POPULARITY_SCALE = {
+  instagramFollower: {floor: 100, ceiling: 15_000},
+  facebookLikes: {floor: 100, ceiling: 15_000},
+  spotifyMonthlyListeners: {floor: 10, ceiling: 200_000},
+} as const;
+
+// Reach is log-distributed, so score on a log scale: each order of magnitude is
+// worth the same step regardless of where in the range it falls.
+function channelScore(
+  value: number,
+  {floor, ceiling}: {floor: number; ceiling: number},
+): number {
+  const span = Math.log10(1 + ceiling) - Math.log10(1 + floor);
+  return Math.max(
+    0,
+    Math.min(1, (Math.log10(1 + value) - Math.log10(1 + floor)) / span),
   );
+}
+
+function decorateRows(rows: BandApplicationRow[]): Row[] {
   return rows.map((r) => {
-    const present = [
-      r.instagramFollower && r.instagramFollower / maxIg,
-      r.facebookLikes && r.facebookLikes / maxFb,
-      r.spotifyMonthlyListeners && r.spotifyMonthlyListeners / maxSp,
-    ].filter((v): v is number => typeof v === 'number' && v > 0);
-    const avg = present.length
-      ? present.reduce((s, v) => s + v, 0) / present.length
-      : 0;
+    // Take the best channel rather than the mean: a band shouldn't be dragged
+    // down for not having a Facebook page, nor lifted up for having only one.
+    const scores = (
+      Object.keys(POPULARITY_SCALE) as (keyof typeof POPULARITY_SCALE)[]
+    )
+      .filter((key) => r[key] > 0)
+      .map((key) => channelScore(r[key], POPULARITY_SCALE[key]));
     const computedTags = computedTagsFor(r);
     return {
       ...r,
-      popularityScore: Math.pow(avg, 1 / 6),
+      // undefined, not 0, when we have no numbers at all — the flame is hidden
+      // entirely and `sortUndefined` parks the row last.
+      popularityScore: scores.length ? Math.max(...scores) : undefined,
       computedTags,
       tagLabels: [...computedTags.map((t) => t.label), ...r.tags],
     };
@@ -514,8 +541,12 @@ const columns = [
   col.accessor('popularityScore', {
     header: 'Popularität',
     sortingFn: 'basic',
+    sortUndefined: 'last',
     cell: ({row}) => {
       const s = row.original.popularityScore;
+      if (s == null) {
+        return null;
+      }
       const stats = [
         {icon: FaInstagram, value: row.original.instagramFollower},
         {icon: FaFacebook, value: row.original.facebookLikes},
@@ -523,7 +554,6 @@ const columns = [
       ].filter(({value}) => value > 0);
       return (
         <Tooltip
-          disabled={stats.length === 0}
           positioning={{placement: 'top'}}
           content={
             <Box>
@@ -571,7 +601,7 @@ const columns = [
         size="md"
       />
     ),
-    meta: {width: '260px'},
+    meta: {width: '215px'},
   }),
   col.display({
     id: 'stage',

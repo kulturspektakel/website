@@ -272,6 +272,7 @@ function BandContactRoute() {
     <DialogRoot
       open
       onOpenChange={(e) => !e.open && close()}
+      closeOnInteractOutside={false}
       placement="center"
       size="lg"
       scrollBehavior="inside"

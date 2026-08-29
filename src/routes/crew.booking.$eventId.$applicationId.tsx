@@ -10,13 +10,13 @@ import {createServerFn} from '@tanstack/react-start';
 import {z} from 'zod';
 import {crewAuth} from '../server/crewAuth';
 import {postBandApplicationComment} from '../server/postBandApplicationComment';
+import {deleteBandApplicationComment} from '../server/deleteBandApplicationComment';
 import {useQuery, useQueryClient} from '@tanstack/react-query';
 import {
   Box,
   Button,
   Combobox,
   Flex,
-  Grid,
   Heading,
   HStack,
   IconButton,
@@ -42,6 +42,7 @@ import {
   FaPaperPlane,
   FaStar,
   FaMusic,
+  FaRegTrashCan,
 } from 'react-icons/fa6';
 import {
   BandRepertoire,
@@ -71,7 +72,10 @@ import {
 import GoogleMaps from '../components/GoogleMaps';
 import {CopyToClipboard} from '../components/CopyToClipboard';
 import {StageMatrix} from '../components/booking/StageMatrix';
-import {toStageValue, type StageValue} from '../components/booking/stageMatrixShared';
+import {
+  toStageValue,
+  type StageValue,
+} from '../components/booking/stageMatrixShared';
 import {setBandApplicationStage} from '../server/setBandApplicationStage';
 import {KULT_LOCATION} from '../utils/kultLocation';
 import {meanRating} from '../utils/meanRating';
@@ -188,7 +192,9 @@ const loadBandApplicationDetail = createServerFn()
           kind: 'application',
           date: x.createdAt,
           eventName: x.event.name,
-          ratingAvg: ratings.length ? meanRating(x.bandApplicationRating) : null,
+          ratingAvg: ratings.length
+            ? meanRating(x.bandApplicationRating)
+            : null,
           ratingCount: ratings.length,
         });
       }
@@ -257,11 +263,15 @@ type TimelineEntry =
 
 type DetailData = Awaited<ReturnType<typeof loadBandApplicationDetail>>;
 
-// All distinct tags ever assigned, for the tags combobox suggestions.
+// Distinct tags assigned within one event, for the tags combobox suggestions.
+// Scoped to the event so a booking round only proposes the vocabulary the crew
+// actually settled on this year instead of everything ever typed.
 const listBandApplicationTags = createServerFn()
   .middleware([crewAuth])
-  .handler(async () => {
+  .inputValidator(z.object({eventId: z.string()}))
+  .handler(async ({data}) => {
     const rows = await prismaClient.bandApplicationTag.findMany({
+      where: {bandApplication: {eventId: data.eventId}},
       distinct: ['tag'],
       select: {tag: true},
       orderBy: {tag: 'asc'},
@@ -509,6 +519,7 @@ function LeftColumn({
 
 function RightColumn({data}: {data: DetailData}) {
   const router = useRouter();
+  const {eventId} = Route.useParams();
   const myViewer = useLoaderData({from: '/crew'});
   const ratings = data.bandApplicationRating;
   const averageRating = meanRating(ratings);
@@ -553,6 +564,9 @@ function RightColumn({data}: {data: DetailData}) {
   const [pendingComments, setPendingComments] = useState<
     ((typeof loadedComments)[number] & {applicationId: string})[]
   >([]);
+  // Ids of comments deleted in this session, hidden optimistically until the
+  // loader refetch drops them for real.
+  const [deletedCommentIds, setDeletedCommentIds] = useState<string[]>([]);
   const comments = [
     ...loadedComments,
     ...pendingComments.filter(
@@ -562,7 +576,24 @@ function RightColumn({data}: {data: DetailData}) {
           (c) => c.viewer.id === p.viewer.id && c.comment === p.comment,
         ),
     ),
-  ];
+  ].filter((c) => !deletedCommentIds.includes(c.id));
+
+  // Retire an optimistic entry only once the refetched loader data actually
+  // contains it. Dropping it when `router.invalidate()` resolves instead leaves
+  // a frame where the pending entry is already gone but the new loader data has
+  // not been committed yet — the comment blinks out and back in.
+  useEffect(() => {
+    setPendingComments((p) => {
+      const next = p.filter(
+        (c) =>
+          c.applicationId !== data.id ||
+          !loadedComments.some(
+            (l) => l.viewer.id === c.viewer.id && l.comment === c.comment,
+          ),
+      );
+      return next.length === p.length ? p : next;
+    });
+  }, [loadedComments, data.id]);
 
   const postComment = async (comment: string) => {
     // Author an optimistic entry when we know the viewer (null in dev / for a
@@ -578,12 +609,32 @@ function RightColumn({data}: {data: DetailData}) {
       : null;
     if (optimistic) setPendingComments((p) => [...p, optimistic]);
     try {
-      await postBandApplicationComment({data: {applicationId: data.id, comment}});
+      await postBandApplicationComment({
+        data: {applicationId: data.id, comment},
+      });
       await router.invalidate();
-    } finally {
+    } catch (e) {
+      // The post failed, so the refetch will never bring a real entry in —
+      // clear the optimistic one instead of leaving it stranded.
       if (optimistic) {
         setPendingComments((p) => p.filter((c) => c.id !== optimistic.id));
       }
+      throw e;
+    }
+  };
+
+  const deleteComment = async (commentId: string) => {
+    if (!window.confirm('Kommentar wirklich löschen?')) {
+      return;
+    }
+    setDeletedCommentIds((ids) => [...ids, commentId]);
+    try {
+      await deleteBandApplicationComment({data: {commentId}});
+      await router.invalidate();
+    } catch (e) {
+      // The delete failed, so the comment is still there — un-hide it.
+      setDeletedCommentIds((ids) => ids.filter((id) => id !== commentId));
+      throw e;
     }
   };
 
@@ -643,6 +694,7 @@ function RightColumn({data}: {data: DetailData}) {
 
       <Section title="Tags">
         <BandTags
+          eventId={eventId}
           applicationId={data.id}
           initialTags={data.BandApplicationTag.map((t) => t.tag)}
           dynamicTags={dynamicTags}
@@ -670,7 +722,7 @@ function RightColumn({data}: {data: DetailData}) {
                       {c.viewer.displayName}
                     </Text>
                     <Text fontSize="xs" color="fg.muted">
-                      <DateString 
+                      <DateString
                         date={c.createdAt}
                         options={{
                           day: 'numeric',
@@ -681,9 +733,29 @@ function RightColumn({data}: {data: DetailData}) {
                         }}
                       />
                     </Text>
+                    {c.viewer.id === myViewer?.id &&
+                      !c.id.startsWith('optimistic-') && (
+                        <Tooltip
+                          content="Kommentar löschen"
+                          positioning={{placement: 'top'}}
+                        >
+                          <IconButton
+                            aria-label="Kommentar löschen"
+                            size="2xs"
+                            variant="ghost"
+                            color="fg.muted"
+                            minW="4"
+                            h="4"
+                            _icon={{width: '3', height: '3'}}
+                            onClick={() => deleteComment(c.id)}
+                          >
+                            <FaRegTrashCan />
+                          </IconButton>
+                        </Tooltip>
+                      )}
                   </HStack>
                   <Text fontSize="sm" whiteSpace="pre-wrap">
-                    {c.comment}
+                    <Linkified text={c.comment} />
                   </Text>
                 </Box>
               </HStack>
@@ -793,10 +865,12 @@ function BandTimeline({timeline}: {timeline: TimelineEntry[]}) {
 // diffing each change against the previous value and calling the add/remove
 // server fns.
 function BandTags({
+  eventId,
   applicationId,
   initialTags,
   dynamicTags,
 }: {
+  eventId: string;
   applicationId: string;
   initialTags: string[];
   dynamicTags: {label: string; colorPalette: string}[];
@@ -804,8 +878,8 @@ function BandTags({
   const router = useRouter();
   const queryClient = useQueryClient();
   const {data: options = []} = useQuery({
-    queryKey: ['bandApplicationTags'],
-    queryFn: () => listBandApplicationTags(),
+    queryKey: ['bandApplicationTags', eventId],
+    queryFn: () => listBandApplicationTags({data: {eventId}}),
   });
   const [value, setValue] = useState<string[]>(initialTags);
 
@@ -823,7 +897,9 @@ function BandTags({
         removeBandApplicationTag({data: {applicationId, tag}}),
       ),
     ]).then(() => {
-      queryClient.invalidateQueries({queryKey: ['bandApplicationTags']});
+      queryClient.invalidateQueries({
+        queryKey: ['bandApplicationTags', eventId],
+      });
       router.invalidate();
     });
   };
@@ -858,6 +934,14 @@ function BandTags({
     collection,
     value: [],
     selectionBehavior: 'clear',
+    // Show every suggestion as soon as the input is focused/clicked, before
+    // anything is typed.
+    openOnClick: true,
+    // Tags stay free-form: the typed text needn't exist in the collection.
+    // Without this the combobox swallows Enter on an unknown value (it
+    // preventDefaults it as "rejected"), which would stop the tags-input
+    // machine from turning it into a new tag.
+    allowCustomValue: true,
     onInputValueChange: (e) => filter(e.inputValue),
     onValueChange: (e) => tags.addValue(e.value[0]),
   });
@@ -891,23 +975,30 @@ function BandTags({
               </TagsInput.ItemPreview>
             </TagsInput.Item>
           ))}
-          <Combobox.Input unstyled asChild>
+          <Combobox.Input
+            unstyled
+            asChild
+            onFocus={() => combobox.setOpen(true)}
+          >
             <TagsInput.Input placeholder="Tag hinzufügen…" />
           </Combobox.Input>
         </TagsInput.Control>
-        <Portal>
-          <Combobox.Positioner>
-            <Combobox.Content>
-              <Combobox.Empty>Keine Treffer</Combobox.Empty>
-              {collection.items.map((item) => (
-                <Combobox.Item item={item} key={item.value}>
-                  <Combobox.ItemText>{item.label}</Combobox.ItemText>
-                  <Combobox.ItemIndicator />
-                </Combobox.Item>
-              ))}
-            </Combobox.Content>
-          </Combobox.Positioner>
-        </Portal>
+        {/* No matches means no popover at all — the input stays free-form and
+            Enter just creates the tag. */}
+        {collection.size > 0 && (
+          <Portal>
+            <Combobox.Positioner>
+              <Combobox.Content>
+                {collection.items.map((item) => (
+                  <Combobox.Item item={item} key={item.value}>
+                    <Combobox.ItemText>{item.label}</Combobox.ItemText>
+                    <Combobox.ItemIndicator />
+                  </Combobox.Item>
+                ))}
+              </Combobox.Content>
+            </Combobox.Positioner>
+          </Portal>
+        )}
       </TagsInput.RootProvider>
     </Combobox.RootProvider>
   );
@@ -970,6 +1061,42 @@ function CommentForm({onPost}: {onPost: (comment: string) => void}) {
       )}
     </Box>
   );
+}
+
+// Bare URLs pasted into a comment, rendered clickable. Only http(s) and
+// `www.`-prefixed hosts qualify, so ordinary prose can't accidentally turn into
+// a link.
+const URL_PATTERN = /\b(?:https?:\/\/|www\.)[^\s<>]+/gi;
+
+function Linkified({text}: {text: string}) {
+  const nodes: React.ReactNode[] = [];
+  let index = 0;
+
+  for (const match of text.matchAll(URL_PATTERN)) {
+    let url = match[0];
+    // A URL at the end of a sentence shouldn't swallow the punctuation after
+    // it — nor a closing paren it never opened ("(siehe https://x.com/a)").
+    while (/[.,;:!?]$/.test(url) || (url.endsWith(')') && !url.includes('('))) {
+      url = url.slice(0, -1);
+    }
+    if (!url) continue;
+
+    if (match.index > index) nodes.push(text.slice(index, match.index));
+    nodes.push(
+      <Link
+        key={match.index}
+        href={url.startsWith('www.') ? `https://${url}` : url}
+        target="_blank"
+        rel="noreferrer"
+      >
+        {url}
+      </Link>,
+    );
+    index = match.index + url.length;
+  }
+  nodes.push(text.slice(index));
+
+  return <>{nodes}</>;
 }
 
 function Section({

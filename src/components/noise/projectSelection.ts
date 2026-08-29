@@ -43,7 +43,7 @@ export function visibleProjectWindow(
 //
 // It need not be inside `start…end`, only inside the project's window: the two answer
 // different questions. The crop says which stretch the charts draw and the Leqs average
-// over; the playhead says where a hand is pointing, and the timeline strip can be pointed
+// over; the playhead says which instant is being read, and the timeline strip can be pointed
 // at end to end — the dim ground either side of the crop is still the evening. So an
 // instant out there is read the way any other is: the readings come off the whole payload
 // rather than the crop (see useProjectLogs), and a row chart whose axis has left it behind
@@ -251,9 +251,9 @@ export function nudgeSelectionThumb(
  * other where it was, pushing it along only if the two would cross, which is exactly
  * what a typed bound does.
  *
- * The playhead is carried over untouched: it marks where a hand was pointing, which cropping
- * elsewhere on the page does not move — and it no longer has to be inside the crop to be
- * anywhere at all (see ProjectSelection).
+ * The playhead is carried over untouched: it marks the instant the page is reading, which
+ * cropping elsewhere on the page does not change — and it no longer has to be inside the crop
+ * to be anywhere at all (see ProjectSelection).
  */
 export function cropProjectSelection(
   crop: {start?: number; end?: number},

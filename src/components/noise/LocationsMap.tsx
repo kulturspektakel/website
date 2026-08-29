@@ -1,5 +1,5 @@
 import {Wrapper} from '@googlemaps/react-wrapper';
-import {Box, HStack, IconButton} from '@chakra-ui/react';
+import {Box, HStack, IconButton, Text} from '@chakra-ui/react';
 import {memo, useEffect, useRef, useState} from 'react';
 import {LuPlus, LuX} from 'react-icons/lu';
 import {SegmentedControl} from '../chakra-snippets/segmented-control';
@@ -7,10 +7,18 @@ import {Tooltip} from '../chakra-snippets/tooltip';
 import {KULT_LOCATION} from '../../utils/kultLocation';
 import {useLatest} from './chartUtils';
 import {useDeviceStates, useTick} from './context';
-import {displayedLevel, formatDb, isCurrent, loudestLevel} from './level';
-import {type SeriesKey} from './series';
+import {
+  displayedLevel,
+  formatDb,
+  isCurrent,
+  loudestLevel,
+  weightingUnit,
+} from './level';
+import {seriesByKey, type SeriesKey} from './series';
 import {darkMapStyle, mapBackground} from './mapStyle';
-import {NO_LEVEL_LABEL, pinIcon, pinLabel} from './mapPin';
+import {NO_LEVEL_LABEL, pinIcon, pinLabel, warningIcon} from './mapPin';
+import {LEVEL_BANDS, levelBand} from './pinScale';
+import {glowOverlay, type Glow} from './mapGlow';
 import {pulseOverlay} from './mapPulse';
 
 export type MapLocation = {
@@ -20,6 +28,12 @@ export type MapLocation = {
   longitude: number;
   // The monitors standing here, whose loudest level the pin carries.
   deviceIds: string[];
+  // What this place is permitted to be over the timeframe on screen, for the series the
+  // pin is showing — absent where no limit was written for it (see strictestLimit).
+  // Resolved by the caller, because which window "the timeframe" is and which series the
+  // pin shows are both the page's answers, and a map that took the raw rules would have
+  // to know about crops and picks to use them.
+  limitDb?: number;
 };
 
 export type Coordinates = {latitude: number; longitude: number};
@@ -32,6 +46,12 @@ const SINGLE_LOCATION_ZOOM = 17;
 const EMPTY_ZOOM = 16;
 // ~0.1 m. Full click precision is a dozen meaningless digits in a form field.
 const COORD_DECIMALS = 6;
+// Above the pins, which take Google's default. A warned pin and its sign both ask for a
+// layer, and in that order: the sign sits *inside* the badge now, so it has to be over its
+// own pill — and the pill has to be over the neighbouring ones, or a sign floating above
+// somebody else's badge would read as their warning.
+const OVER_PIN_Z_INDEX = 1;
+const WARNING_Z_INDEX = 2;
 
 // 'hybrid' rather than 'satellite' for the imagery view: it keeps the road and
 // label overlay, and a mic gets placed relative to a named street or building as
@@ -128,6 +148,11 @@ function MapCanvas({
       gestureHandling: 'greedy',
       streetViewControl: false,
       fullscreenControl: false,
+      // Nothing to navigate to with a button: the gestures above already pan and
+      // zoom, and the widgets would cover the corner pins sit in. cameraControl
+      // too, which is what newer releases put there in the zoom buttons' place.
+      zoomControl: false,
+      cameraControl: false,
       // Google's own map-type switcher is a light-themed widget that would sit
       // badly on this map; the segmented control below replaces it.
       mapTypeControl: false,
@@ -314,6 +339,15 @@ function MapCanvas({
       ),
     ),
   );
+  // Over the number written for this place — the one thing a pin can say that isn't a
+  // reading. Only where the level is a reading of the instant being viewed: a remembered
+  // number is already drawn as "not this" (below), and warning over it would raise an
+  // alarm about a moment nobody is looking at. A missing limit is not a permissive one, so
+  // a place with nothing written for it never warns.
+  const pinOver = pinLevels.map((level, i) => {
+    const limit = locations[i]?.limitDb;
+    return limit != null && isCurrent(level) && level.db > limit;
+  });
   const pinLabels = pinLevels.map((level) =>
     level.kind === 'none' ? NO_LEVEL_LABEL : formatDb(level.db),
   );
@@ -321,30 +355,133 @@ function MapCanvas({
   // number we only remember, or none at all — the same way the list rows grey theirs.
   // The two cases look alike on purpose: from across the map both mean "not this".
   const pinStale = pinLevels.map((level) => !isCurrent(level));
+  // Which band of the ramp each pin is filled from, as the level it is looked up by — the
+  // colour itself is the icon's business (see pinIcon). Null for a pin with no level, and
+  // for one that is only remembered: both are grey, which is what the ramp has nothing to
+  // say about.
+  const pinDb = pinLevels.map((level) => (isCurrent(level) ? level.db : null));
 
   // Two effects, because the two change at very different rates: the number moves
-  // roughly once a second per monitor, while the pin's *badge* only changes when a
-  // location stops (or starts) reading now. Rebuilding an icon object per marker per
-  // second would be pure churn.
+  // roughly once a second per monitor, while the pin's *pill* only changes when a location
+  // crosses a band boundary, stops reading now, or crosses its limit. Rebuilding an icon
+  // object per marker per second would be pure churn.
   const labelKey = pinLabels.join('|');
-  const staleKey = pinStale.map((stale) => (stale ? '1' : '0')).join('');
+  // Everything the pill is drawn from, in one key: the band and not the level, which is
+  // exactly the difference between a redraw per boundary crossed and one per second.
+  const pillKey = pinDb
+    .map(
+      (db, i) =>
+        `${db == null ? '' : levelBand(db)}${pinStale[i] ? 's' : ''}${
+          pinOver[i] ? 'o' : ''
+        }`,
+    )
+    .join('|');
   useEffect(() => {
     markersRef.current.forEach((marker, i) => {
       marker.setLabel(
-        pinLabel(pinLabels[i] ?? NO_LEVEL_LABEL, pinStale[i] ?? true),
+        pinLabel(pinLabels[i] ?? NO_LEVEL_LABEL, {stale: pinStale[i] ?? true}),
       );
     });
-  }, [labelKey, staleKey, signature]);
+  }, [labelKey, pillKey, signature]);
 
   useEffect(() => {
     if (!mapRef.current) return;
     const maps = window.google.maps;
-    const pill = pinIcon(maps);
-    const stalePill = pinIcon(maps, true);
+    // One icon object per look actually on the map rather than per pin: a dozen stages in
+    // the same band are a dozen markers pointing at one Symbol.
+    const icons = new Map<string, google.maps.Symbol>();
     markersRef.current.forEach((marker, i) => {
-      marker.setIcon(pinStale[i] ? stalePill : pill);
+      const db = pinDb[i] ?? null;
+      const stale = pinStale[i] ?? true;
+      const over = pinOver[i] ?? false;
+      const key = `${db == null ? '' : levelBand(db)}${stale ? 's' : ''}${over ? 'o' : ''}`;
+      let icon = icons.get(key);
+      if (!icon) {
+        icon = pinIcon(maps, {db: db ?? undefined, stale, over});
+        icons.set(key, icon);
+      }
+      marker.setIcon(icon);
+      // A warned pin comes forward with its sign; null puts it back in Google's own
+      // stacking, which is what every other pin is in.
+      marker.setZIndex(over ? OVER_PIN_Z_INDEX : null);
     });
-  }, [staleKey, signature]);
+  }, [pillKey, signature]);
+
+  // The halo under each pin, in that pin's own colour and as wide as its level reaches (see
+  // mapGlow) — the ramp spread over enough ground to be read from across the map rather than
+  // only inside a 56px pill.
+  //
+  // One per location, standing whether or not there is a level to show: they are made and
+  // unmade with the *set of places*, which is `signature`, and told what to show below. The
+  // alternative — creating them with the levels — meant a div, a gradient and a pane
+  // insertion per pin per second in live mode, all to arrive at the same element again.
+  const glowsRef = useRef<Map<string, Glow>>(new Map());
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const Glow = glowOverlay(window.google.maps);
+    // Light on the dark basemap, ink on the photograph (see GlowBlend). Switching the view
+    // rebuilds the washes, which is a handful of divs and only on a press of the control.
+    const blend = mapTypeId === 'roadmap' ? 'screen' : 'multiply';
+    const glows = new Map(
+      locations.map((location) => [
+        location.id,
+        new Glow({lat: location.latitude, lng: location.longitude}, blend),
+      ]),
+    );
+    for (const glow of glows.values()) glow.setMap(map);
+    glowsRef.current = glows;
+    return () => {
+      for (const glow of glows.values()) glow.setMap(null);
+      glowsRef.current = new Map();
+    };
+  }, [signature, mapTypeId]);
+
+  // What each of them shows. The level and not the band, because the halo's *size* is read
+  // off the decibel itself — so this follows the number rather than the colour, and a stage
+  // getting louder inside its band grows without changing hue.
+  //
+  // Nothing under a pin with no reading, and nothing under a remembered one: those are grey
+  // for a reason, and a grey wash would be the map's largest mark spent on saying "not this".
+  // `pinDb` is already null for both, and mapGlow draws no halo for a null.
+  useEffect(() => {
+    locations.forEach((location, i) => {
+      glowsRef.current.get(location.id)?.setLevel(pinDb[i] ?? null);
+    });
+  }, [labelKey, signature, mapTypeId]);
+
+  // The triangle inside every pin over its limit, ahead of the number — a second marker,
+  // since it is a second colour over the pill (see warningIcon). Created and destroyed with the set
+  // of pins that are over, the way the pulses below are, rather than kept per pin and
+  // hidden: an over-limit pin is the rare case, and this way the map carries nothing at all
+  // for a site inside its permit.
+  const overKey = pinOver.map((over) => (over ? '1' : '0')).join('');
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const maps = window.google.maps;
+    const icon = warningIcon(maps);
+    const warnings = locations.flatMap((location, i) =>
+      pinOver[i]
+        ? [
+            new maps.Marker({
+              map,
+              position: {lat: location.latitude, lng: location.longitude},
+              icon,
+              // Over the badge it sits in, and so over every pin that badge is over.
+              zIndex: WARNING_Z_INDEX,
+              // The pin underneath keeps the click. A mark this size is not a target, and
+              // one that swallowed the press would make the pin it is warning about the
+              // one pin on the map you cannot open.
+              clickable: false,
+            }),
+          ]
+        : [],
+    );
+    return () => {
+      for (const warning of warnings) warning.setMap(null);
+    };
+  }, [overKey, signature]);
 
   // A pulse behind every pin currently fed by the live stream. Keyed on which pins
   // those are, so it only churns when liveness actually changes — not on every
@@ -456,6 +593,88 @@ function MapCanvas({
           </Tooltip>
         )}
       </HStack>
+
+      {/* Bottom left, the corner Google leaves free — its own logo sits bottom left of the
+          *tiles*, which is the container's bottom left minus the terms link on the right,
+          so this rides just above the attribution rather than over it. Opposite the
+          toolbars, too: the controls are things to press and this is a thing to read. */}
+      <LevelLegend unit={weightingUnit(seriesByKey(series).weighting)} />
     </Box>
+  );
+}
+
+/**
+ * What the pins' colours mean, in the corner of the map.
+ *
+ * A legend and not a tooltip, because the ramp is read by scanning: the question it answers
+ * — is that stage in the same band as this one — is asked of the whole map at once, and an
+ * answer you have to hover for is one you would rather do arithmetic than ask for. It is
+ * small enough to be ignored once learned, which is the other half of earning a permanent
+ * corner.
+ *
+ * The boundaries are printed at the joints rather than a range under each swatch: the
+ * bands are the gaps between the numbers, which is how a scale reads, and it halves the
+ * width of the thing. The first band has no label because it has no floor — the ramp is
+ * open at both ends (see pinScale), and "60" under the second swatch says everything
+ * quieter is the first one.
+ *
+ * The unit is the series the pins are actually showing, so the legend follows the header's
+ * menu: 90 dB(A) and 90 dB(C) are different evenings, and a scale that named neither would
+ * be inviting the comparison the page spent nine series keys avoiding.
+ */
+function LevelLegend({unit}: {unit: string}) {
+  return (
+    <HStack
+      position="absolute"
+      bottom="6"
+      left="2"
+      zIndex="1"
+      gap="3"
+      align="flex-end"
+      bg="bg.panel"
+      shadow="md"
+      borderRadius="l2"
+      px="2"
+      pt="1.5"
+      // Room under the strip for the numbers, which hang off it (see below).
+      pb="4"
+      // A legend is read, not pressed — and a click that lands on it while the create tool
+      // is armed is a click meant for the map underneath.
+      pointerEvents="none"
+    >
+      <HStack gap="0" align="stretch">
+        {LEVEL_BANDS.map((band, i) => (
+          <Box
+            key={band.floor}
+            position="relative"
+            w="1.75rem"
+            h="0.375rem"
+            bg={band.fill}
+            borderStartRadius={i === 0 ? 'full' : undefined}
+            borderEndRadius={i === LEVEL_BANDS.length - 1 ? 'full' : undefined}
+          >
+            {/* Centred on the joint it names — absolutely, so six numbers under six
+                swatches cannot push the strip's own geometry around. */}
+            {i > 0 && (
+              <Text
+                position="absolute"
+                top="100%"
+                left="0"
+                mt="1"
+                transform="translateX(-50%)"
+                fontSize="2xs"
+                lineHeight="1"
+                color="fg.muted"
+              >
+                {band.floor}
+              </Text>
+            )}
+          </Box>
+        ))}
+      </HStack>
+      <Text fontSize="2xs" lineHeight="1" color="fg.muted">
+        {unit}
+      </Text>
+    </HStack>
   );
 }

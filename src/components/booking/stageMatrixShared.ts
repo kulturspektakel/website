@@ -13,7 +13,7 @@
 export const STAGE_ROWS = [
   {label: 'früh', aria: 'Früh'},
   {label: '', aria: 'Mitte'},
-  {label: 'spät', aria: 'Spät (Headliner)'},
+  {label: '(Co-)Headliner', aria: '(Co-)Headliner'},
 ];
 
 // '' columns sit between two stages and mean "either of the neighbours".
@@ -47,8 +47,12 @@ export function colLabel(ci: number): string {
   return STAGE_COLS[ci] || `${STAGE_COLS[ci - 1]} oder ${STAGE_COLS[ci + 1]}`;
 }
 
-// Human-readable "slot · stage" for a selected cell (soft hyphens stripped),
-// e.g. "Spät (Headliner) · Kultbühne". Used for the read-only cell's tooltip.
+// Human-readable "stage, slot" for a selected cell (soft hyphens stripped),
+// e.g. "Kultbühne/Waldbühne, (Co-)Headliner". Used for the read-only cell's
+// tooltip. "Between" columns join the two stage names with a slash — shorter than
+// colLabel's spelled-out "oder", which stays for the screen-reader labels.
 export function stageLabel(v: {row: number; col: number}): string {
-  return `${STAGE_ROWS[v.row].aria} · ${colLabel(v.col).replace(/­/g, '')}`;
+  const stage =
+    STAGE_COLS[v.col] || `${STAGE_COLS[v.col - 1]}/${STAGE_COLS[v.col + 1]}`;
+  return `${stage.replace(/­/g, '')}, ${STAGE_ROWS[v.row].aria}`;
 }

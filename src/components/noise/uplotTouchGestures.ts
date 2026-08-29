@@ -116,8 +116,13 @@ export function attachTouchGestures(
     // are off. So there is no separate commit: every frame is one.
     onRange: (min: number, max: number) => void;
     // Where one finger is, in the plot area's own pixels, or null to put the cursor away
-    // — which is what a lifted finger, a gesture handed to the scroller, and a second
-    // finger landing all amount to.
+    // — which is what a lifted finger and a second finger landing amount to.
+    //
+    // Putting it away takes the tooltip and nothing else: the playhead stays on the last
+    // instant it was given, which is what makes a tap on a chart a thing you can then read
+    // the cards for with your hand off the glass. So the null here is "nothing is pointing
+    // at this any more", not "the page has stopped reading" — and a gesture that turns out
+    // to be a scroll never names an instant in the first place (see onMove).
     onScrub: (pos: {left: number; top: number} | null) => void;
   },
 ): () => void {
@@ -140,9 +145,12 @@ export function attachTouchGestures(
   // Where a single finger is, clamped into the plot area: uPlot reads a cursor position
   // as a pixel inside the plot, and a finger a little over the edge of a row-height chart
   // means the first or the last sample rather than no sample at all.
-  const scrubPos = (touch: Touch) => ({
-    left: Math.min(Math.max(touch.clientX - rect.left, 0), rect.width),
-    top: Math.min(Math.max(touch.clientY - rect.top, 0), rect.height),
+  //
+  // Client coordinates rather than the Touch that reported them, because a tap is committed
+  // on the lift from the point it went down at — which outlives its Touch (see `tap`).
+  const scrubPos = (clientX: number, clientY: number) => ({
+    left: Math.min(Math.max(clientX - rect.left, 0), rect.width),
+    top: Math.min(Math.max(clientY - rect.top, 0), rect.height),
   });
 
   const storePos = (t: {x: number; d: number}, e: TouchEvent) => {
@@ -187,12 +195,24 @@ export function attachTouchGestures(
     onRange(min, max);
   };
 
-  // The one-finger gesture: where it started, and what it turned out to be. `lock` stays
-  // null until the finger has moved far enough to say, and during that time the finger
-  // scrubs — a tap has to read the trace immediately, and a tap is a gesture that never
-  // locks at all.
+  // The one-finger gesture: where the lock is measured from, and what it locked to. `start`
+  // can be re-seated mid-gesture by a pinch that loses a finger, which is why it is not the
+  // same thing as `tap` below.
   let start: {x: number; y: number} | null = null;
   let lock: TouchLock = null;
+
+  // Where a tap would land, while this gesture can still be one: the point a single finger
+  // went down at, held until something rules a tap out — a second finger, or the finger
+  // travelling far enough to lock an axis either way.
+  //
+  // It exists because the playhead now stays where it is put, which is what makes scrubbing
+  // on touchstart wrong. A finger that turns out to be scrolling the cards would park the
+  // mark wherever it happened to land, and there is no longer a "put the cursor away" that
+  // could take it back off — that null only takes the tooltip now. So a one-finger gesture
+  // says nothing until it is known to be a scrub, and a tap — a gesture that never locks at
+  // all — commits here on the lift instead. Six pixels of travel is the whole delay for a
+  // drag (see LOCK_PX), and a tap has no travel to wait for.
+  let tap: {x: number; y: number} | null = null;
 
   const onStart = (e: TouchEvent) => {
     rect = over.getBoundingClientRect();
@@ -202,15 +222,18 @@ export function attachTouchGestures(
       // still want it, and a cancelled touchstart is a card list that cannot be
       // scrolled from the chart that covers it.
       start = {x: t0.clientX, y: t0.clientY};
+      tap = start;
       lock = null;
-      onScrub(scrubPos(t0));
       return;
     }
     // A second finger means the window, not the trace. Take the gesture — the browser
     // has no use for it under `pan-y` anyway — and put the cursor away, so the tooltip
-    // isn't left standing on an instant nobody is pointing at any more.
+    // isn't left standing on an instant nobody is pointing at any more. The playhead is not
+    // what goes with it: a pinch crops, and cropping does not decide what the page is
+    // reading — only a window *drawn* in one gesture does (see drawProjectSelection).
     e.preventDefault();
     start = null;
+    tap = null;
     lock = null;
     onScrub(null);
     anchor(e);
@@ -227,19 +250,24 @@ export function attachTouchGestures(
       if (!start) start = {x: t0.clientX, y: t0.clientY};
       if (lock == null) {
         lock = lockAxis(t0.clientX - start.x, t0.clientY - start.y);
-        // Handed to the scroller: the page is about to move under the chart, and a
-        // playhead placed where the finger happened to pass is not something anyone
-        // asked for.
-        if (lock === 'scroll') {
-          onScrub(null);
-          return;
-        }
+        // Still too small to say which gesture this is, and so nothing said: the mark stays
+        // where it was until the finger is known to be reading the trace rather than
+        // reaching for the next card. Under LOCK_PX it may also still be a tap, which lands
+        // on the lift.
+        if (lock == null) return;
+        // It has travelled, either way, so it is not a tap.
+        tap = null;
+        // Handed to the scroller: the page is about to move under the chart, and a playhead
+        // placed where the finger happened to pass is not something anyone asked for.
+        // Nothing was placed on the way here, so there is nothing to take back — which is
+        // the whole reason this waits for the lock before it scrubs at all.
+        if (lock === 'scroll') return;
       }
       // Once the finger is ours it stays ours, and the default goes — which also stops
       // the browser synthesising the mouse events that would otherwise arm uPlot's own
       // drag-select and crop to wherever the finger left off.
       if (lock === 'scrub') e.preventDefault();
-      onScrub(scrubPos(t0));
+      onScrub(scrubPos(t0.clientX, t0.clientY));
       return;
     }
     e.preventDefault();
@@ -259,12 +287,26 @@ export function attachTouchGestures(
 
   const onEnd = (e: TouchEvent) => {
     if (e.touches.length > 0) return;
-    // The cursor goes when the last finger does — the same thing a mouse leaving the
-    // plot does, and for the same reason: there is nothing under the pointer any more.
-    // The playhead stays where it was put, which is the point of having placed it.
+    // A gesture that never locked an axis and never took a second finger is a tap, and this
+    // is where it lands: the instant under the finger, named once, on the lift.
+    if (tap) onScrub(scrubPos(tap.x, tap.y));
+    // The cursor goes when the last finger does — the same thing a mouse leaving the plot
+    // does, and for the same reason: there is nothing under the pointer any more. The
+    // playhead stays where it was put, which is the point of having placed it, so this is
+    // only the tooltip going. Which is also why it follows the tap above rather than
+    // replacing it: the tap names the instant, and this takes the label off it.
     if (lock !== 'scroll') onScrub(null);
     start = null;
+    tap = null;
     lock = null;
+  };
+
+  // A gesture the system took away rather than one a hand finished. No tap to commit: the
+  // browser's scroller claiming a finger is precisely the case a parked playhead must not
+  // come out of. Everything else about it is the end of a gesture.
+  const onCancel = (e: TouchEvent) => {
+    tap = null;
+    onEnd(e);
   };
 
   // Safari's own two-finger gesture, which it fires alongside the touch events and which
@@ -277,14 +319,14 @@ export function attachTouchGestures(
   over.addEventListener('touchstart', onStart, {passive: false});
   over.addEventListener('touchmove', onMove, {passive: false});
   over.addEventListener('touchend', onEnd);
-  over.addEventListener('touchcancel', onEnd);
+  over.addEventListener('touchcancel', onCancel);
   over.addEventListener('gesturestart', blockPageZoom);
 
   return () => {
     over.removeEventListener('touchstart', onStart);
     over.removeEventListener('touchmove', onMove);
     over.removeEventListener('touchend', onEnd);
-    over.removeEventListener('touchcancel', onEnd);
+    over.removeEventListener('touchcancel', onCancel);
     over.removeEventListener('gesturestart', blockPageZoom);
   };
 }

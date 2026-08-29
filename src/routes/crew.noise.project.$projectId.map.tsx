@@ -9,6 +9,8 @@ import {
   useProjectView,
 } from '../components/noise/projectView';
 import {primarySeries} from '../components/noise/level';
+import {useTick} from '../components/noise/context';
+import {strictestLimit} from '../components/noise/limitLines';
 
 export const Route = createFileRoute('/crew/noise/project/$projectId/map')({
   component: ProjectMapView,
@@ -19,9 +21,13 @@ const PLACE_TOAST = 'noise-place-location';
 
 function ProjectMapView() {
   const {projectId} = Route.useParams();
-  const {project, live, picked, locations, refresh} = useProjectView();
+  const {project, live, range, picked, locations, refresh} = useProjectView();
   // A pin has room for one number, so it reads the first of the picked set (see
   // primarySeries) — the same one every other single-number readout on the page follows.
+  // On this view the set is a single series and the menu only lets it be one (see the
+  // layout's pick), so the first of it is all of it; this stays the way it is read, because
+  // the type is a set either way and primarySeries is the one rule for which of a set a
+  // lone number comes out in.
   const primary = primarySeries(picked);
   // Read here rather than inside the map: what a pin shows at the playhead is a
   // question about this page, and LocationsMap is a map — it takes levels, not a
@@ -74,18 +80,45 @@ function ProjectMapView() {
     return () => toaster.dismiss(PLACE_TOAST);
   }, [prompting]);
 
-  // The map wants each location's monitors flattened; the list view keeps the
-  // assignments themselves, since it renders one row each. Which monitors those are
-  // was already decided by the layout — live means the ones standing there now, and
-  // scrubbing whoever stood there then — so this only reshapes the answer, and inherits
-  // its identity: the memo holds still through a scrub, and so does the memo'd map.
+  // Which window a limit has to be in force over to be worth warning about, as the pair
+  // strictestLimit takes. Scrubbing, that is the crop — the stretch of the evening the page
+  // is about, and the very hours the cards draw their rules over, so the map and the list
+  // warn against the same number. Live, it is this minute: the crop while live is the whole
+  // event by default (nothing has picked one), and judging a reading arriving now against a
+  // permit written for midnight would put a red pin over every stage all afternoon.
+  //
+  // A minute and not the second the levels move at, so the memo below survives the ~1/s
+  // ticks a live map re-renders on: a limit is written to the minute at finest, so asking
+  // any oftener could not change the answer.
+  const minute = Math.floor(useTick(60_000) / 60_000) * 60_000;
+  const [limitFrom, limitTo] = live
+    ? [minute, minute + 1]
+    : [range.start, range.end];
+
+  // The map wants each location's monitors flattened, and its limit reduced to the one
+  // figure a pin can be judged against; the list view keeps the assignments themselves,
+  // since it renders one row each. Which monitors those are was already decided by the
+  // layout — live means the ones standing there now, and scrubbing whoever stood there
+  // then — so this only reshapes the answer, and inherits its identity: the memo holds
+  // still through a scrub, and so does the memo'd map. A crop drag does move it, as it
+  // moves which limits are in force.
   const mapLocations = useMemo(
     () =>
       locations.map(({location, assignments}) => ({
         ...location,
         deviceIds: assignments.map((a) => a.deviceId),
+        // What the place is allowed to be, so the pin can say when it isn't. Against the
+        // series the pin is actually showing, because a peak limit is not a bound on an Leq
+        // (see strictestLimit) — which also means the header's menu is what brings a warning
+        // into view, the same control that brings in the number being warned about.
+        //
+        // Undefined where nothing was written for those hours: a place with no limit is not
+        // a place with a high one, and its pin stays a plain reading however loud.
+        limitDb:
+          strictestLimit(location.limits, primary, limitFrom, limitTo) ??
+          undefined,
       })),
-    [locations],
+    [locations, primary, limitFrom, limitTo],
   );
 
   // Reachable only by hand-typed URL — the index route sends a keyless

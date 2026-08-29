@@ -1,16 +1,20 @@
-import {memo, useCallback, useState} from 'react';
+import {memo, useCallback, useEffect, useState} from 'react';
 import {Box, Button, Span} from '@chakra-ui/react';
 import {LuChevronDown} from 'react-icons/lu';
 import {
   MenuCheckboxItem,
   MenuContent,
   MenuItemGroup,
+  MenuItemGroupLabel,
+  MenuRadioItem,
+  MenuRadioItemGroup,
   MenuRoot,
-  MenuSeparator,
   MenuTrigger,
 } from '../chakra-snippets/menu';
-import {type SeriesKey} from './series';
+import {SERIES_KEYS, type SeriesKey} from './series';
 import {
+  onlySeries,
+  primarySeries,
   primaryWeighting,
   rangeLabel,
   seriesLabel,
@@ -18,6 +22,12 @@ import {
   toggledSeries,
   type PickedSeries,
 } from './level';
+import {
+  DEFAULT_PICK,
+  readStoredPick,
+  writeStoredPick,
+  type SeriesStore,
+} from './seriesSelection';
 
 // The menu's rows, both modes' worth, built once. `seriesOptions` is a pure function of the
 // one boolean, and this menu is a child of a header that re-renders every animation frame
@@ -49,23 +59,68 @@ const GROUPS = {live: seriesOptions(true), stored: seriesOptions(false)};
  * memos that build the traces, so an unchanged pick has to come back as the *same* array.
  * toggledSeries promises that, which is why nothing here filters or sorts in place.
  */
-export function useLevelPick(): {
+export function useLevelPick({
+  // Which page's remembered pick this is. Per page and not per section, because the three
+  // pages that pick series want different sets of them — see seriesSelection.ts.
+  store,
+  // Whether the page has room for more than one. The map has not: a pin is a badge with one
+  // number on it, so ticking there replaces rather than adds (see onlySeries), the menu's
+  // rows are radios, and what is stored is one key.
+  single = false,
+}: {
+  store: SeriesStore;
+  single?: boolean;
+}): {
   picked: PickedSeries;
   toggleSeries: (key: SeriesKey) => void;
   rangeLeq: boolean;
   toggleRangeLeq: () => void;
 } {
-  // The everyday one, and the same default the page opened on when the weighting was its
-  // own control set to dB(A).
-  const [picked, setPicked] = useState<PickedSeries>(['eq_fast:A']);
-  // On to begin with: it is the one number a card is compared with its neighbours on, and it
-  // was on every card unconditionally before it was pickable at all.
-  const [rangeLeq, setRangeLeq] = useState(true);
+  // The everyday series and the crop's Leq on — what the menu was set to before either was
+  // remembered, and now only what is on screen until the store has been read, which is the
+  // frame after mount (see DEFAULT_PICK).
+  const [picked, setPicked] = useState<PickedSeries>(DEFAULT_PICK.picked);
+  const [rangeLeq, setRangeLeq] = useState(DEFAULT_PICK.rangeLeq);
+
+  // The stored state of the menu is read after mount rather than in the initializers above,
+  // and that is the whole reason this is an effect: these pages are server-rendered, and a
+  // lazy initializer reading localStorage would hand hydration different lines than the
+  // server drew. Same arrangement as the column count and the location selection, and for
+  // the same reason (see listColumns.ts).
+  //
+  // Keyed on the store, so it re-reads when the page switches views: the project layout owns
+  // one pick and hands it to whichever of the two is on screen, and those two remember
+  // separately — the list's set of lines and the map's single one. One frame of the previous
+  // view's pick in between, which is the frame the route itself is changing on.
+  useEffect(() => {
+    const stored = readStoredPick(store, single) ?? DEFAULT_PICK;
+    setPicked(stored.picked);
+    setRangeLeq(stored.rangeLeq);
+  }, [store, single]);
+
+  // Both halves of the menu are written on every press, because the entry is the menu rather
+  // than one of its rows — so each toggle needs the other half as it stands, which is why
+  // they are read off the render rather than out of an updater. That is also what keeps the
+  // write to one: React invokes updaters twice in development, and writing to storage is not
+  // the kind of thing to do twice.
+  //
+  // Nothing is written for a press that changed nothing — the last lit line pressed again, or
+  // the map's one row pressed twice — since both hand back the very array they were given.
   const toggleSeries = useCallback(
-    (key: SeriesKey) => setPicked((prev) => toggledSeries(prev, key)),
-    [],
+    (key: SeriesKey) => {
+      const next = single
+        ? onlySeries(picked, key)
+        : toggledSeries(picked, key);
+      if (next === picked) return;
+      setPicked(next);
+      writeStoredPick(store, {picked: next, rangeLeq});
+    },
+    [picked, rangeLeq, single, store],
   );
-  const toggleRangeLeq = useCallback(() => setRangeLeq((on) => !on), []);
+  const toggleRangeLeq = useCallback(() => {
+    setRangeLeq(!rangeLeq);
+    writeStoredPick(store, {picked, rangeLeq: !rangeLeq});
+  }, [picked, rangeLeq, store]);
   return {picked, toggleSeries, rangeLeq, toggleRangeLeq};
 }
 
@@ -97,6 +152,7 @@ export function useLevelPick(): {
 export const LevelPicker = memo(function LevelPicker({
   live,
   picked,
+  single = false,
   rangeLeq,
   rangeLeqShown,
   onToggleSeries,
@@ -107,6 +163,11 @@ export const LevelPicker = memo(function LevelPicker({
   // means the same thing in either mode.
   live: boolean;
   picked: PickedSeries;
+  // Whether only one series may be lit, which is the map's case: a pin has room for one
+  // number, so a second ticked line there would be drawn nowhere (see onlySeries). The rows
+  // are radios then rather than boxes, and the menu closes on a press — picking one of a
+  // list is one press, where assembling a set is several.
+  single?: boolean;
   // What this menu's own row is ticked to. Optional, together with its toggle: it is a
   // reading a *location card* carries, so the row is offered on the page that has cards and
   // left out where the menu picks chart lines only (see the device page). The pick survives
@@ -143,8 +204,9 @@ export const LevelPicker = memo(function LevelPicker({
     //
     // Stays open while boxes are ticked: picking a set is several presses, and a menu that
     // closed after each would have to be reopened to compare two series — which is the very
-    // thing several lines are for.
-    <MenuRoot closeOnSelect={false} positioning={{placement: 'bottom-end'}}>
+    // thing several lines are for. Where only one may be lit there is no set to assemble, so
+    // it closes on the press like any menu of alternatives.
+    <MenuRoot closeOnSelect={single} positioning={{placement: 'bottom-end'}}>
       <MenuTrigger asChild>
         {/* Outlined at the size of the controls it sits among — the live switch, the
               view select — so the strip reads as one row rather than a button dropped
@@ -171,54 +233,85 @@ export const LevelPicker = memo(function LevelPicker({
       </MenuTrigger>
       <MenuContent>
         {/* A block per weighting, headed by the unit its rows are read in — which is what
-              makes nine rows scannable: the letter that distinguishes LAeq,5m from LCeq,5m
-              is the heading you are under rather than something to spot mid-word. It is
-              also the only thing that distinguishes them on the chart, the two weightings
-              of a quantity sharing a colour by design (see the series table). */}
-        {groups.map(({weighting, unit, options}) => (
-          <MenuItemGroup key={weighting} title={unit}>
-            {options.map(({key, label}) => (
-              // The last lit line stays pressable even though unticking it is refused
-              // (see toggledSeries): a whole menu of live options with one greyed row
-              // reads as if that row were unavailable, when what is true is the opposite
-              // — it is the only one being shown. Pressing it simply leaves it ticked,
-              // which is also what a set of one means.
-              <MenuCheckboxItem
-                key={key}
-                value={key}
-                checked={picked.includes(key)}
-                onCheckedChange={() => onToggleSeries(key)}
-              >
-                {label}
-              </MenuCheckboxItem>
-            ))}
-          </MenuItemGroup>
-        ))}
-        {onToggleRangeLeq && (
-          <>
-            {/* Under a rule and outside both blocks, because it belongs to neither: it is
-                  weighted, and named for it, but not by a choice of its own — the mean comes
-                  out in whichever weighting the primary pick is in, so filing it under one
-                  block would offer a choice that ticking it does not make. */}
-            <MenuSeparator />
-            {/* Last, and after the nine series, because it is not one of them: no line is
-                  drawn for it and no cursor reads it — it is the average over whatever the
-                  timeline is cropped to, printed on the cards (see LocationReadings). In the
-                  same menu all the same, because "which levels am I looking at" is one
-                  question and answering it in two controls would be the second place to
-                  look.
+            makes nine rows scannable: the letter that distinguishes LAeq,5m from LCeq,5m is
+            the heading you are under rather than something to spot mid-word. It is also the
+            only thing that distinguishes them on the chart, the two weightings of a quantity
+            sharing a colour by design (see the series table). */}
+        {groups.map(({weighting, unit, options}) =>
+          single ? (
+            // One of nine rather than some of nine, which is a radio group and not nine
+            // boxes: the difference is the whole of what the map's menu has to say about
+            // itself — ticking a second line there would silently unpick the first, and a
+            // checkbox promising otherwise is the control lying about what it does.
+            //
+            // A radio group *per block*, with the heading inside it rather than one group
+            // wrapped round both blocks: an item group nested in a radio group replaces the
+            // group context with its own, which carries no value and no handler, so every
+            // row came out unticked and every press did nothing. Two groups sharing one
+            // value is not two choices either — the value is the page's single pick, so
+            // picking in one block unticks the other as it must.
+            <MenuRadioItemGroup
+              key={weighting}
+              // The lit line, which for a single pick is the whole of it (see primarySeries).
+              value={primarySeries(picked)}
+              // The row's own value read back as the series it came from rather than trusted
+              // as one: the table is the one place the keys are written down.
+              onValueChange={({value}) => {
+                const key = SERIES_KEYS.find((k) => k === value);
+                if (key) onToggleSeries(key);
+              }}
+            >
+              <MenuItemGroupLabel userSelect="none">{unit}</MenuItemGroupLabel>
+              {options.map(({key, label}) => (
+                <MenuRadioItem key={key} value={key}>
+                  {label}
+                </MenuRadioItem>
+              ))}
+            </MenuRadioItemGroup>
+          ) : (
+            <MenuItemGroup key={weighting} title={unit}>
+              {options.map(({key, label}) => (
+                // The last lit line stays pressable even though unticking it is refused
+                // (see toggledSeries): a whole menu of live options with one greyed row
+                // reads as if that row were unavailable, when what is true is the opposite
+                // — it is the only one being shown. Pressing it simply leaves it ticked,
+                // which is also what a set of one means.
+                <MenuCheckboxItem
+                  key={key}
+                  value={key}
+                  checked={picked.includes(key)}
+                  onCheckedChange={() => onToggleSeries(key)}
+                >
+                  {label}
+                </MenuCheckboxItem>
+              ))}
+              {/* The timeframe's Leq, last in the block it is read in — which is the
+                  primary pick's weighting, so the row moves between the two blocks as
+                  the pick above it changes, and is named for the block it is in.
+                  Under `dB(A)` rather than under a rule below both, because it is a
+                  dB(A) reading: filed outside them it read as a third unit, and the one
+                  thing its label has to say is which of the two it comes out in.
+
+                  Still last of its block, and after the five series, because it is not one
+                  of them: no line is drawn for it and no cursor reads it — it is the average
+                  over whatever the timeline is cropped to, printed on the cards (see
+                  LocationReadings). Offered only where a card prints it, which is why both
+                  it and its toggle are optional (see the props).
 
                   Greyed while live, where there is no timeframe to average and the row would
                   promise a number the page cannot produce. */}
-            <MenuCheckboxItem
-              value="range"
-              checked={Boolean(rangeLeq)}
-              disabled={live}
-              onCheckedChange={onToggleRangeLeq}
-            >
-              {range}
-            </MenuCheckboxItem>
-          </>
+              {onToggleRangeLeq && weighting === primaryWeighting(picked) && (
+                <MenuCheckboxItem
+                  value="range"
+                  checked={Boolean(rangeLeq)}
+                  disabled={live}
+                  onCheckedChange={onToggleRangeLeq}
+                >
+                  {range}
+                </MenuCheckboxItem>
+              )}
+            </MenuItemGroup>
+          ),
         )}
       </MenuContent>
     </MenuRoot>

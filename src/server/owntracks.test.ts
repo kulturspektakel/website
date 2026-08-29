@@ -1,15 +1,18 @@
 import {beforeEach, describe, expect, test, vi} from 'vitest';
 import {createHash} from 'node:crypto';
 
-const {findUnique, create, findMany} = vi.hoisted(() => ({
+const {findUnique, create, queryRaw} = vi.hoisted(() => ({
   findUnique: vi.fn(),
   create: vi.fn(),
-  findMany: vi.fn(),
+  queryRaw: vi.fn(),
 }));
 vi.mock('./prismaClient.server', () => ({
   prismaClient: {
-    viewer: {findUnique, findMany},
+    viewer: {findUnique},
     viewerLocation: {create},
+    // The friends view is one raw `DISTINCT ON` query; the mock receives the
+    // tagged-template args (strings, ...values).
+    $queryRaw: queryRaw,
   },
 }));
 
@@ -37,7 +40,7 @@ beforeEach(() => vi.clearAllMocks());
 describe('handleOwnTracks', () => {
   test('valid auth + location persists a ViewerLocation', async () => {
     findUnique.mockResolvedValueOnce({id: 'U1'});
-    findMany.mockResolvedValueOnce([]);
+    queryRaw.mockResolvedValueOnce([]);
     const res = await handleOwnTracks(
       ingest('U1', password('U1'), {
         _type: 'location',
@@ -56,11 +59,13 @@ describe('handleOwnTracks', () => {
 
   test('friend cards/locations use the viewer id as tid (unique, not initials)', async () => {
     findUnique.mockResolvedValueOnce({id: 'U1'});
-    findMany.mockResolvedValueOnce([
+    queryRaw.mockResolvedValueOnce([
       {
         id: 'U2',
         displayName: 'Daniel Büchele',
-        ViewerLocation: [{latitude: 1, longitude: 2, createdAt: new Date(0)}],
+        latitude: 1,
+        longitude: 2,
+        createdAt: new Date(0),
       },
     ]);
     const res = await handleOwnTracks(
@@ -82,20 +87,25 @@ describe('handleOwnTracks', () => {
     });
     vi.stubGlobal('fetch', fetchMock);
     findUnique.mockResolvedValueOnce({id: 'U1'});
-    findMany.mockResolvedValueOnce([
+    queryRaw.mockResolvedValueOnce([
       {
         id: 'U2',
         displayName: 'Daniel Büchele',
         profilePicture: 'https://slack/avatar_192.png',
         // handler requests the smaller _48 variant for the map pin
-        ViewerLocation: [{latitude: 1, longitude: 2, createdAt: new Date(0)}],
+        latitude: 1,
+        longitude: 2,
+        createdAt: new Date(0),
       },
     ]);
     const res = await handleOwnTracks(
       ingest('U1', password('U1'), {_type: 'location', lat: 1, lon: 2, tst: 1}),
     );
     const body = (await res.json()) as Array<{_type: string; face?: string}>;
-    expect(fetchMock).toHaveBeenCalledWith('https://slack/avatar_48.png');
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://slack/avatar_48.png',
+      expect.objectContaining({signal: expect.anything()}),
+    );
     expect(body.find((m) => m._type === 'card')?.face).toBe(
       Buffer.from('PNGBYTES').toString('base64'),
     );
@@ -104,21 +114,18 @@ describe('handleOwnTracks', () => {
 
   test('friends response excludes the requesting viewer (no self-duplicate)', async () => {
     findUnique.mockResolvedValueOnce({id: 'U1'});
-    findMany.mockResolvedValueOnce([]);
+    queryRaw.mockResolvedValueOnce([]);
     await handleOwnTracks(
       ingest('U1', password('U1'), {_type: 'location', lat: 1, lon: 2, tst: 1}),
     );
-    expect(findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({id: {not: 'U1'}}),
-      }),
-    );
+    // The requester's id is passed as a bound parameter of the `<>` filter.
+    expect(queryRaw.mock.calls[0]).toContain('U1');
   });
 
   test('empty body does not throw, returns friends view without persisting', async () => {
     // OwnTracks sometimes POSTs an empty body; must not crash on JSON.parse.
     findUnique.mockResolvedValueOnce({id: 'U1'});
-    findMany.mockResolvedValueOnce([]);
+    queryRaw.mockResolvedValueOnce([]);
     const req = new Request('https://test/owntracks', {
       method: 'POST',
       headers: {

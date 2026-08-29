@@ -8,6 +8,7 @@ import {DeviceMenu} from '../components/noise/DeviceMenu';
 import {DevicePicker} from '../components/noise/DevicePicker';
 import {DeviceStatusLine} from '../components/noise/DeviceStatusLine';
 import {LevelPicker, useLevelPick} from '../components/noise/LevelPicker';
+import {SERIES_STORE} from '../components/noise/seriesSelection';
 import {LiveView} from '../components/noise/LiveView';
 import {NoiseToolbar} from '../components/noise/NoiseToolbar';
 import {DeviceViewContext} from '../components/noise/deviceView';
@@ -76,7 +77,12 @@ function DevicePage() {
   // Which series the chart draws — the same pick the project page sets, from the one place
   // that owns it. No primary taken off the set: nothing on this page reads a single series
   // (see DeviceViewCtx).
-  const {picked, toggleSeries} = useLevelPick();
+  //
+  // Remembered, under this page's own key: an instrument page is opened to watch several
+  // lines at once, which is not the set either of the project's two views wants, so the three
+  // remember separately (see seriesSelection.ts). Per browser and not per monitor — it is how
+  // you read a chart, and the next monitor is the same chart.
+  const {picked, toggleSeries} = useLevelPick({store: SERIES_STORE.device});
   // The microphone the monitor can be measured against. Here rather than in the section
   // layout on purpose: a page is the only thing that measures, and a microphone left open
   // behind a page nobody is looking at keeps the browser's recording indicator lit.

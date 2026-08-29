@@ -123,7 +123,7 @@ const CROP_SPAN = {
 // moving), stepped with the keyboard (focus-visible, so the value is readable while
 // arrowing), and carried by a drag drawing a new window, which zag knows nothing about —
 // hence data-moving below. The playhead's own pill is not one of these: it is not a thumb,
-// and it is shown by simply not being rendered the rest of the time (see Readout).
+// and it stands for as long as there is a playhead at all (see Readout).
 const READOUT_ATTR = 'data-readout';
 // Hoisted for the same reason the CSS below is, and because a computed key would otherwise
 // have a fresh object built for every pill on every frame of a scrub.
@@ -160,10 +160,12 @@ const labelFormat = instantLabel(false);
  * and Emotion's serialization off those frames — which needs props that don't change identity
  * when the page merely re-renders.
  *
- * One component for the grips and the playhead alike. The two differ only in how they are
- * hidden: a grip's is a child of its thumb and left to READOUT_CSS, the playhead's is simply
- * not rendered while nothing is pointing at the strip — which is also why the marker attribute
- * is set on both, since it is what that CSS (and the thumb's focus ring) selects on.
+ * One component for the grips and the playhead alike. The two differ in when they show: a
+ * grip's is a child of its thumb and left to READOUT_CSS, which opens it only while that grip
+ * is pointed at or moving, and the playhead's stands for as long as there is a playhead — the
+ * mark outlives the hand that placed it, and a parked hairline with no instant on it is not
+ * something anyone can come back to. The marker attribute is set on both regardless, since it
+ * is what that CSS (and the thumb's focus ring) selects on.
  */
 const Readout = memo(function Readout({
   fraction,
@@ -262,17 +264,23 @@ const instantAt = (
   return start + ratio * (end - start);
 };
 
-// The selection with its playhead moved to an instant the pointer named — or, with null,
-// with no playhead at all, which is what the pointer leaving names. To the minute, like
+// The selection with its playhead moved to an instant the pointer named. To the minute, like
 // the window a drag draws (see drawProjectSelection): nothing snaps a pointer to the
 // quarter hour on this strip any more, and a mark that stepped in quarters while the same
 // hover over a row chart slid smoothly would be two answers to one question.
 //
-// setSelectionCurrent does the clamping and takes the null, and is the page's one rule for
-// where the cursor may stand — the same call the row charts' hover goes through. The
-// window is its bound, not the crop: the strip can be pointed at end to end.
-const playheadAt = (selection: ProjectSelection, ms: number | null) =>
-  setSelectionCurrent(selection, ms == null ? null : snapToMinute(ms));
+// An instant and never nothing. The pointer leaving used to call this with a null and the mark
+// went with the hand; it stays now, because it says which instant the page is reading rather
+// than where a hand happens to be — which is what lets you point at a peak, take the hand off
+// the strip, and read the cards and the pins for it. The one gesture that takes it away is a
+// window drawn in a single drag, which states a timeframe with no instant in it (see
+// drawProjectSelection).
+//
+// setSelectionCurrent is the page's one rule for where the cursor may stand — the same call
+// the row charts' hover goes through. The window is its bound, not the crop: the strip can be
+// pointed at end to end.
+const playheadAt = (selection: ProjectSelection, ms: number) =>
+  setSelectionCurrent(selection, snapToMinute(ms));
 
 /**
  * The instant the page is reading, drawn across the strip: a hairline the full height of
@@ -303,11 +311,11 @@ function Playhead({
   label,
 }: {
   fraction: number;
-  // What the pill over the mark says, or null for no pill at all — which is how the
-  // playhead's readout is hidden, where a grip's is left to READOUT_CSS. A row chart's
-  // hover sets this same playhead and the line following along here is the point of that,
-  // but a pill over the strip naming an instant the hand is nowhere near is not.
-  label: string | null;
+  // What the pill over the mark says. Always something: the mark stays where it is put, so it
+  // is read with the hand off the strip at least as often as under it, and a hairline with no
+  // instant on it is not a thing anyone can park and come back to. A grip's pill is hidden by
+  // READOUT_CSS instead, a grip being something you take hold of rather than a reading.
+  label: string;
 }) {
   return (
     <Box
@@ -320,7 +328,7 @@ function Playhead({
       pointerEvents="none"
       style={{left: `${fraction * 100}%`}}
     >
-      {label != null && <Readout fraction={fraction}>{label}</Readout>}
+      <Readout fraction={fraction}>{label}</Readout>
     </Box>
   );
 }
@@ -383,8 +391,9 @@ export function ProjectTimeline({
  * a drag anywhere else draws a whole new window between where it started and where it is let
  * go (see onControlPointerDownCapture); and simply pointing at the strip — hovering it, or
  * tapping inside the crop — puts the cursor on an instant, anywhere from one end of the
- * evening to the other. A press only becomes the second of those once it has actually
- * travelled, so a click stays the click it has always been.
+ * evening to the other, and leaves it standing there once the hand has gone. A press only
+ * becomes the second of those once it has actually travelled, so a click stays the click it
+ * has always been.
  */
 function CropTimeline({window, selection, gaps, onCommit}: TimelineProps) {
   // The axis' right-hand end, which is also the slider's max — see axisEnd for the one
@@ -399,30 +408,19 @@ function CropTimeline({window, selection, gaps, onCommit}: TimelineProps) {
   const thumbs = selectionThumbs(selection);
   const {onFrame, onceNow} = useFrameCommit(onCommit);
 
-  // What the press in flight has turned out to be, if there is one — and so which marks are
-  // being carried by a gesture zag knows nothing about, and have to be told to show their
-  // readouts (zag flags only the thumb it drags itself).
+  // Whether the press in flight has become a window being drawn — which carries both grips at
+  // once, and is the one gesture on this strip zag knows nothing about, so its grips have to
+  // be told to show their readouts (zag flags only the thumb it drags itself).
   //
-  // A 'scrub' carries the playhead: a press inside the crop places it, and it stays put until
-  // the press either ends or becomes the other thing. A 'draw' carries both grips at once, and
-  // a window being redrawn with no times on it says nothing about what you are picking.
+  // It used to name the other thing a press can be as well, a scrub, and there was a second
+  // flag beside it for a mouse merely hovering. Both were only ever read to decide whether to
+  // show the playhead's pill, and that pill now stands whenever there is a playhead: the mark
+  // outlives the hand, so whether a hand is on the strip has stopped being a question this
+  // component has to answer.
   //
-  // One value rather than a flag each, because a press is only ever one of the two and the
-  // change from one to the other is a single setter rather than a pair that has to agree.
   // State and not the ref below, because it is read while rendering; set twice per gesture,
   // not per move.
-  const [gesture, setGesture] = useState<'scrub' | 'draw' | null>(null);
-
-  // The same thing for a mouse that is merely over the strip, which moves the playhead
-  // without pressing anything (see onControlPointerMove). Separate from `gesture`
-  // because a hover ends by the pointer leaving and a press by it being released, and
-  // either can be in flight without the other: a hover over the strip that never presses,
-  // and a drag that has wandered off it under pointer capture.
-  //
-  // Set on every move and re-rendered on two of them: React bails out of a setState to the
-  // value the state already holds, so a hover costs one render arriving on the strip and one
-  // leaving it rather than one per frame.
-  const [hovering, setHovering] = useState(false);
+  const [drawing, setDrawing] = useState(false);
 
   // The press in flight, if any. One record and not two, because a scrub and a drawn window
   // are the same press at different degrees of commitment: it is only once it has travelled
@@ -448,7 +446,7 @@ function CropTimeline({window, selection, gaps, onCommit}: TimelineProps) {
   const pointerAt = (control: HTMLElement, clientX: number) =>
     instantAt(control, clientX, window.start, sliderMax);
 
-  const withPlayheadAt = (ms: number | null) => playheadAt(selection, ms);
+  const withPlayheadAt = (ms: number) => playheadAt(selection, ms);
 
   // Where along the strip an instant stands, 0…1: what places a mark and pulls its readout
   // back over it. Against sliderMax rather than window.end, because that is the axis the
@@ -504,10 +502,10 @@ function CropTimeline({window, selection, gaps, onCommit}: TimelineProps) {
       drawing: false,
     };
     if (insideCrop(at)) {
-      setGesture('scrub');
-      // The playhead goes where the press landed, as it always has. A drag from here
-      // redraws the window instead and takes it away again — until then this is a tap
-      // pointing at an instant, and pointing at it is the whole answer.
+      // The playhead goes where the press landed, as it always has — and stays there when the
+      // finger lifts, which is the whole of how a mark is parked by touch. A drag from here
+      // redraws the window instead and takes it away again; until then this is a tap pointing
+      // at an instant, and pointing at it is the whole answer.
       onceNow(withPlayheadAt(at));
     }
     // Pointer capture retargets every subsequent move and the release to the strip,
@@ -531,7 +529,7 @@ function CropTimeline({window, selection, gaps, onCommit}: TimelineProps) {
   // The whole strip, dim ground included: the crop says which stretch the page is *showing*,
   // and pointing at a minute outside it is still pointing at the evening — the readings for
   // it are in the browser either way (see ProjectSelection). So the mark follows the pointer
-  // from one end to the other and only goes when the pointer does.
+  // from one end of it to the other, and stays on the last minute it was carried to.
   //
   // `buttons === 0` is the whole of how a mouse is told from a finger, and there is
   // deliberately no pointerType test or media query anywhere here: a touch pointer only
@@ -543,25 +541,15 @@ function CropTimeline({window, selection, gaps, onCommit}: TimelineProps) {
     const at = pointerAt(event.currentTarget, event.clientX);
     // Only a strip with no width to measure, which is nowhere to point at.
     if (at == null) return;
-    setHovering(true);
     onFrame(withPlayheadAt(at));
   };
 
-  // The pointer has gone, and the playhead goes with it: it marks where a hand is
-  // pointing, so there is nothing for it to stand on once nothing is. The instant is not
-  // kept anywhere — the next hover names a new one — which is what makes "no readings"
-  // the page's resting state rather than a stale number from the last time it was touched.
+  // There is no pointerleave handler, and that absence is the feature: the playhead is the
+  // instant the page is reading rather than the pixel a hand is on, so a pointer going away
+  // says nothing about it. What used to be here took the mark down and left "no readings" as
+  // the page's resting state, which meant a peak could be pointed at but never studied — the
+  // numbers emptied on the way to reading them.
   //
-  // A button still down is not the end of anything: it is a grip, or a window being drawn,
-  // dragged off the edge of the strip — which is most edge drags. The hand has not gone
-  // anywhere, so neither has the instant it was reading, and taking the mark away for the
-  // rest of a gesture that is still in flight would only make it flicker.
-  const onControlPointerLeave = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (event.buttons !== 0) return;
-    setHovering(false);
-    onceNow(withPlayheadAt(null));
-  };
-
   const onControlPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
     const own = ownPress(event);
     if (!own) return onHoverMove(event);
@@ -578,9 +566,9 @@ function CropTimeline({window, selection, gaps, onCommit}: TimelineProps) {
       // that then throws it away is motion for its own sake.
       if (Math.abs(event.clientX - own.originX) < DRAG_MIN_PX) return;
       own.drawing = true;
-      // Which also stops the playhead's readout: a window being drawn has no playhead at all
-      // (see drawProjectSelection), so there would be nothing left for it to name.
-      setGesture('draw');
+      // Which is also the end of the playhead's pill: a window being drawn has no playhead at
+      // all (see drawProjectSelection), so there is nothing left for it to name.
+      setDrawing(true);
     }
 
     // Both ends at once, from where the press landed to where the pointer is now: a redraw
@@ -602,7 +590,7 @@ function CropTimeline({window, selection, gaps, onCommit}: TimelineProps) {
   const endPress = () => {
     const own = press.current;
     press.current = null;
-    setGesture(null);
+    setDrawing(false);
     if (!own || own.drawing) return;
     // A click inside the window placed the playhead as it went down, and that is all it ever
     // did. Outside it, the nearer edge stretches out to meet the pointer — zag's own track
@@ -669,10 +657,6 @@ function CropTimeline({window, selection, gaps, onCommit}: TimelineProps) {
         cursor="crosshair"
         onPointerDownCapture={onControlPointerDownCapture}
         onPointerMove={onControlPointerMove}
-        // Fires for a lifted finger too — the browser removes a touch pointer once it is
-        // up, and leaving is part of removing it — so a tap's playhead goes when the
-        // finger does, the same as a mouse's.
-        onPointerLeave={onControlPointerLeave}
         onPointerUp={onControlPointerUp}
         onPointerCancel={onControlPointerUp}
         // Fires on the ordinary release and whenever the browser takes the capture
@@ -785,18 +769,16 @@ function CropTimeline({window, selection, gaps, onCommit}: TimelineProps) {
             in the tree so the markers are under it and the thumbs, carrying the recipe's own
             z-index, are over it.
 
-            Its pill only while this strip is the thing being pointed at: a hover, or a press
-            that has placed the mark and not yet turned into a drawn window. A row chart's
-            hover sets the same playhead and the line following along here is the point of
-            that, but a pill naming an instant the hand is nowhere near is not. */}
+            With its pill whenever it is there at all, pointed at or not. It was shown only
+            while a hand was on this strip, on the grounds that a pill naming an instant the
+            hand is nowhere near says nothing — but the mark stays where it is put now, and the
+            reason to park one is to read it, so the instant has to be legible with the hand
+            out of the way. The one case with no pill is a window being drawn, which has no
+            playhead to name (see drawProjectSelection). */}
         {selection.current != null && (
           <Playhead
             fraction={fractionOf(selection.current)}
-            label={
-              hovering || gesture === 'scrub'
-                ? labelFormat(selection.current)
-                : null
-            }
+            label={labelFormat(selection.current)}
           />
         )}
 
@@ -810,7 +792,7 @@ function CropTimeline({window, selection, gaps, onCommit}: TimelineProps) {
               // off the strip: it is their two instants that are being picked, and a window
               // redrawn with no times on it says nothing about what you are picking. zag flags
               // the thumb it drags itself, but it has no part in this gesture.
-              data-moving={gesture === 'draw' || undefined}
+              data-moving={drawing || undefined}
               css={READOUT_CSS}
               // Neutralize the default round knob; these are grips, drawn by the
               // bracket below.
@@ -906,23 +888,13 @@ function CropTimeline({window, selection, gaps, onCommit}: TimelineProps) {
  *
  * There is nothing here for a keyboard, and nothing is claimed: the crop strip's two thumbs
  * are what a keyboard reaches there, and they move the crop — the playhead has never been
- * one of them, being where a hand is pointing rather than a value anyone sets (see
+ * one of them, being an instant something was pointed at rather than a value anyone sets (see
  * ProjectSelection). So this offers a pointer affordance and no role, rather than a slider
  * role over something that would not answer a key.
  */
 function ScrubTimeline({window, selection, gaps, onCommit}: TimelineProps) {
   const axisMax = axisEnd(window);
   const {onFrame, onceNow} = useFrameCommit(onCommit);
-
-  // Whether a pointer is on the strip, which is the whole of what shows the pill here.
-  // The crop strip needs a second flag for the gesture in flight because a press there may
-  // turn into a drawn window; a press here is a scrub from the first pixel to the last, so
-  // "something is pointing at this strip" is one answer.
-  //
-  // Set on every move and re-rendered on two of them: React bails out of a setState to the
-  // value the state already holds, so a pass across the strip costs one render arriving and
-  // one leaving rather than one per frame.
-  const [pointing, setPointing] = useState(false);
 
   // The press in flight, if any — just its pointer id, there being no threshold to cross
   // and no anchor to keep. It is what tells our own drag from somebody else's passing over
@@ -950,7 +922,6 @@ function ScrubTimeline({window, selection, gaps, onCommit}: TimelineProps) {
     if (pressed.current != null) return;
     pressed.current = event.pointerId;
     event.currentTarget.setPointerCapture(event.pointerId);
-    setPointing(true);
     onceNow(playheadAt(selection, ms));
   };
 
@@ -963,25 +934,14 @@ function ScrubTimeline({window, selection, gaps, onCommit}: TimelineProps) {
     const ms = at(event);
     // Only a strip with no width to measure, which is nowhere to point at.
     if (ms == null) return;
-    setPointing(true);
     onFrame(playheadAt(selection, ms));
   };
 
-  // The pointer has gone, and the mark goes with it: it says where a hand is pointing, so
-  // there is nothing for it to stand on once nothing is. The instant is not kept anywhere —
-  // the next hover names a new one — which is what makes "no readings" the map's resting
-  // state rather than a stale number from the last time the strip was touched.
+  // No pointerleave, deliberately, as on the crop strip: the mark is the instant the map is
+  // reading and not the pixel a hand is on, so it stays on the last minute it was carried to
+  // — which on the map view is the point of the strip. A pin has room for one number, and
+  // parking the mark is how you choose which minute that number is for.
   //
-  // A button still down is not the end of anything: it is a scrub dragged off the edge,
-  // which is most edge drags, and the hand has not gone anywhere. Fires for a lifted finger
-  // too — the browser removes a touch pointer once it is up, and leaving is part of removing
-  // it — so a tap's mark goes when the finger does, the same as a mouse's.
-  const onPointerLeave = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (event.buttons !== 0) return;
-    setPointing(false);
-    onceNow(playheadAt(selection, null));
-  };
-
   // Nothing to commit at the end of a scrub — every frame of it has already landed. All this
   // does is open the gate again, and it is wired to lost capture as well as to up and cancel,
   // that being the one signal a press cannot end without.
@@ -1009,7 +969,6 @@ function ScrubTimeline({window, selection, gaps, onCommit}: TimelineProps) {
         userSelect="none"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
-        onPointerLeave={onPointerLeave}
         onPointerUp={endPress}
         onPointerCancel={endPress}
         onLostPointerCapture={endPress}
@@ -1039,13 +998,13 @@ function ScrubTimeline({window, selection, gaps, onCommit}: TimelineProps) {
           overhang={HANDLE_W}
         />
 
-        {/* Last, so it draws over the grid — there are no thumbs here to pass over it. Its
-            pill whenever the mark is on this strip at all, which on this strip is the same
-            question as whether a hand is on it. */}
+        {/* Last, so it draws over the grid — there are no thumbs here to pass over it. With
+            its pill whenever there is a mark at all: nothing is ever drawn here without one,
+            there being no window on this strip to draw and so no gesture that clears it. */}
         {selection.current != null && (
           <Playhead
             fraction={axisFraction(selection.current, window.start, axisMax)}
-            label={pointing ? labelFormat(selection.current) : null}
+            label={labelFormat(selection.current)}
           />
         )}
       </Box>

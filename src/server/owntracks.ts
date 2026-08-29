@@ -43,6 +43,13 @@ type OwnTracksMessage =
 
 type Viewer = {id: string; displayName: string; profilePicture: string | null};
 
+/** One row of the "latest location per viewer" query below. */
+type RecentLocation = Viewer & {
+  latitude: number;
+  longitude: number;
+  createdAt: Date;
+};
+
 function tid(viewer: {displayName: string}): string {
   return viewer.displayName
     .toLocaleUpperCase()
@@ -102,12 +109,20 @@ async function avatarFace(url: string | null): Promise<string> {
   const cached = faceCache.get(small);
   if (cached != null) return cached;
   try {
-    const res = await fetch(small);
-    if (!res.ok) return '';
+    // Bounded: a hanging CDN request would otherwise hold the whole ingest
+    // response open (and, on Vercel, keep billing wall-clock time).
+    const res = await fetch(small, {signal: AbortSignal.timeout(2_000)});
+    if (!res.ok) {
+      faceCache.set(small, '');
+      return '';
+    }
     const face = Buffer.from(await res.arrayBuffer()).toString('base64');
     faceCache.set(small, face);
     return face;
   } catch {
+    // Cache the failure too, otherwise every single location POST retries a
+    // permanently broken avatar URL.
+    faceCache.set(small, '');
     return '';
   }
 }
@@ -154,13 +169,25 @@ export async function handleOwnTracks(request: Request): Promise<Response> {
   // "friends" view). The requester is excluded: the app already shows its own
   // device under its own topic (owntracks/<user>/<device>), and echoing it back
   // would surface a duplicate friend re-topiced to owntracks/http/<tid>.
-  const where = {createdAt: {gt: sub(new Date(), {hours: 5})}};
-  const viewers = await prismaClient.viewer.findMany({
-    where: {id: {not: viewerId}, ViewerLocation: {some: where}},
-    include: {
-      ViewerLocation: {where, orderBy: {createdAt: 'desc'}, take: 1},
-    },
-  });
+  //
+  // One `DISTINCT ON` query instead of Prisma's `some` + per-viewer `take: 1`
+  // include: that pair costs two round trips and a window function over every
+  // recent row, where this is a single index scan on
+  // ViewerLocation(viewerId, createdAt) — on the hottest endpoint we have.
+  const viewers = await prismaClient.$queryRaw<RecentLocation[]>`
+    SELECT DISTINCT ON (l."viewerId")
+      l."viewerId" AS "id",
+      v."displayName",
+      v."profilePicture",
+      l."latitude",
+      l."longitude",
+      l."createdAt"
+    FROM "ViewerLocation" l
+    JOIN "Viewer" v ON v."id" = l."viewerId"
+    WHERE l."createdAt" > ${sub(new Date(), {hours: 5})}
+      AND l."viewerId" <> ${viewerId}
+    ORDER BY l."viewerId", l."createdAt" DESC
+  `;
 
   // Encode avatars in parallel (cached), keyed by viewer id, before the
   // synchronous message build below.
@@ -173,8 +200,7 @@ export async function handleOwnTracks(request: Request): Promise<Response> {
   );
 
   const messages = viewers.flatMap((v) => {
-    const loc = v.ViewerLocation[0];
-    const tst = Math.floor(loc.createdAt.getTime() / 1000);
+    const tst = Math.floor(v.createdAt.getTime() / 1000);
     // OwnTracks derives a friend's identity from `tid` alone: any HTTP-received
     // message is filed under topic `owntracks/http/<tid>`, and the `topic` field
     // in the payload is ignored (Connection.m:588-596). Initials aren't unique
@@ -186,8 +212,8 @@ export async function handleOwnTracks(request: Request): Promise<Response> {
       {
         _type: 'location',
         tid: v.id,
-        lat: loc.latitude,
-        lon: loc.longitude,
+        lat: v.latitude,
+        lon: v.longitude,
         tst,
         created_at: tst,
         topic: `owntracks/${v.id}`,

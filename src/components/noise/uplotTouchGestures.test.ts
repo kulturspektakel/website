@@ -195,20 +195,26 @@ describe('attachTouchGestures', () => {
     expect(over.style.touchAction).toBe('pan-y');
   });
 
-  // A tap is how you ask what a trace read at a moment, so it answers before the finger
-  // has gone anywhere — and it must not swallow the touch, because the finger that has
-  // only just landed may be about to scroll the list.
-  it('reads the trace the moment one finger lands, in plot pixels', () => {
+  // A tap is how you ask what a trace read at a moment, and it answers on the lift rather
+  // than on the touch: the mark it leaves behind now stays there, and a finger that has only
+  // just landed may still be about to scroll the list. It must not swallow the touch either,
+  // for that same reason.
+  it('reads the trace where a tap lifted, in plot pixels', () => {
     const {over, onScrub} = harness();
     const start = touches(at(120, 60));
     over.fire('touchstart', start);
-    expect(onScrub).toHaveBeenCalledWith({left: 100, top: 50});
+    expect(onScrub).not.toHaveBeenCalled();
     expect(start.preventDefault).not.toHaveBeenCalled();
+    over.fire('touchend', touches());
+    // The instant, and then the cursor put away: the first is what the page reads from here
+    // on, the second only takes the tooltip off a plot no finger is on.
+    expect(onScrub.mock.calls).toEqual([[{left: 100, top: 50}], [null]]);
   });
 
   it('clamps a finger over the edge into the plot', () => {
     const {over, onScrub} = harness();
     over.fire('touchstart', touches(at(-100, 500)));
+    over.fire('touchend', touches());
     expect(onScrub).toHaveBeenCalledWith({left: 0, top: RECT.height});
   });
 
@@ -224,16 +230,19 @@ describe('attachTouchGestures', () => {
     expect(onRange).not.toHaveBeenCalled();
   });
 
-  it('hands a vertical drag back to the list and stops reading', () => {
+  it('hands a vertical drag back to the list, having read nothing', () => {
     const {over, onScrub} = harness();
     over.fire('touchstart', touches(at(100, 60)));
     const move = touches(at(102, 60 + LOCK_PX + 4));
     over.fire('touchmove', move);
     expect(move.preventDefault).not.toHaveBeenCalled();
-    expect(onScrub).toHaveBeenLastCalledWith(null);
-    // And stays handed over: a scroll that drifts sideways is still a scroll.
-    onScrub.mockClear();
+    // Never named an instant, so there is nothing to take back — which is the whole reason
+    // nothing is named before the lock: whatever the page was reading, it still is.
+    expect(onScrub).not.toHaveBeenCalled();
+    // And stays handed over: a scroll that drifts sideways is still a scroll, right up to
+    // the lift.
     over.fire('touchmove', touches(at(180, 90)));
+    over.fire('touchend', touches());
     expect(onScrub).not.toHaveBeenCalled();
   });
 
@@ -271,17 +280,34 @@ describe('attachTouchGestures', () => {
     over.fire('touchstart', touches(at(70, 60), at(170, 60)));
     over.fire('touchend', touches(at(70, 60)));
     onScrub.mockClear();
+    // Re-seated where it stands, and reading nothing until it has crossed the threshold any
+    // single finger crosses.
     over.fire('touchmove', touches(at(70, 60)));
-    expect(onScrub).toHaveBeenLastCalledWith({left: 50, top: 50});
+    expect(onScrub).not.toHaveBeenCalled();
+    // Which is what re-seating the origin is for: without something to measure the lock
+    // against it could never hand itself over, and would read for ever.
     over.fire('touchmove', touches(at(72, 60 + LOCK_PX + 4)));
-    expect(onScrub).toHaveBeenLastCalledWith(null);
+    expect(onScrub).not.toHaveBeenCalled();
   });
 
-  it('puts the cursor away when the last finger leaves', () => {
+  // Only the tooltip goes with the finger. The instant the drag reported last is the one the
+  // page keeps reading, so nothing is named on the way out.
+  it('leaves the scrubbed instant behind when the last finger goes', () => {
     const {over, onScrub} = harness();
     over.fire('touchstart', touches(at(100, 60)));
+    over.fire('touchmove', touches(at(100 + LOCK_PX + 4, 62)));
+    onScrub.mockClear();
     over.fire('touchend', touches());
-    expect(onScrub).toHaveBeenLastCalledWith(null);
+    expect(onScrub.mock.calls).toEqual([[null]]);
+  });
+
+  // A gesture the system took away rather than one a hand finished: the browser's scroller
+  // claiming a finger is exactly the case a parked mark must not come out of.
+  it('commits nothing when a tap is cancelled', () => {
+    const {over, onScrub} = harness();
+    over.fire('touchstart', touches(at(120, 60)));
+    over.fire('touchcancel', touches());
+    expect(onScrub).not.toHaveBeenCalledWith({left: 100, top: 50});
   });
 
   it('takes every listener with it', () => {
