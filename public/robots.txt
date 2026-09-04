@@ -1,0 +1,19 @@
+# Static file under public/ — served off the CDN, never through SSR.
+
+User-agent: *
+Allow: /
+
+# Machine endpoints (webhooks, cron/task targets). Nothing crawlable.
+Disallow: /api/
+
+# Behind Directus auth; responses are `private, no-store`.
+Disallow: /crew/
+
+# Per-person URLs keyed by an unguessable token — cashless card balances and
+# donation receipts. Not secret by way of robots.txt, but they have no business
+# in a search index.
+Disallow: /card/
+Disallow: /spenden/quittung/
+
+# SSO hand-off, only meaningful mid-redirect.
+Disallow: /nuclino-sso

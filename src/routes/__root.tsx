@@ -15,6 +15,14 @@ export const Route = createRootRouteWithContext<{
       {charSet: 'utf-8'},
       {name: 'viewport', content: 'width=device-width,initial-scale=1'},
     ],
+    // Declared here rather than on the `_main` layout so /crew/* gets them too.
+    // Naming `apple-touch-icon` explicitly is the load-bearing part: without it
+    // iOS probes /apple-touch-icon-precomposed.png, which 404s through the SSR
+    // function.
+    links: [
+      {rel: 'icon', href: '/favicon.ico', sizes: '32x32'},
+      {rel: 'apple-touch-icon', href: '/apple-touch-icon.png'},
+    ],
   }),
   component: RootComponent,
 });

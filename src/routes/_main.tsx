@@ -52,7 +52,6 @@ export const Route = createFileRoute('/_main')({
       links: [
         {rel: 'stylesheet', href: photoswipeCSS},
         {rel: 'stylesheet', href: '/styles/fonts.css'},
-        {rel: 'icon', href: '/logos/logo.png'},
       ],
     };
   },
