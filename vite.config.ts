@@ -10,6 +10,14 @@ import viteReact from '@vitejs/plugin-react';
 // `mergeConfig` it.
 const env = loadEnv('production', process.cwd(), 'SENTRY');
 
+// `public/` files, served as-is under their own names. Not hashed, so a moderate
+// TTL rather than `immutable` — a replaced logo or updated font stylesheet still
+// rolls out within the day. Without an entry a file goes out as
+// `max-age=0, must-revalidate` and is revalidated on every repeat visit.
+const PUBLIC_CACHE = {
+  'cache-control': 'public, max-age=600, s-maxage=86400',
+};
+
 export default defineConfig({
   resolve: {
     tsconfigPaths: true,
@@ -48,6 +56,12 @@ export default defineConfig({
         '/glutenfrei': {
           redirect: {to: '/speisekarte?filter=glutenfrei', statusCode: 307},
         },
+        // Same, but off-site — and unlike the two above it had no
+        // `Cache-Control` at all, since a `beforeLoad` redirect never reaches
+        // the `_main` loader that sets one.
+        '/learn': {
+          redirect: {to: 'https://youtu.be/EakoNs1PP1c', statusCode: 307},
+        },
         // Vite's content-hashed output: the hash changes whenever the bytes do,
         // so these are safe to pin forever. Without this they went out as
         // `max-age=0, must-revalidate` and every repeat visit revalidated every
@@ -57,27 +71,16 @@ export default defineConfig({
             'cache-control': 'public, max-age=31536000, immutable',
           },
         },
-        // `public/` files, served as-is under their own names. Not hashed, so a
-        // moderate TTL rather than `immutable` — a replaced logo or updated
-        // font stylesheet still rolls out within the day.
-        '/styles/**': {
-          headers: {'cache-control': 'public, max-age=600, s-maxage=86400'},
-        },
-        '/logos/**': {
-          headers: {'cache-control': 'public, max-age=600, s-maxage=86400'},
-        },
-        '/genre/**': {
-          headers: {'cache-control': 'public, max-age=600, s-maxage=86400'},
-        },
-        '/maizzle/**': {
-          headers: {'cache-control': 'public, max-age=600, s-maxage=86400'},
-        },
-        '/marker.png': {
-          headers: {'cache-control': 'public, max-age=600, s-maxage=86400'},
-        },
-        '/fallback.svg': {
-          headers: {'cache-control': 'public, max-age=600, s-maxage=86400'},
-        },
+        // See PUBLIC_CACHE above for why these get a TTL at all.
+        '/styles/**': {headers: PUBLIC_CACHE},
+        '/logos/**': {headers: PUBLIC_CACHE},
+        '/genre/**': {headers: PUBLIC_CACHE},
+        '/maizzle/**': {headers: PUBLIC_CACHE},
+        '/marker.png': {headers: PUBLIC_CACHE},
+        '/fallback.svg': {headers: PUBLIC_CACHE},
+        '/robots.txt': {headers: PUBLIC_CACHE},
+        '/favicon.ico': {headers: PUBLIC_CACHE},
+        '/apple-touch-icon.png': {headers: PUBLIC_CACHE},
       },
     }),
     viteReact(),
@@ -90,7 +93,30 @@ export default defineConfig({
     }),
   ],
   ssr: {
-    noExternal: ['@apollo/client', 'iban-ts'],
+    // Everything not listed here stays external, i.e. `require`d out of the
+    // function's own `node_modules` at runtime — the whole package is parsed on
+    // every cold start with no tree-shaking. Cold starts dominate this
+    // function's billed CPU, so barrel-shaped packages belong here: bundling
+    // lets Vite shake them down to the exports actually used. `@chakra-ui/react`
+    // + `date-fns` roughly halved cold start, and Chakra's own dependency tree
+    // (`@ark-ui/react`, the ~74 `@zag-js/*` packages) had to follow — bundling
+    // the wrapper alone left the actual payload external.
+    //
+    // Pick candidates by *measuring*, not by package size. `react-icons`,
+    // `zod`, `formik`, `downshift` and `markdown-to-jsx` were all tried here and
+    // reverted: no measurable change, because V8 compiles function bodies
+    // lazily, so a 1.7 MB file of icon factory calls evaluates in ~20 ms. To
+    // measure, import a package on its own inside `.vercel/output/functions/
+    // __fallback.func` and diff `process.cpuUsage()`.
+    noExternal: [
+      'iban-ts',
+      '@chakra-ui/react',
+      'date-fns',
+      '@ark-ui/react',
+      /^@zag-js\//,
+      /^@internationalized\//,
+      '@pandacss/is-valid-prop',
+    ],
   },
   build: {
     sourcemap: true,
