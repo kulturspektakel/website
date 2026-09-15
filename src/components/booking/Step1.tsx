@@ -9,7 +9,7 @@ import DistanceWarning from './DistanceWarning';
 import DuplicateApplicationWarning from './DuplicateApplicationWarning';
 import useIsDJ from './useIsDJ';
 import {useFormikContext} from 'formik';
-import {Alert} from '../chakra-snippets/alert';
+// import {Alert} from '../chakra-snippets/alert';
 import {ConnectedField} from '../forms/ConnectedField';
 import {z} from 'zod';
 import {BandRepertoire, GenreCategory} from '../../generated/prisma/browser';
@@ -91,7 +91,7 @@ export default function Step1() {
               label,
             }))}
           />
-          {(values.repertoire === BandRepertoire.MostlyCoverSongs ||
+          {/* {(values.repertoire === BandRepertoire.MostlyCoverSongs ||
             values.repertoire === BandRepertoire.ExclusivelyCoverSongs) && (
             <Alert
               status="warning"
@@ -104,7 +104,7 @@ export default function Step1() {
               Reine Tribute-/Coverbands ohne eigene Interpretationen buchen wir
               nicht.
             </Alert>
-          )}
+          )} */}
         </>
       )}
 

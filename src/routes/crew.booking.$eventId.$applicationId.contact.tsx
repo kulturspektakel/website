@@ -1,5 +1,10 @@
 import {useMemo, useState} from 'react';
-import {createFileRoute, notFound, useRouter} from '@tanstack/react-router';
+import {
+  createFileRoute,
+  notFound,
+  useLoaderData,
+  useRouter,
+} from '@tanstack/react-router';
 import {useMutation} from '@tanstack/react-query';
 import {z} from 'zod';
 import {Button, Input, Stack, Textarea} from '@chakra-ui/react';
@@ -53,7 +58,7 @@ const loadContactData = createServerFn()
     const [event, stages] = await Promise.all([
       prismaClient.event.findUnique({
         where: {id: application.eventId},
-        select: {start: true, end: true},
+        select: {name: true, start: true, end: true},
       }),
       // Areas are global (no event relation); some may not be band stages.
       prismaClient.area.findMany({
@@ -69,6 +74,7 @@ const loadContactData = createServerFn()
       bandname: application.bandname,
       contactName: application.contactName ?? '',
       email: application.email ?? '',
+      eventName: event.name,
       start: event.start,
       end: event.end,
       stages,
@@ -110,30 +116,47 @@ const sendBandContactEmail = createServerFn()
 // ---------------------------------------------------------------------------
 
 const TEMPLATE = {
-  subject: 'Spielanfrage Kulturspektakel – {{bandname}}',
-  body: `Hallo {{contact}},
+  subject: 'Anfrage {{bandname}} - {{eventName}}',
+  body: `Hey {{contact}},
 
-wir würden euch ({{bandname}}) sehr gerne beim Kulturspektakel auf der {{stage}} am {{date}} um {{time}} Uhr spielen lassen.
+vielen Dank für eure Bewerbung mit {{bandname}} beim {{eventName}}. Wir denken, dass ihr sehr gut ins diesjährige Programm passt und möchten euch daher folgenden Slot auf unserem Festival anbieten:
 
-{{payment}}Passt das bei euch? Dann freuen wir uns auf eure Rückmeldung.
+• Datum: {{date}}
+• Uhrzeit: {{time}} Uhr (60 Minuten)
+• Bühne: {{stage}}
+
+Wie ihr wisst, ist das Kult ein vielfältiges Kulturfestival mit freiem Eintritt, das komplett ehrenamtlich von Jugendlichen und jungen Erwachsenen organisiert wird.
+
+Wir decken die Kosten für das Festival ausschließlich mit den Einnahmen aus dem Verkauf von Speisen und Getränken und ein paar kleinen Zuschüssen. Leider haben wir letztes Jahr auf Grund schlechtem Wetter einen größeren finanziellen Verlust gefahren.
+
+{{payment}}
+
+Aber natürlich bieten wir tolle Stimmung, professionelle technische Betreuung, ein super Team und selbstverständlich reichlich Verpflegung an unseren Essens- und Getränkebuden.
+
+Es würde uns sehr freuen, wenn ihr beim Kult {{year}} dabei seid. Bitte gebt uns daher so bald wie möglich eine Rückmeldung, ob euch der angebotene Slot passt und ihr nach wie vor bei uns spielen möchtet.
 
 Viele Grüße
-Das Booking-Team`,
+{{sender}}`,
 };
 
-// `label` is the dropdown option; `text` is the sentence inserted before the
-// closing question in the body (empty for "nichts", so it leaves no artifact).
+// `label` is the dropdown option; `text` is the paragraph that replaces
+// {{payment}} in the body — each one walks back a different amount of money,
+// so exactly one is always inserted.
 const PAYMENT_OPTIONS = [
-  {value: 'nichts', label: 'Keine', text: ''},
   {
-    value: 'fahrtkosten',
-    label: 'Fahrtkosten',
-    text: 'Eure Fahrtkosten übernehmen wir selbstverständlich. ',
+    value: 'KEIN_GELD',
+    label: 'Kein Geld',
+    text: 'Darum ist es uns leider nicht möglich, euch eine Gage oder Aufwandsentschädigung zu bezahlen.',
   },
   {
-    value: 'gage',
-    label: 'Gage',
-    text: 'Für euren Auftritt zahlen wir euch eine Gage. ',
+    value: 'KEINE_GAGE',
+    label: 'Keine Gage',
+    text: 'Darum ist es uns leider nicht möglich, euch eine Gage zu bezahlen. Ggf. können wir aber eine Fahrtkostenerstattung machen.',
+  },
+  {
+    value: 'WENIG_GAGE',
+    label: 'Wenig Gage',
+    text: 'Darum ist es uns leider nicht möglich, euch eine attraktive Gage zu bezahlen.',
   },
 ];
 
@@ -143,12 +166,15 @@ type Vars = {
   time: string;
   bandname: string;
   contact: string;
+  eventName: string;
+  year: string;
+  sender: string;
   payment: string;
 };
 
 function fillTemplate(text: string, vars: Vars): string {
   return text.replace(
-    /\{\{(stage|date|time|bandname|contact|payment)\}\}/g,
+    /\{\{(stage|date|time|bandname|contact|eventName|year|sender|payment)\}\}/g,
     (_, key: keyof Vars) => vars[key] ?? '',
   );
 }
@@ -173,7 +199,7 @@ function buildDayOptions(start: Date, end: Date) {
       value: cur.toLocaleDateString('en-CA', {timeZone}),
       label: cur.toLocaleDateString(locale, {
         timeZone,
-        weekday: 'short',
+        weekday: 'long',
         day: 'numeric',
         month: 'long',
         year: 'numeric',
@@ -197,6 +223,7 @@ export const Route = createFileRoute(
 
 function BandContactRoute() {
   const data = Route.useLoaderData();
+  const myViewer = useLoaderData({from: '/crew'});
   const {eventId, applicationId} = Route.useParams();
   const navigate = Route.useNavigate();
   const router = useRouter();
@@ -239,6 +266,13 @@ function BandContactRoute() {
       bandname: data.bandname,
       // Use the first name only (split on space) for a friendlier greeting.
       contact: data.contactName.split(' ')[0],
+      eventName: data.eventName,
+      year: new Date(data.start).toLocaleDateString(locale, {
+        timeZone,
+        year: 'numeric',
+      }),
+      // Signed by whoever is sending it; first name only, like the greeting.
+      sender: myViewer?.displayName.split(' ')[0] ?? 'Das Booking-Team',
       payment: PAYMENT_OPTIONS.find((o) => o.value === payment)?.text ?? '',
     };
     const gen = {

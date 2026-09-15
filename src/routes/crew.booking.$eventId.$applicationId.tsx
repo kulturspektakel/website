@@ -34,6 +34,7 @@ import {
   useListCollection,
   useTagsInput,
 } from '@chakra-ui/react';
+import {LuChevronDown} from 'react-icons/lu';
 import {
   FaFacebook,
   FaGlobe,
@@ -53,6 +54,12 @@ import {prismaClient} from '../server/prismaClient.server';
 import {Avatar} from '../components/chakra-snippets/avatar';
 import {BandName} from '../components/booking/BandName';
 import {BandApplicationRating} from '../components/booking/BandApplicationRating';
+import {
+  MenuContent,
+  MenuItem,
+  MenuRoot,
+  MenuTrigger,
+} from '../components/chakra-snippets/menu';
 import {Tag} from '../components/chakra-snippets/tag';
 import {Tooltip} from '../components/chakra-snippets/tooltip';
 import DateString from '../components/DateString';
@@ -504,12 +511,85 @@ function LeftColumn({
           {data.email}
         </CopyToClipboard>
         <Box mt="3">
-          <Button size="sm" variant="outline" onClick={onContact}>
-            Anfragen
-          </Button>
+          <ContactMenu
+            applicationId={data.id}
+            tags={data.BandApplicationTag.map((t) => t.tag)}
+            onContact={onContact}
+          />
         </Box>
       </Section>
     </Stack>
+  );
+}
+
+// The band's answer to our offer, recorded as an ordinary tag: it then shows up
+// in the tags field below, in the booking table's tag column and in its filters,
+// without needing a column of its own.
+const RESPONSE_TAGS = [
+  {tag: 'abgesagt', label: 'als abgesagt markieren'},
+  {tag: 'zugesagt', label: 'als zugesagt markieren'},
+];
+
+// Everything you can do about the offer, behind one button in the Kontakt
+// section: write the mail, or record the answer that came back.
+function ContactMenu({
+  applicationId,
+  tags,
+  onContact,
+}: {
+  applicationId: string;
+  tags: string[];
+  onContact: () => void;
+}) {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const {eventId} = Route.useParams();
+  // The tag currently being written, or `null` when idle. One at a time is all
+  // the menu can start — it closes on select.
+  const [pending, setPending] = useState<string | null>(null);
+
+  const add = (tag: string) => {
+    setPending(tag);
+    addBandApplicationTag({data: {applicationId, tag}})
+      .then(() =>
+        Promise.all([
+          // Same refresh the tags field does after an edit: the tag joins the
+          // event's suggestion vocabulary, and the booking table re-renders.
+          queryClient.invalidateQueries({
+            queryKey: ['bandApplicationTags', eventId],
+          }),
+          router.invalidate(),
+        ]),
+      )
+      .finally(() => setPending(null));
+  };
+
+  return (
+    <MenuRoot>
+      <MenuTrigger asChild>
+        <Button size="sm" variant="outline" loading={pending != null}>
+          Anfrage
+          <LuChevronDown />
+        </Button>
+      </MenuTrigger>
+      <MenuContent>
+        <MenuItem value="send" onClick={onContact}>
+          Anfrage senden
+        </MenuItem>
+        {RESPONSE_TAGS.map(({tag, label}) => (
+          <MenuItem
+            key={tag}
+            value={tag}
+            // Already recorded — remove the chip in the tags field below if it
+            // was a mistake. `tag` is citext, so stored casing may differ.
+            disabled={tags.some((t) => t.toLowerCase() === tag)}
+            onClick={() => add(tag)}
+          >
+            {label}
+          </MenuItem>
+        ))}
+      </MenuContent>
+    </MenuRoot>
   );
 }
 
@@ -882,6 +962,15 @@ function BandTags({
     queryFn: () => listBandApplicationTags({data: {eventId}}),
   });
   const [value, setValue] = useState<string[]>(initialTags);
+  // Tags are also written from outside this component (the Zugesagt/Abgesagt
+  // buttons), which invalidates the route — so re-seed from the loader whenever
+  // the stored set really changed. Keyed on the joined string, since
+  // `initialTags` is a fresh array on every render; split back apart inside the
+  // effect so the dep list stays exact.
+  const initialKey = initialTags.join('\u0000');
+  useEffect(() => {
+    setValue(initialKey ? initialKey.split('\u0000') : []);
+  }, [initialKey]);
 
   // Persist a single add/remove, then refresh the suggestion list (a brand-new
   // tag should become suggestable) and the route (the booking table shows tags).
