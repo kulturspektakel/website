@@ -49,6 +49,7 @@ const ENV_VARS = {
   VITE_SENTRY_DSN: 'terraform',
 
   // Secrets — Google Secret Manager.
+  APIFY_TOKEN: 'secret',
   AWS_ACCESS_KEY_ID: 'secret',
   // Build-time only: the Sentry Vite plugin uses this to upload source maps.
   SENTRY_AUTH_TOKEN: 'secret',

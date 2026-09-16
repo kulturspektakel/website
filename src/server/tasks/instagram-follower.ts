@@ -1,28 +1,37 @@
-import https from 'node:https';
 import {prismaClient} from '../../server/prismaClient.server';
 import {readJsonPayload} from '../../server/readJsonPayload.server';
 
 export type InstagramFollowerPayload = {id: string};
 
+const ACTOR = 'apify~instagram-profile-scraper';
+
 /** Instagram handles are `[A-Za-z0-9._]`, max 30 chars. */
 const HANDLE = /^[A-Za-z0-9._]{1,30}$/;
 
-/**
- * An account we know exists and is public, used to tell "this handle is gone"
- * apart from "Instagram is stonewalling us" — see `handleInstagramFollower`.
- */
-const CONTROL_HANDLE = 'kulturspektakel';
+/** One dataset item of `apify/instagram-profile-scraper` (the fields we use). */
+type ProfileItem = {
+  username?: string;
+  followersCount?: number | null;
+  error?: string;
+  errorDescription?: string;
+};
 
 /**
- * Reads the follower count from the public Instagram profile page and stores it
- * on the BandApplication.
+ * Stores the applicant's Instagram follower count on the BandApplication.
  *
- * The old `api/v1/users/web_profile_info` endpoint this used to call is now
- * login-gated: it answers `401 {"require_login": true}` to any request without
- * a session cookie, which surfaced here as a thrown error and a 500, and so as
- * 25 futile Cloud Tasks retries per application. The follower count is still
- * public in the profile page's `og:description` meta tag, which is what we
- * parse instead. No credentials involved.
+ * Scraping Instagram from our own IPs no longer works. Two attempts failed
+ * before this one: `api/v1/users/web_profile_info` is login-gated (`401
+ * {"require_login": true}`), and parsing `og:description` off the public
+ * profile page — which works from a normal IP with a crawler User-Agent —
+ * gets a 302 from the Vercel deployment. So hand the handle to Apify's
+ * Instagram Profile Scraper and read `followersCount` off the dataset item.
+ *
+ * As a bonus this is exact: `og:description` abbreviates above 10,000
+ * (`17K`, `2M`), so that route could only ever store two or three
+ * significant figures for the accounts where the number matters most.
+ *
+ * Unexpected responses throw so Cloud Tasks retries; a handle Instagram
+ * doesn't know is treated as a no-op.
  */
 export async function handleInstagramFollower(
   request: Request,
@@ -36,157 +45,61 @@ export async function handleInstagramFollower(
   if (!handle) {
     return new Response(null, {status: 204});
   }
-  // Older rows predate the form's handle normalisation and may hold anything;
-  // a junk value isn't scrapable, so don't burn retries on it.
+  // Older rows predate the form's handle normalisation and may hold anything.
+  // A junk value can't resolve to a profile, and the actor bills per result,
+  // so don't pay to find that out.
   if (!HANDLE.test(handle)) {
     console.error(`Instagram handle ${JSON.stringify(handle)} is not a handle`);
     return new Response(null, {status: 204});
   }
 
-  const count = await instagramFollowerCount(handle);
-  if (count != null) {
-    await prismaClient.bandApplication.update({
-      where: {id},
-      data: {instagramFollower: count},
-    });
-    return new Response(null, {status: 204});
-  }
+  const items = await runActor(handle);
+  const item = items.at(0);
 
-  // No `og:description`. Instagram serves a byte-identical error page whether
-  // the handle doesn't exist or we're being blocked, so the status code can't
-  // tell us which. Ask about an account we know is there: if that works too,
-  // this handle really is gone (give up quietly); if it doesn't, we're blocked
-  // and should throw so Cloud Tasks retries once the block lifts.
-  if ((await instagramFollowerCount(CONTROL_HANDLE)) != null) {
+  if (item?.error === 'not_found') {
     console.error(`Instagram user ${handle} not found`);
     return new Response(null, {status: 204});
   }
-  throw new Error(
-    `Instagram returned no og:description for ${handle} or for the control ` +
-      `handle ${CONTROL_HANDLE} — we are most likely being blocked.`,
-  );
-}
 
-/**
- * Follower count for `handle`, or `null` if the page carried no
- * `og:description` (handle gone, or we're blocked — the caller disambiguates).
- * Throws on a non-200, which Cloud Tasks retries.
- */
-async function instagramFollowerCount(handle: string): Promise<number | null> {
-  const og = await fetchOgDescription(`https://www.instagram.com/${handle}/`);
-  return og == null ? null : parseFollowerCount(og);
-}
-
-/**
- * `"2,570 Followers, 139 Following, 284 Posts - …"` → `2570`.
- *
- * Instagram only spells the number out below 10,000; above that it abbreviates
- * to two or three significant figures (`17K`, `149K`, `2M`), so counts over
- * 10,000 are necessarily approximate. Returns `null` if the tag doesn't lead
- * with a follower count.
- */
-export function parseFollowerCount(ogDescription: string): number | null {
-  const match = ogDescription.match(/^([\d.,]+)([KMB])?\s+Followers/);
-  if (!match) {
-    return null;
-  }
-  // en-US formatting (we send `Accept-Language: en-US`): `,` groups thousands,
-  // `.` is the decimal point in abbreviations like `1.5K`.
-  const value = parseFloat(match[1].replace(/,/g, ''));
-  if (!isFinite(value)) {
-    return null;
-  }
-  const scale = {K: 1e3, M: 1e6, B: 1e9}[match[2] ?? ''] ?? 1;
-  return Math.round(value * scale);
-}
-
-/**
- * Fetch `url` and return its `og:description` content, or `null` if there
- * isn't one.
- *
- * Two non-obvious requirements, both about looking like a link-preview
- * crawler rather than a browser:
- *
- * - The User-Agent decides what we get. A crawler UA gets the real profile
- *   page (~940 KB, og tags present); a browser UA gets a login wall with no
- *   og tags; no UA at all gets a 302.
- * - Plain `node:https` rather than `fetch`, because Instagram's edge rejects
- *   browser fetch-metadata headers with `400 SecFetch Policy violation.` and
- *   Node's `fetch` (undici) unconditionally appends `Sec-Fetch-Mode` and
- *   `Sec-Fetch-Site`. Those are forbidden header names, so `fetch` can't
- *   remove them; `node:https` sends only what we hand it.
- *
- * The og tags sit in the first ~10 KB, so we stop reading at `</head>` rather
- * than pulling the whole ~940 KB document.
- */
-function fetchOgDescription(url: string): Promise<string | null> {
-  return new Promise((resolve, reject) => {
-    const req = https.get(
-      url,
-      {
-        headers: {
-          'User-Agent':
-            'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)',
-          'Accept-Language': 'en-US,en;q=0.9',
-        },
-      },
-      (res) => {
-        if (res.statusCode !== 200) {
-          res.resume();
-          // Include the redirect target: Instagram answers some requests with
-          // a 302 rather than the page, and where it sends us (login wall,
-          // consent interstitial, canonical URL) is the whole diagnosis.
-          const where = res.headers.location
-            ? ` -> ${res.headers.location}`
-            : '';
-          reject(
-            new Error(
-              `Instagram responded ${res.statusCode}${where} for ${url}`,
-            ),
-          );
-          return;
-        }
-        res.setEncoding('utf8');
-        let head = '';
-        let settled = false;
-        const settle = (value: string | null) => {
-          settled = true;
-          res.destroy();
-          resolve(value);
-        };
-        res.on('data', (chunk) => {
-          if (settled) {
-            return;
-          }
-          head += chunk;
-          const og = head.match(
-            /<meta property="og:description" content="([^"]*)"/,
-          );
-          if (og) {
-            settle(decodeEntities(og[1]));
-          } else if (head.includes('</head>')) {
-            settle(null);
-          }
-        });
-        res.on('end', () => {
-          if (!settled) {
-            resolve(null);
-          }
-        });
-        res.on('error', reject);
-      },
+  const count = item?.followersCount;
+  if (count == null) {
+    throw new Error(
+      `No follower count for ${handle}: ${JSON.stringify(items)}`,
     );
-    req.on('error', reject);
-    req.setTimeout(15_000, () => {
-      req.destroy(new Error(`Instagram timed out for ${url}`));
-    });
+  }
+
+  await prismaClient.bandApplication.update({
+    where: {id},
+    data: {instagramFollower: count},
   });
+
+  return new Response(null, {status: 204});
 }
 
-/** Instagram HTML-escapes the tag content; we only need the numeric prefix. */
-function decodeEntities(s: string): string {
-  return s
-    .replace(/&#x([\da-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
-    .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(Number(d)))
-    .replace(/&amp;/g, '&');
+/**
+ * Runs the actor synchronously and returns its dataset items.
+ *
+ * `run-sync-get-dataset-items` blocks until the run finishes, which for a
+ * single profile is a handful of seconds. The `timeout` bounds that wait well
+ * inside the function's own limit: if Apify is slow or wedged we'd rather fail
+ * and let the scrapers queue retry later than sit on an open request.
+ */
+export async function runActor(username: string): Promise<ProfileItem[]> {
+  const res = await fetch(
+    `https://api.apify.com/v2/acts/${ACTOR}/run-sync-get-dataset-items?timeout=120`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${process.env.APIFY_TOKEN}`,
+      },
+      body: JSON.stringify({usernames: [username]}),
+    },
+  );
+
+  if (!res.ok) {
+    throw new Error(`Apify HTTP${res.status}: ${await res.text()}`);
+  }
+
+  return (await res.json()) as ProfileItem[];
 }
