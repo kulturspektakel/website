@@ -133,7 +133,17 @@ function fetchOgDescription(url: string): Promise<string | null> {
       (res) => {
         if (res.statusCode !== 200) {
           res.resume();
-          reject(new Error(`Instagram responded ${res.statusCode} for ${url}`));
+          // Include the redirect target: Instagram answers some requests with
+          // a 302 rather than the page, and where it sends us (login wall,
+          // consent interstitial, canonical URL) is the whole diagnosis.
+          const where = res.headers.location
+            ? ` -> ${res.headers.location}`
+            : '';
+          reject(
+            new Error(
+              `Instagram responded ${res.statusCode}${where} for ${url}`,
+            ),
+          );
           return;
         }
         res.setEncoding('utf8');
