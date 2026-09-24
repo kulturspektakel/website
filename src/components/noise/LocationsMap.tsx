@@ -1,6 +1,6 @@
 import {Wrapper} from '@googlemaps/react-wrapper';
 import {Box, HStack, IconButton, Text} from '@chakra-ui/react';
-import {memo, useEffect, useRef, useState} from 'react';
+import {memo, useEffect, useLayoutEffect, useRef, useState} from 'react';
 import {LuPlus, LuX} from 'react-icons/lu';
 import {SegmentedControl} from '../chakra-snippets/segmented-control';
 import {Tooltip} from '../chakra-snippets/tooltip';
@@ -53,15 +53,71 @@ const COORD_DECIMALS = 6;
 const OVER_PIN_Z_INDEX = 1;
 const WARNING_Z_INDEX = 2;
 
-// 'hybrid' rather than 'satellite' for the imagery view: it keeps the road and
-// label overlay, and a mic gets placed relative to a named street or building as
-// often as to something only visible from above. String literals because the
-// google.maps.MapTypeId enum doesn't exist until the API has loaded.
+// 'hybrid' rather than 'satellite' for the imagery view: it keeps the road overlay,
+// and a mic gets placed relative to a street as often as to something only visible
+// from above. Its labels are down to street names (see SATELLITE_STYLE). String literals
+// because the google.maps.MapTypeId enum doesn't exist until the API has loaded.
 type MapTypeId = 'roadmap' | 'hybrid';
 const MAP_TYPES: Array<{value: MapTypeId; label: string}> = [
   {value: 'roadmap', label: 'Map'},
   {value: 'hybrid', label: 'Satellite'},
 ];
+
+// Every label off over imagery except street names. POIs, transit and place names
+// compete with the pins on a busy photo; a street name is what a mic gets placed by.
+// Later rules win, so the roads are switched back on after everything goes off.
+const SATELLITE_STYLE: google.maps.MapTypeStyle[] = [
+  {elementType: 'labels', stylers: [{visibility: 'off'}]},
+  {featureType: 'road', elementType: 'labels', stylers: [{visibility: 'on'}]},
+];
+
+// A dimmer laid over the imagery, so the pins and their halos — the only things on
+// this map that mean anything — are the brightest things on it. A sunlit field or a
+// white tent roof is otherwise as loud as the loudest badge.
+//
+// An overlay map type rather than an overlay in a pane: its tiles sit directly on the
+// imagery and under every pane, so the pins and glows are never dimmed with it, and
+// it pans and zooms as part of the map without a draw() of its own.
+//
+// Grey and darkened by a backdrop filter, then a thin black fill on top. The fill is
+// also the fallback: the filter only reaches the imagery if nothing between them
+// starts a new backdrop root, and where it doesn't, the photo is still somewhat
+// darker rather than untouched. Grey rather than tinted so nothing in the photo
+// shares a hue with the level ramp.
+//
+// The layer stays on the map in both views and the shade is switched by a CSS rule
+// on the container (see `data-imagery`), not by adding the layer on the switch:
+// added then, its tiles arrive a beat after the photo's, and the photo shows at full
+// colour in between. Standing already, they are shaded the moment the photo is.
+const SHADE_TILE_CLASS = 'noise-shade-tile';
+const SATELLITE_SHADE = {
+  background: 'rgba(0, 0, 0, 0.3)',
+  backdropFilter: 'saturate(0) brightness(0.65)',
+};
+
+function shadeMapType(maps: typeof google.maps): google.maps.MapType {
+  const tileSize = new maps.Size(256, 256);
+  return {
+    tileSize,
+    maxZoom: 22,
+    minZoom: 0,
+    name: 'shade',
+    alt: null,
+    projection: null,
+    radius: 6378137,
+    getTile(_coord, _zoom, ownerDocument) {
+      const div = ownerDocument.createElement('div');
+      Object.assign(div.style, {
+        width: `${tileSize.width}px`,
+        height: `${tileSize.height}px`,
+        pointerEvents: 'none',
+      });
+      div.className = SHADE_TILE_CLASS;
+      return div;
+    },
+    releaseTile() {},
+  };
+}
 
 /**
  * Every location of one noise project, on either the dark basemap or satellite
@@ -168,15 +224,18 @@ function MapCanvas({
     projection.onRemove = () => {};
     projection.setMap(mapRef.current);
     projectionRef.current = projection;
+    mapRef.current.overlayMapTypes.push(shadeMapType(maps));
   }, []);
 
-  useEffect(() => {
+  // A layout effect, so the switch lands in the same frame as the container's
+  // `data-imagery` — otherwise a frame of unshaded photo shows on the way back.
+  useLayoutEffect(() => {
     mapRef.current?.setOptions({
       mapTypeId,
       // The custom palette describes the roadmap base. Left applied over imagery
-      // it would repaint the label overlay in mid-greys on a bright photo, so
-      // hand labels back to Google's treatment, which is designed for satellite.
-      styles: mapTypeId === 'roadmap' ? darkMapStyle() : [],
+      // it would repaint the road overlay in mid-greys on a bright photo, so
+      // imagery gets its own style, which only thins out the labels.
+      styles: mapTypeId === 'roadmap' ? darkMapStyle() : SATELLITE_STYLE,
     });
   }, [mapTypeId]);
 
@@ -379,7 +438,10 @@ function MapCanvas({
   useEffect(() => {
     markersRef.current.forEach((marker, i) => {
       marker.setLabel(
-        pinLabel(pinLabels[i] ?? NO_LEVEL_LABEL, {stale: pinStale[i] ?? true}),
+        pinLabel(pinLabels[i] ?? NO_LEVEL_LABEL, {
+          stale: pinStale[i] ?? true,
+          over: pinOver[i] ?? false,
+        }),
       );
     });
   }, [labelKey, pillKey, signature]);
@@ -522,7 +584,12 @@ function MapCanvas({
   // so it works the same whether the caller sizes the box explicitly or lets flex
   // do it. The caller must set position="relative".
   return (
-    <Box position="absolute" inset="0">
+    <Box
+      position="absolute"
+      inset="0"
+      data-imagery={mapTypeId === 'roadmap' ? undefined : ''}
+      css={{[`&[data-imagery] .${SHADE_TILE_CLASS}`]: SATELLITE_SHADE}}
+    >
       <div ref={containerRef} style={{height: '100%', width: '100%'}} />
       {/* The tooltip's trigger. A marker is drawn by the Maps API and owns no DOM
           node, so the anchor is this zero-size box parked at the pin's pixel and
@@ -615,7 +682,7 @@ function MapCanvas({
  * The boundaries are printed at the joints rather than a range under each swatch: the
  * bands are the gaps between the numbers, which is how a scale reads, and it halves the
  * width of the thing. The first band has no label because it has no floor — the ramp is
- * open at both ends (see pinScale), and "60" under the second swatch says everything
+ * open at both ends (see pinScale), and "50" under the second swatch says everything
  * quieter is the first one.
  *
  * The unit is the series the pins are actually showing, so the legend follows the header's

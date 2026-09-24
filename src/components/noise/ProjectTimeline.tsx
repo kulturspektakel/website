@@ -123,7 +123,7 @@ const CROP_SPAN = {
 // moving), stepped with the keyboard (focus-visible, so the value is readable while
 // arrowing), and carried by a drag drawing a new window, which zag knows nothing about —
 // hence data-moving below. The playhead's own pill is not one of these: it is not a thumb,
-// and it stands for as long as there is a playhead at all (see Readout).
+// and it opens whenever the pointer is anywhere on the strip (see PLAYHEAD_READOUT_CSS).
 const READOUT_ATTR = 'data-readout';
 // Hoisted for the same reason the CSS below is, and because a computed key would otherwise
 // have a fresh object built for every pill on every frame of a scrub.
@@ -131,6 +131,18 @@ const READOUT_MARK = {[READOUT_ATTR]: ''} as const;
 const READOUT_CSS = {
   [`& [${READOUT_ATTR}]`]: {display: 'none'},
   [`&:hover [${READOUT_ATTR}], &[data-dragging] [${READOUT_ATTR}], &[data-focus-visible] [${READOUT_ATTR}], &[data-moving] [${READOUT_ATTR}]`]:
+    {display: 'block'},
+} as const;
+
+// The playhead's pill, set on the strip rather than on the mark: it opens while the pointer
+// is anywhere over the strip, not only over the hairline, and closes when it leaves. The mark
+// itself stays where it was put. A drag holds pointer capture on the strip, which keeps it
+// :hover even once the hand wanders off it; data-dragging covers zag's own thumb drags.
+const PLAYHEAD_ATTR = 'data-playhead';
+const PLAYHEAD_MARK = {[PLAYHEAD_ATTR]: ''} as const;
+const PLAYHEAD_READOUT_CSS = {
+  [`& [${PLAYHEAD_ATTR}] > [${READOUT_ATTR}]`]: {display: 'none'},
+  [`&:hover [${PLAYHEAD_ATTR}] > [${READOUT_ATTR}], &[data-dragging] [${PLAYHEAD_ATTR}] > [${READOUT_ATTR}]`]:
     {display: 'block'},
 } as const;
 
@@ -162,9 +174,8 @@ const labelFormat = instantLabel(false);
  *
  * One component for the grips and the playhead alike. The two differ in when they show: a
  * grip's is a child of its thumb and left to READOUT_CSS, which opens it only while that grip
- * is pointed at or moving, and the playhead's stands for as long as there is a playhead — the
- * mark outlives the hand that placed it, and a parked hairline with no instant on it is not
- * something anyone can come back to. The marker attribute is set on both regardless, since it
+ * is pointed at or moving, and the playhead's is left to PLAYHEAD_READOUT_CSS, which opens it
+ * while the pointer is anywhere on the strip. The marker attribute is set on both, since it
  * is what that CSS (and the thumb's focus ring) selects on.
  */
 const Readout = memo(function Readout({
@@ -311,14 +322,13 @@ function Playhead({
   label,
 }: {
   fraction: number;
-  // What the pill over the mark says. Always something: the mark stays where it is put, so it
-  // is read with the hand off the strip at least as often as under it, and a hairline with no
-  // instant on it is not a thing anyone can park and come back to. A grip's pill is hidden by
-  // READOUT_CSS instead, a grip being something you take hold of rather than a reading.
+  // What the pill over the mark says. Shown only while the pointer is on the strip — see
+  // PLAYHEAD_READOUT_CSS, which the strip carries.
   label: string;
 }) {
   return (
     <Box
+      {...PLAYHEAD_MARK}
       position="absolute"
       top="0"
       bottom="0"
@@ -345,6 +355,9 @@ type TimelineProps = {
   // says where there is anything to look at as well as when. Straight through to
   // TimelineMarkers, which is the layer that draws in the axis' own coordinates.
   gaps?: readonly LogGap[];
+  // Where a place on screen read over its limit, as a bar along the top of the strip. Null
+  // when no place on screen has a limit for the series being shown (see limitBreaches).
+  breaches?: readonly LogGap[] | null;
   onCommit: (selection: ProjectSelection) => void;
 };
 
@@ -395,7 +408,13 @@ export function ProjectTimeline({
  * becomes the second of those once it has actually travelled, so a click stays the click it
  * has always been.
  */
-function CropTimeline({window, selection, gaps, onCommit}: TimelineProps) {
+function CropTimeline({
+  window,
+  selection,
+  gaps,
+  breaches,
+  onCommit,
+}: TimelineProps) {
   // The axis' right-hand end, which is also the slider's max — see axisEnd for the one
   // window where that is not `window.end`.
   const sliderMax = axisEnd(window);
@@ -655,6 +674,7 @@ function CropTimeline({window, selection, gaps, onCommit}: TimelineProps) {
         // already carries is the same gesture said in the same way. The grips keep their own
         // ew-resize over it, the playhead its crosshair.
         cursor="crosshair"
+        css={PLAYHEAD_READOUT_CSS}
         onPointerDownCapture={onControlPointerDownCapture}
         onPointerMove={onControlPointerMove}
         onPointerUp={onControlPointerUp}
@@ -694,7 +714,7 @@ function CropTimeline({window, selection, gaps, onCommit}: TimelineProps) {
             which is a line's own colour at 15 %. Fixed, and there is not even a stroke to
             follow any more: the charts draw a line per picked window, each its own shade, so
             a strip that took one of them would be picking a favourite. `accent.solid` is the
-            section's one accent — the grips' own fill, and the middle of the series ramp —
+            section's one accent — the grips' own fill, and the chart series' shade —
             so the crop reads as belonging to the handles that set it.
 
             Before the markers, so the grid draws over the top of it: a tick inside the crop
@@ -730,6 +750,7 @@ function CropTimeline({window, selection, gaps, onCommit}: TimelineProps) {
           start={window.start}
           end={sliderMax}
           gaps={gaps}
+          breaches={breaches}
           overhang={HANDLE_W}
         />
 
@@ -769,12 +790,8 @@ function CropTimeline({window, selection, gaps, onCommit}: TimelineProps) {
             in the tree so the markers are under it and the thumbs, carrying the recipe's own
             z-index, are over it.
 
-            With its pill whenever it is there at all, pointed at or not. It was shown only
-            while a hand was on this strip, on the grounds that a pill naming an instant the
-            hand is nowhere near says nothing — but the mark stays where it is put now, and the
-            reason to park one is to read it, so the instant has to be legible with the hand
-            out of the way. The one case with no pill is a window being drawn, which has no
-            playhead to name (see drawProjectSelection). */}
+            Its pill shows only while the pointer is on this strip (PLAYHEAD_READOUT_CSS, on
+            the control); the mark itself stays where it was put. */}
         {selection.current != null && (
           <Playhead
             fraction={fractionOf(selection.current)}
@@ -892,7 +909,13 @@ function CropTimeline({window, selection, gaps, onCommit}: TimelineProps) {
  * ProjectSelection). So this offers a pointer affordance and no role, rather than a slider
  * role over something that would not answer a key.
  */
-function ScrubTimeline({window, selection, gaps, onCommit}: TimelineProps) {
+function ScrubTimeline({
+  window,
+  selection,
+  gaps,
+  breaches,
+  onCommit,
+}: TimelineProps) {
   const axisMax = axisEnd(window);
   const {onFrame, onceNow} = useFrameCommit(onCommit);
 
@@ -967,6 +990,7 @@ function ScrubTimeline({window, selection, gaps, onCommit}: TimelineProps) {
         // tick labels) that a drag would otherwise select rather than scrub past.
         touchAction="none"
         userSelect="none"
+        css={PLAYHEAD_READOUT_CSS}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={endPress}
@@ -995,12 +1019,12 @@ function ScrubTimeline({window, selection, gaps, onCommit}: TimelineProps) {
           start={window.start}
           end={axisMax}
           gaps={gaps}
+          breaches={breaches}
           overhang={HANDLE_W}
         />
 
-        {/* Last, so it draws over the grid — there are no thumbs here to pass over it. With
-            its pill whenever there is a mark at all: nothing is ever drawn here without one,
-            there being no window on this strip to draw and so no gesture that clears it. */}
+        {/* Last, so it draws over the grid — there are no thumbs here to pass over it. Its
+            pill shows only while the pointer is on the strip (PLAYHEAD_READOUT_CSS). */}
         {selection.current != null && (
           <Playhead
             fraction={axisFraction(selection.current, window.start, axisMax)}

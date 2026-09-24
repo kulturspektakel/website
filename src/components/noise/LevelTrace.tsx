@@ -90,8 +90,9 @@ import {usePlayheadEffect, type DeviceWindows} from './projectView';
 // The filled area under the trace belongs to a *single* series (see the series list): they
 // are nested — Peak ≥ Fmax ≥ Leq,1m ≳ Leq,5m ≳ Leq,30m, and dB(C) ≥ dB(A) throughout — so
 // an area under any one of several paints over the quieter lines, and two at 15 % stack
-// into a shade that reads as data. One series keeps the fill it always had; several are
-// lines only.
+// into a shade that reads as data. One series has an area; several are lines only. And the
+// area is only painted where the trace is over a limit (see drawLimits): under it, the line
+// alone says everything, and the fill is kept for the one thing worth shouting about.
 //
 // Two sources, one shape, chosen by `live`:
 //   live off — the devices' whole stored history at one point per minute, already on a
@@ -149,8 +150,8 @@ const isTyping = (target: EventTarget | null): boolean =>
   (target.isContentEditable ||
     ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName));
 
-// The line's own colour at 15 %, so the trace reads as an area without the line getting
-// lost in it. An 8-digit hex rather than `color-mix()`, which a canvas `fillStyle` on an
+// The line's own colour at 15 %, for the part of the area that is over a limit — enough to
+// read as an area without the line getting lost in it. An 8-digit hex rather than `color-mix()`, which a canvas `fillStyle` on an
 // older phone may not parse: the suffix is only legal because every series token resolves
 // to a 6-digit hex, which theme-noise.test.ts asserts for all of them.
 const fill = (stroke: string) => `${stroke}26`;
@@ -170,33 +171,22 @@ const X_GRID_SPACE = 56;
 // colour cannot — colour is never the only cue in this section.
 const LIMIT_DASH = [4, 3];
 
-// The rule's own width, and the halo's, in CSS pixels. Odd widths both, so the two stay
-// concentric about the same row of pixels.
-//
-// A hard casing alone was tried at 3 against 1 and is not enough: a pixel of ground either
-// side of a dash reads as anti-aliasing rather than as separation, and the shade that ties a
-// rule to its trace still buries it in one. The blur is what makes it a halo — the ground
-// fades out over a few pixels, so the eye gets a gap around the dash whatever is behind it,
-// which is the thing a fixed one-pixel outline cannot promise against a fill of similar
-// value.
+// The rule's width, in CSS pixels.
 const LIMIT_WIDTH_PX = 1;
-const LIMIT_HALO_PX = 3;
-const LIMIT_HALO_BLUR_PX = 4;
 
 /**
  * The permitted levels, over the traces they are permitted for.
  *
- * Each in the shade of the series it is written against and dashed where that series' own
- * line is solid, which between them are the two things a rule has to say: which of the lines
- * on this chart it bounds, and that it is not one of them. Only the limits whose series is
+ * In red and dashed where the series' own line is yellow and solid, which between them say
+ * that a rule is not one of the lines (see chart.limit). Only the limits whose series is
  * picked are drawn at all (see limitSegments) — so the header's menu brings a rule and the
  * line it belongs to into view together.
+
  *
- * Over a halo in the ground's own colour, because the shade that ties a rule to its trace is
- * also what buries it in one: a yellow dash over a yellow envelope is a rule you have to hunt
- * for, and the fill under it is exactly where a limit matters most. The ground fading out
- * around each dash separates the two without giving the rule a hue of its own to be mistaken
- * for a sixth measurement — see chart.ground.
+ * And the trace's area, only where it is over one: uPlot builds the area under the one filled
+ * series but paints it transparent (see the series list), and this repaints that path clipped
+ * to the band above each limit — so what shows is the part of the level that was too loud,
+ * between the rule and the line. Nothing is filled where no limit is set.
  *
  * The line alone, with no figure lettered on it. What a rule is for is seeing at a glance
  * whether the trace is under it, and for that the height *is* the reading — the dB grid
@@ -218,6 +208,9 @@ const LIMIT_HALO_BLUR_PX = 4;
  * a retina screen the rule comes out a hairline, which looks like a styling choice rather
  * than a bug.
  */
+// uPlot keeps the paths it last drew on each series, which its types leave out.
+type SeriesWithPaths = uPlot.Series & {_paths?: uPlot.Series.Paths | null};
+
 function drawLimits(
   u: uPlot,
   limits: readonly LimitLine[],
@@ -240,17 +233,42 @@ function drawLimits(
   ctx.rect(u.bbox.left, u.bbox.top, u.bbox.width, u.bbox.height);
   ctx.clip();
 
-  ctx.setLineDash(LIMIT_DASH.map((d) => d * ratio));
-
   const [floor, ceiling] = dbAxis.range;
-  // Positions once, since both passes below stroke the same geometry.
-  const rules = segments.map(({series, decibels, from, to}) => ({
-    // The shade of the line it bounds, which is what ties the two together where several
-    // series are picked and each has a limit of its own: a rule and its trace are one
-    // statement about one quantity. What keeps it from reading as a sixth measurement is
-    // the dash — the form, not the hue. Two weightings of a quantity share a shade by
-    // design (see the series table), and so do their limits.
-    stroke: themeHex(seriesByKey(series).color),
+
+  // The over-limit area, first so the rules land on top of it. The one series with an area is
+  // found by what uPlot built rather than by recomputing the layout; it keeps the paths it
+  // last drew on the series, untyped — `fill` the area, `clip` what the gaps cut out of it.
+  // Only ever one, and only with one series picked, so every segment here is that series'.
+  const filled = u.series.find(
+    (s, i) => i > 0 && (s as SeriesWithPaths)._paths?.fill instanceof Path2D,
+  ) as SeriesWithPaths | undefined;
+  const area = filled?._paths?.fill;
+  if (area instanceof Path2D) {
+    // One path for every band, so limits that overlap (see the schema) are one region
+    // rather than two fills stacking into a darker one.
+    const over = new Path2D();
+    for (const {decibels, from, to} of segments) {
+      const y = u.valToPos(clampTo(decibels, floor, ceiling), 'y', true);
+      const x0 = u.valToPos(from, 'x', true);
+      over.rect(x0, u.bbox.top, u.valToPos(to, 'x', true) - x0, y - u.bbox.top);
+    }
+    ctx.save();
+    ctx.clip(over);
+    const gapsClip = filled?._paths?.clip;
+    if (gapsClip) ctx.clip(gapsClip);
+    ctx.fillStyle = fill(themeHex(seriesByKey(segments[0]!.series).color));
+    ctx.fill(area);
+    ctx.restore();
+  }
+
+  ctx.setLineDash(LIMIT_DASH.map((d) => d * ratio));
+  // Red rather than the shade of the line it bounds: every series is one yellow now, so a
+  // rule in it was a yellow line crossing a yellow line (see chart.limit). One colour for
+  // all of them, so one path and one stroke.
+  ctx.strokeStyle = themeHex('chart.limit');
+  ctx.lineWidth = LIMIT_WIDTH_PX * ratio;
+  ctx.beginPath();
+  for (const {decibels, from, to} of segments) {
     // Clamped to the axis, which is fixed at 30–110 (see dbAxis): a peak limit written at
     // 120 has to be drawn somewhere, and hard against the top of the plot is the honest
     // place. Dropping the line instead would be the worse answer — a limit nobody can see
@@ -259,56 +277,11 @@ function drawLimits(
     //
     // Half the stroke down from a whole pixel, so it lands on a row of them rather than
     // straddling two — the same reason the playhead carries a negative half-pixel margin.
-    y: Math.round(u.valToPos(clampTo(decibels, floor, ceiling), 'y', true)) + ratio / 2, // prettier-ignore
-    x0: Math.round(u.valToPos(from, 'x', true)),
-    x1: Math.round(u.valToPos(to, 'x', true)),
-  }));
-
-  const trace = ({y, x0, x1}: (typeof rules)[number]) => {
-    ctx.moveTo(x0, y);
-    ctx.lineTo(x1, y);
-  };
-
-  // Every halo, then every rule — two passes over the list rather than a halo and its rule
-  // per segment. Limits are allowed to overlap (see the schema), and the axis is fixed at
-  // 80 dB over a chart that may be 160 px tall, so two decibels can be four pixels: well
-  // inside the blur. Interleaved, the second rule's halo would land over the first one's
-  // line, and the thing that made one legible would be what dimmed the other.
-  //
-  // The halo is a stroke of the ground *plus* its own shadow of the same colour, which is
-  // what spreads it: canvas paints the shadow around the stroke, so three pixels of solid
-  // ground fade out over four more. Dashed along with the rule rather than solid under it, so
-  // it thickens each dash instead of filling the gaps between them — the trace stays
-  // readable through the rule, which is the whole point of dashing it.
-  //
-  // One path for all of them and one stroke, because `shadowBlur` is the expensive call on a
-  // canvas — each stroke is rendered to a scratch surface and gaussian-blurred, and Skia has
-  // no fast path for a blurred *dashed* stroke. A timeline drag commits a crop per animation
-  // frame to every card near the viewport (see applyCrop), so per-rule strokes made that a
-  // shadow layer per limit per card per frame. Batched it is one, for the same pixels: the
-  // dash phase restarts per subpath, so the dashes are unchanged, and overlapping halos now
-  // composite in a single layer instead of darkening each other.
-  const ground = themeHex('chart.ground');
-  ctx.lineWidth = LIMIT_HALO_PX * ratio;
-  ctx.strokeStyle = ground;
-  ctx.shadowColor = ground;
-  ctx.shadowBlur = LIMIT_HALO_BLUR_PX * ratio;
-  ctx.beginPath();
-  rules.forEach(trace);
-  ctx.stroke();
-
-  // The rules themselves cannot be batched the same way — each is stroked in its own series'
-  // shade — but they carry no shadow, so they are ordinary line drawing. No shadow on
-  // purpose: the halo is already under them, and a coloured line casting a dark blur of its
-  // own would read as the line being out of focus.
-  ctx.shadowBlur = 0;
-  ctx.lineWidth = LIMIT_WIDTH_PX * ratio;
-  for (const rule of rules) {
-    ctx.strokeStyle = rule.stroke;
-    ctx.beginPath();
-    trace(rule);
-    ctx.stroke();
+    const y = Math.round(u.valToPos(clampTo(decibels, floor, ceiling), 'y', true)) + ratio / 2; // prettier-ignore
+    ctx.moveTo(Math.round(u.valToPos(from, 'x', true)), y);
+    ctx.lineTo(Math.round(u.valToPos(to, 'x', true)), y);
   }
+  ctx.stroke();
 
   ctx.restore();
 }
@@ -916,11 +889,10 @@ export function LevelTrace({
         },
         series: [
           {},
-          // The area under the trace is what makes a level readable at row height, and
-          // with several monitors it is filled under the loudest of them rather than
-          // under each: the lines are all one colour, so two areas would stack into a
-          // darker band that looks like it means something. Drawn first, which in
-          // uPlot is underneath, and only ever an area — the lines over it are the
+          // The area under the trace — painted only over a limit (see drawLimits) — and
+          // with several monitors it is under the loudest of them rather than under each:
+          // the lines are all one colour, so two areas would stack into a darker band that
+          // looks like it means something. Only ever an area — the lines over it are the
           // monitors themselves.
           //
           // Only ever one window's, hence `envelope`: several are nested, so an area under
@@ -929,7 +901,8 @@ export function LevelTrace({
             ? [
                 {
                   stroke: 'transparent',
-                  fill: fill(strokes[0]!),
+                  // Built, not painted: drawLimits fills it only where it is over a limit.
+                  fill: 'transparent',
                   width: 0,
                   spanGaps: false,
                   gaps,
@@ -942,13 +915,14 @@ export function LevelTrace({
           // the whole run. Where there is no monitor it is one empty line per window, which
           // is what keeps the axes drawn at a location nothing has stood at yet.
           //
-          // The fill goes to the lines themselves only for a lone monitor of a lone window:
+          // The area goes to the lines themselves only for a lone monitor of a lone window:
           // any other shape either has an envelope above or several windows to keep clear.
+          // Transparent for the same reason as the envelope's.
           ...strokes.flatMap((stroke) =>
             Array.from({length: lineCount}, () => ({
               stroke,
               fill:
-                strokes.length === 1 && !envelope ? fill(stroke) : undefined,
+                strokes.length === 1 && !envelope ? 'transparent' : undefined,
               width: 1.25,
               spanGaps: false,
               gaps,

@@ -1,14 +1,17 @@
-import {logMinuteAt, type ProjectLogs} from './noise';
+import {logMinuteAt, logMinuteIndex, type ProjectLogs} from './noise';
+import {logColumn, type LocationAssignments} from './projectLogs';
+import type {LimitLine} from './limitLines';
+import type {SeriesKey} from './series';
 
 // Where a project has readings and where it does not — the shading behind the project
-// timeline's ticks (see TimelineMarkers). React-free and beside projectLogs.ts for the
+// timeline's ticks (see TimelineMarkers) — and where what it read broke a limit. React-free and beside projectLogs.ts for the
 // same reason: the maths lives apart from the hook that decides when to run it.
 //
 // It costs one pass over the payload, once, and nothing after that. The whole event is
 // already in the browser as a minute grid with no timestamps in it (see ProjectLogs), so
 // "was anything heard at minute i" is an index rather than a search, and the answer
-// depends on the payload alone — not on the crop, the playhead, the weighting or which
-// windows the header is showing.
+// depends on the payload and which places are asked about — never on the crop or the
+// playhead, so a drag re-lays it out and recomputes nothing.
 
 // A stretch nobody reported in, in epoch milliseconds. Half-open, like every range in
 // this section: `end` is the first instant that has a reading again.
@@ -23,52 +26,137 @@ export type LogGap = {start: number; end: number};
 // shading still while the header's two pickers move.
 const PRESENCE_COLUMN = 'laeq_1m';
 
+// The minutes each placement of `locations` covers, clamped into the payload: half-open,
+// so the minute containing `end` belongs to whoever took over — the same rule
+// locationEnergyIndex keeps.
+function assignmentMinutes(
+  logs: ProjectLogs,
+  a: LocationAssignments['assignments'][number],
+): [number, number] {
+  const from = Math.max(0, logMinuteIndex(logs, a.start));
+  const to =
+    a.end == null
+      ? logs.minutes
+      : Math.min(logs.minutes, logMinuteIndex(logs, a.end));
+  return [from, to];
+}
+
+// The minutes flagged in `mask` as ascending spans in epoch ms. One entry per stretch
+// rather than per minute: a four-day festival is ~5,800 minutes and a handful of outages.
+// A run still open at the end closes at the payload's own edge, which is the furthest
+// this may speak for.
+function runs(logs: ProjectLogs, mask: Uint8Array): LogGap[] {
+  const out: LogGap[] = [];
+  let from: number | null = null;
+  for (let i = 0; i < logs.minutes; i++) {
+    if (mask[i]) {
+      from ??= i;
+      continue;
+    }
+    if (from != null) out.push({start: logMinuteAt(logs, from), end: logMinuteAt(logs, i)}); // prettier-ignore
+    from = null;
+  }
+  if (from != null) {
+    out.push({
+      start: logMinuteAt(logs, from),
+      end: logMinuteAt(logs, logs.minutes),
+    });
+  }
+  return out;
+}
+
 /**
  * The stretches of a payload no monitor reported in.
  *
- * A union across every device in the project rather than the selected locations': the
- * strip is the page's second toolbar and its answer has to hold still while you flip
- * between views and tick locations on and off. No assignment logic is needed to make
- * that a fair question — projectLogs already clips each column to the spans its device
- * was actually deployed for, so a monitor sitting in a cupboard contributes nulls.
+ * Without `locations`, a union across every device in the project — what the map asks,
+ * whose pins are every place at once. No assignment logic is needed to make that a fair
+ * question: projectLogs already clips each column to the spans its device was actually
+ * deployed for, so a monitor sitting in a cupboard contributes nulls.
+ *
+ * With them, only what was heard *at* those places: each monitor counts for the minutes it
+ * stood at one of them, and not for the rest of the event it spent elsewhere. That is the
+ * list's question, whose cards are only the places picked for it.
  *
  * Bounded to the payload, and that bound is load-bearing. Past `minutes` we do not know
  * anything, and on a running festival the timeline's window keeps advancing (its right
  * edge is the clock) while the payload stays pinned — so claiming that tail would grow a
  * fake outage at the right of the strip over the course of a session.
  */
-export function coverageGaps(logs: ProjectLogs): LogGap[] {
+export function coverageGaps(
+  logs: ProjectLogs,
+  locations?: readonly LocationAssignments[],
+): LogGap[] {
   const {minutes} = logs;
   const heard = new Uint8Array(minutes);
-  for (const device of Object.values(logs.devices)) {
-    // Absent entirely is the ordinary case for a column that was null throughout, so a
-    // device with nothing to say is skipped rather than walked.
-    const values = device[PRESENCE_COLUMN];
-    if (!values) continue;
-    for (let i = 0; i < minutes; i++) if (values[i] != null) heard[i] = 1;
-  }
-
-  // Run-length encode the silence. One entry per stretch rather than per minute: a
-  // four-day festival is ~5,800 minutes and a handful of outages.
-  const gaps: LogGap[] = [];
-  let from: number | null = null;
-  for (let i = 0; i < minutes; i++) {
-    if (!heard[i]) {
-      from ??= i;
-      continue;
+  if (locations == null) {
+    for (const device of Object.values(logs.devices)) {
+      // Absent entirely is the ordinary case for a column that was null throughout, so a
+      // device with nothing to say is skipped rather than walked.
+      const values = device[PRESENCE_COLUMN];
+      if (!values) continue;
+      for (let i = 0; i < minutes; i++) if (values[i] != null) heard[i] = 1;
     }
-    if (from != null) gaps.push({start: logMinuteAt(logs, from), end: logMinuteAt(logs, i)}); // prettier-ignore
-    from = null;
+  } else {
+    for (const location of locations) {
+      for (const a of location.assignments) {
+        const values = logs.devices[a.deviceId]?.[PRESENCE_COLUMN];
+        if (!values) continue;
+        const [from, to] = assignmentMinutes(logs, a);
+        for (let i = from; i < to; i++) if (values[i] != null) heard[i] = 1;
+      }
+    }
   }
-  // A run still open at the end closes at the payload's own edge, which is the furthest
-  // this may speak for.
-  if (from != null) {
-    gaps.push({
-      start: logMinuteAt(logs, from),
-      end: logMinuteAt(logs, minutes),
-    });
+  const silent = heard.map((h) => (h ? 0 : 1));
+  return runs(logs, silent);
+}
+
+/**
+ * The stretches where one of `locations` read louder than a limit in force there, in
+ * `series` — or null when none of them has a limit written against that series at all,
+ * which is a strip with nothing to say about limits rather than one that says "all clear".
+ *
+ * A place's reading at a minute is the loudest of the monitors standing there then, as its
+ * chart draws it; over *any* limit in force is over the strictest of them, the same rule the
+ * map's pins warn by (see strictestLimit). Strictly above: a reading that sits exactly on
+ * its limit is within it.
+ */
+export function limitBreaches(
+  logs: ProjectLogs,
+  locations: readonly (LocationAssignments & {
+    limits: readonly LimitLine[];
+  })[],
+  series: SeriesKey,
+): LogGap[] | null {
+  const {minutes} = logs;
+  const over = new Uint8Array(minutes);
+  let limited = false;
+  for (const location of locations) {
+    const limits = location.limits.filter((l) => l.series === series);
+    if (limits.length === 0) continue;
+    limited = true;
+
+    // The loudest reading at each minute; NaN where nobody here read anything, which
+    // compares false against every limit.
+    const loudest = new Float64Array(minutes).fill(NaN);
+    for (const a of location.assignments) {
+      const values = logColumn(logs, a.deviceId, series);
+      if (!values) continue;
+      const [from, to] = assignmentMinutes(logs, a);
+      for (let i = from; i < to; i++) {
+        const v = values[i];
+        if (v != null && !(v <= loudest[i]!)) loudest[i] = v;
+      }
+    }
+
+    for (const limit of limits) {
+      const from = Math.max(0, logMinuteIndex(logs, limit.start));
+      const to = Math.min(minutes, logMinuteIndex(logs, limit.end));
+      for (let i = from; i < to; i++) {
+        if (loudest[i]! > limit.decibels) over[i] = 1;
+      }
+    }
   }
-  return gaps;
+  return limited ? runs(logs, over) : null;
 }
 
 /**

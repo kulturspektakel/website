@@ -23,9 +23,10 @@ export const PIN_LABEL = themeHex('map.pin.label');
 // it's the badge that recedes into the basemap, not the digits.
 const PIN_FILL_STALE = themeHex('map.pin.fillStale');
 const PIN_LABEL_STALE = themeHex('map.pin.labelStale');
-// The warning, in the one colour the ramp does not use: the triangle inside a pin that is
-// over its limit. Not a fill, because the fill is already saying how loud — a warning has to
-// be able to sit on any band without replacing what that band said.
+// A pin over its limit: a red pill, with the number and the triangle ahead of it in white.
+// Red rather than a band, because over the limit is the thing the pin has to say first —
+// how loud it is exactly is still the number.
+const PIN_FILL_OVER = themeHex('map.pin.fillOver');
 const PIN_OVER = themeHex('map.pin.over');
 // Rounded rect 56×26, centred on the location.
 const PILL_PATH =
@@ -61,14 +62,12 @@ const PIN_LABEL_CLASS = 'noise-pin-label';
  * A pin, in whatever it has to say at once: how loud, whether that is a reading of the
  * instant being looked at, and whether it is over what was permitted.
  *
- * Three separate channels on purpose, because a pin genuinely has three things to say and
- * collapsing any two of them loses one. `db` is the fill, off the ramp. `stale` overrides
- * that fill with grey — a level we only remember is not a level to colour-code, and the
- * ramp would have it shouting a loudness that is no longer the case. `over` is a sign of its
- * own precisely so it can sit on any fill: a stage may cross a limit at 78 dB where the
- * permit is written low, and a warning that had to be a colour would have to argue with the
- * band for the pill. Here it only widens the badge and shifts the digits over; the sign
- * itself is a second marker (see warningIcon).
+ * `db` is the fill, off the ramp. `stale` overrides that fill with grey — a level we only
+ * remember is not a level to colour-code, and the ramp would have it shouting a loudness
+ * that is no longer the case. `over` overrides it with red, and widens the badge to make room
+ * for the warning sign ahead of the digits; the sign itself is a second marker (see
+ * warningIcon). The two never meet: a pin only warns about a reading of the instant being
+ * viewed (see LocationsMap), which a stale one is not.
  */
 export const pinIcon = (
   maps: typeof google.maps,
@@ -78,7 +77,13 @@ export const pinIcon = (
     over = false,
   }: {db?: number; stale?: boolean; over?: boolean} = {},
 ): google.maps.Symbol => ({
-  fillColor: stale ? PIN_FILL_STALE : db == null ? PIN_FILL : bandFill(db),
+  fillColor: over
+    ? PIN_FILL_OVER
+    : stale
+      ? PIN_FILL_STALE
+      : db == null
+        ? PIN_FILL
+        : bandFill(db),
   fillOpacity: 1,
   // A ring in the ground color, on every pin alike: it is there to separate two badges that
   // overlap on screen, which is not a thing being over the limit changes. The warning is the
@@ -162,15 +167,16 @@ export const warningIcon = (maps: typeof google.maps): google.maps.Icon => ({
   ),
 });
 
-// One label colour for the whole ramp, and the grey one for a level we only remember. That
-// the six bands take the same dark digits is a property of the ramp rather than a
-// coincidence (see theme-noise): a pin getting louder changes one thing about itself.
+// One label colour for the whole ramp, the grey one for a level we only remember, and white
+// on the red of a pin over its limit. That the six bands take the same dark digits is a
+// property of the ramp rather than a coincidence (see theme-noise): a pin getting louder
+// changes one thing about itself.
 export const pinLabel = (
   text: string,
-  {stale = false}: {stale?: boolean} = {},
+  {stale = false, over = false}: {stale?: boolean; over?: boolean} = {},
 ): google.maps.MarkerLabel => ({
   text,
-  color: stale ? PIN_LABEL_STALE : PIN_LABEL,
+  color: over ? PIN_OVER : stale ? PIN_LABEL_STALE : PIN_LABEL,
   className: PIN_LABEL_CLASS,
   fontFamily: PIN_FONT_FAMILY,
   fontSize: PIN_FONT_SIZE,

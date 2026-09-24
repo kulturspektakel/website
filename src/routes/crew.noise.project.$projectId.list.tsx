@@ -44,7 +44,7 @@ export const Route = createFileRoute('/crew/noise/project/$projectId/list')({
 function ProjectListView() {
   // The layout resolves each location's monitors at the playhead, which the map's pins
   // need; a card is about the place over the whole crop and reads the location itself.
-  const {project, locations} = useProjectView();
+  const {project, locations, setListed} = useProjectView();
   // How wide the cards are, and it is remembered — per browser rather than per project, and
   // not in the URL (see listColumns.ts). One column until the stored value is read, which is
   // the frame after mount.
@@ -110,6 +110,9 @@ function ProjectListView() {
     // belongs to. A location added afterwards is picked up by the roster menu and the map,
     // and stays off the list until it is ticked.
   }, [project.id, focus]);
+
+  // Up to the layout, which draws the timeline for whatever is on the list.
+  useEffect(() => setListed(selected), [setListed, selected]);
 
   // Computed here and not inside the updater: React invokes updaters twice in
   // development, and writing to storage is not the kind of thing to do twice.
@@ -238,11 +241,7 @@ function ProjectListView() {
             straight is one representation of "what is on the list" instead of two that
             have to be kept in step — and it is the stable one, which is what the memo on
             the picker needs. */}
-        <LocationPicker
-          locations={roster}
-          shown={selected}
-          onToggle={toggle}
-        />
+        <LocationPicker locations={roster} shown={selected} onToggle={toggle} />
         <ColumnPicker cols={cols} onPick={pickCols} />
       </HStack>
     </Box>

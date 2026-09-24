@@ -71,11 +71,19 @@ const GAP_MIN_W = 2;
 // which is the least this can be and still be a gap rather than a rounding.
 const GAP_INSET = 2;
 
+// How tall the bar marking a limit breach is. A bar along the top rather than a wash
+// like the gaps': the two can never overlap (a breach needs a reading), but a second
+// full-height fill would compete with the crop's own. Drawn over the ticks hanging from
+// the top rather than under them, so a breach reads as one unbroken bar.
+const BREACH_H = 3;
+
 const GAP_ATTR = 'data-gap';
+const BREACH_ATTR = 'data-breach';
 const TICK_ATTR = 'data-tick';
 const MAJOR_ATTR = 'data-major';
 const LABELLED_ATTR = 'data-labelled';
 const LABEL_ATTR = 'data-label';
+const DATE_ATTR = 'data-date';
 const MARKERS_CSS = {
   // A stretch nobody reported in, held off the strip's frame on all four sides by
   // GAP_INSET — so it is a band lying inside the strip rather than a fill of it.
@@ -104,6 +112,14 @@ const MARKERS_CSS = {
     // this started, is a shading you can compute and cannot see.
     backgroundImage:
       'repeating-linear-gradient(45deg, var(--chakra-colors-chart-gap) 0 1px, transparent 1px 3px)',
+  },
+  // Where a place on screen read over its limit, in the primary series — in the same red
+  // the limit rules on the charts are drawn in, so the two read as one statement.
+  [`& [${BREACH_ATTR}]`]: {
+    position: 'absolute',
+    top: `${GAP_INSET}px`,
+    h: `${BREACH_H}px`,
+    bg: 'chart.limit',
   },
   [`& [${TICK_ATTR}]`]: {
     position: 'absolute',
@@ -147,6 +163,11 @@ const MARKERS_CSS = {
     color: 'chart.axis',
     whiteSpace: 'nowrap',
   },
+  // A date, where the day changes: in the playhead's near-white rather than the axis grey,
+  // so the day boundaries stand out from the hours between them.
+  [`& [${LABEL_ATTR}][${DATE_ATTR}]`]: {
+    color: 'chart.playhead',
+  },
 } as const;
 
 /**
@@ -185,6 +206,7 @@ export const TimelineMarkers = memo(function TimelineMarkers({
   start,
   end,
   gaps,
+  breaches,
   overhang,
 }: {
   // Two numbers rather than the window object the timeline holds: this sits inside a
@@ -192,11 +214,15 @@ export const TimelineMarkers = memo(function TimelineMarkers({
   // identity each time and defeat the memo.
   start: number;
   end: number;
-  // The stretches of the event nobody reported in, in epoch ms — an array and so the one
-  // prop here that could defeat the memo, which is why it is memoized on the payload alone
-  // upstream (see useProjectLogs) and never rebuilt by a gesture. Absent while the payload
+  // The stretches of the event nobody reported in, in epoch ms — an array and so a prop
+  // that could defeat the memo, which is why it is memoized on the payload and the places
+  // on screen upstream (see useProjectLogs) and never rebuilt by a gesture. Absent while the payload
   // is in flight, and while live mode is on and the strip is unmounted anyway.
   gaps?: readonly LogGap[];
+  // Where a place on screen read over a limit, memoized upstream the same way. Absent or
+  // null when there is nothing to say about limits — no payload yet, or no limit written
+  // for the series being shown — and then no bar is drawn at all.
+  breaches?: readonly LogGap[] | null;
   // How far the strip reaches past the axis at either end — a grip's width, which is the
   // timeline's own constant (HANDLE_W) and the same figure the track is pulled out by.
   // Passed rather than imported: this is a child of that file, and reading a constant back
@@ -230,6 +256,14 @@ export const TimelineMarkers = memo(function TimelineMarkers({
   const shaded = useMemo(
     () => (gaps ? thinGaps(gaps, {start, end}, widthPx, GAP_MIN_W) : []),
     [gaps, start, end, widthPx],
+  );
+
+  // Thinned by the same rule: a one-minute breach on a four-day strip is sub-pixel, and a
+  // limit broken for a minute is exactly what this bar must not lose.
+  const flagged = useMemo(
+    () =>
+      breaches ? thinGaps(breaches, {start, end}, widthPx, GAP_MIN_W) : [],
+    [breaches, start, end, widthPx],
   );
 
   return (
@@ -314,13 +348,30 @@ export const TimelineMarkers = memo(function TimelineMarkers({
             tick.label && (
               <span
                 key={`${tick.ms}:label`}
-                {...{[LABEL_ATTR]: ''}}
+                {...{
+                  [LABEL_ATTR]: '',
+                  [DATE_ATTR]: tick.date ? '' : undefined,
+                }}
                 style={style}
               >
                 {tick.label}
               </span>
             ),
           ];
+        })}
+        {/* Last, so the bar draws over the hour ticks hanging from the top rather than
+            being cut by them. Not bled into the overhang: a breach is a reading, and there
+            are none past either end of the axis. */}
+        {flagged.map((breach) => {
+          const from = axisFraction(breach.start, start, end) * 100;
+          const to = axisFraction(breach.end, start, end) * 100;
+          return (
+            <span
+              key={breach.start}
+              {...{[BREACH_ATTR]: ''}}
+              style={{left: `${from}%`, width: `${to - from}%`}}
+            />
+          );
         })}
       </Box>
     </Box>

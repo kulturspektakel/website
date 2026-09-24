@@ -35,7 +35,7 @@ import {
   type ProjectViewCtx,
 } from '../components/noise/projectView';
 import {ProjectTimeline} from '../components/noise/ProjectTimeline';
-import {LevelPicker, useLevelPick} from '../components/noise/LevelPicker';
+import {LevelSelect, useLevelPick} from '../components/noise/LevelPicker';
 import {SERIES_STORE} from '../components/noise/seriesSelection';
 import {useProjectLogs} from '../components/noise/useProjectLogs';
 import {
@@ -240,16 +240,15 @@ function NoiseProjectDetail() {
   // what you are looking at — it is remembered instead, per browser (see seriesSelection.ts).
   //
   // Per view and not per project page, which is why it is read down here where the view is
-  // known: the two ask different things of a pick. The cards draw every line picked, so a set
-  // is what the list is for; a pin is a badge with room for one number, so the map takes one
-  // and stores one — and a set of five carried over from the list would have drawn its first
-  // and dropped four without saying so. Held by the layout all the same, since the control
-  // that sets it is in the layout's own header, and switching view simply re-reads the other
-  // view's remembered pick (see useLevelPick).
+  // known: each view remembers its own. One series in either — a pin is a badge with room for
+  // one number, and a card's chart reads as one quantity against its limit, with the crop's
+  // Leq printed beside it. Held by the layout all the same, since the control that sets it is
+  // in the layout's own header, and switching view simply re-reads the other view's
+  // remembered pick (see useLevelPick).
   const mapOnly = shown === 'map';
-  const {picked, toggleSeries, rangeLeq, toggleRangeLeq} = useLevelPick({
+  const {picked, toggleSeries} = useLevelPick({
     store: mapOnly ? SERIES_STORE.map : SERIES_STORE.list,
-    single: mapOnly,
+    single: true,
   });
 
   // Without a Maps key there is no map to switch to, so the list is all there is.
@@ -396,29 +395,45 @@ function NoiseProjectDetail() {
   // One request for the project's whole stored history, and then nothing: every
   // number below is read out of it locally, so the timeline and both pickers cost
   // no round trip. Skipped entirely while live.
-  const {levels, locationTotals, traces, gaps, isFetching} = useProjectLogs({
-    projectId,
-    live,
-    picked,
-    selection,
-    // The raw locations with their whole assignment history, not the playhead-resolved
-    // `locations` below: the crop Leq is summed over every minute a monitor stood at a
-    // place, which has nothing to do with the instant being viewed. Everything it
-    // returns is keyed by location id, so the order is immaterial — it takes the sorted
-    // array only so there is one of them on the page.
-    locations: ordered,
-  });
+  // Which places the list has on it, as it last reported them (see ProjectViewCtx's
+  // `setListed`). The list owns the choice — it is remembered per browser, beside the
+  // cards it arranges — and the layout only needs it for the timeline, which is drawn up
+  // here and speaks for what is on screen. Null until the list has read its store, and
+  // then the strip speaks for every place rather than for none for a frame.
+  const [listed, setListed] = useState<ReadonlySet<string> | null>(null);
 
-  // Whether the cards are printing the crop's Leq at all: the menu's own pick, and a
-  // timeframe to average over — which live mode has not, an instant being no range.
+  // What the timeline speaks for: every place on the map, and on the list only the ones
+  // it is showing — both its coverage and its limits (see useProjectLogs).
+  const timeline = useMemo(() => {
+    const all = mapOnly || listed == null || listed.size === 0;
+    return {
+      all,
+      locations: all ? ordered : ordered.filter((l) => listed.has(l.id)),
+    };
+  }, [mapOnly, listed, ordered]);
+
+  const {levels, locationTotals, traces, gaps, breaches, isFetching} =
+    useProjectLogs({
+      projectId,
+      live,
+      picked,
+      selection,
+      // The raw locations with their whole assignment history, not the playhead-resolved
+      // `locations` below: the crop Leq is summed over every minute a monitor stood at a
+      // place, which has nothing to do with the instant being viewed. Everything it
+      // returns is keyed by location id, so the order is immaterial — it takes the sorted
+      // array only so there is one of them on the page.
+      locations: ordered,
+      timeline,
+    });
+
+  // Whether the cards are printing the crop's Leq at all: always, given a timeframe to
+  // average over — which live mode has not, an instant being no range.
   //
-  // Combined here and nowhere else, because this is the only place that holds both halves.
-  // It used to be stated three times over: the picker re-derived it to make its "+N" count
-  // agree with the cards, and a card gated on the raw pick and came out right about live
-  // only because `useProjectLogs` happens to withhold `locationTotals` then — a correctness
-  // resting on an unrelated layer's data-availability rule, which the first change to it
-  // would have quietly broken.
-  const showRangeLeq = rangeLeq && !live;
+  // Stated here rather than left to `useProjectLogs` withholding `locationTotals` while
+  // live, which would be a correctness resting on an unrelated layer's data-availability
+  // rule that the first change to it would quietly break.
+  const showRangeLeq = !live;
 
   // Assigning or ending changes both this project's locations and which devices
   // are still available, on this page and on the index.
@@ -450,6 +465,7 @@ function NoiseProjectDetail() {
       locationTotals: showRangeLeq ? locationTotals : undefined,
       traces,
       refresh,
+      setListed,
     }),
     [
       project,
@@ -527,6 +543,7 @@ function NoiseProjectDetail() {
                     // on the page (see ProjectViewCtx) — a field there would re-render all
                     // of them the moment the payload landed.
                     gaps={gaps}
+                    breaches={breaches}
                     // Straight into state: what the timeline hands back is exactly the
                     // override to remember, and pinning it is what stops an untouched
                     // crop from following the live edge any further. Identical values
@@ -542,23 +559,7 @@ function NoiseProjectDetail() {
                 )
               }
             >
-              <LevelPicker
-                live={live}
-                picked={picked}
-                // Radios rather than boxes on the map, where the pin's one number is all
-                // there is to show (see the pick above).
-                single={mapOnly}
-                // The crop's Leq is a reading a *card* prints, so its row is offered where
-                // there are cards — the same reason the device page leaves it out. On the
-                // map it would also be a second value in a menu that has just promised one,
-                // and a trigger reading "+1" for a number nothing on screen shows. The pick
-                // itself is untouched by the trip: this state is the layout's, so the row
-                // comes back ticked as it was left when the cards do.
-                rangeLeq={mapOnly ? undefined : rangeLeq}
-                rangeLeqShown={mapOnly ? undefined : showRangeLeq}
-                onToggleSeries={toggleSeries}
-                onToggleRangeLeq={mapOnly ? undefined : toggleRangeLeq}
-              />
+              <LevelSelect live={live} picked={picked} onPick={toggleSeries} />
               {mapAvailable && (
                 <NativeSelectRoot size="xs" w="auto">
                   <NativeSelectField

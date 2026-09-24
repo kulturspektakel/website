@@ -292,8 +292,7 @@ export type ProjectViewCtx = {
   //
   // Absent whenever the reading isn't wanted, and that is the whole of the rule a card has
   // to know: while the one query behind it is in flight, while live — an instant has no
-  // range to average — and when the header's menu has the row unticked. The layout resolves
-  // all three and withholds the field (see showRangeLeq); there is deliberately no flag
+  // range to average. The layout resolves both and withholds the field (see showRangeLeq); there is deliberately no flag
   // beside it, because a value that must not be printed is better not handed over.
   locationTotals?: Record<string, RangeTotals>;
   // Whole-project traces at stored resolution, one device record per picked series; the
@@ -302,6 +301,10 @@ export type ProjectViewCtx = {
   // Re-reads what an assignment change invalidates. Lives on the layout because
   // it also invalidates lists rendered outside this route.
   refresh: () => Promise<void>;
+  // What the list reports it is showing, so the timeline over it can shade and flag only
+  // those places. The list owns the choice (see locationSelection.ts); the layout draws the
+  // strip. A state setter, so its identity never changes.
+  setListed: (ids: ReadonlySet<string>) => void;
 };
 
 export const ProjectViewContext = createContext<ProjectViewCtx | null>(null);

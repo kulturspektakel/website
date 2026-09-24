@@ -3,7 +3,7 @@ import {SERIES_KEYS, type SeriesKey} from './series';
 
 /**
  * What a page's level menu is set to, remembered between visits: which series its charts
- * draw, and whether the crop's Leq is printed beside them.
+ * draw.
  *
  * Not in the URL, for the reason the column count is not (see listColumns.ts): the pick is
  * how you read a chart rather than what you are looking at, and a param would carry one
@@ -14,15 +14,9 @@ import {SERIES_KEYS, type SeriesKey} from './series';
  * One key per page, and that is the whole point of this file: the three pages that pick
  * series are asking different questions of them, so they must not share an answer. A
  * monitor's live page is an instrument — five lines at once is what it is for; the list is a
- * page of charts, and the pick is what each of them draws; the map has room for one number
- * per pin, so it stores exactly one (see `single` below), and a set of five arriving there
- * from the list would have four of them silently unread. Storing them together meant a trip
- * to the map came back with the map's pick on the cards.
- *
- * Both halves of the menu in one entry, because they are one menu: the timeframe's Leq is
- * ticked in the same list as the series and is as much a decision about how you read the
- * page, so remembering the nine rows and forgetting the tenth would leave the one row that
- * came back the way it started.
+ * page of charts, one quantity each against its limit; the map has room for one number per
+ * pin. The two project views store exactly one (see `single` below), but not the same one:
+ * storing them together meant a trip to the map came back with the map's pick on the cards.
  */
 const STORAGE_PREFIX = 'noiseSeries:';
 
@@ -37,23 +31,21 @@ export const SERIES_STORE = {
 
 export type SeriesStore = (typeof SERIES_STORE)[keyof typeof SERIES_STORE];
 
-// What the menu is set to: the lines, and the timeframe's Leq beside them. The shape the hook
-// holds and the shape that is stored, so there is one statement of what a remembered menu is.
+// What the menu is set to: the lines. The shape the hook holds and the shape that is stored,
+// so there is one statement of what a remembered menu is.
 export type StoredPick = {
   picked: PickedSeries;
-  rangeLeq: boolean;
 };
 
 // What a page opens on before anything has been picked, and what a stored value that means
-// nothing falls back to: the everyday series, and the crop's Leq on — which is what the two
-// were when neither was remembered. `picked` is a tuple, so it is a PickedSeries by
+// nothing falls back to: the everyday series, which is what it was when nothing was
+// remembered. `picked` is a tuple, so it is a PickedSeries by
 // construction, and one array rather than a fresh one per read, since a pick that has not
 // changed coming back as the same array is what keeps the charts from being rebuilt (see
 // toggledSeries). Nothing mutates a pick: every producer of one builds a new array (see
 // toggledSeries, onlySeries).
 export const DEFAULT_PICK: StoredPick = {
   picked: ['eq_fast:A'],
-  rangeLeq: true,
 };
 
 const storageKey = (store: SeriesStore) => `${STORAGE_PREFIX}${store}`;
@@ -84,11 +76,9 @@ function storedSeries(value: unknown, single: boolean): PickedSeries | null {
  * localStorage entry would be one nobody could open again without devtools, and the cost of
  * being wrong here is a chart drawn in dB(A).
  *
- * The series decide it: an entry whose lines are unreadable is not worth mining for its
- * `range` flag, since the menu it describes is being fallen back to wholesale. A missing or
- * non-boolean flag is the default rather than a rejection, which is also what makes the bare
- * array an earlier version of this file wrote still readable — the lines survive an upgrade,
- * and the tenth row starts where it always did.
+ * Both shapes an earlier version of this file wrote are still read: the bare array, and the
+ * `{series, range}` entry from when the crop's Leq was a row of the menu — its `range` flag is
+ * simply ignored now that the cards always print it.
  *
  * Separate from the read below so the rule can be tested without a browser, which is also
  * why it takes the raw string.
@@ -109,12 +99,7 @@ export function parseStoredPick(
       ? (parsed as Record<string, unknown>)
       : null;
   const picked = storedSeries(record ? record.series : parsed, single);
-  if (picked == null) return null;
-  return {
-    picked,
-    rangeLeq:
-      typeof record?.range === 'boolean' ? record.range : DEFAULT_PICK.rangeLeq,
-  };
+  return picked == null ? null : {picked};
 }
 
 // The window guard is for the server render — see useLevelPick for why the call is made
@@ -134,13 +119,13 @@ export function readStoredPick(
 // full storage (or a browser refusing it altogether) costs the memory, not the page.
 export function writeStoredPick(
   store: SeriesStore,
-  {picked, rangeLeq}: {picked: readonly SeriesKey[]; rangeLeq: boolean},
+  {picked}: {picked: readonly SeriesKey[]},
 ): void {
   if (typeof window === 'undefined') return;
   try {
     window.localStorage.setItem(
       storageKey(store),
-      JSON.stringify({series: picked, range: rangeLeq}),
+      JSON.stringify({series: picked}),
     );
   } catch {
     // ignore

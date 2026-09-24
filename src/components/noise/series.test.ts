@@ -68,21 +68,10 @@ describe('SERIES', () => {
     expect([...new Set(SERIES.map((s) => s.kind))]).toEqual([...LEVEL_METRICS]);
   });
 
-  // A kind's two weightings are one measurement under a different filter, so they are one
-  // colour: what a shade says on a chart is which quantity, and the name beside it says
-  // which filter. Since both can now be drawn at once, this is also what makes the labels
-  // load-bearing — two lines of one shade are told apart by the tooltip, not the ink.
-  //
-  // The colour is derived from the kind, so this holds by construction rather than by two
-  // rows being kept in step. Kept as the guard against someone reintroducing a per-row
-  // value — which is how the two used to be able to drift.
-  it('gives both weightings of a kind the same colour', () => {
-    for (const kind of new Set(SERIES.map((s) => s.kind))) {
-      const [a, c] = SERIES.filter((s) => s.kind === kind);
-      expect(a!.color).toBe(`chart.series.${kind}`);
-      if (!c) continue; // 'peak' is C-only.
-      expect(a!.color).toBe(c.color);
-    }
+  // One shade for every line: which series a line is, is said by its name — in the picker,
+  // on the card and in the tooltip — and not by the ink.
+  it('draws every series in the one series shade', () => {
+    for (const s of SERIES) expect(s.color).toBe('chart.series');
   });
 
   it('reads every history column exactly once', () => {

@@ -50,7 +50,7 @@ import {
 //
 // The timeframe's Leq is not among them, and that falls out of where it lives rather than
 // being excluded here: it is not one of the nine series, has no line and no live value, and
-// sits outside both blocks in the picker for exactly that reason (see useLevelPick). A limit
+// is not in the picker for exactly that reason. A limit
 // on an average over whatever the timeline happens to be cropped to would be a limit on the
 // crop.
 const SERIES_GROUPS = seriesOptions(false);

@@ -5,25 +5,20 @@ import {parseStoredPick} from './seriesSelection';
 // whatever order they were written in (so the primary is the finest of them — see
 // primarySeries), anything unusable is null so the page falls back to dB(A) rather than
 // drawing whatever was in localStorage, a page with room for one number gets one, and the
-// timeframe's Leq is remembered alongside them rather than starting on every visit.
+// shapes earlier versions wrote are still read.
 describe('parseStoredPick', () => {
-  it('reads back the stored series in table order, and the range row with them', () => {
-    expect(
-      parseStoredPick('{"series":["peak:C","eq_fast:A"],"range":false}'),
-    ).toEqual({picked: ['eq_fast:A', 'peak:C'], rangeLeq: false});
+  it('reads back the stored series in table order', () => {
+    expect(parseStoredPick('{"series":["peak:C","eq_fast:A"]}')).toEqual({
+      picked: ['eq_fast:A', 'peak:C'],
+    });
   });
 
-  // The row is on by default, so a value that does not mention it — an entry from before it
-  // was remembered, including the bare array an earlier version of this file wrote — leaves
-  // it where it has always started.
-  it('defaults the range row to on when the entry does not say', () => {
-    expect(parseStoredPick('{"series":["eq_5m:A"]}')).toEqual({
+  // The bare array, and the entry from when the crop's Leq was a menu row of its own — whose
+  // flag is ignored now that it is always shown.
+  it('reads the shapes earlier versions wrote', () => {
+    expect(parseStoredPick('["eq_5m:A"]')).toEqual({picked: ['eq_5m:A']});
+    expect(parseStoredPick('{"series":["eq_5m:A"],"range":false}')).toEqual({
       picked: ['eq_5m:A'],
-      rangeLeq: true,
-    });
-    expect(parseStoredPick('["eq_5m:A"]')).toEqual({
-      picked: ['eq_5m:A'],
-      rangeLeq: true,
     });
   });
 

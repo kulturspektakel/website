@@ -11,10 +11,11 @@ import {
   type RangeTotals,
   type SeriesTraces,
 } from './projectLogs';
-import {coverageGaps, type LogGap} from './logCoverage';
+import {coverageGaps, limitBreaches, type LogGap} from './logCoverage';
+import type {LimitLine} from './limitLines';
 import {noiseQueryKeys} from './queries';
 import {logMinuteIndex} from './noise';
-import {primaryWeighting, type PickedSeries} from './level';
+import {primarySeries, primaryWeighting, type PickedSeries} from './level';
 import type {ProjectSelection} from './projectSelection';
 
 // Whichever project this is, the whole thing at once. Immutable enough to pin: a
@@ -47,6 +48,7 @@ export function useProjectLogs({
   picked,
   selection,
   locations,
+  timeline,
 }: {
   projectId: string;
   live: boolean;
@@ -60,6 +62,16 @@ export function useProjectLogs({
   // the charts resolve their own; this is the one number that has to be summed over
   // the whole crop rather than read at an instant.
   locations: readonly LocationAssignments[];
+  // Which places the timeline speaks for: the ones on screen, with their limits. `all` is
+  // the map, where every place is on screen at once — the coverage is then every device's,
+  // rather than only what stood at these places. Memoized by the caller, since both
+  // shapes below are keyed on it.
+  timeline: {
+    locations: readonly (LocationAssignments & {
+      limits: readonly LimitLine[];
+    })[];
+    all: boolean;
+  };
 }): {
   levels?: PlayheadLevels;
   locationTotals?: Record<string, RangeTotals>;
@@ -68,6 +80,9 @@ export function useProjectLogs({
   // while live and while the payload is in flight, so the strip draws nothing rather
   // than claiming the whole festival is missing.
   gaps?: LogGap[];
+  // Where one of those places read over a limit in the primary series. Null when none of
+  // them has a limit for it, so the strip draws no limit layer at all; absent like `gaps`.
+  breaches?: LogGap[] | null;
   isFetching: boolean;
 } {
   const {data, isFetching} = useQuery({
@@ -150,11 +165,23 @@ export function useProjectLogs({
     [logs, pickedKey],
   );
 
-  // The one shape here keyed on the payload and nothing else — not the crop, the playhead
-  // or the pick. It answers "was anything heard at this minute",
-  // which none of those four can change (see PRESENCE_COLUMN), so the timeline's shading is
-  // computed once per project and then merely re-laid-out.
-  const gaps = useMemo(() => logs && coverageGaps(logs), [logs]);
+  // Keyed on the payload and the places on screen — not the crop, the playhead or the pick.
+  // It answers "was anything heard here at this minute", which none of those three can
+  // change (see PRESENCE_COLUMN), so the timeline's shading is recomputed only when the
+  // view or the list's places change, and is otherwise merely re-laid-out.
+  const gaps = useMemo(
+    () =>
+      logs && coverageGaps(logs, timeline.all ? undefined : timeline.locations),
+    [logs, timeline],
+  );
 
-  return {levels, locationTotals, traces, gaps, isFetching};
+  // The same places against their limits, in the one series a limit can be read against
+  // here: the primary, which is the only one either project view stores.
+  const primary = primarySeries(picked);
+  const breaches = useMemo(
+    () => logs && limitBreaches(logs, timeline.locations, primary),
+    [logs, timeline, primary],
+  );
+
+  return {levels, locationTotals, traces, gaps, breaches, isFetching};
 }

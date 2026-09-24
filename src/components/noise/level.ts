@@ -55,11 +55,10 @@ export type LevelMetric = (typeof LEVEL_METRICS)[number];
  * primarySeries needs no fallback. Only useLevelPick has to prove it, which it does by
  * being the one thing that produces these — everything downstream is handed one.
  *
- * The Leq over the selected timeframe is picked in the same menu and is deliberately not
- * one of these: it has no line, no live counterpart and no playhead, so nothing downstream
- * of a series — the table, the traces, the chart's columns — has an answer for it. It
- * travels as its own flag beside this set (see useLevelPick) and is read off the cards
- * only, which is why the menu is nine rows plus one that isn't a series.
+ * The Leq over the selected timeframe is deliberately not one of these: it has no line, no
+ * live counterpart and no playhead, so nothing downstream of a series — the table, the
+ * traces, the chart's columns — has an answer for it. The cards always print it beside the
+ * pick, in the primary's weighting (see showRangeLeq).
  */
 export type PickedSeries = readonly [SeriesKey, ...SeriesKey[]];
 
@@ -186,14 +185,12 @@ const RANGE_WINDOW = 'Range';
 
 /**
  * Its full name, for a readout that prints the quantity under the number (see seriesLabel)
- * — and for the picker's own row, which is the same name because it is the same reading.
  *
  * Weighted like everything else here, and it has to be: it is an energetic mean over one
  * weighting's minute column, so `Leq,Range` on its own would be the one row in a menu of
  * ten not saying which it was. The weighting is the primary pick's rather than a choice of
  * its own — a mean has room for exactly one, and following the primary is what every other
- * single-number readout on the page does (see primarySeries and showRangeLeq). So the row
- * is one row, and it is renamed by whatever is ticked above it.
+ * single-number readout on the page does (see primarySeries and showRangeLeq).
  */
 export const rangeLabel = (weighting: Weighting): string =>
   `L${weighting}eq,${RANGE_WINDOW}`;

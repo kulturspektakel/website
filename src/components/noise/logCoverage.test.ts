@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest';
-import {coverageGaps, thinGaps} from './logCoverage';
+import {coverageGaps, limitBreaches, thinGaps} from './logCoverage';
 import {MINUTE_MS} from './timeframe';
 import type {ProjectLogs} from './noise';
 
@@ -44,6 +44,75 @@ describe('coverageGaps', () => {
       // Runs to the payload's own edge and no further: past `minutes` we know nothing.
       {start: at(4), end: at(6)},
     ]);
+  });
+});
+
+describe('coverageGaps for some places', () => {
+  // mic-1 stands at the stage for minutes 0–3, mic-2 at the bar throughout.
+  const logs = payload({
+    'mic-1': {laeq_1m: [60, 60, 60, 60, 60, 60]},
+    'mic-2': {laeq_1m: [50, 50, 50, 50, 50, 50]},
+  });
+  const stage = {
+    id: 'stage',
+    assignments: [{deviceId: 'mic-1', start: at(0), end: at(3)}],
+  };
+  const bar = {
+    id: 'bar',
+    assignments: [{deviceId: 'mic-2', start: at(0), end: null}],
+  };
+
+  it('counts a monitor only for the minutes it stood at one of them', () => {
+    expect(coverageGaps(logs, [stage])).toEqual([{start: at(3), end: at(6)}]);
+  });
+
+  it('unions the places asked about', () => {
+    expect(coverageGaps(logs, [stage, bar])).toEqual([]);
+  });
+});
+
+describe('limitBreaches', () => {
+  const logs = payload({
+    'mic-1': {laeq_1m: [60, 70, 80, 70, 60, null]},
+    'mic-2': {laeq_1m: [75, 50, 50, 50, 50, 50]},
+  });
+  const stage = {
+    id: 'stage',
+    assignments: [{deviceId: 'mic-1', start: at(0), end: null}],
+    limits: [
+      {series: 'eq_fast:A' as const, decibels: 70, start: at(0), end: at(6)},
+    ],
+  };
+  const bar = {
+    id: 'bar',
+    assignments: [{deviceId: 'mic-2', start: at(0), end: null}],
+    limits: [],
+  };
+
+  it('flags the minutes strictly over a limit in force', () => {
+    // 70 sits on the limit and is within it; only minute 2 is over.
+    expect(limitBreaches(logs, [stage], 'eq_fast:A')).toEqual([
+      {start: at(2), end: at(3)},
+    ]);
+  });
+
+  it('ignores a place with no limit, however loud', () => {
+    expect(limitBreaches(logs, [stage, bar], 'eq_fast:A')).toEqual([
+      {start: at(2), end: at(3)},
+    ]);
+  });
+
+  it('says nothing when no place has a limit for the series', () => {
+    expect(limitBreaches(logs, [bar], 'eq_fast:A')).toBeNull();
+    expect(limitBreaches(logs, [stage], 'eq_fast:C')).toBeNull();
+  });
+
+  it('only counts a limit over its own hours', () => {
+    const evening = {
+      ...stage,
+      limits: [{...stage.limits[0]!, start: at(3), end: at(6)}],
+    };
+    expect(limitBreaches(logs, [evening], 'eq_fast:A')).toEqual([]);
   });
 });
 

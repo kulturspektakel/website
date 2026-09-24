@@ -37,22 +37,13 @@ import {defaultConfig} from '@chakra-ui/react';
 // var name by joining the path with `-` and then dash-casing it, which means
 // camelCase gains a separator (`eqFast` → `eq-fast`) while an underscore is
 // passed through untouched. `eqFast` and `eq-fast` therefore collide silently.
-// The series keys are SeriesKind's own values verbatim (`eq_fast`, `eq_5m`, …)
-// so the path is mechanically `chart.series.${kind}`, the variable is a
-// greppable echo of it, and no two keys can fold together.
 const NOISE_COLORS = {
-  // The chart series ramp: a yellow → orange → red arc, lightest at the
-  // shortest averaging window. Validated against the section's ground
-  // (gray.900) for chroma and for ≥3:1 contrast — the previous peak shade was
-  // 2.74:1 and failed. Adjacent pairs sit in the ΔE 6–8 colour-vision-deficiency
-  // floor band, which is legal here because colour is never the only cue: the
-  // trace plots one series at a time, and the big-number row that shows all
-  // five at once labels every one of them.
-  'chart.series.eq_fast': 'yellow.200',
-  'chart.series.eq_5m': 'yellow.400',
-  'chart.series.eq_30m': 'orange.400',
-  'chart.series.fmax': 'red.400',
-  'chart.series.peak': 'red.600',
+  // Every chart series, in one shade: the section's accent. It used to be a
+  // yellow → orange → red ramp, a shade per kind, but the project page picks one
+  // series at a time and its name is printed beside every number, so the ramp
+  // was colour saying what the label already said. Where several lines are
+  // drawn at once (the device page), the tooltip names each.
+  'chart.series': 'yellow.400',
 
   // Chart chrome. `rule` is the hairline the readout pills are outlined in and
   // the project timeline draws its ticks with — one step lighter than
@@ -74,19 +65,12 @@ const NOISE_COLORS = {
   // stay two names. This is meant to be read past — a missing stretch should be findable
   // at a glance without becoming the loudest thing on a strip whose subject is the crop.
   'chart.gap': 'gray.700',
+  // The limit rules over the level trace. Red, off the series' yellow, so a rule stays
+  // legible where the trace runs along or across it — in the series' own shade the two
+  // merged exactly where a limit matters. Still dashed, so the hue is not the only cue.
+  'chart.limit': 'red.500',
   'chart.playhead': 'gray.50',
   'chart.readout.bg': {_light: 'gray.50', _dark: 'gray.800'},
-  // The ground a plot is drawn on, as a value the canvas can stroke with — the same step
-  // the section's `bg` resolves to in dark, which is the only mode this section has. Only
-  // the limit rules ask for it, and they ask for it as a casing: a dashed line in a series'
-  // own shade, laid over a filled trace in a neighbouring shade, is a rule you have to look
-  // for. A pixel of the ground either side of it is what separates the two without giving
-  // the rule a colour of its own to be confused with a sixth measurement (see drawLimits).
-  //
-  // Not `map.ground`, though it is the same step today: that one is the basemap's ground and
-  // answers to mapStyle.ts's lightness ladder. Two names because the two have no reason to
-  // follow each other.
-  'chart.ground': 'gray.900',
 
   // The band spectrum's bars are the fast-window shade — it is the same
   // measurement, drawn against frequency instead of time.
@@ -123,40 +107,48 @@ const NOISE_COLORS = {
   'map.pin.labelStale': 'gray.700',
 
   // The pin ramp: how loud, as a colour, so a site can be read at a glance without
-  // reading six numbers. Cool to hot in even 10 dB steps from 60 (see pinScale), which is
-  // the convention every noise map uses and the one thing about this scale nobody has to
-  // be told.
+  // reading six numbers. Green through yellow to orange in even 10 dB steps from 50 (see
+  // pinScale): green for quiet is the convention every noise map uses, and the one thing
+  // about this scale nobody has to be told.
   //
-  // It is a *sequential* ramp and not the chart's five series shades: those five say which
-  // measurement, this says how much of it, and they are read on different surfaces. Two
-  // adjacent steps here are a step apart in hue and lightness both, and under a red-green
-  // deficiency the cool half still separates from the warm half — but the honest reason
-  // this is legible at six steps is that colour is never the only cue: every pin prints
-  // its own number, and the legend at the corner of the map spells the boundaries.
+  // Hue, nearly only: the first four sit at the same perceptual lightness (OKLCH L 0.80),
+  // stepping from green (h 150) through lime and yellow to amber (h 85), each at the most
+  // chroma sRGB allows there. The hot end steps off it — band 5 to L 0.76 at h 62, band 6 to
+  // L 0.69 at h 36 — because orange and red-orange at L 0.80 can only be peach and salmon,
+  // and the top of the scale has to look hot. Still clear of the over-limit pin's red.600,
+  // which is darker and redder again.
   //
-  // Every step takes the dark `map.pin.label` over it (4.9:1 at the worst of them, band 6,
-  // which is what stops the ramp before red). One label colour for the ramp is also what
+  // The default scale has no lime, and its steps are not level across hues — green.500
+  // beside yellow.200 read as a dark pin and a pale one before they read as two
+  // colours — so these are written out as hex rather than picked off it.
+  //
+  // Two adjacent steps here are a step apart in hue — but the honest reason this is
+  // legible at six steps is that colour is never the only cue: every pin prints its own
+  // number, and the legend at the corner of the map spells the boundaries. Under a
+  // red-green deficiency the green end and the orange end can come close, which is the
+  // price of green for quiet; the numbers are what carry it there.
+  //
+  // Every step takes the dark `map.pin.label` over it (5.9:1 at the worst, band 6; 9:1 or
+  // better on the first four). One label colour for the ramp is also what
   // keeps a pin from changing two things at once as a stage gets louder.
   //
   // Numbered rather than named — `quiet`/`loud` would be six adjectives for what is one
   // ordered scale, and the numbers are the order.
-  'map.pin.band.1': 'blue.200',
-  'map.pin.band.2': 'cyan.300',
-  'map.pin.band.3': 'green.300',
-  'map.pin.band.4': 'yellow.300',
-  'map.pin.band.5': 'orange.400',
-  'map.pin.band.6': 'orange.600',
+  'map.pin.band.1': '#49de78',
+  'map.pin.band.2': '#94d53c',
+  'map.pin.band.3': '#cfc20c',
+  'map.pin.band.4': '#edb40e',
+  'map.pin.band.5': '#fd9305',
+  'map.pin.band.6': '#ff6034',
 
-  // Over the limit written for that place: the triangle inside the pin, just before the
-  // number it is warning about — the same sign the cards print beside theirs (see
-  // LocationReadings), so one page has one mark for over the limit.
-  //
-  // Yellow like the cards', but a dark step of it rather than their `yellow.300`: the cards
-  // draw theirs on the section's black ground, and this one lands on whichever band the pill
-  // is filled from — one of which *is* yellow.300 (band 4), where a bright yellow sign would
-  // vanish into the badge it is on. Dark yellow reads on all six, and stays out of the
-  // ramp's own vocabulary: the scale is cool→hot and stops short of this.
-  'map.pin.over': 'yellow.600',
+  // Over the limit written for that place: the pill turns red, and its number and the
+  // triangle ahead of it (the same sign the cards print beside theirs, see
+  // LocationReadings) turn white. Red is the one colour the ramp stops short of, so an
+  // over-limit pin cannot be mistaken for a loud band — and the sign keeps it from resting on
+  // colour alone. White on red.600 is 4.8:1. `gray.50` stands in for white, the table
+  // resolving scale steps only; it is the same near-white the plain pill is filled with.
+  'map.pin.fillOver': 'red.600',
+  'map.pin.over': 'gray.50',
 } as const;
 
 /**
@@ -172,8 +164,14 @@ export type NoiseColorToken = keyof typeof NOISE_COLORS;
 
 // A step, or one step per appearance. The step alone is the common case and reads as
 // "this colour does not depend on where it is drawn", which for everything on the
-// section's own page is true.
+// section's own page is true. A step is a scale name (`gray.900`) or, where no step of the
+// default scale is the colour wanted, a 6-digit hex written out (see the pin ramp).
 type NoiseColorValue = string | {_light: string; _dark: string};
+
+const isHex = (step: string) => /^#[0-9a-f]{6}$/i.test(step);
+
+// How a step is written into Chakra's token tree: a reference to the scale, or the literal.
+const tokenRef = (step: string) => (isHex(step) ? step : `{colors.${step}}`);
 
 const stepFor = (value: NoiseColorValue, appearance: Appearance): string =>
   typeof value === 'string'
@@ -190,10 +188,7 @@ export const NOISE_COLOR_TOKENS = Object.keys(
 // What series.ts stores instead of a hex. Derived from the table rather than
 // written out, so a series token that isn't in the theme is a type error at the
 // point it is used.
-export type ChartSeriesToken = Extract<
-  NoiseColorToken,
-  `chart.series.${string}`
->;
+export type ChartSeriesToken = Extract<NoiseColorToken, 'chart.series'>;
 
 // The accent, and the whole of it: one hue per appearance, aliased rather than
 // re-specified so that retuning the section is a single edit. Chakra's
@@ -242,6 +237,7 @@ const resolve = (appearance: Appearance) =>
   Object.fromEntries(
     NOISE_COLOR_TOKENS.map((token) => {
       const step = stepFor(NOISE_COLORS[token], appearance);
+      if (isHex(step)) return [token, step];
       const [family, level] = step.split('.');
       const value = SCALE[family!]?.[level!]?.value;
       if (!value) {
@@ -294,11 +290,8 @@ const nest = (paths: readonly NoiseColorToken[]) => {
     node[keys[keys.length - 1]!] = {
       value:
         typeof step === 'string'
-          ? `{colors.${step}}`
-          : {
-              _light: `{colors.${step._light}}`,
-              _dark: `{colors.${step._dark}}`,
-            },
+          ? tokenRef(step)
+          : {_light: tokenRef(step._light), _dark: tokenRef(step._dark)},
     };
   }
   return out;
@@ -321,7 +314,7 @@ export const noiseSemanticColors = {
   // are Chakra's own contract for one. Two of them deliberately differ from
   // the yellow palette they otherwise alias, so that the section has exactly
   // one accent value: the focus ring, a lit chip, the timeline's crop grips and
-  // the middle of the series ramp are all literally #facc15. That equality is
+  // the chart series are all literally #facc15. That equality is
   // pinned by theme-noise.test.ts — and it does mean `colorPalette="accent"`
   // and `colorPalette="yellow"` are not interchangeable.
   accent: {
@@ -331,8 +324,8 @@ export const noiseSemanticColors = {
     muted: accentPair('muted'),
     emphasized: accentPair('emphasized'),
     // The two the section pins to a step rather than to a name, in dark: `solid` is the
-    // middle of the series ramp and `focusRing` is that same value again, which is the
-    // whole of what "one accent" means here. Light has no ramp to agree with, so both
+    // chart series' shade and `focusRing` is that same value again, which is the
+    // whole of what "one accent" means here. Light has no series to agree with, so both
     // take blue's own semantic answer — and `solid` is then literally what fills a
     // primary button (see theme-crew), which is the same claim made the other way round.
     solid: accentPair('solid', '400'),

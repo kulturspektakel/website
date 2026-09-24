@@ -9,9 +9,7 @@ import {
 } from './noise';
 
 // The one table to edit when adding or reordering a chart line. Recolouring is
-// theme-noise's — a line's colour is `chart.series.<kind>` and nothing here
-// picks it, which is what stopped the two weightings of one kind from being
-// able to drift apart.
+// theme-noise's — every line is `chart.series` and nothing here picks it.
 //
 // The live and historical pages plot the same nine series — the only difference
 // is the fast window (one second live, one minute in history) and where the
@@ -31,8 +29,7 @@ import {
 // and traceColumn below.
 
 // What a series measures, apart from the filter it is measured through: the quantity
-// and the window, which is what the two weightings of one row have in common — and so
-// what they share a colour for (see below).
+// and the window, which is what the two weightings of one row have in common.
 export type SeriesKind = 'eq_fast' | 'eq_5m' | 'eq_30m' | 'fmax' | 'peak';
 
 /**
@@ -52,10 +49,8 @@ export const seriesKey = (kind: SeriesKind, weighting: Weighting): SeriesKey =>
 export type NoiseSeries = {
   kind: SeriesKind;
   weighting: Weighting;
-  // The theme token this line is drawn in. Derived from `kind` below rather
-  // than written per row: a kind's two weightings are the same measurement
-  // under a different filter and must be the same colour, and the rows can't
-  // disagree about something none of them states.
+  // The theme token this line is drawn in — the same one for every row (see
+  // theme-noise), set below rather than written per row.
   color: ChartSeriesToken;
   liveLabel: string;
   // The live value, off a decoded MQTT record.
@@ -64,10 +59,6 @@ export type NoiseSeries = {
   col: keyof HistoryRow;
 };
 
-// The ramp runs yellow → orange → red, lightest at the shortest averaging
-// window, with max and peak at the red end. All lines are solid. The shades
-// themselves live in theme-noise.ts, which is also where the reasoning about
-// them being legible against this section's ground is written down.
 const TABLE: readonly Omit<NoiseSeries, 'color'>[] = [
   {
     kind: 'eq_fast',
@@ -136,7 +127,7 @@ const TABLE: readonly Omit<NoiseSeries, 'color'>[] = [
 
 export const SERIES: readonly NoiseSeries[] = TABLE.map((s) => ({
   ...s,
-  color: `chart.series.${s.kind}`,
+  color: 'chart.series',
 }));
 
 // Every row's name, in the table's order — which is the picker's order, and so the

@@ -16,6 +16,9 @@ export type TimelineTick = {
   // of a 25-hour day an index would no longer be where midnight is.
   major: boolean;
   label: string | null;
+  // Whether that label is a date rather than a clock time — the lines where the day
+  // changes, which the strip letters brighter than the hours between them.
+  date: boolean;
 };
 
 const HOUR_MINUTES = 60;
@@ -240,6 +243,7 @@ export function timelineTicks(
           : major && !withinDay
             ? dayOf(at)
             : hourMinuteOf(at),
+        date: labelled && major && !withinDay,
       });
     }
   }

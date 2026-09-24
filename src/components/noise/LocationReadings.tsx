@@ -205,7 +205,7 @@ export function LocationReadings({
             // number under it changes with the name.
             label: rangeLabel(primaryWeighting(picked)),
             // The one reading with no line of its own, so it takes a neutral rather than a
-            // place on the series ramp — but at full `fg` rather than muted: it is the
+            // series' shade — but at full `fg` rather than muted: it is the
             // number the card is summed up by, and a grey among five saturated badges read
             // as the one that had been switched off.
             color: 'fg' as const,

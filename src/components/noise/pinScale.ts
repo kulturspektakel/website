@@ -10,12 +10,12 @@ import {themeHex, type NoiseColorToken} from '../../theme-noise';
  * the colours mean — which needs a small set of steps with numbers on them. Six is what
  * fits a legend that has to sit in the corner of a map without becoming furniture.
  *
- * Even 10 dB steps from 60, which is the range a festival is actually read over: a
- * residential measuring point sits in the first two bands, a stage in the last two, and the
- * boundary that matters most — 100 — is a boundary rather than the middle of a band. The
- * scale is open at both ends, so the quietest band means "60 or under" and the loudest
- * "100 or over"; a level below the chart's own floor is still a level, and clamping it to a
- * colour is the honest answer where the alternative is a pin with no fill.
+ * Even 10 dB steps from 50, so the hottest colour is reached at 90 and covers 90–100: a stage
+ * at full volume is the top of the scale rather than a band below it, and nothing above 100
+ * needs a colour of its own. The scale is open at both ends, so the quietest band means
+ * "under 50" and the loudest "90 or over"; a level below the chart's own floor is still a
+ * level, and clamping it to a colour is the honest answer where the alternative is a pin
+ * with no fill.
  *
  * Deliberately not dbAxis' 30–110: that is the span a *trace* has to be drawn inside,
  * where the top and bottom exist so the line never leaves the plot. Nothing is drawn to
@@ -32,11 +32,11 @@ import {themeHex, type NoiseColorToken} from '../../theme-noise';
 // own legend, which labels the joints between bands and so has one fewer label than swatch).
 const BANDS: ReadonlyArray<{floor: number; token: NoiseColorToken}> = [
   {floor: Number.NEGATIVE_INFINITY, token: 'map.pin.band.1'},
-  {floor: 60, token: 'map.pin.band.2'},
-  {floor: 70, token: 'map.pin.band.3'},
-  {floor: 80, token: 'map.pin.band.4'},
-  {floor: 90, token: 'map.pin.band.5'},
-  {floor: 100, token: 'map.pin.band.6'},
+  {floor: 50, token: 'map.pin.band.2'},
+  {floor: 60, token: 'map.pin.band.3'},
+  {floor: 70, token: 'map.pin.band.4'},
+  {floor: 80, token: 'map.pin.band.5'},
+  {floor: 90, token: 'map.pin.band.6'},
 ];
 
 // One band as everything downstream wants it: where it starts and what colour it is, the
