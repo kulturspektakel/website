@@ -77,6 +77,9 @@ type PrintedLevel = {
   // "I am the last one", which is a claim about position that reordering the row would
   // silently make false.
   caveat?: string;
+  // A reading of monitors crew tagged to be ignored at this instant: printed, but struck
+  // through and in a dashed frame, so it is still there to read and plainly not counted.
+  ignored?: boolean;
 };
 
 // The badge's corner, and the corner of the box inside it. Concentric, which means the
@@ -115,6 +118,7 @@ export function LocationReadings({
   levels,
   live,
   picked,
+  ignored,
 }: {
   // The monitors standing here at the instant being viewed — which while live means the
   // ones standing here now. Not the location's whole history: that is what the names
@@ -137,6 +141,10 @@ export function LocationReadings({
   // drawn it while the header printed one of them made the numbers the odd half of the
   // answer.
   picked: PickedSeries;
+  // Which of `assignments`' monitors are tagged to be ignored at the instant being read.
+  // Left out of the loudest; when that is all of them, the tiles show what they read
+  // anyway, marked as ignored — the same rule the map pin follows.
+  ignored: ReadonlySet<string>;
 }) {
   // One wake-up for the header's whole set — a location's two monitors are read
   // together and printed as one reading, so there is nothing to gain from rendering
@@ -144,6 +152,12 @@ export function LocationReadings({
   const deviceState = useDeviceStates(assignments.map((a) => a.deviceId));
   // Local tick: freshness is per-card, so this doesn't re-render its siblings.
   const now = useTick();
+
+  const allIgnored =
+    assignments.length > 0 && assignments.every((a) => ignored.has(a.deviceId));
+  const counted = allIgnored
+    ? assignments
+    : assignments.filter((a) => !ignored.has(a.deviceId));
 
   // Every tile this header prints, in the order it prints them: the picked series at the
   // playhead, then the crop. Built as one list because what the row does with them is the
@@ -159,7 +173,7 @@ export function LocationReadings({
     ...picked.map((series) => ({
       key: series,
       level: loudestLevel(
-        assignments.map((a) =>
+        counted.map((a) =>
           displayedLevel({
             live,
             now,
@@ -175,6 +189,7 @@ export function LocationReadings({
       // Straight from the series table too, the one place a level's colour is decided,
       // so a number and the line it was read off cannot end up different shades.
       color: seriesByKey(series).color,
+      ignored: allIgnored,
     })),
     // Last, and hard against the edge of the card: the number every card is compared on
     // lines up in one column down the page, whatever is picked above it. Named for the
@@ -240,7 +255,7 @@ export function LocationReadings({
       gap="1.5"
       flexShrink="0"
     >
-      {printed.map(({key, level, label, color, caveat}) => (
+      {printed.map(({key, level, label, color, caveat, ignored}) => (
         <ReadingTile
           key={key}
           db={level.kind === 'none' ? null : level.db}
@@ -252,6 +267,7 @@ export function LocationReadings({
           // The coverage rides with the crop's Leq, inside its tile, so it reads as a
           // caveat on that number rather than as another reading of its own.
           caveat={caveat}
+          ignored={ignored}
         />
       ))}
     </Box>
@@ -284,6 +300,7 @@ function ReadingTile({
   label,
   color,
   caveat,
+  ignored = false,
 }: {
   // The level, or null where this window has nothing at the instant being viewed — an empty
   // badge, keeping its place and its name.
@@ -294,6 +311,8 @@ function ReadingTile({
   color: string;
   // The coverage shortfall, spelled out, where there is one worth saying.
   caveat?: string;
+  // Tagged to be ignored: the frame goes dashed and the number is struck through.
+  ignored?: boolean;
 }) {
   const badge = (
     <Box
@@ -308,8 +327,12 @@ function ReadingTile({
       minW="70px"
       // The colour is the badge, and the hairline of it left showing around the number is
       // what makes the two rows one object rather than a number with a bar under it.
-      bg={color}
-      p="1px"
+      //
+      // Ignored, the colour is a dashed line round the badge instead of its fill — the
+      // same badge with its swatch drawn in outline, so it reads as set aside.
+      {...(ignored
+        ? {borderWidth: '1px', borderStyle: 'dashed', borderColor: color}
+        : {bg: color, p: '1px'})}
       textAlign="right"
       // The badge gives back four pixels at the bottom: the header's height is set by the
       // tallest thing in it, and a row of these was making the card taller than the name and
@@ -369,6 +392,7 @@ function ReadingTile({
             lineHeight="1.2"
             color={color}
             opacity={db == null ? 0.5 : undefined}
+            textDecoration={ignored ? 'line-through' : undefined}
             ms="auto"
           >
             {db == null ? '--.-' : formatDb(db)}
@@ -387,7 +411,9 @@ function ReadingTile({
         fontSize="0.5625rem"
         fontWeight="bold"
         lineHeight="1.4"
-        color="bg"
+        // Outlined, there is no swatch under the name for the ground's shade to be read
+        // against, so it takes the line's colour itself.
+        color={ignored ? color : 'bg'}
         px="1.5"
         // No padding under it: the badge's own 1px of frame sits below this row in the same
         // colour, so anything here reads as that much more space than it is — and the row is

@@ -175,6 +175,7 @@ export type NoiseProjectWhereInput = {
   start?: Prisma.DateTimeFilter<"NoiseProject"> | Date | string
   end?: Prisma.DateTimeFilter<"NoiseProject"> | Date | string
   NoiseLocation?: Prisma.NoiseLocationListRelationFilter
+  NoiseTag?: Prisma.NoiseTagListRelationFilter
 }
 
 export type NoiseProjectOrderByWithRelationInput = {
@@ -183,6 +184,7 @@ export type NoiseProjectOrderByWithRelationInput = {
   start?: Prisma.SortOrder
   end?: Prisma.SortOrder
   NoiseLocation?: Prisma.NoiseLocationOrderByRelationAggregateInput
+  NoiseTag?: Prisma.NoiseTagOrderByRelationAggregateInput
   _relevance?: Prisma.NoiseProjectOrderByRelevanceInput
 }
 
@@ -195,6 +197,7 @@ export type NoiseProjectWhereUniqueInput = Prisma.AtLeast<{
   start?: Prisma.DateTimeFilter<"NoiseProject"> | Date | string
   end?: Prisma.DateTimeFilter<"NoiseProject"> | Date | string
   NoiseLocation?: Prisma.NoiseLocationListRelationFilter
+  NoiseTag?: Prisma.NoiseTagListRelationFilter
 }, "id">
 
 export type NoiseProjectOrderByWithAggregationInput = {
@@ -223,6 +226,7 @@ export type NoiseProjectCreateInput = {
   start: Date | string
   end: Date | string
   NoiseLocation?: Prisma.NoiseLocationCreateNestedManyWithoutNoiseProjectInput
+  NoiseTag?: Prisma.NoiseTagCreateNestedManyWithoutNoiseProjectInput
 }
 
 export type NoiseProjectUncheckedCreateInput = {
@@ -231,6 +235,7 @@ export type NoiseProjectUncheckedCreateInput = {
   start: Date | string
   end: Date | string
   NoiseLocation?: Prisma.NoiseLocationUncheckedCreateNestedManyWithoutNoiseProjectInput
+  NoiseTag?: Prisma.NoiseTagUncheckedCreateNestedManyWithoutNoiseProjectInput
 }
 
 export type NoiseProjectUpdateInput = {
@@ -239,6 +244,7 @@ export type NoiseProjectUpdateInput = {
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   end?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   NoiseLocation?: Prisma.NoiseLocationUpdateManyWithoutNoiseProjectNestedInput
+  NoiseTag?: Prisma.NoiseTagUpdateManyWithoutNoiseProjectNestedInput
 }
 
 export type NoiseProjectUncheckedUpdateInput = {
@@ -247,6 +253,7 @@ export type NoiseProjectUncheckedUpdateInput = {
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   end?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   NoiseLocation?: Prisma.NoiseLocationUncheckedUpdateManyWithoutNoiseProjectNestedInput
+  NoiseTag?: Prisma.NoiseTagUncheckedUpdateManyWithoutNoiseProjectNestedInput
 }
 
 export type NoiseProjectCreateManyInput = {
@@ -316,11 +323,26 @@ export type NoiseProjectUpdateOneRequiredWithoutNoiseLocationNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.NoiseProjectUpdateToOneWithWhereWithoutNoiseLocationInput, Prisma.NoiseProjectUpdateWithoutNoiseLocationInput>, Prisma.NoiseProjectUncheckedUpdateWithoutNoiseLocationInput>
 }
 
+export type NoiseProjectCreateNestedOneWithoutNoiseTagInput = {
+  create?: Prisma.XOR<Prisma.NoiseProjectCreateWithoutNoiseTagInput, Prisma.NoiseProjectUncheckedCreateWithoutNoiseTagInput>
+  connectOrCreate?: Prisma.NoiseProjectCreateOrConnectWithoutNoiseTagInput
+  connect?: Prisma.NoiseProjectWhereUniqueInput
+}
+
+export type NoiseProjectUpdateOneRequiredWithoutNoiseTagNestedInput = {
+  create?: Prisma.XOR<Prisma.NoiseProjectCreateWithoutNoiseTagInput, Prisma.NoiseProjectUncheckedCreateWithoutNoiseTagInput>
+  connectOrCreate?: Prisma.NoiseProjectCreateOrConnectWithoutNoiseTagInput
+  upsert?: Prisma.NoiseProjectUpsertWithoutNoiseTagInput
+  connect?: Prisma.NoiseProjectWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.NoiseProjectUpdateToOneWithWhereWithoutNoiseTagInput, Prisma.NoiseProjectUpdateWithoutNoiseTagInput>, Prisma.NoiseProjectUncheckedUpdateWithoutNoiseTagInput>
+}
+
 export type NoiseProjectCreateWithoutNoiseLocationInput = {
   id?: string
   name: string
   start: Date | string
   end: Date | string
+  NoiseTag?: Prisma.NoiseTagCreateNestedManyWithoutNoiseProjectInput
 }
 
 export type NoiseProjectUncheckedCreateWithoutNoiseLocationInput = {
@@ -328,6 +350,7 @@ export type NoiseProjectUncheckedCreateWithoutNoiseLocationInput = {
   name: string
   start: Date | string
   end: Date | string
+  NoiseTag?: Prisma.NoiseTagUncheckedCreateNestedManyWithoutNoiseProjectInput
 }
 
 export type NoiseProjectCreateOrConnectWithoutNoiseLocationInput = {
@@ -351,6 +374,7 @@ export type NoiseProjectUpdateWithoutNoiseLocationInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   end?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  NoiseTag?: Prisma.NoiseTagUpdateManyWithoutNoiseProjectNestedInput
 }
 
 export type NoiseProjectUncheckedUpdateWithoutNoiseLocationInput = {
@@ -358,6 +382,55 @@ export type NoiseProjectUncheckedUpdateWithoutNoiseLocationInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   end?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  NoiseTag?: Prisma.NoiseTagUncheckedUpdateManyWithoutNoiseProjectNestedInput
+}
+
+export type NoiseProjectCreateWithoutNoiseTagInput = {
+  id?: string
+  name: string
+  start: Date | string
+  end: Date | string
+  NoiseLocation?: Prisma.NoiseLocationCreateNestedManyWithoutNoiseProjectInput
+}
+
+export type NoiseProjectUncheckedCreateWithoutNoiseTagInput = {
+  id?: string
+  name: string
+  start: Date | string
+  end: Date | string
+  NoiseLocation?: Prisma.NoiseLocationUncheckedCreateNestedManyWithoutNoiseProjectInput
+}
+
+export type NoiseProjectCreateOrConnectWithoutNoiseTagInput = {
+  where: Prisma.NoiseProjectWhereUniqueInput
+  create: Prisma.XOR<Prisma.NoiseProjectCreateWithoutNoiseTagInput, Prisma.NoiseProjectUncheckedCreateWithoutNoiseTagInput>
+}
+
+export type NoiseProjectUpsertWithoutNoiseTagInput = {
+  update: Prisma.XOR<Prisma.NoiseProjectUpdateWithoutNoiseTagInput, Prisma.NoiseProjectUncheckedUpdateWithoutNoiseTagInput>
+  create: Prisma.XOR<Prisma.NoiseProjectCreateWithoutNoiseTagInput, Prisma.NoiseProjectUncheckedCreateWithoutNoiseTagInput>
+  where?: Prisma.NoiseProjectWhereInput
+}
+
+export type NoiseProjectUpdateToOneWithWhereWithoutNoiseTagInput = {
+  where?: Prisma.NoiseProjectWhereInput
+  data: Prisma.XOR<Prisma.NoiseProjectUpdateWithoutNoiseTagInput, Prisma.NoiseProjectUncheckedUpdateWithoutNoiseTagInput>
+}
+
+export type NoiseProjectUpdateWithoutNoiseTagInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  end?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  NoiseLocation?: Prisma.NoiseLocationUpdateManyWithoutNoiseProjectNestedInput
+}
+
+export type NoiseProjectUncheckedUpdateWithoutNoiseTagInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  end?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  NoiseLocation?: Prisma.NoiseLocationUncheckedUpdateManyWithoutNoiseProjectNestedInput
 }
 
 
@@ -367,10 +440,12 @@ export type NoiseProjectUncheckedUpdateWithoutNoiseLocationInput = {
 
 export type NoiseProjectCountOutputType = {
   NoiseLocation: number
+  NoiseTag: number
 }
 
 export type NoiseProjectCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   NoiseLocation?: boolean | NoiseProjectCountOutputTypeCountNoiseLocationArgs
+  NoiseTag?: boolean | NoiseProjectCountOutputTypeCountNoiseTagArgs
 }
 
 /**
@@ -390,6 +465,13 @@ export type NoiseProjectCountOutputTypeCountNoiseLocationArgs<ExtArgs extends ru
   where?: Prisma.NoiseLocationWhereInput
 }
 
+/**
+ * NoiseProjectCountOutputType without action
+ */
+export type NoiseProjectCountOutputTypeCountNoiseTagArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.NoiseTagWhereInput
+}
+
 
 export type NoiseProjectSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -397,6 +479,7 @@ export type NoiseProjectSelect<ExtArgs extends runtime.Types.Extensions.Internal
   start?: boolean
   end?: boolean
   NoiseLocation?: boolean | Prisma.NoiseProject$NoiseLocationArgs<ExtArgs>
+  NoiseTag?: boolean | Prisma.NoiseProject$NoiseTagArgs<ExtArgs>
   _count?: boolean | Prisma.NoiseProjectCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["noiseProject"]>
 
@@ -424,6 +507,7 @@ export type NoiseProjectSelectScalar = {
 export type NoiseProjectOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "start" | "end", ExtArgs["result"]["noiseProject"]>
 export type NoiseProjectInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   NoiseLocation?: boolean | Prisma.NoiseProject$NoiseLocationArgs<ExtArgs>
+  NoiseTag?: boolean | Prisma.NoiseProject$NoiseTagArgs<ExtArgs>
   _count?: boolean | Prisma.NoiseProjectCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type NoiseProjectIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -433,6 +517,7 @@ export type $NoiseProjectPayload<ExtArgs extends runtime.Types.Extensions.Intern
   name: "NoiseProject"
   objects: {
     NoiseLocation: Prisma.$NoiseLocationPayload<ExtArgs>[]
+    NoiseTag: Prisma.$NoiseTagPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -834,6 +919,7 @@ readonly fields: NoiseProjectFieldRefs;
 export interface Prisma__NoiseProjectClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   NoiseLocation<T extends Prisma.NoiseProject$NoiseLocationArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.NoiseProject$NoiseLocationArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NoiseLocationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  NoiseTag<T extends Prisma.NoiseProject$NoiseTagArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.NoiseProject$NoiseTagArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NoiseTagPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1281,6 +1367,30 @@ export type NoiseProject$NoiseLocationArgs<ExtArgs extends runtime.Types.Extensi
   take?: number
   skip?: number
   distinct?: Prisma.NoiseLocationScalarFieldEnum | Prisma.NoiseLocationScalarFieldEnum[]
+}
+
+/**
+ * NoiseProject.NoiseTag
+ */
+export type NoiseProject$NoiseTagArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the NoiseTag
+   */
+  select?: Prisma.NoiseTagSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the NoiseTag
+   */
+  omit?: Prisma.NoiseTagOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.NoiseTagInclude<ExtArgs> | null
+  where?: Prisma.NoiseTagWhereInput
+  orderBy?: Prisma.NoiseTagOrderByWithRelationInput | Prisma.NoiseTagOrderByWithRelationInput[]
+  cursor?: Prisma.NoiseTagWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.NoiseTagScalarFieldEnum | Prisma.NoiseTagScalarFieldEnum[]
 }
 
 /**

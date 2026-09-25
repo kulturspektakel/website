@@ -445,8 +445,15 @@ export function timeGridStepS(
 //
 // For one device it is the rule above by another route: its column has a value at
 // every x, so consecutive non-nulls are consecutive samples.
+// The function form of uPlot's refiner, which its type unions with a fixed list of gaps —
+// callable, so a caller can build on what this one finds.
+export type GapsFn = Extract<
+  uPlot.Series.GapsRefiner,
+  (...args: never[]) => unknown
+>;
+
 export const makeSampleGapsRefiner =
-  (gapThresholdX: number): uPlot.Series.GapsRefiner =>
+  (gapThresholdX: number): GapsFn =>
   (u, sIdx, i0, i1) => {
     const xs = u.data[0];
     const ys = u.data[sIdx];

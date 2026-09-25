@@ -419,7 +419,7 @@ export const ModelName = {
   NoiseLocationLimit: 'NoiseLocationLimit',
   DeviceLocation: 'DeviceLocation',
   NoiseLog: 'NoiseLog',
-  NoiseLogTag: 'NoiseLogTag'
+  NoiseTag: 'NoiseTag'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -435,7 +435,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "viewer" | "area" | "areaOpeningHour" | "page" | "productList" | "product" | "productAdditives" | "device" | "order" | "orderItem" | "cardTransaction" | "crewCard" | "deviceLog" | "bandApplication" | "bandApplicationTag" | "bandApplicationRating" | "bandApplicationComment" | "event" | "bandPlaying" | "nonce" | "nonceRequest" | "gmailReminders" | "deviceConfigVersion" | "news" | "twoFactor" | "itemLocation" | "viewerLocation" | "shortDomainRedirect" | "donation" | "noiseProject" | "noiseLocation" | "noiseLocationAssignment" | "noiseLocationLimit" | "deviceLocation" | "noiseLog" | "noiseLogTag"
+    modelProps: "viewer" | "area" | "areaOpeningHour" | "page" | "productList" | "product" | "productAdditives" | "device" | "order" | "orderItem" | "cardTransaction" | "crewCard" | "deviceLog" | "bandApplication" | "bandApplicationTag" | "bandApplicationRating" | "bandApplicationComment" | "event" | "bandPlaying" | "nonce" | "nonceRequest" | "gmailReminders" | "deviceConfigVersion" | "news" | "twoFactor" | "itemLocation" | "viewerLocation" | "shortDomainRedirect" | "donation" | "noiseProject" | "noiseLocation" | "noiseLocationAssignment" | "noiseLocationLimit" | "deviceLocation" | "noiseLog" | "noiseTag"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -3029,77 +3029,77 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
-    NoiseLogTag: {
-      payload: Prisma.$NoiseLogTagPayload<ExtArgs>
-      fields: Prisma.NoiseLogTagFieldRefs
+    NoiseTag: {
+      payload: Prisma.$NoiseTagPayload<ExtArgs>
+      fields: Prisma.NoiseTagFieldRefs
       operations: {
         findUnique: {
-          args: Prisma.NoiseLogTagFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoiseLogTagPayload> | null
+          args: Prisma.NoiseTagFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoiseTagPayload> | null
         }
         findUniqueOrThrow: {
-          args: Prisma.NoiseLogTagFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoiseLogTagPayload>
+          args: Prisma.NoiseTagFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoiseTagPayload>
         }
         findFirst: {
-          args: Prisma.NoiseLogTagFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoiseLogTagPayload> | null
+          args: Prisma.NoiseTagFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoiseTagPayload> | null
         }
         findFirstOrThrow: {
-          args: Prisma.NoiseLogTagFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoiseLogTagPayload>
+          args: Prisma.NoiseTagFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoiseTagPayload>
         }
         findMany: {
-          args: Prisma.NoiseLogTagFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoiseLogTagPayload>[]
+          args: Prisma.NoiseTagFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoiseTagPayload>[]
         }
         create: {
-          args: Prisma.NoiseLogTagCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoiseLogTagPayload>
+          args: Prisma.NoiseTagCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoiseTagPayload>
         }
         createMany: {
-          args: Prisma.NoiseLogTagCreateManyArgs<ExtArgs>
+          args: Prisma.NoiseTagCreateManyArgs<ExtArgs>
           result: BatchPayload
         }
         createManyAndReturn: {
-          args: Prisma.NoiseLogTagCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoiseLogTagPayload>[]
+          args: Prisma.NoiseTagCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoiseTagPayload>[]
         }
         delete: {
-          args: Prisma.NoiseLogTagDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoiseLogTagPayload>
+          args: Prisma.NoiseTagDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoiseTagPayload>
         }
         update: {
-          args: Prisma.NoiseLogTagUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoiseLogTagPayload>
+          args: Prisma.NoiseTagUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoiseTagPayload>
         }
         deleteMany: {
-          args: Prisma.NoiseLogTagDeleteManyArgs<ExtArgs>
+          args: Prisma.NoiseTagDeleteManyArgs<ExtArgs>
           result: BatchPayload
         }
         updateMany: {
-          args: Prisma.NoiseLogTagUpdateManyArgs<ExtArgs>
+          args: Prisma.NoiseTagUpdateManyArgs<ExtArgs>
           result: BatchPayload
         }
         updateManyAndReturn: {
-          args: Prisma.NoiseLogTagUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoiseLogTagPayload>[]
+          args: Prisma.NoiseTagUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoiseTagPayload>[]
         }
         upsert: {
-          args: Prisma.NoiseLogTagUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoiseLogTagPayload>
+          args: Prisma.NoiseTagUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoiseTagPayload>
         }
         aggregate: {
-          args: Prisma.NoiseLogTagAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateNoiseLogTag>
+          args: Prisma.NoiseTagAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateNoiseTag>
         }
         groupBy: {
-          args: Prisma.NoiseLogTagGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.NoiseLogTagGroupByOutputType>[]
+          args: Prisma.NoiseTagGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.NoiseTagGroupByOutputType>[]
         }
         count: {
-          args: Prisma.NoiseLogTagCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.NoiseLogTagCountAggregateOutputType> | number
+          args: Prisma.NoiseTagCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.NoiseTagCountAggregateOutputType> | number
         }
       }
     }
@@ -3600,18 +3600,20 @@ export const NoiseLogScalarFieldEnum = {
 export type NoiseLogScalarFieldEnum = (typeof NoiseLogScalarFieldEnum)[keyof typeof NoiseLogScalarFieldEnum]
 
 
-export const NoiseLogTagScalarFieldEnum = {
+export const NoiseTagScalarFieldEnum = {
   id: 'id',
+  projectId: 'projectId',
+  locationId: 'locationId',
   deviceId: 'deviceId',
-  tag: 'tag',
+  type: 'type',
   start: 'start',
   end: 'end',
+  text: 'text',
   createdAt: 'createdAt',
-  createdByViewerId: 'createdByViewerId',
-  label: 'label'
+  createdByViewerId: 'createdByViewerId'
 } as const
 
-export type NoiseLogTagScalarFieldEnum = (typeof NoiseLogTagScalarFieldEnum)[keyof typeof NoiseLogTagScalarFieldEnum]
+export type NoiseTagScalarFieldEnum = (typeof NoiseTagScalarFieldEnum)[keyof typeof NoiseTagScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -3977,14 +3979,16 @@ export const NoiseLogOrderByRelevanceFieldEnum = {
 export type NoiseLogOrderByRelevanceFieldEnum = (typeof NoiseLogOrderByRelevanceFieldEnum)[keyof typeof NoiseLogOrderByRelevanceFieldEnum]
 
 
-export const NoiseLogTagOrderByRelevanceFieldEnum = {
+export const NoiseTagOrderByRelevanceFieldEnum = {
   id: 'id',
+  projectId: 'projectId',
+  locationId: 'locationId',
   deviceId: 'deviceId',
-  createdByViewerId: 'createdByViewerId',
-  label: 'label'
+  text: 'text',
+  createdByViewerId: 'createdByViewerId'
 } as const
 
-export type NoiseLogTagOrderByRelevanceFieldEnum = (typeof NoiseLogTagOrderByRelevanceFieldEnum)[keyof typeof NoiseLogTagOrderByRelevanceFieldEnum]
+export type NoiseTagOrderByRelevanceFieldEnum = (typeof NoiseTagOrderByRelevanceFieldEnum)[keyof typeof NoiseTagOrderByRelevanceFieldEnum]
 
 
 
@@ -4267,16 +4271,16 @@ export type ListEnumDonationSourceFieldRefInput<$PrismaModel> = FieldRefInputTyp
 
 
 /**
- * Reference to a field of type 'NoiseTag'
+ * Reference to a field of type 'NoiseTagType'
  */
-export type EnumNoiseTagFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'NoiseTag'>
+export type EnumNoiseTagTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'NoiseTagType'>
     
 
 
 /**
- * Reference to a field of type 'NoiseTag[]'
+ * Reference to a field of type 'NoiseTagType[]'
  */
-export type ListEnumNoiseTagFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'NoiseTag[]'>
+export type ListEnumNoiseTagTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'NoiseTagType[]'>
     
 
 /**
@@ -4424,7 +4428,7 @@ export type GlobalOmitConfig = {
   noiseLocationLimit?: Prisma.NoiseLocationLimitOmit
   deviceLocation?: Prisma.DeviceLocationOmit
   noiseLog?: Prisma.NoiseLogOmit
-  noiseLogTag?: Prisma.NoiseLogTagOmit
+  noiseTag?: Prisma.NoiseTagOmit
 }
 
 /* Types for Logging */

@@ -34,6 +34,11 @@ export type MapLocation = {
   // pin shows are both the page's answers, and a map that took the raw rules would have
   // to know about crops and picks to use them.
   limitDb?: number;
+  // The monitors among `deviceIds` whose readings crew tagged to be ignored at the instant
+  // the pin reads (see ignoredDevicesAt). Left out of the number; when that is all of
+  // them, the pin shows what they read anyway, struck through and without colour, glow
+  // or warning — a reading nobody is counting.
+  ignoredDeviceIds?: string[];
 };
 
 export type Coordinates = {latitude: number; longitude: number};
@@ -385,17 +390,27 @@ function MapCanvas({
   // Live records arrive ~1/s; without a tick the pins would freeze at whatever
   // value happened to be current when the markers were built.
   const now = useTick();
-  const pinLevels = locations.map((location) =>
+  const levelOf = (deviceId: string) =>
+    displayedLevel({
+      live,
+      now,
+      series,
+      state: deviceState(deviceId),
+      historyDb: history?.[deviceId],
+    });
+  // Ignored wherever every monitor standing there is: a place with one monitor set aside
+  // and another still counting just reads the other.
+  const pinIgnored = locations.map(
+    ({deviceIds, ignoredDeviceIds = []}) =>
+      deviceIds.length > 0 &&
+      deviceIds.every((id) => ignoredDeviceIds.includes(id)),
+  );
+  const pinLevels = locations.map(({deviceIds, ignoredDeviceIds = []}, i) =>
     loudestLevel(
-      location.deviceIds.map((deviceId) =>
-        displayedLevel({
-          live,
-          now,
-          series,
-          state: deviceState(deviceId),
-          historyDb: history?.[deviceId],
-        }),
-      ),
+      (pinIgnored[i]
+        ? deviceIds
+        : deviceIds.filter((id) => !ignoredDeviceIds.includes(id))
+      ).map(levelOf),
     ),
   );
   // Over the number written for this place — the one thing a pin can say that isn't a
@@ -405,7 +420,9 @@ function MapCanvas({
   // a place with nothing written for it never warns.
   const pinOver = pinLevels.map((level, i) => {
     const limit = locations[i]?.limitDb;
-    return limit != null && isCurrent(level) && level.db > limit;
+    return (
+      !pinIgnored[i] && limit != null && isCurrent(level) && level.db > limit
+    );
   });
   const pinLabels = pinLevels.map((level) =>
     level.kind === 'none' ? NO_LEVEL_LABEL : formatDb(level.db),
@@ -413,18 +430,26 @@ function MapCanvas({
   // Greyed down for anything that isn't a reading of the instant being viewed — a
   // number we only remember, or none at all — the same way the list rows grey theirs.
   // The two cases look alike on purpose: from across the map both mean "not this".
-  const pinStale = pinLevels.map((level) => !isCurrent(level));
+  // An ignored pin is greyed the same way: its number is not one to read a loudness off.
+  const pinStale = pinLevels.map(
+    (level, i) => pinIgnored[i] || !isCurrent(level),
+  );
   // Which band of the ramp each pin is filled from, as the level it is looked up by — the
   // colour itself is the icon's business (see pinIcon). Null for a pin with no level, and
   // for one that is only remembered: both are grey, which is what the ramp has nothing to
   // say about.
-  const pinDb = pinLevels.map((level) => (isCurrent(level) ? level.db : null));
+  // Null for an ignored pin too, which is what takes its colour and its glow.
+  const pinDb = pinLevels.map((level, i) =>
+    !pinIgnored[i] && isCurrent(level) ? level.db : null,
+  );
 
   // Two effects, because the two change at very different rates: the number moves
   // roughly once a second per monitor, while the pin's *pill* only changes when a location
   // crosses a band boundary, stops reading now, or crosses its limit. Rebuilding an icon
   // object per marker per second would be pure churn.
-  const labelKey = pinLabels.join('|');
+  const labelKey = pinLabels
+    .map((label, i) => `${label}${pinIgnored[i] ? 'i' : ''}`)
+    .join('|');
   // Everything the pill is drawn from, in one key: the band and not the level, which is
   // exactly the difference between a redraw per boundary crossed and one per second.
   const pillKey = pinDb
@@ -441,6 +466,7 @@ function MapCanvas({
         pinLabel(pinLabels[i] ?? NO_LEVEL_LABEL, {
           stale: pinStale[i] ?? true,
           over: pinOver[i] ?? false,
+          ignored: pinIgnored[i] ?? false,
         }),
       );
     });
@@ -600,7 +626,11 @@ function MapCanvas({
         <Tooltip
           key={hovered.id}
           open
-          content={hovered.name}
+          content={
+            locations.some((l, i) => l.id === hovered.id && pinIgnored[i])
+              ? `${hovered.name} (ignored)`
+              : hovered.name
+          }
           positioning={{placement: 'top'}}
           showArrow
         >

@@ -144,6 +144,21 @@ export const loadNoiseProject = createServerFn()
             },
           },
         },
+        // Every tag in the project, whatever it applies to: which of them a location's
+        // chart shades is decided client-side against the monitors it has had (see
+        // locationTags), so one query serves every card.
+        NoiseTag: {
+          orderBy: {start: 'asc'},
+          select: {
+            id: true,
+            type: true,
+            text: true,
+            locationId: true,
+            deviceId: true,
+            start: true,
+            end: true,
+          },
+        },
       },
     });
     if (!project) throw notFound();
@@ -202,6 +217,16 @@ export const loadNoiseProject = createServerFn()
               ]
             : [];
         }),
+      })),
+      tags: project.NoiseTag.map((t) => ({
+        id: t.id,
+        type: t.type,
+        text: t.text,
+        locationId: t.locationId,
+        deviceId: t.deviceId,
+        start: t.start.getTime(),
+        // Null is a marker at `start`, not "until the end of the event".
+        end: t.end?.getTime() ?? null,
       })),
     };
   });
@@ -485,6 +510,70 @@ export const deleteNoiseLimit = createServerFn()
   .handler(async ({data}) => {
     await prismaClient.noiseLocationLimit.deleteMany({
       where: {id: data.limitId},
+    });
+  });
+
+// What a tag applies to, as the one field that says so: a monitor, a place, or the whole
+// event. The row stores it as whichever of its keys is set (see the schema); the wire
+// states it outright so a request cannot name a device *and* a location and leave the
+// reader to guess which was meant.
+const noiseTagScope = z.discriminatedUnion('kind', [
+  z.object({kind: z.literal('device'), deviceId: z.string().min(1)}),
+  z.object({kind: z.literal('location'), locationId: z.string().min(1)}),
+  z.object({kind: z.literal('event')}),
+]);
+
+export type NoiseTagScope = z.infer<typeof noiseTagScope>;
+
+export const createNoiseTag = createServerFn()
+  .middleware([crewAuth])
+  .inputValidator(
+    z
+      .object({
+        projectId: z.string().min(1),
+        type: z.enum(['IGNORE', 'COMMENT']),
+        scope: noiseTagScope,
+        start: z.number().int(),
+        // Null is a marker: an instant rather than a range.
+        end: z.number().int().nullable(),
+        text: z.string().trim().max(2000).nullish(),
+      })
+      .refine((v) => v.end == null || v.end > v.start, {
+        message: END_BEFORE_START,
+        path: ['end'],
+      }),
+  )
+  .handler(async ({data, context}) => {
+    const viewerId = context.viewer?.id;
+    if (!viewerId) throw new Error('Unauthorized');
+    const {scope} = data;
+    // A tag on a place belongs to that place's project, so a location from another
+    // project is as unknown here as one that doesn't exist.
+    if (scope.kind === 'location') {
+      const location = await prismaClient.noiseLocation.findFirst({
+        where: {id: scope.locationId, projectId: data.projectId},
+        select: {id: true},
+      });
+      if (!location) throw notFound();
+    } else {
+      const project = await prismaClient.noiseProject.findUnique({
+        where: {id: data.projectId},
+        select: {id: true},
+      });
+      if (!project) throw notFound();
+    }
+    await prismaClient.noiseTag.create({
+      data: {
+        projectId: data.projectId,
+        locationId: scope.kind === 'location' ? scope.locationId : null,
+        deviceId: scope.kind === 'device' ? scope.deviceId : null,
+        type: data.type,
+        start: new Date(data.start),
+        end: instantOrNull(data.end),
+        // Only a comment says anything; an ignored range is its own explanation.
+        text: data.type === 'COMMENT' ? data.text || null : null,
+        createdByViewerId: viewerId,
+      },
     });
   });
 

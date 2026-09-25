@@ -217,7 +217,7 @@ export type DeviceLocation = Prisma.DeviceLocationModel
  */
 export type NoiseLog = Prisma.NoiseLogModel
 /**
- * Model NoiseLogTag
+ * Model NoiseTag
  * 
  */
-export type NoiseLogTag = Prisma.NoiseLogTagModel
+export type NoiseTag = Prisma.NoiseTagModel

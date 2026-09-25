@@ -69,6 +69,19 @@ const NOISE_COLORS = {
   // legible where the trace runs along or across it — in the series' own shade the two
   // merged exactly where a limit matters. Still dashed, so the hue is not the only cue.
   'chart.limit': 'red.500',
+  // One colour per monitor, for a location that has had several: each gets its own line
+  // (see deviceColors). The first is the series shade, so the ordinary one-monitor chart and
+  // the first monitor of several look the same; the rest are picked to stay apart from it
+  // and from each other on the dark ground, and from the limit's red.
+  'chart.device.1': 'yellow.400',
+  'chart.device.2': 'cyan.400',
+  'chart.device.3': 'pink.400',
+  'chart.device.4': 'green.400',
+  'chart.device.5': 'purple.400',
+  'chart.device.6': 'orange.300',
+  // A stretch crew tagged to be ignored, washed under the trace (see drawTags). Grey, so
+  // it reads as "set aside" rather than as another mark competing with the red rules.
+  'chart.ignored': 'gray.500',
   'chart.playhead': 'gray.50',
   'chart.readout.bg': {_light: 'gray.50', _dark: 'gray.800'},
 
@@ -189,6 +202,10 @@ export const NOISE_COLOR_TOKENS = Object.keys(
 // written out, so a series token that isn't in the theme is a type error at the
 // point it is used.
 export type ChartSeriesToken = Extract<NoiseColorToken, 'chart.series'>;
+export type ChartDeviceToken = Extract<
+  NoiseColorToken,
+  `chart.device.${number}`
+>;
 
 // The accent, and the whole of it: one hue per appearance, aliased rather than
 // re-specified so that retuning the section is a single edit. Chakra's

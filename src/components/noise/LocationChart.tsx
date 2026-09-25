@@ -1,10 +1,13 @@
+import {useMemo, useState} from 'react';
 import {Box} from '@chakra-ui/react';
 import {LevelTrace} from './LevelTrace';
 import {
   useProjectView,
   type DeviceWindows,
-  type NoiseLimit,
+  type NoiseLocationItem,
 } from './projectView';
+import {locationTags} from './rangeTags';
+import {RangeTagDialog} from './RangeTagDialog';
 
 // A location's levels over the crop, as one chart of the place.
 //
@@ -24,16 +27,31 @@ import {
 // says "nothing was measured here", and a card that simply omits the chart says nothing
 // and jumps a hundred pixels the moment a monitor is assigned.
 export function LocationChart({
+  location,
   lines,
-  limits,
 }: {
+  // The place itself: its limits are drawn over the trace, and it is what a range swept
+  // here is tagged against by default (see RangeTagDialog).
+  location: NoiseLocationItem;
   lines: DeviceWindows[];
-  // What this place is permitted, whole — the same history-not-instant treatment the lines
-  // get. A limit that ended at midnight is still part of a crop that covers midnight.
-  limits: readonly NoiseLimit[];
 }) {
-  const {live, picked, range, bounds, traces, scrubTo, cropTo} =
+  const {project, live, picked, range, bounds, traces, scrubTo, cropTo} =
     useProjectView();
+  // The range the selection menu's "Ignore…" was chosen for, while its dialog is open.
+  const [tagging, setTagging] = useState<{start: number; end: number} | null>(
+    null,
+  );
+
+  // Every ignored stretch that reaches this place — the event's, its own, and its
+  // monitors' while they stood here (see locationTags). Memoized so the chart's redraw
+  // effect only fires when a tag actually changes.
+  const tags = useMemo(
+    () =>
+      locationTags(project.tags, location.id, lines).filter(
+        (t) => t.type === 'IGNORE',
+      ),
+    [project.tags, location.id, lines],
+  );
 
   // Which of the chart's two modes this card is in, as the one object that decides it:
   // live is the rolling window and has nothing to point at, and a crop is a timeframe
@@ -55,6 +73,8 @@ export function LocationChart({
         // `i`/`o` over the trace, a drag across it, or two fingers on it crop the page's
         // timeframe to what was pointed at.
         onCrop: cropTo,
+        // A swept range tagged from the selection menu instead of zoomed into.
+        onTag: setTagging,
         traces,
       } as const);
 
@@ -80,10 +100,20 @@ export function LocationChart({
         // What the place is allowed to be, as a dashed rule across the hours each limit
         // applies to, in the shade of the series it is written against — and only for the
         // series `picked` above, so a rule and the line it bounds come into view together
-        // (see drawLimits).
-        limits={limits}
+        // (see drawLimits). The whole permit, not the limits in force at the playhead: a
+        // limit that ended at midnight is still part of a crop that covers midnight.
+        limits={location.limits}
+        tags={tags}
         {...mode}
       />
+      {tagging && (
+        <RangeTagDialog
+          range={tagging}
+          location={location}
+          lines={lines}
+          onClose={() => setTagging(null)}
+        />
+      )}
     </Box>
   );
 }

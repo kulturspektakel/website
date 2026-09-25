@@ -9,12 +9,12 @@
 * 🟢 You can import this file directly.
 */
 
-export const NoiseTag = {
-  EXCLUDED: 'EXCLUDED',
-  CUSTOM_LABEL: 'CUSTOM_LABEL'
+export const NoiseTagType = {
+  IGNORE: 'IGNORE',
+  COMMENT: 'COMMENT'
 } as const
 
-export type NoiseTag = (typeof NoiseTag)[keyof typeof NoiseTag]
+export type NoiseTagType = (typeof NoiseTagType)[keyof typeof NoiseTagType]
 
 
 export const DietType = {

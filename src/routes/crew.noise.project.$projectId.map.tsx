@@ -7,7 +7,9 @@ import {NoiseLocationDialog} from '../components/noise/NoiseLocationDialog';
 import {
   usePlayheadLevels,
   useProjectView,
+  useReadingMinute,
 } from '../components/noise/projectView';
+import {ignoredDevicesAt} from '../components/noise/rangeTags';
 import {primarySeries} from '../components/noise/level';
 import {useTick} from '../components/noise/context';
 import {strictestLimit} from '../components/noise/limitLines';
@@ -91,6 +93,10 @@ function ProjectMapView() {
   // ticks a live map re-renders on: a limit is written to the minute at finest, so asking
   // any oftener could not change the answer.
   const minute = Math.floor(useTick(60_000) / 60_000) * 60_000;
+  // The minute the pins read — what decides whether a monitor is ignored (see
+  // useReadingMinute).
+  const pinsAt = useReadingMinute(live);
+
   const [limitFrom, limitTo] = live
     ? [minute, minute + 1]
     : [range.start, range.end];
@@ -104,21 +110,37 @@ function ProjectMapView() {
   // moves which limits are in force.
   const mapLocations = useMemo(
     () =>
-      locations.map(({location, assignments}) => ({
-        ...location,
-        deviceIds: assignments.map((a) => a.deviceId),
-        // What the place is allowed to be, so the pin can say when it isn't. Against the
-        // series the pin is actually showing, because a peak limit is not a bound on an Leq
-        // (see strictestLimit) — which also means the header's menu is what brings a warning
-        // into view, the same control that brings in the number being warned about.
-        //
-        // Undefined where nothing was written for those hours: a place with no limit is not
-        // a place with a high one, and its pin stays a plain reading however loud.
-        limitDb:
-          strictestLimit(location.limits, primary, limitFrom, limitTo) ??
-          undefined,
-      })),
-    [locations, primary, limitFrom, limitTo],
+      locations.map(({location, assignments}) => {
+        const deviceIds = assignments.map((a) => a.deviceId);
+        return {
+          ...location,
+          deviceIds,
+          // The monitors whose readings crew set aside at this instant: the pin leaves them
+          // out of its number, and with nothing else standing there it says so instead.
+          ignoredDeviceIds:
+            pinsAt == null
+              ? []
+              : [
+                  ...ignoredDevicesAt(
+                    project.tags,
+                    location.id,
+                    deviceIds,
+                    pinsAt,
+                  ),
+                ],
+          // What the place is allowed to be, so the pin can say when it isn't. Against the
+          // series the pin is actually showing, because a peak limit is not a bound on an Leq
+          // (see strictestLimit) — which also means the header's menu is what brings a warning
+          // into view, the same control that brings in the number being warned about.
+          //
+          // Undefined where nothing was written for those hours: a place with no limit is not
+          // a place with a high one, and its pin stays a plain reading however loud.
+          limitDb:
+            strictestLimit(location.limits, primary, limitFrom, limitTo) ??
+            undefined,
+        };
+      }),
+    [locations, primary, limitFrom, limitTo, project.tags, pinsAt],
   );
 
   // Reachable only by hand-typed URL — the index route sends a keyless

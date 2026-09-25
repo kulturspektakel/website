@@ -5,3 +5,9 @@
 .noise-pin-label {
   font-variant-numeric: tabular-nums;
 }
+
+/* A pin whose monitors are all tagged to be ignored: the number stays, crossed out. */
+.noise-pin-label-ignored {
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+}

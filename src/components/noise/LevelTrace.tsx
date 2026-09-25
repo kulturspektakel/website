@@ -34,6 +34,7 @@ import {
   instantLabel,
   labelStride,
   makeSampleGapsRefiner,
+  type GapsFn,
   MIN_PLOT_HEIGHT,
   plotHeight,
   timeGridStepS,
@@ -43,6 +44,7 @@ import {
 } from './chartUtils';
 import {ChartTooltip} from './ChartTooltip';
 import {SelectionMenu} from './SelectionMenu';
+import {deviceColor} from './deviceColors';
 import {attachTouchGestures} from './uplotTouchGestures';
 import {usePlayheadEffect, type DeviceWindows} from './projectView';
 
@@ -174,6 +176,10 @@ const LIMIT_DASH = [4, 3];
 // The rule's width, in CSS pixels.
 const LIMIT_WIDTH_PX = 1;
 
+// The trace through an ignored stretch, on and off: dotted rather than dashed, so it can't
+// be mistaken for a limit's rule — the reading is still there, it just isn't being counted.
+const IGNORED_DASH = [1.5, 2.5];
+
 /**
  * The permitted levels, over the traces they are permitted for.
  *
@@ -286,6 +292,119 @@ function drawLimits(
   ctx.restore();
 }
 
+// What crew tagged on this chart, as a wash under the trace: a band over each range and a
+// hairline at each marker. Drawn on `drawClear`, before the series, so the level stays
+// readable through it — a stretch set aside is still a stretch someone may want to read.
+//
+// Clipped to the plot area and positioned in canvas pixels, the same rules drawLimits
+// follows; a range half off the crop is simply cut by the clip.
+//
+// Only for tags that cover the whole chart: one monitor's ignored stretch is its line
+// going dotted (see drawIgnoredLines), and a band behind every line would say the others
+// were set aside too.
+function drawTags(u: uPlot, tags: readonly ChartTag[]): void {
+  if (tags.length === 0) return;
+  const ratio = uPlot.pxRatio;
+  const color = themeHex('chart.ignored');
+  const ctx = u.ctx;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(u.bbox.left, u.bbox.top, u.bbox.width, u.bbox.height);
+  ctx.clip();
+
+  ctx.fillStyle = fill(color);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = ratio;
+  for (const {start, end} of tags) {
+    const x0 = u.valToPos(start / 1000, 'x', true);
+    if (end == null) {
+      const x = Math.round(x0) + ratio / 2;
+      ctx.beginPath();
+      ctx.moveTo(x, u.bbox.top);
+      ctx.lineTo(x, u.bbox.top + u.bbox.height);
+      ctx.stroke();
+    } else {
+      const x1 = u.valToPos(end / 1000, 'x', true);
+      ctx.fillRect(x0, u.bbox.top, x1 - x0, u.bbox.height);
+    }
+  }
+
+  ctx.restore();
+}
+
+// The ignored ranges of a tag list as the pixel spans a series' gaps are written in (see
+// makeSampleGapsRefiner). Markers have no extent, so they cut nothing.
+function ignoredSpans(u: uPlot, tags: readonly ChartTag[]): [number, number][] {
+  return tags.flatMap(({start, end}) =>
+    end == null
+      ? []
+      : [
+          [
+            Math.round(u.valToPos(start / 1000, 'x', true)),
+            Math.round(u.valToPos(end / 1000, 'x', true)),
+          ] as [number, number],
+        ],
+  );
+}
+
+// Two lists of spans as one, sorted and with overlaps folded together — the shape uPlot
+// builds a series' clip from.
+function mergeSpans(spans: [number, number][]): [number, number][] {
+  const out: [number, number][] = [];
+  for (const [a, b] of [...spans].sort((x, y) => x[0] - y[0])) {
+    const last = out[out.length - 1];
+    if (last && a <= last[1]) last[1] = Math.max(last[1], b);
+    else out.push([a, b]);
+  }
+  return out;
+}
+
+// The other half of cutting ignored stretches out of every line (see the gaps refiner in
+// the plot): the same lines again, dotted, inside those stretches only. Each line's own
+// path, in its own colour and width, so the dotted run is visibly the same trace carrying
+// on — and still broken wherever the monitor itself went quiet, since the sample gaps the
+// solid line was cut by are cut out of this too.
+function drawIgnoredLines(
+  u: uPlot,
+  // Per series, the ignored spans its own line was cut at — so a monitor's tag dots its
+  // line and no other.
+  ignoredBySeries: ReadonlyMap<number, [number, number][]>,
+  sampleGaps: ReadonlyMap<number, [number, number][]>,
+): void {
+  const ratio = uPlot.pxRatio;
+  const {left, top, width, height} = u.bbox;
+  const ctx = u.ctx;
+
+  u.series.forEach((series, i) => {
+    const {_paths: paths} = series as SeriesWithPaths;
+    const spans = ignoredBySeries.get(i) ?? [];
+    if (i === 0 || spans.length === 0 || !paths?.stroke || !series.width)
+      return;
+    const stroke =
+      typeof series.stroke === 'function' ? series.stroke(u, i) : series.stroke;
+    if (typeof stroke !== 'string' || stroke === 'transparent') return;
+
+    ctx.save();
+    const inside = new Path2D();
+    for (const [a, b] of spans) inside.rect(a, top, b - a, height);
+    ctx.clip(inside);
+    // Everything but the sample gaps: the plot's own rectangle with each gap cut out of it
+    // by the even-odd rule.
+    const gaps = sampleGaps.get(i) ?? [];
+    if (gaps.length > 0) {
+      const outside = new Path2D();
+      outside.rect(left, top, width, height);
+      for (const [a, b] of gaps) outside.rect(a, top, b - a, height);
+      ctx.clip(outside, 'evenodd');
+    }
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = series.width * ratio;
+    ctx.setLineDash(IGNORED_DASH.map((d) => d * ratio));
+    ctx.stroke(paths.stroke as Path2D);
+    ctx.restore();
+  });
+}
+
 // The playhead, drawn as a DOM line over the canvas rather than in it. A `draw` hook
 // would mean a full redraw of every row's plot per pointer frame for a line that
 // moves independently of the data; this is one style write. Inside u.over, so it is
@@ -331,6 +450,14 @@ const CHART_CSS = {
 // and a live one has none of those. Split like this the compiler is what enforces the
 // pairing — before, a caller could ask for a crop and pass no range, and the chart would
 // scale itself to 1970 rather than fail to build.
+// A tag as the chart draws it. `deviceId` null means every line on the chart (the event's
+// or the place's own); otherwise only that monitor's lines.
+export type ChartTag = {
+  start: number;
+  end: number | null;
+  deviceId: string | null;
+};
+
 type LevelTraceProps = {
   // Every monitor this location has ever had, with the windows it had them for. One
   // line each, clipped to those windows; one line is the ordinary case, and none — a
@@ -351,6 +478,10 @@ type LevelTraceProps = {
   // Optional because one caller genuinely has none to give — a monitor standing nowhere has
   // no limits, which is a place with no permit rather than a permit of none.
   limits?: readonly LimitLine[];
+  // Ranges crew tagged to be ignored, in epoch ms, washed under the trace. A null end is a
+  // marker at `start`. Optional for the same reason as the limits: only a location's
+  // chart has any.
+  tags?: readonly ChartTag[];
   // How much height to give the time axis, for the one caller that cannot take the
   // default. A chart's bottom gutter comes out of its plot area, so two charts side by
   // side draw their grids at different heights unless they reserve the same — and on the
@@ -377,6 +508,7 @@ type LevelTraceProps = {
       // numbers to move.
       onScrub?: (at: number | null) => void;
       onCrop?: never;
+      onTag?: never;
       traces?: never;
     }
   | {
@@ -419,6 +551,9 @@ type LevelTraceProps = {
       //
       // An omitted end keeps the crop's own.
       onCrop: (crop: {start?: number; end?: number}) => void;
+      // Tags a swept range, in epoch ms — what the selection menu's "Ignore…" hands back.
+      // Optional: without it the menu has only its zoom.
+      onTag?: (range: {start: number; end: number}) => void;
       // Every device's whole stored trace, at one point per minute, per picked series — the
       // page's own record, passed through rather than picked apart here. Absent while it
       // loads, and missing an entry for a device that measured nothing in the project.
@@ -435,10 +570,12 @@ export function LevelTrace({
   live,
   picked,
   limits,
+  tags,
   range,
   bounds,
   onScrub,
   onCrop,
+  onTag,
   traces,
   xAxisSize = X_AXIS_H,
 }: LevelTraceProps) {
@@ -463,6 +600,7 @@ export function LevelTrace({
   // limit saved in the dialog must repaint the rule, not tear the chart down and build a
   // new one under the pointer. The effect further down asks for that repaint.
   const limitsRef = useLatest(limits);
+  const tagsRef = useLatest(tags);
   // The set they are drawn against, through a ref for the same reason — a limit is drawn
   // only where its series is (see limitSegments), so the draw hook needs the current pick
   // and not the one the plot was built on. Read off a ref rather than the closure, which is
@@ -532,7 +670,24 @@ export function LevelTrace({
   );
   // Wrapped rather than passed point-free: themeHex takes an appearance second, and
   // `map` would hand it the index.
-  const strokes = useMemo(() => tokens.map((t) => themeHex(t)), [tokens]);
+  //
+  // One stroke per plotted column, in the projection's order: metric-major, a monitor per
+  // column inside each metric (see traceColumn). With several monitors each takes its own
+  // colour (see deviceColors) — the lines were one shade, and which of two crossing lines
+  // was which could only be asked of the tooltip; the header's badges carry the same
+  // colours as the key. A lone monitor keeps the series shade.
+  const strokes = useMemo(
+    () =>
+      tokens.flatMap((token) =>
+        Array.from({length: lineCount}, (_, d) => {
+          const device = lines[d]?.deviceId;
+          return themeHex(
+            (device != null && deviceColor(lines, device)) || token,
+          );
+        }),
+      ),
+    [tokens, linesKey, lineCount],
+  );
   // What the tooltip's numbers are in. With one line there is one weighting and one window
   // to state, so the number carries both — `87.5 dB(A) 5m`, spelled the way the card's
   // header spells it. With several the row already names the series in full beside it, and
@@ -674,6 +829,15 @@ export function LevelTrace({
         metricCount: picked.length,
         envelope,
         holdX: gapThresholdX,
+        // A monitor's own ignored stretches, kept out of the loudest-of line so the
+        // over-limit area under it is never one nobody is counting.
+        excluded: current.map((l) =>
+          (tagsRef.current ?? []).flatMap((t) =>
+            t.deviceId === l.deviceId && t.end != null
+              ? [{start: t.start, end: t.end}]
+              : [],
+          ),
+        ),
       },
     ) as uPlot.AlignedData;
     // Keyed on digests rather than on the arrays: the same monitors over the same windows
@@ -709,9 +873,34 @@ export function LevelTrace({
     const container = containerRef.current;
     if (!container) return;
 
-    // One refiner for every line: it closes over nothing but the threshold, and uPlot
-    // only ever calls it.
-    const gaps = makeSampleGapsRefiner(gapThresholdX);
+    // One refiner for every line. The monitor's own silences, plus every ignored stretch:
+    // cut out here so the solid line (and any area under it) stops at them, and drawn
+    // back in dotted by drawIgnoredLines. The silences alone are kept per series, because
+    // the dotted run must still break where the monitor went quiet.
+    const sampleGaps = makeSampleGapsRefiner(gapThresholdX);
+    const sampleGapsBySeries = new Map<number, [number, number][]>();
+    const ignoredBySeries = new Map<number, [number, number][]>();
+    // Which monitor a series column is, off the same layout traceColumn reads — or null
+    // for the envelope, which is every monitor's and is cut only by the tags that cover
+    // all of them (a monitor's own are taken out of its data instead; see project).
+    const deviceOf = (sIdx: number): string | null => {
+      if (envelope && sIdx === 1) return null;
+      const d = (sIdx - (envelope ? 2 : 1)) % lineCount;
+      return linesRef.current[d]?.deviceId ?? null;
+    };
+    const gaps: GapsFn = (u, sIdx, i0, i1, nullGaps) => {
+      const own = sampleGaps(u, sIdx, i0, i1, nullGaps);
+      sampleGapsBySeries.set(sIdx, own);
+      const device = deviceOf(sIdx);
+      const ignored = ignoredSpans(
+        u,
+        (tagsRef.current ?? []).filter(
+          (t) => t.deviceId == null || t.deviceId === device,
+        ),
+      );
+      ignoredBySeries.set(sIdx, ignored);
+      return ignored.length === 0 ? own : mergeSpans([...own, ...ignored]);
+    };
 
     // Both axes carry a grid and a thin row of labels — enough to read a level and a
     // time off the trace without going to the timeline for one and the row's numbers
@@ -748,10 +937,24 @@ export function LevelTrace({
           },
         },
         hooks: {
+          // Under the series, so the trace stays on top of what was set aside.
+          drawClear: [
+            (u) =>
+              drawTags(
+                u,
+                (tagsRef.current ?? []).filter(
+                  (t) =>
+                    t.deviceId == null ||
+                    (linesRef.current.length === 1 &&
+                      t.deviceId === linesRef.current[0]!.deviceId),
+                ),
+              ),
+          ],
           // After the series, so a rule sits over the trace it bounds rather than under
           // the area — a limit the level has already crossed is exactly the one that has
           // to stay visible.
           draw: [
+            (u) => drawIgnoredLines(u, ignoredBySeries, sampleGapsBySeries),
             (u) => drawLimits(u, limitsRef.current ?? [], pickedRef.current),
           ],
           setSelect: [
@@ -918,17 +1121,14 @@ export function LevelTrace({
           // The area goes to the lines themselves only for a lone monitor of a lone window:
           // any other shape either has an envelope above or several windows to keep clear.
           // Transparent for the same reason as the envelope's.
-          ...strokes.flatMap((stroke) =>
-            Array.from({length: lineCount}, () => ({
-              stroke,
-              fill:
-                strokes.length === 1 && !envelope ? 'transparent' : undefined,
-              width: 1.25,
-              spanGaps: false,
-              gaps,
-              points: {show: false},
-            })),
-          ),
+          ...strokes.map((stroke) => ({
+            stroke,
+            fill: picked.length === 1 && !envelope ? 'transparent' : undefined,
+            width: 1.25,
+            spanGaps: false,
+            gaps,
+            points: {show: false},
+          })),
         ],
       },
       project(),
@@ -1029,6 +1229,7 @@ export function LevelTrace({
     pendingRef,
     positionPlayhead,
     limitsRef,
+    tagsRef,
     xAxisSize,
   ]);
 
@@ -1112,7 +1313,9 @@ export function LevelTrace({
     return subscribeToClock(1000, () => {
       if (nearViewRef.current) apply();
     });
-  }, [project, live, traces]);
+    // `tags` too: a monitor's ignored stretch comes out of the envelope's data, and every
+    // tag moves where the lines are cut, both of which only a fresh projection redraws.
+  }, [project, live, traces, tags]);
 
   const applyCrop = useCallback(() => {
     const range = rangeRef.current;
@@ -1210,6 +1413,14 @@ export function LevelTrace({
             clearSelection();
             onCrop?.({start, end});
           }}
+          onIgnore={
+            onTag &&
+            (() => {
+              const {start, end} = pending;
+              clearSelection();
+              onTag({start, end});
+            })
+          }
           onClose={clearSelection}
         />
       )}
@@ -1249,7 +1460,12 @@ export function LevelTrace({
                   .filter(Boolean)
                   .join(' · ')}
               </Text>
-              <Text fontWeight="bold" color={tokens[picked.indexOf(series)]}>
+              <Text
+                fontWeight="bold"
+                color={
+                  deviceColor(lines, deviceId) ?? tokens[picked.indexOf(series)]
+                }
+              >
                 {formatDb(db, unitLabel)}
               </Text>
             </HStack>

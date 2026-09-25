@@ -1,4 +1,11 @@
-import {createContext, useContext, useEffect} from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
+import {useTick} from './context';
 import {locale} from '../../utils/dateUtils';
 import type {loadNoiseProject} from '../../routes/crew.noise';
 import type {PickedSeries} from './level';
@@ -402,4 +409,27 @@ export const usePlayheadLevels = () => useContext(PlayheadLevelsContext);
 export function usePlayheadEffect(move: (at: number | null) => void) {
   const subscribe = useContext(PlayheadSignalContext);
   useEffect(() => subscribe(move), [subscribe, move]);
+}
+
+const toMinute = (ms: number) => Math.floor(ms / 60_000) * 60_000;
+
+/**
+ * The minute the page's readings are of — what decides whether a monitor's reading is one
+ * crew tagged to be ignored (see ignoredDevicesAt).
+ *
+ * Live, that is this minute. Scrubbing, it is the playhead's, taken off its signal and
+ * floored, so a reader re-renders once per minute crossed rather than per frame of a hover:
+ * the same rate the stored levels themselves move at. Null before a scrubbed page has a
+ * playhead.
+ */
+export function useReadingMinute(live: boolean): number | null {
+  const now = useTick(60_000);
+  const [playhead, setPlayhead] = useState<number | null>(null);
+  usePlayheadEffect(
+    useCallback(
+      (at: number | null) => setPlayhead(at == null ? null : toMinute(at)),
+      [],
+    ),
+  );
+  return live ? toMinute(now) : playhead;
 }

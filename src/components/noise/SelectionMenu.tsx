@@ -11,8 +11,8 @@ import {
 // The sweep used to be its own answer — mouse up and the page's timeframe was already
 // the band you had just drawn. One gesture, one meaning, and no way to add a second
 // without inventing a modifier for it. So the sweep now only *names* a range, and this
-// is what says what can be done with it. One entry today; everything a range will grow
-// (marking it, exporting it, comparing two of them) belongs on this menu rather than on
+// is what says what can be done with it. Zooming and tagging today; everything else a
+// range will grow (exporting it, comparing two of them) belongs on this menu rather than on
 // another chord over the same canvas.
 //
 // Mounted only while there is a selection, so `open` is a constant: the presence of the
@@ -21,12 +21,17 @@ import {
 export function SelectionMenu({
   at,
   onZoom,
+  onIgnore,
   onClose,
 }: {
   // Where the sweep ended, in the pixels of the box the chart is absolute in — the same
   // coordinates the tooltip is placed with (see cursorAnchor).
   at: {left: number; top: number};
   onZoom: () => void;
+  // Opens the dialog that tags the range as one to leave out (see RangeTagDialog).
+  // Optional, because only a chart that knows which place it is drawing can say what
+  // the tag applies to.
+  onIgnore?: () => void;
   onClose: () => void;
 }) {
   return (
@@ -59,6 +64,11 @@ export function SelectionMenu({
         <MenuItem value="zoom" onClick={onZoom}>
           Zoom in
         </MenuItem>
+        {onIgnore && (
+          <MenuItem value="ignore" onClick={onIgnore}>
+            Ignore…
+          </MenuItem>
+        )}
       </MenuContent>
     </MenuRoot>
   );

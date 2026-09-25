@@ -424,6 +424,20 @@ export function loudestColumn(
   return out;
 }
 
+// A column with the samples inside any of `ranges` (epoch ms, `end` exclusive) nulled —
+// maskToWindows' complement. The column itself when there is nothing to take out.
+export function maskOutRanges(
+  xs: readonly number[],
+  column: (number | null)[],
+  ranges: readonly {start: number; end: number}[],
+): (number | null)[] {
+  if (ranges.length === 0) return column;
+  return column.map((v, i) => {
+    const x = xs[i]! * 1000;
+    return ranges.some((r) => x >= r.start && x < r.end) ? null : v;
+  });
+}
+
 /**
  * Where one monitor's line for one metric sits in a metric-major projection — the reverse
  * of the layout traceData builds, for a caller reading a value back out of it (see
@@ -464,7 +478,15 @@ export function traceData(
     metricCount,
     envelope,
     holdX,
-  }: {metricCount: number; envelope: boolean; holdX: number},
+    excluded,
+  }: {
+    metricCount: number;
+    envelope: boolean;
+    holdX: number;
+    // Per device, in the same order: stretches its readings are tagged to be ignored.
+    // Left out of the envelope only — the lines themselves still carry them, drawn dotted.
+    excluded?: ReadonlyArray<readonly {start: number; end: number}[]>;
+  },
 ): (number | null)[][] {
   const xs = (aligned[0] ?? []) as number[];
   const deviceCount = windows.length;
@@ -482,5 +504,9 @@ export function traceData(
     }
   }
   if (!envelope) return [xs, ...columns];
-  return [xs, loudestColumn(xs, columns, holdX), ...columns];
+  // The envelope is one metric's columns (see `envelope`), so column d is device d.
+  const counted = excluded
+    ? columns.map((column, d) => maskOutRanges(xs, column, excluded[d] ?? []))
+    : columns;
+  return [xs, loudestColumn(xs, counted, holdX), ...columns];
 }

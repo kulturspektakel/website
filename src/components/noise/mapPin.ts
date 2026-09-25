@@ -57,6 +57,7 @@ export const NO_LEVEL_LABEL = '--.-';
 // being the one thing on the page set in someone else's typeface.
 const PIN_FONT_FAMILY = 'system-ui, sans-serif';
 const PIN_LABEL_CLASS = 'noise-pin-label';
+const PIN_LABEL_IGNORED_CLASS = 'noise-pin-label-ignored';
 
 /**
  * A pin, in whatever it has to say at once: how loud, whether that is a reading of the
@@ -171,13 +172,22 @@ export const warningIcon = (maps: typeof google.maps): google.maps.Icon => ({
 // on the red of a pin over its limit. That the six bands take the same dark digits is a
 // property of the ramp rather than a coincidence (see theme-noise): a pin getting louder
 // changes one thing about itself.
+//
+// An ignored pin is struck through: the grey it shares with a remembered reading says "not
+// this", and the line says why — the number is there, but crew set it aside.
 export const pinLabel = (
   text: string,
-  {stale = false, over = false}: {stale?: boolean; over?: boolean} = {},
+  {
+    stale = false,
+    over = false,
+    ignored = false,
+  }: {stale?: boolean; over?: boolean; ignored?: boolean} = {},
 ): google.maps.MarkerLabel => ({
   text,
   color: over ? PIN_OVER : stale ? PIN_LABEL_STALE : PIN_LABEL,
-  className: PIN_LABEL_CLASS,
+  className: ignored
+    ? `${PIN_LABEL_CLASS} ${PIN_LABEL_IGNORED_CLASS}`
+    : PIN_LABEL_CLASS,
   fontFamily: PIN_FONT_FAMILY,
   fontSize: PIN_FONT_SIZE,
   fontWeight: '700',

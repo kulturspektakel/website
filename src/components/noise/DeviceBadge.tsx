@@ -1,4 +1,4 @@
-import {HStack, Text} from '@chakra-ui/react';
+import {Box, HStack, Text} from '@chakra-ui/react';
 import {Link} from '@tanstack/react-router';
 import {useEffect, useRef, useState} from 'react';
 import {Tooltip} from '../chakra-snippets/tooltip';
@@ -14,6 +14,8 @@ import {
 import {Chip} from './Chip';
 import {LiveStatusDot} from './LiveStatusDot';
 import {type DeviceWindows} from './projectView';
+import {deviceColor} from './deviceColors';
+import {type ChartDeviceToken} from '../../theme-noise';
 
 // One badge tall, which is what makes the line a line: the badges wrap, and everything past
 // the first row is cut off. Chakra's own minimum for a `sm` badge, so it is that height
@@ -109,6 +111,9 @@ export function DeviceBadges({lines}: {lines: DeviceWindows[]}) {
           <DeviceBadge
             key={deviceId}
             deviceName={deviceId}
+            // Off the unsorted `lines`, which are in the chart's order — so a badge's
+            // colour is its line's whatever order the names are shown in.
+            color={deviceColor(lines, deviceId)}
             // The record's own answer to "when did we last hear from this", which is all a
             // freshly-opened page has for a monitor that went quiet before it loaded. The
             // badge takes the later of this and whatever has arrived since.
@@ -196,8 +201,12 @@ function MoreDevicesBadge({names}: {names: string[]}) {
 export function DeviceBadge({
   deviceName,
   lastSeen,
+  color,
 }: {
   deviceName: string;
+  // The colour this monitor's line is drawn in on the card's chart, where it has one of its
+  // own (see deviceColors): a short bar ahead of the name, which is the chart's key.
+  color?: ChartDeviceToken | null;
   // When the monitor was last heard from according to the record, which is what a page
   // opened this morning knows about a device that went quiet last night. The live context
   // only knows what has arrived since this tab did, so on its own it would report a
@@ -247,6 +256,16 @@ export function DeviceBadge({
       <Chip pressable asChild flexShrink="0" maxW="full" minW="0">
         <Link to="/crew/noise/device/$device" params={{device: deviceName}}>
           {/* Only when there is something lit to show — see above. */}
+          {color && (
+            <Box
+              as="span"
+              flexShrink="0"
+              w="2.5"
+              h="3px"
+              rounded="full"
+              bg={color}
+            />
+          )}
           {(alive || ble) && <LiveStatusDot lastSeen={seen} ble={ble} />}
           {/* A span, because a badge is one: the default paragraph would be invalid
               inside it. */}

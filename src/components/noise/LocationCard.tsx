@@ -1,5 +1,5 @@
 import {Box, HStack, IconButton, Text} from '@chakra-ui/react';
-import {memo, useState} from 'react';
+import {memo, useMemo, useState} from 'react';
 import {LuEllipsisVertical} from 'react-icons/lu';
 import {
   MenuContent,
@@ -17,9 +17,11 @@ import {
   locationLines,
   usePlayheadLevels,
   useProjectView,
+  useReadingMinute,
   type NoiseAssignment,
   type NoiseLocationItem,
 } from './projectView';
+import {ignoredDevicesAt} from './rangeTags';
 
 // One place on the list, and one row for it however many monitors have stood there. The
 // card *is* that row: the monitors' names take the line the coordinates used to have,
@@ -80,7 +82,11 @@ export const LocationCard = memo(function LocationCard({
   // Every monitor this location has ever had, once each and in the order it first had
   // them. Grouped once here and handed to both the names and the chart, so the two are
   // the same set in the same order by construction rather than by two calls agreeing.
-  const lines = locationLines(location.assignments);
+  // Memoized so the chart's tag list (and its redraw) only changes with the assignments.
+  const lines = useMemo(
+    () => locationLines(location.assignments),
+    [location.assignments],
+  );
 
   return (
     // A card is either on the list or not on it at all, never folded shut: there is no
@@ -198,7 +204,7 @@ export const LocationCard = memo(function LocationCard({
       {/* The place's whole permit, not the limits in force at the playhead: the chart
           spans the crop, so a limit that lapsed at midnight belongs on a crop that covers
           midnight — the same reason `lines` is the whole assignment history. */}
-      <LocationChart lines={lines} limits={location.limits} />
+      <LocationChart location={location} lines={lines} />
     </Box>
   );
 });
@@ -212,6 +218,8 @@ export const LocationCard = memo(function LocationCard({
 // Both halves of the page's state are read here rather than passed down for the same
 // reason — the card holds still through a crop drag except for these numbers, so
 // subscribing the leaf and not its parent keeps a drag off every card's header and ⋮. Same arrangement LocationChart uses, and why both take only what is theirs.
+const NOTHING_IGNORED: ReadonlySet<string> = new Set();
+
 function LocationLevels({
   locationId,
   assignments,
@@ -226,8 +234,23 @@ function LocationLevels({
   // no monitor *now* and still has a crop Leq to show.
   empty: boolean;
 }) {
-  const {live, picked, locationTotals} = useProjectView();
+  const {project, live, picked, locationTotals} = useProjectView();
   const levels = usePlayheadLevels();
+  // The monitors whose readings crew set aside at the minute being read — the same rule
+  // and the same minute the map's pin reads them at, so the two agree on what is ignored.
+  const at = useReadingMinute(live);
+  const ignored = useMemo(
+    () =>
+      at == null
+        ? NOTHING_IGNORED
+        : ignoredDevicesAt(
+            project.tags,
+            locationId,
+            assignments.map((a) => a.deviceId),
+            at,
+          ),
+    [at, project.tags, locationId, assignments],
+  );
   if (empty) return null;
 
   return (
@@ -240,6 +263,7 @@ function LocationLevels({
       levels={levels}
       live={live}
       picked={picked}
+      ignored={ignored}
     />
   );
 }

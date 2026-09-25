@@ -26,7 +26,7 @@ model Viewer {
   NonceRequest           NonceRequest[]
   ViewerLocation         ViewerLocation[]
   ProductList            ProductList[]
-  NoiseLogTag            NoiseLogTag[]
+  NoiseTag               NoiseTag[]
 }
 
 model Area {
@@ -102,7 +102,7 @@ model Device {
   Order                   Order[]
   noiseLogs               NoiseLog[]
   NoiseLocationAssignment NoiseLocationAssignment[]
-  NoiseLogTag             NoiseLogTag[]
+  NoiseTag                NoiseTag[]
 }
 
 model Order {
@@ -385,6 +385,7 @@ model NoiseProject {
   start         DateTime
   end           DateTime
   NoiseLocation NoiseLocation[]
+  NoiseTag      NoiseTag[]
 }
 
 model NoiseLocation {
@@ -396,6 +397,7 @@ model NoiseLocation {
   NoiseProject            NoiseProject              @relation(fields: [projectId], references: [id])
   NoiseLocationAssignment NoiseLocationAssignment[]
   NoiseLocationLimit      NoiseLocationLimit[]
+  NoiseTag                NoiseTag[]
 }
 
 // Assigns a noise monitor to a `NoiseLocation` for a timeframe. Multiple
@@ -495,31 +497,41 @@ model NoiseLog {
   @@unique([deviceId, measuredAt])
 }
 
-// A crew-applied tag covering a timeframe of one device's measurements — e.g.
-// marking a soundcheck, or excluding a stretch where the mic was handled.
-// Deliberately a range and not a column on `NoiseLog`: NoiseLog is one row per
-// device-minute, so tagging an evening would mean rewriting hundreds of rows
-// with no way to edit or undo the span as a unit. Reads join on
-// `deviceId` + `measuredAt BETWEEN start AND end`.
-model NoiseLogTag {
-  id                String   @id @default(cuid())
-  deviceId          String
-  tag               NoiseTag
+// A crew-applied tag over a timeframe of a project's measurements — a stretch to ignore
+// (the mic was handled, a soundcheck) or a comment on what happened. Deliberately a range
+// and not a column on `NoiseLog`: NoiseLog is one row per device-minute, so tagging an
+// evening would mean rewriting hundreds of rows with no way to edit or undo the span as a
+// unit.
+//
+// What it applies to is whichever key is set: `deviceId` → that monitor wherever it stood,
+// `locationId` → every monitor at that place, neither → the whole event. `projectId` is
+// always set, so the project page reads every tag it has to draw in one query.
+//
+// A null `end` is a marker at `start` rather than a range.
+model NoiseTag {
+  id                String       @id @default(cuid())
+  projectId         String
+  locationId        String?
+  deviceId          String?
+  type              NoiseTagType
   start             DateTime
   end               DateTime?
-  createdAt         DateTime @default(now())
+  // COMMENT only: what was said about the range.
+  text              String?
+  createdAt         DateTime     @default(now())
   createdByViewerId String
-  label             String?
 
-  Device          Device @relation(fields: [deviceId], references: [id])
-  createdByViewer Viewer @relation(fields: [createdByViewerId], references: [id])
+  NoiseProject    NoiseProject   @relation(fields: [projectId], references: [id])
+  NoiseLocation   NoiseLocation? @relation(fields: [locationId], references: [id])
+  Device          Device?        @relation(fields: [deviceId], references: [id])
+  createdByViewer Viewer         @relation(fields: [createdByViewerId], references: [id])
 
-  @@index([deviceId, start])
+  @@index([projectId, start])
 }
 
-enum NoiseTag {
-  EXCLUDED
-  CUSTOM_LABEL
+enum NoiseTagType {
+  IGNORE
+  COMMENT
 }
 
 // Ordered diet chain: VEGAN ⊆ VEGETARIAN. Only applies to consumables
