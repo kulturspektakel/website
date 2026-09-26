@@ -9,7 +9,9 @@ import {
 } from './noise';
 
 // The one table to edit when adding or reordering a chart line. Recolouring is
-// theme-noise's — every line is `chart.series` and nothing here picks it.
+// theme-noise's — a line's colour is `chart.series.<kind>` and nothing here
+// picks it, which is what stops the two weightings of one kind from being
+// able to drift apart.
 //
 // The live and historical pages plot the same nine series — the only difference
 // is the fast window (one second live, one minute in history) and where the
@@ -49,8 +51,10 @@ export const seriesKey = (kind: SeriesKind, weighting: Weighting): SeriesKey =>
 export type NoiseSeries = {
   kind: SeriesKind;
   weighting: Weighting;
-  // The theme token this line is drawn in — the same one for every row (see
-  // theme-noise), set below rather than written per row.
+  // The theme token this line is drawn in. Derived from `kind` below rather
+  // than written per row: a kind's two weightings are the same measurement
+  // under a different filter and must be the same colour, and the rows can't
+  // disagree about something none of them states.
   color: ChartSeriesToken;
   liveLabel: string;
   // The live value, off a decoded MQTT record.
@@ -127,7 +131,7 @@ const TABLE: readonly Omit<NoiseSeries, 'color'>[] = [
 
 export const SERIES: readonly NoiseSeries[] = TABLE.map((s) => ({
   ...s,
-  color: 'chart.series',
+  color: `chart.series.${s.kind}`,
 }));
 
 // Every row's name, in the table's order — which is the picker's order, and so the
@@ -484,7 +488,7 @@ export function traceData(
     envelope: boolean;
     holdX: number;
     // Per device, in the same order: stretches its readings are tagged to be ignored.
-    // Left out of the envelope only — the lines themselves still carry them, drawn dotted.
+    // Left out of the envelope only — the lines themselves still carry them, drawn faded.
     excluded?: ReadonlyArray<readonly {start: number; end: number}[]>;
   },
 ): (number | null)[][] {

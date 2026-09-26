@@ -14,9 +14,10 @@ import {SERIES_KEYS, type SeriesKey} from './series';
  * One key per page, and that is the whole point of this file: the three pages that pick
  * series are asking different questions of them, so they must not share an answer. A
  * monitor's live page is an instrument — five lines at once is what it is for; the list is a
- * page of charts, one quantity each against its limit; the map has room for one number per
- * pin. The two project views store exactly one (see `single` below), but not the same one:
- * storing them together meant a trip to the map came back with the map's pick on the cards.
+ * page of charts, and the pick is what each of them draws; the map has room for one number
+ * per pin, so it stores exactly one (see `single` below), and a set arriving there from the
+ * list would have all but one of them silently unread. Storing them together meant a trip to
+ * the map came back with the map's pick on the cards.
  */
 const STORAGE_PREFIX = 'noiseSeries:';
 

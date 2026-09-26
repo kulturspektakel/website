@@ -38,12 +38,20 @@ import {defaultConfig} from '@chakra-ui/react';
 // camelCase gains a separator (`eqFast` → `eq-fast`) while an underscore is
 // passed through untouched. `eqFast` and `eq-fast` therefore collide silently.
 const NOISE_COLORS = {
-  // Every chart series, in one shade: the section's accent. It used to be a
-  // yellow → orange → red ramp, a shade per kind, but the project page picks one
-  // series at a time and its name is printed beside every number, so the ramp
-  // was colour saying what the label already said. Where several lines are
-  // drawn at once (the device page), the tooltip names each.
-  'chart.series': 'yellow.400',
+  // The chart series ramp: a yellow → orange → red arc, lightest at the
+  // shortest averaging window. Validated against the section's ground
+  // (gray.900) for chroma and for ≥3:1 contrast. Adjacent pairs sit in the
+  // ΔE 6–8 colour-vision-deficiency floor band, which is legal here because
+  // colour is never the only cue: every number carries its series' name, and
+  // the chart's tooltip names every line. A kind's two weightings share a shade.
+  //
+  // Keys are SeriesKind's own values verbatim (`eq_fast`, `eq_5m`, …) so the path
+  // is mechanically `chart.series.${kind}` and no two keys can fold together.
+  'chart.series.eq_fast': 'yellow.200',
+  'chart.series.eq_5m': 'yellow.400',
+  'chart.series.eq_30m': 'orange.400',
+  'chart.series.fmax': 'red.400',
+  'chart.series.peak': 'red.600',
 
   // Chart chrome. `rule` is the hairline the readout pills are outlined in and
   // the project timeline draws its ticks with — one step lighter than
@@ -65,25 +73,25 @@ const NOISE_COLORS = {
   // stay two names. This is meant to be read past — a missing stretch should be findable
   // at a glance without becoming the loudest thing on a strip whose subject is the crop.
   'chart.gap': 'gray.700',
-  // The limit rules over the level trace. Red, off the series' yellow, so a rule stays
-  // legible where the trace runs along or across it — in the series' own shade the two
-  // merged exactly where a limit matters. Still dashed, so the hue is not the only cue.
+  // Where a limit was breached, as a mark on the project timeline (see TimelineMarkers).
+  // The chart's own rules are drawn in their series' shade instead (see drawLimits); this
+  // one stands for every series at once, so it takes a colour of its own.
   'chart.limit': 'red.500',
-  // One colour per monitor, for a location that has had several: each gets its own line
-  // (see deviceColors). The first is the series shade, so the ordinary one-monitor chart and
-  // the first monitor of several look the same; the rest are picked to stay apart from it
-  // and from each other on the dark ground, and from the limit's red.
-  'chart.device.1': 'yellow.400',
-  'chart.device.2': 'cyan.400',
-  'chart.device.3': 'pink.400',
-  'chart.device.4': 'green.400',
-  'chart.device.5': 'purple.400',
-  'chart.device.6': 'orange.300',
   // A stretch crew tagged to be ignored, washed under the trace (see drawTags). Grey, so
   // it reads as "set aside" rather than as another mark competing with the red rules.
   'chart.ignored': 'gray.500',
   'chart.playhead': 'gray.50',
   'chart.readout.bg': {_light: 'gray.50', _dark: 'gray.800'},
+  // The ground a plot is drawn on, as a value the canvas can stroke with — the same step
+  // the section's `bg` resolves to in dark, which is the only mode this section has. Only
+  // the limit rules ask for it, and they ask for it as a halo: a dashed line in a series'
+  // own shade over a trace in the same or a neighbouring shade is a rule you have to look
+  // for (see drawLimits).
+  //
+  // Not `map.ground`, though it is the same step today: that one is the basemap's ground and
+  // answers to mapStyle.ts's lightness ladder. Two names because the two have no reason to
+  // follow each other.
+  'chart.ground': 'gray.900',
 
   // The band spectrum's bars are the fast-window shade — it is the same
   // measurement, drawn against frequency instead of time.
@@ -201,10 +209,9 @@ export const NOISE_COLOR_TOKENS = Object.keys(
 // What series.ts stores instead of a hex. Derived from the table rather than
 // written out, so a series token that isn't in the theme is a type error at the
 // point it is used.
-export type ChartSeriesToken = Extract<NoiseColorToken, 'chart.series'>;
-export type ChartDeviceToken = Extract<
+export type ChartSeriesToken = Extract<
   NoiseColorToken,
-  `chart.device.${number}`
+  `chart.series.${string}`
 >;
 
 // The accent, and the whole of it: one hue per appearance, aliased rather than
@@ -331,7 +338,7 @@ export const noiseSemanticColors = {
   // are Chakra's own contract for one. Two of them deliberately differ from
   // the yellow palette they otherwise alias, so that the section has exactly
   // one accent value: the focus ring, a lit chip, the timeline's crop grips and
-  // the chart series are all literally #facc15. That equality is
+  // the middle of the series ramp are all literally #facc15. That equality is
   // pinned by theme-noise.test.ts — and it does mean `colorPalette="accent"`
   // and `colorPalette="yellow"` are not interchangeable.
   accent: {
@@ -341,8 +348,8 @@ export const noiseSemanticColors = {
     muted: accentPair('muted'),
     emphasized: accentPair('emphasized'),
     // The two the section pins to a step rather than to a name, in dark: `solid` is the
-    // chart series' shade and `focusRing` is that same value again, which is the
-    // whole of what "one accent" means here. Light has no series to agree with, so both
+    // middle of the series ramp and `focusRing` is that same value again, which is the
+    // whole of what "one accent" means here. Light has no ramp to agree with, so both
     // take blue's own semantic answer — and `solid` is then literally what fills a
     // primary button (see theme-crew), which is the same claim made the other way round.
     solid: accentPair('solid', '400'),

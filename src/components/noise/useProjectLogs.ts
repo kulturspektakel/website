@@ -171,7 +171,16 @@ export function useProjectLogs({
   // view or the list's places change, and is otherwise merely re-laid-out.
   const gaps = useMemo(
     () =>
-      logs && coverageGaps(logs, timeline.all ? undefined : timeline.locations),
+      logs &&
+      coverageGaps(
+        logs,
+        // Every device at once is the cheaper question, but it cannot know what was
+        // ignored where — so with any tag in play, even "every place" is asked place by
+        // place.
+        timeline.all && !timeline.locations.some((l) => l.ignored?.length)
+          ? undefined
+          : timeline.locations,
+      ),
     [logs, timeline],
   );
 

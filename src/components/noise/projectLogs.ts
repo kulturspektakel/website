@@ -49,7 +49,36 @@ export type LocationAssignments = {
     start: number;
     end: number | null;
   }[];
+  // Stretches crew tagged to be ignored here (see rangeTags): a null `deviceId` sets aside
+  // every monitor standing here, otherwise only that one. Those minutes neither count
+  // towards the Leq nor towards the coverage it is measured against — they were set aside
+  // on purpose, which is not a monitor missing.
+  ignored?: readonly {deviceId: string | null; start: number; end: number}[];
 };
+
+// One monitor's ignored stretches at a location, as half-open minute-index ranges on the
+// payload's grid — the tags on the whole place and the ones on that monitor alone. Every
+// reader of a location's minutes (its Leq, the timeline's coverage and its breaches) skips
+// these the same way.
+export function ignoredMinutes(
+  grid: LogGrid,
+  location: Pick<LocationAssignments, 'ignored'>,
+  deviceId: string,
+): [number, number][] {
+  return (location.ignored ?? []).flatMap((t) =>
+    t.deviceId == null || t.deviceId === deviceId
+      ? [
+          [logMinuteIndex(grid, t.start), logMinuteIndex(grid, t.end)] as [
+            number,
+            number,
+          ],
+        ]
+      : [],
+  );
+}
+
+export const inMinutes = (ranges: readonly [number, number][], i: number) =>
+  ranges.some(([from, to]) => i >= from && i < to);
 
 /**
  * Every *location's* per-minute level as running totals — the cumulative acoustic
@@ -118,7 +147,9 @@ export function locationEnergyIndex(
           ? minutes
           : Math.min(minutes, logMinuteIndex(logs, a.end));
       const values = eqColumn(logs, a.deviceId, weighting);
+      const skip = ignoredMinutes(logs, location, a.deviceId);
       for (let i = from; i < to; i++) {
+        if (inMinutes(skip, i)) continue;
         covered[i] = 1;
         const v = values?.[i];
         if (!usableDb(v)) continue;

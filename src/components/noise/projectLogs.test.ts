@@ -176,6 +176,25 @@ describe('locationRangeTotals', () => {
     expect(partial).toMatchObject({minutes: 3, expectedMinutes: 4});
   });
 
+  // An ignored stretch is left out of both the mean and the coverage it is measured
+  // against: set aside on purpose, it is not a gap to warn about.
+  it('leaves ignored minutes out of the mean and the coverage', () => {
+    const column = logs.devices['mic-1']!.laeq_1m!;
+    const index = locationEnergyIndex(logs, 'A', [
+      {
+        id: 'tagged',
+        assignments: [{deviceId: 'mic-1', start: START, end: null}],
+        ignored: [{deviceId: 'mic-1', start: at(0), end: at(1)}],
+      },
+    ]);
+    expect(
+      locationRangeTotals(index, 'tagged', {start: START, end: at(4)}),
+    ).toMatchObject({
+      db: energeticMeanDb(column, 1, 4),
+      expectedMinutes: 3,
+    });
+  });
+
   it('is null for a window with nothing in it, or an empty window', () => {
     expect(totalsOf('A', 'sued', {start: at(2), end: at(4)})).toBeNull();
     expect(totalsOf('A', 'nord', {start: at(2), end: at(2)})).toBeNull();

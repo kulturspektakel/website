@@ -6,6 +6,7 @@ import {
   themeHex,
   type NoiseColorToken,
 } from './theme-noise';
+import {SERIES} from './components/noise/series';
 
 type Token = {
   value?: string;
@@ -72,30 +73,55 @@ describe('theme-noise', () => {
     expect([...NOISE_COLOR_TOKENS].sort()).toEqual(registered);
   });
 
-  describe('the series shade', () => {
-    // The one shade every chart line is drawn in, pinned: it was validated against this
-    // section's ground for at least 3:1 contrast, so a "small tweak" should be deliberate.
-    it('is the accent yellow', () => {
-      expect(themeHex('chart.series')).toBe('#facc15');
+  describe('the series ramp', () => {
+    // Every kind the chart can plot has somewhere to get its colour from.
+    it('covers every SeriesKind', () => {
+      for (const kind of new Set(SERIES.map((s) => s.kind))) {
+        expect(NOISE_COLOR_TOKENS).toContain(`chart.series.${kind}`);
+      }
+    });
+
+    // The validated palette, pinned in ramp order. These five were checked against this
+    // section's ground for chroma and for at least 3:1 contrast, so a "small tweak" here
+    // should have to be a deliberate one.
+    it('is the palette that was validated against the page ground', () => {
+      expect([
+        themeHex('chart.series.eq_fast'),
+        themeHex('chart.series.eq_5m'),
+        themeHex('chart.series.eq_30m'),
+        themeHex('chart.series.fmax'),
+        themeHex('chart.series.peak'),
+      ]).toEqual(['#fef08a', '#facc15', '#fb923c', '#f87171', '#dc2626']);
+    });
+
+    // The band spectrum is the same measurement drawn against frequency, so its bars are
+    // the fast window's shade rather than a colour of their own.
+    it('draws the band spectrum in shades the time chart already uses', () => {
+      expect(themeHex('chart.band.bar')).toBe(themeHex('chart.series.eq_fast'));
     });
 
     // The one exception, for the one thing that is not the same measurement: a reference
-    // microphone is a second instrument, not a second averaging window, so its line is not
-    // the series shade — nor the band bars' it is drawn over.
-    it('draws the reference microphone off the series shade', () => {
+    // microphone is a second instrument, not a second averaging window, so its line sits
+    // off the ramp on purpose — and off the band bars it is drawn over.
+    it('draws the reference microphone off the ramp entirely', () => {
       expect(themeHex('chart.band.ref')).toBe('#67e8f9');
-      expect(themeHex('chart.band.ref')).not.toBe(themeHex('chart.series'));
+      const ramp = NOISE_COLOR_TOKENS.filter((t) =>
+        t.startsWith('chart.series.'),
+      ).map((t) => themeHex(t));
+      expect(ramp).not.toContain(themeHex('chart.band.ref'));
       expect(themeHex('chart.band.ref')).not.toBe(themeHex('chart.band.bar'));
     });
   });
 
   describe('the accent', () => {
     // The section has one accent value. The focus ring, a lit chip, the crop
-    // grips on the timeline and the chart series are all this
+    // grips on the timeline and the middle of the series ramp are all this
     // colour, and the point of saying so here is that they cannot drift apart
     // without a test going red.
-    it('is the chart series shade', () => {
-      expect(darkHex('colors.accent.solid')).toBe(themeHex('chart.series'));
+    it('is the middle of the series ramp', () => {
+      expect(darkHex('colors.accent.solid')).toBe(
+        themeHex('chart.series.eq_5m'),
+      );
       expect(darkHex('colors.accent.focusRing')).toBe('#facc15');
     });
 
@@ -137,6 +163,10 @@ describe('theme-noise', () => {
     expect(themeHex('chart.grid')).toBe(darkHex('colors.border.emphasized'));
     expect(themeHex('chart.playhead')).toBe(darkHex('colors.fg'));
     expect(themeHex('map.ground')).toBe(darkHex('colors.bg'));
+    // The load-bearing one: the limit rules' halo is only invisible *as* a halo while it is
+    // the ground behind the plot. Let `bg` move without this and every dash on every chart
+    // grows a grey outline — the one thing the halo exists to avoid, and silent.
+    expect(themeHex('chart.ground')).toBe(darkHex('colors.bg'));
   });
 
   // The half the calibration chart draws in, which is the only thing in the section on a

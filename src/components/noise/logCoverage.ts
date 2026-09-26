@@ -1,6 +1,11 @@
 import {logMinuteAt, logMinuteIndex, type ProjectLogs} from './noise';
-import {logColumn, type LocationAssignments} from './projectLogs';
-import type {LimitLine} from './limitLines';
+import {
+  ignoredMinutes,
+  inMinutes,
+  logColumn,
+  type LocationAssignments,
+} from './projectLogs';
+import {exceedsLimit, type LimitLine} from './limitLines';
 import type {SeriesKey} from './series';
 
 // Where a project has readings and where it does not — the shading behind the project
@@ -102,7 +107,12 @@ export function coverageGaps(
         const values = logs.devices[a.deviceId]?.[PRESENCE_COLUMN];
         if (!values) continue;
         const [from, to] = assignmentMinutes(logs, a);
-        for (let i = from; i < to; i++) if (values[i] != null) heard[i] = 1;
+        // An ignored minute was set aside, so as far as this strip is concerned nothing
+        // was heard in it.
+        const skip = ignoredMinutes(logs, location, a.deviceId);
+        for (let i = from; i < to; i++) {
+          if (values[i] != null && !inMinutes(skip, i)) heard[i] = 1;
+        }
       }
     }
   }
@@ -142,7 +152,9 @@ export function limitBreaches(
       const values = logColumn(logs, a.deviceId, series);
       if (!values) continue;
       const [from, to] = assignmentMinutes(logs, a);
+      const skip = ignoredMinutes(logs, location, a.deviceId);
       for (let i = from; i < to; i++) {
+        if (inMinutes(skip, i)) continue;
         const v = values[i];
         if (v != null && !(v <= loudest[i]!)) loudest[i] = v;
       }
@@ -152,7 +164,7 @@ export function limitBreaches(
       const from = Math.max(0, logMinuteIndex(logs, limit.start));
       const to = Math.min(minutes, logMinuteIndex(logs, limit.end));
       for (let i = from; i < to; i++) {
-        if (loudest[i]! > limit.decibels) over[i] = 1;
+        if (exceedsLimit(loudest[i]!, limit.decibels)) over[i] = 1;
       }
     }
   }

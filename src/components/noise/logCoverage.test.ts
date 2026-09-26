@@ -47,6 +47,19 @@ describe('coverageGaps', () => {
   });
 });
 
+describe('coverageGaps with ignored stretches', () => {
+  // An ignored minute counts as nothing heard, at exactly the minutes the tag covers.
+  it('shades a stretch that is only ignored readings', () => {
+    const logs = payload({'mic-1': {laeq_1m: [60, 60, 60, 60, 60, 60]}});
+    const stage = {
+      id: 'stage',
+      assignments: [{deviceId: 'mic-1', start: at(0), end: null}],
+      ignored: [{deviceId: 'mic-1', start: at(2), end: at(4)}],
+    };
+    expect(coverageGaps(logs, [stage])).toEqual([{start: at(2), end: at(4)}]);
+  });
+});
+
 describe('coverageGaps for some places', () => {
   // mic-1 stands at the stage for minutes 0–3, mic-2 at the bar throughout.
   const logs = payload({

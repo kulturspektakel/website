@@ -68,10 +68,16 @@ describe('SERIES', () => {
     expect([...new Set(SERIES.map((s) => s.kind))]).toEqual([...LEVEL_METRICS]);
   });
 
-  // One shade for every line: which series a line is, is said by its name — in the picker,
-  // on the card and in the tooltip — and not by the ink.
-  it('draws every series in the one series shade', () => {
-    for (const s of SERIES) expect(s.color).toBe('chart.series');
+  // A kind's two weightings are one measurement under a different filter, so they are one
+  // colour: what a shade says on a chart is which quantity, and the name beside it says
+  // which filter.
+  it('gives both weightings of a kind the same colour', () => {
+    for (const kind of new Set(SERIES.map((s) => s.kind))) {
+      const [a, c] = SERIES.filter((s) => s.kind === kind);
+      expect(a!.color).toBe(`chart.series.${kind}`);
+      if (!c) continue; // 'peak' is C-only.
+      expect(a!.color).toBe(c.color);
+    }
   });
 
   it('reads every history column exactly once', () => {

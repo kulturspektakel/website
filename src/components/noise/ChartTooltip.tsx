@@ -1,5 +1,6 @@
-import {Box} from '@chakra-ui/react';
-import {type ReactNode} from 'react';
+import {Box, HStack, Text} from '@chakra-ui/react';
+import {Fragment, type ComponentProps, type ReactNode} from 'react';
+import {HiMiniExclamationTriangle} from 'react-icons/hi2';
 
 // What a chart readout looks like: a small dark pill that carries a value over a
 // plot. Exported apart from the tooltip below because one readout on the project page
@@ -90,4 +91,80 @@ export function ChartTooltip({
       {children}
     </Box>
   );
+}
+
+// One reading in a readout: what it is on the left, muted, and the number on the right in
+// bold and in its line's colour — spread to the pill's full width so the numbers line up
+// under each other rather than after names of different lengths. Shared by the trace's
+// tooltip and the map's pins, which both list a location's monitors one per row.
+//
+// `dimmed` is a number that isn't a reading of the instant being looked at, `struck` one
+// crew set aside — the same two looks the pins and the cards give those — and `over` one
+// above a limit in force for its series: red, the colour the chart washes a breach in (see
+// drawBreaches), with the warning sign ahead of it so the hue is not the only cue. A reading
+// set aside is never over — nobody is counting it — so struck wins.
+export function ChartTooltipRow({
+  label,
+  value,
+  color,
+  dimmed = false,
+  struck = false,
+  over = false,
+}: {
+  label: string;
+  value: string;
+  color?: string;
+  dimmed?: boolean;
+  struck?: boolean;
+  over?: boolean;
+}) {
+  const warn = over && !struck && !dimmed;
+  return (
+    <HStack gap="3" justify="space-between">
+      <Text color="fg.muted">{label}</Text>
+      <HStack
+        gap="1"
+        fontWeight="bold"
+        color={dimmed ? 'fg.muted' : warn ? 'chart.limit' : color}
+      >
+        {warn && <HiMiniExclamationTriangle aria-label="Over the limit" />}
+        <Text textDecoration={struck ? 'line-through' : undefined}>
+          {value}
+        </Text>
+      </HStack>
+    </HStack>
+  );
+}
+
+// A location's readings in a readout, grouped by monitor: every row names its series, and
+// with several monitors each gets its name as a heading over its rows. With one there is no
+// heading — the card or the pin already says which place, and a monitor's name over the only
+// group is a line saying nothing. `headed` is the caller's, because it is about how many
+// monitors the place has, not how many happen to have a reading at this instant: a heading
+// that came and went as the pointer crossed a handover would read as the layout jumping.
+//
+// Shared by the trace's tooltip and the map's pins, so the two print one place the same way.
+export function ChartTooltipReadings({
+  groups,
+  headed,
+}: {
+  groups: Array<{
+    key: string;
+    heading: string;
+    rows: Array<{key: string} & ComponentProps<typeof ChartTooltipRow>>;
+  }>;
+  headed: boolean;
+}) {
+  return groups.map(({key, heading, rows}, i) => (
+    <Fragment key={key}>
+      {headed && (
+        <Text fontWeight="semibold" mt={i > 0 ? '1' : undefined}>
+          {heading}
+        </Text>
+      )}
+      {rows.map(({key: rowKey, ...row}) => (
+        <ChartTooltipRow key={rowKey} {...row} />
+      ))}
+    </Fragment>
+  ));
 }

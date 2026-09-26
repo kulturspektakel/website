@@ -57,10 +57,9 @@ export function useLevelPick({
   // Which page's remembered pick this is. Per page and not per section, because the three
   // pages that pick series want different sets of them — see seriesSelection.ts.
   store,
-  // Whether the page has room for more than one. The project page has not: a pin is a badge
-  // with one number on it, and a card's chart reads as one quantity against its limit — so
-  // picking there replaces rather than adds (see onlySeries), the control is LevelSelect
-  // rather than the menu, and what is stored is one key.
+  // Whether the page has room for more than one. The map has not: a pin is a badge with one
+  // number on it, so picking there replaces rather than adds (see onlySeries), the control is
+  // LevelSelect rather than the menu, and what is stored is one key.
   single = false,
 }: {
   store: SeriesStore;
@@ -108,7 +107,7 @@ export function useLevelPick({
   return {picked, toggleSeries};
 }
 
-// The device page's control: which of the nine lines its chart draws.
+// The device page's and the project list's control: which of the nine lines the charts draw.
 //
 // One rather than the weighting select and the window menu it used to be. Those read as two
 // independent choices and were not — and between them they could not express the comparison
@@ -122,7 +121,7 @@ export function useLevelPick({
 // is a scrolling listbox that wants a ctrl-click, and neither the box nor the modifier
 // belongs in a strip on a phone. Behind a button that collapses to the first pick and a
 // count — nine options' worth of segments or chips would not fit in the header. Where only
-// one series may be picked, the page uses LevelSelect below instead.
+// one series may be picked (the map), the page uses LevelSelect below instead.
 //
 // The first pick is what the button names on purpose: it is the series every single number
 // on the page is read in (see primarySeries), so the control that sets it is also where that
@@ -206,7 +205,7 @@ export const LevelPicker = memo(function LevelPicker({
   );
 });
 
-// The project header's control: the one series every pin and every card on the page shows.
+// The project map's control: the one series every pin shows.
 //
 // A native select, now that one of nine is all it picks: the menu above exists for the set,
 // and without one a select is the same choice in less code, with the platform's own picker

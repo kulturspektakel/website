@@ -1,5 +1,5 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
-import {Box, HStack, Text} from '@chakra-ui/react';
+import {Box, Text} from '@chakra-ui/react';
 import uPlot from 'uplot';
 import {subscribeToClock, useNoiseBuffers} from './context';
 import {GAP_THRESHOLD_S, STORED_GAP_THRESHOLD_S, WINDOW_S} from './noise';
@@ -12,16 +12,10 @@ import {
   traceData,
   type SeriesKey,
 } from './series';
-import {
-  formatDb,
-  metricTag,
-  seriesLabel,
-  weightingUnit,
-  type PickedSeries,
-} from './level';
+import {formatDb, seriesLabel, type PickedSeries} from './level';
 import {type SeriesTraces} from './projectLogs';
 import {themeHex} from '../../theme-noise';
-import {limitSegments, type LimitLine} from './limitLines';
+import {limitSegments, overLimitAt, type LimitLine} from './limitLines';
 import {clampTo} from './timeframe';
 import {
   axisBase,
@@ -42,9 +36,9 @@ import {
   X_AXIS_H,
   zonedDate,
 } from './chartUtils';
-import {ChartTooltip} from './ChartTooltip';
+import {ChartTooltip, ChartTooltipReadings} from './ChartTooltip';
+import {ignoredAt, IGNORED_OPACITY} from './rangeTags';
 import {SelectionMenu} from './SelectionMenu';
-import {deviceColor} from './deviceColors';
 import {attachTouchGestures} from './uplotTouchGestures';
 import {usePlayheadEffect, type DeviceWindows} from './projectView';
 
@@ -89,12 +83,8 @@ import {usePlayheadEffect, type DeviceWindows} from './projectView';
 // So there is still no legend of its own: at row height it would cost more of the trace
 // than it explained, and on the device page the tile row above the chart already is one.
 //
-// The filled area under the trace belongs to a *single* series (see the series list): they
-// are nested — Peak ≥ Fmax ≥ Leq,1m ≳ Leq,5m ≳ Leq,30m, and dB(C) ≥ dB(A) throughout — so
-// an area under any one of several paints over the quieter lines, and two at 15 % stack
-// into a shade that reads as data. One series has an area; several are lines only. And the
-// area is only painted where the trace is over a limit (see drawLimits): under it, the line
-// alone says everything, and the fill is kept for the one thing worth shouting about.
+// Lines only, with no area under them: where a level is over its limit the chart's ground
+// goes red behind it (see drawBreaches), which says the one thing an area was kept for.
 //
 // Two sources, one shape, chosen by `live`:
 //   live off — the devices' whole stored history at one point per minute, already on a
@@ -119,26 +109,45 @@ import {usePlayheadEffect, type DeviceWindows} from './projectView';
 // A monitor with no value at that sample is left out rather than printed as a dash: it
 // was either silent or standing somewhere else, and the masked line already shows which
 // by not being there.
+//
+// Each reading also says whether crew set it aside at that sample (a tag over the whole chart
+// or over that monitor) and whether it is above a limit in force for its series — the same
+// two things the chart draws as a faded line and a red wash, so the tooltip agrees with what
+// is under the pointer.
+type TipReading = {
+  deviceId: string;
+  series: SeriesKey;
+  db: number;
+  ignored: boolean;
+  over: boolean;
+};
+
 function readingsAt(
   u: uPlot,
   lines: DeviceWindows[],
   picked: readonly SeriesKey[],
   envelope: boolean,
   gapThresholdX: number,
-): Array<{deviceId: string; series: SeriesKey; db: number}> {
+  limits: readonly LimitLine[],
+  tags: readonly ChartTag[],
+): TipReading[] {
   const idx = u.cursor.idx;
   if (idx == null) return [];
   const dataX = u.data[0]![idx] as number | undefined;
   const cursorX = u.posToVal(u.cursor.left ?? -1, 'x');
   if (dataX == null || Math.abs(cursorX - dataX) > gapThresholdX) return [];
-  const out: Array<{deviceId: string; series: SeriesKey; db: number}> = [];
+  const atMs = dataX * 1000;
+  const out: TipReading[] = [];
   for (const [d, {deviceId}] of lines.entries()) {
+    const ignored = ignoredAt(tags, deviceId, atMs);
     for (const [s, series] of picked.entries()) {
       // Never counted out here: where a column sits is the projection's layout, and a
       // reader that worked it out for itself would go on printing plausible levels
       // attributed to the wrong monitor the day the layout moved.
       const db = u.data[traceColumn(s, d, lines.length, envelope)]?.[idx];
-      if (db != null) out.push({deviceId, series, db});
+      if (db == null) continue;
+      const over = overLimitAt(limits, series, atMs, db);
+      out.push({deviceId, series, db, ignored, over});
     }
   }
   return out;
@@ -152,10 +161,11 @@ const isTyping = (target: EventTarget | null): boolean =>
   (target.isContentEditable ||
     ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName));
 
-// The line's own colour at 15 %, for the part of the area that is over a limit — enough to
-// read as an area without the line getting lost in it. An 8-digit hex rather than `color-mix()`, which a canvas `fillStyle` on an
-// older phone may not parse: the suffix is only legal because every series token resolves
-// to a 6-digit hex, which theme-noise.test.ts asserts for all of them.
+// A colour at 15 %, for the washes behind the trace — ignored stretches and breaches — so
+// they read as ground rather than as marks competing with the lines. An 8-digit hex rather
+// than `color-mix()`, which a canvas `fillStyle` on an older phone may not parse: the suffix
+// is only legal because every token resolves to a 6-digit hex, which theme-noise.test.ts
+// asserts for all of them.
 const fill = (stroke: string) => `${stroke}26`;
 
 // The closest two time labels may sit, which decides how many grid lines go
@@ -173,26 +183,31 @@ const X_GRID_SPACE = 56;
 // colour cannot — colour is never the only cue in this section.
 const LIMIT_DASH = [4, 3];
 
-// The rule's width, in CSS pixels.
+// The rule's own width, and the halo's, in CSS pixels. Odd widths both, so the two stay
+// concentric about the same row of pixels.
+//
+// A hard casing alone is not enough: a pixel of ground either side of a dash reads as
+// anti-aliasing rather than as separation, and the shade that ties a rule to its trace still
+// buries it in one. The blur is what makes it a halo — the ground fades out over a few
+// pixels, so the eye gets a gap around the dash whatever is behind it.
 const LIMIT_WIDTH_PX = 1;
-
-// The trace through an ignored stretch, on and off: dotted rather than dashed, so it can't
-// be mistaken for a limit's rule — the reading is still there, it just isn't being counted.
-const IGNORED_DASH = [1.5, 2.5];
+const LIMIT_HALO_PX = 3;
+const LIMIT_HALO_BLUR_PX = 4;
 
 /**
  * The permitted levels, over the traces they are permitted for.
  *
- * In red and dashed where the series' own line is yellow and solid, which between them say
- * that a rule is not one of the lines (see chart.limit). Only the limits whose series is
+ * Each in the shade of the series it is written against and dashed where that series' own
+ * line is solid, which between them are the two things a rule has to say: which of the lines
+ * on this chart it bounds, and that it is not one of them. Only the limits whose series is
  * picked are drawn at all (see limitSegments) — so the header's menu brings a rule and the
  * line it belongs to into view together.
-
  *
- * And the trace's area, only where it is over one: uPlot builds the area under the one filled
- * series but paints it transparent (see the series list), and this repaints that path clipped
- * to the band above each limit — so what shows is the part of the level that was too loud,
- * between the rule and the line. Nothing is filled where no limit is set.
+ * Over a halo in the ground's own colour, because the shade that ties a rule to its trace is
+ * also what buries it in one: a yellow dash over a yellow line is a rule you have to hunt
+ * for, and where the trace meets the rule is exactly where a limit matters most. The ground
+ * fading out around each dash separates the two without giving the rule a hue of its own to
+ * be mistaken for another measurement — see chart.ground.
  *
  * The line alone, with no figure lettered on it. What a rule is for is seeing at a glance
  * whether the trace is under it, and for that the height *is* the reading — the dB grid
@@ -241,40 +256,15 @@ function drawLimits(
 
   const [floor, ceiling] = dbAxis.range;
 
-  // The over-limit area, first so the rules land on top of it. The one series with an area is
-  // found by what uPlot built rather than by recomputing the layout; it keeps the paths it
-  // last drew on the series, untyped — `fill` the area, `clip` what the gaps cut out of it.
-  // Only ever one, and only with one series picked, so every segment here is that series'.
-  const filled = u.series.find(
-    (s, i) => i > 0 && (s as SeriesWithPaths)._paths?.fill instanceof Path2D,
-  ) as SeriesWithPaths | undefined;
-  const area = filled?._paths?.fill;
-  if (area instanceof Path2D) {
-    // One path for every band, so limits that overlap (see the schema) are one region
-    // rather than two fills stacking into a darker one.
-    const over = new Path2D();
-    for (const {decibels, from, to} of segments) {
-      const y = u.valToPos(clampTo(decibels, floor, ceiling), 'y', true);
-      const x0 = u.valToPos(from, 'x', true);
-      over.rect(x0, u.bbox.top, u.valToPos(to, 'x', true) - x0, y - u.bbox.top);
-    }
-    ctx.save();
-    ctx.clip(over);
-    const gapsClip = filled?._paths?.clip;
-    if (gapsClip) ctx.clip(gapsClip);
-    ctx.fillStyle = fill(themeHex(seriesByKey(segments[0]!.series).color));
-    ctx.fill(area);
-    ctx.restore();
-  }
-
   ctx.setLineDash(LIMIT_DASH.map((d) => d * ratio));
-  // Red rather than the shade of the line it bounds: every series is one yellow now, so a
-  // rule in it was a yellow line crossing a yellow line (see chart.limit). One colour for
-  // all of them, so one path and one stroke.
-  ctx.strokeStyle = themeHex('chart.limit');
-  ctx.lineWidth = LIMIT_WIDTH_PX * ratio;
-  ctx.beginPath();
-  for (const {decibels, from, to} of segments) {
+  // Positions once, since both passes below stroke the same geometry.
+  const rules = segments.map(({series, decibels, from, to}) => ({
+    // The shade of the line it bounds, which is what ties the two together where several
+    // series are picked and each has a limit of its own: a rule and its trace are one
+    // statement about one quantity. What keeps it from reading as another measurement is
+    // the dash — the form, not the hue. Two weightings of a quantity share a shade by
+    // design (see the series table), and so do their limits.
+    stroke: themeHex(seriesByKey(series).color),
     // Clamped to the axis, which is fixed at 30–110 (see dbAxis): a peak limit written at
     // 120 has to be drawn somewhere, and hard against the top of the plot is the honest
     // place. Dropping the line instead would be the worse answer — a limit nobody can see
@@ -283,11 +273,48 @@ function drawLimits(
     //
     // Half the stroke down from a whole pixel, so it lands on a row of them rather than
     // straddling two — the same reason the playhead carries a negative half-pixel margin.
-    const y = Math.round(u.valToPos(clampTo(decibels, floor, ceiling), 'y', true)) + ratio / 2; // prettier-ignore
-    ctx.moveTo(Math.round(u.valToPos(from, 'x', true)), y);
-    ctx.lineTo(Math.round(u.valToPos(to, 'x', true)), y);
-  }
+    y: Math.round(u.valToPos(clampTo(decibels, floor, ceiling), 'y', true)) + ratio / 2, // prettier-ignore
+    x0: Math.round(u.valToPos(from, 'x', true)),
+    x1: Math.round(u.valToPos(to, 'x', true)),
+  }));
+
+  const trace = ({y, x0, x1}: (typeof rules)[number]) => {
+    ctx.moveTo(x0, y);
+    ctx.lineTo(x1, y);
+  };
+
+  // Every halo, then every rule — two passes over the list rather than a halo and its rule
+  // per segment. Limits are allowed to overlap (see the schema), and two decibels can be a
+  // few pixels: well inside the blur. Interleaved, the second rule's halo would land over
+  // the first one's line, and the thing that made one legible would dim the other.
+  //
+  // The halo is a stroke of the ground *plus* its own shadow of the same colour, which is
+  // what spreads it. Dashed along with the rule rather than solid under it, so it thickens
+  // each dash instead of filling the gaps between them — the trace stays readable through
+  // the rule, which is the whole point of dashing it.
+  //
+  // One path for all of them and one stroke, because `shadowBlur` is the expensive call on a
+  // canvas, and a timeline drag redraws every card near the viewport per animation frame
+  // (see applyCrop). Batched it is one shadow layer for the same pixels.
+  const ground = themeHex('chart.ground');
+  ctx.lineWidth = LIMIT_HALO_PX * ratio;
+  ctx.strokeStyle = ground;
+  ctx.shadowColor = ground;
+  ctx.shadowBlur = LIMIT_HALO_BLUR_PX * ratio;
+  ctx.beginPath();
+  rules.forEach(trace);
   ctx.stroke();
+
+  // The rules themselves, each in its own series' shade. No shadow: the halo is already
+  // under them, and a coloured line casting a dark blur would read as out of focus.
+  ctx.shadowBlur = 0;
+  ctx.lineWidth = LIMIT_WIDTH_PX * ratio;
+  for (const rule of rules) {
+    ctx.strokeStyle = rule.stroke;
+    ctx.beginPath();
+    trace(rule);
+    ctx.stroke();
+  }
 
   ctx.restore();
 }
@@ -300,7 +327,7 @@ function drawLimits(
 // follows; a range half off the crop is simply cut by the clip.
 //
 // Only for tags that cover the whole chart: one monitor's ignored stretch is its line
-// going dotted (see drawIgnoredLines), and a band behind every line would say the others
+// fading out (see drawIgnoredLines), and a band behind every line would say the others
 // were set aside too.
 function drawTags(u: uPlot, tags: readonly ChartTag[]): void {
   if (tags.length === 0) return;
@@ -332,6 +359,79 @@ function drawTags(u: uPlot, tags: readonly ChartTag[]): void {
   ctx.restore();
 }
 
+// Where a line on this chart reads above a limit in force for its series, as a red wash
+// behind the trace — the same kind of mark the ignored stretches get in grey (see drawTags),
+// so a glance along a card finds the loud stretches the way it finds the set-aside ones.
+// Drawn on `drawClear` with them, under the series.
+//
+// Read off what the plot is drawing rather than recomputed from the logs, so it follows the
+// chart in both modes — the stored minutes and the live buffer alike. A sample is over when
+// any limit for its column's series is in force at it and the value is strictly above it
+// (sitting exactly on a limit is within it, as on the timeline — see limitBreaches). Each
+// sample stands until the next one, so a breached minute washes the whole minute.
+//
+// Readings crew set aside don't count: they are left out of the envelope already, and a
+// monitor's own columns skip the stretches tagged for it or for everyone. One path for
+// every span, so overlapping breaches from several lines are one wash rather than stacking
+// into a darker one.
+function drawBreaches(
+  u: uPlot,
+  limits: readonly LimitLine[],
+  picked: PickedSeries,
+  // Which series and monitor a column is — or null for one not to read, which is every
+  // monitor's own line where the envelope already stands for them.
+  columnOf: (
+    sIdx: number,
+  ) => {series: SeriesKey; deviceId: string | null} | null,
+  tags: readonly ChartTag[],
+): void {
+  if (!limits.some((l) => picked.includes(l.series))) return;
+  const {min, max} = u.scales.x;
+  if (min == null || max == null) return;
+
+  const xs = u.data[0];
+  const area = new Path2D();
+  let any = false;
+  for (let sIdx = 1; sIdx < u.data.length; sIdx++) {
+    const column = columnOf(sIdx);
+    if (!column) continue;
+    const {series, deviceId} = column;
+    const ys = u.data[sIdx]!;
+    let runStart: number | null = null;
+    const close = (end: number) => {
+      if (runStart == null) return;
+      const x0 = u.valToPos(runStart, 'x', true);
+      area.rect(x0, u.bbox.top, u.valToPos(end, 'x', true) - x0, u.bbox.height);
+      any = true;
+      runStart = null;
+    };
+    for (let i = 0; i < xs.length; i++) {
+      const x = xs[i]!;
+      const y = ys[i];
+      const over =
+        y != null &&
+        x >= min &&
+        x < max &&
+        overLimitAt(limits, series, x * 1000, y) &&
+        !ignoredAt(tags, deviceId, x * 1000);
+      if (over) runStart ??= x;
+      else close(x);
+    }
+    // A run still open at the last sample stands for that sample only.
+    close(xs[xs.length - 1] ?? min);
+  }
+  if (!any) return;
+
+  const ctx = u.ctx;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(u.bbox.left, u.bbox.top, u.bbox.width, u.bbox.height);
+  ctx.clip();
+  ctx.fillStyle = fill(themeHex('chart.limit'));
+  ctx.fill(area);
+  ctx.restore();
+}
+
 // The ignored ranges of a tag list as the pixel spans a series' gaps are written in (see
 // makeSampleGapsRefiner). Markers have no extent, so they cut nothing.
 function ignoredSpans(u: uPlot, tags: readonly ChartTag[]): [number, number][] {
@@ -360,13 +460,13 @@ function mergeSpans(spans: [number, number][]): [number, number][] {
 }
 
 // The other half of cutting ignored stretches out of every line (see the gaps refiner in
-// the plot): the same lines again, dotted, inside those stretches only. Each line's own
-// path, in its own colour and width, so the dotted run is visibly the same trace carrying
+// the plot): the same lines again, faded, inside those stretches only. Each line's
+// own path, in its own colour and width, so the faded run is visibly the same trace carrying
 // on — and still broken wherever the monitor itself went quiet, since the sample gaps the
 // solid line was cut by are cut out of this too.
 function drawIgnoredLines(
   u: uPlot,
-  // Per series, the ignored spans its own line was cut at — so a monitor's tag dots its
+  // Per series, the ignored spans its own line was cut at — so a monitor's tag fades its
   // line and no other.
   ignoredBySeries: ReadonlyMap<number, [number, number][]>,
   sampleGaps: ReadonlyMap<number, [number, number][]>,
@@ -399,7 +499,9 @@ function drawIgnoredLines(
     }
     ctx.strokeStyle = stroke;
     ctx.lineWidth = series.width * ratio;
-    ctx.setLineDash(IGNORED_DASH.map((d) => d * ratio));
+    // Faded rather than dashed, so it can't be mistaken for a limit's rule — the reading is
+    // still there, it just isn't being counted.
+    ctx.globalAlpha = IGNORED_OPACITY;
     ctx.stroke(paths.stroke as Path2D);
     ctx.restore();
   });
@@ -418,7 +520,7 @@ const PLAYHEAD_CLASS = 'noise-row-playhead';
 // constant is hashed once for the whole session.
 const CHART_CSS = {
   // uPlot's own rubber band, which its stylesheet paints in 7 % black — invisible on
-  // this chart. The playhead's colour at the same 15 % the trace fills its area with, so
+  // this chart. The playhead's colour at the same 15 % the washes behind the trace use, so
   // the drag region reads as one of this chart's own marks rather than as the library's.
   //
   // It matters more than it did when the sweep committed a crop on mouse up and the band
@@ -672,32 +774,14 @@ export function LevelTrace({
   // `map` would hand it the index.
   //
   // One stroke per plotted column, in the projection's order: metric-major, a monitor per
-  // column inside each metric (see traceColumn). With several monitors each takes its own
-  // colour (see deviceColors) — the lines were one shade, and which of two crossing lines
-  // was which could only be asked of the tooltip; the header's badges carry the same
-  // colours as the key. A lone monitor keeps the series shade.
+  // column inside each metric (see traceColumn). Every monitor of a series shares its shade.
   const strokes = useMemo(
     () =>
       tokens.flatMap((token) =>
-        Array.from({length: lineCount}, (_, d) => {
-          const device = lines[d]?.deviceId;
-          return themeHex(
-            (device != null && deviceColor(lines, device)) || token,
-          );
-        }),
+        Array.from({length: lineCount}, () => themeHex(token)),
       ),
-    [tokens, linesKey, lineCount],
+    [tokens, lineCount],
   );
-  // What the tooltip's numbers are in. With one line there is one weighting and one window
-  // to state, so the number carries both — `87.5 dB(A) 5m`, spelled the way the card's
-  // header spells it. With several the row already names the series in full beside it, and
-  // a name says its own unit: a figure under `LCeq,5m` is dB by definition, and repeating
-  // the weighting after the number would be the second place a line says which it is — and
-  // the wrong place, the lines no longer sharing one.
-  const only = picked.length === 1 ? seriesByKey(picked[0]) : null;
-  const unitLabel = only
-    ? `${weightingUnit(only.weighting)} ${metricTag(only.kind, live)}`
-    : 'dB';
   const onScrubRef = useLatest(onScrub);
   // Where the line stands: the instant the page is looking at, written by the
   // subscription below rather than taken as a prop. The playhead is page state that moves
@@ -725,7 +809,7 @@ export function LevelTrace({
     // (see ChartTooltip). Straight off cursorAnchor with the two coordinates.
     fraction: number;
     label: string;
-    readings: Array<{deviceId: string; series: SeriesKey; db: number}>;
+    readings: TipReading[];
   } | null>(null);
 
   // The range a sweep has named and not yet done anything with: the crop it would make,
@@ -830,7 +914,7 @@ export function LevelTrace({
         envelope,
         holdX: gapThresholdX,
         // A monitor's own ignored stretches, kept out of the loudest-of line so the
-        // over-limit area under it is never one nobody is counting.
+        // red wash read off it is never one nobody is counting.
         excluded: current.map((l) =>
           (tagsRef.current ?? []).flatMap((t) =>
             t.deviceId === l.deviceId && t.end != null
@@ -875,8 +959,8 @@ export function LevelTrace({
 
     // One refiner for every line. The monitor's own silences, plus every ignored stretch:
     // cut out here so the solid line (and any area under it) stops at them, and drawn
-    // back in dotted by drawIgnoredLines. The silences alone are kept per series, because
-    // the dotted run must still break where the monitor went quiet.
+    // back faded by drawIgnoredLines. The silences alone are kept per series, because
+    // the faded run must still break where the monitor went quiet.
     const sampleGaps = makeSampleGapsRefiner(gapThresholdX);
     const sampleGapsBySeries = new Map<number, [number, number][]>();
     const ignoredBySeries = new Map<number, [number, number][]>();
@@ -887,6 +971,18 @@ export function LevelTrace({
       if (envelope && sIdx === 1) return null;
       const d = (sIdx - (envelope ? 2 : 1)) % lineCount;
       return linesRef.current[d]?.deviceId ?? null;
+    };
+    // And which series it is, for the breach wash: metric-major, a monitor per column
+    // inside each metric. With an envelope only it is read — it is already the loudest of
+    // the monitors, with their own ignored stretches taken out.
+    const columnOf = (sIdx: number) => {
+      if (envelope && sIdx > 1) return null;
+      const offset = sIdx - (envelope ? 2 : 1);
+      const m = offset < 0 ? 0 : Math.floor(offset / lineCount);
+      return {
+        series: pickedRef.current[m] ?? pickedRef.current[0],
+        deviceId: deviceOf(sIdx),
+      };
     };
     const gaps: GapsFn = (u, sIdx, i0, i1, nullGaps) => {
       const own = sampleGaps(u, sIdx, i0, i1, nullGaps);
@@ -939,6 +1035,14 @@ export function LevelTrace({
         hooks: {
           // Under the series, so the trace stays on top of what was set aside.
           drawClear: [
+            (u) =>
+              drawBreaches(
+                u,
+                limitsRef.current ?? [],
+                pickedRef.current,
+                columnOf,
+                tagsRef.current ?? [],
+              ),
             (u) =>
               drawTags(
                 u,
@@ -1038,6 +1142,8 @@ export function LevelTrace({
                   picked,
                   envelope,
                   gapThresholdX,
+                  limitsRef.current ?? [],
+                  tagsRef.current ?? [],
                 ),
               });
             },
@@ -1092,20 +1198,13 @@ export function LevelTrace({
         },
         series: [
           {},
-          // The area under the trace — painted only over a limit (see drawLimits) — and
-          // with several monitors it is under the loudest of them rather than under each:
-          // the lines are all one colour, so two areas would stack into a darker band that
-          // looks like it means something. Only ever an area — the lines over it are the
-          // monitors themselves.
-          //
-          // Only ever one window's, hence `envelope`: several are nested, so an area under
-          // any one of them would paint over the quieter lines (see the head comment).
+          // The loudest of several monitors of one series, which the red wash and the
+          // tooltip read the place's level off (see drawBreaches). Never drawn — the lines
+          // are the monitors themselves.
           ...(envelope
             ? [
                 {
                   stroke: 'transparent',
-                  // Built, not painted: drawLimits fills it only where it is over a limit.
-                  fill: 'transparent',
                   width: 0,
                   spanGaps: false,
                   gaps,
@@ -1117,13 +1216,8 @@ export function LevelTrace({
           // laid them out — so a window's lines are consecutive and its stroke is fixed for
           // the whole run. Where there is no monitor it is one empty line per window, which
           // is what keeps the axes drawn at a location nothing has stood at yet.
-          //
-          // The area goes to the lines themselves only for a lone monitor of a lone window:
-          // any other shape either has an envelope above or several windows to keep clear.
-          // Transparent for the same reason as the envelope's.
           ...strokes.map((stroke) => ({
             stroke,
-            fill: picked.length === 1 && !envelope ? 'transparent' : undefined,
             width: 1.25,
             spanGaps: false,
             gaps,
@@ -1429,47 +1523,29 @@ export function LevelTrace({
           <Text fontSize="xs" lineHeight="1.2">
             {tip.label}
           </Text>
-          {/* One line per monitor per series with something to say at that instant, the
-              value in that line's own colour. Spread to the pill's full width so the
-              numbers line up under each other rather than after names of different
-              lengths.
-
-              What goes on the left is whatever the colour and the card don't already say:
-              the monitor's name, which several lines of one series share; and the series'
-              own name, where there are several series. Never both when one of them is the
-              only one there is — a lone monitor's name on all five rows, or a lone series'
-              name, is a column of the same word down a tooltip that has a few lines to
-              spare.
-
-              Named in full — `LCeq,5m`, not `5m` — because that is the only thing here
-              that distinguishes a series from its twin in the other weighting: the two
-              share a colour, and a tag would print the same string for both. */}
-          {tip.readings.map(({deviceId, series, db}) => (
-            <HStack
-              key={`${deviceId} ${series}`}
-              gap="3"
-              justify="space-between"
-              fontSize="xs"
-              lineHeight="1.2"
-            >
-              <Text color="fg.muted">
-                {[
-                  lines.length > 1 || picked.length === 1 ? deviceId : null,
-                  picked.length > 1 ? seriesLabel(series, live) : null,
-                ]
-                  .filter(Boolean)
-                  .join(' · ')}
-              </Text>
-              <Text
-                fontWeight="bold"
-                color={
-                  deviceColor(lines, deviceId) ?? tokens[picked.indexOf(series)]
-                }
-              >
-                {formatDb(db, unitLabel)}
-              </Text>
-            </HStack>
-          ))}
+          {/* A row per series with something to say at that instant, named in full —
+              `LCeq,5m`, not `5m`, because that is the only thing here that distinguishes a
+              series from its twin in the other weighting: the two share a colour. Grouped
+              under each monitor's name where the place has had several (see
+              ChartTooltipReadings); the readings already arrive monitor by monitor. */}
+          <ChartTooltipReadings
+            headed={lines.length > 1}
+            groups={lines.flatMap(({deviceId}) => {
+              const rows = tip.readings
+                .filter((r) => r.deviceId === deviceId)
+                .map(({series, db, ignored, over}) => ({
+                  key: series,
+                  label: seriesLabel(series, live),
+                  value: formatDb(db, 'dB'),
+                  color: tokens[picked.indexOf(series)],
+                  struck: ignored,
+                  over,
+                }));
+              return rows.length === 0
+                ? []
+                : [{key: deviceId, heading: deviceId, rows}];
+            })}
+          />
         </ChartTooltip>
       )}
     </Box>

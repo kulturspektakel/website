@@ -2,6 +2,11 @@ import type {DeviceWindows, NoiseProject} from './projectView';
 
 export type NoiseRangeTag = NoiseProject['tags'][number];
 
+// How strongly a reading crew set aside is drawn — its line through the ignored stretch on
+// the chart, and its badge on the card — so the two fade by the same amount and read as one
+// statement: still there, not being counted.
+export const IGNORED_OPACITY = 0.3;
+
 /**
  * The tags that belong on one location's chart.
  *
@@ -46,15 +51,35 @@ export function ignoredDevicesAt(
   deviceIds: readonly string[],
   at: number,
 ): Set<string> {
-  const ignored = new Set<string>();
-  for (const tag of tags) {
-    if (tag.type !== 'IGNORE' || tag.end == null) continue;
-    if (tag.start > at || tag.end <= at) continue;
-    if (tag.deviceId != null) {
-      if (deviceIds.includes(tag.deviceId)) ignored.add(tag.deviceId);
-    } else if (tag.locationId == null || tag.locationId === locationId) {
-      return new Set(deviceIds);
-    }
-  }
-  return ignored;
+  const scoped = tags.filter(
+    (tag) =>
+      tag.type === 'IGNORE' &&
+      (tag.deviceId != null ||
+        tag.locationId == null ||
+        tag.locationId === locationId),
+  );
+  return new Set(deviceIds.filter((id) => ignoredAt(scoped, id, at)));
+}
+
+/**
+ * Whether one monitor's reading at an instant (epoch ms) is set aside by any of `tags` —
+ * which are already the ones reaching this place (see locationTags). A tag with no device
+ * covers every monitor; a device tag only its own. `null` asks for a reading that is every
+ * monitor's at once, like a chart's envelope, which only the former cover. Only ranges
+ * count, `[start, end)` like every window on the page: a marker sets nothing aside.
+ *
+ * The one test the map's pins, a chart's faded lines and red wash, and both tooltips make.
+ */
+export function ignoredAt(
+  tags: readonly {start: number; end: number | null; deviceId: string | null}[],
+  deviceId: string | null,
+  at: number,
+): boolean {
+  return tags.some(
+    (tag) =>
+      tag.end != null &&
+      tag.start <= at &&
+      at < tag.end &&
+      (tag.deviceId == null || tag.deviceId === deviceId),
+  );
 }

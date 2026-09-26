@@ -156,3 +156,29 @@ export function strictestLimit(
   }
   return strictest;
 }
+
+// Whether a reading is over a limit: strictly above it — a reading sitting exactly on its
+// limit is within it — and never where no limit is written, which is not a permissive one.
+// The one comparison every warning in this section makes, so a pin, a chart's red wash, a
+// tooltip and the timeline's breach marks cannot disagree about an edge case.
+export const exceedsLimit = (
+  db: number,
+  limit: number | null | undefined,
+): boolean => limit != null && db > limit;
+
+// The limit a reading of one series at one instant (epoch ms) is judged against: the
+// strictest in force then (see strictestLimit), or null where none is.
+export const limitAt = (
+  limits: readonly LimitLine[],
+  series: SeriesKey,
+  at: number,
+): number | null => strictestLimit(limits, series, at, at + 1);
+
+// Whether a reading of one series at one instant is over any limit in force for that
+// series then — over any of them being over the strictest.
+export const overLimitAt = (
+  limits: readonly LimitLine[],
+  series: SeriesKey,
+  at: number,
+  db: number,
+): boolean => exceedsLimit(db, limitAt(limits, series, at));

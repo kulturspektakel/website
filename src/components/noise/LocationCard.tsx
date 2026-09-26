@@ -22,6 +22,7 @@ import {
   type NoiseLocationItem,
 } from './projectView';
 import {ignoredDevicesAt} from './rangeTags';
+import {type LimitLine} from './limitLines';
 
 // One place on the list, and one row for it however many monitors have stood there. The
 // card *is* that row: the monitors' names take the line the coordinates used to have,
@@ -131,6 +132,7 @@ export const LocationCard = memo(function LocationCard({
         </Box>
         <LocationLevels
           locationId={location.id}
+          limits={location.limits}
           assignments={assignments}
           empty={lines.length === 0}
         />
@@ -222,10 +224,13 @@ const NOTHING_IGNORED: ReadonlySet<string> = new Set();
 
 function LocationLevels({
   locationId,
+  limits,
   assignments,
   empty,
 }: {
   locationId: string;
+  // The place's permit, which the readings are judged against at the minute being read.
+  limits: readonly LimitLine[];
   // Resolved at the playhead by the layout — the monitors whose readings are this
   // location's at the instant being viewed.
   assignments: NoiseAssignment[];
@@ -264,6 +269,8 @@ function LocationLevels({
       live={live}
       picked={picked}
       ignored={ignored}
+      limits={limits}
+      at={at}
     />
   );
 }

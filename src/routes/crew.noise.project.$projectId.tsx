@@ -35,7 +35,11 @@ import {
   type ProjectViewCtx,
 } from '../components/noise/projectView';
 import {ProjectTimeline} from '../components/noise/ProjectTimeline';
-import {LevelSelect, useLevelPick} from '../components/noise/LevelPicker';
+import {
+  LevelPicker,
+  LevelSelect,
+  useLevelPick,
+} from '../components/noise/LevelPicker';
 import {SERIES_STORE} from '../components/noise/seriesSelection';
 import {useProjectLogs} from '../components/noise/useProjectLogs';
 import {
@@ -240,15 +244,16 @@ function NoiseProjectDetail() {
   // what you are looking at — it is remembered instead, per browser (see seriesSelection.ts).
   //
   // Per view and not per project page, which is why it is read down here where the view is
-  // known: each view remembers its own. One series in either — a pin is a badge with room for
-  // one number, and a card's chart reads as one quantity against its limit, with the crop's
-  // Leq printed beside it. Held by the layout all the same, since the control that sets it is
-  // in the layout's own header, and switching view simply re-reads the other view's
-  // remembered pick (see useLevelPick).
+  // known: the two ask different things of a pick. The cards draw every line picked, each
+  // series in its own shade, so a set is what the list is for; a pin is a badge with room for
+  // one number, so the map takes one and stores one — and a set carried over from the list
+  // would have drawn its first and dropped the rest without saying so. Held by the layout all
+  // the same, since the control that sets it is in the layout's own header, and switching
+  // view simply re-reads the other view's remembered pick (see useLevelPick).
   const mapOnly = shown === 'map';
   const {picked, toggleSeries} = useLevelPick({
     store: mapOnly ? SERIES_STORE.map : SERIES_STORE.list,
-    single: true,
+    single: mapOnly,
   });
 
   // Without a Maps key there is no map to switch to, so the list is all there is.
@@ -324,6 +329,24 @@ function NoiseProjectDetail() {
   const ordered = useMemo(
     () => orderLocations(project.locations),
     [project.locations],
+  );
+  // The same places carrying the stretches crew tagged to be ignored at each, for the crop's
+  // Leq to leave out (see locationEnergyIndex). Markers set nothing aside, so only ranges.
+  const withIgnored = useMemo(
+    () =>
+      ordered.map((location) => ({
+        ...location,
+        ignored: project.tags.flatMap((t) =>
+          t.type === 'IGNORE' &&
+          t.end != null &&
+          (t.deviceId != null ||
+            t.locationId == null ||
+            t.locationId === location.id)
+            ? [{deviceId: t.deviceId, start: t.start, end: t.end}]
+            : [],
+        ),
+      })),
+    [ordered, project.tags],
   );
   const locationsKey = ordered
     .map(
@@ -408,9 +431,13 @@ function NoiseProjectDetail() {
     const all = mapOnly || listed == null || listed.size === 0;
     return {
       all,
-      locations: all ? ordered : ordered.filter((l) => listed.has(l.id)),
+      // Carrying what is ignored at each, so the strip's coverage and breaches leave it
+      // out the same way the Leq does.
+      locations: all
+        ? withIgnored
+        : withIgnored.filter((l) => listed.has(l.id)),
     };
-  }, [mapOnly, listed, ordered]);
+  }, [mapOnly, listed, withIgnored]);
 
   const {levels, locationTotals, traces, gaps, breaches, isFetching} =
     useProjectLogs({
@@ -423,7 +450,7 @@ function NoiseProjectDetail() {
       // place, which has nothing to do with the instant being viewed. Everything it
       // returns is keyed by location id, so the order is immaterial — it takes the sorted
       // array only so there is one of them on the page.
-      locations: ordered,
+      locations: withIgnored,
       timeline,
     });
 
@@ -559,7 +586,20 @@ function NoiseProjectDetail() {
                 )
               }
             >
-              <LevelSelect live={live} picked={picked} onPick={toggleSeries} />
+              {/* A set on the list, one of nine on the map (see the pick above). */}
+              {mapOnly ? (
+                <LevelSelect
+                  live={live}
+                  picked={picked}
+                  onPick={toggleSeries}
+                />
+              ) : (
+                <LevelPicker
+                  live={live}
+                  picked={picked}
+                  onToggleSeries={toggleSeries}
+                />
+              )}
               {mapAvailable && (
                 <NativeSelectRoot size="xs" w="auto">
                   <NativeSelectField

@@ -6,12 +6,17 @@ import {SegmentedControl} from '../chakra-snippets/segmented-control';
 import {Tooltip} from '../chakra-snippets/tooltip';
 import {KULT_LOCATION} from '../../utils/kultLocation';
 import {useLatest} from './chartUtils';
+import {exceedsLimit} from './limitLines';
+import {ChartTooltip, ChartTooltipReadings} from './ChartTooltip';
+import {formatBatteryPercent} from './batteryCurve';
 import {useDeviceStates, useTick} from './context';
+import {compareDeviceIds, isFresh} from './noise';
 import {
   displayedLevel,
   formatDb,
   isCurrent,
   loudestLevel,
+  seriesLabel,
   weightingUnit,
 } from './level';
 import {seriesByKey, type SeriesKey} from './series';
@@ -191,6 +196,9 @@ function MapCanvas({
     name: string;
     x: number;
     y: number;
+    // How far across the map the pin sits, which keeps the readout inside it (see
+    // ChartTooltip).
+    fraction: number;
   } | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
   const [mapTypeId, setMapTypeId] = useState<MapTypeId>('roadmap');
@@ -310,9 +318,9 @@ function MapCanvas({
         map,
         position: {lat: location.latitude, lng: location.longitude},
       });
-      // The pin shows a level, not a name, so the name lives in a tooltip — a
-      // Chakra one, driven from here. Deliberately no `title`: the native tooltip
-      // would sit under the styled one on the same hover.
+      // The pin shows a level, not a name, so the name lives in a tooltip — the
+      // charts' readout, driven from here. Deliberately no `title`: the native
+      // tooltip would sit under the styled one on the same hover.
       marker.addListener('mouseover', () => {
         const point = projectionRef.current
           ?.getProjection()
@@ -320,11 +328,13 @@ function MapCanvas({
             new maps.LatLng({lat: location.latitude, lng: location.longitude}),
           );
         if (!point) return;
+        const width = containerRef.current?.offsetWidth ?? 0;
         setHovered({
           id: location.id,
           name: location.locationName,
           x: point.x,
           y: point.y,
+          fraction: width > 0 ? Math.min(Math.max(point.x / width, 0), 1) : 0.5,
         });
       });
       marker.addListener('mouseout', () => setHovered(null));
@@ -420,9 +430,7 @@ function MapCanvas({
   // a place with nothing written for it never warns.
   const pinOver = pinLevels.map((level, i) => {
     const limit = locations[i]?.limitDb;
-    return (
-      !pinIgnored[i] && limit != null && isCurrent(level) && level.db > limit
-    );
+    return !pinIgnored[i] && isCurrent(level) && exceedsLimit(level.db, limit);
   });
   const pinLabels = pinLevels.map((level) =>
     level.kind === 'none' ? NO_LEVEL_LABEL : formatDb(level.db),
@@ -617,35 +625,89 @@ function MapCanvas({
       css={{[`&[data-imagery] .${SHADE_TILE_CLASS}`]: SATELLITE_SHADE}}
     >
       <div ref={containerRef} style={{height: '100%', width: '100%'}} />
-      {/* The tooltip's trigger. A marker is drawn by the Maps API and owns no DOM
-          node, so the anchor is this zero-size box parked at the pin's pixel and
-          the open state is driven by the marker's own hover events. Keyed on the
-          location so moving between two pins re-anchors rather than leaving the
-          bubble where the last one was. */}
-      {hovered && (
-        <Tooltip
-          key={hovered.id}
-          open
-          content={
-            locations.some((l, i) => l.id === hovered.id && pinIgnored[i])
-              ? `${hovered.name} (ignored)`
-              : hovered.name
-          }
-          positioning={{placement: 'top'}}
-          showArrow
-        >
-          <Box
-            position="absolute"
-            left={`${hovered.x}px`}
-            top={`${hovered.y}px`}
-            // The pill is 26px tall and centred on the point, so lifting the
-            // anchor by half of it puts the bubble above the badge, not over it.
-            mt="-13px"
-            boxSize="0"
-            pointerEvents="none"
-          />
-        </Tooltip>
-      )}
+      {/* The same readout the location cards' charts hover with, since it answers the
+          same question about the same monitors — only at a place rather than an instant.
+          Parked at the pin's pixel and opened by the marker's own hover events, a
+          marker being drawn by the Maps API with no DOM node to hang a trigger on. The
+          pill is 26px tall and centred on the point, so lifting the anchor by half of
+          it puts the readout above the badge, not over it. */}
+      {hovered &&
+        (() => {
+          const i = locations.findIndex((l) => l.id === hovered.id);
+          const location = locations[i];
+          return (
+            <ChartTooltip
+              left={hovered.x}
+              top={hovered.y - 13}
+              fraction={hovered.fraction}
+            >
+              {/* Every monitor standing here with its own reading — the pin carries only
+                  the loudest — and, live, its charge, since that is the other thing a walk
+                  round the site is checking for. Battery only while the monitor is
+                  talking: the stream is the only thing that carries it (see DeviceBadge),
+                  and a last-heard voltage shown as current is worse than none. Beside the
+                  monitor's name where there are several, and beside the place's where
+                  there is one and so no heading to put it in. */}
+              {(() => {
+                const devices = [...(location?.deviceIds ?? [])]
+                  .sort(compareDeviceIds)
+                  .map((deviceId) => {
+                    const state = deviceState(deviceId);
+                    const batteryMv =
+                      live && isFresh(state?.lastSeen, now)
+                        ? state?.latest.batteryMv
+                        : null;
+                    return {
+                      deviceId,
+                      battery:
+                        batteryMv == null
+                          ? null
+                          : formatBatteryPercent(batteryMv),
+                      level: levelOf(deviceId),
+                    };
+                  });
+                const headed = devices.length > 1;
+                const name = pinIgnored[i]
+                  ? `${hovered.name} (ignored)`
+                  : hovered.name;
+                const lone = headed ? null : devices[0]?.battery;
+                return (
+                  <>
+                    <Text>{lone ? `${name} · ${lone}` : name}</Text>
+                    <ChartTooltipReadings
+                      headed={headed}
+                      groups={devices.map(({deviceId, battery, level}) => ({
+                        key: deviceId,
+                        heading: battery
+                          ? `${deviceId} · ${battery}`
+                          : deviceId,
+                        rows: [
+                          {
+                            key: series,
+                            label: seriesLabel(series, live),
+                            value: formatDb(
+                              level.kind === 'none' ? null : level.db,
+                              'dB',
+                            ),
+                            color: seriesByKey(series).color,
+                            dimmed: !isCurrent(level),
+                            struck:
+                              location?.ignoredDeviceIds?.includes(deviceId) ??
+                              false,
+                            // Against the same figure the pin warns by (see limitDb).
+                            over:
+                              isCurrent(level) &&
+                              exceedsLimit(level.db, location?.limitDb),
+                          },
+                        ],
+                      }))}
+                    />
+                  </>
+                );
+              })()}
+            </ChartTooltip>
+          );
+        })()}
       {/* A sibling of the map container rather than a Google control, so it's
           styled like the rest of the page and swallows its own clicks instead of
           letting them through as a "create here" tap. */}
@@ -662,8 +724,8 @@ function MapCanvas({
           items={MAP_TYPES}
         />
         {onCreateAt && (
-          // The same words as the accessible name, in a Chakra tooltip like the
-          // pins' — and no `title`, or the native one would show up beside it.
+          // The same words as the accessible name, in a Chakra tooltip — and no
+          // `title`, or the native one would show up beside it.
           <Tooltip
             content={placeLabel}
             showArrow

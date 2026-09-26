@@ -10,6 +10,7 @@ import {useDeviceStates, useTick} from './context';
 import {
   displayedLevel,
   formatDb,
+  isCurrent,
   loudestLevel,
   primaryWeighting,
   rangeLabel,
@@ -20,6 +21,8 @@ import {
 import {seriesByKey, SERIES} from './series';
 import {type ChartSeriesToken} from '../../theme-noise';
 import {coverageDetail} from './leq';
+import {IGNORED_OPACITY} from './rangeTags';
+import {exceedsLimit, limitAt, type LimitLine} from './limitLines';
 import {type PlayheadLevels, type RangeTotals} from './projectLogs';
 import {type NoiseAssignment} from './projectView';
 
@@ -78,8 +81,12 @@ type PrintedLevel = {
   // silently make false.
   caveat?: string;
   // A reading of monitors crew tagged to be ignored at this instant: printed, but struck
-  // through and in a dashed frame, so it is still there to read and plainly not counted.
+  // through and faded, so it is still there to read and plainly not counted.
   ignored?: boolean;
+  // The limit in force for this series at the instant being read, and whether the reading
+  // is over it — absent for the crop's mean, which no limit is written against.
+  limitDb?: number | null;
+  over?: boolean;
 };
 
 // The badge's corner, and the corner of the box inside it. Concentric, which means the
@@ -119,6 +126,8 @@ export function LocationReadings({
   live,
   picked,
   ignored,
+  limits,
+  at,
 }: {
   // The monitors standing here at the instant being viewed — which while live means the
   // ones standing here now. Not the location's whole history: that is what the names
@@ -145,6 +154,11 @@ export function LocationReadings({
   // Left out of the loudest; when that is all of them, the tiles show what they read
   // anyway, marked as ignored — the same rule the map pin follows.
   ignored: ReadonlySet<string>;
+  // The place's permit, and the minute the readings are of (see useReadingMinute) — what
+  // each series' tile is judged against, by the same rule the map's pins and the chart's
+  // tooltip use (see limitAt, exceedsLimit). Null before the playhead has been placed.
+  limits: readonly LimitLine[];
+  at: number | null;
 }) {
   // One wake-up for the header's whole set — a location's two monitors are read
   // together and printed as one reading, so there is nothing to gain from rendering
@@ -170,9 +184,8 @@ export function LocationReadings({
   // row then holds still as the playhead crosses a gap, instead of shuffling the badges
   // beside it along and back again.
   const printed: PrintedLevel[] = [
-    ...picked.map((series) => ({
-      key: series,
-      level: loudestLevel(
+    ...picked.map((series) => {
+      const level = loudestLevel(
         counted.map((a) =>
           displayedLevel({
             live,
@@ -182,15 +195,25 @@ export function LocationReadings({
             historyDb: levels?.[series]?.[a.deviceId],
           }),
         ),
-      ),
-      // The quantity spelled out — `LAeq,5m` — off the series table's own naming, and
-      // in the mode's own window (a second live, a stored minute; see seriesLabel).
-      label: seriesLabel(series, live),
-      // Straight from the series table too, the one place a level's colour is decided,
-      // so a number and the line it was read off cannot end up different shades.
-      color: seriesByKey(series).color,
-      ignored: allIgnored,
-    })),
+      );
+      const limitDb = at == null ? null : limitAt(limits, series, at);
+      return {
+        key: series,
+        level,
+        limitDb,
+        // Only a reading of the instant being viewed, and one that is being counted — the
+        // same two conditions the map's pin warns under.
+        over:
+          !allIgnored && isCurrent(level) && exceedsLimit(level.db, limitDb),
+        // The quantity spelled out — `LAeq,5m` — off the series table's own naming, and
+        // in the mode's own window (a second live, a stored minute; see seriesLabel).
+        label: seriesLabel(series, live),
+        // Straight from the series table too, the one place a level's colour is decided,
+        // so a number and the line it was read off cannot end up different shades.
+        color: seriesByKey(series).color,
+        ignored: allIgnored,
+      };
+    }),
     // Last, and hard against the edge of the card: the number every card is compared on
     // lines up in one column down the page, whatever is picked above it. Named for the
     // timeframe where the others name a window, because that is what it averages, and in a
@@ -255,21 +278,25 @@ export function LocationReadings({
       gap="1.5"
       flexShrink="0"
     >
-      {printed.map(({key, level, label, color, caveat, ignored}) => (
-        <ReadingTile
-          key={key}
-          db={level.kind === 'none' ? null : level.db}
-          label={label}
-          // Muted when the number is only the last thing we heard, so a reading that
-          // has stopped moving doesn't keep reading as one that hasn't — saying "not
-          // now" then matters more than which line it belongs to.
-          color={level.kind === 'stale' ? 'fg.subtle' : color}
-          // The coverage rides with the crop's Leq, inside its tile, so it reads as a
-          // caveat on that number rather than as another reading of its own.
-          caveat={caveat}
-          ignored={ignored}
-        />
-      ))}
+      {printed.map(
+        ({key, level, label, color, caveat, ignored, limitDb, over}) => (
+          <ReadingTile
+            key={key}
+            db={level.kind === 'none' ? null : level.db}
+            label={label}
+            // Muted when the number is only the last thing we heard, so a reading that
+            // has stopped moving doesn't keep reading as one that hasn't — saying "not
+            // now" then matters more than which line it belongs to.
+            color={level.kind === 'stale' ? 'fg.subtle' : color}
+            // The coverage rides with the crop's Leq, inside its tile, so it reads as a
+            // caveat on that number rather than as another reading of its own.
+            caveat={caveat}
+            ignored={ignored}
+            limitDb={limitDb}
+            over={over}
+          />
+        ),
+      )}
     </Box>
   );
 }
@@ -301,6 +328,8 @@ function ReadingTile({
   color,
   caveat,
   ignored = false,
+  limitDb,
+  over = false,
 }: {
   // The level, or null where this window has nothing at the instant being viewed — an empty
   // badge, keeping its place and its name.
@@ -311,9 +340,27 @@ function ReadingTile({
   color: string;
   // The coverage shortfall, spelled out, where there is one worth saying.
   caveat?: string;
-  // Tagged to be ignored: the frame goes dashed and the number is struck through.
+  // Tagged to be ignored: the badge fades, the way its line does on the chart, and the
+  // number is struck through.
   ignored?: boolean;
+  // The limit in force for this reading, which the tooltip states; and whether the number
+  // is over it, which turns it red behind a warning sign — the same red the chart washes a
+  // breach in, and the same sign the tooltips print (see ChartTooltipRow).
+  limitDb?: number | null;
+  over?: boolean;
 }) {
+  // What hovering the badge says: the coverage behind the crop's mean, or the limit this
+  // reading is held to — which is worth stating whether or not it is crossed, since the
+  // chart draws its rule without a figure (see drawLimits).
+  const tooltip = [
+    caveat,
+    limitDb == null ? null : `Limit ${formatDb(limitDb, 'dB')}`,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+  // The sign, for either reason there is one: a limit crossed (red), or minutes missing
+  // from the mean (yellow).
+  const sign = over ? 'chart.limit' : caveat ? 'yellow.300' : null;
   const badge = (
     <Box
       display="flex"
@@ -327,25 +374,25 @@ function ReadingTile({
       minW="70px"
       // The colour is the badge, and the hairline of it left showing around the number is
       // what makes the two rows one object rather than a number with a bar under it.
-      //
-      // Ignored, the colour is a dashed line round the badge instead of its fill — the
-      // same badge with its swatch drawn in outline, so it reads as set aside.
-      {...(ignored
-        ? {borderWidth: '1px', borderStyle: 'dashed', borderColor: color}
-        : {bg: color, p: '1px'})}
+      // Over its limit the whole badge goes red — frame, name row and number — so a card
+      // that is too loud reads as one from across the page, not only up close.
+      bg={over ? 'chart.limit' : color}
+      p="1px"
+      // Ignored, the whole badge fades by the amount its line does on the chart below.
+      opacity={ignored ? IGNORED_OPACITY : undefined}
       textAlign="right"
       // The badge gives back four pixels at the bottom: the header's height is set by the
       // tallest thing in it, and a row of these was making the card taller than the name and
       // the monitors beside them need — the chart underneath is what wants that height.
       mb="-4px"
-      {...(caveat && {
+      {...(tooltip && {
         // A hover target the size of the badge, rather than a sign inside it to hit: the
         // caveat is about this reading, so the reading is what carries it. Focusable for the
         // same reason the sign used to be — a warning nobody can read is worse than none —
         // and `help` rather than `pointer`, which would promise it did something.
         as: 'button' as const,
         type: 'button' as const,
-        'aria-label': caveat,
+        'aria-label': tooltip,
         cursor: 'help',
         focusRing: 'outside' as const,
       })}
@@ -357,9 +404,10 @@ function ReadingTile({
             on the right edge of the badge and down the page, and a sign between them and
             that edge would push the one card that has it out of the column. */}
         <HStack gap="1.5" justify="space-between" minW="0">
-          {caveat && (
+          {sign && (
             // It stays visible: this is what says at a glance, without hovering anything,
-            // that the average has minutes missing from it.
+            // that the reading is over its limit, or that the average has minutes missing
+            // from it.
             // Brighter than `fg.warning`, which is a text colour: this is a solid shape a
             // tenth of an inch wide on the section's black ground, and at that size it has
             // to be the loudest thing in the badge or it isn't a warning at all.
@@ -368,7 +416,7 @@ function ReadingTile({
             // allows for some), so centred reads as the sign riding above the number.
             // Relative, so it moves the glyph without touching what the row measures.
             <Box
-              color="yellow.300"
+              color={sign}
               fontSize="sm"
               lineHeight="1"
               flexShrink="0"
@@ -390,7 +438,7 @@ function ReadingTile({
             // reading rather than as a different quantity.
             fontWeight="600"
             lineHeight="1.2"
-            color={color}
+            color={over ? 'chart.limit' : color}
             opacity={db == null ? 0.5 : undefined}
             textDecoration={ignored ? 'line-through' : undefined}
             ms="auto"
@@ -411,9 +459,7 @@ function ReadingTile({
         fontSize="0.5625rem"
         fontWeight="bold"
         lineHeight="1.4"
-        // Outlined, there is no swatch under the name for the ground's shade to be read
-        // against, so it takes the line's colour itself.
-        color={ignored ? color : 'bg'}
+        color="bg"
         px="1.5"
         // No padding under it: the badge's own 1px of frame sits below this row in the same
         // colour, so anything here reads as that much more space than it is — and the row is
@@ -425,9 +471,9 @@ function ReadingTile({
     </Box>
   );
 
-  if (!caveat) return badge;
+  if (!tooltip) return badge;
   return (
-    <Tooltip content={caveat} showArrow>
+    <Tooltip content={tooltip} showArrow>
       {badge}
     </Tooltip>
   );
