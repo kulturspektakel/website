@@ -11,3 +11,12 @@
   text-decoration: line-through;
   text-decoration-thickness: 2px;
 }
+
+/* A pin carrying its place's name: cut to the inside of the 56px pill (its 13px caps at
+   either end are the padding) with an ellipsis, so every pin keeps the same footprint. */
+.noise-pin-label-name {
+  max-width: 44px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

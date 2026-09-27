@@ -5,7 +5,7 @@
 // every frame, and AdvancedMarkerElement (which *is* DOM) requires a mapId, which
 // would disable the custom map style. OverlayView needs neither.
 const PULSE_SIZE = 26;
-// Green, matching the status dot, the WiFi icon and the header's Live switch —
+// Green, matching the status dot, the WiFi icon and the header's LIVE key —
 // "live" means the same thing everywhere on this page, so it is one colour with no
 // exceptions. The variable rather than a token, because this is plain DOM built
 // outside Chakra's provider: it is still appended into the document, so the custom

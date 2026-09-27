@@ -312,6 +312,23 @@ export type ProjectViewCtx = {
   // those places. The list owns the choice (see locationSelection.ts); the layout draws the
   // strip. A state setter, so its identity never changes.
   setListed: (ids: ReadonlySet<string>) => void;
+  // Whether the map's create tool is armed — the page being edited rather than read.
+  //
+  // Not a third mode beside live and scrubbing, though it is as page-wide as they are.
+  // Those two say which readings the page shows, are part of the URL, and the page is
+  // always in one of them. This says the page is showing no readings at all for a moment:
+  // the pins give their names instead of their levels, the timeline folds away, and the
+  // playhead holds still — and then it hands back whichever of the two it was in, untouched.
+  // So it sits across them rather than between them, and nothing about it is remembered.
+  //
+  // The layout's, although only the map arms it, because the strip it folds away is the
+  // layout's. On the map that is all it takes to hold the playhead: the strip is the one
+  // thing there that moves it, besides the map's own sideways swipe, which stands down
+  // while this is on and hands the swipe back to the map. Only ever true on the map:
+  // leaving it disarms the tool.
+  placing: boolean;
+  // A state setter, so its identity never changes.
+  setPlacing: (placing: boolean) => void;
 };
 
 export const ProjectViewContext = createContext<ProjectViewCtx | null>(null);

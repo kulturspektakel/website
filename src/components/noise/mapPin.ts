@@ -58,6 +58,10 @@ export const NO_LEVEL_LABEL = '--.-';
 const PIN_FONT_FAMILY = 'system-ui, sans-serif';
 const PIN_LABEL_CLASS = 'noise-pin-label';
 const PIN_LABEL_IGNORED_CLASS = 'noise-pin-label-ignored';
+const PIN_LABEL_NAME_CLASS = 'noise-pin-label-name';
+// A name is words, not a number: a size down from the digits, so a little more of it fits
+// in a pill that is not getting any wider for it.
+const PIN_NAME_FONT_SIZE = '11px';
 
 /**
  * A pin, in whatever it has to say at once: how loud, whether that is a reading of the
@@ -175,20 +179,28 @@ export const warningIcon = (maps: typeof google.maps): google.maps.Icon => ({
 //
 // An ignored pin is struck through: the grey it shares with a remembered reading says "not
 // this", and the line says why — the number is there, but crew set it aside.
+//
+// A `named` pin carries its place's name instead of a level (see namePin), cut to the pill
+// with an ellipsis rather than widening it (see mapPin.css).
 export const pinLabel = (
   text: string,
   {
     stale = false,
     over = false,
     ignored = false,
-  }: {stale?: boolean; over?: boolean; ignored?: boolean} = {},
+    named = false,
+  }: {stale?: boolean; over?: boolean; ignored?: boolean; named?: boolean} = {},
 ): google.maps.MarkerLabel => ({
   text,
   color: over ? PIN_OVER : stale ? PIN_LABEL_STALE : PIN_LABEL,
-  className: ignored
-    ? `${PIN_LABEL_CLASS} ${PIN_LABEL_IGNORED_CLASS}`
-    : PIN_LABEL_CLASS,
+  className: [
+    PIN_LABEL_CLASS,
+    ignored && PIN_LABEL_IGNORED_CLASS,
+    named && PIN_LABEL_NAME_CLASS,
+  ]
+    .filter(Boolean)
+    .join(' '),
   fontFamily: PIN_FONT_FAMILY,
-  fontSize: PIN_FONT_SIZE,
+  fontSize: named ? PIN_NAME_FONT_SIZE : PIN_FONT_SIZE,
   fontWeight: '700',
 });

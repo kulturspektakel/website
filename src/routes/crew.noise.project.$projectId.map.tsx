@@ -1,9 +1,9 @@
 import {createFileRoute, useNavigate} from '@tanstack/react-router';
 import {Box, Text} from '@chakra-ui/react';
-import {useCallback, useEffect, useMemo, useState} from 'react';
-import {toaster} from '../components/chakra-snippets/toaster';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import LocationsMap, {type Coordinates} from '../components/noise/LocationsMap';
 import {NoiseLocationDialog} from '../components/noise/NoiseLocationDialog';
+import {useWheelScrub} from '../components/noise/useWheelScrub';
 import {
   usePlayheadLevels,
   useProjectView,
@@ -18,12 +18,18 @@ export const Route = createFileRoute('/crew/noise/project/$projectId/map')({
   component: ProjectMapView,
 });
 
-// A fixed id, so arming the tool twice replaces the prompt rather than stacking two.
-const PLACE_TOAST = 'noise-place-location';
-
 function ProjectMapView() {
   const {projectId} = Route.useParams();
-  const {project, live, range, picked, locations, refresh} = useProjectView();
+  const {
+    project,
+    live,
+    range,
+    picked,
+    locations,
+    refresh,
+    placing,
+    setPlacing,
+  } = useProjectView();
   // A pin has room for one number, so it reads the first of the picked set (see
   // primarySeries) — the same one every other single-number readout on the page follows.
   // On this view the set is a single series and the menu only lets it be one (see the
@@ -39,10 +45,9 @@ function ProjectMapView() {
   // ever placed by clicking the map, so there is no coordinate-less open — and so the
   // dialog belongs to this view rather than to the layout.
   const [createAt, setCreateAt] = useState<Coordinates | null>(null);
-  // Whether the plus button has armed the map. Lives here rather than in the map
-  // because what disarms it is the dialog closing, which the map knows nothing about:
-  // one location per press of the button, and then the map is a map again.
-  const [placing, setPlacing] = useState(false);
+  // A sideways swipe over the map moves the playhead; the map's own zoom is untouched.
+  const mapBox = useRef<HTMLDivElement | null>(null);
+  useWheelScrub(mapBox);
 
   // Pressing a pin goes to that place's card. The map asked a question a badge can only
   // half answer — 88 dB of what, and how did it get there — and the list is where the
@@ -66,21 +71,20 @@ function ProjectMapView() {
     [navigate, projectId],
   );
 
-  // The prompt, for exactly as long as it is an instruction: from arming the tool
-  // until a point is picked or the tool is dropped. Persistent rather than timed —
-  // it is the only thing telling you what the crosshair is waiting for, and it
-  // outlives any five seconds a toast would give it.
-  const prompting = placing && createAt == null;
+  // Escape drops the tool while it is waiting for a click, the way it would close anything
+  // else that had taken over the pointer. Only then — once a point is picked the dialog is
+  // up and Escape is the dialog's; closing it hands the map back still armed, and a second
+  // Escape drops the tool from there. What says the tool is armed is the map itself: the
+  // glow round it, the crosshair and the pin following the pointer (see LocationsMap).
+  const waiting = placing && createAt == null;
   useEffect(() => {
-    if (!prompting) return;
-    toaster.create({
-      id: PLACE_TOAST,
-      type: 'info',
-      title: 'Click the map to place the location',
-      duration: Number.POSITIVE_INFINITY,
-    });
-    return () => toaster.dismiss(PLACE_TOAST);
-  }, [prompting]);
+    if (!waiting) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setPlacing(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [waiting, setPlacing]);
 
   // Which window a limit has to be in force over to be worth warning about, as the pair
   // strictestLimit takes. Scrubbing, that is the crop — the stretch of the evening the page
@@ -164,6 +168,7 @@ function ProjectMapView() {
           own. minH keeps it usable on a short viewport, where the page scrolls
           under the toolbars instead. */}
       <Box
+        ref={mapBox}
         flex="1"
         minH="20rem"
         overflow="hidden"
@@ -194,12 +199,10 @@ function ProjectMapView() {
         coordinates={createAt}
         projectId={projectId}
         projectStart={project.start}
-        // Whether it was saved or abandoned, the tool has done its one job: the map
-        // goes back to being read-only until the plus is pressed again.
-        onClose={() => {
-          setCreateAt(null);
-          setPlacing(false);
-        }}
+        // Abandoned, the tool is still armed: a cancel is most often a point picked a
+        // little off, and the next click is the one meant. Only saving (below), the plus,
+        // Escape or leaving the map put it back to being read-only.
+        onClose={() => setCreateAt(null)}
         onCreated={async () => {
           await refresh();
           setCreateAt(null);

@@ -13,6 +13,7 @@ import {DeviceBadges} from './DeviceBadge';
 import {LocationChart} from './LocationChart';
 import {LocationAssignmentsDialog} from './LocationAssignmentsDialog';
 import {LocationLimitsDialog} from './LocationLimitsDialog';
+import {DeleteLocationDialog} from './DeleteLocationDialog';
 import {
   locationLines,
   usePlayheadLevels,
@@ -78,7 +79,9 @@ export const LocationCard = memo(function LocationCard({
   // One nullable pick rather than a boolean each, so the two editors of this location
   // cannot be open over one another — and so the next thing behind the ⋮ is a name in
   // this union rather than a third piece of state.
-  const [dialog, setDialog] = useState<'devices' | 'limits' | null>(null);
+  const [dialog, setDialog] = useState<'devices' | 'limits' | 'delete' | null>(
+    null,
+  );
 
   // Every monitor this location has ever had, once each and in the order it first had
   // them. Grouped once here and handed to both the names and the chart, so the two are
@@ -140,8 +143,8 @@ export const LocationCard = memo(function LocationCard({
             you came to the card to assign one to, and a labelled button that appeared
             only there would move the whole right-hand side of the row the moment it
             got one.
-            Everything else this card will grow (renaming the place, moving its pin,
-            deleting it) belongs behind the same ⋮ — as does taking this card off the
+            Everything else this card will grow (renaming the place, moving its pin)
+            belongs behind the same ⋮ — as does taking this card off the
             list, which is the one item there that isn't about the location at all. */}
         <MenuRoot>
           <MenuTrigger asChild>
@@ -165,7 +168,7 @@ export const LocationCard = memo(function LocationCard({
             <MenuItem value="limits" onClick={() => setDialog('limits')}>
               Manage limits
             </MenuItem>
-            {/* Ruled off and last: the two above edit the place, this one only dismisses
+            {/* Ruled off: the two above edit the place, this one only dismisses
                 the card. Nothing is deleted and nobody else's page changes — it is the
                 roster's untick, reached from the card instead of from a dozen rows at
                 the foot of the page, and the roster is where it is undone.
@@ -183,6 +186,16 @@ export const LocationCard = memo(function LocationCard({
             >
               Hide
             </MenuItem>
+            {/* Last and in red: the one item here that cannot be undone, and it asks
+                first (see DeleteLocationDialog) — which the ellipsis says. */}
+            <MenuItem
+              value="delete"
+              color="fg.error"
+              _hover={{bg: 'bg.error', color: 'fg.error'}}
+              onClick={() => setDialog('delete')}
+            >
+              Delete…
+            </MenuItem>
           </MenuContent>
         </MenuRoot>
       </HStack>
@@ -194,6 +207,11 @@ export const LocationCard = memo(function LocationCard({
       />
       <LocationLimitsDialog
         open={dialog === 'limits'}
+        onClose={() => setDialog(null)}
+        location={location}
+      />
+      <DeleteLocationDialog
+        open={dialog === 'delete'}
         onClose={() => setDialog(null)}
         location={location}
       />

@@ -113,7 +113,7 @@ const MARKERS_CSS = {
     backgroundImage:
       'repeating-linear-gradient(45deg, var(--chakra-colors-chart-gap) 0 1px, transparent 1px 3px)',
   },
-  // Where a place on screen read over its limit, in the primary series — in the same red
+  // Where a place on screen read over its limit, in any series picked — in the same red
   // the limit rules on the charts are drawn in, so the two read as one statement.
   [`& [${BREACH_ATTR}]`]: {
     position: 'absolute',
@@ -217,11 +217,11 @@ export const TimelineMarkers = memo(function TimelineMarkers({
   // The stretches of the event nobody reported in, in epoch ms — an array and so a prop
   // that could defeat the memo, which is why it is memoized on the payload and the places
   // on screen upstream (see useProjectLogs) and never rebuilt by a gesture. Absent while the payload
-  // is in flight, and while live mode is on and the strip is unmounted anyway.
+  // is in flight, and while live mode is on and the strip is folded away anyway.
   gaps?: readonly LogGap[];
   // Where a place on screen read over a limit, memoized upstream the same way. Absent or
   // null when there is nothing to say about limits — no payload yet, or no limit written
-  // for the series being shown — and then no bar is drawn at all.
+  // for any series picked — and then no bar is drawn at all.
   breaches?: readonly LogGap[] | null;
   // How far the strip reaches past the axis at either end — a grip's width, which is the
   // timeline's own constant (HANDLE_W) and the same figure the track is pulled out by.

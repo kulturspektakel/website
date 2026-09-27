@@ -15,7 +15,7 @@ import {coverageGaps, limitBreaches, type LogGap} from './logCoverage';
 import type {LimitLine} from './limitLines';
 import {noiseQueryKeys} from './queries';
 import {logMinuteIndex} from './noise';
-import {primarySeries, primaryWeighting, type PickedSeries} from './level';
+import {primaryWeighting, type PickedSeries} from './level';
 import type {ProjectSelection} from './projectSelection';
 
 // Whichever project this is, the whole thing at once. Immutable enough to pin: a
@@ -80,8 +80,8 @@ export function useProjectLogs({
   // while live and while the payload is in flight, so the strip draws nothing rather
   // than claiming the whole festival is missing.
   gaps?: LogGap[];
-  // Where one of those places read over a limit in the primary series. Null when none of
-  // them has a limit for it, so the strip draws no limit layer at all; absent like `gaps`.
+  // Where one of those places read over a limit in a picked series. Null when none of
+  // them has a limit for any, so the strip draws no limit layer at all; absent like `gaps`.
   breaches?: LogGap[] | null;
   isFetching: boolean;
 } {
@@ -184,12 +184,12 @@ export function useProjectLogs({
     [logs, timeline],
   );
 
-  // The same places against their limits, in the one series a limit can be read against
-  // here: the primary, which is the only one either project view stores.
-  const primary = primarySeries(picked);
+  // The same places against their limits, in every series picked — each one a chart
+  // draws a limit's rule for (see limitBreaches). Keyed on the string for the reason
+  // `traces` is.
   const breaches = useMemo(
-    () => logs && limitBreaches(logs, timeline.locations, primary),
-    [logs, timeline, primary],
+    () => logs && limitBreaches(logs, timeline.locations, picked),
+    [logs, timeline, pickedKey],
   );
 
   return {levels, locationTotals, traces, gaps, breaches, isFetching};

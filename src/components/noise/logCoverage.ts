@@ -121,9 +121,15 @@ export function coverageGaps(
 }
 
 /**
- * The stretches where one of `locations` read louder than a limit in force there, in
- * `series` — or null when none of them has a limit written against that series at all,
+ * The stretches where one of `locations` read louder than a limit in force there, in any of
+ * `series` — or null when none of them has a limit written against any of those at all,
  * which is a strip with nothing to say about limits rather than one that says "all clear".
+ *
+ * Every series the page shows rather than only its primary, because that is what the
+ * charts draw a limit's rule for (see drawLimits): a list ticked to LAF and LAeq,5m shows
+ * the LAeq,5m permit across its cards, and a strip that stayed blank under a breach of it
+ * would be the one place on the page that disagreed. On the map, which shows one series,
+ * this is the same question it always was.
  *
  * A place's reading at a minute is the loudest of the monitors standing there then, as its
  * chart draws it; over *any* limit in force is over the strictest of them, the same rule the
@@ -135,36 +141,51 @@ export function limitBreaches(
   locations: readonly (LocationAssignments & {
     limits: readonly LimitLine[];
   })[],
-  series: SeriesKey,
+  series: readonly SeriesKey[],
 ): LogGap[] | null {
   const {minutes} = logs;
   const over = new Uint8Array(minutes);
+  // One buffer for every place and series, refilled per pair: the loudest reading at
+  // each minute, NaN where nobody here read anything, which compares false against every
+  // limit.
+  const loudest = new Float64Array(minutes);
   let limited = false;
   for (const location of locations) {
-    const limits = location.limits.filter((l) => l.series === series);
-    if (limits.length === 0) continue;
+    const keyed = series
+      .map((key) => ({
+        key,
+        limits: location.limits.filter((l) => l.series === key),
+      }))
+      .filter(({limits}) => limits.length > 0);
+    if (keyed.length === 0) continue;
     limited = true;
 
-    // The loudest reading at each minute; NaN where nobody here read anything, which
-    // compares false against every limit.
-    const loudest = new Float64Array(minutes).fill(NaN);
-    for (const a of location.assignments) {
-      const values = logColumn(logs, a.deviceId, series);
-      if (!values) continue;
-      const [from, to] = assignmentMinutes(logs, a);
-      const skip = ignoredMinutes(logs, location, a.deviceId);
-      for (let i = from; i < to; i++) {
-        if (inMinutes(skip, i)) continue;
-        const v = values[i];
-        if (v != null && !(v <= loudest[i]!)) loudest[i] = v;
-      }
-    }
+    // Which minutes each monitor stood here for and what was ignored of them, which no
+    // series changes — so worked out once per place rather than once per series.
+    const stints = location.assignments.map((a) => ({
+      deviceId: a.deviceId,
+      range: assignmentMinutes(logs, a),
+      skip: ignoredMinutes(logs, location, a.deviceId),
+    }));
 
-    for (const limit of limits) {
-      const from = Math.max(0, logMinuteIndex(logs, limit.start));
-      const to = Math.min(minutes, logMinuteIndex(logs, limit.end));
-      for (let i = from; i < to; i++) {
-        if (exceedsLimit(loudest[i]!, limit.decibels)) over[i] = 1;
+    for (const {key, limits} of keyed) {
+      loudest.fill(NaN);
+      for (const {deviceId, range, skip} of stints) {
+        const values = logColumn(logs, deviceId, key);
+        if (!values) continue;
+        for (let i = range[0]; i < range[1]; i++) {
+          if (inMinutes(skip, i)) continue;
+          const v = values[i];
+          if (v != null && !(v <= loudest[i]!)) loudest[i] = v;
+        }
+      }
+
+      for (const limit of limits) {
+        const from = Math.max(0, logMinuteIndex(logs, limit.start));
+        const to = Math.min(minutes, logMinuteIndex(logs, limit.end));
+        for (let i = from; i < to; i++) {
+          if (exceedsLimit(loudest[i]!, limit.decibels)) over[i] = 1;
+        }
       }
     }
   }

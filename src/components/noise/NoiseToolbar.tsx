@@ -1,6 +1,13 @@
 import {Link} from '@tanstack/react-router';
-import {type ReactNode} from 'react';
-import {Box, HStack, Heading, IconButton, VStack} from '@chakra-ui/react';
+import {useState, type ReactNode} from 'react';
+import {
+  Box,
+  Collapsible,
+  HStack,
+  Heading,
+  IconButton,
+  VStack,
+} from '@chakra-ui/react';
 import {LuArrowLeft} from 'react-icons/lu';
 
 // One strip: the gutter it keeps, the rule under it, and the ground both are painted on.
@@ -32,6 +39,7 @@ export function NoiseToolbar({
   sub,
   children,
   below,
+  belowOpen = true,
   back = true,
 }: {
   // What the page is about, filling the strip's left half. A node and not a string
@@ -54,12 +62,29 @@ export function NoiseToolbar({
   // controls wrap onto a second line at phone width. Given the same strip as the first,
   // so a caller passes contents and not chrome.
   below?: ReactNode;
+  // Whether that strip is showing. A flag beside it rather than the caller passing
+  // nothing, so that hiding it can be animated: the strip folds up from its own height,
+  // and that needs its contents still there while it does.
+  belowOpen?: boolean;
   // The arrow back to the project list. On by default, because every page that has this
   // strip was arrived at from that list — except the list itself, which is the one place
   // the arrow would point at the page you are already on. So the destination opts out and
   // nobody else says anything.
   back?: boolean;
 }) {
+  // Whether the strip below is mid-fold, which is the only time it may clip: the fold is a
+  // height animation and needs `overflow: hidden` to be one, but the timeline's readouts
+  // stand above its top edge, over this strip, and a settled strip that clipped would cut
+  // them off. Off to begin with, since the first render of an open strip doesn't animate
+  // and so never reports an end.
+  const [folding, setFolding] = useState(false);
+  // Only the strip's own animations, not ones bubbling up from inside the timeline.
+  const onFold =
+    (running: boolean) =>
+    (e: {target: EventTarget; currentTarget: EventTarget}) => {
+      if (e.target === e.currentTarget) setFolding(running);
+    };
+
   return (
     <Box
       position="sticky"
@@ -98,7 +123,21 @@ export function NoiseToolbar({
           {children}
         </HStack>
       </HStack>
-      {below && <Box {...STRIP}>{below}</Box>}
+      {below && (
+        // Mounted only while open or on its way closed: a strip nobody can see has no
+        // business drawing a timeline.
+        <Collapsible.Root open={belowOpen} lazyMount unmountOnExit>
+          {/* The whole strip inside, gutter and rule too, so the fold takes the line
+              under it with it rather than leaving it behind at height 0. */}
+          <Collapsible.Content
+            overflow={folding ? 'hidden' : 'visible'}
+            onAnimationStart={onFold(true)}
+            onAnimationEnd={onFold(false)}
+          >
+            <Box {...STRIP}>{below}</Box>
+          </Collapsible.Content>
+        </Collapsible.Root>
+      )}
     </Box>
   );
 }

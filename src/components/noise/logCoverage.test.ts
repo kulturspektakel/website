@@ -104,20 +104,26 @@ describe('limitBreaches', () => {
 
   it('flags the minutes strictly over a limit in force', () => {
     // 70 sits on the limit and is within it; only minute 2 is over.
-    expect(limitBreaches(logs, [stage], 'eq_fast:A')).toEqual([
+    expect(limitBreaches(logs, [stage], ['eq_fast:A'])).toEqual([
       {start: at(2), end: at(3)},
     ]);
   });
 
   it('ignores a place with no limit, however loud', () => {
-    expect(limitBreaches(logs, [stage, bar], 'eq_fast:A')).toEqual([
+    expect(limitBreaches(logs, [stage, bar], ['eq_fast:A'])).toEqual([
       {start: at(2), end: at(3)},
     ]);
   });
 
   it('says nothing when no place has a limit for the series', () => {
-    expect(limitBreaches(logs, [bar], 'eq_fast:A')).toBeNull();
-    expect(limitBreaches(logs, [stage], 'eq_fast:C')).toBeNull();
+    expect(limitBreaches(logs, [bar], ['eq_fast:A'])).toBeNull();
+    expect(limitBreaches(logs, [stage], ['eq_fast:C'])).toBeNull();
+  });
+
+  it('reads a limit in any series picked, not only the first', () => {
+    expect(limitBreaches(logs, [stage], ['eq_fast:C', 'eq_fast:A'])).toEqual([
+      {start: at(2), end: at(3)},
+    ]);
   });
 
   it('only counts a limit over its own hours', () => {
@@ -125,7 +131,7 @@ describe('limitBreaches', () => {
       ...stage,
       limits: [{...stage.limits[0]!, start: at(3), end: at(6)}],
     };
-    expect(limitBreaches(logs, [evening], 'eq_fast:A')).toEqual([]);
+    expect(limitBreaches(logs, [evening], ['eq_fast:A'])).toEqual([]);
   });
 });
 

@@ -255,6 +255,26 @@ export const createNoiseLocation = createServerFn()
     return prismaClient.noiseLocation.create({data, select: {id: true}});
   });
 
+// A location and everything that is only about it: the monitors placed there, its limits,
+// and the tags crew pinned to it. One transaction, since the foreign keys have no cascade and
+// a half-deleted place — limits with nothing to belong to, or a location that lost its
+// placements but not itself — is worse than either outcome.
+//
+// The monitors themselves are untouched, and so is what they recorded: a placement is only
+// the claim that a device stood here, and its logs belong to the device. deleteMany
+// throughout, so a double press or a stale page deletes nothing twice.
+export const deleteNoiseLocation = createServerFn()
+  .middleware([crewAuth])
+  .inputValidator(z.object({locationId: z.string().min(1)}))
+  .handler(async ({data: {locationId}}) => {
+    await prismaClient.$transaction([
+      prismaClient.noiseLocationAssignment.deleteMany({where: {locationId}}),
+      prismaClient.noiseLocationLimit.deleteMany({where: {locationId}}),
+      prismaClient.noiseTag.deleteMany({where: {locationId}}),
+      prismaClient.noiseLocation.deleteMany({where: {id: locationId}}),
+    ]);
+  });
+
 // Every stored level of one project, in one payload: the page then answers its own
 // questions locally (see projectLogs.ts). No window and no weighting in the input —
 // the whole event travels, so scrubbing, cropping and the header's pickers never

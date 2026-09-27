@@ -1,9 +1,8 @@
 import {Wrapper} from '@googlemaps/react-wrapper';
-import {Box, HStack, IconButton, Text} from '@chakra-ui/react';
+import {Box, Button, HStack, Span, Text} from '@chakra-ui/react';
 import {memo, useEffect, useLayoutEffect, useRef, useState} from 'react';
 import {LuPlus, LuX} from 'react-icons/lu';
 import {SegmentedControl} from '../chakra-snippets/segmented-control';
-import {Tooltip} from '../chakra-snippets/tooltip';
 import {KULT_LOCATION} from '../../utils/kultLocation';
 import {useLatest} from './chartUtils';
 import {exceedsLimit} from './limitLines';
@@ -18,6 +17,7 @@ import {
   loudestLevel,
   seriesLabel,
   weightingUnit,
+  type DisplayedLevel,
 } from './level';
 import {seriesByKey, type SeriesKey} from './series';
 import {darkMapStyle, mapBackground} from './mapStyle';
@@ -62,6 +62,18 @@ const COORD_DECIMALS = 6;
 // somebody else's badge would read as their warning.
 const OVER_PIN_Z_INDEX = 1;
 const WARNING_Z_INDEX = 2;
+// The pin being placed, over every other: it is under the pointer, and the one mark on the
+// map that answers to it.
+const PLACING_Z_INDEX = 3;
+// What that pin says. A name pin like every other while placing (see namePin), with the
+// one name the place does not have yet — and white where they are grey, the pin's own
+// unlit fill (see PIN_FILL), so the one being added stands out from the ones already
+// standing.
+const PLACING_LABEL = 'New';
+// How far right of the pointer that pin is hung, in the icon's own pixels: the pill's half
+// width (28, see mapPin's PILL_PATH) plus a gap, so it sits beside the crosshair rather
+// than over it — the crosshair is what says exactly where the click lands.
+const PLACING_OFFSET_X = 28 + 10;
 
 // 'hybrid' rather than 'satellite' for the imagery view: it keeps the road overlay,
 // and a mic gets placed relative to a street as often as to something only visible
@@ -146,8 +158,8 @@ type MapCanvasProps = {
   live: boolean;
   series: SeriesKey;
   history?: Record<string, number>;
-  // Whether the create tool is armed. Owned by the caller, because what disarms it
-  // is the dialog it opens closing again — which the map knows nothing about.
+  // Whether the create tool is armed. Controlled, because the page holds it (see
+  // ProjectViewCtx's `placing`): arming it changes more than the map.
   placing?: boolean;
   onPlacingChange?: (placing: boolean) => void;
   // Where the map was clicked while armed. Absent for a map that may not be added
@@ -158,6 +170,83 @@ type MapCanvasProps = {
   // to. Absent leaves the pins unpressable.
   onSelect?: (locationId: string) => void;
 };
+
+// One pin, as the effects in MapCanvas draw it (see `pins` there).
+type Pin = {
+  // What is printed in the pill: a level, the placeholder for none, or the place's name.
+  label: string;
+  // The level the pill is filled from and the halo is sized by; null for a grey pill with
+  // no halo.
+  db: number | null;
+  stale: boolean;
+  over: boolean;
+  ignored: boolean;
+  // Fed by the live stream right now, which is what puts a pulse behind it.
+  live: boolean;
+  // Whether `label` is the place's name rather than a level (see namePin).
+  named: boolean;
+};
+
+// A pin reading its location's level: the loudest of the monitors standing there, as the
+// list rows decide it.
+function levelPin(
+  {deviceIds, ignoredDeviceIds = [], limitDb}: MapLocation,
+  levelOf: (deviceId: string) => DisplayedLevel,
+): Pin {
+  // Ignored wherever every monitor standing there is: a place with one monitor set aside
+  // and another still counting just reads the other.
+  const ignored =
+    deviceIds.length > 0 &&
+    deviceIds.every((id) => ignoredDeviceIds.includes(id));
+  const level = loudestLevel(
+    (ignored
+      ? deviceIds
+      : deviceIds.filter((id) => !ignoredDeviceIds.includes(id))
+    ).map(levelOf),
+  );
+  const current = isCurrent(level);
+  return {
+    label: level.kind === 'none' ? NO_LEVEL_LABEL : formatDb(level.db),
+    // Which band of the ramp the pill is filled from, as the level it is looked up by — the
+    // colour itself is the icon's business (see pinIcon). Null for a pin with no level, and
+    // for one that is only remembered: both are grey, which is what the ramp has nothing to
+    // say about. Null for an ignored pin too, which is what takes its colour and its glow.
+    db: !ignored && current ? level.db : null,
+    // Greyed down for anything that isn't a reading of the instant being viewed — a number
+    // we only remember, or none at all — the same way the list rows grey theirs. The two
+    // look alike on purpose: from across the map both mean "not this". An ignored pin is
+    // greyed the same way: its number is not one to read a loudness off.
+    stale: ignored || !current,
+    // Over the number written for this place — the one thing a pin can say that isn't a
+    // reading. Only where the level is a reading of the instant being viewed: a remembered
+    // number is already drawn as "not this", and warning over it would raise an alarm about
+    // a moment nobody is looking at. A missing limit is not a permissive one, so a place
+    // with nothing written for it never warns.
+    over: !ignored && current && exceedsLimit(level.db, limitDb),
+    ignored,
+    live: level.kind === 'live',
+    named: false,
+  };
+}
+
+// A pin saying which place it is, while the map is being edited (see `pins` in MapCanvas):
+// grey, like a pin with nothing current to say, and the same size as every other — a name
+// longer than the pill is cut short rather than widening it (see pinLabel), so the pins
+// hold the footprint they are recognised by.
+const namePin = ({locationName}: MapLocation): Pin => ({
+  label: locationName,
+  db: null,
+  stale: true,
+  over: false,
+  ignored: false,
+  live: false,
+  named: true,
+});
+
+// Everything the pill is drawn from, in one key: the band and not the level, which is
+// exactly the difference between a redraw per boundary crossed and one per second.
+const pillLook = ({db, stale, over}: Pin) =>
+  `${db == null ? '' : levelBand(db)}${stale ? 's' : ''}${over ? 'o' : ''}`;
 
 function LocationsMap({apiKey, ...canvas}: MapCanvasProps & {apiKey: string}) {
   // Wrapper renders its children only once the Maps JS API has loaded, which is
@@ -258,6 +347,41 @@ function MapCanvas({
     mapRef.current?.setOptions({
       draggableCursor: placing ? 'crosshair' : undefined,
     });
+  }, [placing]);
+
+  // The pin being placed, following the pointer while armed: the same badge the others are
+  // wearing, in white, so what the next click adds is on the map before it is added, among
+  // the ones it will stand beside. Unclickable, so the click it is waiting for goes through it to the
+  // map — which is also what places it under the pointer rather than a pixel off.
+  //
+  // Gone whenever the pointer is off the map, and never shown to a finger, which has no
+  // hover to follow. Once a point is picked the dialog's backdrop takes the pointer, so the
+  // pin simply stays where it was dropped for as long as the dialog is up, and follows again
+  // after a cancel.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !placing) return;
+    const maps = window.google.maps;
+    const pin = new maps.Marker({
+      // Anchored at a point left of the pill, so the pill hangs right of the pointer. The
+      // label's origin is in the same coordinates and moves with it.
+      icon: {...pinIcon(maps), anchor: new maps.Point(-PLACING_OFFSET_X, 0)},
+      label: pinLabel(PLACING_LABEL, {named: true}),
+      clickable: false,
+      zIndex: PLACING_Z_INDEX,
+    });
+    const listeners = [
+      map.addListener('mousemove', (e: google.maps.MapMouseEvent) => {
+        if (!e.latLng) return;
+        pin.setPosition(e.latLng);
+        if (!pin.getMap()) pin.setMap(map);
+      }),
+      map.addListener('mouseout', () => pin.setMap(null)),
+    ];
+    return () => {
+      for (const listener of listeners) listener.remove();
+      pin.setMap(null);
+    };
   }, [placing]);
 
   // Click to place — and only while armed, so the listener is simply not registered
@@ -408,75 +532,33 @@ function MapCanvas({
       state: deviceState(deviceId),
       historyDb: history?.[deviceId],
     });
-  // Ignored wherever every monitor standing there is: a place with one monitor set aside
-  // and another still counting just reads the other.
-  const pinIgnored = locations.map(
-    ({deviceIds, ignoredDeviceIds = []}) =>
-      deviceIds.length > 0 &&
-      deviceIds.every((id) => ignoredDeviceIds.includes(id)),
-  );
-  const pinLevels = locations.map(({deviceIds, ignoredDeviceIds = []}, i) =>
-    loudestLevel(
-      (pinIgnored[i]
-        ? deviceIds
-        : deviceIds.filter((id) => !ignoredDeviceIds.includes(id))
-      ).map(levelOf),
-    ),
-  );
-  // Over the number written for this place — the one thing a pin can say that isn't a
-  // reading. Only where the level is a reading of the instant being viewed: a remembered
-  // number is already drawn as "not this" (below), and warning over it would raise an
-  // alarm about a moment nobody is looking at. A missing limit is not a permissive one, so
-  // a place with nothing written for it never warns.
-  const pinOver = pinLevels.map((level, i) => {
-    const limit = locations[i]?.limitDb;
-    return !pinIgnored[i] && isCurrent(level) && exceedsLimit(level.db, limit);
-  });
-  const pinLabels = pinLevels.map((level) =>
-    level.kind === 'none' ? NO_LEVEL_LABEL : formatDb(level.db),
-  );
-  // Greyed down for anything that isn't a reading of the instant being viewed — a
-  // number we only remember, or none at all — the same way the list rows grey theirs.
-  // The two cases look alike on purpose: from across the map both mean "not this".
-  // An ignored pin is greyed the same way: its number is not one to read a loudness off.
-  const pinStale = pinLevels.map(
-    (level, i) => pinIgnored[i] || !isCurrent(level),
-  );
-  // Which band of the ramp each pin is filled from, as the level it is looked up by — the
-  // colour itself is the icon's business (see pinIcon). Null for a pin with no level, and
-  // for one that is only remembered: both are grey, which is what the ramp has nothing to
-  // say about.
-  // Null for an ignored pin too, which is what takes its colour and its glow.
-  const pinDb = pinLevels.map((level, i) =>
-    !pinIgnored[i] && isCurrent(level) ? level.db : null,
-  );
+  // What every pin says, and every property of how it is drawn that follows from that — one
+  // record per location, so the effects below each read the part they draw rather than a
+  // parallel array apiece.
+  //
+  // Two kinds of pin, and the map is only ever showing one kind. Reading, a pin is a level
+  // (see levelPin). Armed to place a location, the page is being edited rather than read
+  // (see ProjectViewCtx's `placing`), so a pin is the *place*: its name on grey, with no
+  // colour, halo, warning or pulse — the question at that moment is where things already
+  // stand, and a loudness would be an answer to a different one.
+  const pins: Pin[] = placing
+    ? locations.map(namePin)
+    : locations.map((location) => levelPin(location, levelOf));
 
   // Two effects, because the two change at very different rates: the number moves
   // roughly once a second per monitor, while the pin's *pill* only changes when a location
   // crosses a band boundary, stops reading now, or crosses its limit. Rebuilding an icon
   // object per marker per second would be pure churn.
-  const labelKey = pinLabels
-    .map((label, i) => `${label}${pinIgnored[i] ? 'i' : ''}`)
-    .join('|');
-  // Everything the pill is drawn from, in one key: the band and not the level, which is
-  // exactly the difference between a redraw per boundary crossed and one per second.
-  const pillKey = pinDb
+  const labelKey = pins
     .map(
-      (db, i) =>
-        `${db == null ? '' : levelBand(db)}${pinStale[i] ? 's' : ''}${
-          pinOver[i] ? 'o' : ''
-        }`,
+      (pin) => `${pin.label}${pin.ignored ? 'i' : ''}${pin.named ? 'n' : ''}`,
     )
     .join('|');
+  const pillKey = pins.map(pillLook).join('|');
   useEffect(() => {
     markersRef.current.forEach((marker, i) => {
-      marker.setLabel(
-        pinLabel(pinLabels[i] ?? NO_LEVEL_LABEL, {
-          stale: pinStale[i] ?? true,
-          over: pinOver[i] ?? false,
-          ignored: pinIgnored[i] ?? false,
-        }),
-      );
+      const pin = pins[i];
+      if (pin) marker.setLabel(pinLabel(pin.label, pin));
     });
   }, [labelKey, pillKey, signature]);
 
@@ -487,19 +569,18 @@ function MapCanvas({
     // the same band are a dozen markers pointing at one Symbol.
     const icons = new Map<string, google.maps.Symbol>();
     markersRef.current.forEach((marker, i) => {
-      const db = pinDb[i] ?? null;
-      const stale = pinStale[i] ?? true;
-      const over = pinOver[i] ?? false;
-      const key = `${db == null ? '' : levelBand(db)}${stale ? 's' : ''}${over ? 'o' : ''}`;
+      const pin = pins[i];
+      if (!pin) return;
+      const key = pillLook(pin);
       let icon = icons.get(key);
       if (!icon) {
-        icon = pinIcon(maps, {db: db ?? undefined, stale, over});
+        icon = pinIcon(maps, {...pin, db: pin.db ?? undefined});
         icons.set(key, icon);
       }
       marker.setIcon(icon);
       // A warned pin comes forward with its sign; null puts it back in Google's own
       // stacking, which is what every other pin is in.
-      marker.setZIndex(over ? OVER_PIN_Z_INDEX : null);
+      marker.setZIndex(pin.over ? OVER_PIN_Z_INDEX : null);
     });
   }, [pillKey, signature]);
 
@@ -539,10 +620,11 @@ function MapCanvas({
   //
   // Nothing under a pin with no reading, and nothing under a remembered one: those are grey
   // for a reason, and a grey wash would be the map's largest mark spent on saying "not this".
-  // `pinDb` is already null for both, and mapGlow draws no halo for a null.
+  // A pin's `db` is already null for both (and for a named one), and mapGlow draws no halo
+  // for a null.
   useEffect(() => {
     locations.forEach((location, i) => {
-      glowsRef.current.get(location.id)?.setLevel(pinDb[i] ?? null);
+      glowsRef.current.get(location.id)?.setLevel(pins[i]?.db ?? null);
     });
   }, [labelKey, signature, mapTypeId]);
 
@@ -551,14 +633,14 @@ function MapCanvas({
   // of pins that are over, the way the pulses below are, rather than kept per pin and
   // hidden: an over-limit pin is the rare case, and this way the map carries nothing at all
   // for a site inside its permit.
-  const overKey = pinOver.map((over) => (over ? '1' : '0')).join('');
+  const overKey = pins.map((pin) => (pin.over ? '1' : '0')).join('');
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
     const maps = window.google.maps;
     const icon = warningIcon(maps);
     const warnings = locations.flatMap((location, i) =>
-      pinOver[i]
+      pins[i]?.over
         ? [
             new maps.Marker({
               map,
@@ -582,15 +664,13 @@ function MapCanvas({
   // A pulse behind every pin currently fed by the live stream. Keyed on which pins
   // those are, so it only churns when liveness actually changes — not on every
   // level update.
-  const liveKey = pinLevels
-    .map((level) => (level.kind === 'live' ? '1' : '0'))
-    .join('');
+  const liveKey = pins.map((pin) => (pin.live ? '1' : '0')).join('');
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
     const Pulse = pulseOverlay(window.google.maps);
     const pulses = locations.flatMap((location, i) =>
-      pinLevels[i]?.kind === 'live'
+      pins[i]?.live
         ? [new Pulse({lat: location.latitude, lng: location.longitude})]
         : [],
     );
@@ -609,9 +689,8 @@ function MapCanvas({
     [],
   );
 
-  // One string for the plus button's accessible name and its tooltip: they say the
-  // same thing to a screen reader and to a pointer, and two that drifted apart is
-  // exactly the sort of thing nobody notices.
+  // The plus button's accessible name, which is also what its words say where they are
+  // shown — spelled out in full here, since below `sm` the button is only an icon.
   const placeLabel = placing ? 'Cancel placing a location' : 'Add location';
 
   // Fills its nearest positioned ancestor rather than taking a percentage height,
@@ -625,6 +704,24 @@ function MapCanvas({
       css={{[`&[data-imagery] .${SHADE_TILE_CLASS}`]: SATELLITE_SHADE}}
     >
       <div ref={containerRef} style={{height: '100%', width: '100%'}} />
+      {/* The tool, said at the edge of the map: a glow from the frame inwards while it
+          is armed, in the accent the plus is lit in — so the mode is on the thing the
+          next click lands on, not only on the button that armed it, and it reads at a
+          glance where the crosshair only shows under the pointer (and not at all on a
+          touch device). Inset rather than over the middle, which is where the point is
+          being picked. Always mounted and faded, so it comes and goes rather than
+          snapping; it takes no pointers, the map under it is what is being clicked.
+          After the map and before the controls, so tree order alone puts it over the
+          tiles and under the switch, the plus and the legend. */}
+      <Box
+        position="absolute"
+        inset="0"
+        pointerEvents="none"
+        boxShadow="inset 0 0 0 2px var(--chakra-colors-accent-solid), inset 0 0 48px 4px color-mix(in srgb, var(--chakra-colors-accent-solid) 60%, transparent)"
+        opacity={placing ? 1 : 0}
+        transition="opacity 0.2s"
+        aria-hidden
+      />
       {/* The same readout the location cards' charts hover with, since it answers the
           same question about the same monitors — only at a place rather than an instant.
           Parked at the pin's pixel and opened by the marker's own hover events, a
@@ -667,7 +764,7 @@ function MapCanvas({
                     };
                   });
                 const headed = devices.length > 1;
-                const name = pinIgnored[i]
+                const name = pins[i]?.ignored
                   ? `${hovered.name} (ignored)`
                   : hovered.name;
                 const lone = headed ? null : devices[0]?.battery;
@@ -723,41 +820,48 @@ function MapCanvas({
           onValueChange={(e) => setMapTypeId(e.value as MapTypeId)}
           items={MAP_TYPES}
         />
-        {onCreateAt && (
-          // The same words as the accessible name, in a Chakra tooltip — and no
-          // `title`, or the native one would show up beside it.
-          <Tooltip
-            content={placeLabel}
-            showArrow
-            positioning={{placement: 'bottom'}}
-          >
-            {/* A toggle, and it says so: armed it is solid and its icon turns from
-                "add" into "cancel", so the mode is visible from the button as well
-                as from the cursor — which a touch device doesn't have.
-
-                Lit in the accent rather than in green: green on this page means a
-                monitor is reporting (see LiveStatusDot and the map's own pulse
-                rings), and being armed to drop a pin is a mode this control is in,
-                not something the site is doing. */}
-            <IconButton
-              aria-label={placeLabel}
-              size="xs"
-              shadow="md"
-              variant={placing ? 'solid' : 'surface'}
-              colorPalette={placing ? 'accent' : undefined}
-              onClick={() => onPlacingChange?.(!placing)}
-            >
-              {placing ? <LuX /> : <LuPlus />}
-            </IconButton>
-          </Tooltip>
-        )}
       </HStack>
+
+      {/* Bottom right, level with the legend opposite: above Google's terms links in that
+          corner rather than over them, and away from the switch at the top, which is about
+          how the map looks rather than what is on it.
+
+          A toggle, and it says so: armed it is solid and says "Cancel" beside an ✕, so the
+          mode is visible from the button as well as from the cursor — which a touch device
+          doesn't have. Lit in the accent rather than in green: green on this page means a
+          monitor is reporting (see LiveStatusDot and the map's own pulse rings), and being
+          armed to drop a pin is a mode this control is in, not something the site is doing.
+
+          Its words only where there is room for them beside the legend: below `sm` it is
+          the icon alone, square, and the accessible name says what the words would have. */}
+      {onCreateAt && (
+        <Button
+          position="absolute"
+          bottom="6"
+          right="2"
+          zIndex="1"
+          aria-label={placeLabel}
+          size="xs"
+          shadow="md"
+          px={{base: '0', sm: '2.5'}}
+          variant={placing ? 'solid' : 'surface'}
+          colorPalette={placing ? 'accent' : undefined}
+          onClick={() => onPlacingChange?.(!placing)}
+        >
+          {placing ? <LuX /> : <LuPlus />}
+          <Span hideBelow="sm">{placing ? 'Cancel' : 'Add location'}</Span>
+        </Button>
+      )}
 
       {/* Bottom left, the corner Google leaves free — its own logo sits bottom left of the
           *tiles*, which is the container's bottom left minus the terms link on the right,
           so this rides just above the attribution rather than over it. Opposite the
           toolbars, too: the controls are things to press and this is a thing to read. */}
-      <LevelLegend unit={weightingUnit(seriesByKey(series).weighting)} />
+      {/* Not while placing: the pins are names then, not levels, and a scale for colours
+          no pin is showing would be a key to nothing. */}
+      {!placing && (
+        <LevelLegend unit={weightingUnit(seriesByKey(series).weighting)} />
+      )}
     </Box>
   );
 }

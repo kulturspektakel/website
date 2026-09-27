@@ -39,7 +39,7 @@ import {
 import {ChartTooltip, ChartTooltipReadings} from './ChartTooltip';
 import {ignoredAt, IGNORED_OPACITY} from './rangeTags';
 import {SelectionMenu} from './SelectionMenu';
-import {attachTouchGestures} from './uplotTouchGestures';
+import {attachTouchGestures, attachWheelPan} from './uplotTouchGestures';
 import {usePlayheadEffect, type DeviceWindows} from './projectView';
 
 // A level trace: a line per monitor per picked window, a sparse label up each side, and a
@@ -1245,38 +1245,49 @@ export function LevelTrace({
     // the cursor (the tooltip and the page's playhead, the same as a hover), two are the
     // window (a pinch crops, a drag slides it). Installed only where there is a window to
     // move — see `bounds` — so a live chart is left with no touch listeners at all.
+    //
+    // Shared with the trackpad's sideways scroll below, which is the same window moved
+    // the same way.
+    const windowGesture = {
+      // Seconds, uPlot's unit, out of the milliseconds everything else here speaks.
+      // The gesture only exists where `bounds` does, so the fallback is unreachable —
+      // and it is the crop rather than something invented, so were it ever reached a
+      // finger would find the window immovable instead of somewhere unasked for.
+      bounds: (): [number, number] => {
+        const {start = 0, end = 0} =
+          boundsRef.current ?? rangeRef.current ?? {};
+        return [start / 1000, end / 1000];
+      },
+      // The page's crop, once per frame — a pinch on one card moves the timeline, the
+      // other cards and every number on the page with the fingers, which is what a
+      // drag on the timeline itself does. That commit comes straight back as `range`
+      // and lands on this plot through applyCrop, so the setScale here is only about
+      // the frame in between: it keeps the chart under the fingers attached to them
+      // even while React is catching up. (applyCrop then finds the scale already
+      // where it wants it and does nothing.)
+      //
+      // No special case for a pinch that reaches the whole project: the pair
+      // committed *is* the project's window then, which is a crop of everything.
+      onRange: (min: number, max: number) => {
+        onCropRef.current?.({start: min * 1000, end: max * 1000});
+        plot.setScale('x', {min, max});
+        positionPlayhead();
+      },
+    };
     const removeTouch = cropped
       ? attachTouchGestures(plot, {
-          // Seconds, uPlot's unit, out of the milliseconds everything else here speaks.
-          // The gesture only exists where `bounds` does, so the fallback is unreachable —
-          // and it is the crop rather than something invented, so were it ever reached a
-          // finger would find the window immovable instead of somewhere unasked for.
-          bounds: () => {
-            const {start = 0, end = 0} =
-              boundsRef.current ?? rangeRef.current ?? {};
-            return [start / 1000, end / 1000];
-          },
-          // The page's crop, once per frame — a pinch on one card moves the timeline, the
-          // other cards and every number on the page with the fingers, which is what a
-          // drag on the timeline itself does. That commit comes straight back as `range`
-          // and lands on this plot through applyCrop, so the setScale here is only about
-          // the frame in between: it keeps the chart under the fingers attached to them
-          // even while React is catching up. (applyCrop then finds the scale already
-          // where it wants it and does nothing.)
-          //
-          // No special case for a pinch that reaches the whole project: the pair
-          // committed *is* the project's window then, which is a crop of everything.
-          onRange: (min, max) => {
-            onCropRef.current?.({start: min * 1000, end: max * 1000});
-            plot.setScale('x', {min, max});
-            positionPlayhead();
-          },
+          ...windowGesture,
           // Straight into uPlot's cursor, which fires the setCursor hook above — so a
           // finger reaches the tooltip, the readings and the page's playhead through the
           // one path a mouse does, and there is no second definition of what a hover
           // means. The negative pixel is uPlot's own "pointer has left".
           onScrub: (pos) => plot.setCursor(pos ?? {left: -10, top: -10}, true),
         })
+      : undefined;
+    // A two-finger swipe on a trackpad slides the window, the desktop counterpart of the
+    // two-finger drag above (see attachWheelPan). Same condition, for the same reason.
+    const removeWheel = cropped
+      ? attachWheelPan(plot, windowGesture)
       : undefined;
 
     // Only the width can change: the row gives the trace a fixed height. A new width
@@ -1294,6 +1305,7 @@ export function LevelTrace({
       ro.disconnect();
       // Before the plot goes: the listeners are on a node uPlot is about to take away.
       removeTouch?.();
+      removeWheel?.();
       plot.destroy();
       plotRef.current = null;
       // Destroying the plot took the line with it; drop the handle so a stale node

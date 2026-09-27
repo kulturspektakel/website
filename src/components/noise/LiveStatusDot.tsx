@@ -10,8 +10,8 @@ import {isFresh} from './noise';
 //
 // `green.solid` and not `fg.success`: this is a filled mark rather than type, and
 // the foreground shade is a pale mint meant to carry small text on a dark ground —
-// as 8 px of solid colour it reads washed out. Solid is also what the header's Live
-// switch fills itself with, so the dot and the switch are the one green.
+// as 8 px of solid colour it reads washed out. Solid is also what the header's LIVE
+// key lights its own dot with (see PlayheadDisplay), so the two dots are the one green.
 export function LiveStatusDot({
   lastSeen,
   ble,

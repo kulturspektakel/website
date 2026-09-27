@@ -330,3 +330,97 @@ export function attachTouchGestures(
     over.removeEventListener('gesturestart', blockPageZoom);
   };
 }
+
+// Pixels per line, for the wheel events that count in lines rather than pixels (Firefox
+// with a mouse wheel, mostly). Roughly a line of text, which is what the OS meant by one.
+const WHEEL_LINE_PX = 16;
+
+/**
+ * How far a wheel event scrolls sideways, in pixels — or null when it is not a sideways
+ * scroll at all, and so not ours.
+ *
+ * Mostly sideways only: a trackpad never scrolls perfectly straight, so it is the larger of
+ * the two axes that decides, per event. And never a ctrl-wheel, which is how a trackpad
+ * pinch arrives — the browser's page zoom on a chart, the map's own zoom on the map.
+ *
+ * Shared by the two things a sideways swipe moves: a chart's window (attachWheelPan) and,
+ * on the map, the playhead (useWheelScrub).
+ */
+export function sidewaysWheelPx(e: WheelEvent): number | null {
+  if (e.ctrlKey) return null;
+  if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return null;
+  return e.deltaMode === WheelEvent.DOM_DELTA_LINE
+    ? e.deltaX * WHEEL_LINE_PX
+    : e.deltaX;
+}
+
+/**
+ * A sideways scroll on the plot slides the window — a trackpad's two-finger swipe, or
+ * shift and a mouse wheel, which the browser reports the same way. The desktop half of the
+ * two-finger drag above: same window, same clamp (a pan is a pinch that didn't pinch, see
+ * pinchWindow), same `onRange`.
+ *
+ * Only a scroll that is mostly sideways (see sidewaysWheelPx). A vertical one is the page's,
+ * so the list of cards still scrolls with the pointer over a chart. Taken even at the end
+ * of the project, where the window can't move any further: handed back, a sideways swipe
+ * there is the browser's back gesture, and the page would navigate away from under a hand
+ * that was reading the evening.
+ *
+ * Kept apart from attachTouchGestures, since a wheel event is no touch and a live chart
+ * — which has no window to slide — gets neither.
+ */
+export function attachWheelPan(
+  plot: uPlot,
+  {
+    bounds,
+    onRange,
+  }: {
+    // As for attachTouchGestures.
+    bounds: () => [number, number];
+    onRange: (min: number, max: number) => void;
+  },
+): () => void {
+  const over = plot.over;
+  // Pixels of scroll not yet applied: a trackpad reports far more often than a display
+  // draws, so the events add up here and each frame commits once.
+  let pendingPx = 0;
+  let rafPending = false;
+
+  const applyPan = () => {
+    rafPending = false;
+    const width = over.clientWidth;
+    const {min, max} = plot.scales.x;
+    if (width <= 0 || min == null || max == null) {
+      pendingPx = 0;
+      return;
+    }
+    const span = max - min;
+    // Content follows the fingers the way a scrolled page does: a swipe to the left
+    // (positive deltaX) moves on to later in the evening.
+    const next = pinchWindow({
+      anchorSpan: span,
+      anchorVal: min + (pendingPx / width) * span,
+      midPct: 0,
+      spreadRatio: 1,
+      bounds: bounds(),
+    });
+    pendingPx = 0;
+    if (next.min !== min || next.max !== max) onRange(next.min, next.max);
+  };
+
+  const onWheel = (e: WheelEvent) => {
+    const px = sidewaysWheelPx(e);
+    if (px == null) return;
+    e.preventDefault();
+    pendingPx += px;
+    if (!rafPending) {
+      rafPending = true;
+      requestAnimationFrame(applyPan);
+    }
+  };
+
+  // Not passive: cancelling the event is the whole point, both to keep the page from
+  // scrolling sideways and to keep the back gesture from firing.
+  over.addEventListener('wheel', onWheel, {passive: false});
+  return () => over.removeEventListener('wheel', onWheel);
+}

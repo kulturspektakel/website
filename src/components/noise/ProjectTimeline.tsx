@@ -356,7 +356,7 @@ type TimelineProps = {
   // TimelineMarkers, which is the layer that draws in the axis' own coordinates.
   gaps?: readonly LogGap[];
   // Where a place on screen read over its limit, as a bar along the top of the strip. Null
-  // when no place on screen has a limit for the series being shown (see limitBreaches).
+  // when no place on screen has a limit for any series picked (see limitBreaches).
   breaches?: readonly LogGap[] | null;
   onCommit: (selection: ProjectSelection) => void;
 };
@@ -366,9 +366,10 @@ type TimelineProps = {
  * which instant the page is reading drawn on it — and, where the view has any use for one,
  * the crop that says which stretch of it the charts draw.
  *
- * Mounted only while scrubbing. Live mode reads what is arriving now, which is neither
- * a range nor an instant anyone picked, so the page leaves this out entirely rather
- * than showing a strip with nothing to point at — hence no `live` anywhere below.
+ * Shown only while scrubbing. Live mode reads what is arriving now, which is neither
+ * a range nor an instant anyone picked, so the page folds this away and unmounts it once
+ * the fold ends (see NoiseToolbar) rather than showing a strip with nothing to point at —
+ * hence no `live` anywhere below.
  *
  * The strip is the whole component: what a mark stands on is read off the mark itself
  * (see Readout) rather than from a line of text beside it. The two date fields that used

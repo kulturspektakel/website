@@ -4,12 +4,11 @@ import {
   retainSearchParams,
   useChildMatches,
 } from '@tanstack/react-router';
-import {AbsoluteCenter, Box, Spinner, Text} from '@chakra-ui/react';
+import {Box} from '@chakra-ui/react';
 import {useQuery, useQueryClient} from '@tanstack/react-query';
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {loadNoiseProject} from './crew.noise';
-import {NoiseToolbar, ToolbarTitle} from '../components/noise/NoiseToolbar';
-import {formatProjectRange} from '../components/noise/timeframe';
+import {NoiseToolbar} from '../components/noise/NoiseToolbar';
 import {
   resolveProjectSelection,
   cropProjectSelection,
@@ -35,6 +34,7 @@ import {
   type ProjectViewCtx,
 } from '../components/noise/projectView';
 import {ProjectTimeline} from '../components/noise/ProjectTimeline';
+import {PlayheadDisplay} from '../components/noise/PlayheadDisplay';
 import {
   LevelPicker,
   LevelSelect,
@@ -46,7 +46,6 @@ import {
   NativeSelectField,
   NativeSelectRoot,
 } from '../components/chakra-snippets/native-select';
-import {Switch} from '../components/chakra-snippets/switch';
 import {noiseQueryKeys} from '../components/noise/queries';
 import {useLatest} from '../components/noise/chartUtils';
 import {seo} from '../utils/seo';
@@ -255,6 +254,13 @@ function NoiseProjectDetail() {
     store: mapOnly ? SERIES_STORE.map : SERIES_STORE.list,
     single: mapOnly,
   });
+
+  // The map's create tool (see ProjectViewCtx's `placing`). Dropped the moment the page is
+  // not on the map, during the render that leaves it — so the view arrived at never paints
+  // with the tool on, and coming back to the map finds it unarmed rather than still waiting
+  // for a click from a visit ago. React's own pattern for adjusting state to a prop.
+  const [placing, setPlacing] = useState(false);
+  if (placing && !mapOnly) setPlacing(false);
 
   // Without a Maps key there is no map to switch to, so the list is all there is.
   const mapAvailable = project.apiKey != null;
@@ -493,6 +499,8 @@ function NoiseProjectDetail() {
       traces,
       refresh,
       setListed,
+      placing,
+      setPlacing,
     }),
     [
       project,
@@ -507,6 +515,7 @@ function NoiseProjectDetail() {
       locationTotals,
       traces,
       refresh,
+      placing,
     ],
   );
 
@@ -535,55 +544,58 @@ function NoiseProjectDetail() {
               // arrived here by picking this festival by name a moment ago. The back
               // arrow stays, so the way out of the page you are on is still there.
               title={
-                <Box hideBelow="sm" w="full" minW="0">
-                  <ToolbarTitle>{project.name}</ToolbarTitle>
-                </Box>
+                // The instant being read, the project named under it, and the key that
+                // decides whether that instant is now (see PlayheadDisplay). At every width,
+                // since it is how the page is switched out of live.
+                <PlayheadDisplay
+                  name={project.name}
+                  live={live}
+                  onLiveChange={setLive}
+                  pending={isFetching}
+                />
               }
-              // The project's dates: they say which festival this is, which is the same
-              // thing its name does.
-              sub={
-                <Text truncate w="full" hideBelow="sm">
-                  {formatProjectRange(project.start, project.end)}
-                </Text>
-              }
+              /* A second toolbar, and only while scrubbing. Live mode reads what is
+                 arriving now — there is no instant to point at and no crop to pick, so
+                 the strip had nothing left to do but take up the room the map wants.
+                 The selection it edits is not lost with it: the layout owns it, so
+                 switching back returns to the crop and the instant you left.
+
+                 Folded while the map is being edited, too: the strip moves the playhead,
+                 and the playhead holds still then (see `placing`). Passed either way and
+                 folded by the flag, so either animates the strip shut rather than dropping
+                 it (see NoiseToolbar). */
+              belowOpen={!live && !placing}
               below={
-                /* A second toolbar, and only while scrubbing. Live mode reads what is
-                   arriving now — there is no instant to point at and no crop to pick, so
-                   the strip had nothing left to do but take up the room the map wants.
-                   The selection it edits is not lost with it: the layout owns it, so
-                   switching back returns to the crop and the instant you left. */
-                !live && (
-                  <ProjectTimeline
-                    window={pickable}
-                    selection={selection}
-                    // The crop belongs to the charts: they are drawn over it and their Leqs
-                    // averaged across it. The map has none — a pin reads what stood there at
-                    // the playhead, off the whole payload rather than the crop — so the two
-                    // grips there would pick a window nothing on screen answers to, over the
-                    // one thing the map does want the strip for. The playhead stays in both.
-                    //
-                    // Nothing is lost switching to the map: the selection is this layout's,
-                    // so the crop is still where it was left when the charts come back.
-                    croppable={shown === 'list'}
-                    // A prop rather than a field on the context below: the strip is the
-                    // only thing that draws these, and the context is read by every card
-                    // on the page (see ProjectViewCtx) — a field there would re-render all
-                    // of them the moment the payload landed.
-                    gaps={gaps}
-                    breaches={breaches}
-                    // Straight into state: what the timeline hands back is exactly the
-                    // override to remember, and pinning it is what stops an untouched
-                    // crop from following the live edge any further. Identical values
-                    // are dropped — every gesture snaps to the quarter hour, so
-                    // consecutive frames of a drag often commit the same selection, and
-                    // re-rendering the page for it would be pure waste.
-                    onCommit={(next) =>
-                      setChosen((prev) =>
-                        sameSelection(prev, next) ? prev : next,
-                      )
-                    }
-                  />
-                )
+                <ProjectTimeline
+                  window={pickable}
+                  selection={selection}
+                  // The crop belongs to the charts: they are drawn over it and their Leqs
+                  // averaged across it. The map has none — a pin reads what stood there at
+                  // the playhead, off the whole payload rather than the crop — so the two
+                  // grips there would pick a window nothing on screen answers to, over the
+                  // one thing the map does want the strip for. The playhead stays in both.
+                  //
+                  // Nothing is lost switching to the map: the selection is this layout's,
+                  // so the crop is still where it was left when the charts come back.
+                  croppable={shown === 'list'}
+                  // A prop rather than a field on the context below: the strip is the
+                  // only thing that draws these, and the context is read by every card
+                  // on the page (see ProjectViewCtx) — a field there would re-render all
+                  // of them the moment the payload landed.
+                  gaps={gaps}
+                  breaches={breaches}
+                  // Straight into state: what the timeline hands back is exactly the
+                  // override to remember, and pinning it is what stops an untouched
+                  // crop from following the live edge any further. Identical values
+                  // are dropped — every gesture snaps to the quarter hour, so
+                  // consecutive frames of a drag often commit the same selection, and
+                  // re-rendering the page for it would be pure waste.
+                  onCommit={(next) =>
+                    setChosen((prev) =>
+                      sameSelection(prev, next) ? prev : next,
+                    )
+                  }
+                />
               }
             >
               {/* A set on the list, one of nine on the map (see the pick above). */}
@@ -629,63 +641,6 @@ function NoiseProjectDetail() {
                   />
                 </NativeSelectRoot>
               )}
-              {/* Last, hard against the right edge: it decides what the whole page is
-                  doing, and the controls beside it only dress up what it lets through.
-
-                  The one moment this page waits for anything: the project's whole history,
-                  on the first switch out of live. A spinner stands in for the switch and
-                  its caption while that arrives — the control being waited on is the one
-                  that says so, rather than a second thing appearing beside it.
-
-                  Relative, and the switch is hidden rather than unmounted, which is the
-                  whole of how the strip holds still: the switch and the word under it go on
-                  laying this item out at exactly the width they do the rest of the time, so
-                  the spinner over them shoves nothing sideways and the controls to the left
-                  don't shuffle along and back. `visibility` and not `opacity`, which would
-                  leave a control that is invisible and still live under the spinner.
-                  `disabled` alongside it says the same thing semantically — a hidden subtree
-                  is already unfocusable — and is what the switch would need if it were ever
-                  shown while waiting. Nothing else is torn down: the pins simply have no
-                  number yet. */}
-              <Box
-                position="relative"
-                display="flex"
-                cursor={isFetching ? 'progress' : undefined}
-              >
-                <Switch
-                  size="sm"
-                  checked={live}
-                  disabled={isFetching}
-                  visibility={isFetching ? 'hidden' : undefined}
-                  // The window survives the switch: every one of them exists in both
-                  // modes (the finest simply gets finer), so there is nothing to reset.
-                  onCheckedChange={(e) => setLive(e.checked)}
-                  colorPalette="green"
-                  // Stacked, with the word under the switch rather than beside it: it is
-                  // the widest control in the strip and the one that has to survive a
-                  // phone, and a caption costs height the strip already has to spare.
-                  flexDirection="column"
-                  gap="0.5"
-                >
-                  <Text
-                    fontSize="2xs"
-                    fontWeight="medium"
-                    letterSpacing="wide"
-                    color="fg"
-                    lineHeight="1"
-                  >
-                    LIVE
-                  </Text>
-                </Switch>
-                {isFetching && (
-                  <AbsoluteCenter>
-                    {/* Muted rather than the switch's green: green is what this control
-                        says when live is *on*, and a green spinner in its place would read
-                        as the state instead of as the wait for one. */}
-                    <Spinner size="sm" color="fg.muted" />
-                  </AbsoluteCenter>
-                )}
-              </Box>
             </NoiseToolbar>
 
             {/* Everything the toolbars left over, edge to edge: the map fills it, and

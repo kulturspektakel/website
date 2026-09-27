@@ -1,6 +1,7 @@
 import {useRef, useState} from 'react';
 import {
   Button,
+  HStack,
   IconButton,
   Input,
   NativeSelectField,
@@ -9,7 +10,7 @@ import {
   Text,
 } from '@chakra-ui/react';
 import {useMutation} from '@tanstack/react-query';
-import {LuPlus, LuTrash2} from 'react-icons/lu';
+import {LuChevronDown, LuCopy, LuPlus, LuTrash2} from 'react-icons/lu';
 import {
   DialogBody,
   DialogCloseTrigger,
@@ -19,6 +20,12 @@ import {
   DialogRoot,
   DialogTitle,
 } from '../chakra-snippets/dialog';
+import {
+  MenuContent,
+  MenuItem,
+  MenuRoot,
+  MenuTrigger,
+} from '../chakra-snippets/menu';
 import {NativeSelectRoot} from '../chakra-snippets/native-select';
 import {toaster} from '../chakra-snippets/toaster';
 import {
@@ -33,6 +40,7 @@ import {applyEdits, hasEdits} from './draftTable';
 import {primarySeries, seriesLabel, seriesOptions} from './level';
 import {type SeriesKey} from './series';
 import {
+  orderLocations,
   useProjectView,
   type NoiseLimit,
   type NoiseLocationItem,
@@ -138,13 +146,12 @@ function LimitsForm({
   // Both pinned to the opening: the page behind keeps refetching while this is up (it is
   // a live view), and a draft that re-based itself under the cursor — or a Save that
   // diffed against rows the user never saw — would be a table you cannot trust.
-  const [original] = useState(() =>
-    [...location.limits].sort((a, b) => a.start - b.start),
-  );
+  const [original] = useState(() => byStart(location.limits));
   const [rows, setRows] = useState<DraftLimit[]>(() => original.map(toDraft));
   // Only has to outlive the rows on screen, and a row added after one was binned must
   // not reuse the key it had — React would keep the old field's draft string.
   const nextKey = useRef(0);
+  const newKey = () => `new-${nextKey.current++}`;
 
   const save = useMutation({
     mutationFn: () => saveLimits(original, rows, location.id, project),
@@ -159,6 +166,27 @@ function LimitsForm({
   // A row with no number in it, which would be a limit of nothing — the one thing here
   // the server would reject.
   const incomplete = rows.some((r) => r.decibels == null);
+  // Where a location with no limits of its own can take them from: every other place in
+  // the project that has some. Offered only while this one has none saved *and* none
+  // drafted, so a copy only ever adds rows — it never has to decide what to do about the
+  // ones already here.
+  const sources =
+    original.length === 0 && rows.length === 0
+      ? orderLocations(project.locations).filter(
+          (l) => l.id !== location.id && l.limits.length > 0,
+        )
+      : [];
+  // Into the draft rather than straight to the server, like everything else here: the
+  // copied rows are new ones (no id), so Save creates them, and Cancel leaves nothing.
+  // Through toDraft so a bound that follows the event there follows it here too.
+  const copyFrom = (source: NoiseLocationItem) =>
+    setRows(
+      byStart(source.limits).map((limit) => ({
+        ...toDraft(limit),
+        key: newKey(),
+        id: null,
+      })),
+    );
   const dirty = hasEdits(original, rows, (row, was) =>
     isUnchanged(row, was, project),
   );
@@ -209,25 +237,49 @@ function LimitsForm({
               No limit set for this location.
             </Text>
           )}
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() =>
-              setRows((rs) => [
-                ...rs,
-                {
-                  key: `new-${nextKey.current++}`,
-                  id: null,
-                  series: primary,
-                  decibels: null,
-                  start: null,
-                  end: null,
-                },
-              ])
-            }
-          >
-            <LuPlus /> Add limit
-          </Button>
+          <HStack gap="2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() =>
+                setRows((rs) => [
+                  ...rs,
+                  {
+                    key: newKey(),
+                    id: null,
+                    series: primary,
+                    decibels: null,
+                    start: null,
+                    end: null,
+                  },
+                ])
+              }
+            >
+              <LuPlus /> Add limit
+            </Button>
+            {sources.length > 0 && (
+              <MenuRoot>
+                <MenuTrigger asChild>
+                  <Button size="sm" variant="outline">
+                    <LuCopy /> Copy from <LuChevronDown />
+                  </Button>
+                </MenuTrigger>
+                {/* In the dialog's own tree: portalled out of it, the dialog's focus trap
+                  would not let the pointer or the keyboard reach the items. */}
+                <MenuContent portalled={false}>
+                  {sources.map((source) => (
+                    <MenuItem
+                      key={source.id}
+                      value={source.id}
+                      onClick={() => copyFrom(source)}
+                    >
+                      {source.locationName}
+                    </MenuItem>
+                  ))}
+                </MenuContent>
+              </MenuRoot>
+            )}
+          </HStack>
         </Stack>
       </DialogBody>
       <DialogFooter>
@@ -400,6 +452,11 @@ function parseDecibels(value: string): number | null {
   }
   return n;
 }
+
+// A location's limits in the order the table lists them. A sorted copy: what comes in is
+// the query's array, shared with the cache.
+const byStart = (limits: readonly NoiseLimit[]): NoiseLimit[] =>
+  [...limits].sort((a, b) => a.start - b.start);
 
 // A blank bound comes back blank, which is what makes the fields round-trip: blank one,
 // save, and it is still blank rather than filled in with a time you didn't type — and
