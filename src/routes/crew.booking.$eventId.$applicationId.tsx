@@ -231,8 +231,16 @@ const loadBandApplicationDetail = createServerFn()
         stage: x.area.displayName,
       });
     }
-    // Newest first.
-    timeline.sort((a, b) => b.date.getTime() - a.date.getTime());
+    // Newest first. Contacts without `lastContactedAt` share their application's
+    // date, so break ties by lifecycle order (Bewerbung → Anfrage → Auftritt):
+    // otherwise the stable sort keeps insertion order and the Anfrage lands
+    // below — i.e. before — its own Bewerbung.
+    const KIND_ORDER = {application: 0, contact: 1, performance: 2};
+    timeline.sort(
+      (a, b) =>
+        b.date.getTime() - a.date.getTime() ||
+        KIND_ORDER[b.kind] - KIND_ORDER[a.kind],
+    );
 
     const myViewerId = context.viewer?.id ?? null;
     return {
