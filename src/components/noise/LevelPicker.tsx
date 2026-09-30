@@ -13,13 +13,17 @@ import {
   NativeSelectRoot,
 } from '../chakra-snippets/native-select';
 import {SERIES_KEYS, type SeriesKey} from './series';
+import {type Weighting} from './noise';
 import {
   onlySeries,
   primarySeries,
+  rangeLabel,
   seriesLabel,
   seriesOptions,
+  toggledRange,
   toggledSeries,
   type PickedSeries,
+  type RangePick,
 } from './level';
 import {
   DEFAULT_PICK,
@@ -44,8 +48,7 @@ const GROUPS = {live: seriesOptions(true), stored: seriesOptions(false)};
  * weighting, so picking is picking lines and the coupling has nothing left to get wrong.
  *
  * The set's first in table order is the one every *single* number is read in — the charts
- * draw all of them, a map pin has room for one, and the crop's Leq is one energetic mean and
- * so has one weighting. Not returned beside the set, though it once was: it is `picked[0]`
+ * draw all of them, and a map pin has room for one. Not returned beside the set, though it once was: it is `picked[0]`
  * (see primarySeries), so a second field here was a derived value plumbed through the
  * context and a prop to save its two readers one call.
  *
@@ -67,11 +70,16 @@ export function useLevelPick({
 }): {
   picked: PickedSeries;
   toggleSeries: (key: SeriesKey) => void;
+  // Which weightings of the crop's Leq are picked (see RangePick). Always empty where
+  // `single`: the map has no range rows.
+  range: RangePick;
+  toggleRange: (weighting: Weighting) => void;
 } {
   // The everyday series — what the menu was set to before it was remembered, and now only
   // what is on screen until the store has been read, which is the frame after mount (see
   // DEFAULT_PICK).
   const [picked, setPicked] = useState<PickedSeries>(DEFAULT_PICK.picked);
+  const [range, setRange] = useState<RangePick>(DEFAULT_PICK.range);
 
   // The stored state of the menu is read after mount rather than in the initializers above,
   // and that is the whole reason this is an effect: these pages are server-rendered, and a
@@ -84,12 +92,15 @@ export function useLevelPick({
   // separately. One frame of the previous
   // view's pick in between, which is the frame the route itself is changing on.
   useEffect(() => {
-    setPicked((readStoredPick(store, single) ?? DEFAULT_PICK).picked);
+    const stored = readStoredPick(store, single) ?? DEFAULT_PICK;
+    setPicked(stored.picked);
+    setRange(stored.range);
   }, [store, single]);
 
   // Read off the render rather than out of an updater, which is what keeps the write to one:
   // React invokes updaters twice in development, and writing to storage is not the kind of
-  // thing to do twice.
+  // thing to do twice. Both halves are written on every press, the entry being the whole
+  // menu — so each toggle needs the other half as it stands.
   //
   // Nothing is written for a press that changed nothing — the last lit line pressed again, or
   // the map's one row pressed twice — since both hand back the very array they were given.
@@ -100,11 +111,19 @@ export function useLevelPick({
         : toggledSeries(picked, key);
       if (next === picked) return;
       setPicked(next);
-      writeStoredPick(store, {picked: next});
+      writeStoredPick(store, {picked: next, range});
     },
-    [picked, single, store],
+    [picked, range, single, store],
   );
-  return {picked, toggleSeries};
+  const toggleRange = useCallback(
+    (weighting: Weighting) => {
+      const next = toggledRange(range, weighting);
+      setRange(next);
+      writeStoredPick(store, {picked, range: next});
+    },
+    [picked, range, store],
+  );
+  return {picked, toggleSeries, range, toggleRange};
 }
 
 // The device page's and the project list's control: which of the nine lines the charts draw.
@@ -136,16 +155,26 @@ export const LevelPicker = memo(function LevelPicker({
   live,
   picked,
   onToggleSeries,
+  range,
+  onToggleRange,
 }: {
-  // To label: the finest window is 1 s live and 1 min stored. Every series means the same
-  // thing in either mode.
+  // To label, and to disable the rows a live page has no answer for: the finest window is
+  // 1 s live and 1 min stored, and the Leq over the timeframe needs a timeframe.
   live: boolean;
   picked: PickedSeries;
   onToggleSeries: (key: SeriesKey) => void;
+  // The crop's Leq, one row per weighting. Optional, together with its toggle: only the
+  // project list has a crop to average over, so the device page leaves both out.
+  range?: RangePick;
+  onToggleRange?: (weighting: Weighting) => void;
 }) {
   const groups = live ? GROUPS.live : GROUPS.stored;
-  // What the button has to account for: the picked series, of which the first is named.
-  const shown = picked.map((key) => seriesLabel(key, live));
+  // What the button has to account for: the picked series, of which the first is named, and
+  // the range rows while there is a range for them to be drawn over.
+  const shown = [
+    ...picked.map((key) => seriesLabel(key, live)),
+    ...(live ? [] : (range ?? []).map(rangeLabel)),
+  ];
 
   return (
     // Stays open while boxes are ticked: picking a set is several presses, and a menu that
@@ -198,6 +227,20 @@ export const LevelPicker = memo(function LevelPicker({
                 {label}
               </MenuCheckboxItem>
             ))}
+            {/* The timeframe's Leq in this block's weighting, last because it is not one
+                of the five: its line is the running mean from the crop's start, and its
+                tile the mean over the whole crop (see RangePick). Greyed while live,
+                where there is no timeframe to average. */}
+            {onToggleRange && (
+              <MenuCheckboxItem
+                value={`range:${weighting}`}
+                checked={range?.includes(weighting) ?? false}
+                disabled={live}
+                onCheckedChange={() => onToggleRange(weighting)}
+              >
+                {rangeLabel(weighting)}
+              </MenuCheckboxItem>
+            )}
           </MenuItemGroup>
         ))}
       </MenuContent>

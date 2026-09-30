@@ -80,6 +80,11 @@ const NOISE_COLORS = {
   // A stretch crew tagged to be ignored, washed under the trace (see drawTags). Grey, so
   // it reads as "set aside" rather than as another mark competing with the red rules.
   'chart.ignored': 'gray.500',
+  // The crop's Leq — its running line on the chart and its badge on the card (see
+  // RangePick). A light neutral off the ramp: it is the mean of the whole picture rather than
+  // one more averaging window, and it has to stay clear of the limit's red. Not the
+  // playhead's near-white, so the two lines don't read as one mark where they cross.
+  'chart.range': 'gray.300',
   'chart.playhead': 'gray.50',
   'chart.readout.bg': {_light: 'gray.50', _dark: 'gray.800'},
   // The ground a plot is drawn on, as a value the canvas can stroke with — the same step

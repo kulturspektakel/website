@@ -257,7 +257,8 @@ function LocationLevels({
   // no monitor *now* and still has a crop Leq to show.
   empty: boolean;
 }) {
-  const {project, live, picked, locationTotals} = useProjectView();
+  const {project, live, picked, pickedRange, locationTotals, rangeOver} =
+    useProjectView();
   const levels = usePlayheadLevels();
   // The monitors whose readings crew set aside at the minute being read — the same rule
   // and the same minute the map's pin reads them at, so the two agree on what is ignored.
@@ -274,15 +275,24 @@ function LocationLevels({
           ),
     [at, project.tags, locationId, assignments],
   );
+  // Whatever there is, unconditionally: whether this reading is wanted at all is settled
+  // where it is produced, so a card has no gate of its own to get wrong (see
+  // ProjectViewCtx.pickedRange).
+  const totals = useMemo(
+    () =>
+      pickedRange.map((weighting) => ({
+        weighting,
+        total: locationTotals?.[weighting]?.[locationId],
+        over: rangeOver?.[weighting]?.[locationId],
+      })),
+    [pickedRange, locationTotals, rangeOver, locationId],
+  );
   if (empty) return null;
 
   return (
     <LocationReadings
       assignments={assignments}
-      // Whatever there is, unconditionally: whether this reading is wanted at all is
-      // settled where it is produced, so a card has no gate of its own to get wrong (see
-      // ProjectViewCtx.locationTotals).
-      total={locationTotals?.[locationId]}
+      totals={totals}
       levels={levels}
       live={live}
       picked={picked}

@@ -3,10 +3,14 @@ import {
   ignoredMinutes,
   inMinutes,
   logColumn,
+  rangeLimits,
+  runningLeq,
   type LocationAssignments,
+  type LocationEnergyIndex,
 } from './projectLogs';
 import {exceedsLimit, type LimitLine} from './limitLines';
 import type {SeriesKey} from './series';
+import type {Weighting} from './noise';
 
 // Where a project has readings and where it does not — the shading behind the project
 // timeline's ticks (see TimelineMarkers) — and where what it read broke a limit. React-free and beside projectLogs.ts for the
@@ -135,6 +139,11 @@ export function coverageGaps(
  * chart draws it; over *any* limit in force is over the strictest of them, the same rule the
  * map's pins warn by (see strictestLimit). Strictly above: a reading that sits exactly on
  * its limit is within it.
+ *
+ * `range` is the picked weightings of `Leq,Range`, each with the energy index it is summed
+ * off. A limit written against one is judged on its own hours (see runningLeq): a minute of
+ * them is a breach where the Leq from the limit's start up to that minute is over — the same
+ * line, and the same wash, its card's chart draws.
  */
 export function limitBreaches(
   logs: ProjectLogs,
@@ -142,6 +151,7 @@ export function limitBreaches(
     limits: readonly LimitLine[];
   })[],
   series: readonly SeriesKey[],
+  range: readonly {weighting: Weighting; index: LocationEnergyIndex}[] = [],
 ): LogGap[] | null {
   const {minutes} = logs;
   const over = new Uint8Array(minutes);
@@ -151,6 +161,19 @@ export function limitBreaches(
   const loudest = new Float64Array(minutes);
   let limited = false;
   for (const location of locations) {
+    for (const {weighting, index} of range) {
+      for (const limit of rangeLimits(location.limits, weighting)) {
+        limited = true;
+        const line = runningLeq(index, location.id, limit.start);
+        const from = Math.max(0, logMinuteIndex(logs, limit.start));
+        const to = Math.min(minutes, logMinuteIndex(logs, limit.end));
+        for (let i = from; i < to; i++) {
+          const v = line[i];
+          if (v != null && exceedsLimit(v, limit.decibels)) over[i] = 1;
+        }
+      }
+    }
+
     const keyed = series
       .map((key) => ({
         key,

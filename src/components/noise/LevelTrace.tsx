@@ -2,7 +2,12 @@ import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {Box, Text} from '@chakra-ui/react';
 import uPlot from 'uplot';
 import {subscribeToClock, useNoiseBuffers} from './context';
-import {GAP_THRESHOLD_S, STORED_GAP_THRESHOLD_S, WINDOW_S} from './noise';
+import {
+  GAP_THRESHOLD_S,
+  STORED_GAP_THRESHOLD_S,
+  WINDOW_S,
+  type Weighting,
+} from './noise';
 import {
   alignedBuffers,
   alignedSeries,
@@ -12,10 +17,22 @@ import {
   traceData,
   type SeriesKey,
 } from './series';
-import {formatDb, seriesLabel, type PickedSeries} from './level';
+import {
+  formatDb,
+  isRangeKey,
+  rangeKey as rangeKeyOf,
+  rangeLabel,
+  seriesLabel,
+  type PickedSeries,
+} from './level';
 import {type SeriesTraces} from './projectLogs';
 import {themeHex} from '../../theme-noise';
-import {limitSegments, overLimitAt, type LimitLine} from './limitLines';
+import {
+  limitSegments,
+  overLimitAt,
+  type LimitLine,
+  type LimitSeries,
+} from './limitLines';
 import {clampTo} from './timeframe';
 import {
   axisBase,
@@ -153,6 +170,35 @@ function readingsAt(
   return out;
 }
 
+// The location's running Leq at the hovered sample, one per range line — the last
+// `weightings.length` columns of the projection (see project). Same gap rule as the
+// monitors' readings: nothing under a pointer that is past the nearest sample.
+function rangeReadingsAt(
+  u: uPlot,
+  weightings: readonly Weighting[],
+  gapThresholdX: number,
+  limits: readonly LimitLine[],
+): {weighting: Weighting; db: number; over: boolean}[] {
+  const idx = u.cursor.idx;
+  if (idx == null || weightings.length === 0) return [];
+  const dataX = u.data[0]![idx] as number | undefined;
+  const cursorX = u.posToVal(u.cursor.left ?? -1, 'x');
+  if (dataX == null || Math.abs(cursorX - dataX) > gapThresholdX) return [];
+  const first = u.data.length - weightings.length;
+  return weightings.flatMap((weighting, r) => {
+    const db = u.data[first + r]?.[idx];
+    return db == null
+      ? []
+      : [
+          {
+            weighting,
+            db,
+            over: overLimitAt(limits, rangeKeyOf(weighting), dataX * 1000, db),
+          },
+        ];
+  });
+}
+
 // Whether a keystroke is somebody writing rather than reaching for a shortcut. The
 // dialogs on this page are full of fields, and one of them may well be open over a
 // row the pointer is still resting on.
@@ -193,6 +239,8 @@ const LIMIT_DASH = [4, 3];
 const LIMIT_WIDTH_PX = 1;
 const LIMIT_HALO_PX = 3;
 const LIMIT_HALO_BLUR_PX = 4;
+// The radius of the dot at each end of a limit's rule, in CSS pixels.
+const LIMIT_DOT_PX = 2;
 
 /**
  * The permitted levels, over the traces they are permitted for.
@@ -235,7 +283,8 @@ type SeriesWithPaths = uPlot.Series & {_paths?: uPlot.Series.Paths | null};
 function drawLimits(
   u: uPlot,
   limits: readonly LimitLine[],
-  picked: PickedSeries,
+  // What the chart is drawing: the picked series and any `Leq,Range` line (see drawnKeys).
+  picked: readonly LimitSeries[],
 ): void {
   if (limits.length === 0) return;
   const {min, max} = u.scales.x;
@@ -256,7 +305,6 @@ function drawLimits(
 
   const [floor, ceiling] = dbAxis.range;
 
-  ctx.setLineDash(LIMIT_DASH.map((d) => d * ratio));
   // Positions once, since both passes below stroke the same geometry.
   const rules = segments.map(({series, decibels, from, to}) => ({
     // The shade of the line it bounds, which is what ties the two together where several
@@ -264,7 +312,10 @@ function drawLimits(
     // statement about one quantity. What keeps it from reading as another measurement is
     // the dash — the form, not the hue. Two weightings of a quantity share a shade by
     // design (see the series table), and so do their limits.
-    stroke: themeHex(seriesByKey(series).color),
+    // A `Leq,Range` limit is drawn in its running line's neutral.
+    stroke: themeHex(
+      isRangeKey(series) ? 'chart.range' : seriesByKey(series).color,
+    ),
     // Clamped to the axis, which is fixed at 30–110 (see dbAxis): a peak limit written at
     // 120 has to be drawn somewhere, and hard against the top of the plot is the honest
     // place. Dropping the line instead would be the worse answer — a limit nobody can see
@@ -278,9 +329,20 @@ function drawLimits(
     x1: Math.round(u.valToPos(to, 'x', true)),
   }));
 
-  const trace = ({y, x0, x1}: (typeof rules)[number]) => {
-    ctx.moveTo(x0, y);
-    ctx.lineTo(x1, y);
+  // Every rule ends in a dot at both ends, in its shade — what says "from here to here" where
+  // a dash alone just stops, which matters most for a `Leq,Range` limit, whose window is what
+  // its figure is averaged over (see runningLeq). Only an end that is actually on screen: a
+  // segment cut by the crop starts or stops at the plot's edge, and that edge is not the
+  // limit's.
+  const dots = segments.flatMap(({from, to}, i) => {
+    const {stroke, y, x0, x1} = rules[i]!;
+    const dot = (x: number) => ({stroke, x, y});
+    return [...(from > min ? [dot(x0)] : []), ...(to < max ? [dot(x1)] : [])];
+  });
+  const dotRadius = LIMIT_DOT_PX * ratio;
+  const circle = ({x, y}: (typeof dots)[number], radius: number) => {
+    ctx.moveTo(x + radius, y);
+    ctx.arc(x, y, radius, 0, 2 * Math.PI);
   };
 
   // Every halo, then every rule — two passes over the list rather than a halo and its rule
@@ -291,7 +353,8 @@ function drawLimits(
   // The halo is a stroke of the ground *plus* its own shadow of the same colour, which is
   // what spreads it. Dashed along with the rule rather than solid under it, so it thickens
   // each dash instead of filling the gaps between them — the trace stays readable through
-  // the rule, which is the whole point of dashing it.
+  // the rule, which is the whole point of dashing it. A dot's halo is the same ground, filled
+  // a little wider than the dot.
   //
   // One path for all of them and one stroke, because `shadowBlur` is the expensive call on a
   // canvas, and a timeline drag redraws every card near the viewport per animation frame
@@ -299,21 +362,39 @@ function drawLimits(
   const ground = themeHex('chart.ground');
   ctx.lineWidth = LIMIT_HALO_PX * ratio;
   ctx.strokeStyle = ground;
+  ctx.fillStyle = ground;
   ctx.shadowColor = ground;
   ctx.shadowBlur = LIMIT_HALO_BLUR_PX * ratio;
+  ctx.setLineDash(LIMIT_DASH.map((d) => d * ratio));
   ctx.beginPath();
-  rules.forEach(trace);
+  for (const {y, x0, x1} of rules) {
+    ctx.moveTo(x0, y);
+    ctx.lineTo(x1, y);
+  }
   ctx.stroke();
+  if (dots.length > 0) {
+    ctx.beginPath();
+    for (const d of dots) circle(d, dotRadius + ratio);
+    ctx.fill();
+  }
 
-  // The rules themselves, each in its own series' shade. No shadow: the halo is already
-  // under them, and a coloured line casting a dark blur would read as out of focus.
+  // The rules themselves, each in its own series' shade, and the dots over their ends. No
+  // shadow: the halo is already under them, and a coloured line casting a dark blur would
+  // read as out of focus.
   ctx.shadowBlur = 0;
   ctx.lineWidth = LIMIT_WIDTH_PX * ratio;
-  for (const rule of rules) {
-    ctx.strokeStyle = rule.stroke;
+  for (const {stroke, y, x0, x1} of rules) {
+    ctx.strokeStyle = stroke;
     ctx.beginPath();
-    trace(rule);
+    ctx.moveTo(x0, y);
+    ctx.lineTo(x1, y);
     ctx.stroke();
+  }
+  for (const d of dots) {
+    ctx.fillStyle = d.stroke;
+    ctx.beginPath();
+    circle(d, dotRadius);
+    ctx.fill();
   }
 
   ctx.restore();
@@ -377,12 +458,13 @@ function drawTags(u: uPlot, tags: readonly ChartTag[]): void {
 function drawBreaches(
   u: uPlot,
   limits: readonly LimitLine[],
-  picked: PickedSeries,
+  picked: readonly LimitSeries[],
   // Which series and monitor a column is — or null for one not to read, which is every
-  // monitor's own line where the envelope already stands for them.
+  // monitor's own line where the envelope already stands for them. A `Leq,Range` line is
+  // the place's, so it has no monitor.
   columnOf: (
     sIdx: number,
-  ) => {series: SeriesKey; deviceId: string | null} | null,
+  ) => {series: LimitSeries; deviceId: string | null} | null,
   tags: readonly ChartTag[],
 ): void {
   if (!limits.some((l) => picked.includes(l.series))) return;
@@ -612,6 +694,7 @@ type LevelTraceProps = {
       onCrop?: never;
       onTag?: never;
       traces?: never;
+      rangeLines?: never;
     }
   | {
       live: false;
@@ -664,8 +747,17 @@ type LevelTraceProps = {
       // weighting means a row of the table: `picked` above names the series, this is the
       // data for them.
       traces?: SeriesTraces;
+      // The place's running Leq from the crop's start, one line per picked weighting of
+      // `Leq,Range` (see RangePick) — on the same minute grid as `traces`, and the
+      // location's rather than any monitor's, so drawn once however many monitors it has
+      // had. `db` is absent while it loads.
+      rangeLines?: readonly {weighting: Weighting; db?: (number | null)[]}[];
     }
 );
+
+// No range lines, for the live arm and a caller that passes none. One array, so the
+// digest below is stable.
+const NO_RANGE_LINES: NonNullable<LevelTraceProps['rangeLines']> = [];
 
 export function LevelTrace({
   lines,
@@ -679,6 +771,7 @@ export function LevelTrace({
   onCrop,
   onTag,
   traces,
+  rangeLines = NO_RANGE_LINES,
   xAxisSize = X_AXIS_H,
 }: LevelTraceProps) {
   // The buffers alone: a chart has nothing to say about a record arriving — the
@@ -692,6 +785,7 @@ export function LevelTrace({
   // not one of them: the gap threshold below is derived from it and is baked into the
   // series at construction, so switching source rebuilds the plot either way.
   const tracesRef = useLatest(traces);
+  const rangeLinesRef = useLatest(rangeLines);
   const rangeRef = useLatest(range);
   // Through a ref for the same reason as the range, and read only from inside a gesture:
   // the window's right edge follows the clock on a running festival, so the object is new
@@ -703,12 +797,9 @@ export function LevelTrace({
   // new one under the pointer. The effect further down asks for that repaint.
   const limitsRef = useLatest(limits);
   const tagsRef = useLatest(tags);
-  // The set they are drawn against, through a ref for the same reason — a limit is drawn
-  // only where its series is (see limitSegments), so the draw hook needs the current pick
-  // and not the one the plot was built on. Read off a ref rather than the closure, which is
-  // what this used to be: that was fresh only transitively, because `strokes` is derived
-  // from the pick and is in the plot's dependencies — a hidden dependency of the limits'
-  // correctness on an unrelated memo.
+  // The pick, through a ref for the same reason — the breach wash reads which series a
+  // column is off it, so the draw hook needs the current pick and not the one the plot was
+  // built on. (What limits are drawn against is drawnKeysRef below.)
   const pickedRef = useLatest(picked);
   // Whether this chart has a crop to move, which is everything uPlot has to be built
   // differently for: its own drag-select, and the touch gestures. Both were their own
@@ -739,6 +830,22 @@ export function LevelTrace({
   // columns, the effect that builds the plot — would otherwise be recomputed or torn down
   // for a set that had not changed.
   const pickedKey = picked.join(' ');
+  // Which range lines there are, which is what the plot is built for — their data moves
+  // with the crop's start and is pushed in by the data effect, like `traces`.
+  const rangeKey = rangeLines.map((r) => r.weighting).join(' ');
+  const rangeWeightings = useMemo(
+    () => rangeLines.map((r) => r.weighting),
+    [rangeKey],
+  );
+  const rangeWeightingsRef = useLatest(rangeWeightings);
+  // Everything a limit may be drawn against on this chart: the picked series, and the
+  // `Leq,Range` lines — a limit appears when the line it bounds does (see limitSegments).
+  const drawnKeysRef = useLatest(
+    useMemo(
+      (): LimitSeries[] => [...picked, ...rangeWeightings.map(rangeKeyOf)],
+      [pickedKey, rangeWeightings],
+    ),
+  );
   // How many monitors the plot has a line for, per series. At least one, so a location with
   // no monitor yet still has a series to be empty in rather than an axis pair uPlot would
   // reject.
@@ -782,6 +889,9 @@ export function LevelTrace({
       ),
     [tokens, lineCount],
   );
+  // Where the range lines start in the projection: after the envelope and every monitor's
+  // columns (see project), one each.
+  const firstRangeColumn = (envelope ? 2 : 1) + picked.length * lineCount;
   const onScrubRef = useLatest(onScrub);
   // Where the line stands: the instant the page is looking at, written by the
   // subscription below rather than taken as a prop. The playhead is page state that moves
@@ -810,6 +920,7 @@ export function LevelTrace({
     fraction: number;
     label: string;
     readings: TipReading[];
+    rangeReadings: {weighting: Weighting; db: number; over: boolean}[];
   } | null>(null);
 
   // The range a sweep has named and not yet done anything with: the crop it would make,
@@ -906,7 +1017,7 @@ export function LevelTrace({
     // out itself would be the second place that decided it. A location nothing has ever
     // stood at lands here too, and comes back as empty columns over drawn axes rather than
     // as a card with a gap where a chart should be.
-    return traceData(
+    const data = traceData(
       aligned,
       current.map((l) => l.windows),
       {
@@ -923,13 +1034,25 @@ export function LevelTrace({
           ),
         ),
       },
-    ) as uPlot.AlignedData;
+    );
+    // The place's running Leq after all of that, a column per range line. Padded to the
+    // shared x where there is nothing to draw — still loading, or a place with no monitor
+    // and so no grid from the traces (the line is all null there anyway).
+    const xs = data[0] ?? [];
+    for (const {db} of live ? [] : rangeLinesRef.current) {
+      data.push(
+        db && db.length === xs.length ? db : new Array(xs.length).fill(null),
+      );
+    }
+    return data as uPlot.AlignedData;
     // Keyed on digests rather than on the arrays: the same monitors over the same windows
     // in the same set of quantities are the same projection, and new arrays of them every
     // render are not a new plot.
   }, [
     linesKey,
     pickedKey,
+    rangeWeightings,
+    rangeLinesRef,
     linesRef,
     deviceData,
     live,
@@ -968,7 +1091,7 @@ export function LevelTrace({
     // for the envelope, which is every monitor's and is cut only by the tags that cover
     // all of them (a monitor's own are taken out of its data instead; see project).
     const deviceOf = (sIdx: number): string | null => {
-      if (envelope && sIdx === 1) return null;
+      if ((envelope && sIdx === 1) || sIdx >= firstRangeColumn) return null;
       const d = (sIdx - (envelope ? 2 : 1)) % lineCount;
       return linesRef.current[d]?.deviceId ?? null;
     };
@@ -976,7 +1099,15 @@ export function LevelTrace({
     // inside each metric. With an envelope only it is read — it is already the loudest of
     // the monitors, with their own ignored stretches taken out.
     const columnOf = (sIdx: number) => {
-      if (envelope && sIdx > 1) return null;
+      if (envelope && sIdx > 1 && sIdx < firstRangeColumn) return null;
+      // A `Leq,Range` line is judged against the limits written for it: inside one it is
+      // that limit's own Leq so far (see runningLeq), so the wash reads straight off it.
+      if (sIdx >= firstRangeColumn) {
+        const weighting = rangeWeightingsRef.current[sIdx - firstRangeColumn];
+        return weighting
+          ? {series: rangeKeyOf(weighting), deviceId: null}
+          : null;
+      }
       const offset = sIdx - (envelope ? 2 : 1);
       const m = offset < 0 ? 0 : Math.floor(offset / lineCount);
       return {
@@ -1039,7 +1170,7 @@ export function LevelTrace({
               drawBreaches(
                 u,
                 limitsRef.current ?? [],
-                pickedRef.current,
+                drawnKeysRef.current,
                 columnOf,
                 tagsRef.current ?? [],
               ),
@@ -1059,7 +1190,7 @@ export function LevelTrace({
           // to stay visible.
           draw: [
             (u) => drawIgnoredLines(u, ignoredBySeries, sampleGapsBySeries),
-            (u) => drawLimits(u, limitsRef.current ?? [], pickedRef.current),
+            (u) => drawLimits(u, limitsRef.current ?? [], drawnKeysRef.current),
           ],
           setSelect: [
             (u) => {
@@ -1145,6 +1276,12 @@ export function LevelTrace({
                   limitsRef.current ?? [],
                   tagsRef.current ?? [],
                 ),
+                rangeReadings: rangeReadingsAt(
+                  u,
+                  rangeWeightingsRef.current,
+                  gapThresholdX,
+                  limitsRef.current ?? [],
+                ),
               });
             },
           ],
@@ -1221,6 +1358,16 @@ export function LevelTrace({
             width: 1.25,
             spanGaps: false,
             gaps,
+            points: {show: false},
+          })),
+          // The place's running Leq, last so it is drawn over the monitors it averages, and
+          // a touch heavier: it is one line summing the rest. No gaps of its own — it holds
+          // through silences and ignored stretches rather than breaking, neither adding to
+          // the mean (see runningLeq).
+          ...rangeWeightings.map(() => ({
+            stroke: themeHex('chart.range'),
+            width: 1.5,
+            spanGaps: false,
             points: {show: false},
           })),
         ],
@@ -1329,6 +1476,8 @@ export function LevelTrace({
     lineCount,
     envelope,
     strokes,
+    rangeWeightings,
+    firstRangeColumn,
     cropped,
     boundsRef,
     rangeRef,
@@ -1421,7 +1570,8 @@ export function LevelTrace({
     });
     // `tags` too: a monitor's ignored stretch comes out of the envelope's data, and every
     // tag moves where the lines are cut, both of which only a fresh projection redraws.
-  }, [project, live, traces, tags]);
+    // And the range lines, whose data follows the crop's start.
+  }, [project, live, traces, tags, rangeLines]);
 
   const applyCrop = useCallback(() => {
     const range = rangeRef.current;
@@ -1542,21 +1692,40 @@ export function LevelTrace({
               ChartTooltipReadings); the readings already arrive monitor by monitor. */}
           <ChartTooltipReadings
             headed={lines.length > 1}
-            groups={lines.flatMap(({deviceId}) => {
-              const rows = tip.readings
-                .filter((r) => r.deviceId === deviceId)
-                .map(({series, db, ignored, over}) => ({
-                  key: series,
-                  label: seriesLabel(series, live),
-                  value: formatDb(db, 'dB'),
-                  color: tokens[picked.indexOf(series)],
-                  struck: ignored,
-                  over,
-                }));
-              return rows.length === 0
+            groups={[
+              ...lines.flatMap(({deviceId}) => {
+                const rows = tip.readings
+                  .filter((r) => r.deviceId === deviceId)
+                  .map(({series, db, ignored, over}) => ({
+                    key: series,
+                    label: seriesLabel(series, live),
+                    value: formatDb(db, 'dB'),
+                    color: tokens[picked.indexOf(series)],
+                    struck: ignored,
+                    over,
+                  }));
+                return rows.length === 0
+                  ? []
+                  : [{key: deviceId, heading: deviceId, rows}];
+              }),
+              // The place's own, after its monitors': the running Leq is of the
+              // location, so under a monitor's name it would be attributed to one.
+              ...(tip.rangeReadings.length === 0
                 ? []
-                : [{key: deviceId, heading: deviceId, rows}];
-            })}
+                : [
+                    {
+                      key: 'range',
+                      heading: 'Location',
+                      rows: tip.rangeReadings.map(({weighting, db, over}) => ({
+                        key: rangeKeyOf(weighting),
+                        label: rangeLabel(weighting),
+                        value: formatDb(db, 'dB'),
+                        color: 'chart.range',
+                        over,
+                      })),
+                    },
+                  ]),
+            ]}
           />
         </ChartTooltip>
       )}

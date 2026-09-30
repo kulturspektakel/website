@@ -441,10 +441,11 @@ model NoiseLocationLimit {
   id         String    @id @default(cuid())
   locationId String
   // Which series the figure is written against — a `SeriesKey`, e.g. `eq_fast:A` or
-  // `peak:C`. Text and not an enum: the name is `${kind}:${weighting}`, which a Postgres
-  // enum cannot spell, and the nine of them are a table in code (see series.ts) rather
-  // than a fact about the database. Both the writer and the reader narrow it through
-  // isSeriesKey, so nothing downstream has to cope with a name that is not a row.
+  // `peak:C`, or `range:A`/`range:C` for the Leq over the limit's own start–end. Text and
+  // not an enum: the name is `${kind}:${weighting}`, which a Postgres enum cannot spell,
+  // and the series are a table in code (see series.ts) rather than a fact about the
+  // database. Both the writer and the reader narrow it through isLimitSeries, so nothing
+  // downstream has to cope with a name that is not a row.
   //
   // Required, because a bare dB figure is not comparable with anything: an LAeq over a
   // minute and an LCpeak are different measurements of the same evening, and a limit that

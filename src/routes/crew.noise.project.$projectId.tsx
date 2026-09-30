@@ -41,6 +41,7 @@ import {
   useLevelPick,
 } from '../components/noise/LevelPicker';
 import {SERIES_STORE} from '../components/noise/seriesSelection';
+import {type RangePick} from '../components/noise/level';
 import {useProjectLogs} from '../components/noise/useProjectLogs';
 import {
   NativeSelectField,
@@ -82,6 +83,10 @@ type View = (typeof VIEWS)[number]['value'];
 // that a drag or a hover across a chart is one write rather than a hundred, short enough
 // that letting go and reaching for the address bar finds it already there.
 const URL_SETTLE_MS = 300;
+
+// No weighting of the crop's Leq, while live (see showRangeLeq). One array rather than a
+// fresh one per render, since it goes into the context and into useProjectLogs' memos.
+const NO_RANGE: RangePick = [];
 
 // `project/` is a static segment because $device already occupies the dynamic slot
 // under /crew/noise — a cuid and a device name are indistinguishable at
@@ -250,7 +255,12 @@ function NoiseProjectDetail() {
   // the same, since the control that sets it is in the layout's own header, and switching
   // view simply re-reads the other view's remembered pick (see useLevelPick).
   const mapOnly = shown === 'map';
-  const {picked, toggleSeries} = useLevelPick({
+  const {
+    picked,
+    toggleSeries,
+    range: pickedRange,
+    toggleRange,
+  } = useLevelPick({
     store: mapOnly ? SERIES_STORE.map : SERIES_STORE.list,
     single: mapOnly,
   });
@@ -445,28 +455,38 @@ function NoiseProjectDetail() {
     };
   }, [mapOnly, listed, withIgnored]);
 
-  const {levels, locationTotals, traces, gaps, breaches, isFetching} =
-    useProjectLogs({
-      projectId,
-      live,
-      picked,
-      selection,
-      // The raw locations with their whole assignment history, not the playhead-resolved
-      // `locations` below: the crop Leq is summed over every minute a monitor stood at a
-      // place, which has nothing to do with the instant being viewed. Everything it
-      // returns is keyed by location id, so the order is immaterial — it takes the sorted
-      // array only so there is one of them on the page.
-      locations: withIgnored,
-      timeline,
-    });
-
-  // Whether the cards are printing the crop's Leq at all: always, given a timeframe to
-  // average over — which live mode has not, an instant being no range.
+  // Whether the cards may print the crop's Leq at all: only given a timeframe to average
+  // over — which live mode has not, an instant being no range.
   //
   // Stated here rather than left to `useProjectLogs` withholding `locationTotals` while
   // live, which would be a correctness resting on an unrelated layer's data-availability
   // rule that the first change to it would quietly break.
   const showRangeLeq = !live;
+  const shownRange = showRangeLeq ? pickedRange : NO_RANGE;
+
+  const {
+    levels,
+    locationTotals,
+    rangeTraces,
+    rangeOver,
+    traces,
+    gaps,
+    breaches,
+    isFetching,
+  } = useProjectLogs({
+    projectId,
+    live,
+    picked,
+    range: shownRange,
+    selection,
+    // The raw locations with their whole assignment history, not the playhead-resolved
+    // `locations` below: the crop Leq is summed over every minute a monitor stood at a
+    // place, which has nothing to do with the instant being viewed. Everything it
+    // returns is keyed by location id, so the order is immaterial — it takes the sorted
+    // array only so there is one of them on the page.
+    locations: withIgnored,
+    timeline,
+  });
 
   // Assigning or ending changes both this project's locations and which devices
   // are still available, on this page and on the index.
@@ -495,7 +515,10 @@ function NoiseProjectDetail() {
       // Withheld rather than flagged: the reading is absent at the point it is *produced*,
       // so a card simply prints what it is given and no consumer — a pin, an export, the
       // next one — has to rediscover the gate. See showRangeLeq.
+      pickedRange: shownRange,
       locationTotals: showRangeLeq ? locationTotals : undefined,
+      rangeTraces: showRangeLeq ? rangeTraces : undefined,
+      rangeOver: showRangeLeq ? rangeOver : undefined,
       traces,
       refresh,
       setListed,
@@ -512,7 +535,10 @@ function NoiseProjectDetail() {
       scrubTo,
       cropTo,
       showRangeLeq,
+      shownRange,
       locationTotals,
+      rangeTraces,
+      rangeOver,
       traces,
       refresh,
       placing,
@@ -598,7 +624,8 @@ function NoiseProjectDetail() {
                 />
               }
             >
-              {/* A set on the list, one of nine on the map (see the pick above). */}
+              {/* A set on the list, one of nine on the map (see the pick above). The crop's
+                  Leq is offered on the list only: the map has no crop. */}
               {mapOnly ? (
                 <LevelSelect
                   live={live}
@@ -610,6 +637,10 @@ function NoiseProjectDetail() {
                   live={live}
                   picked={picked}
                   onToggleSeries={toggleSeries}
+                  // The raw pick, not the one withheld while live: the rows stay ticked,
+                  // greyed, and come back into force when the page leaves live.
+                  range={pickedRange}
+                  onToggleRange={toggleRange}
                 />
               )}
               {mapAvailable && (

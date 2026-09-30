@@ -8,9 +8,15 @@ import {
 import {useTick} from './context';
 import {locale} from '../../utils/dateUtils';
 import type {loadNoiseProject} from '../../routes/crew.noise';
-import type {PickedSeries} from './level';
+import type {PickedSeries, RangePick} from './level';
 import type {SeriesKey} from './series';
-import type {PlayheadLevels, RangeTotals, SeriesTraces} from './projectLogs';
+import type {
+  PlayheadLevels,
+  RangeByWeighting,
+  RangeTotals,
+  RangeVerdict,
+  SeriesTraces,
+} from './projectLogs';
 
 export type NoiseProject = Awaited<ReturnType<typeof loadNoiseProject>>;
 export type NoiseLocationItem = NoiseProject['locations'][number];
@@ -285,23 +291,29 @@ export type ProjectViewCtx = {
   // Every series the page shows: one line each on the charts, in its own shade, and one
   // number each on a location's header, in that same shade (see LocationReadings).
   //
-  // One field and not this plus its first: the readouts with room for a single number — a
-  // map pin, and the crop's Leq, which is one energetic mean and so has one weighting — take
-  // it off the set themselves (see primarySeries and primaryWeighting), which is one call
-  // rather than a derived value carried alongside the thing it is derived from.
+  // One field and not this plus its first: the readout with room for a single number — a
+  // map pin — takes it off the set itself (see primarySeries), which is one call rather
+  // than a derived value carried alongside the thing it is derived from.
   picked: PickedSeries;
-  // Each *location's* Leq over the crop — the energetic mean of its per-minute
-  // loudest, which is the number every card leads with whatever the picker says, and
-  // the average of the very area its chart fills (see locationEnergyIndex). Keyed by
-  // location and not by device on purpose: a monitor's own history spans every stage it
-  // visited, so a per-device figure printed the same number on every card it had ever
-  // stood at.
+  // Which weightings of the crop's Leq the cards show — a tile each and a line each (see
+  // RangePick). Empty while live, when an instant has no range to average: the layout
+  // withholds it (see showRangeLeq), so a card shows what it is given.
+  pickedRange: RangePick;
+  // Each *location's* Leq over the crop, per picked weighting — the energetic mean of its
+  // per-minute loudest, the average of the very area its chart fills (see
+  // locationEnergyIndex). Keyed by location and not by device on purpose: a monitor's own
+  // history spans every stage it visited, so a per-device figure printed the same number
+  // on every card it had ever stood at.
   //
-  // Absent whenever the reading isn't wanted, and that is the whole of the rule a card has
-  // to know: while the one query behind it is in flight, while live — an instant has no
-  // range to average. The layout resolves both and withholds the field (see showRangeLeq); there is deliberately no flag
-  // beside it, because a value that must not be printed is better not handed over.
-  locationTotals?: Record<string, RangeTotals>;
+  // Absent while the one query behind it is in flight and while live, like `pickedRange`.
+  locationTotals?: RangeByWeighting<RangeTotals>;
+  // The same mean as a line: each location's running Leq from the crop's start, per picked
+  // weighting, on the traces' minute grid (see runningLeq). Absent like `locationTotals`.
+  rangeTraces?: RangeByWeighting<(number | null)[]>;
+  // The `Leq,Range` limits each location's own hours broke, per picked weighting, among
+  // those overlapping the crop (see rangeLimitVerdicts) — what turns a card's range tile red.
+  // Absent like `locationTotals`.
+  rangeOver?: RangeByWeighting<RangeVerdict[]>;
   // Whole-project traces at stored resolution, one device record per picked series; the
   // crop is applied by the chart, not here, so these survive a timeline drag untouched.
   traces?: SeriesTraces;

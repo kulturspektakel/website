@@ -35,8 +35,18 @@ export function LocationChart({
   location: NoiseLocationItem;
   lines: DeviceWindows[];
 }) {
-  const {project, live, picked, range, bounds, traces, scrubTo, cropTo} =
-    useProjectView();
+  const {
+    project,
+    live,
+    picked,
+    pickedRange,
+    range,
+    bounds,
+    traces,
+    rangeTraces,
+    scrubTo,
+    cropTo,
+  } = useProjectView();
   // The range the selection menu's "Ignore…" was chosen for, while its dialog is open.
   const [tagging, setTagging] = useState<{start: number; end: number} | null>(
     null,
@@ -51,6 +61,17 @@ export function LocationChart({
         (t) => t.type === 'IGNORE',
       ),
     [project.tags, location.id, lines],
+  );
+
+  // The place's running Leq, a line per ticked `Leq,Range` row (see RangePick). Memoized
+  // so a render that changed neither leaves the chart's data alone.
+  const rangeLines = useMemo(
+    () =>
+      pickedRange.map((weighting) => ({
+        weighting,
+        db: rangeTraces?.[weighting]?.[location.id],
+      })),
+    [pickedRange, rangeTraces, location.id],
   );
 
   // Which of the chart's two modes this card is in, as the one object that decides it:
@@ -76,6 +97,7 @@ export function LocationChart({
         // A swept range tagged from the selection menu instead of zoomed into.
         onTag: setTagging,
         traces,
+        rangeLines,
       } as const);
 
   return (

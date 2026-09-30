@@ -12,7 +12,6 @@ import {
   formatDb,
   isCurrent,
   loudestLevel,
-  primaryWeighting,
   rangeLabel,
   seriesLabel,
   type DisplayedLevel,
@@ -20,10 +19,16 @@ import {
 } from './level';
 import {seriesByKey, SERIES} from './series';
 import {type ChartSeriesToken} from '../../theme-noise';
+import {type Weighting} from './noise';
 import {coverageDetail} from './leq';
 import {IGNORED_OPACITY} from './rangeTags';
 import {exceedsLimit, limitAt, type LimitLine} from './limitLines';
-import {type PlayheadLevels, type RangeTotals} from './projectLogs';
+import {
+  type PlayheadLevels,
+  type RangeTotals,
+  type RangeVerdict,
+} from './projectLogs';
+import {formatTimeframeRange} from './timeframe';
 import {type NoiseAssignment} from './projectView';
 
 // How loud it is at a location — the other half of its header, the half that follows the
@@ -43,10 +48,8 @@ import {type NoiseAssignment} from './projectView';
 //                 uses, so the card and the pin for one place can no longer print
 //                 different numbers.
 //   the crop    — the energetic mean of that loudest, minute by minute, summed upstream
-//                 (see locationEnergyIndex), in the primary's weighting — one mean has room
-//                 for one. It is the average of the very area the chart below fills while
-//                 the primary is what that area is drawn from, so the number and the picture
-//                 agree in the ordinary case.
+//                 (see locationEnergyIndex), once per picked weighting of `Leq,Range`. It
+//                 is where the chart's running line for it ends (see runningLeq).
 //
 // One tile each, in the picker's order — which is the chart's order too (see SERIES) — the
 // value over the quantity's own name, `LAeq,5m` under 98.0. Naming it is what a row of
@@ -69,12 +72,12 @@ import {type NoiseAssignment} from './projectView';
 // none of them: its readings from wherever it went are not this location's.
 
 // One tile of the row, ready to print: the level, the name that goes under it, and the shade
-// it is drawn in — its line's, or a neutral for the crop's mean, which has no line.
+// it is drawn in — its line's.
 type PrintedLevel = {
   key: string;
   level: DisplayedLevel;
   label: string;
-  color: ChartSeriesToken | 'fg';
+  color: ChartSeriesToken | 'chart.range';
   // What qualifies the number, for the one tile that has anything to qualify it — the
   // coverage behind the crop's mean. Carried by the tile rather than as a flag saying
   // "I am the last one", which is a claim about position that reordering the row would
@@ -101,7 +104,7 @@ const INNER_RADIUS = `calc(var(--chakra-radii-${BADGE_RADIUS}) - 1px)`;
 const GRID_CAPS = {base: 2, sm: 3, lg: Infinity} as const;
 
 // The grid a row of `n` badges is laid out in, for every count this can print: the picked
-// series, at most the whole table's worth, and the crop's mean after them.
+// series, at most the whole table's worth, and the crop's mean in each weighting after them.
 //
 // A table rather than three template literals built where the Box is: this component
 // re-renders at least once a second from its own tick, and again on every animation frame
@@ -110,7 +113,7 @@ const GRID_CAPS = {base: 2, sm: 3, lg: Infinity} as const;
 // CHART_CSS are, one file over: Emotion resolves it once for the session rather than
 // hashing a fresh object per card per frame.
 const GRID_COLUMNS = Array.from(
-  {length: SERIES.length + 2},
+  {length: SERIES.length + 3},
   (_, n) =>
     ({
       base: `repeat(${Math.min(n, GRID_CAPS.base)}, 1fr)`,
@@ -121,7 +124,7 @@ const GRID_COLUMNS = Array.from(
 
 export function LocationReadings({
   assignments,
-  total,
+  totals,
   levels,
   live,
   picked,
@@ -134,11 +137,18 @@ export function LocationReadings({
   // above and the chart below are drawn from, and averaging a monitor's time at another
   // stage into this place's reading is the mistake this shape exists to prevent.
   assignments: NoiseAssignment[];
-  // This location's Leq over the crop, already the envelope — and a badge here for as long as
-  // there is one. Absent while live, when an instant has no range to average over it, and
-  // absent when the menu's `Leq,Range` is unticked: the caller decides whether it is asked
+  // This location's Leq over the crop, already the envelope, for each weighting the menu's
+  // `Leq,Range` rows have ticked — a badge each, empty while there is no mean. None while
+  // live, when an instant has no range to average over: the caller decides what is asked
   // for, and this prints whatever it is given.
-  total?: RangeTotals;
+  //
+  // `over` is the weighting's `Leq,Range` limits overlapping the crop that their own hours
+  // broke, worst first (see rangeLimitVerdicts). The badge turns red for them and says which.
+  totals: readonly {
+    weighting: Weighting;
+    total?: RangeTotals;
+    over?: readonly RangeVerdict[];
+  }[];
   // What the playhead's minute holds for each monitor, series by series, from the
   // project's logs. Undefined while live and while the one query behind it is in flight.
   levels?: PlayheadLevels;
@@ -214,16 +224,12 @@ export function LocationReadings({
         ignored: allIgnored,
       };
     }),
-    // Last, and hard against the edge of the card: the number every card is compared on
-    // lines up in one column down the page, whatever is picked above it. Named for the
-    // timeframe where the others name a window, because that is what it averages, and in a
-    // grey rather than a line's colour — it is the mean of the whole picture rather than a
-    // reading off any one line of it, and the badge has to be *some* colour to be a badge.
+    // Last, and hard against the edge of the card: the crop's mean lines up in one column
+    // down the page, whatever is picked above it. Named for the timeframe where the others
+    // name a window, because that is what it averages.
     //
-    // Absent altogether while live — an instant has no range to average — and absent when
-    // the menu's `Leq,Range` is unticked. Off `total` directly rather than through a
-    // DisplayedLevel built only to be tested for emptiness: there is nothing here that
-    // could be stale or unheard, only a mean or no mean at all.
+    // One per ticked `Leq,Range` row, and none while live — an instant has no range to
+    // average. A mean or no mean at all: there is nothing here that could be stale.
     //
     // Its caveat is the coverage, because a Leq over a crop is an average of the minutes
     // that were measured and how many there were is part of the reading: without it a place
@@ -232,24 +238,32 @@ export function LocationReadings({
     // stretch is the location's gap and not charged to the monitor that covered the rest.
     // Same rule as the device page's Leq tile, thresholds included, so a shortfall too small
     // to matter stays unsaid in both.
-    ...(total == null
-      ? []
-      : [
-          {
-            key: 'range',
-            level: {kind: 'history', db: total.db} as const,
-            // In the primary's weighting, that being the one it was summed in — so ticking
-            // a C-weighted row to the top of the pick relabels this LCeq,Range and the
-            // number under it changes with the name.
-            label: rangeLabel(primaryWeighting(picked)),
-            // The one reading with no line of its own, so it takes a neutral rather than a
-            // series' shade — but at full `fg` rather than muted: it is the
-            // number the card is summed up by, and a grey among five saturated badges read
-            // as the one that had been switched off.
-            color: 'fg' as const,
-            caveat: coverageDetail(total),
-          },
-        ]),
+    ...totals.map(({weighting, total, over}) => ({
+      key: `range:${weighting}`,
+      level:
+        total == null
+          ? ({kind: 'none'} as const)
+          : ({kind: 'history', db: total.db} as const),
+      label: rangeLabel(weighting),
+      // Its running line's shade: a light neutral off the series ramp, since it is the
+      // mean of the whole picture rather than a reading off any one window.
+      color: 'chart.range' as const,
+      // A limit on `Leq,Range` is judged on its own hours, not the crop's (see
+      // rangeLimitVerdicts), so the badge prints the crop's mean but warns for the limit —
+      // and names the hours and what they came to, since that is not the number shown.
+      caveat:
+        [
+          total && coverageDetail(total),
+          ...(over ?? []).map(
+            ({limit, db}) =>
+              `${formatTimeframeRange(limit.start, limit.end)}: ${formatDb(db, 'dB')}`,
+          ),
+        ]
+          .filter(Boolean)
+          .join(' · ') || undefined,
+      limitDb: over?.[0]?.limit.decibels,
+      over: (over?.length ?? 0) > 0,
+    })),
   ];
 
   return (
@@ -336,7 +350,7 @@ function ReadingTile({
   db: number | null;
   // What the number is — `LAeq,5m`, or the timeframe for the one averaged over all of it.
   label: string;
-  // The line's shade. The crop's mean has no line, and takes a neutral (see the caller).
+  // The line's shade.
   color: string;
   // The coverage shortfall, spelled out, where there is one worth saying.
   caveat?: string;
@@ -374,9 +388,9 @@ function ReadingTile({
       minW="70px"
       // The colour is the badge, and the hairline of it left showing around the number is
       // what makes the two rows one object rather than a number with a bar under it.
-      // Over its limit the whole badge goes red — frame, name row and number — so a card
-      // that is too loud reads as one from across the page, not only up close.
-      bg={over ? 'chart.limit' : color}
+      // Over its limit only the number and the sign beside it go red: the frame and name
+      // row keep the line's colour, so the badge still says which reading it is.
+      bg={color}
       p="1px"
       // Ignored, the whole badge fades by the amount its line does on the chart below.
       opacity={ignored ? IGNORED_OPACITY : undefined}

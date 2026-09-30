@@ -1,5 +1,12 @@
 import {describe, expect, it} from 'vitest';
-import {limitSegments, strictestLimit, type LimitLine} from './limitLines';
+import {
+  isLimitSeries,
+  limitLine,
+  limitSegments,
+  strictestLimit,
+  type LimitLine,
+  type LimitSeries,
+} from './limitLines';
 import {type SeriesKey} from './series';
 
 // Three things this has to get right that a chart cannot show you it got wrong: a limit half
@@ -10,7 +17,7 @@ import {type SeriesKey} from './series';
 const at = (iso: string) => Date.parse(iso);
 
 const limit = (
-  series: SeriesKey,
+  series: LimitSeries,
   decibels: number,
   start: string,
   end: string,
@@ -22,7 +29,38 @@ const CROP_END = at('2026-07-25T23:00:00Z') / 1000;
 
 const PICKED: SeriesKey[] = ['eq_fast:A'];
 
+// A limit may be written against a weighting's Leq over its own hours as well as a series.
+describe('isLimitSeries', () => {
+  it('takes the series and the range keys, and nothing else', () => {
+    expect(isLimitSeries('eq_fast:A')).toBe(true);
+    expect(isLimitSeries('range:A')).toBe(true);
+    expect(isLimitSeries('range:C')).toBe(true);
+    expect(isLimitSeries('range:B')).toBe(false);
+    expect(isLimitSeries('range')).toBe(false);
+  });
+
+  it('lets a stored range limit through to the chart', () => {
+    const project = {start: new Date(0), end: new Date(1000)};
+    const row = {decibels: 85, start: null, end: null};
+    expect(limitLine({...row, series: 'range:A'}, project)?.series).toBe(
+      'range:A',
+    );
+    expect(limitLine({...row, series: 'range:B'}, project)).toBeNull();
+  });
+});
+
 describe('limitSegments', () => {
+  // Drawn where its line is, like any other: with `Leq,Range` on the chart and not without.
+  it('draws a range limit only where its line is drawn', () => {
+    const range = [
+      limit('range:A', 85, '2026-07-25T21:00:00Z', '2026-07-25T22:00:00Z'),
+    ];
+    expect(limitSegments(range, PICKED, CROP_START, CROP_END)).toEqual([]);
+    expect(
+      limitSegments(range, [...PICKED, 'range:A'], CROP_START, CROP_END),
+    ).toHaveLength(1);
+  });
+
   it('cuts a limit that runs past the crop to the crop', () => {
     expect(
       limitSegments(

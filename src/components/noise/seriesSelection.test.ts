@@ -10,15 +10,27 @@ describe('parseStoredPick', () => {
   it('reads back the stored series in table order', () => {
     expect(parseStoredPick('{"series":["peak:C","eq_fast:A"]}')).toEqual({
       picked: ['eq_fast:A', 'peak:C'],
+      range: [],
     });
   });
 
-  // The bare array, and the entry from when the crop's Leq was a menu row of its own — whose
-  // flag is ignored now that it is always shown.
+  // Weightings in WEIGHTINGS order, unknown ones dropped.
+  it('reads back the range weightings', () => {
+    expect(
+      parseStoredPick('{"series":["eq_fast:A"],"range":["C","B","A"]}'),
+    ).toEqual({picked: ['eq_fast:A'], range: ['A', 'C']});
+  });
+
+  // The bare array, and the entry from when the crop's Leq was one boolean row — which reads
+  // as no range picked.
   it('reads the shapes earlier versions wrote', () => {
-    expect(parseStoredPick('["eq_5m:A"]')).toEqual({picked: ['eq_5m:A']});
-    expect(parseStoredPick('{"series":["eq_5m:A"],"range":false}')).toEqual({
+    expect(parseStoredPick('["eq_5m:A"]')).toEqual({
       picked: ['eq_5m:A'],
+      range: [],
+    });
+    expect(parseStoredPick('{"series":["eq_5m:A"],"range":true}')).toEqual({
+      picked: ['eq_5m:A'],
+      range: [],
     });
   });
 
@@ -40,7 +52,7 @@ describe('parseStoredPick', () => {
   // still names the line the pins are drawn in.
   it('takes the first only where one is all there is room for', () => {
     expect(
-      parseStoredPick('{"series":["peak:C","eq_fast:A"]}', true)?.picked,
-    ).toEqual(['eq_fast:A']);
+      parseStoredPick('{"series":["peak:C","eq_fast:A"],"range":["A"]}', true),
+    ).toEqual({picked: ['eq_fast:A'], range: []});
   });
 });

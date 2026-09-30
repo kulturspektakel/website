@@ -37,8 +37,8 @@ import {
 import {errorToast} from './toast';
 import {TimeField, useDraftField} from './TimeField';
 import {applyEdits, hasEdits} from './draftTable';
-import {primarySeries, seriesLabel, seriesOptions} from './level';
-import {type SeriesKey} from './series';
+import {primarySeries, rangeKey, rangeLabel, seriesOptions} from './level';
+import {limitLabel, type LimitSeries} from './limitLines';
 import {
   orderLocations,
   useProjectView,
@@ -56,12 +56,17 @@ import {
 // so the finest window reads `LAeq,1m` here rather than the device page's per-second name for
 // the same row.
 //
-// The timeframe's Leq is not among them, and that falls out of where it lives rather than
-// being excluded here: it is not one of the nine series, has no line and no live value, and
-// is not in the picker for exactly that reason. A limit
-// on an average over whatever the timeline happens to be cropped to would be a limit on the
-// crop.
-const SERIES_GROUPS = seriesOptions(false);
+// Each block ends on the timeframe's Leq in its weighting, `LAeq,Range` — and the timeframe
+// is the limit's own start and end rather than the crop: a limit on whatever the timeline
+// happens to be cropped to would be a limit on the crop. So "LAeq,Range 85 dB, 20:00–23:00"
+// is the Leq of those three hours (see rangeLimitVerdicts).
+const SERIES_GROUPS = seriesOptions(false).map((group) => ({
+  ...group,
+  options: [
+    ...group.options,
+    {key: rangeKey(group.weighting), label: rangeLabel(group.weighting)},
+  ] as Array<{key: LimitSeries; label: string}>,
+}));
 
 // One line of the table while it is being edited, the same arrangement DraftRow has in
 // the assignments dialog: `id` is the row it came from or null for one added here, `key`
@@ -74,7 +79,7 @@ const SERIES_GROUPS = seriesOptions(false);
 type DraftLimit = {
   key: string;
   id: string | null;
-  series: SeriesKey;
+  series: LimitSeries;
   decibels: number | null;
   start: number | null;
   end: number | null;
@@ -316,8 +321,8 @@ function LimitRow({
   // limit on two series — or what the row is for while it has no figure yet.
   const which =
     row.decibels == null
-      ? `new ${seriesLabel(row.series, false)} limit`
-      : `${row.decibels} dB ${seriesLabel(row.series, false)} limit`;
+      ? `new ${limitLabel(row.series)} limit`
+      : `${row.decibels} dB ${limitLabel(row.series)} limit`;
 
   return (
     <Table.Row>
@@ -334,7 +339,7 @@ function LimitRow({
             onChange={(e) =>
               // The options are the table's own keys, so the cast is the DOM's string
               // coming back as what was put into it.
-              onChange({...row, series: e.currentTarget.value as SeriesKey})
+              onChange({...row, series: e.currentTarget.value as LimitSeries})
             }
           >
             {/* A group per weighting, headed by the unit its rows read in — the same

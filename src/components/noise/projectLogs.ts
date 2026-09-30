@@ -9,6 +9,8 @@ import {
 } from './noise';
 import {seriesByKey, seriesKey, SERIES_KEYS, type SeriesKey} from './series';
 import {fromEnergy, toEnergy, usableDb, type Coverage} from './leq';
+import {exceedsLimit, type LimitLine} from './limitLines';
+import {rangeKey} from './level';
 
 // Reading the project page's numbers off the whole event, which the browser now
 // holds (see projectLogs in noiseHistory.server.ts). Every question the map and the
@@ -31,14 +33,18 @@ export const logColumn = (
 
 // The 1-minute column, the only one an aggregate over a range may average: 5m and 30m
 // are trailing windows the device reports, so averaging those would average twice. In
-// the weighting the caller asked for, which for the crop's Leq is the primary pick's —
-// one mean cannot be in two.
+// the weighting the caller asked for — one mean cannot be in two, so the crop's Leq builds
+// an index per picked weighting (see RangePick).
 const eqColumn = (logs: ProjectLogs, deviceId: string, weighting: Weighting) =>
   logColumn(logs, deviceId, seriesKey('eq_fast', weighting));
 
 // A crop's Leq for one device, carrying how much of the crop it was actually
 // measured over — which is the caveat that keeps the number honest.
 export type RangeTotals = {db: number} & Coverage;
+
+// Per picked weighting, per location — the shape both of the crop's readings arrive in, its
+// Leq and its running line.
+export type RangeByWeighting<T> = Partial<Record<Weighting, Record<string, T>>>;
 
 // A location and the placements whose readings count as its own — the same windows the
 // chart's lines are clipped to (see maskToWindows), in the shape the index needs.
@@ -92,9 +98,8 @@ export const inMinutes = (ranges: readonly [number, number][], i: number) =>
  * the picture are one statement in the ordinary case rather than two derivations that can
  * drift. Pick a coarser window alone and the lead still reads the minute Leq: it is the
  * number every card is compared on, and it must not move with the picker. Its *weighting*
- * does follow the pick — the primary's, an energetic mean having room for exactly one —
- * which is why the card names this tile LAeq,Range or LCeq,Range rather than leaving it
- * unqualified. It is per location and not per device because a monitor's own history
+ * is picked — an energetic mean has room for exactly one, so there is an index per ticked
+ * LAeq,Range / LCeq,Range row. It is per location and not per device because a monitor's own history
  * spans every stage it visited: averaged whole, it would print the same figure on the
  * card of every place it ever stood.
  *
@@ -273,8 +278,8 @@ export function seriesLevelsByDevice(
 }
 
 /**
- * What each location averaged over the whole crop — the number every card leads with,
- * whatever the picker is set to. Its own record, and not a mode of the one above,
+ * What each location averaged over the whole crop — the tile a picked `Leq,Range` prints.
+ * Its own record, and not a mode of the one above,
  * because the two answer different questions and change on different things: this one
  * ignores the playhead, that one ignores the crop.
  */
@@ -288,6 +293,108 @@ export function totalsByLocation(
     if (totals != null) out[locationId] = totals;
   }
   return out;
+}
+
+/**
+ * A location's running Leq on the same minute grid the traces use (see logSeries) — the line
+ * a picked `Leq,Range` draws. At each minute, the energetic mean from an *anchor* up to and
+ * including that minute:
+ *
+ *   inside a limit written against this `Leq,Range` (`windows`), the limit's own start —
+ *     so what is drawn under the rule is exactly what the rule is judged on, the Leq of the
+ *     limit's hours so far. Where two overlap, the one limitAt would judge by: the strictest,
+ *     and of equally strict ones the earlier.
+ *   everywhere else, `start` — the crop's, so at the crop's last minute the line is the
+ *     number on the tile. (Not where the crop ends inside a limit: there the line is that
+ *     limit's Leq, which is the price of there being one line rather than two.)
+ *
+ * The same mean locationRangeTotals takes, over a window that grows a minute at a time. Null
+ * before the anchor and until the first minute there was a reading; flat, not broken, through
+ * a stretch nobody heard or that was ignored, since neither adds to the mean.
+ *
+ * Runs to the end of the payload rather than the crop's end, so dragging the end leaves it
+ * untouched: past the crop nothing is drawn anyway.
+ */
+export function runningLeq(
+  index: LocationEnergyIndex,
+  locationId: string,
+  start: number,
+  windows: readonly {decibels: number; start: number; end: number}[] = [],
+): (number | null)[] {
+  const out = new Array<number | null>(index.minutes).fill(null);
+  const location = index.locations[locationId];
+  if (!location) return out;
+  const from = Math.max(0, logMinuteIndex(index.grid, start));
+  // Where each minute's mean starts. Written least strict first, so the strictest window over
+  // a minute is the last to claim it — and of equals the earlier, written after the later.
+  const anchor = new Int32Array(index.minutes).fill(from);
+  const ranked = [...windows].sort(
+    (a, b) => b.decibels - a.decibels || b.start - a.start,
+  );
+  for (const w of ranked) {
+    const a = Math.max(0, logMinuteIndex(index.grid, w.start));
+    const b = Math.min(index.minutes, logMinuteIndex(index.grid, w.end));
+    for (let i = a; i < b; i++) anchor[i] = a;
+  }
+  const {energy, measured} = location;
+  for (let i = 0; i < index.minutes; i++) {
+    const at = anchor[i]!;
+    if (i < at) continue;
+    const minutes = measured[i + 1]! - measured[at]!;
+    if (minutes === 0) continue;
+    out[i] = fromEnergy((energy[i + 1]! - energy[at]!) / minutes);
+  }
+  return out;
+}
+
+// A location's limits written against one weighting's `Leq,Range`.
+export const rangeLimits = (
+  limits: readonly LimitLine[],
+  weighting: Weighting,
+): LimitLine[] => limits.filter((l) => l.series === rangeKey(weighting));
+
+// Every location's running Leq from one start, each restarting inside its own `Leq,Range`
+// limits for this index's weighting (see runningLeq).
+export function runningLeqByLocation(
+  index: LocationEnergyIndex,
+  weighting: Weighting,
+  start: number,
+  locations: readonly {id: string; limits: readonly LimitLine[]}[],
+): Record<string, (number | null)[]> {
+  const out: Record<string, (number | null)[]> = {};
+  for (const {id, limits} of locations) {
+    if (!index.locations[id]) continue;
+    out[id] = runningLeq(index, id, start, rangeLimits(limits, weighting));
+  }
+  return out;
+}
+
+// A `Leq,Range` limit its hours broke, and the Leq they came to.
+export type RangeVerdict = {limit: LimitLine; db: number};
+
+/**
+ * The `Leq,Range` limits a location is over, for one weighting, loudest overshoot first:
+ * each judged on the energetic mean of its own hours — as much of them as has been measured,
+ * locationRangeTotals clamping to the end of the payload — rather than on the crop's. Only
+ * those that overlap `crop`, since the card saying so is showing that stretch.
+ */
+export function rangeLimitVerdicts(
+  index: LocationEnergyIndex,
+  weighting: Weighting,
+  location: {id: string; limits: readonly LimitLine[]},
+  crop: {start: number; end: number},
+): RangeVerdict[] {
+  const out: RangeVerdict[] = [];
+  for (const limit of rangeLimits(location.limits, weighting)) {
+    if (limit.start >= crop.end || limit.end <= crop.start) continue;
+    const totals = locationRangeTotals(index, location.id, limit);
+    if (totals && exceedsLimit(totals.db, limit.decibels)) {
+      out.push({limit, db: totals.db});
+    }
+  }
+  return out.sort(
+    (a, b) => b.db - b.limit.decibels - (a.db - a.limit.decibels),
+  );
 }
 
 /**

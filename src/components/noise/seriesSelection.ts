@@ -1,4 +1,5 @@
-import {nonEmptyPick, type PickedSeries} from './level';
+import {nonEmptyPick, type PickedSeries, type RangePick} from './level';
+import {WEIGHTINGS} from './noise';
 import {SERIES_KEYS, type SeriesKey} from './series';
 
 /**
@@ -32,10 +33,12 @@ export const SERIES_STORE = {
 
 export type SeriesStore = (typeof SERIES_STORE)[keyof typeof SERIES_STORE];
 
-// What the menu is set to: the lines. The shape the hook holds and the shape that is stored,
-// so there is one statement of what a remembered menu is.
+// What the menu is set to: the lines, and which weightings of the crop's Leq are shown (see
+// RangePick). The shape the hook holds and the shape that is stored, so there is one
+// statement of what a remembered menu is.
 export type StoredPick = {
   picked: PickedSeries;
+  range: RangePick;
 };
 
 // What a page opens on before anything has been picked, and what a stored value that means
@@ -47,6 +50,7 @@ export type StoredPick = {
 // toggledSeries, onlySeries).
 export const DEFAULT_PICK: StoredPick = {
   picked: ['eq_fast:A'],
+  range: [],
 };
 
 const storageKey = (store: SeriesStore) => `${STORAGE_PREFIX}${store}`;
@@ -77,9 +81,11 @@ function storedSeries(value: unknown, single: boolean): PickedSeries | null {
  * localStorage entry would be one nobody could open again without devtools, and the cost of
  * being wrong here is a chart drawn in dB(A).
  *
- * Both shapes an earlier version of this file wrote are still read: the bare array, and the
- * `{series, range}` entry from when the crop's Leq was a row of the menu — its `range` flag is
- * simply ignored now that the cards always print it.
+ * Every shape an earlier version of this file wrote is still read: the bare array, and the
+ * `{series, range}` entry — whose `range` was once a boolean for a single row in the primary's
+ * weighting, and is now the list of weightings picked. A boolean reads as none picked.
+ *
+ * `single` pages (the map) have no range rows, so nothing is read for them.
  *
  * Separate from the read below so the rule can be tested without a browser, which is also
  * why it takes the raw string.
@@ -100,7 +106,15 @@ export function parseStoredPick(
       ? (parsed as Record<string, unknown>)
       : null;
   const picked = storedSeries(record ? record.series : parsed, single);
-  return picked == null ? null : {picked};
+  if (picked == null) return null;
+  const range = record?.range;
+  return {
+    picked,
+    range:
+      single || !Array.isArray(range)
+        ? []
+        : WEIGHTINGS.filter((w) => range.includes(w)),
+  };
 }
 
 // The window guard is for the server render — see useLevelPick for why the call is made
@@ -120,13 +134,13 @@ export function readStoredPick(
 // full storage (or a browser refusing it altogether) costs the memory, not the page.
 export function writeStoredPick(
   store: SeriesStore,
-  {picked}: {picked: readonly SeriesKey[]},
+  {picked, range}: {picked: readonly SeriesKey[]; range: RangePick},
 ): void {
   if (typeof window === 'undefined') return;
   try {
     window.localStorage.setItem(
       storageKey(store),
-      JSON.stringify({series: picked}),
+      JSON.stringify({series: picked, range}),
     );
   } catch {
     // ignore

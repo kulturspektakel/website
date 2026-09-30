@@ -1,4 +1,31 @@
 import {isSeriesKey, type SeriesKey} from './series';
+import {
+  isRangeKey,
+  rangeKeyWeighting,
+  rangeLabel,
+  seriesLabel,
+  type RangeKey,
+} from './level';
+
+/**
+ * What a limit can be written against: one of the series, or the Leq over a timeframe in one
+ * weighting — `LAeq,Range`. For the latter the timeframe is the limit's own start and end, not
+ * the crop: "LAeq over 20:00–23:00 ≤ 85 dB" is judged on the energetic mean of those hours
+ * (see runningLeq and rangeLimitVerdicts).
+ */
+export type LimitSeries = SeriesKey | RangeKey;
+
+// The column is text, so this is the one test of whether it names something a limit can be
+// written against — the server fn that accepts one and both loaders go through it.
+export const isLimitSeries = (value: string): value is LimitSeries =>
+  isSeriesKey(value) || isRangeKey(value);
+
+// How a limit's series is named in the dialog and wherever a limit is spelled out — the stored
+// page's names, since that is what a limit is checked against.
+export const limitLabel = (key: LimitSeries): string =>
+  isRangeKey(key)
+    ? rangeLabel(rangeKeyWeighting(key))
+    : seriesLabel(key, false);
 
 // A location's permitted level as a chart takes one: the series it is written against, the
 // figure, and both bounds concrete, in epoch ms.
@@ -14,7 +41,7 @@ import {isSeriesKey, type SeriesKey} from './series';
 // depending on which — an LAeq over a minute and an LCpeak are not the same measurement of
 // the same evening. So a limit names one, and is drawn only where that one is.
 export type LimitLine = {
-  series: SeriesKey;
+  series: LimitSeries;
   decibels: number;
   start: number;
   end: number;
@@ -34,13 +61,13 @@ export type LimitLine = {
  *
  * Null for a row whose series the table no longer has — a limit with nothing to be drawn
  * against, dropped rather than carried to a colour lookup that misses. The column is text,
- * so this is also the one place it becomes a SeriesKey.
+ * so this is also the one place it becomes a LimitSeries.
  */
 export function limitLine(
   row: {series: string; decibels: number; start: Date | null; end: Date | null},
   project: {start: Date; end: Date},
 ): LimitLine | null {
-  if (!isSeriesKey(row.series)) return null;
+  if (!isLimitSeries(row.series)) return null;
   return {
     series: row.series,
     decibels: row.decibels,
@@ -53,7 +80,7 @@ export function limitLine(
 // cut to what is on screen. `from`/`to` and not `start`/`end`, because these are no longer
 // the limit's own bounds — they are where its line begins and ends on this chart.
 export type LimitSegment = {
-  series: SeriesKey;
+  series: LimitSeries;
   decibels: number;
   from: number;
   to: number;
@@ -91,7 +118,7 @@ export type LimitSegment = {
  */
 export function limitSegments(
   limits: readonly LimitLine[],
-  picked: readonly SeriesKey[],
+  picked: readonly LimitSeries[],
   xMin: number,
   xMax: number,
 ): LimitSegment[] {
@@ -142,7 +169,7 @@ export function limitSegments(
  */
 export function strictestLimit(
   limits: readonly LimitLine[],
-  series: SeriesKey,
+  series: LimitSeries,
   from: number,
   to: number,
 ): number | null {
@@ -170,7 +197,7 @@ export const exceedsLimit = (
 // strictest in force then (see strictestLimit), or null where none is.
 export const limitAt = (
   limits: readonly LimitLine[],
-  series: SeriesKey,
+  series: LimitSeries,
   at: number,
 ): number | null => strictestLimit(limits, series, at, at + 1);
 
@@ -178,7 +205,7 @@ export const limitAt = (
 // series then — over any of them being over the strictest.
 export const overLimitAt = (
   limits: readonly LimitLine[],
-  series: SeriesKey,
+  series: LimitSeries,
   at: number,
   db: number,
 ): boolean => exceedsLimit(db, limitAt(limits, series, at));

@@ -5,6 +5,8 @@ import {
   locationRangeTotals,
   logColumn,
   logSeries,
+  rangeLimitVerdicts,
+  runningLeq,
   seriesLevelsByDevice,
   totalsByLocation,
 } from './projectLogs';
@@ -100,6 +102,96 @@ const sued = {
   id: 'sued',
   assignments: [{deviceId: 'mic-1', start: START, end: at(2)}],
 };
+
+// The line a picked Leq,Range draws: the crop's mean over a window that grows a minute at a
+// time, so wherever the crop ends, its last minute reads what the tile prints.
+describe('runningLeq', () => {
+  const index = locationEnergyIndex(logs, 'A', [nord, sued]);
+
+  it('ends each minute on the mean of the crop up to it', () => {
+    const line = runningLeq(index, 'nord', at(1));
+    expect(line[0]).toBeNull();
+    for (const end of [2, 3, 4]) {
+      expect(line[end - 1]).toBeCloseTo(
+        locationRangeTotals(index, 'nord', {start: at(1), end: at(end)})!.db,
+        10,
+      );
+    }
+  });
+
+  // Nothing heard adds nothing to the mean, so the line holds rather than breaking.
+  it('holds through minutes nobody reported', () => {
+    const line = runningLeq(index, 'sued', START);
+    expect(line[1]).toBeCloseTo(energeticMeanDb([60, 70])!, 10);
+    expect(line[2]).toBe(line[1]);
+    expect(line[3]).toBe(line[1]);
+  });
+
+  // Inside a `Leq,Range` limit the line is that limit's Leq so far: it restarts at the
+  // limit's start, and goes back to the crop's once the limit is over.
+  it('restarts inside a range limit and reverts after it', () => {
+    const line = runningLeq(index, 'nord', START, [
+      {decibels: 80, start: at(1), end: at(2)},
+    ]);
+    // nord's loudest per minute: 60, 70, 90, 90.
+    expect(line[0]).toBe(60);
+    expect(line[1]).toBeCloseTo(70, 10);
+    expect(line[2]).toBeCloseTo(energeticMeanDb([60, 70, 90])!, 10);
+  });
+
+  it('anchors on the strictest of overlapping limits', () => {
+    const line = runningLeq(index, 'nord', START, [
+      {decibels: 85, start: at(0), end: at(4)},
+      {decibels: 80, start: at(2), end: at(4)},
+    ]);
+    expect(line[1]).toBeCloseTo(energeticMeanDb([60, 70])!, 10);
+    expect(line[2]).toBeCloseTo(90, 10);
+    expect(line[3]).toBeCloseTo(90, 10);
+  });
+
+  it('is all null for a place the index does not know', () => {
+    expect(runningLeq(index, 'nobody', START)).toEqual([
+      null,
+      null,
+      null,
+      null,
+    ]);
+  });
+});
+
+describe('rangeLimitVerdicts', () => {
+  const index = locationEnergyIndex(logs, 'A', [nord]);
+  const limits = [
+    {series: 'range:A' as const, decibels: 85, start: at(2), end: at(4)},
+    {series: 'range:A' as const, decibels: 95, start: at(2), end: at(4)},
+    {series: 'range:C' as const, decibels: 50, start: at(2), end: at(4)},
+    {series: 'eq_fast:A' as const, decibels: 50, start: at(2), end: at(4)},
+  ];
+
+  // Minutes 2–3 are 90 dB(A): over the 85, within the 95, and the C and series limits are
+  // not this weighting's Leq,Range.
+  it('judges each range limit on its own hours', () => {
+    expect(
+      rangeLimitVerdicts(
+        index,
+        'A',
+        {id: 'nord', limits},
+        {start: START, end: at(4)},
+      ),
+    ).toEqual([{limit: limits[0], db: expect.closeTo(90, 10)}]);
+  });
+
+  it('leaves out limits the crop does not reach', () => {
+    expect(
+      rangeLimitVerdicts(
+        index,
+        'A',
+        {id: 'nord', limits},
+        {start: START, end: at(2)},
+      ),
+    ).toEqual([]);
+  });
+});
 
 describe('locationRangeTotals', () => {
   // The index is what every Leq on the page is read off; building one per weighting

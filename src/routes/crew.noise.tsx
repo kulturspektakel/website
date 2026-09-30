@@ -22,8 +22,11 @@ import {prismaClient} from '../server/prismaClient.server';
 import {deviceAssignments, projectLogs} from '../server/noiseHistory.server';
 import {Toaster} from '../components/chakra-snippets/toaster';
 import {END_BEFORE_START} from '../components/noise/timeframe';
-import {isSeriesKey, type SeriesKey} from '../components/noise/series';
-import {limitLine} from '../components/noise/limitLines';
+import {
+  isLimitSeries,
+  limitLine,
+  type LimitSeries,
+} from '../components/noise/limitLines';
 
 // The section's data layer lives in this layout file and is imported by the leaf
 // routes, as in crew.produkte.tsx. Every DateTime crosses the wire as epoch ms
@@ -451,13 +454,13 @@ export const noiseLimitDecibels = z
   .min(NOISE_LIMIT_DB.min)
   .max(NOISE_LIMIT_DB.max);
 
-// Which series the figure is written against, checked against the one table that says what
-// a series is (see isSeriesKey). The column is text, so this is the only thing standing
-// between a typo in a request and a row nothing can draw — and it is `z.custom` rather than
-// a `z.enum` of the nine names so that the list stays derived from the table rather than
-// spelled out a second time here.
-const noiseLimitSeries = z.custom<SeriesKey>(
-  (v) => typeof v === 'string' && isSeriesKey(v),
+// Which series the figure is written against — one of the table's (see isSeriesKey) or a
+// weighting's `Leq,Range` (see LimitSeries). The column is text, so this is the only thing
+// standing between a typo in a request and a row nothing can draw — and it is `z.custom`
+// rather than a `z.enum` of the names so that the list stays derived from the table rather
+// than spelled out a second time here.
+const noiseLimitSeries = z.custom<LimitSeries>(
+  (v) => typeof v === 'string' && isLimitSeries(v),
   'Unknown series',
 );
 

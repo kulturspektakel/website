@@ -1,5 +1,6 @@
 import {describe, expect, it} from 'vitest';
 import {coverageGaps, limitBreaches, thinGaps} from './logCoverage';
+import {locationEnergyIndex} from './projectLogs';
 import {MINUTE_MS} from './timeframe';
 import type {ProjectLogs} from './noise';
 
@@ -113,6 +114,23 @@ describe('limitBreaches', () => {
     expect(limitBreaches(logs, [stage, bar], ['eq_fast:A'])).toEqual([
       {start: at(2), end: at(3)},
     ]);
+  });
+
+  // Judged on the limit's own hours: the Leq from its start up to each minute of them.
+  it("flags where a range limit's hours average over it so far", () => {
+    const evening = {
+      ...stage,
+      limits: [
+        {series: 'range:A' as const, decibels: 72, start: at(1), end: at(4)},
+      ],
+    };
+    const index = locationEnergyIndex(logs, 'A', [evening]);
+    // Minute 1 alone is 70; with minute 2's 80 it is 77.4, and with minute 3's 70 still 76.
+    expect(
+      limitBreaches(logs, [evening], [], [{weighting: 'A', index}]),
+    ).toEqual([{start: at(2), end: at(4)}]);
+    // Not picked, not asked.
+    expect(limitBreaches(logs, [evening], ['eq_fast:A'])).toBeNull();
   });
 
   it('says nothing when no place has a limit for the series', () => {
