@@ -118,8 +118,9 @@ export function BandApplicationRating({
         <>
           {/* Fixed-width slot for the average. The number is revealed only once
               the viewer has cast their own rating, but the slot is always
-              reserved so the avatars never shift when it appears. */}
-          <Box minW="7" textAlign="end">
+              reserved so the avatars never shift when it appears. Never shrunk
+              or wrapped: squeezed, "4.0" would break at the dot. */}
+          <Box minW="7" textAlign="end" flexShrink="0">
             {value > 0 && optimisticAverage != null && (
               <Tooltip
                 positioning={{placement: 'top'}}
@@ -139,6 +140,7 @@ export function BandApplicationRating({
                   fontWeight="bold"
                   lineHeight="1"
                   color="blue.solid"
+                  whiteSpace="nowrap"
                 >
                   {optimisticAverage.toFixed(1)}
                 </Text>
