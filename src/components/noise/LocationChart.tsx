@@ -6,8 +6,9 @@ import {
   type DeviceWindows,
   type NoiseLocationItem,
 } from './projectView';
-import {locationTags} from './rangeTags';
+import {locationTags, type NoiseRangeTag} from './rangeTags';
 import {RangeTagDialog} from './RangeTagDialog';
+import {RemoveTagDialog} from './RemoveTagDialog';
 
 // A location's levels over the crop, as one chart of the place.
 //
@@ -51,6 +52,8 @@ export function LocationChart({
   const [tagging, setTagging] = useState<{start: number; end: number} | null>(
     null,
   );
+  // The ignored range whose "Ignored" pill ✕ was pressed, while its dialog is open.
+  const [untagging, setUntagging] = useState<NoiseRangeTag | null>(null);
 
   // Every ignored stretch that reaches this place — the event's, its own, and its
   // monitors' while they stood here (see locationTags). Memoized so the chart's redraw
@@ -126,6 +129,10 @@ export function LocationChart({
         // limit that ended at midnight is still part of a crop that covers midnight.
         limits={location.limits}
         tags={tags}
+        // The chart hands back one of `tags`, so it is one of the records above.
+        onUntag={(tag) =>
+          setUntagging(tags.find((t) => t.id === tag.id) ?? null)
+        }
         {...mode}
       />
       {tagging && (
@@ -134,6 +141,13 @@ export function LocationChart({
           location={location}
           lines={lines}
           onClose={() => setTagging(null)}
+        />
+      )}
+      {untagging && (
+        <RemoveTagDialog
+          tag={untagging}
+          location={location}
+          onClose={() => setUntagging(null)}
         />
       )}
     </Box>

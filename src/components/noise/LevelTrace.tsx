@@ -1,5 +1,13 @@
-import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
-import {Box, Text} from '@chakra-ui/react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent,
+} from 'react';
+import {Box, HStack, IconButton, Text} from '@chakra-ui/react';
+import {LuX} from 'react-icons/lu';
 import uPlot from 'uplot';
 import {subscribeToClock, subscribeToFrames, useNoiseBuffers} from './context';
 import {
@@ -668,6 +676,7 @@ const CHART_CSS = {
 // A tag as the chart draws it. `deviceId` null means every line on the chart (the event's
 // or the place's own); otherwise only that monitor's lines.
 export type ChartTag = {
+  id: string;
   start: number;
   end: number | null;
   deviceId: string | null;
@@ -697,6 +706,9 @@ type LevelTraceProps = {
   // marker at `start`. Optional for the same reason as the limits: only a location's
   // chart has any.
   tags?: readonly ChartTag[];
+  // Takes one of `tags` back — what the ✕ on the "Ignored" pill over a hovered range does.
+  // Optional: without it there is no pill.
+  onUntag?: (tag: ChartTag) => void;
   // How much height to give the time axis, for the one caller that cannot take the
   // default. A chart's bottom gutter comes out of its plot area, so two charts side by
   // side draw their grids at different heights unless they reserve the same — and on the
@@ -794,6 +806,7 @@ export function LevelTrace({
   picked,
   limits,
   tags,
+  onUntag,
   range,
   bounds,
   onScrub,
@@ -979,6 +992,65 @@ export function LevelTrace({
   // a hover here puts under the playhead, and which is why the rule lives in instantLabel
   // rather than here.
   const formatRef = useLatest(instantLabel(live));
+
+  // The ignored range the pointer is in, and where its "Ignored" pill stands: along the
+  // plot's bottom edge, centred on the range's visible part, so the pill stays put while
+  // the pointer moves through the range rather than following it — and overhangs a range
+  // narrower than itself rather than moving off it. Null whenever there is no pill.
+  const [untag, setUntag] = useState<{
+    tag: ChartTag;
+    left: number;
+    top: number;
+  } | null>(null);
+  const untagPillRef = useRef<HTMLDivElement | null>(null);
+
+  // Off the wrapper's own pointer events rather than uPlot's cursor hook: the pill is a
+  // sibling of the plot, so moving onto it is the plot's pointer *leaving*, and a pill
+  // cleared by that would vanish under the hand reaching for it.
+  const hoverUntag = (e: PointerEvent) => {
+    if (!onUntag) return;
+    // Over the pill itself: it stays where it stands.
+    if (untagPillRef.current?.contains(e.target as Node)) return;
+    const plot = plotRef.current;
+    const container = containerRef.current;
+    // Not mid-sweep or with a menu open, and not for a finger, which has no hover — a tap
+    // on the trace is a scrub.
+    if (
+      !plot ||
+      !container ||
+      e.pointerType === 'touch' ||
+      e.buttons !== 0 ||
+      pendingRef.current
+    ) {
+      setUntag(null);
+      return;
+    }
+    const over = plot.over.getBoundingClientRect();
+    const x = e.clientX - over.left;
+    const y = e.clientY - over.top;
+    const at = plot.posToVal(x, 'x') * 1000;
+    // The innermost range where several overlap, so each of them can be reached.
+    const tag =
+      x >= 0 && x <= over.width && y >= 0 && y <= over.height
+        ? (tagsRef.current ?? [])
+            .filter((t) => t.end != null && t.start <= at && at < t.end)
+            .sort((a, b) => a.end! - a.start - (b.end! - b.start))[0]
+        : undefined;
+    if (!tag) {
+      setUntag(null);
+      return;
+    }
+    const x0 = Math.max(0, plot.valToPos(tag.start / 1000, 'x'));
+    const x1 = Math.min(over.width, plot.valToPos(tag.end! / 1000, 'x'));
+    const origin = container.getBoundingClientRect();
+    const left = over.left - origin.left + (x0 + x1) / 2;
+    const top = over.bottom - origin.top - 6;
+    setUntag((prev) =>
+      prev?.tag === tag && prev.left === left && prev.top === top
+        ? prev
+        : {tag, left, top},
+    );
+  };
 
   const playheadRef = useRef<HTMLDivElement | null>(null);
 
@@ -1721,7 +1793,14 @@ export function LevelTrace({
     // Fills its card, down to the floor above. The plot inside is sized to this box by
     // the observer rather than the other way round, so the height comes from the layout
     // and nothing here has to know how many locations are sharing the page.
-    <Box position="relative" h="full" minH={`${MIN_PLOT_HEIGHT}px`} w="full">
+    <Box
+      position="relative"
+      h="full"
+      minH={`${MIN_PLOT_HEIGHT}px`}
+      w="full"
+      onPointerMove={hoverUntag}
+      onPointerLeave={() => setUntag(null)}
+    >
       <Box
         ref={containerRef}
         position="absolute"
@@ -1756,6 +1835,48 @@ export function LevelTrace({
           }
           onClose={clearSelection}
         />
+      )}
+      {untag && onUntag && (
+        // A label saying what the range is, with the way to take it back on its end.
+        <HStack
+          ref={untagPillRef}
+          position="absolute"
+          left={`${untag.left}px`}
+          top={`${untag.top}px`}
+          transform="translate(-50%, -100%)"
+          gap="0.5"
+          ps="2.5"
+          pe="0.5"
+          py="0.5"
+          borderRadius="full"
+          borderWidth="1px"
+          bg="white"
+          color="gray.900"
+          borderColor="gray.200"
+          fontSize="xs"
+          fontWeight="medium"
+          whiteSpace="nowrap"
+          cursor="default"
+        >
+          Ignored
+          <IconButton
+            aria-label="Un-ignore range"
+            size="2xs"
+            variant="ghost"
+            cursor="pointer"
+            color="gray.900"
+            _hover={{bg: 'gray.100'}}
+            borderRadius="full"
+            minW="5"
+            h="5"
+            onClick={() => {
+              onUntag(untag.tag);
+              setUntag(null);
+            }}
+          >
+            <LuX />
+          </IconButton>
+        </HStack>
       )}
       {tip && (
         <ChartTooltip left={tip.left} top={tip.top} fraction={tip.fraction}>

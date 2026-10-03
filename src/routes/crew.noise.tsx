@@ -600,6 +600,15 @@ export const createNoiseTag = createServerFn()
     });
   });
 
+// Takes a tag back — what the chart's "Un-ignore" confirms. deleteMany, so a double press
+// or a stale page deletes nothing twice.
+export const deleteNoiseTag = createServerFn()
+  .middleware([crewAuth])
+  .inputValidator(z.object({tagId: z.string().min(1)}))
+  .handler(async ({data: {tagId}}) => {
+    await prismaClient.noiseTag.deleteMany({where: {id: tagId}});
+  });
+
 export const Route = createFileRoute('/crew/noise')({
   component: NoiseLayout,
   head: () => seo({title: 'Noise'}),
