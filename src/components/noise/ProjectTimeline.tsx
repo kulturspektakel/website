@@ -11,7 +11,12 @@ import {
   thumbsToSelection,
   type ProjectSelection,
 } from './projectSelection';
-import {DRAG_MIN_PX, instantLabel} from './chartUtils';
+import {
+  DRAG_MIN_PX,
+  instantLabel,
+  PLAYHEAD_CASING,
+  playheadHead,
+} from './chartUtils';
 import type {LogGap} from './logCoverage';
 import {CHART_READOUT_STYLE} from './ChartTooltip';
 import {TimelineMarkers} from './TimelineMarkers';
@@ -280,12 +285,9 @@ const instantAt = (
 // quarter hour on this strip any more, and a mark that stepped in quarters while the same
 // hover over a row chart slid smoothly would be two answers to one question.
 //
-// An instant and never nothing. The pointer leaving used to call this with a null and the mark
-// went with the hand; it stays now, because it says which instant the page is reading rather
-// than where a hand happens to be — which is what lets you point at a peak, take the hand off
-// the strip, and read the cards and the pins for it. The one gesture that takes it away is a
-// window drawn in a single drag, which states a timeframe with no instant in it (see
-// drawProjectSelection).
+// An instant and never nothing. The mark stays where it is put, because it says which instant
+// the page is reading rather than where a hand happens to be — which is what lets you point at
+// a peak, take the hand off the strip, and read the cards and the pins for it.
 //
 // setSelectionCurrent is the page's one rule for where the cursor may stand — the same call
 // the row charts' hover goes through. The window is its bound, not the crop: the strip can be
@@ -295,10 +297,11 @@ const playheadAt = (selection: ProjectSelection, ms: number) =>
 
 /**
  * The instant the page is reading, drawn across the strip: a hairline the full height of
- * it, so it reads as a position in time rather than a draggable edge. The same width and
- * the same near-white as the one the row charts draw (see LevelTrace's CHART_CSS): one
- * instant, standing in several places at once, and it should be recognisably the same mark
- * in each of them. On the crop strip it is the grips' yellow that tells it apart from an edge.
+ * it, hung from a small head at the top (see playheadHead), so it reads as a position in
+ * time rather than a draggable edge. The same width and the same red as the one the row
+ * charts draw (see LevelTrace's CHART_CSS): one instant, standing in several places at once,
+ * and it should be recognisably the same mark in each of them. On the crop strip it is the
+ * grips' yellow that tells it apart from an edge.
  *
  * Drawn rather than dragged, which is the whole reason it is not one of the crop's thumbs:
  * it may stand outside the crop, and zag's thumbs are one ascending list — an edge could
@@ -335,7 +338,9 @@ function Playhead({
       w={`${PLAYHEAD_W}px`}
       ml={`-${PLAYHEAD_W / 2}px`}
       bg="chart.playhead"
+      boxShadow={PLAYHEAD_CASING}
       pointerEvents="none"
+      css={playheadHead(9, 10)}
       style={{left: `${fraction * 100}%`}}
     >
       <Readout fraction={fraction}>{label}</Readout>
@@ -355,7 +360,7 @@ type TimelineProps = {
   // says where there is anything to look at as well as when. Straight through to
   // TimelineMarkers, which is the layer that draws in the axis' own coordinates.
   gaps?: readonly LogGap[];
-  // Where a place on screen read over its limit, as a bar along the top of the strip. Null
+  // Where a place on screen read over its limit, as a red wash across the strip. Null
   // when no place on screen has a limit for any series picked (see limitBreaches).
   breaches?: readonly LogGap[] | null;
   onCommit: (selection: ProjectSelection) => void;
@@ -524,8 +529,8 @@ function CropTimeline({
     if (insideCrop(at)) {
       // The playhead goes where the press landed, as it always has — and stays there when the
       // finger lifts, which is the whole of how a mark is parked by touch. A drag from here
-      // redraws the window instead and takes it away again; until then this is a tap pointing
-      // at an instant, and pointing at it is the whole answer.
+      // redraws the window instead; until then this is a tap pointing at an instant, and
+      // pointing at it is the whole answer.
       onceNow(withPlayheadAt(at));
     }
     // Pointer capture retargets every subsequent move and the release to the strip,
@@ -586,8 +591,8 @@ function CropTimeline({
       // that then throws it away is motion for its own sake.
       if (Math.abs(event.clientX - own.originX) < DRAG_MIN_PX) return;
       own.drawing = true;
-      // Which is also the end of the playhead's pill: a window being drawn has no playhead at
-      // all (see drawProjectSelection), so there is nothing left for it to name.
+      // Which is also the end of the playhead's pill: while a window is being drawn, the
+      // grips' own readouts are what is being read, and a third over them is clutter.
       setDrawing(true);
     }
 
@@ -711,8 +716,8 @@ function CropTimeline({
 
         {/* Inside it: the window, from the first thumb to the last — which is start→end
             whether or not the playhead sits between them.
-            The same wash the row charts lay under their traces — see LevelTrace's `fill()`,
-            which is a line's own colour at 15 %. Fixed, and there is not even a stroke to
+            At 15 % of a fixed colour, a little stronger than the washes behind the row
+            charts' traces (see LevelTrace's `wash()`) — there is not even a stroke to
             follow any more: the charts draw a line per picked window, each its own shade, so
             a strip that took one of them would be picking a favourite. `accent.solid` is the
             section's one accent — the grips' own fill, and the chart series' shade —
@@ -793,12 +798,10 @@ function CropTimeline({
 
             Its pill shows only while the pointer is on this strip (PLAYHEAD_READOUT_CSS, on
             the control); the mark itself stays where it was put. */}
-        {selection.current != null && (
-          <Playhead
-            fraction={fractionOf(selection.current)}
-            label={labelFormat(selection.current)}
-          />
-        )}
+        <Playhead
+          fraction={fractionOf(selection.current)}
+          label={labelFormat(selection.current)}
+        />
 
         {thumbs.map((value, i) => {
           const start = i === 0;
@@ -1026,12 +1029,10 @@ function ScrubTimeline({
 
         {/* Last, so it draws over the grid — there are no thumbs here to pass over it. Its
             pill shows only while the pointer is on the strip (PLAYHEAD_READOUT_CSS). */}
-        {selection.current != null && (
-          <Playhead
-            fraction={axisFraction(selection.current, window.start, axisMax)}
-            label={labelFormat(selection.current)}
-          />
-        )}
+        <Playhead
+          fraction={axisFraction(selection.current, window.start, axisMax)}
+          label={labelFormat(selection.current)}
+        />
       </Box>
     </Box>
   );

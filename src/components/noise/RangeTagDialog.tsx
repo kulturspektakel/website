@@ -28,8 +28,10 @@ type ScopeKind = NoiseTagScope['kind'];
 // Tags a swept range as one to leave out — what the selection menu's "Ignore…" opens.
 //
 // The range arrives from the sweep, but the sweep is a gesture at chart resolution and a
-// tag is a record, so both ends are editable here before anything is written. A blank end
-// makes it a marker: an instant rather than a stretch.
+// tag is a record, so both ends are editable here before anything is written. Either end may
+// be left at the event's own — "Event start", "Event end" — which is saved as that instant:
+// an ignored stretch has to have two ends to set anything aside, and one with no end is a
+// marker, which ignores nothing.
 //
 // What it applies to is the one real decision: the monitor (its readings wherever it
 // stood during the range), the place (every monitor that stood here), or the whole
@@ -70,9 +72,15 @@ export function RangeTagDialog({
         : {kind};
 
   const save = useMutation({
-    mutationFn: (from: number) =>
+    mutationFn: () =>
       createNoiseTag({
-        data: {projectId: project.id, type: 'IGNORE', scope, start: from, end},
+        data: {
+          projectId: project.id,
+          type: 'IGNORE',
+          scope,
+          start: start ?? project.start,
+          end: end ?? project.end,
+        },
       }),
     onSuccess: async () => {
       await refresh();
@@ -82,7 +90,7 @@ export function RangeTagDialog({
     onError: errorToast('Range could not be saved'),
   });
 
-  const backwards = start != null && end != null && end <= start;
+  const backwards = (end ?? project.end) <= (start ?? project.start);
 
   return (
     <DialogRoot
@@ -98,12 +106,13 @@ export function RangeTagDialog({
         <DialogBody>
           <Stack gap="4">
             <Stack direction={{base: 'column', sm: 'row'}} gap="3">
-              <Field.Root required>
+              <Field.Root>
                 <Field.Label>Start</Field.Label>
                 <TimeField
                   label="Start"
                   value={start}
                   window={project}
+                  empty={{label: 'Event start', at: project.start}}
                   onChange={setStart}
                 />
               </Field.Root>
@@ -113,16 +122,11 @@ export function RangeTagDialog({
                   label="End"
                   value={end}
                   window={project}
+                  empty={{label: 'Event end', at: project.end}}
                   onChange={setEnd}
                 />
-                {backwards ? (
+                {backwards && (
                   <Field.ErrorText>{END_BEFORE_START}</Field.ErrorText>
-                ) : (
-                  end == null && (
-                    <Field.HelperText>
-                      No end: a marker at the start.
-                    </Field.HelperText>
-                  )
                 )}
               </Field.Root>
             </Stack>
@@ -172,9 +176,9 @@ export function RangeTagDialog({
             Cancel
           </Button>
           <Button
-            disabled={start == null || backwards}
+            disabled={backwards}
             loading={save.isPending}
-            onClick={() => start != null && save.mutate(start)}
+            onClick={() => save.mutate()}
           >
             Save
           </Button>

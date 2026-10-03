@@ -2,6 +2,7 @@ import {describe, expect, it} from 'vitest';
 import {
   commitProjectSelection,
   drawProjectSelection,
+  midpointOf,
   resolveProjectSelection,
   selectionThumbs,
   nudgeSelectionThumb,
@@ -58,14 +59,14 @@ describe('resolveProjectSelection', () => {
     end: Date.parse('2026-07-27T16:00:00Z'),
   };
 
-  it('defaults to the whole window with no cursor in it', () => {
-    // Not either edge: the playhead is where a pointer is pointing, and nothing is
-    // pointing at a page just arrived at.
+  it('defaults to the whole window with the playhead in its middle', () => {
     expect(resolveProjectSelection(null, window)).toEqual({
       start: window.start,
       end: window.end,
-      current: null,
+      current: midpointOf(window),
     });
+    // On the minute, like every instant a readout prints.
+    expect(midpointOf(window) % MINUTE_MS).toBe(0);
   });
 
   // The reason the page stores a pick (which may be null) rather than a resolved
@@ -75,7 +76,7 @@ describe('resolveProjectSelection', () => {
     expect(resolveProjectSelection(null, later)).toEqual({
       start: later.start,
       end: later.end,
-      current: null,
+      current: midpointOf(later),
     });
   });
 
@@ -394,7 +395,7 @@ describe('drawProjectSelection', () => {
     ).toEqual({
       start: at('2026-07-26T20:07:00Z'),
       end: at('2026-07-26T21:53:00Z'),
-      current: null,
+      current: selection.current,
     });
   });
 
@@ -409,7 +410,7 @@ describe('drawProjectSelection', () => {
     ).toEqual({
       start: at('2026-07-26T20:07:00Z'),
       end: at('2026-07-26T21:53:00Z'),
-      current: null,
+      current: selection.current,
     });
   });
 
@@ -433,14 +434,14 @@ describe('drawProjectSelection', () => {
     ).toEqual({
       start: at('2026-07-26T20:00:00Z'),
       end: at('2026-07-26T20:01:00Z'),
-      current: null,
+      current: selection.current,
     });
     expect(
       draw(at('2026-07-26T20:00:25Z'), at('2026-07-26T20:00:10Z')),
     ).toEqual({
       start: at('2026-07-26T19:59:00Z'),
       end: at('2026-07-26T20:00:00Z'),
-      current: null,
+      current: selection.current,
     });
   });
 
@@ -450,12 +451,12 @@ describe('drawProjectSelection', () => {
     expect(draw(window.end, window.end + 1_000)).toEqual({
       start: window.end - MINUTE_MS,
       end: window.end,
-      current: null,
+      current: selection.current,
     });
     expect(draw(window.start, window.start - 1_000)).toEqual({
       start: window.start,
       end: window.start + MINUTE_MS,
-      current: null,
+      current: selection.current,
     });
   });
 
@@ -465,15 +466,15 @@ describe('drawProjectSelection', () => {
     ).toEqual({
       start: at('2026-07-27T15:00:00Z'),
       end: window.end,
-      current: null,
+      current: selection.current,
     });
   });
 
-  // The hand is pointing at the window's moving edge while it is drawn, which that edge's
-  // own readout already says — so the cursor goes, rather than being dragged along by the
-  // clamp. The next hover names a new one.
-  it('drops the playhead', () => {
-    expect(draw(selection.start, selection.end).current).toBeNull();
+  // Drawing a window says which stretch to look at, not which instant to read.
+  it('keeps the playhead where it was', () => {
+    expect(
+      draw(at('2026-07-26T20:00:00Z'), at('2026-07-26T22:00:00Z')).current,
+    ).toBe(selection.current);
   });
 });
 
@@ -487,12 +488,8 @@ describe('selectionThumbs / thumbsToSelection', () => {
     end: Date.parse('2026-07-25T22:00:00Z'),
   };
 
-  it('is the crop’s two ends, cursor or no cursor', () => {
+  it('is the crop’s two ends, without the cursor', () => {
     expect(selectionThumbs(selection)).toEqual([
-      selection.start,
-      selection.end,
-    ]);
-    expect(selectionThumbs({...selection, current: null})).toEqual([
       selection.start,
       selection.end,
     ]);
@@ -514,18 +511,6 @@ describe('selectionThumbs / thumbsToSelection', () => {
     expect(moved.current).toBe(selection.current);
     expect(moved.start).toBe(Date.parse('2026-07-25T20:00:00Z'));
     expect(moved.end).toBe(Date.parse('2026-07-25T23:00:00Z'));
-  });
-
-  // Nothing may invent a cursor: a page nobody is pointing at has none, and a grip dragged
-  // on one still has none afterwards.
-  it('leaves an absent cursor absent', () => {
-    const idle = {...selection, current: null};
-    const end = Date.parse('2026-07-25T23:00:00Z');
-    expect(thumbsToSelection([idle.start, end], idle)).toEqual({
-      start: idle.start,
-      current: null,
-      end,
-    });
   });
 });
 
@@ -574,15 +559,6 @@ describe('setSelectionCurrent', () => {
       Date.parse('2026-07-25T06:00:00Z'),
     );
     expect(resolveProjectSelection(before, window).current).toBe(window.start);
-  });
-
-  // What leaving a chart or the strip commits: the same call, with no instant. The crop
-  // is untouched, so letting the playhead go doesn't unpick the window it stood in.
-  it('takes the playhead away entirely when handed no instant', () => {
-    expect(setSelectionCurrent(selection, null)).toEqual({
-      ...selection,
-      current: null,
-    });
   });
 });
 

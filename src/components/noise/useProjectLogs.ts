@@ -130,12 +130,9 @@ export function useProjectLogs({
   // Not keyed on the pick either, and it never was on the weighting's half of one: every
   // series is in the record, so ticking a box leaves this untouched.
   //
-  // Null whenever nothing is pointing at the event, and then there are no readings to
-  // give: the playhead is where a pointer is (see ProjectSelection), so a page nobody is
-  // hovering has a crop and its traces but no instant, and every card and pin prints what
-  // it prints without one. Withheld here rather than blanked in each of them, for the same
-  // reason `logs` is dropped while live — "absent" is one rule about this hook's answer.
-  const minute = logs && current != null ? logMinuteIndex(logs, current) : null;
+  // Absent until the payload is in, and while live (see `logs`) — the playhead itself is
+  // always somewhere (see ProjectSelection).
+  const minute = logs ? logMinuteIndex(logs, current) : null;
   const levels = useMemo(
     () =>
       logs && minute != null ? seriesLevelsByDevice(logs, {minute}) : undefined,

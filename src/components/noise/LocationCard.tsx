@@ -160,13 +160,13 @@ export const LocationCard = memo(function LocationCard({
           </MenuTrigger>
           <MenuContent>
             <MenuItem value="devices" onClick={() => setDialog('devices')}>
-              Manage devices
+              Manage devices…
             </MenuItem>
             {/* What this place is permitted, which the chart below draws as a rule per
                 limit over the hours it covers. Only the timing and the number are edited
                 here — a limit is read off the trace it is a limit on, not off a list. */}
             <MenuItem value="limits" onClick={() => setDialog('limits')}>
-              Manage limits
+              Manage limits…
             </MenuItem>
             {/* Ruled off: the two above edit the place, this one only dismisses
                 the card. Nothing is deleted and nobody else's page changes — it is the

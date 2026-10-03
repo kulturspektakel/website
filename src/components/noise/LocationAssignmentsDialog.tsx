@@ -313,6 +313,7 @@ function AssignmentRow({
           label={`Start of ${who}`}
           value={row.start}
           window={window}
+          empty={{label: 'Event start', at: window.start}}
           onChange={(start) => onChange({...row, start})}
         />
       </Table.Cell>
@@ -321,6 +322,9 @@ function AssignmentRow({
           label={`End of ${who}`}
           value={row.end}
           window={window}
+          // An open end is a monitor still standing there — which, the page reading nothing
+          // past the event, is the same as standing there until it ends.
+          empty={{label: 'Event end', at: window.end}}
           onChange={(end) => onChange({...row, end})}
         />
       </Table.Cell>

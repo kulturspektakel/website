@@ -172,6 +172,32 @@ export function subscribeToClock(
   };
 }
 
+// One animation-frame loop for the whole page, for what moves continuously without being
+// state — the live charts' window sliding along the clock (see LevelTrace). Listeners are
+// handed the frame's time and must not set React state: this runs sixty times a second, and
+// the point of it is that nothing renders. Runs only while somebody is listening, and the
+// browser pauses it for a hidden tab on its own.
+const frameListeners = new Set<(now: number) => void>();
+let frame: number | null = null;
+
+const tickFrames = () => {
+  const now = Date.now();
+  for (const l of frameListeners) l(now);
+  frame = frameListeners.size > 0 ? requestAnimationFrame(tickFrames) : null;
+};
+
+export function subscribeToFrames(listener: (now: number) => void) {
+  frameListeners.add(listener);
+  frame ??= requestAnimationFrame(tickFrames);
+  return () => {
+    frameListeners.delete(listener);
+    if (frameListeners.size === 0 && frame != null) {
+      cancelAnimationFrame(frame);
+      frame = null;
+    }
+  };
+}
+
 // The current time, re-read every `intervalMs`. Scoped to the consuming component so
 // freshness checks don't re-render the whole context subtree, but off the shared clock
 // above so all of them re-render at once when they do.

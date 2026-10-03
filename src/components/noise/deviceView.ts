@@ -1,6 +1,5 @@
 import {createContext, useContext} from 'react';
 import {type PickedSeries} from './level';
-import {type SeriesKey} from './series';
 import {type ReferenceMicSlice} from './useReferenceMic';
 
 // What the device page is showing, picked in its toolbar (the device layout route) and
@@ -13,14 +12,11 @@ import {type ReferenceMicSlice} from './useReferenceMic';
 // same terms.
 //
 // No `primary` here, unlike the project page's context: nothing on this page reads a
-// single one. Its numbers are the tile row, which prints every series there is whatever
-// is picked, so the pick is only ever the set of lines to draw and the set of tiles to
-// light.
+// single one. The pick is the set of lines to draw and the badges above them that read
+// those lines out (see LiveView).
 export type DeviceViewCtx = {
   // Which series the chart draws, in table order and never empty.
   picked: PickedSeries;
-  // Adds or removes one — pressing a tile and ticking a box are the same commit.
-  toggleSeries: (key: SeriesKey) => void;
   // The microphone on this computer that the monitor is being measured against, if any.
   // This page's alone — nowhere else in the section compares a monitor to anything — and
   // here for the same sibling reason as the pair above: it is picked in the toolbar's menu

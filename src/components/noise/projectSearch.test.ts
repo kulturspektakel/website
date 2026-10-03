@@ -4,6 +4,7 @@ import {
   projectSearchSelection,
   validateProjectSearch,
 } from './projectSearch';
+import {midpointOf} from './projectSelection';
 
 // What the project page's URL says about the window being looked at. The values arrive
 // already parsed (the router's own parseSearch turns `live=false` into a boolean and
@@ -36,13 +37,13 @@ describe('validateProjectSearch', () => {
 describe('projectSearchSelection', () => {
   const search = {live: false, from, to} as const;
 
-  // A pinned link opened cold has no cursor to keep and does not invent one: a URL
-  // carries the window, and the playhead is where a pointer is.
-  it('arrives with no playhead when there is no page to keep one from', () => {
+  // A pinned link opened cold has no cursor to keep, so it opens in the middle of the
+  // linked window — a URL carries the window, not a hand.
+  it('opens in the middle of the window when there is no page to keep one from', () => {
     expect(projectSearchSelection(search, null)).toEqual({
       start: from,
       end: to,
-      current: null,
+      current: midpointOf({start: from, end: to}),
     });
   });
 

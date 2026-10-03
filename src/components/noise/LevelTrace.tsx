@@ -1,7 +1,7 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {Box, Text} from '@chakra-ui/react';
 import uPlot from 'uplot';
-import {subscribeToClock, useNoiseBuffers} from './context';
+import {subscribeToClock, subscribeToFrames, useNoiseBuffers} from './context';
 import {
   GAP_THRESHOLD_S,
   STORED_GAP_THRESHOLD_S,
@@ -36,6 +36,8 @@ import {
 import {clampTo} from './timeframe';
 import {
   axisBase,
+  PLAYHEAD_CASING,
+  playheadHead,
   CHART_PADDING,
   cursorAnchor,
   dbAxis,
@@ -207,12 +209,13 @@ const isTyping = (target: EventTarget | null): boolean =>
   (target.isContentEditable ||
     ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName));
 
-// A colour at 15 %, for the washes behind the trace — ignored stretches and breaches — so
-// they read as ground rather than as marks competing with the lines. An 8-digit hex rather
-// than `color-mix()`, which a canvas `fillStyle` on an older phone may not parse: the suffix
-// is only legal because every token resolves to a 6-digit hex, which theme-noise.test.ts
-// asserts for all of them.
-const fill = (stroke: string) => `${stroke}26`;
+// A colour at 10 %, for the washes behind the trace — ignored stretches and breaches — so
+// they read as ground rather than as marks competing with the lines. Drawn over the grid
+// (see the drawAxes hook), which shows through. An 8-digit hex rather than `color-mix()`,
+// which a canvas `fillStyle` on an older phone may not parse: the suffix is only legal
+// because every token resolves to a 6-digit hex, which theme-noise.test.ts asserts for all
+// of them.
+const wash = (color: string) => `${color}1a`;
 
 // The closest two time labels may sit, which decides how many grid lines go
 // unlabelled between them. Sized for "22:15" at the axis font with room to breathe —
@@ -229,18 +232,74 @@ const X_GRID_SPACE = 56;
 // colour cannot — colour is never the only cue in this section.
 const LIMIT_DASH = [4, 3];
 
-// The rule's own width, and the halo's, in CSS pixels. Odd widths both, so the two stay
-// concentric about the same row of pixels.
-//
-// A hard casing alone is not enough: a pixel of ground either side of a dash reads as
-// anti-aliasing rather than as separation, and the shade that ties a rule to its trace still
-// buries it in one. The blur is what makes it a halo — the ground fades out over a few
-// pixels, so the eye gets a gap around the dash whatever is behind it.
+// The rule's own width, in CSS pixels.
 const LIMIT_WIDTH_PX = 1;
-const LIMIT_HALO_PX = 3;
-const LIMIT_HALO_BLUR_PX = 4;
 // The radius of the dot at each end of a limit's rule, in CSS pixels.
 const LIMIT_DOT_PX = 2;
+
+// The casing under a line, shared by the traces (while the chart draws more than one) and the
+// limit rules: the same line again in the plot's ground, this much wider on each side, in CSS
+// pixels. It is what keeps two lines apart where they cross — two traces, or a rule over the
+// trace it bounds, which share a shade by design and would otherwise merge. A casing rather
+// than a canvas shadow, which has an offset and a blur but nothing that spreads it evenly.
+const LINE_CASING_PX = 1;
+
+// uPlot keeps the paths it last drew on each series, which its types leave out.
+type SeriesWithPaths = uPlot.Series & {_paths?: uPlot.Series.Paths | null};
+
+// Saves the context and clips it to the plotting area — what every hand-drawn mark here
+// starts with: they are drawn in the scale's own coordinates, and the axes' gutters are not
+// part of it. The caller restores.
+function clipToPlot(u: uPlot): CanvasRenderingContext2D {
+  const ctx = u.ctx;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(u.bbox.left, u.bbox.top, u.bbox.width, u.bbox.height);
+  ctx.clip();
+  return ctx;
+}
+
+// The casing under a line `lineWidth` device pixels wide: `path` stroked in the plot's
+// ground, LINE_CASING_PX wider on each side — the one outline the traces and the limit rules
+// share. `dash` for a dashed line, whose casing is dashed along with it rather than solid
+// under it, so it thickens each dash instead of filling the gaps between them. A closed shape
+// that is filled rather than stroked — a limit's end dot — is cased by stroking its outline at
+// a `lineWidth` of 0, which rings it by exactly the casing.
+//
+// Draws into whatever clip and state the caller has set up, and leaves the style changed:
+// every caller is inside a save/restore of its own.
+function strokeCasing(
+  ctx: CanvasRenderingContext2D,
+  path: Path2D,
+  lineWidth: number,
+  dash: readonly number[] = [],
+): void {
+  ctx.strokeStyle = themeHex('chart.ground');
+  ctx.lineWidth = lineWidth + 2 * LINE_CASING_PX * uPlot.pxRatio;
+  ctx.lineJoin = 'round';
+  ctx.setLineDash(dash);
+  ctx.stroke(path);
+}
+
+// The casing of whichever line uPlot strokes after `sIdx`, off the path it has already built
+// for it and inside the same gaps clip it strokes that path in — so a casing breaks where its
+// line does. Laid from the drawSeries hook of the line before, which puts it over every line
+// drawn earlier and under its own; the first line has nothing before it to be kept apart from,
+// and gets none. Nothing for a series that draws no line — the envelope, which is width 0.
+//
+// From drawSeries and not earlier because that is the first moment the paths are sure to be
+// fresh: uPlot drops them on every scale change and rebuilds them all just before it strokes
+// the first line.
+function drawNextCasing(u: uPlot, sIdx: number): void {
+  const next = u.series.findIndex((s, i) => i > sIdx && s.show);
+  const series = u.series[next] as SeriesWithPaths | undefined;
+  const paths = series?._paths;
+  if (!series?.width || !paths?.stroke) return;
+  const ctx = clipToPlot(u);
+  if (paths.clip) ctx.clip(paths.clip);
+  strokeCasing(ctx, paths.stroke as Path2D, series.width * uPlot.pxRatio);
+  ctx.restore();
+}
 
 /**
  * The permitted levels, over the traces they are permitted for.
@@ -251,11 +310,11 @@ const LIMIT_DOT_PX = 2;
  * picked are drawn at all (see limitSegments) — so the header's menu brings a rule and the
  * line it belongs to into view together.
  *
- * Over a halo in the ground's own colour, because the shade that ties a rule to its trace is
- * also what buries it in one: a yellow dash over a yellow line is a rule you have to hunt
- * for, and where the trace meets the rule is exactly where a limit matters most. The ground
- * fading out around each dash separates the two without giving the rule a hue of its own to
- * be mistaken for another measurement — see chart.ground.
+ * Over a casing of the plot's ground, as wide as the traces' own (see LINE_CASING_PX),
+ * because the shade that ties a rule to its trace is also what buries it in one: a yellow dash
+ * over a yellow line is a rule you have to hunt for, and where the trace meets the rule is
+ * exactly where a limit matters most. The edge of ground separates the two without giving the
+ * rule a hue of its own to be mistaken for another measurement.
  *
  * The line alone, with no figure lettered on it. What a rule is for is seeing at a glance
  * whether the trace is under it, and for that the height *is* the reading — the dB grid
@@ -277,9 +336,6 @@ const LIMIT_DOT_PX = 2;
  * a retina screen the rule comes out a hairline, which looks like a styling choice rather
  * than a bug.
  */
-// uPlot keeps the paths it last drew on each series, which its types leave out.
-type SeriesWithPaths = uPlot.Series & {_paths?: uPlot.Series.Paths | null};
-
 function drawLimits(
   u: uPlot,
   limits: readonly LimitLine[],
@@ -295,13 +351,7 @@ function drawLimits(
   // Read per draw rather than closed over: uPlot itself re-reads it on a dppxchange, which
   // is what dragging a window between two displays fires.
   const ratio = uPlot.pxRatio;
-  const ctx = u.ctx;
-  ctx.save();
-  // The plotting area and nothing else: a rule is drawn in the scale's own coordinates,
-  // and the axes' gutters are not part of it.
-  ctx.beginPath();
-  ctx.rect(u.bbox.left, u.bbox.top, u.bbox.width, u.bbox.height);
-  ctx.clip();
+  const ctx = clipToPlot(u);
 
   const [floor, ceiling] = dbAxis.range;
 
@@ -340,69 +390,54 @@ function drawLimits(
     return [...(from > min ? [dot(x0)] : []), ...(to < max ? [dot(x1)] : [])];
   });
   const dotRadius = LIMIT_DOT_PX * ratio;
-  const circle = ({x, y}: (typeof dots)[number], radius: number) => {
-    ctx.moveTo(x + radius, y);
-    ctx.arc(x, y, radius, 0, 2 * Math.PI);
+  const rulePath = (
+    {y, x0, x1}: (typeof rules)[number],
+    path = new Path2D(),
+  ) => {
+    path.moveTo(x0, y);
+    path.lineTo(x1, y);
+    return path;
+  };
+  const dotPath = ({x, y}: (typeof dots)[number], path = new Path2D()) => {
+    path.moveTo(x + dotRadius, y);
+    path.arc(x, y, dotRadius, 0, 2 * Math.PI);
+    return path;
   };
 
-  // Every halo, then every rule — two passes over the list rather than a halo and its rule
-  // per segment. Limits are allowed to overlap (see the schema), and two decibels can be a
-  // few pixels: well inside the blur. Interleaved, the second rule's halo would land over
-  // the first one's line, and the thing that made one legible would dim the other.
-  //
-  // The halo is a stroke of the ground *plus* its own shadow of the same colour, which is
-  // what spreads it. Dashed along with the rule rather than solid under it, so it thickens
-  // each dash instead of filling the gaps between them — the trace stays readable through
-  // the rule, which is the whole point of dashing it. A dot's halo is the same ground, filled
-  // a little wider than the dot.
-  //
-  // One path for all of them and one stroke, because `shadowBlur` is the expensive call on a
-  // canvas, and a timeline drag redraws every card near the viewport per animation frame
-  // (see applyCrop). Batched it is one shadow layer for the same pixels.
-  const ground = themeHex('chart.ground');
-  ctx.lineWidth = LIMIT_HALO_PX * ratio;
-  ctx.strokeStyle = ground;
-  ctx.fillStyle = ground;
-  ctx.shadowColor = ground;
-  ctx.shadowBlur = LIMIT_HALO_BLUR_PX * ratio;
-  ctx.setLineDash(LIMIT_DASH.map((d) => d * ratio));
-  ctx.beginPath();
-  for (const {y, x0, x1} of rules) {
-    ctx.moveTo(x0, y);
-    ctx.lineTo(x1, y);
-  }
-  ctx.stroke();
+  // Every casing, then every rule and dot — two passes rather than a casing and its rule per
+  // segment. Limits are allowed to overlap (see the schema), and two decibels can be a pixel
+  // or two apart: interleaved, the second rule's casing would cut the first one's line. One
+  // path for all the rules and one for all the dots, so the casings are two strokes.
+  const lineWidth = LIMIT_WIDTH_PX * ratio;
+  const dash = LIMIT_DASH.map((d) => d * ratio);
+  const allRules = new Path2D();
+  for (const rule of rules) rulePath(rule, allRules);
+  strokeCasing(ctx, allRules, lineWidth, dash);
   if (dots.length > 0) {
-    ctx.beginPath();
-    for (const d of dots) circle(d, dotRadius + ratio);
-    ctx.fill();
+    const allDots = new Path2D();
+    for (const dot of dots) dotPath(dot, allDots);
+    strokeCasing(ctx, allDots, 0);
   }
 
-  // The rules themselves, each in its own series' shade, and the dots over their ends. No
-  // shadow: the halo is already under them, and a coloured line casting a dark blur would
-  // read as out of focus.
-  ctx.shadowBlur = 0;
-  ctx.lineWidth = LIMIT_WIDTH_PX * ratio;
-  for (const {stroke, y, x0, x1} of rules) {
-    ctx.strokeStyle = stroke;
-    ctx.beginPath();
-    ctx.moveTo(x0, y);
-    ctx.lineTo(x1, y);
-    ctx.stroke();
+  // The rules, each in its own series' shade, and the dots over their ends.
+  ctx.lineWidth = lineWidth;
+  ctx.setLineDash(dash);
+  for (const rule of rules) {
+    ctx.strokeStyle = rule.stroke;
+    ctx.stroke(rulePath(rule));
   }
-  for (const d of dots) {
-    ctx.fillStyle = d.stroke;
-    ctx.beginPath();
-    circle(d, dotRadius);
-    ctx.fill();
+  for (const dot of dots) {
+    ctx.fillStyle = dot.stroke;
+    ctx.fill(dotPath(dot));
   }
 
   ctx.restore();
 }
 
 // What crew tagged on this chart, as a wash under the trace: a band over each range and a
-// hairline at each marker. Drawn on `drawClear`, before the series, so the level stays
-// readable through it — a stretch set aside is still a stretch someone may want to read.
+// hairline at each marker. Drawn on `drawAxes`, over the grid and before the series, so the
+// level stays readable through it — a stretch set aside is still a stretch someone may want
+// to read.
 //
 // Clipped to the plot area and positioned in canvas pixels, the same rules drawLimits
 // follows; a range half off the crop is simply cut by the clip.
@@ -414,13 +449,9 @@ function drawTags(u: uPlot, tags: readonly ChartTag[]): void {
   if (tags.length === 0) return;
   const ratio = uPlot.pxRatio;
   const color = themeHex('chart.ignored');
-  const ctx = u.ctx;
-  ctx.save();
-  ctx.beginPath();
-  ctx.rect(u.bbox.left, u.bbox.top, u.bbox.width, u.bbox.height);
-  ctx.clip();
+  const ctx = clipToPlot(u);
 
-  ctx.fillStyle = fill(color);
+  ctx.fillStyle = wash(color);
   ctx.strokeStyle = color;
   ctx.lineWidth = ratio;
   for (const {start, end} of tags) {
@@ -443,7 +474,7 @@ function drawTags(u: uPlot, tags: readonly ChartTag[]): void {
 // Where a line on this chart reads above a limit in force for its series, as a red wash
 // behind the trace — the same kind of mark the ignored stretches get in grey (see drawTags),
 // so a glance along a card finds the loud stretches the way it finds the set-aside ones.
-// Drawn on `drawClear` with them, under the series.
+// Drawn on `drawAxes` with them, over the grid and under the series.
 //
 // Read off what the plot is drawing rather than recomputed from the logs, so it follows the
 // chart in both modes — the stored minutes and the live buffer alike. A sample is over when
@@ -504,12 +535,8 @@ function drawBreaches(
   }
   if (!any) return;
 
-  const ctx = u.ctx;
-  ctx.save();
-  ctx.beginPath();
-  ctx.rect(u.bbox.left, u.bbox.top, u.bbox.width, u.bbox.height);
-  ctx.clip();
-  ctx.fillStyle = fill(themeHex('chart.limit'));
+  const ctx = clipToPlot(u);
+  ctx.fillStyle = wash(themeHex('chart.limit'));
   ctx.fill(area);
   ctx.restore();
 }
@@ -602,14 +629,15 @@ const PLAYHEAD_CLASS = 'noise-row-playhead';
 // constant is hashed once for the whole session.
 const CHART_CSS = {
   // uPlot's own rubber band, which its stylesheet paints in 7 % black — invisible on
-  // this chart. The playhead's colour at the same 15 % the washes behind the trace use, so
-  // the drag region reads as one of this chart's own marks rather than as the library's.
+  // this chart. A translucent blue instead, the colour a selection is everywhere else on a
+  // screen — so a sweep reads as "this is selected" rather than as one more of the chart's
+  // own marks, and stays apart from the yellow of the crop it may become.
   //
   // It matters more than it did when the sweep committed a crop on mouse up and the band
   // was gone the same frame: it now stays up for as long as the selection menu is open,
   // as the only thing saying which range that menu is about.
   '& .u-select': {
-    background: 'chart.playhead/15',
+    background: 'blue.400/25',
   },
   [`& .${PLAYHEAD_CLASS}`]: {
     position: 'absolute',
@@ -623,9 +651,12 @@ const CHART_CSS = {
     // transform, which positionPlayhead writes and should hold nothing else.
     marginLeft: '-0.5px',
     background: 'chart.playhead',
+    boxShadow: PLAYHEAD_CASING,
     // The cursor underneath it has to keep receiving the pointer, or the line would
     // stall the moment it caught up with what's moving it.
     pointerEvents: 'none',
+    // Its head, a size up from the timeline's (see playheadHead): this is the taller mark.
+    ...playheadHead(11, 12),
   },
 } as const;
 
@@ -711,13 +742,11 @@ type LevelTraceProps = {
       // plot (uPlot batches its own cursor updates to a frame).
       //
       // Only ever an instant: the pointer *leaving* is not reported here, because the
-      // playhead is no longer where a hand is pointing but the instant the page is reading
-      // — it stays on the last one it was given, which is what lets you point at a peak,
-      // take your hand off the glass and read the cards for it. The one gesture that takes
-      // it away again is a window drawn in a single drag, which states a timeframe with no
-      // instant in it (see drawProjectSelection). The null in the signature is the live
-      // arm's, whose caller is reading its own pointer rather than the page's mark.
-      onScrub: (at: number | null) => void;
+      // playhead is not where a hand is pointing but the instant the page is reading — it
+      // stays on the last one it was given, which is what lets you point at a peak, take
+      // your hand off the glass and read the cards for it. Only the live arm reports a
+      // pointer leaving, its caller reading this chart's own pointer rather than a page mark.
+      onScrub: (at: number) => void;
       // Crops the page's timeframe to what this trace was pointed at, in epoch ms. Two
       // gestures, one answer, because they differ only in how much of the crop they name:
       //
@@ -893,6 +922,9 @@ export function LevelTrace({
   // columns (see project), one each.
   const firstRangeColumn = (envelope ? 2 : 1) + picked.length * lineCount;
   const onScrubRef = useLatest(onScrub);
+  // The live arm's alone, which is the one that also reports a pointer leaving (see the
+  // props) — so it is the one typed to take a null.
+  const liveScrubRef = useLatest(live ? onScrub : undefined);
   // Where the line stands: the instant the page is looking at, written by the
   // subscription below rather than taken as a prop. The playhead is page state that moves
   // on every frame of a hover over any row on the page, so a prop would mean re-rendering
@@ -953,23 +985,29 @@ export function LevelTrace({
   // Where the playhead stands on this chart, or out of sight when it stands outside
   // the crop this one is showing (or when there is no playhead at all).
   //
-  // Called two ways, hence the default: with an instant — by the page's playhead
-  // subscription below, or by this chart's own hover while live, when there is no such
-  // subscription to follow; and with none, by a resize or a rescale, which move the pixel
-  // the same instant falls on. Imperative and ref-driven either way, so it can be
-  // called from the plot's own callbacks.
+  // A function of exactly two things, and called whenever either changes, so the line can
+  // never be left standing for an instant or a scale it no longer has:
+  //
+  //   the instant — with one, by the page's playhead subscription below (or this chart's
+  //                 own hover while live, when there is no such subscription to follow);
+  //   the scale   — with none, from uPlot's own setScale and setSize hooks, which fire once
+  //                 the plot has actually settled. Not after calling setScale or setSize:
+  //                 uPlot commits both in a microtask, so the scale read straight after is
+  //                 still the old one — or, on a plot just built, none at all, which is how
+  //                 a line came to stay hidden until something unrelated moved it.
+  //
+  // Imperative and ref-driven, so it can be called from the plot's own callbacks.
   const positionPlayhead = useCallback(
     (next: number | null = currentRef.current) => {
       currentRef.current = next;
       const line = playheadRef.current;
       const plot = plotRef.current;
       if (!line) return;
-      const at = currentRef.current;
-      if (!plot || at == null) {
+      if (!plot || next == null) {
         line.style.display = 'none';
         return;
       }
-      const x = at / 1000;
+      const x = next / 1000;
       const {min, max} = plot.scales.x;
       if (min == null || max == null || x < min || x > max) {
         line.style.display = 'none';
@@ -1085,6 +1123,9 @@ export function LevelTrace({
     // back faded by drawIgnoredLines. The silences alone are kept per series, because
     // the faded run must still break where the monitor went quiet.
     const sampleGaps = makeSampleGapsRefiner(gapThresholdX);
+    // Whether there is more than one line to keep apart — every monitor's line of every
+    // picked series, and the range lines. Both counts rebuild the plot when they change.
+    const cased = strokes.length + rangeWeightings.length > 1;
     const sampleGapsBySeries = new Map<number, [number, number][]>();
     const ignoredBySeries = new Map<number, [number, number][]>();
     // Which monitor a series column is, off the same layout traceColumn reads — or null
@@ -1164,8 +1205,9 @@ export function LevelTrace({
           },
         },
         hooks: {
-          // Under the series, so the trace stays on top of what was set aside.
-          drawClear: [
+          // Over the grid and under the series: a band reads as one stretch of the chart
+          // rather than as a tint the grid runs through, and the trace stays on top of it.
+          drawAxes: [
             (u) =>
               drawBreaches(
                 u,
@@ -1185,6 +1227,9 @@ export function LevelTrace({
                 ),
               ),
           ],
+          // Each line's casing, laid right before it is drawn (see drawNextCasing). Only
+          // registered where there is more than one line to keep apart.
+          drawSeries: cased ? [drawNextCasing] : [],
           // After the series, so a rule sits over the trace it bounds rather than under
           // the area — a limit the level has already crossed is exactly the one that has
           // to stay visible.
@@ -1192,6 +1237,11 @@ export function LevelTrace({
             (u) => drawIgnoredLines(u, ignoredBySeries, sampleGapsBySeries),
             (u) => drawLimits(u, limitsRef.current ?? [], drawnKeysRef.current),
           ],
+          // The line's other half (see positionPlayhead): wherever the x scale or the plot's
+          // size settles — first draw, a crop, a gesture, a resize, the live window sliding —
+          // the same instant now falls on another pixel.
+          setScale: [(_u, key) => key === 'x' && positionPlayhead()],
+          setSize: [() => positionPlayhead()],
           setSelect: [
             (u) => {
               const {left, width} = u.select;
@@ -1246,7 +1296,7 @@ export function LevelTrace({
                 // in a window that scrolls out from under it within the minute. So the
                 // caller's numbers empty, and this chart takes its own line down.
                 if (live) {
-                  onScrubRef.current?.(null);
+                  liveScrubRef.current?.(null);
                   positionPlayhead(null);
                 }
                 return;
@@ -1309,11 +1359,24 @@ export function LevelTrace({
             // and X_LABEL_SPACE is what keeps the ones that remain apart. Nor does a
             // line whose minute the last label already named: a live window is five
             // minutes wide, so without that the same 22:15 would be printed twice.
+            //
+            // And only on the minute: the label names a minute, so a line half a minute
+            // past one — a live window's grid steps by thirty seconds — would carry a time
+            // that is off by thirty seconds from where it stands. The stride is counted over
+            // the minute lines alone, then, so dropping the others keeps the labels spaced.
             values: (u, splits) => {
               const step = labelStride(u, splits, 'x', X_LABEL_SPACE);
+              const gridS = splits.length > 1 ? splits[1]! - splits[0]! : 60;
+              // How many lines a minute spans, so the stride can be restated in minute lines.
+              const perMinute = gridS < 60 ? 60 / gridS : 1;
+              const minuteStep = Math.max(1, Math.ceil(step / perMinute));
+              let minutes = 0;
               let last: string | null = null;
-              return splits.map((v, i) => {
-                if (i % step) return null;
+              return splits.map((v) => {
+                // Epoch seconds, and every zone's offset is a whole number of minutes, so a
+                // minute boundary here is one on the festival's clock too.
+                if (v % 60 !== 0) return null;
+                if (minutes++ % minuteStep) return null;
                 const label = fmtHourMinute(v);
                 if (label === last) return null;
                 last = label;
@@ -1383,10 +1446,9 @@ export function LevelTrace({
     playheadRef.current = line;
     // A plot nobody is hovering yet. While live that is the whole story — the line is the
     // hover — so it starts empty rather than standing at whatever instant the page was
-    // showing before live was switched on. Otherwise it goes straight back to the page's
-    // playhead, which is where the rebuilt chart left it.
+    // showing before live was switched on. Otherwise it keeps the page's instant, and the
+    // first settled scale puts it there (see the setScale hook).
     if (live) positionPlayhead(null);
-    else positionPlayhead();
 
     // What a finger can do here, which uPlot does nothing about on its own: one finger is
     // the cursor (the tooltip and the page's playhead, the same as a hover), two are the
@@ -1418,7 +1480,6 @@ export function LevelTrace({
       onRange: (min: number, max: number) => {
         onCropRef.current?.({start: min * 1000, end: max * 1000});
         plot.setScale('x', {min, max});
-        positionPlayhead();
       },
     };
     const removeTouch = cropped
@@ -1437,14 +1498,13 @@ export function LevelTrace({
       ? attachWheelPan(plot, windowGesture)
       : undefined;
 
-    // Only the width can change: the row gives the trace a fixed height. A new width
-    // is a new pixel for the same instant, so the playhead is replaced with it.
+    // Only the width can change: the row gives the trace a fixed height. The playhead
+    // follows from the setSize hook, once the new size has been committed.
     const ro = new ResizeObserver(() => {
       plot.setSize({
         width: container.clientWidth,
         height: plotHeight(container, MIN_PLOT_HEIGHT),
       });
-      positionPlayhead();
     });
     ro.observe(container);
 
@@ -1549,8 +1609,8 @@ export function LevelTrace({
   const nearViewRef = useRef(true);
   const missedCropRef = useRef(false);
 
-  // Push data in: once per new trace or mode, and every second while live — which is
-  // also what re-runs the x-range closure and slides the live window along.
+  // Push data in: once per new trace or mode, and every second while live — the rate the
+  // monitors report at.
   // Deliberately not keyed on `range`: the stored trace covers the whole project, so
   // cropping doesn't change a single value.
   //
@@ -1561,17 +1621,38 @@ export function LevelTrace({
   // both be for nobody — it catches up on the next tick when it scrolls back, which on
   // a five-minute rolling window is a second of staleness nobody can see. The clock
   // does not call on registration, hence the eager apply.
+  //
+  // Between those ticks the live window slides on its own, once per animation frame: a scale
+  // change and a redraw of the plot as it stands, which is all that moving along the clock
+  // takes — no new data and nothing rendered. So the trace glides rather than stepping a
+  // second at a time, while the projection still runs at the rate data arrives. Off-screen
+  // rows skip it like the tick, and anyone who asked for less motion keeps the steps.
   useEffect(() => {
     const apply = () => plotRef.current?.setData(project());
     apply();
     if (!live) return;
-    return subscribeToClock(1000, () => {
+    const unsubscribeClock = subscribeToClock(1000, () => {
       if (nearViewRef.current) apply();
     });
+    const reducedMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    ).matches;
+    const unsubscribeFrames = reducedMotion
+      ? undefined
+      : subscribeToFrames(() => {
+          const plot = plotRef.current;
+          if (!plot || !nearViewRef.current) return;
+          const [min, max] = xRange();
+          plot.setScale('x', {min, max});
+        });
+    return () => {
+      unsubscribeClock();
+      unsubscribeFrames?.();
+    };
     // `tags` too: a monitor's ignored stretch comes out of the envelope's data, and every
     // tag moves where the lines are cut, both of which only a fresh projection redraws.
     // And the range lines, whose data follows the crop's start.
-  }, [project, live, traces, tags, rangeLines]);
+  }, [project, live, traces, tags, rangeLines, xRange]);
 
   const applyCrop = useCallback(() => {
     const range = rangeRef.current;
@@ -1586,14 +1667,10 @@ export function LevelTrace({
     // dropping its cached paths and clearing the canvas twice per frame of the gesture.
     // Every other caller arrives with numbers that did move.
     if (plot.scales.x.min === min && plot.scales.x.max === max) return;
+    // The playhead keeps its instant while the axis under it moves; the setScale hook puts
+    // the line back on the pixel that instant now falls on.
     plot.setScale('x', {min, max});
-    // The playhead keeps its instant while the axis under it moves, so the line has to
-    // be put back on the pixel that instant now falls on. Here rather than in an effect
-    // of its own, because the two other things that move the line — the instant itself
-    // and a resize — reach it through the subscription and the ResizeObserver, neither
-    // of which renders.
-    positionPlayhead();
-  }, [rangeRef, positionPlayhead]);
+  }, [rangeRef]);
 
   // Cropping is a scale change and nothing more, which is the whole point of handing
   // the reduction to uPlot: it re-clips by binary search and redraws, with no data

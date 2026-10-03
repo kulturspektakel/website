@@ -71,12 +71,6 @@ const GAP_MIN_W = 2;
 // which is the least this can be and still be a gap rather than a rounding.
 const GAP_INSET = 2;
 
-// How tall the bar marking a limit breach is. A bar along the top rather than a wash
-// like the gaps': the two can never overlap (a breach needs a reading), but a second
-// full-height fill would compete with the crop's own. Drawn over the ticks hanging from
-// the top rather than under them, so a breach reads as one unbroken bar.
-const BREACH_H = 3;
-
 const GAP_ATTR = 'data-gap';
 const BREACH_ATTR = 'data-breach';
 const TICK_ATTR = 'data-tick';
@@ -85,42 +79,20 @@ const LABELLED_ATTR = 'data-labelled';
 const LABEL_ATTR = 'data-label';
 const DATE_ATTR = 'data-date';
 const MARKERS_CSS = {
-  // A stretch nobody reported in, held off the strip's frame on all four sides by
-  // GAP_INSET — so it is a band lying inside the strip rather than a fill of it.
-  //
-  // Hatched rather than filled, because this box has two grounds to read on: the page's
-  // own outside the crop, and a 15 % accent wash inside it. A flat neutral over the second
-  // reads as another *value* — a third band of colour competing with the lit window —
-  // where a diagonal hatch reads as "nothing here" on both, and it does so without hiding
-  // the ticks that draw over the top of it.
-  //
-  // `chart.gap` is its own token because a texture is not a line: a third of the band is
-  // stripe and two thirds is ground, so what reads is the average of the two rather than
-  // the value. See theme-noise.ts — and note that the step there and the pitch below are
-  // one setting, since it is their product the eye is given.
-  //
-  // As a CSS variable and not the token, because a gradient is a raw string and Chakra
-  // resolves neither token paths nor its `/alpha` suffix inside one.
-  [`& [${GAP_ATTR}]`]: {
+  // A stretch nobody reported in, and one where a place on screen read over its limit:
+  // each a wash held off the strip's frame on all four sides by GAP_INSET, so it is a band
+  // lying inside the strip rather than a fill of it. The location charts' own two washes,
+  // the same colours at the same strength (see LevelTrace's `wash`) — grey for the
+  // stretches that are not being read, red for the ones over a limit — so the strip and the
+  // charts under it say both things one way. The two never overlap: a breach needs a
+  // reading, and a gap is where there is none.
+  [`& [${GAP_ATTR}], & [${BREACH_ATTR}]`]: {
     position: 'absolute',
     top: `${GAP_INSET}px`,
     bottom: `${GAP_INSET}px`,
-    // A one-pixel stripe every three. The pitch and the step in theme-noise are one
-    // setting, not two: what the band weighs is their product, not the line on its own. So
-    // the two are written as a ratio held at a third — retuning the texture is a matter of
-    // moving both and leaving the weight where it is, and a fifth covered, which is where
-    // this started, is a shading you can compute and cannot see.
-    backgroundImage:
-      'repeating-linear-gradient(45deg, var(--chakra-colors-chart-gap) 0 1px, transparent 1px 3px)',
   },
-  // Where a place on screen read over its limit, in any series picked — in the same red
-  // the limit rules on the charts are drawn in, so the two read as one statement.
-  [`& [${BREACH_ATTR}]`]: {
-    position: 'absolute',
-    top: `${GAP_INSET}px`,
-    h: `${BREACH_H}px`,
-    bg: 'chart.limit',
-  },
+  [`& [${GAP_ATTR}]`]: {bg: 'chart.ignored/10'},
+  [`& [${BREACH_ATTR}]`]: {bg: 'chart.limit/10'},
   [`& [${TICK_ATTR}]`]: {
     position: 'absolute',
     top: '0',
@@ -163,10 +135,10 @@ const MARKERS_CSS = {
     color: 'chart.axis',
     whiteSpace: 'nowrap',
   },
-  // A date, where the day changes: in the playhead's near-white rather than the axis grey,
-  // so the day boundaries stand out from the hours between them.
+  // A date, where the day changes: in the full foreground rather than the axis grey, so the
+  // day boundaries stand out from the hours between them.
   [`& [${LABEL_ATTR}][${DATE_ATTR}]`]: {
-    color: 'chart.playhead',
+    color: 'fg',
   },
 } as const;
 
@@ -325,6 +297,19 @@ export const TimelineMarkers = memo(function TimelineMarkers({
             />
           );
         })}
+        {/* Under the ticks like the gaps, by the same rule. Not bled into the overhang: a
+            breach is a reading, and there are none past either end of the axis. */}
+        {flagged.map((breach) => {
+          const from = axisFraction(breach.start, start, end) * 100;
+          const to = axisFraction(breach.end, start, end) * 100;
+          return (
+            <span
+              key={breach.start}
+              {...{[BREACH_ATTR]: ''}}
+              style={{left: `${from}%`, width: `${to - from}%`}}
+            />
+          );
+        })}
         {ticks.flatMap((tick) => {
           const fraction = axisFraction(tick.ms, start, end);
           // Per mark and per resize, so a raw style rather than a Chakra prop: Emotion
@@ -358,20 +343,6 @@ export const TimelineMarkers = memo(function TimelineMarkers({
               </span>
             ),
           ];
-        })}
-        {/* Last, so the bar draws over the hour ticks hanging from the top rather than
-            being cut by them. Not bled into the overhang: a breach is a reading, and there
-            are none past either end of the axis. */}
-        {flagged.map((breach) => {
-          const from = axisFraction(breach.start, start, end) * 100;
-          const to = axisFraction(breach.end, start, end) * 100;
-          return (
-            <span
-              key={breach.start}
-              {...{[BREACH_ATTR]: ''}}
-              style={{left: `${from}%`, width: `${to - from}%`}}
-            />
-          );
         })}
       </Box>
     </Box>

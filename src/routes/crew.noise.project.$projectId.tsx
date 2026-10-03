@@ -13,6 +13,7 @@ import {
   resolveProjectSelection,
   cropProjectSelection,
   sameSelection,
+  midpointOf,
   setSelectionCurrent,
   visibleProjectWindow,
   type ProjectSelection,
@@ -48,7 +49,8 @@ import {
   NativeSelectRoot,
 } from '../components/chakra-snippets/native-select';
 import {noiseQueryKeys} from '../components/noise/queries';
-import {useLatest} from '../components/noise/chartUtils';
+import {spanWithinDay, useLatest} from '../components/noise/chartUtils';
+import {timePresets, type TimePreset} from '../components/noise/timePresets';
 import {seo} from '../utils/seo';
 
 // One view at a time: the map is only useful at a size worth giving the whole viewport
@@ -126,7 +128,7 @@ function NoiseProjectDetail() {
   // moment is a page someone pinned and sent, so it opens on that instead.
   //
   // For a festival that is over — or hasn't started — live is an empty page, so it opens
-  // on the whole event with the playhead at its end instead (see resolveProjectSelection,
+  // on the whole event with the playhead in its middle instead (see resolveProjectSelection,
   // which is what a live-less page with no crop resolves to). That rule lived on the index
   // route's links, which meant it held for exactly one way in: a bookmark, a pasted URL,
   // the index route's own redirect and every future link — a pin on the map, a device's
@@ -405,7 +407,7 @@ function NoiseProjectDetail() {
   // put: nothing reports a pointer leaving any more (see the context's `scrubTo`), so the
   // frames this drops are the repeats a slow hover makes within one minute.
   const scrubTo = useCallback(
-    (at: number | null) => {
+    (at: number) => {
       setChosen((prev) => {
         const from = selectionRef.current;
         const next = setSelectionCurrent(from, at);
@@ -413,6 +415,38 @@ function NoiseProjectDetail() {
       });
     },
     [selectionRef],
+  );
+
+  // The playhead menu's windows (see timePresets): the last hour, today, the event's days —
+  // none until the clock is known, since which of them exist is a question about now.
+  // Recomputed as the clock ticks over a minute, which is how "today" keeps its live edge.
+  const presets = useMemo(
+    () => (now == null ? [] : timePresets(project, now)),
+    [project.start, project.end, now],
+  );
+  // Which of them the crop is on, if any — so its row is ticked. Only while scrubbing, live
+  // being a row of its own.
+  const activePreset = live
+    ? null
+    : (presets.find(
+        (p) => p.start === selection.start && p.end === selection.end,
+      ) ?? null);
+  const goLive = useCallback(() => setLive(true), []);
+  // Leaving live onto a window is a crop like any other — the same state a drag on the strip
+  // commits, so the URL and the back button treat it alike. A window that runs to the live
+  // edge is stored running to the project's end instead, which the clamp to what is pickable
+  // turns back into "until now" on every tick (see resolveProjectSelection): today goes on
+  // being today, rather than freezing at the minute it was picked.
+  const pickPreset = useCallback(
+    (preset: TimePreset) => {
+      setLive(false);
+      setChosen({
+        start: preset.start,
+        end: preset.end >= pickableRef.current.end ? project.end : preset.end,
+        current: midpointOf(preset),
+      });
+    },
+    [pickableRef, project.end],
   );
 
   // Cropping from a row chart: the in/out keys hand over one end, a drag across the
@@ -549,7 +583,9 @@ function NoiseProjectDetail() {
   // never has to be torn down and re-established. Pushed from an effect rather than
   // during render: the charts move a line to a pixel, and the scale that pixel is
   // measured against is set by their own effects, which run first.
-  const [playheadSignal] = useState(createPlayheadSignal);
+  // Created holding the first instant, so nothing subscribing to it sees a frame of "no
+  // playhead" before the effect below has run.
+  const [playheadSignal] = useState(() => createPlayheadSignal(viewedAt));
   useEffect(() => playheadSignal.set(viewedAt), [playheadSignal, viewedAt]);
 
   return (
@@ -565,18 +601,21 @@ function NoiseProjectDetail() {
               fill), and as tall as the list when there is more. */}
           <Box display="flex" flexDirection="column" flex="1 0 auto">
             <NoiseToolbar
-              // Both gone at phone width: the controls beside them need every pixel of
-              // the strip, and neither line tells you anything you don't know — you
-              // arrived here by picking this festival by name a moment ago. The back
-              // arrow stays, so the way out of the page you are on is still there.
+              // The clock in the middle of the strip, and leading it from the left on a
+              // phone, where the arrow gives way to the controls (see centerTitle).
+              centerTitle
               title={
-                // The instant being read, the project named under it, and the key that
-                // decides whether that instant is now (see PlayheadDisplay). At every width,
-                // since it is how the page is switched out of live.
+                // The instant being read, and the menu that decides whether that instant is
+                // now (see PlayheadDisplay). At every width, since it is how the page is
+                // switched out of live.
                 <PlayheadDisplay
                   name={project.name}
+                  withDate={!spanWithinDay(pickable.end - pickable.start)}
                   live={live}
-                  onLiveChange={setLive}
+                  presets={presets}
+                  activePreset={activePreset}
+                  onLive={goLive}
+                  onPreset={pickPreset}
                   pending={isFetching}
                 />
               }

@@ -134,6 +134,79 @@ export const X_AXIS_H_ROTATED = AXIS_GAP + 30;
 // uPlot's own default here is a third of its default x-axis height, which is 17 px and
 // covers this by accident; passing a padding at all is what gives that up. The right, in
 // contrast, is chosen: it keeps the last x label off the edge of the canvas.
+// The playhead's head: a small tab pointing down onto its line, square-shouldered with the
+// top corners eased — the marker an editing timeline hangs its playhead from. Shared by the
+// project timeline and the row charts so the mark is recognisably the same one in each; the
+// charts pass a larger one, being the taller of the two.
+//
+// Two pseudo-elements of the line itself, centred on it, so it moves with the line and needs
+// no element of its own: the head in red over the same shape a pixel larger in the plot's
+// ground, which is its casing (see PLAYHEAD_CASING). A shadow cannot be that casing — the
+// shape is a clip-path, and a clip takes the shadow with everything else outside it.
+const headShape = (
+  widthPx: number,
+  heightPx: number,
+  background: string,
+  points: readonly (readonly [number, number])[],
+) =>
+  ({
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: '50%',
+    width: `${widthPx}px`,
+    height: `${heightPx}px`,
+    transform: 'translateX(-50%)',
+    background,
+    borderTopLeftRadius: '2px',
+    borderTopRightRadius: '2px',
+    clipPath: `polygon(${points.map(([x, y]) => `${x}px ${y}px`).join(', ')})`,
+  }) as const;
+
+// The tab's outline, in pixels: square to `shoulder`, then in to the point.
+const tab = (w: number, h: number, shoulder: number) =>
+  [
+    [0, 0],
+    [w, 0],
+    [w, shoulder],
+    [w / 2, h],
+    [0, shoulder],
+  ] as const;
+
+export const playheadHead = (widthPx: number, heightPx: number) => {
+  const shoulder = Math.round(heightPx * 0.55);
+  const mid = widthPx / 2;
+  return {
+    // Before, so the head drawn after it lies on top: wider by a pixel each side and longer
+    // by one at the point, and not taller at the top, which is the plot's own edge.
+    '&::before': headShape(
+      widthPx + 2,
+      heightPx + 1,
+      'chart.ground',
+      tab(widthPx + 2, heightPx + 1, shoulder),
+    ),
+    // The head, carried on down through that extra pixel of ground as a stem the line's own
+    // width — so the line runs on out of the point instead of being cut from it.
+    '&::after': headShape(widthPx, heightPx + 1, 'chart.playhead', [
+      [0, 0],
+      [widthPx, 0],
+      [widthPx, shoulder],
+      [mid + 0.5, heightPx],
+      [mid + 0.5, heightPx + 1],
+      [mid - 0.5, heightPx + 1],
+      [mid - 0.5, heightPx],
+      [0, shoulder],
+    ]),
+  } as const;
+};
+
+// A pixel of the plot's ground either side of the playhead's line, so it stands clear of
+// whatever it crosses — a trace, a grid line, a crop's edge — rather than merging into a
+// line of a similar weight. Hard shadows rather than a border, which would widen the line
+// and move its centre off the instant; under the head, which covers them.
+export const PLAYHEAD_CASING =
+  '-1px 0 0 var(--chakra-colors-chart-ground), 1px 0 0 var(--chakra-colors-chart-ground)';
+
 export const CHART_PADDING: uPlot.Padding = [
   Math.ceil(AXIS_FONT_SIZE / 2) + 1,
   8,
@@ -333,6 +406,10 @@ const weekdayFmt = new Intl.DateTimeFormat(locale, {
 });
 export const weekdayOf = (d: TZDate) => weekdayFmt.format(d);
 
+// A day as every readout here names it: weekday and date, "Fr 01.08." — the tooltips' and
+// the playhead's prefix, and the time menu's name for a day of the event.
+export const dayLabelOf = (d: TZDate) => `${weekdayOf(d)} ${dayOf(d)}`;
+
 // HH:MM — historical chart x-axis (per-minute, within a day), in `timeZone`.
 export const fmtHourMinute = (ts: number) => hourMinuteOf(zonedDate(ts));
 
@@ -374,7 +451,7 @@ export const instantLabel =
     const clock = live
       ? `${hourMinuteOf(d)}:${pad2(d.getSeconds())}`
       : hourMinuteOf(d);
-    return `${weekdayOf(d)} ${dayOf(d)} ${clock}`;
+    return `${dayLabelOf(d)} ${clock}`;
   };
 
 // Vertical-grid steps in seconds, smallest first, for the row charts' time axis.

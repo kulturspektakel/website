@@ -271,14 +271,10 @@ export type ProjectViewCtx = {
   // project rather than re-picking it. Not called while live: there is no instant to point at
   // then, and the views withhold it.
   //
-  // Only ever an instant in practice. The null is what a pointer leaving a chart used to
-  // report, and the mark went with it; it stays now, because it says which instant the page is
-  // reading rather than where a hand is — so a peak can be pointed at and then studied with
-  // the hand off the glass. Nothing takes it away but a window drawn in one drag, which states
-  // a timeframe with no instant in it (see drawProjectSelection). The signature keeps the null
-  // because the charts' `onScrub` does, that prop being shared with a live chart reporting its
-  // own pointer (see LevelTrace).
-  scrubTo: (at: number | null) => void;
+  // Always an instant: the playhead says which instant the page is reading rather than where a
+  // hand is, so it stays where it was put when the pointer leaves — a peak can be pointed at
+  // and then studied with the hand off the glass — and nothing takes it away.
+  scrubTo: (at: number) => void;
   // Crops the timeframe, exactly where asked — what a row chart commits, whether that
   // came from the in/out keys (one end) or a drag across the trace (both). An omitted
   // end stays where it was, and the playhead stays where it is: it marks the instant being
@@ -369,8 +365,8 @@ export type PlayheadSignal = (
   listener: (at: number | null) => void,
 ) => () => void;
 
-export function createPlayheadSignal() {
-  let at: number | null = null;
+export function createPlayheadSignal(initial: number | null = null) {
+  let at: number | null = initial;
   const listeners = new Set<(at: number | null) => void>();
   return {
     set(next: number | null) {
@@ -448,8 +444,8 @@ const toMinute = (ms: number) => Math.floor(ms / 60_000) * 60_000;
  *
  * Live, that is this minute. Scrubbing, it is the playhead's, taken off its signal and
  * floored, so a reader re-renders once per minute crossed rather than per frame of a hover:
- * the same rate the stored levels themselves move at. Null before a scrubbed page has a
- * playhead.
+ * the same rate the stored levels themselves move at. Null only off a project page, where
+ * there is no playhead at all.
  */
 export function useReadingMinute(live: boolean): number | null {
   const now = useTick(60_000);

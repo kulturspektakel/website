@@ -1,14 +1,15 @@
 import {useCallback, useMemo, useState} from 'react';
-import {Flex} from '@chakra-ui/react';
+import {Box, Flex} from '@chakra-ui/react';
 import {useDeviceState, useNoiseBuffers, useTick} from './context';
-import {bufferColumn, bufferSampleAt, LIVE_SERIES, seriesKey} from './series';
-import {BigNumberRow} from './BigNumber';
+import {bufferColumn, bufferSampleAt, seriesByKey} from './series';
+import {seriesLabel} from './level';
+import {ReadingTiles} from './LocationReadings';
 import {LevelTrace} from './LevelTrace';
 import {BandSpectrumChart} from './BandSpectrumChart';
 import {X_AXIS_H_ROTATED} from './chartUtils';
 import {useDeviceView} from './deviceView';
 import {GAP_THRESHOLD_S, isFresh} from './noise';
-import {type LimitLine} from './limitLines';
+import {exceedsLimit, limitAt, type LimitLine} from './limitLines';
 import {deviceLines} from './projectView';
 
 // One monitor, as it is reading now: the numbers it is sending, the level over the last
@@ -32,7 +33,7 @@ export function LiveView({
   // every one of them, but only on this device's, which is all it shows. The trace reads
   // the rolling buffer itself and redraws on its own tick.
   const deviceState = useDeviceState(device);
-  const {picked, toggleSeries} = useDeviceView();
+  const {picked} = useDeviceView();
   // The rolling samples, for the numbers to be read out of at the pointer. The chart
   // below has them too and neither hands them to the other: they are a ref, so reading
   // them here costs nothing and subscribes to nothing.
@@ -90,23 +91,40 @@ export function LiveView({
 
   return (
     <>
-      {/* What the toolbar picks are rows of the series table, so they are also the lines
-          to plot and the tiles to light — the row and the menu are two ways at one choice,
-          and pressing a tile is the same commit as ticking a box. The numbers print every
-          series either way: the row is the readout, the lit ones are what you asked to see
-          over time. */}
-      <BigNumberRow
-        series={LIVE_SERIES}
-        picked={picked}
-        onPick={toggleSeries}
-        value={(s) =>
-          hovered
-            ? hovered.row[bufferColumn(seriesKey(s.kind, s.weighting))]!
-            : current
-              ? s.get(current)
-              : null
-        }
-      />
+      {/* One badge per series the toolbar has picked — the same badges, in the same order,
+          as a location card's header (see ReadingTiles), since they are the same numbers:
+          what this monitor reads, the line's colour under its name, and red against the
+          place's limit where one is in force. Read off the sample under the pointer while
+          there is one, and the latest record otherwise. Not toggles: the menu above is what
+          picks the lines, and these are their readout. */}
+      <Box mb="3">
+        <ReadingTiles
+          // The page's headline numbers: the large size, spread across the page rather
+          // than stretched to fill it (see ReadingTiles).
+          size="lg"
+          spread
+          tiles={picked.map((key) => {
+            const db = hovered
+              ? (hovered.row[bufferColumn(key)] ?? null)
+              : current
+                ? seriesByKey(key).get(current)
+                : null;
+            const limitDb = limitAt(
+              limits,
+              key,
+              hovered ? hovered.at * 1000 : now,
+            );
+            return {
+              key,
+              db,
+              label: seriesLabel(key, true),
+              color: seriesByKey(key).color,
+              limitDb,
+              over: db != null && exceedsLimit(db, limitDb),
+            };
+          })}
+        />
+      </Box>
       <Flex flex="1" minH="0" direction={{base: 'column', lg: 'row'}} gap="2">
         {/* Side by side where there is room for both, stacked on a phone. The trace takes
             what the spectrum leaves, which is how a location card divides its own box. */}
@@ -127,10 +145,9 @@ export function LiveView({
             lines={lines}
             live
             picked={picked}
-            // What the tile row above reads out while the pointer is on the trace. The
-            // numbers are this chart's legend as well as its readout (see BigNumberRow),
-            // so pointing at a sample is how a line is asked what it was, in every series
-            // and not only the picked ones the tooltip has room for.
+            // What the badges above read out while the pointer is on the trace: they are
+            // this chart's legend as well as its readout, so pointing at a sample is how its
+            // lines are asked what they were.
             onScrub={onScrub}
             // Drawn on this chart and not on the spectrum beside it: a limit is written
             // against a level over time, and the spectrum's axis is frequency.

@@ -1,4 +1,9 @@
-import {format, roundToNearestMinutes, type NearestMinutes} from 'date-fns';
+import {
+  format,
+  roundToNearestMinutes,
+  startOfDay,
+  type NearestMinutes,
+} from 'date-fns';
 import {TZDate, tz} from '@date-fns/tz';
 import {locale, timeZone} from '../../utils/dateUtils';
 
@@ -40,6 +45,12 @@ export const snapToMinute = (ms: number): number => snapTo(ms, 1);
 // the project's window with the same rule.
 export const clampTo = (ms: number, min: number, max: number): number =>
   Math.min(Math.max(ms, min), max);
+
+// The midnight that begins the festival day an instant falls in, as a zoned date — so that
+// adding days to it with date-fns stays on midnights in `timeZone` across a clock change,
+// where adding 24 hours would not.
+export const zonedStartOfDay = (ms: number): TZDate =>
+  startOfDay(ms, {in: tz(timeZone)});
 
 // Local wall-clock fields → the instant they denote in `timeZone`.
 const zonedInstant = (y: number, mo: number, d: number, h = 0, min = 0): Date =>

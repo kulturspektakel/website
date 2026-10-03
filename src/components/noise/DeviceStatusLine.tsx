@@ -1,5 +1,5 @@
 import {Link as RouteLink} from '@tanstack/react-router';
-import {Box, HStack, Span} from '@chakra-ui/react';
+import {Box, Span} from '@chakra-ui/react';
 import {LuMapPin} from 'react-icons/lu';
 import {Tooltip} from '../chakra-snippets/tooltip';
 import {BatteryChip} from './BatteryChip';
@@ -26,6 +26,11 @@ import {useBluetooth, useDeviceState, useTick} from './context';
 // the subscription would wake the toolbar, both its dropdowns and its ⋮ menu once a second
 // to redraw four chips. Same arrangement every other live readout in this section uses, and
 // the same reason (see DeviceBadge, LocationReadings).
+// The narrowest the "last seen" note may be and still be shown — below this it is hidden
+// rather than truncated to a fragment.
+const LAST_SEEN_MIN_W = '7ch';
+const LAST_SEEN_LINE = '1rem';
+
 export function DeviceStatusLine({
   device,
   assignment,
@@ -51,14 +56,47 @@ export function DeviceStatusLine({
   const wifiStatus = bleConnected ? bluetooth.wifiStatus : null;
 
   return (
-    <HStack gap="2" flexShrink="0">
+    // Not a box of its own: these are items of the title row the name stands in (see the
+    // device route), so each can be sized against the name directly. A row of them would
+    // not be able to give way below its own text — a flex box's minimum width counts its
+    // children's whole text, however willing they are to truncate.
+    <>
       {/* Plain muted text and not a chip: it qualifies the name beside it rather than
           standing as a reading of its own, and the chips after it are things the monitor
-          is telling us — this is the note that it has stopped. Never shrinks and never
-          wraps; it is a few words, and the name is what gives (see DevicePicker). */}
+          is telling us — this is the note that it has stopped. The first thing to give
+          when the toolbar runs short — truncated, then gone — before the name is touched
+          (see the sizing below). */}
       {!alive && (
-        <Span fontSize="xs" color="fg.muted" flexShrink="0" whiteSpace="nowrap">
-          {formatSeen(seen, now)}
+        // Hidden outright below a few characters rather than dwindling to "6…": the box is
+        // one line tall and clips, and the text inside it wraps — so while there is room for
+        // its minimum it stays on the line and truncates, and the moment there is not it
+        // drops to a second line nobody can see. CSS only, so it follows every resize.
+        //
+        // The `::before` is what lets it drop: a zero-width first item, because the first
+        // item on a line never wraps — alone in the box, the text would only clip. A full
+        // line tall, too, or the first line has no height and the "second" sits where the
+        // first was, in plain view.
+        <Span
+          display="flex"
+          flexWrap="wrap"
+          // One explicit line, which the box, its line height and the spacer below all share.
+          lineHeight={LAST_SEEN_LINE}
+          h={LAST_SEEN_LINE}
+          overflow="hidden"
+          // Sized from nothing up, never down: no width of its own (a zero basis), growing
+          // into whatever the name and the chips leave over, up to its text's own width. So
+          // it can never be the reason the name truncates — the name gives only once there
+          // is nothing left over at all, by which point this has none to give.
+          flex="1 1 0"
+          maxW="max-content"
+          minW="0"
+          fontSize="xs"
+          color="fg.muted"
+          _before={{content: '""', flex: '0 0 0', height: LAST_SEEN_LINE}}
+        >
+          <Span flex={`1 0 ${LAST_SEEN_MIN_W}`} minW="0" truncate>
+            {formatSeen(seen, now)}
+          </Span>
         </Span>
       )}
       {deviceState?.latest.batteryMv != null && (
@@ -71,7 +109,7 @@ export function DeviceStatusLine({
           question nobody asks twice. */}
       {assignment && (
         <Tooltip content={assignment.projectName} showArrow>
-          <Chip pressable asChild maxW="40" minW="0">
+          <Chip pressable asChild maxW="40" minW="0" flexShrink="0">
             {/* Straight to that stage's card, not to the project's front door: the chip
                 names one place out of a dozen, and landing on somebody's remembered
                 arrangement would leave you looking for it. Which place travels in the
@@ -100,6 +138,6 @@ export function DeviceStatusLine({
         <UploadsChip count={pendingUploads} />
       )}
       {wifiStatus && <WifiStatusIcon status={wifiStatus} />}
-    </HStack>
+    </>
   );
 }

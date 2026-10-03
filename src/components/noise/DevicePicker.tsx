@@ -1,8 +1,7 @@
 import {useNavigate} from '@tanstack/react-router';
 import {useQuery} from '@tanstack/react-query';
 import {useMemo} from 'react';
-import {Box, Button, HStack, Span} from '@chakra-ui/react';
-import {LuChevronDown} from 'react-icons/lu';
+import {Box, HStack, Span} from '@chakra-ui/react';
 import {
   MenuContent,
   MenuRadioItem,
@@ -19,6 +18,7 @@ import {
 } from './context';
 import {compareDeviceIds, formatSeen, isFresh, lastSeenAt} from './noise';
 import {LiveStatusDot} from './LiveStatusDot';
+import {ToolbarTitleButton} from './ToolbarTitleButton';
 import {noiseQueryKeys} from './queries';
 
 // Which monitor the device page is showing, as the page's own title — the name is the
@@ -45,43 +45,25 @@ export function DevicePicker({device}: {device: string}) {
     // instrument must not listen to all of them for the sake of a closed menu.
     <MenuRoot lazyMount unmountOnExit>
       <MenuTrigger asChild>
-        {/* As wide as the name and no wider, down to whatever the strip has left: the
-            title is a name, so it takes a name's width rather than a column's, and gives
-            that up to an ellipsis before the controls beside it give up anything. Ghost,
-            because it is the page's heading first and a control second — the chevron is
-            what says it can be pressed. */}
-        <Button
-          variant="ghost"
-          size="sm"
-          px="2"
-          gap="1"
-          minW="0"
-          maxW="full"
-          // Against Chakra's button recipe, which pins every button at `flex-shrink: 0`
-          // — right for a control in a row of controls, wrong for this one: it is the
-          // page's title, the widest thing in the strip and the only thing in it that
-          // can be abbreviated and still be read. Without this the name holds its full
-          // width on a phone and pushes the chips beside it off the edge.
-          flexShrink="1"
-          fontSize="md"
-          fontWeight="bold"
-        >
+        {/* As wide as the name and no wider, down to whatever the strip has left — it is
+            the page's heading as much as a control, the same title button the project page's
+            clock is (see ToolbarTitleButton). */}
+        <ToolbarTitleButton>
           {/* Lit or absent, never grey: on the button there is nothing for a grey dot to
               be read against, so "no light" is the whole of what it would have said. The
               list is where the two states sit side by side and a slot has to be kept. */}
           {alive && (
-            <LiveStatusDot
-              lastSeen={state?.lastSeen}
-              ble={device === bluetooth.deviceName}
-            />
+            <Box me="2" display="flex" flexShrink="0">
+              <LiveStatusDot
+                lastSeen={state?.lastSeen}
+                ble={device === bluetooth.deviceName}
+              />
+            </Box>
           )}
           <Span truncate minW="0">
             {device}
           </Span>
-          <Box asChild flexShrink="0" color="fg.muted">
-            <LuChevronDown />
-          </Box>
-        </Button>
+        </ToolbarTitleButton>
       </MenuTrigger>
       <MenuContent minW="56">
         <DeviceOptions device={device} />

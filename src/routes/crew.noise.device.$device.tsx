@@ -89,10 +89,7 @@ function DevicePage() {
   const referenceMic = useReferenceMic();
 
   // Pinned, so the charts below are not handed a new context on every render of the page.
-  const view = useMemo(
-    () => ({picked, toggleSeries, referenceMic}),
-    [picked, toggleSeries, referenceMic],
-  );
+  const view = useMemo(() => ({picked, referenceMic}), [picked, referenceMic]);
 
   return (
     <DeviceViewContext.Provider value={view}>
@@ -123,11 +120,8 @@ function DevicePage() {
         >
           {/* What the charts below are drawn from. `live` only labels the rows — the
               finest window is a second here, where the project page's stored one is a
-              minute. No live switch beside it: this page has no other mode.
-
-              The same set the tile row above the chart lights, and either control sets it:
-              a menu is how you pick a series that is not on screen, a tile is how you drop
-              one you can see. */}
+              minute. No live switch beside it: this page has no other mode. The badges
+              above the chart follow it, one per series picked. */}
           <LevelPicker live picked={picked} onToggleSeries={toggleSeries} />
           <DeviceMenu device={device} />
         </NoiseToolbar>

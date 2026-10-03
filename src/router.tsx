@@ -5,6 +5,7 @@ import * as Sentry from '@sentry/tanstackstart-react';
 import {NotFound} from './components/NotFound/NotFound';
 import {Error} from './components/Error';
 import {Pending} from './components/Pending';
+import {trackHistoryRoutes} from './utils/historyRoutes';
 
 export function getRouter() {
   // Per request, not per module. `getRouter` is memoized for the lifetime of a
@@ -52,8 +53,10 @@ export function getRouter() {
     defaultPendingMinMs: 200,
   });
 
-  // Browser-only: wire up Sentry route-change tracing.
+  // Browser-only: wire up Sentry route-change tracing, and the record of which route each
+  // history entry is on that back arrows step by (see historyRoutes).
   if (typeof document !== 'undefined') {
+    trackHistoryRoutes(router);
     Sentry.addIntegration(
       Sentry.tanstackRouterBrowserTracingIntegration(router),
     );

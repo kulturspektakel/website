@@ -230,7 +230,7 @@ export function attachTouchGestures(
     // has no use for it under `pan-y` anyway — and put the cursor away, so the tooltip
     // isn't left standing on an instant nobody is pointing at any more. The playhead is not
     // what goes with it: a pinch crops, and cropping does not decide what the page is
-    // reading — only a window *drawn* in one gesture does (see drawProjectSelection).
+    // reading.
     e.preventDefault();
     start = null;
     tap = null;

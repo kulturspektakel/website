@@ -1,4 +1,5 @@
 import {Box, HStack, Text} from '@chakra-ui/react';
+import {type ComponentProps} from 'react';
 // The one icon in this section that isn't lucide's, for two reasons: lucide is a stroke-only
 // set, and at the size this sits — 12px, inside a badge — an outlined triangle is a few
 // hairlines that read as a smudge. Heroicons' *mini* set is drawn for exactly this size, on a
@@ -93,10 +94,22 @@ type PrintedLevel = {
 };
 
 // The badge's corner, and the corner of the box inside it. Concentric, which means the
-// inner one is the outer less the 1px of frame between them — curve both by the same
-// radius and the frame reads as thickening at the corners.
-const BADGE_RADIUS = 'md';
-const INNER_RADIUS = `calc(var(--chakra-radii-${BADGE_RADIUS}) - 1px)`;
+// inner one is the outer less the frame between them — curve both by the same
+// radius and the frame reads as thickening at the corners. In `em`, like every size in the
+// badge, so the whole of it scales with the row's type (see ReadingTiles).
+const BADGE_RADIUS = '0.375em';
+// The frame — the badge's colour showing round the number — scaling with the rest of it, but
+// never thinner than a hairline: 1px on a card, growing to 2px at the device page's largest.
+const BADGE_FRAME = 'max(1px, 0.0625em)';
+const INNER_RADIUS = `calc(${BADGE_RADIUS} - ${BADGE_FRAME})`;
+
+// The type a row of badges is set in, which every size inside a badge is relative to: the
+// card header's at 1rem, and the device page's, where the badges are the page's headline
+// numbers, growing with the viewport to twice that.
+const TILE_SIZES = {
+  sm: '1rem',
+  lg: 'clamp(1rem, 0.5rem + 2vw, 2rem)',
+} as const;
 
 // The most badges a row may put on one line, per breakpoint — the cap that makes five of
 // them fall onto a second row on a narrow card (see the grid below for why a cap rather
@@ -269,48 +282,74 @@ export function LocationReadings({
   return (
     // Side by side rather than stacked: they are several readings of one place at one instant,
     // not a headline and its footnotes. And never squashed: what gives when the header runs out
-    // of width is the device names beside it, which truncate.
-    //
-    // A grid of equal columns rather than a row of badges, which is what makes them all one
-    // width without that width being written down anywhere: `1fr` tracks in a box sized by its
-    // own contents come out equal, and equal to the widest of them — so the longest name, which
-    // is the crop's `LAeq,Range` rather than any number, sets the size of every badge, and
-    // renaming it resizes them rather than clipping one.
-    //
-    // The column count is capped so the badges fall onto a second row where five of them would
-    // not fit a narrow card: a grid does not wrap, and this is what a wrapping row's line
-    // breaks would have done, decided by the space there is rather than found by the browser.
-    // Fewer badges than the cap is simply fewer columns.
+    // of width is the device names beside it, which truncate. One width for all of them, the
+    // widest's — which is the crop's `LAeq,Range` where it is shown (see ReadingTiles).
     //
     // Only the readings, and nothing about the monitors: when one was last heard from is a
     // fact about *that monitor*, so it is on its own badge (see DeviceBadge). Said here, once,
     // it was the newer monitor's silence reported for both of a card's two — and a clock under
     // a column of levels reads as one of them.
+    <ReadingTiles
+      tiles={printed.map(({level, ...tile}) => ({
+        ...tile,
+        db: level.kind === 'none' ? null : level.db,
+        // Muted when the number is only the last thing we heard, so a reading that has
+        // stopped moving doesn't keep reading as one that hasn't — saying "not now" then
+        // matters more than which line it belongs to.
+        color: level.kind === 'stale' ? 'fg.subtle' : tile.color,
+      }))}
+    />
+  );
+}
+
+// A row of readings as badges — a location card's header, and the device page's row above
+// its trace (see LiveView), which print the same kind of number and so print it the same way.
+//
+// A grid of equal columns rather than a row of badges, which is what makes them all one width
+// without that width being written down anywhere: `1fr` tracks in a box sized by its own
+// contents come out equal, and equal to the widest of them — so the longest name sets the size
+// of every badge, and renaming it resizes them rather than clipping one.
+//
+// The column count is capped so the badges fall onto a second row where five of them would
+// not fit a narrow box: a grid does not wrap, and this is what a wrapping row's line breaks
+// would have done, decided by the space there is rather than found by the browser. Fewer
+// badges than the cap is simply fewer columns.
+//
+// One component at two sizes: `size` sets the row's type, and everything in a badge is in
+// `em` of it — so a larger row is the same badge scaled, not a second design kept in step.
+//
+// `spread` lays them across the whole width instead, each at its own width with the room
+// left over shared out evenly between them and at both ends — the device page, where the row
+// is the page's headline rather than a corner of a card's. Wrapping where they do not fit,
+// which is what the grid's caps do for a card.
+export function ReadingTiles({
+  tiles,
+  size = 'sm',
+  spread = false,
+}: {
+  tiles: readonly ({key: string} & ComponentProps<typeof ReadingTile>)[];
+  size?: keyof typeof TILE_SIZES;
+  spread?: boolean;
+}) {
+  return (
     <Box
-      display="grid"
-      gridTemplateColumns={GRID_COLUMNS[printed.length]}
-      gap="1.5"
+      {...(spread
+        ? {
+            display: 'flex',
+            flexWrap: 'wrap',
+            justifyContent: 'space-evenly',
+          }
+        : {
+            display: 'grid',
+            gridTemplateColumns: GRID_COLUMNS[tiles.length],
+          })}
+      gap="0.375em"
+      fontSize={TILE_SIZES[size]}
       flexShrink="0"
     >
-      {printed.map(
-        ({key, level, label, color, caveat, ignored, limitDb, over}) => (
-          <ReadingTile
-            key={key}
-            db={level.kind === 'none' ? null : level.db}
-            label={label}
-            // Muted when the number is only the last thing we heard, so a reading that
-            // has stopped moving doesn't keep reading as one that hasn't — saying "not
-            // now" then matters more than which line it belongs to.
-            color={level.kind === 'stale' ? 'fg.subtle' : color}
-            // The coverage rides with the crop's Leq, inside its tile, so it reads as a
-            // caveat on that number rather than as another reading of its own.
-            caveat={caveat}
-            ignored={ignored}
-            limitDb={limitDb}
-            over={over}
-          />
-        ),
-      )}
+      {tiles.map(({key, ...tile}) => (
+        <ReadingTile key={key} {...tile} />
+      ))}
     </Box>
   );
 }
@@ -385,20 +424,20 @@ function ReadingTile({
       // A floor under the equal columns, not a width: the grid still sizes them to the
       // widest name (see the caller), and this only stops a card whose readings are all
       // short names from shrinking its badges below the size a number is read at.
-      minW="70px"
+      minW="4.375em"
       // The colour is the badge, and the hairline of it left showing around the number is
       // what makes the two rows one object rather than a number with a bar under it.
       // Over its limit only the number and the sign beside it go red: the frame and name
       // row keep the line's colour, so the badge still says which reading it is.
       bg={color}
-      p="1px"
+      p={BADGE_FRAME}
       // Ignored, the whole badge fades by the amount its line does on the chart below.
       opacity={ignored ? IGNORED_OPACITY : undefined}
       textAlign="right"
       // The badge gives back four pixels at the bottom: the header's height is set by the
       // tallest thing in it, and a row of these was making the card taller than the name and
       // the monitors beside them need — the chart underneath is what wants that height.
-      mb="-4px"
+      mb="-0.25em"
       {...(tooltip && {
         // A hover target the size of the badge, rather than a sign inside it to hit: the
         // caveat is about this reading, so the reading is what carries it. Focusable for the
@@ -413,11 +452,11 @@ function ReadingTile({
     >
       {/* Air above and below the number — the badge is read as a number first, and the ground
           it sits on is what gives it room to be one. */}
-      <Box bg="bg" px="1.5" py="0.5" roundedTop={INNER_RADIUS}>
+      <Box bg="bg" px="0.375em" py="0.125em" roundedTop={INNER_RADIUS}>
         {/* The sign goes to the far left, where it is out of the numbers' way: they line up
             on the right edge of the badge and down the page, and a sign between them and
             that edge would push the one card that has it out of the column. */}
-        <HStack gap="1.5" justify="space-between" minW="0">
+        <HStack gap="0.375em" justify="space-between" minW="0">
           {sign && (
             // It stays visible: this is what says at a glance, without hovering anything,
             // that the reading is over its limit, or that the average has minutes missing
@@ -431,7 +470,7 @@ function ReadingTile({
             // Relative, so it moves the glyph without touching what the row measures.
             <Box
               color={sign}
-              fontSize="sm"
+              fontSize="0.875em"
               lineHeight="1"
               flexShrink="0"
               position="relative"
@@ -446,7 +485,7 @@ function ReadingTile({
               — that one is for a number in a sentence, and here what is wanted is the
               instrument's blank, the same width and shape as the value it is waiting for. */}
           <Text
-            fontSize="lg"
+            fontSize="1.125em"
             // Every one of them the same weight: the badge's colour and its name are what tell
             // the readings apart, and a lighter number among heavier ones read as a lesser
             // reading rather than as a different quantity.
@@ -470,12 +509,13 @@ function ReadingTile({
         // Below the smallest step the scale names (`2xs`, 10px): the name is read once to
         // learn what the badge is and then only glanced at, and the number is what the tile
         // is for — so this is as small as it can be and still be a word.
-        fontSize="0.5625rem"
+        fontSize="0.5625em"
         fontWeight="bold"
         lineHeight="1.4"
         color="bg"
-        px="1.5"
-        // No padding under it: the badge's own 1px of frame sits below this row in the same
+        // The number's side padding, restated against this row's own smaller type.
+        px="0.667em"
+        // No padding under it: the badge's own frame sits below this row in the same
         // colour, so anything here reads as that much more space than it is — and the row is
         // meant to be the colour running to the bottom edge, not a label floating above it.
         whiteSpace="nowrap"

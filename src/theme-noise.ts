@@ -58,21 +58,10 @@ const NOISE_COLORS = {
   // `border.emphasized`, which is what it needs to be to stay visible both over
   // the toolbar and inside the 15% accent wash of a crop window.
   'chart.axis': {_light: 'gray.600', _dark: 'gray.400'},
-  'chart.grid': {_light: 'gray.300', _dark: 'gray.700'},
+  // The grid is the quietest chrome there is — `border`, not `border.emphasized`: it is for
+  // placing a trace, and read against it the dashed limit rules and the traces come first.
+  'chart.grid': {_light: 'gray.300', _dark: 'gray.800'},
   'chart.rule': {_light: 'gray.300', _dark: 'gray.600'},
-  // The hatch the project timeline shades a stretch with no readings in (see
-  // TimelineMarkers). Its own name, because unlike every other entry here it is not drawn
-  // as a line but as texture: the stripes cover about a third of the band, so what the eye
-  // gets is their average against the ground behind rather than this value itself. Which
-  // means the step alone does not say how heavy the shading is — it is this and the pitch
-  // over in TimelineMarkers together, and they have to be changed as a pair.
-  //
-  // It lands on `grid`'s step, and that is a coincidence of value rather than a
-  // relationship: one is the faintest line a chart can be read against, this is the
-  // faintest texture a strip can be. Neither has a reason to follow the other, so they
-  // stay two names. This is meant to be read past — a missing stretch should be findable
-  // at a glance without becoming the loudest thing on a strip whose subject is the crop.
-  'chart.gap': 'gray.700',
   // Where a limit was breached, as a mark on the project timeline (see TimelineMarkers).
   // The chart's own rules are drawn in their series' shade instead (see drawLimits); this
   // one stands for every series at once, so it takes a colour of its own.
@@ -83,15 +72,19 @@ const NOISE_COLORS = {
   // The crop's Leq — its running line on the chart and its badge on the card (see
   // RangePick). A light neutral off the ramp: it is the mean of the whole picture rather than
   // one more averaging window, and it has to stay clear of the limit's red. Not the
-  // playhead's near-white, so the two lines don't read as one mark where they cross.
+  // playhead's red, so the two lines don't read as one mark where they cross.
   'chart.range': 'gray.300',
-  'chart.playhead': 'gray.50',
+  // The playhead — the line down every chart and the strip at the instant being read, and
+  // its head. Red, the way an editing timeline draws it, so it reads as the one moving mark
+  // over everything that is data; the same red as a limit (see chart.limit), which never
+  // stands where the playhead does, being a rule across a stretch or a wash behind it.
+  'chart.playhead': 'red.500',
   'chart.readout.bg': {_light: 'gray.50', _dark: 'gray.800'},
-  // The ground a plot is drawn on, as a value the canvas can stroke with — the same step
-  // the section's `bg` resolves to in dark, which is the only mode this section has. Only
-  // the limit rules ask for it, and they ask for it as a halo: a dashed line in a series'
-  // own shade over a trace in the same or a neighbouring shade is a rule you have to look
-  // for (see drawLimits).
+  // The ground a plot is drawn on, as a value the canvas can paint with — the same step the
+  // section's `bg` resolves to in dark, which is the only mode this section has. What the
+  // lines are cased in (see LINE_CASING_PX), and the playhead (see PLAYHEAD_CASING): an edge
+  // of the ground around a line is what keeps two lines apart where they cross, without
+  // adding a colour of its own.
   //
   // Not `map.ground`, though it is the same step today: that one is the basemap's ground and
   // answers to mapStyle.ts's lightness ladder. Two names because the two have no reason to

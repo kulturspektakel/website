@@ -1,14 +1,8 @@
-import {Link} from '@tanstack/react-router';
+import {Link, useRouter} from '@tanstack/react-router';
 import {useState, type ReactNode} from 'react';
-import {
-  Box,
-  Collapsible,
-  HStack,
-  Heading,
-  IconButton,
-  VStack,
-} from '@chakra-ui/react';
+import {Box, Collapsible, HStack, Heading, IconButton} from '@chakra-ui/react';
 import {LuArrowLeft} from 'react-icons/lu';
+import {stepsBackToOtherRoute} from '../../utils/historyRoutes';
 
 // One strip: the gutter it keeps, the rule under it, and the ground both are painted on.
 // Applied to each of the two rather than described twice, which is the whole reason this
@@ -36,22 +30,18 @@ const STRIP = {
 // long list ran past it, so the pages grow instead (`flex: 1 0 auto`) and this stays.
 export function NoiseToolbar({
   title,
-  sub,
   children,
   below,
   belowOpen = true,
   back = true,
+  centerTitle = false,
 }: {
-  // What the page is about, filling the strip's left half. A node and not a string
-  // because the two pages differ in kind: a project *has* a name (see ToolbarTitle,
-  // which is that name as the h1), while a monitor's name is also how you get to the
-  // next monitor, so its title is a control (see DevicePicker).
+  // What the page is about: leading the strip, or in its middle (see centerTitle). A node
+  // and not a string because the pages differ in kind: the index *has* a name (see
+  // ToolbarTitle, which is that name as the h1), a monitor's name is also how you get to the
+  // next monitor (see DevicePicker), and a project's title is its clock (see
+  // PlayheadDisplay).
   title: ReactNode;
-  // The line under it, which is where the two pages differ most: a project says which
-  // festival it is (its dates), a monitor says what state it is in (its dot, where it
-  // stands, its battery). A node and not a string, because the second of those is a row
-  // of badges.
-  sub?: ReactNode;
   // The controls, hard against the right edge. Wrapping rather than squeezing: four of
   // them is more than a phone's width, and the heading beside them has already taken
   // what it needs.
@@ -66,11 +56,19 @@ export function NoiseToolbar({
   // nothing, so that hiding it can be animated: the strip folds up from its own height,
   // and that needs its contents still there while it does.
   belowOpen?: boolean;
-  // The arrow back to the project list. On by default, because every page that has this
-  // strip was arrived at from that list — except the list itself, which is the one place
-  // the arrow would point at the page you are already on. So the destination opts out and
-  // nobody else says anything.
+  // The arrow back to the page you came from — the project list, where that isn't known.
+  // On by default, because every page that has this strip was arrived at from somewhere —
+  // except the list itself, the top of the section, where there is nowhere further up to
+  // go. So the list opts out and nobody else says anything.
   back?: boolean;
+  // The title in the middle of the strip rather than leading it — the project page, whose
+  // title is its clock. The strip's true middle, not the middle of what the arrow and the
+  // controls leave: the two sides are flex columns of equal basis and equal growth, so they
+  // come out the same width whatever is in them, and the title sits between them. On a
+  // phone there is no room for three columns, so the arrow goes and the title leads the
+  // strip from the left — the controls are what the width is needed for, and the way back
+  // is the browser's own.
+  centerTitle?: boolean;
 }) {
   // Whether the strip below is mid-fold, which is the only time it may clip: the fold is a
   // height animation and needs `overflow: hidden` to be one, but the timeline's readouts
@@ -78,6 +76,29 @@ export function NoiseToolbar({
   // them off. Off to begin with, since the first render of an open strip doesn't animate
   // and so never reports an end.
   const [folding, setFolding] = useState(false);
+  const router = useRouter();
+  // Back to the page you came from rather than always to the list: the nearest entry of the
+  // tab's history on another route, which steps over the ones on this one — the project page
+  // pushes one per crop, and the next monitor is the same page about another device (see
+  // historyRoutes). A link all the same, to the
+  // list, which is what it falls back to where the way here isn't known (a link opened
+  // straight onto the page) and what a middle-click or a modified click still opens.
+  const backArrow = back && (
+    <IconButton asChild aria-label="Back" variant="ghost" size="sm">
+      <Link
+        to="/crew/noise"
+        onClick={(e) => {
+          if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+          const steps = stepsBackToOtherRoute(router);
+          if (steps == null) return;
+          e.preventDefault();
+          router.history.go(steps);
+        }}
+      >
+        <LuArrowLeft />
+      </Link>
+    </IconButton>
+  );
   // Only the strip's own animations, not ones bubbling up from inside the timeline.
   const onFold =
     (running: boolean) =>
@@ -97,29 +118,30 @@ export function NoiseToolbar({
       bg="bg"
     >
       <HStack align="center" gap="3" {...STRIP}>
-        {back && (
-          <IconButton
-            asChild
-            aria-label="Back to the project list"
-            variant="ghost"
-            size="sm"
+        {/* Three slots either way, and only their flex differs. Centred, the two sides
+            are columns of equal basis and equal growth, so they come out the same width
+            whatever is in them and the title sits in the strip's true middle; on a phone
+            the arrow's slot goes and the title leads from the left. Otherwise the title
+            takes what the arrow and the controls leave. */}
+        {(back || centerTitle) && (
+          <Box
+            flex={centerTitle ? '1 1 0' : 'none'}
+            minW="0"
+            hideBelow={centerTitle ? 'md' : undefined}
           >
-            <Link to="/crew/noise">
-              <LuArrowLeft />
-            </Link>
-          </IconButton>
+            {backArrow}
+          </Box>
         )}
-        {/* The sub line's type is the toolbar's, not each caller's: one size and one
-            muted grey, whether what sits in it is a date range or a row of chips. */}
-        <VStack align="start" gap="0" flex="1" minW="0">
+        <Box flex={centerTitle ? 'none' : '1'} minW="0" maxW="full">
           {title}
-          {sub && (
-            <Box fontSize="xs" color="fg.subtle" w="full" minW="0">
-              {sub}
-            </Box>
-          )}
-        </VStack>
-        <HStack gap="3" flexShrink="0" wrap="wrap" justify="flex-end">
+        </Box>
+        <HStack
+          flex={centerTitle ? '1 1 0' : 'none'}
+          minW="0"
+          gap="3"
+          wrap="wrap"
+          justify="flex-end"
+        >
           {children}
         </HStack>
       </HStack>

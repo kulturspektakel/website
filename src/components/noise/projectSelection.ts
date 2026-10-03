@@ -30,16 +30,12 @@ export function visibleProjectWindow(
   };
 }
 
-// `current` is null whenever nothing is pointing at the event: the playhead exists only
-// while a pointer is over a row chart or over the timeline strip, and goes with it (see
-// LevelTrace's setCursor hook and the timeline's onHoverMove). So it is not a position the
-// page remembers between gestures — it is where the hand is, and a page nobody is pointing
-// at has no instant, only a range.
-//
-// Which is what every reader downstream already had to handle: live mode has never had
-// an instant either (see the project route's `viewedAt`), so a null here reaches the
-// pins, the cards' readings and the playhead signal through the same path as a live page
-// and needs nothing new of any of them.
+// `current` is always somewhere: a page that opens on a window opens with the playhead in
+// the middle of it (see midpointOf), and from then on it stands wherever it was last put —
+// a hover over a row chart or the strip moves it, and nothing takes it away. So the cards and
+// the pins always have an instant to read rather than a blank to print until something is
+// pointed at. Live mode is the one state with no instant, and that is decided above this,
+// on the page (see the project route's `viewedAt`), not by a hole in the selection.
 //
 // It need not be inside `start…end`, only inside the project's window: the two answer
 // different questions. The crop says which stretch the charts draw and the Leqs average
@@ -50,9 +46,14 @@ export function visibleProjectWindow(
 // simply hides its line (see LevelTrace's positionPlayhead).
 export type ProjectSelection = {
   start: number;
-  current: number | null;
+  current: number;
   end: number;
 };
+
+// Where the playhead stands on a window nobody has pointed into yet: its middle, on the
+// minute — the grid every readout prints and the loggers report (see snapToMinute).
+export const midpointOf = ({start, end}: {start: number; end: number}) =>
+  snapToMinute((start + end) / 2);
 
 // Whether two picks are the same pick, "nothing picked" included. Every writer here
 // builds a fresh object — per frame of a drag, per navigation — and what matters is
@@ -70,9 +71,7 @@ export const sameSelection = (
     a.current === b.current);
 
 // What the user picked, resolved against the window — or, where they have picked
-// nothing, the whole window with no cursor in it: an instant is what a pointer names, and
-// there is no pointer on a page just arrived at. The first hover over a chart or the strip
-// puts one there.
+// nothing, the whole window with the playhead in its middle (see midpointOf).
 //
 // The null is load-bearing, and the reason the page stores a pick rather than a
 // resolved selection: the window's right edge follows the clock during a running
@@ -84,7 +83,7 @@ export function resolveProjectSelection(
   // orderSelection does the clamping and the ordering, so a pick made against a wider
   // window collapses the range rather than inverting it.
   return orderSelection(
-    chosen ?? {start: window.start, end: window.end, current: null},
+    chosen ?? {...window, current: midpointOf(window)},
     window,
   );
 }
@@ -108,9 +107,8 @@ export const thumbsToSelection = (
 ): ProjectSelection => ({
   start: thumbs[0]!,
   end: thumbs[1]!,
-  // The cursor is carried over, not discarded: a grip dragged while nothing is hovered must
-  // not invent one, and one the drag has swept past keeps the instant it was pointing at —
-  // the crop moved, the hand did not.
+  // The cursor is carried over: one the drag has swept past keeps the instant it was pointing
+  // at — the crop moved, the hand did not.
   current: previous.current,
 });
 
@@ -126,17 +124,11 @@ const orderSelection = (
   return {
     start,
     end,
-    // No cursor stays no cursor: this orders a selection, and there is nothing here from
-    // which to invent an instant nobody is pointing at.
-    //
     // Held to the window and not to the crop, which is the whole of what "the playhead may
     // stand outside the window you picked" comes to in the rules: a crop dragged past the
     // instant being read leaves it where it is, rather than dragging it along by the edge
     // that swept over it.
-    current:
-      selection.current == null
-        ? null
-        : clampTo(selection.current, window.start, window.end),
+    current: clampTo(selection.current, window.start, window.end),
   };
 };
 
@@ -188,10 +180,7 @@ export function pressProjectBound(
   );
 }
 
-// The playhead moved and nothing else: what hovering a row chart commits — and, with
-// `at` null, what leaving one commits. Both directions through one function, because
-// "where the playhead is" is one rule and a pointer that has gone is as much an answer
-// to it as a pointer that has moved.
+// The playhead moved and nothing else: what hovering a row chart or the strip commits.
 //
 // Takes the instant as it is given, and clamps nothing: the only bound left on a playhead is
 // the project's window, and orderSelection is where that is held — every pick reaches it (see
@@ -207,7 +196,7 @@ export function pressProjectBound(
 // withPlayheadAt). Which is why this takes an instant rather than a grid.
 export const setSelectionCurrent = (
   selection: ProjectSelection,
-  at: number | null,
+  at: number,
 ): ProjectSelection => ({...selection, current: at});
 
 // The grid the crop's two ends land on, in milliseconds: the keyboard's stride below, and the
@@ -305,15 +294,9 @@ export function drawProjectSelection(
   const step = at < anchor ? -MINUTE_MS : MINUTE_MS;
   const fits = (ms: number) => ms >= window.start && ms <= window.end;
   const far = to !== from ? to : fits(from + step) ? from + step : from - step;
-  // No playhead while a window is being drawn: the two ends are what the gesture is saying,
-  // and the hand is on one of them — a third mark standing at the same instant as a grip,
-  // with a third readout over it, is clutter over the very thing being picked. The next hover
-  // names a new one, wherever on the strip it happens.
-  return cropProjectSelection(
-    {start: from, end: far},
-    {...selection, current: null},
-    window,
-  );
+  // The playhead stays where it was: drawing a window says which stretch to look at, not
+  // which instant to read, the same as every other crop (see cropProjectSelection).
+  return cropProjectSelection({start: from, end: far}, selection, window);
 }
 
 // What a manual date/time field commits: the exact minute typed, never snapped —

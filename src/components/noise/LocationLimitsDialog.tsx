@@ -370,6 +370,7 @@ function LimitRow({
           label={`Start of ${which}`}
           value={row.start}
           window={window}
+          empty={{label: 'Event start', at: window.start}}
           onChange={(start) => onChange({...row, start})}
         />
       </Table.Cell>
@@ -378,6 +379,7 @@ function LimitRow({
           label={`End of ${which}`}
           value={row.end}
           window={window}
+          empty={{label: 'Event end', at: window.end}}
           onChange={(end) => onChange({...row, end})}
         />
       </Table.Cell>
@@ -423,7 +425,7 @@ function DecibelField({
       type="number"
       aria-label={label}
       size="sm"
-      w="24"
+      w="16"
       // Native attributes only — what is actually enforced is the schema these come from,
       // and a field that refused to hold a mistyped number would also refuse to let you
       // correct it.

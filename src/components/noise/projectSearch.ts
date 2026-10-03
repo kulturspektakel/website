@@ -1,4 +1,4 @@
-import type {ProjectSelection} from './projectSelection';
+import {midpointOf, type ProjectSelection} from './projectSelection';
 
 // What a project page's URL says about how it is being looked at: whether it is live,
 // and — while it is not — which slice of the event is on screen. Those two are the page's
@@ -58,8 +58,9 @@ export const validateProjectSearch = (
 // The instant is kept rather than reset, and kept as it is: following a link or stepping
 // back changes which window is on screen, and there is no reason for it to also move the
 // cursor — which need not be inside the arriving crop to be somewhere worth keeping (see
-// ProjectSelection). With no page to keep — the first render of a pinned link — there is no
-// instant at all: the playhead is where a pointer is, and a URL carries a window, not a hand.
+// ProjectSelection). With no page to keep — the first render of a pinned link — it opens in
+// the middle of the linked window, as every window nobody has pointed into does (see
+// midpointOf): a URL carries a window, not a hand.
 //
 // Not clamped to anything here: the only bound left on a playhead is the project's window,
 // and resolveProjectSelection is the one that knows it.
@@ -70,7 +71,8 @@ export const projectSearchSelection = (
   search.from != null && search.to != null
     ? {
         start: search.from,
-        current: previous?.current ?? null,
+        current:
+          previous?.current ?? midpointOf({start: search.from, end: search.to}),
         end: search.to,
       }
     : null;

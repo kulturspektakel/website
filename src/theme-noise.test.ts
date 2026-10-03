@@ -51,8 +51,8 @@ const registered = [
 ].sort();
 
 describe('theme-noise', () => {
-  // The invariant behind LevelTrace's `fill()`, which appends an alpha pair to
-  // the resolved value to lay a 15 % wash under the trace. A token that came
+  // The invariant behind LevelTrace's `wash()`, which appends an alpha pair to
+  // the resolved value to lay a translucent wash behind the trace. A token that came
   // back as `rgb(...)`, a shorthand, or an unresolved `var()` would make that a
   // silently broken string and the area would draw as black or not at all.
   it('resolves every token to a 6-digit hex', () => {
@@ -154,18 +154,16 @@ describe('theme-noise', () => {
     });
   });
 
-  // chart.* points at raw scale steps rather than at fg.muted/border.emphasized,
+  // chart.* points at raw scale steps rather than at fg.muted/border,
   // because the canvas layer has to resolve them with no DOM and a light/dark
   // pair is not statically resolvable. These two assertions buy back the
   // coupling that gives up: the chart's axes and the UI's type still agree.
   it('keeps the chart chrome in step with the UI semantics', () => {
     expect(themeHex('chart.axis')).toBe(darkHex('colors.fg.muted'));
-    expect(themeHex('chart.grid')).toBe(darkHex('colors.border.emphasized'));
-    expect(themeHex('chart.playhead')).toBe(darkHex('colors.fg'));
+    expect(themeHex('chart.grid')).toBe(darkHex('colors.border'));
     expect(themeHex('map.ground')).toBe(darkHex('colors.bg'));
-    // The load-bearing one: the limit rules' halo is only invisible *as* a halo while it is
-    // the ground behind the plot. Let `bg` move without this and every dash on every chart
-    // grows a grey outline — the one thing the halo exists to avoid, and silent.
+    // The lines' casing is only a cut in them while it is the ground behind the plot. Let
+    // `bg` move without this and every line on every chart grows a grey edge instead.
     expect(themeHex('chart.ground')).toBe(darkHex('colors.bg'));
   });
 
@@ -255,7 +253,7 @@ describe('theme-noise', () => {
       // normalisation of a flat one — not a `_light`/`_dark` pair whose halves happen to
       // agree. The difference matters the day one of them is edited.
       expect(conditionsOf('colors.chart.playhead')).toEqual({
-        base: '{colors.gray.50}',
+        base: '{colors.red.500}',
       });
     });
   });

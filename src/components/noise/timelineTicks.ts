@@ -1,7 +1,7 @@
-import {addDays, differenceInCalendarDays, startOfDay} from 'date-fns';
+import {addDays, differenceInCalendarDays} from 'date-fns';
 import {TZDate, tz} from '@date-fns/tz';
 import {timeZone} from '../../utils/dateUtils';
-import {MINUTE_MS, clampTo} from './timeframe';
+import {MINUTE_MS, clampTo, zonedStartOfDay} from './timeframe';
 import {dayOf, gridStep, hourMinuteOf, spanWithinDay} from './chartUtils';
 
 // The time axis under the project timeline's strip: where its lines go and which of
@@ -180,7 +180,7 @@ export function timelineTicks(
   // Off a fixed anchor by a counted number of days rather than a date advanced in place:
   // the walk is then bounded by its own header, so it cannot spin, and no step
   // accumulates on the one before it.
-  const firstDay = startOfDay(window.start, {in: tz(timeZone)});
+  const firstDay = zonedStartOfDay(window.start);
   const dayCount = differenceInCalendarDays(window.end, firstDay, {
     in: tz(timeZone),
   });

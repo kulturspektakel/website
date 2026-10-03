@@ -49,21 +49,29 @@ const FREQS = BAND_FREQUENCIES;
 // bands, and the two are read against each other. The trace beside this one keeps its labels
 // flat; the turned ones are for the axis with more to say than it has width.
 
-// uPlot's own crosshair, which this chart keeps — unlike the trace, whose line marks an
-// instant the whole page shares and so is drawn as DOM. Restyled to match that line all
-// the same: the library's stylesheet draws it dashed, and the two answer the same pointer
-// a few hundred pixels apart. Hoisted rather than inlined on the Box, so Emotion hashes it
-// once for the session instead of re-serializing it every render.
+// What the pointer is over: not an instant on a continuous axis, as on the trace beside this,
+// but one band out of thirty-one — so it is marked as the band, its whole slot washed from
+// the half-step before its bar to the half-step after, rather than with a line at a point
+// that means nothing between two bars. A DOM box in the plot's overlay, placed from the
+// cursor hook, so hovering moves a box and redraws nothing. Hoisted rather than inlined on
+// the Box, so Emotion hashes it once for the session instead of re-serializing it every
+// render.
+const BAND_HOVER_CLASS = 'noise-band-hover';
 const CHART_CSS = {
-  '& .u-cursor-x': {
-    borderColor: 'chart.playhead',
-    borderRightStyle: 'solid',
+  [`& .${BAND_HOVER_CLASS}`]: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    background: 'fg/5',
+    pointerEvents: 'none',
   },
 } as const;
 
 export function BandSpectrumChart({state}: {state: DeviceState | undefined}) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const plotRef = useRef<uPlot | null>(null);
+  // The hovered band's wash, appended to the plot's overlay once it is built.
+  const bandRef = useRef<HTMLDivElement | null>(null);
   const xs = useMemo(() => FREQS.map((_, i) => i), []);
   // Hovered frequency band: which bar (index into FREQS) and where to anchor the
   // tooltip, in container-relative CSS pixels. null when not hovering a bar.
@@ -102,6 +110,8 @@ export function BandSpectrumChart({state}: {state: DeviceState | undefined}) {
       // Snap the cursor to the nearest bar so hovering reveals that band's value
       // via the React tooltip below; no crosshair points, no drag-to-zoom.
       cursor: {
+        // No crosshair: the hovered band is washed instead (see BAND_HOVER_CLASS).
+        x: false,
         y: false,
         points: {show: false},
         drag: {x: false, y: false},
@@ -155,9 +165,20 @@ export function BandSpectrumChart({state}: {state: DeviceState | undefined}) {
         setCursor: [
           (u) => {
             const {idx, left, top} = u.cursor;
+            const band = bandRef.current;
             if (idx == null || left == null || left < 0 || top == null) {
+              if (band) band.style.display = 'none';
               setHover(null);
               return;
+            }
+            if (band) {
+              // The band's slot: the bars stand on whole indices, so half a step either
+              // side is where this one's room ends and the next one's begins.
+              const from = u.valToPos(idx - 0.5, 'x');
+              const to = u.valToPos(idx + 0.5, 'x');
+              band.style.display = '';
+              band.style.left = `${from}px`;
+              band.style.width = `${to - from}px`;
             }
             setHover({idx, ...cursorAnchor(u, container, left, top)});
           },
@@ -172,6 +193,12 @@ export function BandSpectrumChart({state}: {state: DeviceState | undefined}) {
     );
     plotRef.current = plot;
 
+    const band = document.createElement('div');
+    band.className = BAND_HOVER_CLASS;
+    band.style.display = 'none';
+    plot.over.appendChild(band);
+    bandRef.current = band;
+
     const ro = new ResizeObserver(() => {
       plot.setSize({width: container.clientWidth, height: height()});
     });
@@ -181,6 +208,7 @@ export function BandSpectrumChart({state}: {state: DeviceState | undefined}) {
       ro.disconnect();
       plot.destroy();
       plotRef.current = null;
+      bandRef.current = null;
     };
   }, [xs]);
 
