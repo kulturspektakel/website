@@ -1,4 +1,4 @@
-import {Heading, Link, SimpleGrid, VStack} from '@chakra-ui/react';
+import {Center, Heading, Link, SimpleGrid, VStack} from '@chakra-ui/react';
 import {createFileRoute} from '@tanstack/react-router';
 import {Gallery} from 'react-photoswipe-gallery';
 import {Alert} from '../components/chakra-snippets/alert';
@@ -64,7 +64,23 @@ export default function Plakate() {
                   event.poster?.copyright ?? 'unbekannt'
                 }`}
               />
-            ) : null,
+            ) : (
+              <Center
+                key={event.id}
+                aspectRatio={1 / Math.SQRT2}
+                borderRadius="xl"
+                transform="rotate(-1deg)"
+                borderWidth="2px"
+                borderStyle="dashed"
+                borderColor="offwhite.500"
+                color="offwhite.600"
+                fontFamily="heading"
+                fontSize="3xl"
+                title={`Kulturspektakel ${event.start.getFullYear()} · Plakat fehlt`}
+              >
+                {event.start.getFullYear()}
+              </Center>
+            ),
           )}
         </SimpleGrid>
         <Alert title="Fehlende Plakate?">
