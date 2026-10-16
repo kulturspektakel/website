@@ -1,6 +1,7 @@
 import {Box, HStack, Text} from '@chakra-ui/react';
 import {Fragment, type ComponentProps, type ReactNode} from 'react';
 import {HiMiniExclamationTriangle} from 'react-icons/hi2';
+import {LuCornerDownRight} from 'react-icons/lu';
 
 // What a chart readout looks like: a small dark pill that carries a value over a
 // plot. Exported apart from the tooltip below because one readout on the project page
@@ -103,9 +104,18 @@ export function ChartTooltip({
 // above a limit in force for its series: red, the colour the chart washes a breach in (see
 // drawBreaches), with the warning sign ahead of it so the hue is not the only cue. A reading
 // set aside is never over — nobody is counting it — so struck wins.
+//
+// `limit` is the figure in force for the reading's series, as a muted line of its own under
+// the reading — the reading against what it is allowed to be, whichever side of it it is on.
+// Hung off it with a corner arrow, so it reads as belonging to the row above rather than as another
+// series. The air is over each row and not under its limit: it is what parts one series —
+// with its limit — from whatever is above it, the time or the series before, and so leaves
+// none trailing at the bottom of the pill. An icon and not `↳`, whose stroke sits wherever
+// the font puts it — in ours well below the middle of the word beside it.
 export function ChartTooltipRow({
   label,
   value,
+  limit,
   color,
   dimmed = false,
   struck = false,
@@ -113,6 +123,7 @@ export function ChartTooltipRow({
 }: {
   label: string;
   value: string;
+  limit?: string;
   color?: string;
   dimmed?: boolean;
   struck?: boolean;
@@ -120,19 +131,30 @@ export function ChartTooltipRow({
 }) {
   const warn = over && !struck && !dimmed;
   return (
-    <HStack gap="3" justify="space-between">
-      <Text color="fg.muted">{label}</Text>
-      <HStack
-        gap="1"
-        fontWeight="bold"
-        color={dimmed ? 'fg.muted' : warn ? 'chart.limit' : color}
-      >
-        {warn && <HiMiniExclamationTriangle aria-label="Over the limit" />}
-        <Text textDecoration={struck ? 'line-through' : undefined}>
-          {value}
-        </Text>
+    <Box mt="1">
+      <HStack gap="3" justify="space-between">
+        <Text color="fg.muted">{label}</Text>
+        <HStack
+          gap="1"
+          fontWeight="bold"
+          color={dimmed ? 'fg.muted' : warn ? 'chart.limit' : color}
+        >
+          {warn && <HiMiniExclamationTriangle aria-label="Over the limit" />}
+          <Text textDecoration={struck ? 'line-through' : undefined}>
+            {value}
+          </Text>
+        </HStack>
       </HStack>
-    </HStack>
+      {limit != null && (
+        <HStack gap="3" justify="space-between" color="fg.muted">
+          <HStack gap="1">
+            <Box as={LuCornerDownRight} ms="2px" />
+            <Text>Limit</Text>
+          </HStack>
+          <Text>{limit}</Text>
+        </HStack>
+      )}
+    </Box>
   );
 }
 

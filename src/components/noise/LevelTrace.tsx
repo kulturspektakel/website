@@ -36,6 +36,8 @@ import {
 import {type SeriesTraces} from './projectLogs';
 import {themeHex} from '../../theme-noise';
 import {
+  exceedsLimit,
+  limitAt,
   limitSegments,
   overLimitAt,
   type LimitLine,
@@ -140,12 +142,16 @@ import {usePlayheadEffect, type DeviceWindows} from './projectView';
 // Each reading also says whether crew set it aside at that sample (a tag over the whole chart
 // or over that monitor) and whether it is above a limit in force for its series — the same
 // two things the chart draws as a faded line and a red wash, so the tooltip agrees with what
-// is under the pointer.
+// is under the pointer. And the limit itself, the strictest in force then (see limitAt), so
+// the readout says how far over or under it the reading is rather than only which side.
+// Only ever a drawn one: a reading is of a picked series, and a limit is drawn when its
+// series is picked (see limitSegments).
 type TipReading = {
   deviceId: string;
   series: SeriesKey;
   db: number;
   ignored: boolean;
+  limit: number | null;
   over: boolean;
 };
 
@@ -173,8 +179,15 @@ function readingsAt(
       // attributed to the wrong monitor the day the layout moved.
       const db = u.data[traceColumn(s, d, lines.length, envelope)]?.[idx];
       if (db == null) continue;
-      const over = overLimitAt(limits, series, atMs, db);
-      out.push({deviceId, series, db, ignored, over});
+      const limit = limitAt(limits, series, atMs);
+      out.push({
+        deviceId,
+        series,
+        db,
+        ignored,
+        limit,
+        over: exceedsLimit(db, limit),
+      });
     }
   }
   return out;
@@ -188,7 +201,7 @@ function rangeReadingsAt(
   weightings: readonly Weighting[],
   gapThresholdX: number,
   limits: readonly LimitLine[],
-): {weighting: Weighting; db: number; over: boolean}[] {
+): {weighting: Weighting; db: number; limit: number | null; over: boolean}[] {
   const idx = u.cursor.idx;
   if (idx == null || weightings.length === 0) return [];
   const dataX = u.data[0]![idx] as number | undefined;
@@ -197,15 +210,9 @@ function rangeReadingsAt(
   const first = u.data.length - weightings.length;
   return weightings.flatMap((weighting, r) => {
     const db = u.data[first + r]?.[idx];
-    return db == null
-      ? []
-      : [
-          {
-            weighting,
-            db,
-            over: overLimitAt(limits, rangeKeyOf(weighting), dataX * 1000, db),
-          },
-        ];
+    if (db == null) return [];
+    const limit = limitAt(limits, rangeKeyOf(weighting), dataX * 1000);
+    return [{weighting, db, limit, over: exceedsLimit(db, limit)}];
   });
 }
 
@@ -965,7 +972,7 @@ export function LevelTrace({
     fraction: number;
     label: string;
     readings: TipReading[];
-    rangeReadings: {weighting: Weighting; db: number; over: boolean}[];
+    rangeReadings: ReturnType<typeof rangeReadingsAt>;
   } | null>(null);
 
   // The range a sweep has named and not yet done anything with: the crop it would make,
@@ -1880,7 +1887,7 @@ export function LevelTrace({
       )}
       {tip && (
         <ChartTooltip left={tip.left} top={tip.top} fraction={tip.fraction}>
-          <Text fontSize="xs" lineHeight="1.2">
+          <Text fontSize="xs" lineHeight="1.2" fontWeight="semibold">
             {tip.label}
           </Text>
           {/* A row per series with something to say at that instant, named in full —
@@ -1894,10 +1901,11 @@ export function LevelTrace({
               ...lines.flatMap(({deviceId}) => {
                 const rows = tip.readings
                   .filter((r) => r.deviceId === deviceId)
-                  .map(({series, db, ignored, over}) => ({
+                  .map(({series, db, ignored, limit, over}) => ({
                     key: series,
                     label: seriesLabel(series, live),
                     value: formatDb(db, 'dB'),
+                    limit: limit == null ? undefined : formatDb(limit, 'dB'),
                     color: tokens[picked.indexOf(series)],
                     struck: ignored,
                     over,
@@ -1914,13 +1922,17 @@ export function LevelTrace({
                     {
                       key: 'range',
                       heading: 'Location',
-                      rows: tip.rangeReadings.map(({weighting, db, over}) => ({
-                        key: rangeKeyOf(weighting),
-                        label: rangeLabel(weighting),
-                        value: formatDb(db, 'dB'),
-                        color: 'chart.range',
-                        over,
-                      })),
+                      rows: tip.rangeReadings.map(
+                        ({weighting, db, limit, over}) => ({
+                          key: rangeKeyOf(weighting),
+                          label: rangeLabel(weighting),
+                          value: formatDb(db, 'dB'),
+                          limit:
+                            limit == null ? undefined : formatDb(limit, 'dB'),
+                          color: 'chart.range',
+                          over,
+                        }),
+                      ),
                     },
                   ]),
             ]}
