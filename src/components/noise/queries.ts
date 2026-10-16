@@ -30,4 +30,6 @@ export const noiseQueryKeys = {
   // after an assignment change must not evict measurements, which are immutable once
   // recorded and expensive to re-read.
   projectLogs: (projectId: string) => ['noiseProjectLogs', projectId] as const,
+  // The stages and who plays on each during a project (see noiseLineupAreas).
+  lineupAreas: (projectId: string) => ['noiseLineupAreas', projectId] as const,
 };

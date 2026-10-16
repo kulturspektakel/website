@@ -72,6 +72,8 @@ const GAP_MIN_W = 2;
 const GAP_INSET = 2;
 
 const GAP_ATTR = 'data-gap';
+const COMMENT_ATTR = 'data-comment';
+const COMMENT_SPAN_ATTR = 'data-comment-span';
 const BREACH_ATTR = 'data-breach';
 const TICK_ATTR = 'data-tick';
 const MAJOR_ATTR = 'data-major';
@@ -135,6 +137,23 @@ const MARKERS_CSS = {
     color: 'chart.axis',
     whiteSpace: 'nowrap',
   },
+  // A comment: a hairline down the lines' band at its instant — at both ends of a range,
+  // with a bar along the top between them. In `fg.muted` rather than `chart.rule`, which is
+  // every tick's, so a note can't be taken for the clock. Bare: the strip has no room for
+  // the text, which the cards' charts carry.
+  [`& [${COMMENT_ATTR}]`]: {
+    position: 'absolute',
+    top: '0',
+    bottom: `${LABEL_ROW_H}px`,
+    w: '1px',
+    bg: 'fg.muted',
+  },
+  [`& [${COMMENT_SPAN_ATTR}]`]: {
+    position: 'absolute',
+    top: '0',
+    h: '2px',
+    bg: 'fg.muted',
+  },
   // A date, where the day changes: in the full foreground rather than the axis grey, so the
   // day boundaries stand out from the hours between them.
   [`& [${LABEL_ATTR}][${DATE_ATTR}]`]: {
@@ -179,6 +198,7 @@ export const TimelineMarkers = memo(function TimelineMarkers({
   end,
   gaps,
   breaches,
+  comments,
   overhang,
 }: {
   // Two numbers rather than the window object the timeline holds: this sits inside a
@@ -195,6 +215,9 @@ export const TimelineMarkers = memo(function TimelineMarkers({
   // null when there is nothing to say about limits — no payload yet, or no limit written
   // for any series picked — and then no bar is drawn at all.
   breaches?: readonly LogGap[] | null;
+  // Where crew left comments, in epoch ms, a null end being an instant. Memoized upstream
+  // like the two above.
+  comments?: readonly {start: number; end: number | null}[];
   // How far the strip reaches past the axis at either end — a grip's width, which is the
   // timeline's own constant (HANDLE_W) and the same figure the track is pulled out by.
   // Passed rather than imported: this is a child of that file, and reading a constant back
@@ -342,6 +365,30 @@ export const TimelineMarkers = memo(function TimelineMarkers({
                 {tick.label}
               </span>
             ),
+          ];
+        })}
+        {/* After the ticks, so a comment standing on a tick is the one that shows. */}
+        {comments?.flatMap(({start: from, end: to}, i) => {
+          // Off the axis altogether — past the live edge of a running event, say. Not left
+          // to axisFraction, which would clamp it onto the end and draw it there.
+          if (from > end || (to ?? from) < start) return [];
+          const a = axisFraction(from, start, end) * 100;
+          const b = to == null ? null : axisFraction(to, start, end) * 100;
+          return [
+            b != null && (
+              <span
+                key={`${i}:span`}
+                {...{[COMMENT_SPAN_ATTR]: ''}}
+                style={{left: `${a}%`, width: `${b - a}%`}}
+              />
+            ),
+            ...(b == null ? [a] : [a, b]).map((at, j) => (
+              <span
+                key={`${i}:${j}`}
+                {...{[COMMENT_ATTR]: ''}}
+                style={{left: `${at}%`}}
+              />
+            )),
           ];
         })}
       </Box>

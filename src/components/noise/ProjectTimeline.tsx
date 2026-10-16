@@ -363,6 +363,8 @@ type TimelineProps = {
   // Where a place on screen read over its limit, as a red wash across the strip. Null
   // when no place on screen has a limit for any series picked (see limitBreaches).
   breaches?: readonly LogGap[] | null;
+  // Where crew left comments, as marks on the strip (see TimelineMarkers).
+  comments?: readonly {start: number; end: number | null}[];
   onCommit: (selection: ProjectSelection) => void;
 };
 
@@ -419,6 +421,7 @@ function CropTimeline({
   selection,
   gaps,
   breaches,
+  comments,
   onCommit,
 }: TimelineProps) {
   // The axis' right-hand end, which is also the slider's max — see axisEnd for the one
@@ -757,6 +760,7 @@ function CropTimeline({
           end={sliderMax}
           gaps={gaps}
           breaches={breaches}
+          comments={comments}
           overhang={HANDLE_W}
         />
 
@@ -918,6 +922,7 @@ function ScrubTimeline({
   selection,
   gaps,
   breaches,
+  comments,
   onCommit,
 }: TimelineProps) {
   const axisMax = axisEnd(window);
@@ -1024,6 +1029,7 @@ function ScrubTimeline({
           end={axisMax}
           gaps={gaps}
           breaches={breaches}
+          comments={comments}
           overhang={HANDLE_W}
         />
 

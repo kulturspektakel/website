@@ -310,6 +310,10 @@ export type ProjectViewCtx = {
   // those overlapping the crop (see rangeLimitVerdicts) — what turns a card's range tile red.
   // Absent like `locationTotals`.
   rangeOver?: RangeByWeighting<RangeVerdict[]>;
+  // Each comment range's Leq over its own hours, per picked weighting, location and comment
+  // id — printed in a chart's tooltip while the pointer is inside the range. Absent like
+  // `locationTotals`.
+  commentLeqs?: RangeByWeighting<Record<string, number>>;
   // Whole-project traces at stored resolution, one device record per picked series; the
   // crop is applied by the chart, not here, so these survive a timeline drag untouched.
   traces?: SeriesTraces;

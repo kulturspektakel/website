@@ -27,6 +27,7 @@ import {
 import {useNowAfterMount} from '../components/noise/context';
 import {
   assignmentsAt,
+  locationLines,
   orderLocations,
   createPlayheadSignal,
   PlayheadLevelsContext,
@@ -35,6 +36,7 @@ import {
   type ProjectViewCtx,
 } from '../components/noise/projectView';
 import {ProjectTimeline} from '../components/noise/ProjectTimeline';
+import {locationTags} from '../components/noise/rangeTags';
 import {PlayheadDisplay} from '../components/noise/PlayheadDisplay';
 import {
   LevelPicker,
@@ -489,6 +491,40 @@ function NoiseProjectDetail() {
     };
   }, [mapOnly, listed, withIgnored]);
 
+  // Every comment in the project, the source of both lists below.
+  const comments = useMemo(
+    () => project.tags.filter((t) => t.type === 'COMMENT'),
+    [project.tags],
+  );
+
+  // Every comment with an end, whose Leq over its own hours the charts' tooltips print.
+  const commentRanges = useMemo(
+    () =>
+      comments.flatMap(({id, start, end}) =>
+        end == null ? [] : [{id, start, end}],
+      ),
+    [comments],
+  );
+
+  // The comments the strip marks: those reaching the places it speaks for, by the rule
+  // the cards' charts use (see locationTags), so the strip marks no note the cards don't
+  // show. Bare instants, since the strip has no room for the text — that is the cards'
+  // (see LevelTrace). Memoized, because the markers layer is memoized on its props.
+  const timelineComments = useMemo(() => {
+    const reaching = timeline.all
+      ? comments
+      : [
+          ...new Map(
+            timeline.locations
+              .flatMap((l) =>
+                locationTags(comments, l.id, locationLines(l.assignments)),
+              )
+              .map((t) => [t.id, t]),
+          ).values(),
+        ];
+    return reaching.map(({start, end}) => ({start, end}));
+  }, [comments, timeline]);
+
   // Whether the cards may print the crop's Leq at all: only given a timeframe to average
   // over — which live mode has not, an instant being no range.
   //
@@ -503,6 +539,7 @@ function NoiseProjectDetail() {
     locationTotals,
     rangeTraces,
     rangeOver,
+    commentLeqs,
     traces,
     gaps,
     breaches,
@@ -520,6 +557,7 @@ function NoiseProjectDetail() {
     // array only so there is one of them on the page.
     locations: withIgnored,
     timeline,
+    comments: commentRanges,
   });
 
   // Assigning or ending changes both this project's locations and which devices
@@ -553,6 +591,7 @@ function NoiseProjectDetail() {
       locationTotals: showRangeLeq ? locationTotals : undefined,
       rangeTraces: showRangeLeq ? rangeTraces : undefined,
       rangeOver: showRangeLeq ? rangeOver : undefined,
+      commentLeqs: showRangeLeq ? commentLeqs : undefined,
       traces,
       refresh,
       setListed,
@@ -573,6 +612,7 @@ function NoiseProjectDetail() {
       locationTotals,
       rangeTraces,
       rangeOver,
+      commentLeqs,
       traces,
       refresh,
       placing,
@@ -649,6 +689,7 @@ function NoiseProjectDetail() {
                   // of them the moment the payload landed.
                   gaps={gaps}
                   breaches={breaches}
+                  comments={timelineComments}
                   // Straight into state: what the timeline hands back is exactly the
                   // override to remember, and pinning it is what stops an untouched
                   // crop from following the live edge any further. Identical values

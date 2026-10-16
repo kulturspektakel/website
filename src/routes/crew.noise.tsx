@@ -585,18 +585,56 @@ export const createNoiseTag = createServerFn()
       });
       if (!project) throw notFound();
     }
-    await prismaClient.noiseTag.create({
-      data: {
-        projectId: data.projectId,
-        locationId: scope.kind === 'location' ? scope.locationId : null,
-        deviceId: scope.kind === 'device' ? scope.deviceId : null,
-        type: data.type,
-        start: new Date(data.start),
-        end: instantOrNull(data.end),
-        // Only a comment says anything; an ignored range is its own explanation.
-        text: data.type === 'COMMENT' ? data.text || null : null,
-        createdByViewerId: viewerId,
-      },
+    const locationId = scope.kind === 'location' ? scope.locationId : null;
+    const deviceId = scope.kind === 'device' ? scope.deviceId : null;
+
+    // An ignored range that overlaps or touches one already set aside for the same thing
+    // is folded into it rather than stored beside it: two ranges over one stretch say no
+    // more than one does, and each would be its own "Un-ignore" to find on the chart.
+    // Only the same scope — a device's range inside the location's still has to outlive
+    // the location's being taken back. Every overlapping one at once, so a range bridging
+    // two leaves one, as a fresh row over all of them. In a transaction, so the widened
+    // range and the deletes of the ones it swallowed land together or not at all.
+    await prismaClient.$transaction(async (tx) => {
+      const overlapping =
+        data.type === 'IGNORE' && data.end != null
+          ? await tx.noiseTag.findMany({
+              where: {
+                projectId: data.projectId,
+                type: 'IGNORE',
+                locationId,
+                deviceId,
+                start: {lte: new Date(data.end)},
+                end: {gte: new Date(data.start)},
+              },
+              select: {id: true, start: true, end: true},
+            })
+          : [];
+      if (overlapping.length > 0) {
+        await tx.noiseTag.deleteMany({
+          where: {id: {in: overlapping.map((t) => t.id)}},
+        });
+      }
+      await tx.noiseTag.create({
+        data: {
+          projectId: data.projectId,
+          locationId,
+          deviceId,
+          type: data.type,
+          // Widened over whatever it swallowed; with nothing overlapping, its own.
+          start: new Date(
+            Math.min(data.start, ...overlapping.map((t) => t.start.getTime())),
+          ),
+          end: instantOrNull(
+            data.end == null
+              ? null
+              : Math.max(data.end, ...overlapping.map((t) => t.end!.getTime())),
+          ),
+          // Only a comment says anything; an ignored range is its own explanation.
+          text: data.type === 'COMMENT' ? data.text || null : null,
+          createdByViewerId: viewerId,
+        },
+      });
     });
   });
 
@@ -607,6 +645,110 @@ export const deleteNoiseTag = createServerFn()
   .inputValidator(z.object({tagId: z.string().min(1)}))
   .handler(async ({data: {tagId}}) => {
     await prismaClient.noiseTag.deleteMany({where: {id: tagId}});
+  });
+
+// The bands overlapping a project's window, so a set that started before the monitors went
+// up still counts — the one filter the lineup dialog previews with and the import writes
+// from, so the two cannot list different bands.
+const bandsDuring = (project: {start: Date; end: Date}) => ({
+  startTime: {lt: project.end},
+  endTime: {gt: project.start},
+});
+
+// The festival's stages with the bands playing on each while a project runs — what the
+// location card's "Import band lineup…" offers to pin to a place. Any band overlapping the
+// project's window, so a set that started before the monitors went up still counts. Only
+// areas with someone playing in that window: an empty stage is nothing to import.
+export const noiseLineupAreas = createServerFn()
+  .middleware([crewAuth])
+  .inputValidator(z.object({projectId: z.string().min(1)}))
+  .handler(async ({data: {projectId}}) => {
+    const project = await prismaClient.noiseProject.findUnique({
+      where: {id: projectId},
+      select: {start: true, end: true},
+    });
+    if (!project) throw notFound();
+    const areas = await prismaClient.area.findMany({
+      orderBy: {order: 'asc'},
+      select: {
+        id: true,
+        displayName: true,
+        BandPlaying: {
+          where: bandsDuring(project),
+          orderBy: {startTime: 'asc'},
+          select: {id: true, name: true, startTime: true, endTime: true},
+        },
+      },
+    });
+    return areas
+      .filter((a) => a.BandPlaying.length > 0)
+      .map((a) => ({
+        id: a.id,
+        displayName: a.displayName,
+        bands: a.BandPlaying.map((b) => ({
+          id: b.id,
+          name: b.name,
+          start: b.startTime.getTime(),
+          end: b.endTime.getTime(),
+        })),
+      }));
+  });
+
+// One comment on a place per band playing on a stage while the project runs, named for the
+// band and spanning its set. Pinned to the location, since that is the card it was asked
+// from. A band already there — a comment at this place with its name over the same set — is
+// skipped, so importing the same stage twice adds nothing the second time.
+export const importNoiseLineup = createServerFn()
+  .middleware([crewAuth])
+  .inputValidator(
+    z.object({
+      projectId: z.string().min(1),
+      locationId: z.string().min(1),
+      areaId: z.string().min(1),
+    }),
+  )
+  .handler(async ({data, context}) => {
+    const viewerId = context.viewer?.id;
+    if (!viewerId) throw new Error('Unauthorized');
+    const location = await prismaClient.noiseLocation.findFirst({
+      where: {id: data.locationId, projectId: data.projectId},
+      select: {NoiseProject: {select: {start: true, end: true}}},
+    });
+    if (!location) throw notFound();
+    const project = location.NoiseProject;
+    const [bands, existing] = await Promise.all([
+      prismaClient.bandPlaying.findMany({
+        where: {areaId: data.areaId, ...bandsDuring(project)},
+        select: {name: true, startTime: true, endTime: true},
+      }),
+      prismaClient.noiseTag.findMany({
+        where: {
+          projectId: data.projectId,
+          locationId: data.locationId,
+          type: 'COMMENT',
+        },
+        select: {text: true, start: true, end: true},
+      }),
+    ]);
+    const key = (text: string | null, start: Date, end: Date | null) =>
+      `${text}|${start.getTime()}|${end?.getTime()}`;
+    const seen = new Set(existing.map((t) => key(t.text, t.start, t.end)));
+    const fresh = bands.filter(
+      (b) => !seen.has(key(b.name, b.startTime, b.endTime)),
+    );
+    if (fresh.length > 0)
+      await prismaClient.noiseTag.createMany({
+        data: fresh.map((b) => ({
+          projectId: data.projectId,
+          locationId: data.locationId,
+          type: 'COMMENT' as const,
+          start: b.startTime,
+          end: b.endTime,
+          text: b.name,
+          createdByViewerId: viewerId,
+        })),
+      });
+    return {created: fresh.length, skipped: bands.length - fresh.length};
   });
 
 export const Route = createFileRoute('/crew/noise')({

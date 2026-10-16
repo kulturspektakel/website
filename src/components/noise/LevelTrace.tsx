@@ -65,7 +65,12 @@ import {
   X_AXIS_H,
   zonedDate,
 } from './chartUtils';
-import {ChartTooltip, ChartTooltipReadings} from './ChartTooltip';
+import {
+  CHART_READOUT_STYLE,
+  ChartTooltip,
+  ChartTooltipReadings,
+  ChartTooltipRow,
+} from './ChartTooltip';
 import {ignoredAt, IGNORED_OPACITY} from './rangeTags';
 import {SelectionMenu} from './SelectionMenu';
 import {attachTouchGestures, attachWheelPan} from './uplotTouchGestures';
@@ -142,18 +147,18 @@ import {usePlayheadEffect, type DeviceWindows} from './projectView';
 // Each reading also says whether crew set it aside at that sample (a tag over the whole chart
 // or over that monitor) and whether it is above a limit in force for its series — the same
 // two things the chart draws as a faded line and a red wash, so the tooltip agrees with what
-// is under the pointer. And the limit itself, the strictest in force then (see limitAt), so
-// the readout says how far over or under it the reading is rather than only which side.
-// Only ever a drawn one: a reading is of a picked series, and a limit is drawn when its
-// series is picked (see limitSegments).
+// is under the pointer — the latter as the limit in force itself (see limitAt), which the
+// tooltip prints and compares the reading against.
 type TipReading = {
   deviceId: string;
   series: SeriesKey;
   db: number;
   ignored: boolean;
   limit: number | null;
-  over: boolean;
 };
+
+// The location's running Leq at one sample, in one weighting, and the limit it is judged by.
+type RangeReading = {weighting: Weighting; db: number; limit: number | null};
 
 function readingsAt(
   u: uPlot,
@@ -179,14 +184,12 @@ function readingsAt(
       // attributed to the wrong monitor the day the layout moved.
       const db = u.data[traceColumn(s, d, lines.length, envelope)]?.[idx];
       if (db == null) continue;
-      const limit = limitAt(limits, series, atMs);
       out.push({
         deviceId,
         series,
         db,
         ignored,
-        limit,
-        over: exceedsLimit(db, limit),
+        limit: limitAt(limits, series, atMs),
       });
     }
   }
@@ -201,7 +204,7 @@ function rangeReadingsAt(
   weightings: readonly Weighting[],
   gapThresholdX: number,
   limits: readonly LimitLine[],
-): {weighting: Weighting; db: number; limit: number | null; over: boolean}[] {
+): RangeReading[] {
   const idx = u.cursor.idx;
   if (idx == null || weightings.length === 0) return [];
   const dataX = u.data[0]![idx] as number | undefined;
@@ -211,9 +214,25 @@ function rangeReadingsAt(
   return weightings.flatMap((weighting, r) => {
     const db = u.data[first + r]?.[idx];
     if (db == null) return [];
-    const limit = limitAt(limits, rangeKeyOf(weighting), dataX * 1000);
-    return [{weighting, db, limit, over: exceedsLimit(db, limit)}];
+    return [
+      {
+        weighting,
+        db,
+        limit: limitAt(limits, rangeKeyOf(weighting), dataX * 1000),
+      },
+    ];
   });
+}
+
+// The comment ranges the hovered instant falls in, `[start, end)` like every window on the
+// page, with their Leqs — each comment's own hours, so the figure holds still while the
+// pointer moves through it, unlike the running line beside it.
+function commentLeqsAt(comments: readonly ChartComment[], at: number) {
+  return comments.flatMap(({id, start, end, text, leq}) =>
+    end != null && start <= at && at < end && leq && leq.length > 0
+      ? [{id, text, leq}]
+      : [],
+  );
 }
 
 // Whether a keystroke is somebody writing rather than reaching for a shortcut. The
@@ -460,6 +479,16 @@ function drawLimits(
 // Only for tags that cover the whole chart: one monitor's ignored stretch is its line
 // fading out (see drawIgnoredLines), and a band behind every line would say the others
 // were set aside too.
+// A hairline down the whole plot at one x in canvas pixels, snapped to the pixel grid so
+// it stays crisp. The context's stroke style and width are the caller's.
+function strokeRule(u: uPlot, ctx: CanvasRenderingContext2D, x: number): void {
+  const at = Math.round(x) + uPlot.pxRatio / 2;
+  ctx.beginPath();
+  ctx.moveTo(at, u.bbox.top);
+  ctx.lineTo(at, u.bbox.top + u.bbox.height);
+  ctx.stroke();
+}
+
 function drawTags(u: uPlot, tags: readonly ChartTag[]): void {
   if (tags.length === 0) return;
   const ratio = uPlot.pxRatio;
@@ -472,17 +501,30 @@ function drawTags(u: uPlot, tags: readonly ChartTag[]): void {
   for (const {start, end} of tags) {
     const x0 = u.valToPos(start / 1000, 'x', true);
     if (end == null) {
-      const x = Math.round(x0) + ratio / 2;
-      ctx.beginPath();
-      ctx.moveTo(x, u.bbox.top);
-      ctx.lineTo(x, u.bbox.top + u.bbox.height);
-      ctx.stroke();
+      strokeRule(u, ctx, x0);
     } else {
       const x1 = u.valToPos(end / 1000, 'x', true);
       ctx.fillRect(x0, u.bbox.top, x1 - x0, u.bbox.height);
     }
   }
 
+  ctx.restore();
+}
+
+// Where crew left a comment on this chart, as a hairline down the full plot at its start and,
+// for a range, at its end — in its label's outline colour (`chart.rule`, see
+// CHART_READOUT_STYLE), so the label reads as hung off the line. On the canvas, under the trace.
+function drawCommentRules(u: uPlot, comments: readonly ChartComment[]): void {
+  if (comments.length === 0) return;
+  const ratio = uPlot.pxRatio;
+  const ctx = clipToPlot(u);
+  ctx.strokeStyle = themeHex('chart.rule');
+  ctx.lineWidth = ratio;
+  for (const {start, end} of comments) {
+    for (const at of end == null ? [start] : [start, end]) {
+      strokeRule(u, ctx, u.valToPos(at / 1000, 'x', true));
+    }
+  }
   ctx.restore();
 }
 
@@ -689,6 +731,75 @@ export type ChartTag = {
   deviceId: string | null;
 };
 
+// How far a comment's label stands above the plot's top edge, in CSS pixels — into the gutter
+// over it, so it covers less of the trace.
+const COMMENT_LABEL_RAISE_PX = 8;
+// How much room the overlay keeps above the plot for a label to be lifted into — clear of
+// the trace while the pointer is under it (see liftComments). At least a label's height.
+const COMMENT_LIFT_ROOM_PX = 24;
+
+// A comment's label, as positioned by positionComments. Everything that follows the scale —
+// where it stands, how wide it is, which way it hangs, whether a side is cut by the crop,
+// whether it is lifted — is written straight onto the node as a style or a data attribute,
+// in the same uPlot hook that redraws the canvas, so the two move in the same frame. Through
+// React state it was a render behind, and visibly trailed the chart on every scroll.
+//
+// So this is the whole of its styling that reacts to those attributes, in one object
+// Emotion hashes once. Hidden until positioned.
+const COMMENT_LABEL = '[data-comment-label]';
+const COMMENT_ITEM_CSS = {
+  display: 'none',
+  position: 'absolute',
+  // At rest COMMENT_LABEL_RAISE_PX over the plot's top edge, so a label stands partly in the
+  // gutter above it and covers that much less of the trace.
+  top: `${COMMENT_LIFT_ROOM_PX - COMMENT_LABEL_RAISE_PX}px`,
+  '--flip-x': '0px',
+  '--lift-y': '0px',
+  transform: 'translate(var(--flip-x), var(--lift-y))',
+  transition: 'transform 0.08s ease-out',
+  // Over its neighbours while pointed at: labels that crowd each other overlap, and the one
+  // under the pointer is the one being read.
+  '&:hover': {zIndex: 1},
+  // A marker's label near the right edge hangs left of its line.
+  '&[data-flip]': {'--flip-x': 'calc(-100% + 1px)'},
+  // Lifted, its bottom on the plot's top edge: off the trace it was over.
+  '&[data-lifted]': {'--lift-y': `calc(-100% + ${COMMENT_LABEL_RAISE_PX}px)`},
+  [`& > ${COMMENT_LABEL}`]: {maxWidth: '12rem'},
+  // A range's label spans it, however long the text.
+  [`&[data-range] > ${COMMENT_LABEL}`]: {maxWidth: 'none'},
+  // Square where its line leaves it.
+  [`&:not([data-flip]):not([data-cut-left]) > ${COMMENT_LABEL}`]: {
+    borderBottomLeftRadius: '0',
+  },
+  [`&[data-flip] > ${COMMENT_LABEL}, &[data-range]:not([data-cut-right]) > ${COMMENT_LABEL}`]:
+    {borderBottomRightRadius: '0'},
+  // A side the range runs on past the plot has no corner or outline: the label is cut
+  // there by the crop, it doesn't end.
+  [`&[data-cut-left] > ${COMMENT_LABEL}`]: {
+    borderLeftWidth: '0',
+    borderTopLeftRadius: '0',
+    borderBottomLeftRadius: '0',
+  },
+  [`&[data-cut-right] > ${COMMENT_LABEL}`]: {
+    borderRightWidth: '0',
+    borderTopRightRadius: '0',
+    borderBottomRightRadius: '0',
+  },
+} as const;
+
+// A comment as the chart draws it: a label along the plot's top edge with its text on it (see
+// positionComments). Every one that reaches the place, whatever it is scoped to — a note sets
+// nothing aside, so there is no line to fade instead.
+export type ChartComment = {
+  id: string;
+  start: number;
+  end: number | null;
+  text: string | null;
+  // A range's Leq over its own hours, per picked `Leq,Range` weighting — printed in the
+  // tooltip while the pointer is inside it.
+  leq?: readonly {weighting: Weighting; db: number}[];
+};
+
 type LevelTraceProps = {
   // Every monitor this location has ever had, with the windows it had them for. One
   // line each, clipped to those windows; one line is the ordinary case, and none — a
@@ -716,6 +827,11 @@ type LevelTraceProps = {
   // Takes one of `tags` back — what the ✕ on the "Ignored" pill over a hovered range does.
   // Optional: without it there is no pill.
   onUntag?: (tag: ChartTag) => void;
+  // Notes crew left on the chart, in epoch ms. A null end is a marker at `start`.
+  comments?: readonly ChartComment[];
+  // Deletes one of `comments` — what the ✕ on a hovered label does. Optional: without it
+  // the labels can't be pointed at at all.
+  onDeleteComment?: (comment: ChartComment) => void;
   // How much height to give the time axis, for the one caller that cannot take the
   // default. A chart's bottom gutter comes out of its plot area, so two charts side by
   // side draw their grids at different heights unless they reserve the same — and on the
@@ -814,6 +930,8 @@ export function LevelTrace({
   limits,
   tags,
   onUntag,
+  comments,
+  onDeleteComment,
   range,
   bounds,
   onScrub,
@@ -846,6 +964,7 @@ export function LevelTrace({
   // new one under the pointer. The effect further down asks for that repaint.
   const limitsRef = useLatest(limits);
   const tagsRef = useLatest(tags);
+  const commentsRef = useLatest(comments);
   // The pick, through a ref for the same reason — the breach wash reads which series a
   // column is off it, so the draw hook needs the current pick and not the one the plot was
   // built on. (What limits are drawn against is drawnKeysRef below.)
@@ -972,7 +1091,8 @@ export function LevelTrace({
     fraction: number;
     label: string;
     readings: TipReading[];
-    rangeReadings: ReturnType<typeof rangeReadingsAt>;
+    rangeReadings: RangeReading[];
+    commentLeqs: ReturnType<typeof commentLeqsAt>;
   } | null>(null);
 
   // The range a sweep has named and not yet done anything with: the crop it would make,
@@ -1099,6 +1219,95 @@ export function LevelTrace({
     },
     [],
   );
+
+  // Where each comment's label stands, written onto the overlay and its labels directly
+  // (see COMMENT_ITEM_CSS) — off the same hooks as the playhead, since a comment moves
+  // exactly when it does: a new scale or a new size. Cut to what is on screen, a range that
+  // began before the crop labelled where it enters it.
+  //
+  // DOM rather than drawn on the canvas, unlike the limits and the washes: a label is text
+  // in the page's type, cut with an ellipsis and coloured off the theme, all of which the
+  // DOM does for nothing and a canvas has to be taught.
+  //
+  // The overlay's own box only on `relayout` — a new size, a new plot, new labels — since
+  // that is the one part read off the page. A scroll only moves labels along it, so it
+  // writes and never reads, and a frame that moves every card's labels lays the page out
+  // once rather than once per card.
+  const overlayRef = useRef<HTMLDivElement | null>(null);
+  const positionComments = useCallback(
+    (plot: uPlot, relayout = false) => {
+      const container = containerRef.current;
+      const overlay = overlayRef.current;
+      if (!container || !overlay) return;
+      if (relayout) {
+        const over = plot.over.getBoundingClientRect();
+        const origin = container.getBoundingClientRect();
+        // Reaching COMMENT_LIFT_ROOM_PX above the plot, which is the room a lifted label
+        // rises into; clipped at the sides, to the plot.
+        overlay.style.left = `${over.left - origin.left}px`;
+        overlay.style.top = `${over.top - origin.top - COMMENT_LIFT_ROOM_PX}px`;
+        overlay.style.width = `${over.width}px`;
+        overlay.style.height = `${over.height + COMMENT_LIFT_ROOM_PX}px`;
+      }
+      // The plot area's width in CSS pixels, off uPlot's own geometry rather than the page.
+      const width = plot.bbox.width / uPlot.pxRatio;
+      const byId = new Map((commentsRef.current ?? []).map((c) => [c.id, c]));
+      for (const node of overlay.querySelectorAll<HTMLElement>(
+        '[data-comment-id]',
+      )) {
+        const comment = byId.get(node.dataset.commentId!);
+        const x0 = comment && plot.valToPos(comment.start / 1000, 'x');
+        const x1 =
+          comment?.end == null ? null : plot.valToPos(comment.end / 1000, 'x');
+        if (x0 == null || (x1 ?? x0) < 0 || x0 > width) {
+          node.style.display = 'none';
+          continue;
+        }
+        const x = Math.max(x0, 0);
+        const range = x1 != null;
+        node.style.display = 'block';
+        node.style.left = `${x}px`;
+        // One past the span, so the label's right outline lands on the end's rule rather
+        // than a pixel short of it.
+        node.style.width = range ? `${Math.min(x1, width) - x + 1}px` : '';
+        node.toggleAttribute('data-range', range);
+        node.toggleAttribute('data-flip', !range && x > width * 0.75);
+        node.toggleAttribute('data-cut-left', range && x0 < 0);
+        node.toggleAttribute('data-cut-right', range && x1 > width);
+      }
+    },
+    [commentsRef],
+  );
+
+  // The labels the pointer is under — anywhere below one, across its width — which rise
+  // clear of the plot so that what is under them can be read (see COMMENT_LIFT_ROOM_PX).
+  // Off each label's own box rather than the comment's instant, since a marker's label is
+  // as wide as its text. Its own box keeps it lifted once it has risen, the pointer still
+  // being under it, and the label itself counts too, so it can be reached once up there.
+  // Written onto the nodes like their positions, so a hover renders nothing.
+  const liftComments = (e: PointerEvent | null) => {
+    const nodes = [
+      ...(overlayRef.current?.querySelectorAll<HTMLElement>(
+        '[data-comment-id]',
+      ) ?? []),
+    ];
+    // Every box read before any is written, so toggling one doesn't make the next read
+    // lay the page out again. A finger has no hover to lift for.
+    const under =
+      e == null || e.pointerType === 'touch'
+        ? nodes.map(() => false)
+        : nodes.map((node) => {
+            const r = node.getBoundingClientRect();
+            return (
+              e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top
+            );
+          });
+    nodes.forEach((node, i) => node.toggleAttribute('data-lifted', under[i]));
+  };
+
+  // Whether the pointer is on one of those labels, which holds the tooltip off (see the
+  // setCursor hook). A ref, since the hook that reads it closes over the plot's build.
+  const overCommentRef = useRef(false);
 
   // Stable by construction — positionPlayhead closes over nothing but refs — which is
   // what keeps the subscription from being torn down and re-established as the page
@@ -1305,6 +1514,7 @@ export function LevelTrace({
                       t.deviceId === linesRef.current[0]!.deviceId),
                 ),
               ),
+            (u) => drawCommentRules(u, commentsRef.current ?? []),
           ],
           // Each line's casing, laid right before it is drawn (see drawNextCasing). Only
           // registered where there is more than one line to keep apart.
@@ -1319,8 +1529,20 @@ export function LevelTrace({
           // The line's other half (see positionPlayhead): wherever the x scale or the plot's
           // size settles — first draw, a crop, a gesture, a resize, the live window sliding —
           // the same instant now falls on another pixel.
-          setScale: [(_u, key) => key === 'x' && positionPlayhead()],
-          setSize: [() => positionPlayhead()],
+          setScale: [
+            (u, key) => {
+              if (key !== 'x') return;
+              positionPlayhead();
+              positionComments(u);
+            },
+          ],
+          // A new size moves the plot area itself, which the labels' overlay is laid over.
+          setSize: [
+            (u) => {
+              positionPlayhead();
+              positionComments(u, true);
+            },
+          ],
           setSelect: [
             (u) => {
               const {left, width} = u.select;
@@ -1353,6 +1575,12 @@ export function LevelTrace({
               // way to that menu, and every pixel of the journey would otherwise move the
               // page's playhead and print a tooltip under the thing being read.
               if (pendingRef.current) return;
+              // Nor while the pointer is on a comment's label: what it is reading there is
+              // the note, and a readout opening over it would cover the very thing.
+              if (overCommentRef.current) {
+                setTip(null);
+                return;
+              }
               const left = u.cursor.left;
               // Negative once the pointer leaves — a lifted finger included, which the
               // touch gestures report by parking the cursor off the plot. The tooltip goes
@@ -1411,6 +1639,7 @@ export function LevelTrace({
                   gapThresholdX,
                   limitsRef.current ?? [],
                 ),
+                commentLeqs: commentLeqsAt(commentsRef.current ?? [], atMs),
               });
             },
           ],
@@ -1518,6 +1747,7 @@ export function LevelTrace({
       container,
     );
     plotRef.current = plot;
+    positionComments(plot, true);
 
     const line = document.createElement('div');
     line.className = PLAYHEAD_CLASS;
@@ -1622,6 +1852,7 @@ export function LevelTrace({
     rangeRef,
     pendingRef,
     positionPlayhead,
+    positionComments,
     limitsRef,
     tagsRef,
     xAxisSize,
@@ -1636,6 +1867,15 @@ export function LevelTrace({
   useEffect(() => {
     plotRef.current?.redraw(false);
   }, [limits]);
+
+  // A comment added or taken back, put where it goes on the plot as it stands — its label,
+  // and its rules on the canvas.
+  useEffect(() => {
+    const plot = plotRef.current;
+    if (!plot) return;
+    positionComments(plot, true);
+    plot.redraw(false);
+  }, [comments, positionComments]);
 
   // In and out points, bound to the hover rather than to the page: `i` crops the
   // timeframe to start at the instant under the pointer, `o` to end there.
@@ -1805,8 +2045,14 @@ export function LevelTrace({
       h="full"
       minH={`${MIN_PLOT_HEIGHT}px`}
       w="full"
-      onPointerMove={hoverUntag}
-      onPointerLeave={() => setUntag(null)}
+      onPointerMove={(e) => {
+        hoverUntag(e);
+        liftComments(e);
+      }}
+      onPointerLeave={() => {
+        setUntag(null);
+        liftComments(null);
+      }}
     >
       <Box
         ref={containerRef}
@@ -1820,6 +2066,82 @@ export function LevelTrace({
         cursor="crosshair"
         css={CHART_CSS}
       />
+      {/* What crew noted on this chart, as labels along the plot's top edge: a marker's
+          hung off its line at its instant, a range's spanning it from start to end.
+          On the plot rather than in the tooltip, so a note is read where it is rather
+          than found by hovering. Clipped to the plot area; a marker's label hangs left of
+          its line near the right edge so it stays on it. Never in the pointer's way. */}
+      {comments?.some((c) => c.text) && (
+        <Box
+          ref={overlayRef}
+          position="absolute"
+          overflow="hidden"
+          pointerEvents="none"
+        >
+          {comments.map((comment) => {
+            const {id, text} = comment;
+            if (!text) return null;
+            return (
+              <Box key={id} data-comment-id={id} css={COMMENT_ITEM_CSS}>
+                <HStack
+                  {...CHART_READOUT_STYLE}
+                  data-comment-label
+                  className="group"
+                  gap="1"
+                  py="0.5"
+                  px="1.5"
+                  // The one part of the overlay the pointer can reach, and only where
+                  // there is something for it to do there.
+                  pointerEvents={onDeleteComment ? 'auto' : undefined}
+                  // A mark on the chart rather than copy, and a drag that strays onto it
+                  // would otherwise select its text instead of sweeping the trace.
+                  userSelect="none"
+                  onPointerEnter={() => {
+                    overCommentRef.current = true;
+                    setTip(null);
+                  }}
+                  onPointerLeave={() => {
+                    overCommentRef.current = false;
+                  }}
+                >
+                  <Text flex="1" minW="0" truncate>
+                    {text}
+                  </Text>
+                  {/* On hover only, so a label at rest is just its note — and taken out
+                      of the layout rather than hidden, so a marker's label is no wider
+                      than its text until there is a reason for it to be. */}
+                  {onDeleteComment && (
+                    <IconButton
+                      aria-label="Delete comment"
+                      size="2xs"
+                      variant="ghost"
+                      cursor="pointer"
+                      // Quiet until it is the thing being pointed at: muted beside the
+                      // note, white under the pointer, and no ground of its own.
+                      color="fg.muted"
+                      _hover={{color: 'white', bg: 'transparent'}}
+                      _active={{bg: 'transparent'}}
+                      borderRadius="full"
+                      minW="4"
+                      h="4"
+                      me="-1"
+                      // Taller than a line of the label's text, so pulled into the padding
+                      // above and below rather than growing the label when it appears.
+                      my="-1"
+                      display="none"
+                      _groupHover={{display: 'inline-flex'}}
+                      _focusVisible={{display: 'inline-flex'}}
+                      onClick={() => onDeleteComment(comment)}
+                    >
+                      <LuX />
+                    </IconButton>
+                  )}
+                </HStack>
+              </Box>
+            );
+          })}
+        </Box>
+      )}
       {/* What a sweep across the trace opened, standing where it ended. A sibling of the
           plot and not a child of it, for the same reason the tooltip is: uPlot owns
           every node inside its container. Never both at once — a pending selection
@@ -1901,14 +2223,14 @@ export function LevelTrace({
               ...lines.flatMap(({deviceId}) => {
                 const rows = tip.readings
                   .filter((r) => r.deviceId === deviceId)
-                  .map(({series, db, ignored, limit, over}) => ({
+                  .map(({series, db, ignored, limit}) => ({
                     key: series,
                     label: seriesLabel(series, live),
                     value: formatDb(db, 'dB'),
-                    limit: limit == null ? undefined : formatDb(limit, 'dB'),
+                    limit,
                     color: tokens[picked.indexOf(series)],
                     struck: ignored,
-                    over,
+                    over: exceedsLimit(db, limit),
                   }));
                 return rows.length === 0
                   ? []
@@ -1922,21 +2244,35 @@ export function LevelTrace({
                     {
                       key: 'range',
                       heading: 'Location',
-                      rows: tip.rangeReadings.map(
-                        ({weighting, db, limit, over}) => ({
-                          key: rangeKeyOf(weighting),
-                          label: rangeLabel(weighting),
-                          value: formatDb(db, 'dB'),
-                          limit:
-                            limit == null ? undefined : formatDb(limit, 'dB'),
-                          color: 'chart.range',
-                          over,
-                        }),
-                      ),
+                      rows: tip.rangeReadings.map(({weighting, db, limit}) => ({
+                        key: rangeKeyOf(weighting),
+                        label: rangeLabel(weighting),
+                        value: formatDb(db, 'dB'),
+                        limit,
+                        color: 'chart.range',
+                        over: exceedsLimit(db, limit),
+                      })),
                     },
                   ]),
             ]}
           />
+          {/* Each comment range the pointer is in, under its own text — a band's set, say
+              — with what this place came to over the whole of it. */}
+          {tip.commentLeqs.map(({id, text, leq}) => (
+            <Box key={id} mt="1">
+              <Text fontWeight="semibold" truncate maxW="48">
+                {text ?? 'Comment'}
+              </Text>
+              {leq.map(({weighting, db}) => (
+                <ChartTooltipRow
+                  key={weighting}
+                  label={rangeLabel(weighting)}
+                  value={formatDb(db, 'dB')}
+                  color="chart.range"
+                />
+              ))}
+            </Box>
+          ))}
         </ChartTooltip>
       )}
     </Box>

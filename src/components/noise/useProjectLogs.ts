@@ -3,6 +3,7 @@ import {useMemo} from 'react';
 import {noiseProjectLogs} from '../../routes/crew.noise';
 import {
   locationEnergyIndex,
+  locationRangeTotals,
   logSeries,
   rangeLimitVerdicts,
   runningLeqByLocation,
@@ -54,6 +55,7 @@ export function useProjectLogs({
   selection,
   locations,
   timeline,
+  comments,
 }: {
   projectId: string;
   live: boolean;
@@ -82,6 +84,9 @@ export function useProjectLogs({
     })[];
     all: boolean;
   };
+  // The project's comment ranges, whose own Leq the charts' tooltips print (see
+  // `commentLeqs`). Memoized by the caller.
+  comments: readonly {id: string; start: number; end: number}[];
 }): {
   levels?: PlayheadLevels;
   // Per picked range weighting: each location's Leq over the crop, and its running Leq from
@@ -91,6 +96,9 @@ export function useProjectLogs({
   // Per picked range weighting and location: the `Leq,Range` limits overlapping the crop
   // whose own hours came to more than they allow.
   rangeOver?: RangeByWeighting<RangeVerdict[]>;
+  // Per picked range weighting and location: the Leq over each comment range's own
+  // hours, by comment id — what a band's set came to at that place.
+  commentLeqs?: RangeByWeighting<Record<string, number>>;
   traces?: SeriesTraces;
   // The stretches of the event nobody reported in, which the timeline shades. Absent
   // while live and while the payload is in flight, so the strip draws nothing rather
@@ -199,6 +207,29 @@ export function useProjectLogs({
     [energies, start, end, locations],
   );
 
+  // Each comment range's Leq at every place, over the comment's own hours rather than the
+  // crop's — the same mean as a `Leq,Range` limit is judged on (see rangeLimitVerdicts).
+  // Every place against every comment, whatever it is scoped to: a chart looks up only the
+  // ones it shows, and there are a few dozen of each at most.
+  const commentLeqs = useMemo(
+    () =>
+      energies &&
+      byWeighting(energies, (index) =>
+        Object.fromEntries(
+          Object.keys(index.locations).map((id) => [
+            id,
+            Object.fromEntries(
+              comments.flatMap((c) => {
+                const totals = locationRangeTotals(index, id, c);
+                return totals ? [[c.id, totals.db]] : [];
+              }),
+            ),
+          ]),
+        ),
+      ),
+    [energies, comments],
+  );
+
   // Not keyed on the crop or the playhead: uPlot does the cropping, so dragging the
   // timeline leaves this memo untouched and no trace is rebuilt. Ticking a series does
   // rebuild them — those are other columns of the payload, not another slice of the same
@@ -253,6 +284,7 @@ export function useProjectLogs({
     locationTotals,
     rangeTraces,
     rangeOver,
+    commentLeqs,
     traces,
     gaps,
     breaches,

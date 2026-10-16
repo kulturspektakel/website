@@ -14,6 +14,7 @@ import {LocationChart} from './LocationChart';
 import {LocationAssignmentsDialog} from './LocationAssignmentsDialog';
 import {LocationLimitsDialog} from './LocationLimitsDialog';
 import {DeleteLocationDialog} from './DeleteLocationDialog';
+import {ImportLineupDialog} from './ImportLineupDialog';
 import {
   locationLines,
   usePlayheadLevels,
@@ -79,9 +80,9 @@ export const LocationCard = memo(function LocationCard({
   // One nullable pick rather than a boolean each, so the two editors of this location
   // cannot be open over one another — and so the next thing behind the ⋮ is a name in
   // this union rather than a third piece of state.
-  const [dialog, setDialog] = useState<'devices' | 'limits' | 'delete' | null>(
-    null,
-  );
+  const [dialog, setDialog] = useState<
+    'devices' | 'limits' | 'lineup' | 'delete' | null
+  >(null);
 
   // Every monitor this location has ever had, once each and in the order it first had
   // them. Grouped once here and handed to both the names and the chart, so the two are
@@ -168,6 +169,10 @@ export const LocationCard = memo(function LocationCard({
             <MenuItem value="limits" onClick={() => setDialog('limits')}>
               Manage limits…
             </MenuItem>
+            {/* Who played on a stage, as comments on this place's chart. */}
+            <MenuItem value="lineup" onClick={() => setDialog('lineup')}>
+              Import band lineup…
+            </MenuItem>
             {/* Ruled off: the two above edit the place, this one only dismisses
                 the card. Nothing is deleted and nobody else's page changes — it is the
                 roster's untick, reached from the card instead of from a dozen rows at
@@ -207,6 +212,11 @@ export const LocationCard = memo(function LocationCard({
       />
       <LocationLimitsDialog
         open={dialog === 'limits'}
+        onClose={() => setDialog(null)}
+        location={location}
+      />
+      <ImportLineupDialog
+        open={dialog === 'lineup'}
         onClose={() => setDialog(null)}
         location={location}
       />

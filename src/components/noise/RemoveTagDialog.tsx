@@ -23,6 +23,9 @@ const label = instantLabel(false);
 // one card and the tag may be the whole event's — removing it here counts those readings
 // again everywhere, not just on this chart.
 //
+// A comment is taken back through the same question, from the ✕ on its label — worded for
+// what is lost, which there is the note rather than a stretch set aside.
+//
 // Mounted per tag, so Cancel, the ✕ and a click outside all simply unmount it.
 export function RemoveTagDialog({
   tag,
@@ -34,15 +37,32 @@ export function RemoveTagDialog({
   onClose: () => void;
 }) {
   const {project, refresh} = useProjectView();
+  const comment = tag.type === 'COMMENT';
+  const copy = comment
+    ? {
+        title: 'Delete comment?',
+        action: 'Delete',
+        done: 'Comment deleted',
+        failed: 'Comment could not be deleted',
+      }
+    : {
+        title: 'Un-ignore range?',
+        action: 'Un-ignore',
+        done: 'Range no longer ignored',
+        failed: 'Range could not be un-ignored',
+      };
 
   const remove = useMutation({
     mutationFn: () => deleteNoiseTag({data: {tagId: tag.id}}),
     onSuccess: async () => {
       await refresh();
-      toaster.create({type: 'success', title: 'Range no longer ignored'});
+      toaster.create({
+        type: 'success',
+        title: copy.done,
+      });
       onClose();
     },
-    onError: errorToast('Range could not be un-ignored'),
+    onError: errorToast(copy.failed),
   });
 
   const scope =
@@ -61,14 +81,24 @@ export function RemoveTagDialog({
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Un-ignore range?</DialogTitle>
+          <DialogTitle>{copy.title}</DialogTitle>
         </DialogHeader>
         <DialogCloseTrigger disabled={remove.isPending} />
         <DialogBody>
-          <Text>
-            Readings from {scope} between {label(tag.start)} and{' '}
-            {label(tag.end ?? tag.start)} will count again.
-          </Text>
+          {comment ? (
+            <Text>
+              “{tag.text}” on {scope}{' '}
+              {tag.end == null
+                ? `at ${label(tag.start)}`
+                : `between ${label(tag.start)} and ${label(tag.end)}`}{' '}
+              will be deleted.
+            </Text>
+          ) : (
+            <Text>
+              Readings from {scope} between {label(tag.start)} and{' '}
+              {label(tag.end ?? tag.start)} will count again.
+            </Text>
+          )}
         </DialogBody>
         <DialogFooter>
           <Button
@@ -83,7 +113,7 @@ export function RemoveTagDialog({
             loading={remove.isPending}
             onClick={() => remove.mutate()}
           >
-            Un-ignore
+            {copy.action}
           </Button>
         </DialogFooter>
       </DialogContent>

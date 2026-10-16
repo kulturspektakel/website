@@ -45,25 +45,46 @@ export function LocationChart({
     bounds,
     traces,
     rangeTraces,
+    commentLeqs,
     scrubTo,
     cropTo,
   } = useProjectView();
+  // Every tag that reaches this place — the event's, its own, and its monitors' while they
+  // stood here (see locationTags) — once, for both lists below.
+  const reaching = useMemo(
+    () => locationTags(project.tags, location.id, lines),
+    [project.tags, location.id, lines],
+  );
+
+  // What crew noted here, a range carrying what this place's picked `Leq,Range`s came to
+  // over its hours.
+  const comments = useMemo(
+    () =>
+      reaching
+        .filter((t) => t.type === 'COMMENT')
+        .map((t) => ({
+          ...t,
+          leq: pickedRange.flatMap((weighting) => {
+            const db = commentLeqs?.[weighting]?.[location.id]?.[t.id];
+            return db == null ? [] : [{weighting, db}];
+          }),
+        })),
+    [reaching, location.id, pickedRange, commentLeqs],
+  );
+
   // The range the selection menu's "Ignore…" was chosen for, while its dialog is open.
   const [tagging, setTagging] = useState<{start: number; end: number} | null>(
     null,
   );
-  // The ignored range whose "Ignored" pill ✕ was pressed, while its dialog is open.
+  // The ignored range whose pill ✕, or the comment whose label ✕, was pressed, while its
+  // dialog is open.
   const [untagging, setUntagging] = useState<NoiseRangeTag | null>(null);
 
-  // Every ignored stretch that reaches this place — the event's, its own, and its
-  // monitors' while they stood here (see locationTags). Memoized so the chart's redraw
-  // effect only fires when a tag actually changes.
+  // Every ignored stretch that reaches this place. Memoized so the chart's redraw effect
+  // only fires when a tag actually changes.
   const tags = useMemo(
-    () =>
-      locationTags(project.tags, location.id, lines).filter(
-        (t) => t.type === 'IGNORE',
-      ),
-    [project.tags, location.id, lines],
+    () => reaching.filter((t) => t.type === 'IGNORE'),
+    [reaching],
   );
 
   // The place's running Leq, a line per ticked `Leq,Range` row (see RangePick). Memoized
@@ -129,6 +150,10 @@ export function LocationChart({
         // limit that ended at midnight is still part of a crop that covers midnight.
         limits={location.limits}
         tags={tags}
+        comments={comments}
+        onDeleteComment={(comment) =>
+          setUntagging(comments.find((t) => t.id === comment.id) ?? null)
+        }
         // The chart hands back one of `tags`, so it is one of the records above.
         onUntag={(tag) =>
           setUntagging(tags.find((t) => t.id === tag.id) ?? null)
