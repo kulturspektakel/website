@@ -74,8 +74,8 @@ const SERIES_GROUPS = seriesOptions(false).map((group) => ({
 //
 // `decibels` is null for "nothing typed yet", which is what lets a row exist before it
 // says anything — and is the one state Save refuses. `series` has no such state: a new row
-// opens on the one the page is showing, because that is overwhelmingly the series someone
-// came here to write a limit for.
+// opens on the previous row's, or on the one the page is showing when it is the first,
+// because that is overwhelmingly the series someone came here to write a limit for.
 type DraftLimit = {
   key: string;
   id: string | null;
@@ -144,8 +144,8 @@ function LimitsForm({
   onClose: () => void;
 }) {
   const {project, picked, refresh} = useProjectView();
-  // What a new row opens on: the first of the series the page is showing, which is the one
-  // whose lines and numbers are in front of whoever pressed Add.
+  // What the first new row opens on: the first of the series the page is showing, which is
+  // the one whose lines and numbers are in front of whoever pressed Add.
   const primary = primarySeries(picked);
 
   // Both pinned to the opening: the page behind keeps refetching while this is up (it is
@@ -247,17 +247,23 @@ function LimitsForm({
               size="sm"
               variant="outline"
               onClick={() =>
-                setRows((rs) => [
-                  ...rs,
-                  {
-                    key: newKey(),
-                    id: null,
-                    series: primary,
-                    decibels: null,
-                    start: null,
-                    end: null,
-                  },
-                ])
+                setRows((rs) => {
+                  // A new row usually carries on from the last one: the night limit after
+                  // the day one, on the same series and starting where it ended. A last row
+                  // that runs to the event's end leaves nothing to carry on from.
+                  const previous = rs.at(-1);
+                  return [
+                    ...rs,
+                    {
+                      key: newKey(),
+                      id: null,
+                      series: previous?.series ?? primary,
+                      decibels: null,
+                      start: previous?.end ?? null,
+                      end: null,
+                    },
+                  ];
+                })
               }
             >
               <LuPlus /> Add limit
