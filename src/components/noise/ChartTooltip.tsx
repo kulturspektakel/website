@@ -148,7 +148,15 @@ export function ChartTooltipRow({
       {limit != null && (
         <HStack gap="3" justify="space-between" color="fg.muted">
           <HStack gap="1">
-            <Box as={LuCornerDownRight} ms="2px" />
+            <Box
+              as={LuCornerDownRight}
+              ms="2px"
+              position="relative"
+              top="-1px"
+              // A shade fainter than the muted word beside it: the arrow only says which
+              // row the limit hangs off, and should not compete with what it points at.
+              opacity="0.6"
+            />
             <Text>Limit</Text>
           </HStack>
           <Text>{limit}</Text>
