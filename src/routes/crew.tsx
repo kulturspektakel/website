@@ -5,6 +5,7 @@ import {ChakraProvider} from '@chakra-ui/react';
 import crewTheme from '../theme-crew';
 import {verifyDirectusSession} from '../server/directusAuth.server';
 import {crewAuth} from '../server/crewAuth';
+import {CrewError} from '../components/CrewError';
 
 /**
  * Build the Directus Slack-SSO login URL for an unauthenticated visitor, or
@@ -62,6 +63,15 @@ export const Route = createFileRoute('/crew')({
   // their own pending views; this one just waits, as it always has.
   pendingMs: Infinity,
   component: CrewLayout,
+  // Only covers /crew's own beforeLoad/loader: child routes fall back to the
+  // router's `defaultErrorComponent`, which hands off to `CrewError` itself
+  // when a /crew match is active. Renders in place of `CrewLayout`, so it has to
+  // bring its own provider.
+  errorComponent: ({error, reset}) => (
+    <ChakraProvider value={crewTheme}>
+      <CrewError error={error} reset={reset} />
+    </ChakraProvider>
+  ),
 });
 
 function CrewLayout() {
