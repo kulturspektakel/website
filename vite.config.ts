@@ -32,11 +32,14 @@ export default defineConfig({
     nitro({
       preset: 'vercel',
       compatibilityDate: '2026-10-17',
-      // Nitro bundles every dependency unless told otherwise. These two locate
-      // their `.proto`/`.json` descriptors via `__dirname` at runtime, which
-      // doesn't exist in the bundled ESM output, so ship them as-is (`*` =
-      // copy the whole package, not just the files the tracer can see).
-      traceDeps: ['@google-cloud/tasks*', 'google-gax*'],
+      // Nitro bundles every dependency unless told otherwise. These locate
+      // files at runtime in ways a bundle can't follow, so ship them as-is
+      // (`*` = copy the whole package, not just the files the tracer can see).
+      // `@google-cloud/tasks` and `google-gax` read their `.proto`/`.json`
+      // descriptors via `__dirname`, which doesn't exist in the bundled ESM
+      // output. `pdfkit` (under `@react-pdf/renderer`) `require`s its standard
+      // fonts through its own package.json `imports` map (`#standard-fonts/*`).
+      traceDeps: ['@google-cloud/tasks*', 'google-gax*', 'pdfkit*'],
       // The /api/tasks/nuclino-update-message cron scans the whole Nuclino
       // workspace (~14 sequential paginated requests, ~7s) since the API has
       // no recency sort. That brushes Vercel's default function timeout and
