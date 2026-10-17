@@ -33,13 +33,14 @@ export default defineConfig({
       preset: 'vercel',
       compatibilityDate: '2026-10-17',
       // Nitro bundles every dependency unless told otherwise. These locate
-      // files at runtime in ways a bundle can't follow, so ship them as-is
-      // (`*` = copy the whole package, not just the files the tracer can see).
+      // files at runtime in ways a bundle can't follow, so ship them unbundled.
       // `@google-cloud/tasks` and `google-gax` read their `.proto`/`.json`
       // descriptors via `__dirname`, which doesn't exist in the bundled ESM
-      // output. `pdfkit` (under `@react-pdf/renderer`) `require`s its standard
-      // fonts through its own package.json `imports` map (`#standard-fonts/*`).
-      traceDeps: ['@google-cloud/tasks*', 'google-gax*', 'pdfkit*'],
+      // output; the tracer finds those files on its own. `pdfkit` (under
+      // `@react-pdf/renderer`) `require`s its standard fonts through its
+      // package.json `imports` map (`#standard-fonts/*`), which the tracer
+      // can't follow, so `*` copies the whole package.
+      traceDeps: ['@google-cloud/tasks', 'google-gax', 'pdfkit*'],
       // The /api/tasks/nuclino-update-message cron scans the whole Nuclino
       // workspace (~14 sequential paginated requests, ~7s) since the API has
       // no recency sort. That brushes Vercel's default function timeout and
@@ -106,11 +107,10 @@ export default defineConfig({
     // `traceDeps` and native packages), but it does so *after* this SSR build,
     // and packages listed here are already tree-shaken by Vite by then. Cold
     // starts dominate this function's billed CPU, so barrel-shaped packages
-    // belong here. Under Nitro v2, which left everything else external, this
-    // list roughly halved cold start; under Nitro v3 it still saves ~5%
-    // (measured: ~1.20 s vs ~1.27 s CPU for a cold `/`). Chakra's own dependency
-    // tree (`@ark-ui/react`, the ~74 `@zag-js/*` packages) has to be listed
-    // alongside it — the wrapper alone leaves the actual payload untouched.
+    // belong here: this list saves ~5% (measured: ~1.20 s vs ~1.27 s CPU for a
+    // cold `/`). Chakra's own dependency tree (`@ark-ui/react`, the ~74
+    // `@zag-js/*` packages) has to be listed alongside it — the wrapper alone
+    // leaves the actual payload untouched.
     //
     // Pick candidates by *measuring*, not by package size. `react-icons`,
     // `zod`, `formik`, `downshift` and `markdown-to-jsx` were all tried here and
