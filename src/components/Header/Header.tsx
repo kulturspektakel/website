@@ -32,8 +32,8 @@ function Item({children, to}: {children: React.ReactNode; to: string}) {
       lineHeight={1}
     >
       <Link to={to}>
-        {({isActive, isTransitioning}) => (
-          <Text color={isActive || isTransitioning ? 'brand.500' : undefined}>
+        {({isActive}) => (
+          <Text color={isActive ? 'brand.500' : undefined}>
             {children}
           </Text>
         )}

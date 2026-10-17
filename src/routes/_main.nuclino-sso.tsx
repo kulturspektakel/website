@@ -28,7 +28,7 @@ const NONCE_LIFETIME_MINUTES = 5;
 // serialize it to a Response that Sentry's function middleware logs as an error
 // (`Error: [object Response]`).
 const resolveRedirect = createServerFn()
-  .inputValidator((query: Record<string, any>) => query)
+  .validator((query: Record<string, any>) => query)
   .handler(({data}): string | null => {
     const nonce = getCookie('nonce');
     if (nonce) {
@@ -46,7 +46,7 @@ const resolveRedirect = createServerFn()
   });
 
 const createNonceRequest = createServerFn()
-  .inputValidator((data: {email: string}) => data)
+  .validator((data: {email: string}) => data)
   .handler(async ({data}) => {
     const expiresAt = addMinutes(new Date(), NONCE_LIFETIME_MINUTES);
     const nonceRequest = await prismaClient.nonceRequest.create({
@@ -74,7 +74,7 @@ const createNonceRequest = createServerFn()
   });
 
 const checkNonceRequest = createServerFn()
-  .inputValidator((data: {nonceRequestId: string}) => data)
+  .validator((data: {nonceRequestId: string}) => data)
   .handler(async ({data}) => {
     const nonceRequest = await prismaClient.nonceRequest.findUnique({
       where: {

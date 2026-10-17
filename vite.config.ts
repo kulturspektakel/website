@@ -1,6 +1,6 @@
 import {defineConfig, loadEnv} from 'vite';
 import {tanstackStart} from '@tanstack/react-start/plugin/vite';
-import {nitroV2Plugin} from '@tanstack/nitro-v2-vite-plugin';
+import {nitro} from 'nitro/vite';
 import {sentryTanstackStart} from '@sentry/tanstackstart-react/vite';
 import viteReact from '@vitejs/plugin-react';
 
@@ -29,8 +29,14 @@ export default defineConfig({
         routeFileIgnorePattern: '\\.(test|spec)\\.',
       },
     }),
-    nitroV2Plugin({
+    nitro({
       preset: 'vercel',
+      compatibilityDate: '2026-10-17',
+      // Nitro bundles every dependency unless told otherwise. These two locate
+      // their `.proto`/`.json` descriptors via `__dirname` at runtime, which
+      // doesn't exist in the bundled ESM output, so ship them as-is (`*` =
+      // copy the whole package, not just the files the tracer can see).
+      traceDeps: ['@google-cloud/tasks*', 'google-gax*'],
       // The /api/tasks/nuclino-update-message cron scans the whole Nuclino
       // workspace (~14 sequential paginated requests, ~7s) since the API has
       // no recency sort. That brushes Vercel's default function timeout and
@@ -41,7 +47,7 @@ export default defineConfig({
         },
       },
       // These compile into `.vercel/output/config.json` *above* the
-      // `filesystem` handle and the `/__fallback` catch-all, so they're
+      // `filesystem` handle and the `/__server` catch-all, so they're
       // resolved at the edge and never reach the function.
       routeRules: {
         // Short marketing URLs printed on menus and signage. Answering them
@@ -51,16 +57,16 @@ export default defineConfig({
         // fallback (route rules are edge-only) and as the type-checked record of
         // these destinations; production never reaches them.
         '/vegan': {
-          redirect: {to: '/speisekarte?filter=vegan', statusCode: 307},
+          redirect: {to: '/speisekarte?filter=vegan', status: 307},
         },
         '/glutenfrei': {
-          redirect: {to: '/speisekarte?filter=glutenfrei', statusCode: 307},
+          redirect: {to: '/speisekarte?filter=glutenfrei', status: 307},
         },
         // Same, but off-site — and unlike the two above it had no
         // `Cache-Control` at all, since a `beforeLoad` redirect never reaches
         // the `_main` loader that sets one.
         '/learn': {
-          redirect: {to: 'https://youtu.be/EakoNs1PP1c', statusCode: 307},
+          redirect: {to: 'https://youtu.be/EakoNs1PP1c', status: 307},
         },
         // Vite's content-hashed output: the hash changes whenever the bytes do,
         // so these are safe to pin forever. Without this they went out as
@@ -93,21 +99,22 @@ export default defineConfig({
     }),
   ],
   ssr: {
-    // Everything not listed here stays external, i.e. `require`d out of the
-    // function's own `node_modules` at runtime — the whole package is parsed on
-    // every cold start with no tree-shaking. Cold starts dominate this
-    // function's billed CPU, so barrel-shaped packages belong here: bundling
-    // lets Vite shake them down to the exports actually used. `@chakra-ui/react`
-    // + `date-fns` roughly halved cold start, and Chakra's own dependency tree
-    // (`@ark-ui/react`, the ~74 `@zag-js/*` packages) had to follow — bundling
-    // the wrapper alone left the actual payload external.
+    // Nitro bundles every dependency into the function anyway (bar its
+    // `traceDeps` and native packages), but it does so *after* this SSR build,
+    // and packages listed here are already tree-shaken by Vite by then. Cold
+    // starts dominate this function's billed CPU, so barrel-shaped packages
+    // belong here. Under Nitro v2, which left everything else external, this
+    // list roughly halved cold start; under Nitro v3 it still saves ~5%
+    // (measured: ~1.20 s vs ~1.27 s CPU for a cold `/`). Chakra's own dependency
+    // tree (`@ark-ui/react`, the ~74 `@zag-js/*` packages) has to be listed
+    // alongside it — the wrapper alone leaves the actual payload untouched.
     //
     // Pick candidates by *measuring*, not by package size. `react-icons`,
     // `zod`, `formik`, `downshift` and `markdown-to-jsx` were all tried here and
     // reverted: no measurable change, because V8 compiles function bodies
     // lazily, so a 1.7 MB file of icon factory calls evaluates in ~20 ms. To
     // measure, import a package on its own inside `.vercel/output/functions/
-    // __fallback.func` and diff `process.cpuUsage()`.
+    // __server.func` and diff `process.cpuUsage()`.
     noExternal: [
       'iban-ts',
       '@chakra-ui/react',

@@ -17,7 +17,7 @@ import {markdownPages} from '../server/markdownText.server';
 import {imageUrl} from '../utils/directusImage';
 
 const loader = createServerFn()
-  .inputValidator((cursor: string | undefined) => cursor)
+  .validator((cursor: string | undefined) => cursor)
   .handler(async ({data: cursor}) => {
     const data = await prismaClient.news.findMany({
       select: {

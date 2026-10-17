@@ -10,7 +10,7 @@ import {prismaClient} from './prismaClient.server';
 // call; the assignment itself isn't viewer-attributed.
 export const setBandApplicationStage = createServerFn()
   .middleware([crewAuth])
-  .inputValidator(
+  .validator(
     z.object({
       applicationId: z.string(),
       row: z.number().int().min(0).max(2).nullable(),

@@ -18,7 +18,7 @@ import {eventSelect} from '../components/events/Event';
 import {immichAlbumAssets} from '../server/immich.server';
 
 const loader = createServerFn()
-  .inputValidator((eventId: string) => eventId)
+  .validator((eventId: string) => eventId)
   .handler(async ({data: eventId}) => {
     const data = await prismaClient.event.findUnique({
       where: {

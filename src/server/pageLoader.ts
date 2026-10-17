@@ -6,7 +6,7 @@ import {markdownText} from './markdownText.server';
 import {pageSelect} from '../components/Page';
 
 export const pageLoader = createServerFn()
-  .inputValidator((slug: string) => slug)
+  .validator((slug: string) => slug)
   .handler(async ({data: slug}) => {
     const data = await prismaClient.page.findUnique({
       where: {

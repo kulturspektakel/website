@@ -38,7 +38,7 @@ import {
 // band data, the event's date window, and the list of stages.
 const loadContactData = createServerFn()
   .middleware([crewAuth])
-  .inputValidator((applicationId: string) => applicationId)
+  .validator((applicationId: string) => applicationId)
   .handler(async ({data: applicationId}) => {
     const application = await prismaClient.bandApplication.findUnique({
       where: {id: applicationId},
@@ -87,7 +87,7 @@ const loadContactData = createServerFn()
 // booking@kulturspektakel.de) so it shows up in that account's Sent folder.
 const sendBandContactEmail = createServerFn()
   .middleware([crewAuth])
-  .inputValidator(
+  .validator(
     z.object({
       applicationId: z.string(),
       to: z.string(),

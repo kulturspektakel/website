@@ -19,7 +19,7 @@ import {createServerFn} from '@tanstack/react-start';
 import {enqueueGcpTask} from '../server/enqueueGcpTask.server';
 
 const createMembership = createServerFn()
-  .inputValidator((data: any) => data)
+  .validator((data: any) => data)
   .handler(async ({data}) => {
     await enqueueGcpTask('create-membership-application', data);
   });

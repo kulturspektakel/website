@@ -3,7 +3,7 @@ import * as Sentry from '@sentry/tanstackstart-react';
 import Headline from './Headline';
 import {Text} from '@chakra-ui/react';
 
-export function Error({error}: {error?: Error}) {
+export function Error({error}: {error: unknown}) {
   useEffect(() => {
     if (error) {
       Sentry.captureException(error);

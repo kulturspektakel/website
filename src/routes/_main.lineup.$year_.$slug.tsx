@@ -25,7 +25,7 @@ import {isSameDay} from '../utils/dateUtils';
 import {seo} from '../utils/seo';
 
 const loader = createServerFn()
-  .inputValidator((data: {year: string; slug: string}) => data)
+  .validator((data: {year: string; slug: string}) => data)
   .handler(async ({data}) => {
     const band = await prismaClient.bandPlaying.findUnique({
       where: {

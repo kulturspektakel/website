@@ -89,7 +89,7 @@ const previousEventId = (eventId: string) => {
 
 const loadBandApplications = createServerFn()
   .middleware([crewAuth])
-  .inputValidator((eventId: string) => eventId)
+  .validator((eventId: string) => eventId)
   .handler(async ({data: eventId, context}) => {
     const prevId = previousEventId(eventId);
     const lastYearBands = prevId

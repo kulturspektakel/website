@@ -37,7 +37,7 @@ const select = {
 } as const;
 
 const loader = createServerFn()
-  .inputValidator((id: string) => id)
+  .validator((id: string) => id)
   .handler(async ({data: id}) => {
     const data = await prismaClient.donation.findFirstOrThrow({
       select,
@@ -57,7 +57,7 @@ const loader = createServerFn()
   });
 
 const setData = createServerFn()
-  .inputValidator(FormSchemaWithId)
+  .validator(FormSchemaWithId)
   .handler(async ({data: {id, ...data}}) => {
     return prismaClient.donation.update({
       where: {

@@ -25,7 +25,7 @@ import {crewAuth} from '../server/crewAuth';
  * `JWT_SECRET` regardless of origin).
  */
 const crewLoginUrl = createServerFn()
-  .inputValidator((to: string) => to)
+  .validator((to: string) => to)
   .handler(({data}) => {
     // Crew pages render user-specific content; never let a CDN or proxy cache
     // them. Set on every /crew/* request via this beforeLoad server fn.

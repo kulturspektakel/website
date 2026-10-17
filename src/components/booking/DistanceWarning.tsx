@@ -3,7 +3,7 @@ import {createServerFn} from '@tanstack/react-start';
 import {useQuery} from '@tanstack/react-query';
 
 const getDistance = createServerFn()
-  .inputValidator((data: string) => data)
+  .validator((data: string) => data)
   .handler(async ({data: origin}) => {
     const url = new URL(
       'https://maps.googleapis.com/maps/api/distancematrix/json',

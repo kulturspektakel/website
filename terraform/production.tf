@@ -206,7 +206,7 @@ resource "google_cloud_scheduler_job" "nuclino_update_message" {
   region      = local.region
 
   # TEMPORARY (paused 2026-08-26) — measuring how much of the site's Fluid
-  # Active CPU this job accounts for. Every route is served by one `__fallback`
+  # Active CPU this job accounts for. Every route is served by one `__server`
   # function and per-path CPU breakdown needs Observability Plus, which we do
   # not have, so silencing the only fixed-schedule caller is the one way to
   # attribute its share. Baseline to diff against: 9.37 CPU-hrs over

@@ -9,7 +9,7 @@ import {enqueueGcpTask} from './enqueueGcpTask.server';
  * never blocks the other.
  */
 export const requestAwarenessHelp = createServerFn()
-  .inputValidator(
+  .validator(
     z.object({
       name: z.string().trim().min(1),
       phone: z.string().trim().min(1),

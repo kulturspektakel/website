@@ -96,7 +96,7 @@ import {computedTagsFor} from './crew.booking.$eventId';
 
 const loadBandApplicationDetail = createServerFn()
   .middleware([crewAuth])
-  .inputValidator((applicationId: string) => applicationId)
+  .validator((applicationId: string) => applicationId)
   .handler(async ({data: id, context}) => {
     const a = await prismaClient.bandApplication.findUnique({
       where: {id},
@@ -283,7 +283,7 @@ type DetailData = Awaited<ReturnType<typeof loadBandApplicationDetail>>;
 // actually settled on this year instead of everything ever typed.
 const listBandApplicationTags = createServerFn()
   .middleware([crewAuth])
-  .inputValidator(z.object({eventId: z.string()}))
+  .validator(z.object({eventId: z.string()}))
   .handler(async ({data}) => {
     const rows = await prismaClient.bandApplicationTag.findMany({
       where: {bandApplication: {eventId: data.eventId}},
@@ -299,7 +299,7 @@ const listBandApplicationTags = createServerFn()
 // member via context.viewer.
 const addBandApplicationTag = createServerFn()
   .middleware([crewAuth])
-  .inputValidator(
+  .validator(
     z.object({applicationId: z.string(), tag: z.string().trim().min(1)}),
   )
   .handler(async ({data, context}) => {
@@ -325,7 +325,7 @@ const addBandApplicationTag = createServerFn()
 
 const removeBandApplicationTag = createServerFn()
   .middleware([crewAuth])
-  .inputValidator(z.object({applicationId: z.string(), tag: z.string()}))
+  .validator(z.object({applicationId: z.string(), tag: z.string()}))
   .handler(async ({data, context}) => {
     if (!context.viewer?.id) {
       throw new Error('Unauthorized');

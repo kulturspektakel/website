@@ -28,7 +28,7 @@ import {eventSelect} from '../components/events/Event';
 import {immichAlbumAssets} from '../server/immich.server';
 
 const loader = createServerFn()
-  .inputValidator(
+  .validator(
     (cursor: {cursor?: string; eventType: EventType | 'ALL'}) => cursor,
   )
   .handler(async ({data}) => {

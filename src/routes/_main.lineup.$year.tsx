@@ -8,7 +8,7 @@ import {prismaClient} from '../server/prismaClient.server';
 import {seo} from '../utils/seo';
 
 const loader = createServerFn()
-  .inputValidator((data: {year: string}) => data)
+  .validator((data: {year: string}) => data)
   .handler(async ({data}) => {
     const bands = await prismaClient.bandPlaying.findMany({
       where: {

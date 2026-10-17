@@ -26,7 +26,7 @@ function productWhereForFilter(
 }
 
 const loader = createServerFn()
-  .inputValidator((data: {filter?: DietFilter}) => data)
+  .validator((data: {filter?: DietFilter}) => data)
   .handler(async ({data}) => {
     const productWhere = productWhereForFilter(data.filter);
 

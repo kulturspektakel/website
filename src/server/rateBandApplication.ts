@@ -9,7 +9,7 @@ import {prismaClient} from './prismaClient.server';
 // [viewerId, bandApplicationId]).
 export const rateBandApplication = createServerFn()
   .middleware([crewAuth])
-  .inputValidator(
+  .validator(
     z.object({
       applicationId: z.string(),
       rating: z.number().int().min(0).max(4),

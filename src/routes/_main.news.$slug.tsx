@@ -7,7 +7,7 @@ import {prismaClient} from '../server/prismaClient.server';
 import {markdownText} from '../server/markdownText.server';
 
 const loader = createServerFn()
-  .inputValidator((slug: string) => slug)
+  .validator((slug: string) => slug)
   .handler(async ({data: slug}) => {
     const data = await prismaClient.news.findUnique({
       where: {

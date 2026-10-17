@@ -23,7 +23,7 @@ import {locale, timeZone} from '../../utils/dateUtils';
 const DEPOSIT_VALUE = 200;
 
 const setOrderNotForMe = createServerFn({method: 'POST'})
-  .inputValidator(
+  .validator(
     z.object({
       cardId: z.string(),
       orderId: z.number().int(),

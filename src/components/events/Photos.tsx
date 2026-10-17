@@ -10,7 +10,7 @@ import {directusImageConnection} from '../../server/directusImage.server';
 import {DataSourceArray} from 'photoswipe';
 
 const loadMoreImages = createServerFn()
-  .inputValidator(
+  .validator(
     (params: {limit: number; offset: number; eventId: string}) => params,
   )
   .handler(async ({data: {eventId, offset, limit}}) => {

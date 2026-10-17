@@ -8,7 +8,7 @@ import {prismaClient} from './prismaClient.server';
 // belonging to somebody else simply matches nothing.
 export const deleteBandApplicationComment = createServerFn()
   .middleware([crewAuth])
-  .inputValidator(z.object({commentId: z.string()}))
+  .validator(z.object({commentId: z.string()}))
   .handler(async ({data, context}) => {
     const viewerId = context.viewer?.id;
     if (!viewerId) {

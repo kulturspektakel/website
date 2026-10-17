@@ -49,7 +49,7 @@ export const createProductListInput = z.object({
 
 export const createProductList = createServerFn()
   .middleware([crewAuth])
-  .inputValidator(createProductListInput)
+  .validator(createProductListInput)
   .handler(async ({data}) => {
     return prismaClient.productList.create({
       data: {name: data.name, emoji: data.emoji},
@@ -66,7 +66,7 @@ export const updateProductListInput = z.object({
 
 export const updateProductList = createServerFn()
   .middleware([crewAuth])
-  .inputValidator(updateProductListInput)
+  .validator(updateProductListInput)
   .handler(async ({data, context}) => {
     await prismaClient.productList.update({
       where: {id: data.id},

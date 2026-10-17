@@ -13,7 +13,7 @@ import {
 import {decodePayload} from '../utils/decodePayload';
 
 const loader = createServerFn()
-  .inputValidator(
+  .validator(
     (data: {hash: string; event: {start: Date; end: Date}}) => data,
   )
   .handler(async ({data: {event, hash}}) => {

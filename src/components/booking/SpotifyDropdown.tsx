@@ -27,7 +27,7 @@ type SpotifyArtist = {
 };
 
 const getSpotifyArtists = createServerFn()
-  .inputValidator((data: string) => data)
+  .validator((data: string) => data)
   .handler(async ({data: query}) => {
     const token = await getSpotifyToken();
     const res = await fetch(

@@ -11,7 +11,7 @@ import {prismaClient} from '../../server/prismaClient.server';
 import {useNavigate} from '@tanstack/react-router';
 
 const serverFn = createServerFn()
-  .inputValidator((query: string) => query)
+  .validator((query: string) => query)
   .handler(({data: query}) => {
     let q = query
       .replace(/[^\p{L}0-9- ]/gu, ' ')

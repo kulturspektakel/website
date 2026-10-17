@@ -8,7 +8,7 @@ import {prismaClient} from './prismaClient.server';
 // keyed on that Viewer.id.
 export const postBandApplicationComment = createServerFn()
   .middleware([crewAuth])
-  .inputValidator(
+  .validator(
     z.object({
       applicationId: z.string(),
       comment: z.string().min(1).max(1000),

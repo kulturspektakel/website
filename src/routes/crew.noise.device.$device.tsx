@@ -33,7 +33,7 @@ import {seo} from '../utils/seo';
 // offline either.
 const loadDevice = createServerFn()
   .middleware([crewAuth])
-  .inputValidator((device: string) => device)
+  .validator((device: string) => device)
   .handler(async ({data: device}) => {
     const [assignment, limits, row] = await Promise.all([
       deviceAssignment(device),

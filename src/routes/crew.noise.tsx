@@ -78,7 +78,7 @@ export const createNoiseProjectInput = z
 
 export const createNoiseProject = createServerFn()
   .middleware([crewAuth])
-  .inputValidator(createNoiseProjectInput)
+  .validator(createNoiseProjectInput)
   .handler(async ({data}) =>
     // Returns the id so the dialog can drop the user straight into the project
     // they just created (which is why they created it).
@@ -94,7 +94,7 @@ export const createNoiseProject = createServerFn()
 
 export const loadNoiseProject = createServerFn()
   .middleware([crewAuth])
-  .inputValidator(z.object({projectId: z.string().min(1)}))
+  .validator(z.object({projectId: z.string().min(1)}))
   .handler(async ({data}) => {
     const project = await prismaClient.noiseProject.findUnique({
       where: {id: data.projectId},
@@ -246,7 +246,7 @@ export const createNoiseLocationInput = z.object({
 
 export const createNoiseLocation = createServerFn()
   .middleware([crewAuth])
-  .inputValidator(createNoiseLocationInput)
+  .validator(createNoiseLocationInput)
   .handler(async ({data}) => {
     // The FK would reject an unknown project anyway, but a 404 is the honest
     // answer for a stale page.
@@ -268,7 +268,7 @@ export const createNoiseLocation = createServerFn()
 // throughout, so a double press or a stale page deletes nothing twice.
 export const deleteNoiseLocation = createServerFn()
   .middleware([crewAuth])
-  .inputValidator(z.object({locationId: z.string().min(1)}))
+  .validator(z.object({locationId: z.string().min(1)}))
   .handler(async ({data: {locationId}}) => {
     await prismaClient.$transaction([
       prismaClient.noiseLocationAssignment.deleteMany({where: {locationId}}),
@@ -284,7 +284,7 @@ export const deleteNoiseLocation = createServerFn()
 // come back here. Only sent when live mode is off.
 export const noiseProjectLogs = createServerFn()
   .middleware([crewAuth])
-  .inputValidator(z.object({projectId: z.string().min(1)}))
+  .validator(z.object({projectId: z.string().min(1)}))
   .handler(async ({data}) => projectLogs(data.projectId));
 
 export const assignableNoiseDevices = createServerFn()
@@ -353,7 +353,7 @@ const instantOrNull = (ms: number | null | undefined): Date | null =>
 
 export const assignNoiseDevice = createServerFn()
   .middleware([crewAuth])
-  .inputValidator(
+  .validator(
     z.object({
       locationId: z.string().min(1),
       deviceId: z.string().min(1),
@@ -399,7 +399,7 @@ export const assignNoiseDevice = createServerFn()
 // a monitor stood, and the person filling it in knows better than a clamp would.
 export const updateNoiseAssignment = createServerFn()
   .middleware([crewAuth])
-  .inputValidator(
+  .validator(
     z.object({
       assignmentId: z.string().min(1),
       start: z.number().int().nullable(),
@@ -427,7 +427,7 @@ export const updateNoiseAssignment = createServerFn()
 // throwing on a row that has already gone.
 export const deleteNoiseAssignment = createServerFn()
   .middleware([crewAuth])
-  .inputValidator(z.object({assignmentId: z.string().min(1)}))
+  .validator(z.object({assignmentId: z.string().min(1)}))
   .handler(async ({data}) => {
     await prismaClient.noiseLocationAssignment.deleteMany({
       where: {id: data.assignmentId},
@@ -466,7 +466,7 @@ const noiseLimitSeries = z.custom<LimitSeries>(
 
 export const createNoiseLimit = createServerFn()
   .middleware([crewAuth])
-  .inputValidator(
+  .validator(
     z.object({
       locationId: z.string().min(1),
       series: noiseLimitSeries,
@@ -505,7 +505,7 @@ export const createNoiseLimit = createServerFn()
 // clearing one is a stated null rather than an omission.
 export const updateNoiseLimit = createServerFn()
   .middleware([crewAuth])
-  .inputValidator(
+  .validator(
     z.object({
       limitId: z.string().min(1),
       series: noiseLimitSeries,
@@ -529,7 +529,7 @@ export const updateNoiseLimit = createServerFn()
 // deleteMany, so a double-tap or a stale list deletes nothing twice.
 export const deleteNoiseLimit = createServerFn()
   .middleware([crewAuth])
-  .inputValidator(z.object({limitId: z.string().min(1)}))
+  .validator(z.object({limitId: z.string().min(1)}))
   .handler(async ({data}) => {
     await prismaClient.noiseLocationLimit.deleteMany({
       where: {id: data.limitId},
@@ -550,7 +550,7 @@ export type NoiseTagScope = z.infer<typeof noiseTagScope>;
 
 export const createNoiseTag = createServerFn()
   .middleware([crewAuth])
-  .inputValidator(
+  .validator(
     z
       .object({
         projectId: z.string().min(1),
@@ -642,7 +642,7 @@ export const createNoiseTag = createServerFn()
 // or a stale page deletes nothing twice.
 export const deleteNoiseTag = createServerFn()
   .middleware([crewAuth])
-  .inputValidator(z.object({tagId: z.string().min(1)}))
+  .validator(z.object({tagId: z.string().min(1)}))
   .handler(async ({data: {tagId}}) => {
     await prismaClient.noiseTag.deleteMany({where: {id: tagId}});
   });
@@ -661,7 +661,7 @@ const bandsDuring = (project: {start: Date; end: Date}) => ({
 // areas with someone playing in that window: an empty stage is nothing to import.
 export const noiseLineupAreas = createServerFn()
   .middleware([crewAuth])
-  .inputValidator(z.object({projectId: z.string().min(1)}))
+  .validator(z.object({projectId: z.string().min(1)}))
   .handler(async ({data: {projectId}}) => {
     const project = await prismaClient.noiseProject.findUnique({
       where: {id: projectId},
@@ -700,7 +700,7 @@ export const noiseLineupAreas = createServerFn()
 // skipped, so importing the same stage twice adds nothing the second time.
 export const importNoiseLineup = createServerFn()
   .middleware([crewAuth])
-  .inputValidator(
+  .validator(
     z.object({
       projectId: z.string().min(1),
       locationId: z.string().min(1),

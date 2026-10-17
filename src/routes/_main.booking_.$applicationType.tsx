@@ -51,7 +51,7 @@ const serverSchema = z
 export type ServerSchemaInput = z.input<typeof serverSchema>;
 
 const createBandApplication = createServerFn()
-  .inputValidator(serverSchema)
+  .validator(serverSchema)
   .handler(async ({data}) => {
     const application = await prismaClient.bandApplication.create({
       data,

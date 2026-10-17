@@ -9,107 +9,101 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as VeganRouteImport } from './routes/vegan'
-import { Route as GlutenfreiRouteImport } from './routes/glutenfrei'
-import { Route as CrewRouteImport } from './routes/crew'
 import { Route as MainRouteImport } from './routes/_main'
-import { Route as CrewIndexRouteImport } from './routes/crew.index'
+import { Route as CrewRouteImport } from './routes/crew'
+import { Route as GlutenfreiRouteImport } from './routes/glutenfrei'
+import { Route as VeganRouteImport } from './routes/vegan'
 import { Route as MainIndexRouteImport } from './routes/_main.index'
-import { Route as CrewProdukteRouteImport } from './routes/crew.produkte'
-import { Route as CrewNoiseRouteImport } from './routes/crew.noise'
-import { Route as CrewAuthReturnRouteImport } from './routes/crew.auth-return'
-import { Route as ApiTasksRouteImport } from './routes/api.tasks'
-import { Route as ApiOwntracksRouteImport } from './routes/api.owntracks'
-import { Route as ApiNoiseRouteImport } from './routes/api.noise'
-import { Route as ApiKultcashRouteImport } from './routes/api.kultcash'
-import { Route as MainSpeisekarteRouteImport } from './routes/_main.speisekarte'
-import { Route as MainPlakateRouteImport } from './routes/_main.plakate'
-import { Route as MainNuclinoSsoRouteImport } from './routes/_main.nuclino-sso'
-import { Route as MainMitgliedsantragRouteImport } from './routes/_main.mitgliedsantrag'
-import { Route as MainLogoRouteImport } from './routes/_main.logo'
-import { Route as MainLineupRouteImport } from './routes/_main.lineup'
-import { Route as MainLearnRouteImport } from './routes/_main.learn'
-import { Route as MainInfosRouteImport } from './routes/_main.infos'
-import { Route as MainEventsRouteImport } from './routes/_main.events'
-import { Route as MainBookingRouteImport } from './routes/_main.booking'
-import { Route as MainBadgesRouteImport } from './routes/_main.badges'
-import { Route as MainAwarenessRouteImport } from './routes/_main.awareness'
-import { Route as MainAngebotRouteImport } from './routes/_main.angebot'
-import { Route as MainRouteRouteImport } from './routes/_main.Route'
 import { Route as MainSlugRouteImport } from './routes/_main.$slug'
-import { Route as CrewProdukteIndexRouteImport } from './routes/crew.produkte.index'
-import { Route as CrewNoiseIndexRouteImport } from './routes/crew.noise.index'
-import { Route as MainLineupIndexRouteImport } from './routes/_main.lineup.index'
-import { Route as CrewProdukteListIdRouteImport } from './routes/crew.produkte.$listId'
-import { Route as CrewBookingEventIdRouteImport } from './routes/crew.booking.$eventId'
-import { Route as ApiTwilioScreenRouteImport } from './routes/api.twilio.screen'
-import { Route as ApiTwilioLegStatusRouteImport } from './routes/api.twilio.leg-status'
-import { Route as ApiTwilioIncomingRouteImport } from './routes/api.twilio.incoming'
-import { Route as ApiTwilioAcceptRouteImport } from './routes/api.twilio.accept'
-import { Route as ApiTasksSpotifyListenersRouteImport } from './routes/api.tasks.spotify-listeners'
-import { Route as ApiTasksSpotifyImageRouteImport } from './routes/api.tasks.spotify-image'
-import { Route as ApiTasksSendGmailRouteImport } from './routes/api.tasks.send-gmail'
-import { Route as ApiTasksSendEmailRouteImport } from './routes/api.tasks.send-email'
-import { Route as ApiTasksNuclinoUpdateMessageRouteImport } from './routes/api.tasks.nuclino-update-message'
-import { Route as ApiTasksNonceRequestInvalidateRouteImport } from './routes/api.tasks.nonce-request-invalidate'
-import { Route as ApiTasksNonceInvalidateRouteImport } from './routes/api.tasks.nonce-invalidate'
-import { Route as ApiTasksInstagramFollowerRouteImport } from './routes/api.tasks.instagram-follower'
-import { Route as ApiTasksGmailWatchRefreshRouteImport } from './routes/api.tasks.gmail-watch-refresh'
-import { Route as ApiTasksGmailReminderRouteImport } from './routes/api.tasks.gmail-reminder'
-import { Route as ApiTasksGmailNotificationRouteImport } from './routes/api.tasks.gmail-notification'
-import { Route as ApiTasksFacebookLikesRouteImport } from './routes/api.tasks.facebook-likes'
-import { Route as ApiTasksCrewCardEnrolledRouteImport } from './routes/api.tasks.crew-card-enrolled'
-import { Route as ApiTasksCreateNonceRequestRouteImport } from './routes/api.tasks.create-nonce-request'
-import { Route as ApiTasksCreateMembershipApplicationRouteImport } from './routes/api.tasks.create-membership-application'
-import { Route as ApiTasksCreateBandApplicationRouteImport } from './routes/api.tasks.create-band-application'
-import { Route as ApiTasksBandApplicationDistanceRouteImport } from './routes/api.tasks.band-application-distance'
-import { Route as ApiTasksBandApplicationDemoRouteImport } from './routes/api.tasks.band-application-demo'
-import { Route as ApiTasksBadgeAwardedRouteImport } from './routes/api.tasks.badge-awarded'
-import { Route as ApiTasksAwarenessSlackRouteImport } from './routes/api.tasks.awareness-slack'
-import { Route as ApiTasksAwarenessCallRouteImport } from './routes/api.tasks.awareness-call'
-import { Route as ApiStripeWebhookRouteImport } from './routes/api.stripe.webhook'
-import { Route as ApiSlackTwofactorRouteImport } from './routes/api.slack.twofactor'
-import { Route as ApiSlackTokenRouteImport } from './routes/api.slack.token'
-import { Route as ApiSlackOwntracksRouteImport } from './routes/api.slack.owntracks'
-import { Route as ApiSlackMailinglisteRouteImport } from './routes/api.slack.mailingliste'
-import { Route as ApiSlackInteractionRouteImport } from './routes/api.slack.interaction'
-import { Route as ApiSlackEventsRouteImport } from './routes/api.slack.events'
-import { Route as ApiSlackBonbudeRouteImport } from './routes/api.slack.bonbude'
-import { Route as ApiSamlLogoutRouteImport } from './routes/api.saml.logout'
-import { Route as ApiSamlLoginRouteImport } from './routes/api.saml.login'
-import { Route as ApiOwntracksConfigRouteImport } from './routes/api.owntracks.config'
-import { Route as ApiNoiseLogRouteImport } from './routes/api.noise.log'
-import { Route as ApiKultcashLogRouteImport } from './routes/api.kultcash.log'
-import { Route as ApiKultcashListsRouteImport } from './routes/api.kultcash.lists'
-import { Route as MainNewsArchivRouteImport } from './routes/_main.news.archiv'
-import { Route as MainNewsSlugRouteImport } from './routes/_main.news.$slug'
-import { Route as MainMitgliedsantragDankeRouteImport } from './routes/_main.mitgliedsantrag_.danke'
-import { Route as MainLineupYearRouteImport } from './routes/_main.lineup.$year'
-import { Route as MainEventsIdRouteImport } from './routes/_main.events_.$id'
-import { Route as MainCardHashRouteImport } from './routes/_main.card.$hash'
+import { Route as MainRouteRouteImport } from './routes/_main.Route'
+import { Route as MainAngebotRouteImport } from './routes/_main.angebot'
+import { Route as MainAwarenessRouteImport } from './routes/_main.awareness'
+import { Route as MainBadgesRouteImport } from './routes/_main.badges'
+import { Route as MainBookingRouteImport } from './routes/_main.booking'
+import { Route as MainEventsRouteImport } from './routes/_main.events'
+import { Route as MainInfosRouteImport } from './routes/_main.infos'
+import { Route as MainLearnRouteImport } from './routes/_main.learn'
+import { Route as MainLineupRouteImport } from './routes/_main.lineup'
+import { Route as MainLogoRouteImport } from './routes/_main.logo'
+import { Route as MainMitgliedsantragRouteImport } from './routes/_main.mitgliedsantrag'
+import { Route as MainNuclinoSsoRouteImport } from './routes/_main.nuclino-sso'
+import { Route as MainPlakateRouteImport } from './routes/_main.plakate'
+import { Route as MainSpeisekarteRouteImport } from './routes/_main.speisekarte'
+import { Route as ApiKultcashRouteImport } from './routes/api.kultcash'
+import { Route as ApiNoiseRouteImport } from './routes/api.noise'
+import { Route as ApiOwntracksRouteImport } from './routes/api.owntracks'
+import { Route as ApiTasksRouteImport } from './routes/api.tasks'
+import { Route as CrewIndexRouteImport } from './routes/crew.index'
+import { Route as CrewAuthReturnRouteImport } from './routes/crew.auth-return'
+import { Route as CrewNoiseRouteImport } from './routes/crew.noise'
+import { Route as CrewProdukteRouteImport } from './routes/crew.produkte'
 import { Route as MainBookingApplicationTypeRouteImport } from './routes/_main.booking_.$applicationType'
-import { Route as CrewNoiseProjectProjectIdRouteImport } from './routes/crew.noise.project.$projectId'
-import { Route as CrewNoiseDeviceDeviceRouteImport } from './routes/crew.noise.device.$device'
-import { Route as CrewBookingEventIdApplicationIdRouteImport } from './routes/crew.booking.$eventId.$applicationId'
-import { Route as ApiSpendenQuittungIdRouteImport } from './routes/api.spenden.quittung.$id'
-import { Route as MainSpendenQuittungIdRouteImport } from './routes/_main.spenden_.quittung.$id'
-import { Route as MainLineupYearSlugRouteImport } from './routes/_main.lineup.$year_.$slug'
-import { Route as MainCardHashKultRouteImport } from './routes/_main.card.$hash.kult'
-import { Route as MainCardHashCrewRouteImport } from './routes/_main.card.$hash.crew'
+import { Route as MainCardHashRouteImport } from './routes/_main.card.$hash'
+import { Route as MainEventsIdRouteImport } from './routes/_main.events_.$id'
+import { Route as MainLineupIndexRouteImport } from './routes/_main.lineup.index'
+import { Route as MainLineupYearRouteImport } from './routes/_main.lineup.$year'
+import { Route as MainMitgliedsantragDankeRouteImport } from './routes/_main.mitgliedsantrag_.danke'
+import { Route as MainNewsSlugRouteImport } from './routes/_main.news.$slug'
+import { Route as MainNewsArchivRouteImport } from './routes/_main.news.archiv'
+import { Route as ApiKultcashListsRouteImport } from './routes/api.kultcash.lists'
+import { Route as ApiKultcashLogRouteImport } from './routes/api.kultcash.log'
+import { Route as ApiNoiseLogRouteImport } from './routes/api.noise.log'
+import { Route as ApiOwntracksConfigRouteImport } from './routes/api.owntracks.config'
+import { Route as ApiSamlLoginRouteImport } from './routes/api.saml.login'
+import { Route as ApiSamlLogoutRouteImport } from './routes/api.saml.logout'
+import { Route as ApiSlackBonbudeRouteImport } from './routes/api.slack.bonbude'
+import { Route as ApiSlackEventsRouteImport } from './routes/api.slack.events'
+import { Route as ApiSlackInteractionRouteImport } from './routes/api.slack.interaction'
+import { Route as ApiSlackMailinglisteRouteImport } from './routes/api.slack.mailingliste'
+import { Route as ApiSlackOwntracksRouteImport } from './routes/api.slack.owntracks'
+import { Route as ApiSlackTokenRouteImport } from './routes/api.slack.token'
+import { Route as ApiSlackTwofactorRouteImport } from './routes/api.slack.twofactor'
+import { Route as ApiStripeWebhookRouteImport } from './routes/api.stripe.webhook'
+import { Route as ApiTasksAwarenessCallRouteImport } from './routes/api.tasks.awareness-call'
+import { Route as ApiTasksAwarenessSlackRouteImport } from './routes/api.tasks.awareness-slack'
+import { Route as ApiTasksBadgeAwardedRouteImport } from './routes/api.tasks.badge-awarded'
+import { Route as ApiTasksBandApplicationDemoRouteImport } from './routes/api.tasks.band-application-demo'
+import { Route as ApiTasksBandApplicationDistanceRouteImport } from './routes/api.tasks.band-application-distance'
+import { Route as ApiTasksCreateBandApplicationRouteImport } from './routes/api.tasks.create-band-application'
+import { Route as ApiTasksCreateMembershipApplicationRouteImport } from './routes/api.tasks.create-membership-application'
+import { Route as ApiTasksCreateNonceRequestRouteImport } from './routes/api.tasks.create-nonce-request'
+import { Route as ApiTasksCrewCardEnrolledRouteImport } from './routes/api.tasks.crew-card-enrolled'
+import { Route as ApiTasksFacebookLikesRouteImport } from './routes/api.tasks.facebook-likes'
+import { Route as ApiTasksGmailNotificationRouteImport } from './routes/api.tasks.gmail-notification'
+import { Route as ApiTasksGmailReminderRouteImport } from './routes/api.tasks.gmail-reminder'
+import { Route as ApiTasksGmailWatchRefreshRouteImport } from './routes/api.tasks.gmail-watch-refresh'
+import { Route as ApiTasksInstagramFollowerRouteImport } from './routes/api.tasks.instagram-follower'
+import { Route as ApiTasksNonceInvalidateRouteImport } from './routes/api.tasks.nonce-invalidate'
+import { Route as ApiTasksNonceRequestInvalidateRouteImport } from './routes/api.tasks.nonce-request-invalidate'
+import { Route as ApiTasksNuclinoUpdateMessageRouteImport } from './routes/api.tasks.nuclino-update-message'
+import { Route as ApiTasksSendEmailRouteImport } from './routes/api.tasks.send-email'
+import { Route as ApiTasksSendGmailRouteImport } from './routes/api.tasks.send-gmail'
+import { Route as ApiTasksSpotifyImageRouteImport } from './routes/api.tasks.spotify-image'
+import { Route as ApiTasksSpotifyListenersRouteImport } from './routes/api.tasks.spotify-listeners'
+import { Route as ApiTwilioAcceptRouteImport } from './routes/api.twilio.accept'
+import { Route as ApiTwilioIncomingRouteImport } from './routes/api.twilio.incoming'
+import { Route as ApiTwilioLegStatusRouteImport } from './routes/api.twilio.leg-status'
+import { Route as ApiTwilioScreenRouteImport } from './routes/api.twilio.screen'
+import { Route as CrewBookingEventIdRouteImport } from './routes/crew.booking.$eventId'
+import { Route as CrewNoiseIndexRouteImport } from './routes/crew.noise.index'
+import { Route as CrewProdukteIndexRouteImport } from './routes/crew.produkte.index'
+import { Route as CrewProdukteListIdRouteImport } from './routes/crew.produkte.$listId'
 import { Route as MainBookingApplicationTypeDankeRouteImport } from './routes/_main.booking_.$applicationType_.danke'
-import { Route as CrewNoiseProjectProjectIdIndexRouteImport } from './routes/crew.noise.project.$projectId.index'
-import { Route as CrewNoiseProjectProjectIdMapRouteImport } from './routes/crew.noise.project.$projectId.map'
-import { Route as CrewNoiseProjectProjectIdListRouteImport } from './routes/crew.noise.project.$projectId.list'
+import { Route as MainCardHashCrewRouteImport } from './routes/_main.card.$hash.crew'
+import { Route as MainCardHashKultRouteImport } from './routes/_main.card.$hash.kult'
+import { Route as MainLineupYearSlugRouteImport } from './routes/_main.lineup.$year_.$slug'
+import { Route as MainSpendenQuittungIdRouteImport } from './routes/_main.spenden_.quittung.$id'
+import { Route as ApiSpendenQuittungIdRouteImport } from './routes/api.spenden.quittung.$id'
+import { Route as CrewBookingEventIdApplicationIdRouteImport } from './routes/crew.booking.$eventId.$applicationId'
+import { Route as CrewNoiseDeviceDeviceRouteImport } from './routes/crew.noise.device.$device'
+import { Route as CrewNoiseProjectProjectIdRouteImport } from './routes/crew.noise.project.$projectId'
 import { Route as CrewBookingEventIdApplicationIdContactRouteImport } from './routes/crew.booking.$eventId.$applicationId.contact'
+import { Route as CrewNoiseProjectProjectIdIndexRouteImport } from './routes/crew.noise.project.$projectId.index'
+import { Route as CrewNoiseProjectProjectIdListRouteImport } from './routes/crew.noise.project.$projectId.list'
+import { Route as CrewNoiseProjectProjectIdMapRouteImport } from './routes/crew.noise.project.$projectId.map'
 
-const VeganRoute = VeganRouteImport.update({
-  id: '/vegan',
-  path: '/vegan',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const GlutenfreiRoute = GlutenfreiRouteImport.update({
-  id: '/glutenfrei',
-  path: '/glutenfrei',
+const MainRoute = MainRouteImport.update({
+  id: '/_main',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CrewRoute = CrewRouteImport.update({
@@ -117,123 +111,19 @@ const CrewRoute = CrewRouteImport.update({
   path: '/crew',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MainRoute = MainRouteImport.update({
-  id: '/_main',
+const GlutenfreiRoute = GlutenfreiRouteImport.update({
+  id: '/glutenfrei',
+  path: '/glutenfrei',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CrewIndexRoute = CrewIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => CrewRoute,
+const VeganRoute = VeganRouteImport.update({
+  id: '/vegan',
+  path: '/vegan',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const MainIndexRoute = MainIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => MainRoute,
-} as any)
-const CrewProdukteRoute = CrewProdukteRouteImport.update({
-  id: '/produkte',
-  path: '/produkte',
-  getParentRoute: () => CrewRoute,
-} as any)
-const CrewNoiseRoute = CrewNoiseRouteImport.update({
-  id: '/noise',
-  path: '/noise',
-  getParentRoute: () => CrewRoute,
-} as any)
-const CrewAuthReturnRoute = CrewAuthReturnRouteImport.update({
-  id: '/auth-return',
-  path: '/auth-return',
-  getParentRoute: () => CrewRoute,
-} as any)
-const ApiTasksRoute = ApiTasksRouteImport.update({
-  id: '/api/tasks',
-  path: '/api/tasks',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiOwntracksRoute = ApiOwntracksRouteImport.update({
-  id: '/api/owntracks',
-  path: '/api/owntracks',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiNoiseRoute = ApiNoiseRouteImport.update({
-  id: '/api/noise',
-  path: '/api/noise',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiKultcashRoute = ApiKultcashRouteImport.update({
-  id: '/api/kultcash',
-  path: '/api/kultcash',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MainSpeisekarteRoute = MainSpeisekarteRouteImport.update({
-  id: '/speisekarte',
-  path: '/speisekarte',
-  getParentRoute: () => MainRoute,
-} as any)
-const MainPlakateRoute = MainPlakateRouteImport.update({
-  id: '/plakate',
-  path: '/plakate',
-  getParentRoute: () => MainRoute,
-} as any)
-const MainNuclinoSsoRoute = MainNuclinoSsoRouteImport.update({
-  id: '/nuclino-sso',
-  path: '/nuclino-sso',
-  getParentRoute: () => MainRoute,
-} as any)
-const MainMitgliedsantragRoute = MainMitgliedsantragRouteImport.update({
-  id: '/mitgliedsantrag',
-  path: '/mitgliedsantrag',
-  getParentRoute: () => MainRoute,
-} as any)
-const MainLogoRoute = MainLogoRouteImport.update({
-  id: '/logo',
-  path: '/logo',
-  getParentRoute: () => MainRoute,
-} as any)
-const MainLineupRoute = MainLineupRouteImport.update({
-  id: '/lineup',
-  path: '/lineup',
-  getParentRoute: () => MainRoute,
-} as any)
-const MainLearnRoute = MainLearnRouteImport.update({
-  id: '/learn',
-  path: '/learn',
-  getParentRoute: () => MainRoute,
-} as any)
-const MainInfosRoute = MainInfosRouteImport.update({
-  id: '/infos',
-  path: '/infos',
-  getParentRoute: () => MainRoute,
-} as any)
-const MainEventsRoute = MainEventsRouteImport.update({
-  id: '/events',
-  path: '/events',
-  getParentRoute: () => MainRoute,
-} as any)
-const MainBookingRoute = MainBookingRouteImport.update({
-  id: '/booking',
-  path: '/booking',
-  getParentRoute: () => MainRoute,
-} as any)
-const MainBadgesRoute = MainBadgesRouteImport.update({
-  id: '/badges',
-  path: '/badges',
-  getParentRoute: () => MainRoute,
-} as any)
-const MainAwarenessRoute = MainAwarenessRouteImport.update({
-  id: '/awareness',
-  path: '/awareness',
-  getParentRoute: () => MainRoute,
-} as any)
-const MainAngebotRoute = MainAngebotRouteImport.update({
-  id: '/angebot',
-  path: '/angebot',
-  getParentRoute: () => MainRoute,
-} as any)
-const MainRouteRoute = MainRouteRouteImport.update({
-  id: '/Route',
-  path: '/Route',
   getParentRoute: () => MainRoute,
 } as any)
 const MainSlugRoute = MainSlugRouteImport.update({
@@ -241,139 +131,247 @@ const MainSlugRoute = MainSlugRouteImport.update({
   path: '/$slug',
   getParentRoute: () => MainRoute,
 } as any)
-const CrewProdukteIndexRoute = CrewProdukteIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => CrewProdukteRoute,
+const MainRouteRoute = MainRouteRouteImport.update({
+  id: '/Route',
+  path: '/Route',
+  getParentRoute: () => MainRoute,
 } as any)
-const CrewNoiseIndexRoute = CrewNoiseIndexRouteImport.update({
+const MainAngebotRoute = MainAngebotRouteImport.update({
+  id: '/angebot',
+  path: '/angebot',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainAwarenessRoute = MainAwarenessRouteImport.update({
+  id: '/awareness',
+  path: '/awareness',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainBadgesRoute = MainBadgesRouteImport.update({
+  id: '/badges',
+  path: '/badges',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainBookingRoute = MainBookingRouteImport.update({
+  id: '/booking',
+  path: '/booking',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainEventsRoute = MainEventsRouteImport.update({
+  id: '/events',
+  path: '/events',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainInfosRoute = MainInfosRouteImport.update({
+  id: '/infos',
+  path: '/infos',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLearnRoute = MainLearnRouteImport.update({
+  id: '/learn',
+  path: '/learn',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLineupRoute = MainLineupRouteImport.update({
+  id: '/lineup',
+  path: '/lineup',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLogoRoute = MainLogoRouteImport.update({
+  id: '/logo',
+  path: '/logo',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainMitgliedsantragRoute = MainMitgliedsantragRouteImport.update({
+  id: '/mitgliedsantrag',
+  path: '/mitgliedsantrag',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainNuclinoSsoRoute = MainNuclinoSsoRouteImport.update({
+  id: '/nuclino-sso',
+  path: '/nuclino-sso',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainPlakateRoute = MainPlakateRouteImport.update({
+  id: '/plakate',
+  path: '/plakate',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainSpeisekarteRoute = MainSpeisekarteRouteImport.update({
+  id: '/speisekarte',
+  path: '/speisekarte',
+  getParentRoute: () => MainRoute,
+} as any)
+const ApiKultcashRoute = ApiKultcashRouteImport.update({
+  id: '/api/kultcash',
+  path: '/api/kultcash',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiNoiseRoute = ApiNoiseRouteImport.update({
+  id: '/api/noise',
+  path: '/api/noise',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiOwntracksRoute = ApiOwntracksRouteImport.update({
+  id: '/api/owntracks',
+  path: '/api/owntracks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTasksRoute = ApiTasksRouteImport.update({
+  id: '/api/tasks',
+  path: '/api/tasks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrewIndexRoute = CrewIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => CrewNoiseRoute,
+  getParentRoute: () => CrewRoute,
+} as any)
+const CrewAuthReturnRoute = CrewAuthReturnRouteImport.update({
+  id: '/auth-return',
+  path: '/auth-return',
+  getParentRoute: () => CrewRoute,
+} as any)
+const CrewNoiseRoute = CrewNoiseRouteImport.update({
+  id: '/noise',
+  path: '/noise',
+  getParentRoute: () => CrewRoute,
+} as any)
+const CrewProdukteRoute = CrewProdukteRouteImport.update({
+  id: '/produkte',
+  path: '/produkte',
+  getParentRoute: () => CrewRoute,
+} as any)
+const MainBookingApplicationTypeRoute =
+  MainBookingApplicationTypeRouteImport.update({
+    id: '/booking_/$applicationType',
+    path: '/booking/$applicationType',
+    getParentRoute: () => MainRoute,
+  } as any)
+const MainCardHashRoute = MainCardHashRouteImport.update({
+  id: '/card/$hash',
+  path: '/card/$hash',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainEventsIdRoute = MainEventsIdRouteImport.update({
+  id: '/events_/$id',
+  path: '/events/$id',
+  getParentRoute: () => MainRoute,
 } as any)
 const MainLineupIndexRoute = MainLineupIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => MainLineupRoute,
 } as any)
-const CrewProdukteListIdRoute = CrewProdukteListIdRouteImport.update({
-  id: '/$listId',
-  path: '/$listId',
-  getParentRoute: () => CrewProdukteRoute,
+const MainLineupYearRoute = MainLineupYearRouteImport.update({
+  id: '/$year',
+  path: '/$year',
+  getParentRoute: () => MainLineupRoute,
 } as any)
-const CrewBookingEventIdRoute = CrewBookingEventIdRouteImport.update({
-  id: '/booking/$eventId',
-  path: '/booking/$eventId',
-  getParentRoute: () => CrewRoute,
+const MainMitgliedsantragDankeRoute =
+  MainMitgliedsantragDankeRouteImport.update({
+    id: '/mitgliedsantrag_/danke',
+    path: '/mitgliedsantrag/danke',
+    getParentRoute: () => MainRoute,
+  } as any)
+const MainNewsSlugRoute = MainNewsSlugRouteImport.update({
+  id: '/news/$slug',
+  path: '/news/$slug',
+  getParentRoute: () => MainRoute,
 } as any)
-const ApiTwilioScreenRoute = ApiTwilioScreenRouteImport.update({
-  id: '/api/twilio/screen',
-  path: '/api/twilio/screen',
+const MainNewsArchivRoute = MainNewsArchivRouteImport.update({
+  id: '/news/archiv',
+  path: '/news/archiv',
+  getParentRoute: () => MainRoute,
+} as any)
+const ApiKultcashListsRoute = ApiKultcashListsRouteImport.update({
+  id: '/lists',
+  path: '/lists',
+  getParentRoute: () => ApiKultcashRoute,
+} as any)
+const ApiKultcashLogRoute = ApiKultcashLogRouteImport.update({
+  id: '/log',
+  path: '/log',
+  getParentRoute: () => ApiKultcashRoute,
+} as any)
+const ApiNoiseLogRoute = ApiNoiseLogRouteImport.update({
+  id: '/log',
+  path: '/log',
+  getParentRoute: () => ApiNoiseRoute,
+} as any)
+const ApiOwntracksConfigRoute = ApiOwntracksConfigRouteImport.update({
+  id: '/config',
+  path: '/config',
+  getParentRoute: () => ApiOwntracksRoute,
+} as any)
+const ApiSamlLoginRoute = ApiSamlLoginRouteImport.update({
+  id: '/api/saml/login',
+  path: '/api/saml/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiTwilioLegStatusRoute = ApiTwilioLegStatusRouteImport.update({
-  id: '/api/twilio/leg-status',
-  path: '/api/twilio/leg-status',
+const ApiSamlLogoutRoute = ApiSamlLogoutRouteImport.update({
+  id: '/api/saml/logout',
+  path: '/api/saml/logout',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiTwilioIncomingRoute = ApiTwilioIncomingRouteImport.update({
-  id: '/api/twilio/incoming',
-  path: '/api/twilio/incoming',
+const ApiSlackBonbudeRoute = ApiSlackBonbudeRouteImport.update({
+  id: '/api/slack/bonbude',
+  path: '/api/slack/bonbude',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiTwilioAcceptRoute = ApiTwilioAcceptRouteImport.update({
-  id: '/api/twilio/accept',
-  path: '/api/twilio/accept',
+const ApiSlackEventsRoute = ApiSlackEventsRouteImport.update({
+  id: '/api/slack/events',
+  path: '/api/slack/events',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiTasksSpotifyListenersRoute =
-  ApiTasksSpotifyListenersRouteImport.update({
-    id: '/spotify-listeners',
-    path: '/spotify-listeners',
-    getParentRoute: () => ApiTasksRoute,
-  } as any)
-const ApiTasksSpotifyImageRoute = ApiTasksSpotifyImageRouteImport.update({
-  id: '/spotify-image',
-  path: '/spotify-image',
+const ApiSlackInteractionRoute = ApiSlackInteractionRouteImport.update({
+  id: '/api/slack/interaction',
+  path: '/api/slack/interaction',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSlackMailinglisteRoute = ApiSlackMailinglisteRouteImport.update({
+  id: '/api/slack/mailingliste',
+  path: '/api/slack/mailingliste',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSlackOwntracksRoute = ApiSlackOwntracksRouteImport.update({
+  id: '/api/slack/owntracks',
+  path: '/api/slack/owntracks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSlackTokenRoute = ApiSlackTokenRouteImport.update({
+  id: '/api/slack/token',
+  path: '/api/slack/token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSlackTwofactorRoute = ApiSlackTwofactorRouteImport.update({
+  id: '/api/slack/twofactor',
+  path: '/api/slack/twofactor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
+  id: '/api/stripe/webhook',
+  path: '/api/stripe/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTasksAwarenessCallRoute = ApiTasksAwarenessCallRouteImport.update({
+  id: '/awareness-call',
+  path: '/awareness-call',
   getParentRoute: () => ApiTasksRoute,
 } as any)
-const ApiTasksSendGmailRoute = ApiTasksSendGmailRouteImport.update({
-  id: '/send-gmail',
-  path: '/send-gmail',
+const ApiTasksAwarenessSlackRoute = ApiTasksAwarenessSlackRouteImport.update({
+  id: '/awareness-slack',
+  path: '/awareness-slack',
   getParentRoute: () => ApiTasksRoute,
 } as any)
-const ApiTasksSendEmailRoute = ApiTasksSendEmailRouteImport.update({
-  id: '/send-email',
-  path: '/send-email',
+const ApiTasksBadgeAwardedRoute = ApiTasksBadgeAwardedRouteImport.update({
+  id: '/badge-awarded',
+  path: '/badge-awarded',
   getParentRoute: () => ApiTasksRoute,
 } as any)
-const ApiTasksNuclinoUpdateMessageRoute =
-  ApiTasksNuclinoUpdateMessageRouteImport.update({
-    id: '/nuclino-update-message',
-    path: '/nuclino-update-message',
-    getParentRoute: () => ApiTasksRoute,
-  } as any)
-const ApiTasksNonceRequestInvalidateRoute =
-  ApiTasksNonceRequestInvalidateRouteImport.update({
-    id: '/nonce-request-invalidate',
-    path: '/nonce-request-invalidate',
-    getParentRoute: () => ApiTasksRoute,
-  } as any)
-const ApiTasksNonceInvalidateRoute = ApiTasksNonceInvalidateRouteImport.update({
-  id: '/nonce-invalidate',
-  path: '/nonce-invalidate',
-  getParentRoute: () => ApiTasksRoute,
-} as any)
-const ApiTasksInstagramFollowerRoute =
-  ApiTasksInstagramFollowerRouteImport.update({
-    id: '/instagram-follower',
-    path: '/instagram-follower',
-    getParentRoute: () => ApiTasksRoute,
-  } as any)
-const ApiTasksGmailWatchRefreshRoute =
-  ApiTasksGmailWatchRefreshRouteImport.update({
-    id: '/gmail-watch-refresh',
-    path: '/gmail-watch-refresh',
-    getParentRoute: () => ApiTasksRoute,
-  } as any)
-const ApiTasksGmailReminderRoute = ApiTasksGmailReminderRouteImport.update({
-  id: '/gmail-reminder',
-  path: '/gmail-reminder',
-  getParentRoute: () => ApiTasksRoute,
-} as any)
-const ApiTasksGmailNotificationRoute =
-  ApiTasksGmailNotificationRouteImport.update({
-    id: '/gmail-notification',
-    path: '/gmail-notification',
-    getParentRoute: () => ApiTasksRoute,
-  } as any)
-const ApiTasksFacebookLikesRoute = ApiTasksFacebookLikesRouteImport.update({
-  id: '/facebook-likes',
-  path: '/facebook-likes',
-  getParentRoute: () => ApiTasksRoute,
-} as any)
-const ApiTasksCrewCardEnrolledRoute =
-  ApiTasksCrewCardEnrolledRouteImport.update({
-    id: '/crew-card-enrolled',
-    path: '/crew-card-enrolled',
-    getParentRoute: () => ApiTasksRoute,
-  } as any)
-const ApiTasksCreateNonceRequestRoute =
-  ApiTasksCreateNonceRequestRouteImport.update({
-    id: '/create-nonce-request',
-    path: '/create-nonce-request',
-    getParentRoute: () => ApiTasksRoute,
-  } as any)
-const ApiTasksCreateMembershipApplicationRoute =
-  ApiTasksCreateMembershipApplicationRouteImport.update({
-    id: '/create-membership-application',
-    path: '/create-membership-application',
-    getParentRoute: () => ApiTasksRoute,
-  } as any)
-const ApiTasksCreateBandApplicationRoute =
-  ApiTasksCreateBandApplicationRouteImport.update({
-    id: '/create-band-application',
-    path: '/create-band-application',
+const ApiTasksBandApplicationDemoRoute =
+  ApiTasksBandApplicationDemoRouteImport.update({
+    id: '/band-application-demo',
+    path: '/band-application-demo',
     getParentRoute: () => ApiTasksRoute,
   } as any)
 const ApiTasksBandApplicationDistanceRoute =
@@ -382,175 +380,135 @@ const ApiTasksBandApplicationDistanceRoute =
     path: '/band-application-distance',
     getParentRoute: () => ApiTasksRoute,
   } as any)
-const ApiTasksBandApplicationDemoRoute =
-  ApiTasksBandApplicationDemoRouteImport.update({
-    id: '/band-application-demo',
-    path: '/band-application-demo',
+const ApiTasksCreateBandApplicationRoute =
+  ApiTasksCreateBandApplicationRouteImport.update({
+    id: '/create-band-application',
+    path: '/create-band-application',
     getParentRoute: () => ApiTasksRoute,
   } as any)
-const ApiTasksBadgeAwardedRoute = ApiTasksBadgeAwardedRouteImport.update({
-  id: '/badge-awarded',
-  path: '/badge-awarded',
+const ApiTasksCreateMembershipApplicationRoute =
+  ApiTasksCreateMembershipApplicationRouteImport.update({
+    id: '/create-membership-application',
+    path: '/create-membership-application',
+    getParentRoute: () => ApiTasksRoute,
+  } as any)
+const ApiTasksCreateNonceRequestRoute =
+  ApiTasksCreateNonceRequestRouteImport.update({
+    id: '/create-nonce-request',
+    path: '/create-nonce-request',
+    getParentRoute: () => ApiTasksRoute,
+  } as any)
+const ApiTasksCrewCardEnrolledRoute =
+  ApiTasksCrewCardEnrolledRouteImport.update({
+    id: '/crew-card-enrolled',
+    path: '/crew-card-enrolled',
+    getParentRoute: () => ApiTasksRoute,
+  } as any)
+const ApiTasksFacebookLikesRoute = ApiTasksFacebookLikesRouteImport.update({
+  id: '/facebook-likes',
+  path: '/facebook-likes',
   getParentRoute: () => ApiTasksRoute,
 } as any)
-const ApiTasksAwarenessSlackRoute = ApiTasksAwarenessSlackRouteImport.update({
-  id: '/awareness-slack',
-  path: '/awareness-slack',
+const ApiTasksGmailNotificationRoute =
+  ApiTasksGmailNotificationRouteImport.update({
+    id: '/gmail-notification',
+    path: '/gmail-notification',
+    getParentRoute: () => ApiTasksRoute,
+  } as any)
+const ApiTasksGmailReminderRoute = ApiTasksGmailReminderRouteImport.update({
+  id: '/gmail-reminder',
+  path: '/gmail-reminder',
   getParentRoute: () => ApiTasksRoute,
 } as any)
-const ApiTasksAwarenessCallRoute = ApiTasksAwarenessCallRouteImport.update({
-  id: '/awareness-call',
-  path: '/awareness-call',
+const ApiTasksGmailWatchRefreshRoute =
+  ApiTasksGmailWatchRefreshRouteImport.update({
+    id: '/gmail-watch-refresh',
+    path: '/gmail-watch-refresh',
+    getParentRoute: () => ApiTasksRoute,
+  } as any)
+const ApiTasksInstagramFollowerRoute =
+  ApiTasksInstagramFollowerRouteImport.update({
+    id: '/instagram-follower',
+    path: '/instagram-follower',
+    getParentRoute: () => ApiTasksRoute,
+  } as any)
+const ApiTasksNonceInvalidateRoute = ApiTasksNonceInvalidateRouteImport.update({
+  id: '/nonce-invalidate',
+  path: '/nonce-invalidate',
   getParentRoute: () => ApiTasksRoute,
 } as any)
-const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
-  id: '/api/stripe/webhook',
-  path: '/api/stripe/webhook',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiSlackTwofactorRoute = ApiSlackTwofactorRouteImport.update({
-  id: '/api/slack/twofactor',
-  path: '/api/slack/twofactor',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiSlackTokenRoute = ApiSlackTokenRouteImport.update({
-  id: '/api/slack/token',
-  path: '/api/slack/token',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiSlackOwntracksRoute = ApiSlackOwntracksRouteImport.update({
-  id: '/api/slack/owntracks',
-  path: '/api/slack/owntracks',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiSlackMailinglisteRoute = ApiSlackMailinglisteRouteImport.update({
-  id: '/api/slack/mailingliste',
-  path: '/api/slack/mailingliste',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiSlackInteractionRoute = ApiSlackInteractionRouteImport.update({
-  id: '/api/slack/interaction',
-  path: '/api/slack/interaction',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiSlackEventsRoute = ApiSlackEventsRouteImport.update({
-  id: '/api/slack/events',
-  path: '/api/slack/events',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiSlackBonbudeRoute = ApiSlackBonbudeRouteImport.update({
-  id: '/api/slack/bonbude',
-  path: '/api/slack/bonbude',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiSamlLogoutRoute = ApiSamlLogoutRouteImport.update({
-  id: '/api/saml/logout',
-  path: '/api/saml/logout',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiSamlLoginRoute = ApiSamlLoginRouteImport.update({
-  id: '/api/saml/login',
-  path: '/api/saml/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiOwntracksConfigRoute = ApiOwntracksConfigRouteImport.update({
-  id: '/config',
-  path: '/config',
-  getParentRoute: () => ApiOwntracksRoute,
-} as any)
-const ApiNoiseLogRoute = ApiNoiseLogRouteImport.update({
-  id: '/log',
-  path: '/log',
-  getParentRoute: () => ApiNoiseRoute,
-} as any)
-const ApiKultcashLogRoute = ApiKultcashLogRouteImport.update({
-  id: '/log',
-  path: '/log',
-  getParentRoute: () => ApiKultcashRoute,
-} as any)
-const ApiKultcashListsRoute = ApiKultcashListsRouteImport.update({
-  id: '/lists',
-  path: '/lists',
-  getParentRoute: () => ApiKultcashRoute,
-} as any)
-const MainNewsArchivRoute = MainNewsArchivRouteImport.update({
-  id: '/news/archiv',
-  path: '/news/archiv',
-  getParentRoute: () => MainRoute,
-} as any)
-const MainNewsSlugRoute = MainNewsSlugRouteImport.update({
-  id: '/news/$slug',
-  path: '/news/$slug',
-  getParentRoute: () => MainRoute,
-} as any)
-const MainMitgliedsantragDankeRoute =
-  MainMitgliedsantragDankeRouteImport.update({
-    id: '/mitgliedsantrag_/danke',
-    path: '/mitgliedsantrag/danke',
-    getParentRoute: () => MainRoute,
+const ApiTasksNonceRequestInvalidateRoute =
+  ApiTasksNonceRequestInvalidateRouteImport.update({
+    id: '/nonce-request-invalidate',
+    path: '/nonce-request-invalidate',
+    getParentRoute: () => ApiTasksRoute,
   } as any)
-const MainLineupYearRoute = MainLineupYearRouteImport.update({
-  id: '/$year',
-  path: '/$year',
-  getParentRoute: () => MainLineupRoute,
-} as any)
-const MainEventsIdRoute = MainEventsIdRouteImport.update({
-  id: '/events_/$id',
-  path: '/events/$id',
-  getParentRoute: () => MainRoute,
-} as any)
-const MainCardHashRoute = MainCardHashRouteImport.update({
-  id: '/card/$hash',
-  path: '/card/$hash',
-  getParentRoute: () => MainRoute,
-} as any)
-const MainBookingApplicationTypeRoute =
-  MainBookingApplicationTypeRouteImport.update({
-    id: '/booking_/$applicationType',
-    path: '/booking/$applicationType',
-    getParentRoute: () => MainRoute,
+const ApiTasksNuclinoUpdateMessageRoute =
+  ApiTasksNuclinoUpdateMessageRouteImport.update({
+    id: '/nuclino-update-message',
+    path: '/nuclino-update-message',
+    getParentRoute: () => ApiTasksRoute,
   } as any)
-const CrewNoiseProjectProjectIdRoute =
-  CrewNoiseProjectProjectIdRouteImport.update({
-    id: '/project/$projectId',
-    path: '/project/$projectId',
-    getParentRoute: () => CrewNoiseRoute,
+const ApiTasksSendEmailRoute = ApiTasksSendEmailRouteImport.update({
+  id: '/send-email',
+  path: '/send-email',
+  getParentRoute: () => ApiTasksRoute,
+} as any)
+const ApiTasksSendGmailRoute = ApiTasksSendGmailRouteImport.update({
+  id: '/send-gmail',
+  path: '/send-gmail',
+  getParentRoute: () => ApiTasksRoute,
+} as any)
+const ApiTasksSpotifyImageRoute = ApiTasksSpotifyImageRouteImport.update({
+  id: '/spotify-image',
+  path: '/spotify-image',
+  getParentRoute: () => ApiTasksRoute,
+} as any)
+const ApiTasksSpotifyListenersRoute =
+  ApiTasksSpotifyListenersRouteImport.update({
+    id: '/spotify-listeners',
+    path: '/spotify-listeners',
+    getParentRoute: () => ApiTasksRoute,
   } as any)
-const CrewNoiseDeviceDeviceRoute = CrewNoiseDeviceDeviceRouteImport.update({
-  id: '/device/$device',
-  path: '/device/$device',
+const ApiTwilioAcceptRoute = ApiTwilioAcceptRouteImport.update({
+  id: '/api/twilio/accept',
+  path: '/api/twilio/accept',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTwilioIncomingRoute = ApiTwilioIncomingRouteImport.update({
+  id: '/api/twilio/incoming',
+  path: '/api/twilio/incoming',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTwilioLegStatusRoute = ApiTwilioLegStatusRouteImport.update({
+  id: '/api/twilio/leg-status',
+  path: '/api/twilio/leg-status',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTwilioScreenRoute = ApiTwilioScreenRouteImport.update({
+  id: '/api/twilio/screen',
+  path: '/api/twilio/screen',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrewBookingEventIdRoute = CrewBookingEventIdRouteImport.update({
+  id: '/booking/$eventId',
+  path: '/booking/$eventId',
+  getParentRoute: () => CrewRoute,
+} as any)
+const CrewNoiseIndexRoute = CrewNoiseIndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => CrewNoiseRoute,
 } as any)
-const CrewBookingEventIdApplicationIdRoute =
-  CrewBookingEventIdApplicationIdRouteImport.update({
-    id: '/$applicationId',
-    path: '/$applicationId',
-    getParentRoute: () => CrewBookingEventIdRoute,
-  } as any)
-const ApiSpendenQuittungIdRoute = ApiSpendenQuittungIdRouteImport.update({
-  id: '/api/spenden/quittung/$id',
-  path: '/api/spenden/quittung/$id',
-  getParentRoute: () => rootRouteImport,
+const CrewProdukteIndexRoute = CrewProdukteIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CrewProdukteRoute,
 } as any)
-const MainSpendenQuittungIdRoute = MainSpendenQuittungIdRouteImport.update({
-  id: '/spenden_/quittung/$id',
-  path: '/spenden/quittung/$id',
-  getParentRoute: () => MainRoute,
-} as any)
-const MainLineupYearSlugRoute = MainLineupYearSlugRouteImport.update({
-  id: '/$year_/$slug',
-  path: '/$year/$slug',
-  getParentRoute: () => MainLineupRoute,
-} as any)
-const MainCardHashKultRoute = MainCardHashKultRouteImport.update({
-  id: '/kult',
-  path: '/kult',
-  getParentRoute: () => MainCardHashRoute,
-} as any)
-const MainCardHashCrewRoute = MainCardHashCrewRouteImport.update({
-  id: '/crew',
-  path: '/crew',
-  getParentRoute: () => MainCardHashRoute,
+const CrewProdukteListIdRoute = CrewProdukteListIdRouteImport.update({
+  id: '/$listId',
+  path: '/$listId',
+  getParentRoute: () => CrewProdukteRoute,
 } as any)
 const MainBookingApplicationTypeDankeRoute =
   MainBookingApplicationTypeDankeRouteImport.update({
@@ -558,16 +516,58 @@ const MainBookingApplicationTypeDankeRoute =
     path: '/booking/$applicationType/danke',
     getParentRoute: () => MainRoute,
   } as any)
+const MainCardHashCrewRoute = MainCardHashCrewRouteImport.update({
+  id: '/crew',
+  path: '/crew',
+  getParentRoute: () => MainCardHashRoute,
+} as any)
+const MainCardHashKultRoute = MainCardHashKultRouteImport.update({
+  id: '/kult',
+  path: '/kult',
+  getParentRoute: () => MainCardHashRoute,
+} as any)
+const MainLineupYearSlugRoute = MainLineupYearSlugRouteImport.update({
+  id: '/$year_/$slug',
+  path: '/$year/$slug',
+  getParentRoute: () => MainLineupRoute,
+} as any)
+const MainSpendenQuittungIdRoute = MainSpendenQuittungIdRouteImport.update({
+  id: '/spenden_/quittung/$id',
+  path: '/spenden/quittung/$id',
+  getParentRoute: () => MainRoute,
+} as any)
+const ApiSpendenQuittungIdRoute = ApiSpendenQuittungIdRouteImport.update({
+  id: '/api/spenden/quittung/$id',
+  path: '/api/spenden/quittung/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrewBookingEventIdApplicationIdRoute =
+  CrewBookingEventIdApplicationIdRouteImport.update({
+    id: '/$applicationId',
+    path: '/$applicationId',
+    getParentRoute: () => CrewBookingEventIdRoute,
+  } as any)
+const CrewNoiseDeviceDeviceRoute = CrewNoiseDeviceDeviceRouteImport.update({
+  id: '/device/$device',
+  path: '/device/$device',
+  getParentRoute: () => CrewNoiseRoute,
+} as any)
+const CrewNoiseProjectProjectIdRoute =
+  CrewNoiseProjectProjectIdRouteImport.update({
+    id: '/project/$projectId',
+    path: '/project/$projectId',
+    getParentRoute: () => CrewNoiseRoute,
+  } as any)
+const CrewBookingEventIdApplicationIdContactRoute =
+  CrewBookingEventIdApplicationIdContactRouteImport.update({
+    id: '/contact',
+    path: '/contact',
+    getParentRoute: () => CrewBookingEventIdApplicationIdRoute,
+  } as any)
 const CrewNoiseProjectProjectIdIndexRoute =
   CrewNoiseProjectProjectIdIndexRouteImport.update({
     id: '/',
     path: '/',
-    getParentRoute: () => CrewNoiseProjectProjectIdRoute,
-  } as any)
-const CrewNoiseProjectProjectIdMapRoute =
-  CrewNoiseProjectProjectIdMapRouteImport.update({
-    id: '/map',
-    path: '/map',
     getParentRoute: () => CrewNoiseProjectProjectIdRoute,
   } as any)
 const CrewNoiseProjectProjectIdListRoute =
@@ -576,11 +576,11 @@ const CrewNoiseProjectProjectIdListRoute =
     path: '/list',
     getParentRoute: () => CrewNoiseProjectProjectIdRoute,
   } as any)
-const CrewBookingEventIdApplicationIdContactRoute =
-  CrewBookingEventIdApplicationIdContactRouteImport.update({
-    id: '/contact',
-    path: '/contact',
-    getParentRoute: () => CrewBookingEventIdApplicationIdRoute,
+const CrewNoiseProjectProjectIdMapRoute =
+  CrewNoiseProjectProjectIdMapRouteImport.update({
+    id: '/map',
+    path: '/map',
+    getParentRoute: () => CrewNoiseProjectProjectIdRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -1165,18 +1165,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/vegan': {
-      id: '/vegan'
-      path: '/vegan'
-      fullPath: '/vegan'
-      preLoaderRoute: typeof VeganRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/glutenfrei': {
-      id: '/glutenfrei'
-      path: '/glutenfrei'
-      fullPath: '/glutenfrei'
-      preLoaderRoute: typeof GlutenfreiRouteImport
+    '/_main': {
+      id: '/_main'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof MainRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/crew': {
@@ -1186,172 +1179,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrewRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_main': {
-      id: '/_main'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof MainRouteImport
+    '/glutenfrei': {
+      id: '/glutenfrei'
+      path: '/glutenfrei'
+      fullPath: '/glutenfrei'
+      preLoaderRoute: typeof GlutenfreiRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/crew/': {
-      id: '/crew/'
-      path: '/'
-      fullPath: '/crew/'
-      preLoaderRoute: typeof CrewIndexRouteImport
-      parentRoute: typeof CrewRoute
+    '/vegan': {
+      id: '/vegan'
+      path: '/vegan'
+      fullPath: '/vegan'
+      preLoaderRoute: typeof VeganRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_main/': {
       id: '/_main/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof MainIndexRouteImport
-      parentRoute: typeof MainRoute
-    }
-    '/crew/produkte': {
-      id: '/crew/produkte'
-      path: '/produkte'
-      fullPath: '/crew/produkte'
-      preLoaderRoute: typeof CrewProdukteRouteImport
-      parentRoute: typeof CrewRoute
-    }
-    '/crew/noise': {
-      id: '/crew/noise'
-      path: '/noise'
-      fullPath: '/crew/noise'
-      preLoaderRoute: typeof CrewNoiseRouteImport
-      parentRoute: typeof CrewRoute
-    }
-    '/crew/auth-return': {
-      id: '/crew/auth-return'
-      path: '/auth-return'
-      fullPath: '/crew/auth-return'
-      preLoaderRoute: typeof CrewAuthReturnRouteImport
-      parentRoute: typeof CrewRoute
-    }
-    '/api/tasks': {
-      id: '/api/tasks'
-      path: '/api/tasks'
-      fullPath: '/api/tasks'
-      preLoaderRoute: typeof ApiTasksRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/owntracks': {
-      id: '/api/owntracks'
-      path: '/api/owntracks'
-      fullPath: '/api/owntracks'
-      preLoaderRoute: typeof ApiOwntracksRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/noise': {
-      id: '/api/noise'
-      path: '/api/noise'
-      fullPath: '/api/noise'
-      preLoaderRoute: typeof ApiNoiseRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/kultcash': {
-      id: '/api/kultcash'
-      path: '/api/kultcash'
-      fullPath: '/api/kultcash'
-      preLoaderRoute: typeof ApiKultcashRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_main/speisekarte': {
-      id: '/_main/speisekarte'
-      path: '/speisekarte'
-      fullPath: '/speisekarte'
-      preLoaderRoute: typeof MainSpeisekarteRouteImport
-      parentRoute: typeof MainRoute
-    }
-    '/_main/plakate': {
-      id: '/_main/plakate'
-      path: '/plakate'
-      fullPath: '/plakate'
-      preLoaderRoute: typeof MainPlakateRouteImport
-      parentRoute: typeof MainRoute
-    }
-    '/_main/nuclino-sso': {
-      id: '/_main/nuclino-sso'
-      path: '/nuclino-sso'
-      fullPath: '/nuclino-sso'
-      preLoaderRoute: typeof MainNuclinoSsoRouteImport
-      parentRoute: typeof MainRoute
-    }
-    '/_main/mitgliedsantrag': {
-      id: '/_main/mitgliedsantrag'
-      path: '/mitgliedsantrag'
-      fullPath: '/mitgliedsantrag'
-      preLoaderRoute: typeof MainMitgliedsantragRouteImport
-      parentRoute: typeof MainRoute
-    }
-    '/_main/logo': {
-      id: '/_main/logo'
-      path: '/logo'
-      fullPath: '/logo'
-      preLoaderRoute: typeof MainLogoRouteImport
-      parentRoute: typeof MainRoute
-    }
-    '/_main/lineup': {
-      id: '/_main/lineup'
-      path: '/lineup'
-      fullPath: '/lineup'
-      preLoaderRoute: typeof MainLineupRouteImport
-      parentRoute: typeof MainRoute
-    }
-    '/_main/learn': {
-      id: '/_main/learn'
-      path: '/learn'
-      fullPath: '/learn'
-      preLoaderRoute: typeof MainLearnRouteImport
-      parentRoute: typeof MainRoute
-    }
-    '/_main/infos': {
-      id: '/_main/infos'
-      path: '/infos'
-      fullPath: '/infos'
-      preLoaderRoute: typeof MainInfosRouteImport
-      parentRoute: typeof MainRoute
-    }
-    '/_main/events': {
-      id: '/_main/events'
-      path: '/events'
-      fullPath: '/events'
-      preLoaderRoute: typeof MainEventsRouteImport
-      parentRoute: typeof MainRoute
-    }
-    '/_main/booking': {
-      id: '/_main/booking'
-      path: '/booking'
-      fullPath: '/booking'
-      preLoaderRoute: typeof MainBookingRouteImport
-      parentRoute: typeof MainRoute
-    }
-    '/_main/badges': {
-      id: '/_main/badges'
-      path: '/badges'
-      fullPath: '/badges'
-      preLoaderRoute: typeof MainBadgesRouteImport
-      parentRoute: typeof MainRoute
-    }
-    '/_main/awareness': {
-      id: '/_main/awareness'
-      path: '/awareness'
-      fullPath: '/awareness'
-      preLoaderRoute: typeof MainAwarenessRouteImport
-      parentRoute: typeof MainRoute
-    }
-    '/_main/angebot': {
-      id: '/_main/angebot'
-      path: '/angebot'
-      fullPath: '/angebot'
-      preLoaderRoute: typeof MainAngebotRouteImport
-      parentRoute: typeof MainRoute
-    }
-    '/_main/Route': {
-      id: '/_main/Route'
-      path: '/Route'
-      fullPath: '/Route'
-      preLoaderRoute: typeof MainRouteRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/$slug': {
@@ -1361,347 +1207,165 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainSlugRouteImport
       parentRoute: typeof MainRoute
     }
-    '/crew/produkte/': {
-      id: '/crew/produkte/'
+    '/_main/Route': {
+      id: '/_main/Route'
+      path: '/Route'
+      fullPath: '/Route'
+      preLoaderRoute: typeof MainRouteRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/angebot': {
+      id: '/_main/angebot'
+      path: '/angebot'
+      fullPath: '/angebot'
+      preLoaderRoute: typeof MainAngebotRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/awareness': {
+      id: '/_main/awareness'
+      path: '/awareness'
+      fullPath: '/awareness'
+      preLoaderRoute: typeof MainAwarenessRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/badges': {
+      id: '/_main/badges'
+      path: '/badges'
+      fullPath: '/badges'
+      preLoaderRoute: typeof MainBadgesRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/booking': {
+      id: '/_main/booking'
+      path: '/booking'
+      fullPath: '/booking'
+      preLoaderRoute: typeof MainBookingRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/events': {
+      id: '/_main/events'
+      path: '/events'
+      fullPath: '/events'
+      preLoaderRoute: typeof MainEventsRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/infos': {
+      id: '/_main/infos'
+      path: '/infos'
+      fullPath: '/infos'
+      preLoaderRoute: typeof MainInfosRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/learn': {
+      id: '/_main/learn'
+      path: '/learn'
+      fullPath: '/learn'
+      preLoaderRoute: typeof MainLearnRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/lineup': {
+      id: '/_main/lineup'
+      path: '/lineup'
+      fullPath: '/lineup'
+      preLoaderRoute: typeof MainLineupRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/logo': {
+      id: '/_main/logo'
+      path: '/logo'
+      fullPath: '/logo'
+      preLoaderRoute: typeof MainLogoRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/mitgliedsantrag': {
+      id: '/_main/mitgliedsantrag'
+      path: '/mitgliedsantrag'
+      fullPath: '/mitgliedsantrag'
+      preLoaderRoute: typeof MainMitgliedsantragRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/nuclino-sso': {
+      id: '/_main/nuclino-sso'
+      path: '/nuclino-sso'
+      fullPath: '/nuclino-sso'
+      preLoaderRoute: typeof MainNuclinoSsoRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/plakate': {
+      id: '/_main/plakate'
+      path: '/plakate'
+      fullPath: '/plakate'
+      preLoaderRoute: typeof MainPlakateRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/speisekarte': {
+      id: '/_main/speisekarte'
+      path: '/speisekarte'
+      fullPath: '/speisekarte'
+      preLoaderRoute: typeof MainSpeisekarteRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/api/kultcash': {
+      id: '/api/kultcash'
+      path: '/api/kultcash'
+      fullPath: '/api/kultcash'
+      preLoaderRoute: typeof ApiKultcashRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/noise': {
+      id: '/api/noise'
+      path: '/api/noise'
+      fullPath: '/api/noise'
+      preLoaderRoute: typeof ApiNoiseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/owntracks': {
+      id: '/api/owntracks'
+      path: '/api/owntracks'
+      fullPath: '/api/owntracks'
+      preLoaderRoute: typeof ApiOwntracksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tasks': {
+      id: '/api/tasks'
+      path: '/api/tasks'
+      fullPath: '/api/tasks'
+      preLoaderRoute: typeof ApiTasksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crew/': {
+      id: '/crew/'
       path: '/'
-      fullPath: '/crew/produkte/'
-      preLoaderRoute: typeof CrewProdukteIndexRouteImport
-      parentRoute: typeof CrewProdukteRoute
-    }
-    '/crew/noise/': {
-      id: '/crew/noise/'
-      path: '/'
-      fullPath: '/crew/noise/'
-      preLoaderRoute: typeof CrewNoiseIndexRouteImport
-      parentRoute: typeof CrewNoiseRoute
-    }
-    '/_main/lineup/': {
-      id: '/_main/lineup/'
-      path: '/'
-      fullPath: '/lineup/'
-      preLoaderRoute: typeof MainLineupIndexRouteImport
-      parentRoute: typeof MainLineupRoute
-    }
-    '/crew/produkte/$listId': {
-      id: '/crew/produkte/$listId'
-      path: '/$listId'
-      fullPath: '/crew/produkte/$listId'
-      preLoaderRoute: typeof CrewProdukteListIdRouteImport
-      parentRoute: typeof CrewProdukteRoute
-    }
-    '/crew/booking/$eventId': {
-      id: '/crew/booking/$eventId'
-      path: '/booking/$eventId'
-      fullPath: '/crew/booking/$eventId'
-      preLoaderRoute: typeof CrewBookingEventIdRouteImport
+      fullPath: '/crew/'
+      preLoaderRoute: typeof CrewIndexRouteImport
       parentRoute: typeof CrewRoute
     }
-    '/api/twilio/screen': {
-      id: '/api/twilio/screen'
-      path: '/api/twilio/screen'
-      fullPath: '/api/twilio/screen'
-      preLoaderRoute: typeof ApiTwilioScreenRouteImport
-      parentRoute: typeof rootRouteImport
+    '/crew/auth-return': {
+      id: '/crew/auth-return'
+      path: '/auth-return'
+      fullPath: '/crew/auth-return'
+      preLoaderRoute: typeof CrewAuthReturnRouteImport
+      parentRoute: typeof CrewRoute
     }
-    '/api/twilio/leg-status': {
-      id: '/api/twilio/leg-status'
-      path: '/api/twilio/leg-status'
-      fullPath: '/api/twilio/leg-status'
-      preLoaderRoute: typeof ApiTwilioLegStatusRouteImport
-      parentRoute: typeof rootRouteImport
+    '/crew/noise': {
+      id: '/crew/noise'
+      path: '/noise'
+      fullPath: '/crew/noise'
+      preLoaderRoute: typeof CrewNoiseRouteImport
+      parentRoute: typeof CrewRoute
     }
-    '/api/twilio/incoming': {
-      id: '/api/twilio/incoming'
-      path: '/api/twilio/incoming'
-      fullPath: '/api/twilio/incoming'
-      preLoaderRoute: typeof ApiTwilioIncomingRouteImport
-      parentRoute: typeof rootRouteImport
+    '/crew/produkte': {
+      id: '/crew/produkte'
+      path: '/produkte'
+      fullPath: '/crew/produkte'
+      preLoaderRoute: typeof CrewProdukteRouteImport
+      parentRoute: typeof CrewRoute
     }
-    '/api/twilio/accept': {
-      id: '/api/twilio/accept'
-      path: '/api/twilio/accept'
-      fullPath: '/api/twilio/accept'
-      preLoaderRoute: typeof ApiTwilioAcceptRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/tasks/spotify-listeners': {
-      id: '/api/tasks/spotify-listeners'
-      path: '/spotify-listeners'
-      fullPath: '/api/tasks/spotify-listeners'
-      preLoaderRoute: typeof ApiTasksSpotifyListenersRouteImport
-      parentRoute: typeof ApiTasksRoute
-    }
-    '/api/tasks/spotify-image': {
-      id: '/api/tasks/spotify-image'
-      path: '/spotify-image'
-      fullPath: '/api/tasks/spotify-image'
-      preLoaderRoute: typeof ApiTasksSpotifyImageRouteImport
-      parentRoute: typeof ApiTasksRoute
-    }
-    '/api/tasks/send-gmail': {
-      id: '/api/tasks/send-gmail'
-      path: '/send-gmail'
-      fullPath: '/api/tasks/send-gmail'
-      preLoaderRoute: typeof ApiTasksSendGmailRouteImport
-      parentRoute: typeof ApiTasksRoute
-    }
-    '/api/tasks/send-email': {
-      id: '/api/tasks/send-email'
-      path: '/send-email'
-      fullPath: '/api/tasks/send-email'
-      preLoaderRoute: typeof ApiTasksSendEmailRouteImport
-      parentRoute: typeof ApiTasksRoute
-    }
-    '/api/tasks/nuclino-update-message': {
-      id: '/api/tasks/nuclino-update-message'
-      path: '/nuclino-update-message'
-      fullPath: '/api/tasks/nuclino-update-message'
-      preLoaderRoute: typeof ApiTasksNuclinoUpdateMessageRouteImport
-      parentRoute: typeof ApiTasksRoute
-    }
-    '/api/tasks/nonce-request-invalidate': {
-      id: '/api/tasks/nonce-request-invalidate'
-      path: '/nonce-request-invalidate'
-      fullPath: '/api/tasks/nonce-request-invalidate'
-      preLoaderRoute: typeof ApiTasksNonceRequestInvalidateRouteImport
-      parentRoute: typeof ApiTasksRoute
-    }
-    '/api/tasks/nonce-invalidate': {
-      id: '/api/tasks/nonce-invalidate'
-      path: '/nonce-invalidate'
-      fullPath: '/api/tasks/nonce-invalidate'
-      preLoaderRoute: typeof ApiTasksNonceInvalidateRouteImport
-      parentRoute: typeof ApiTasksRoute
-    }
-    '/api/tasks/instagram-follower': {
-      id: '/api/tasks/instagram-follower'
-      path: '/instagram-follower'
-      fullPath: '/api/tasks/instagram-follower'
-      preLoaderRoute: typeof ApiTasksInstagramFollowerRouteImport
-      parentRoute: typeof ApiTasksRoute
-    }
-    '/api/tasks/gmail-watch-refresh': {
-      id: '/api/tasks/gmail-watch-refresh'
-      path: '/gmail-watch-refresh'
-      fullPath: '/api/tasks/gmail-watch-refresh'
-      preLoaderRoute: typeof ApiTasksGmailWatchRefreshRouteImport
-      parentRoute: typeof ApiTasksRoute
-    }
-    '/api/tasks/gmail-reminder': {
-      id: '/api/tasks/gmail-reminder'
-      path: '/gmail-reminder'
-      fullPath: '/api/tasks/gmail-reminder'
-      preLoaderRoute: typeof ApiTasksGmailReminderRouteImport
-      parentRoute: typeof ApiTasksRoute
-    }
-    '/api/tasks/gmail-notification': {
-      id: '/api/tasks/gmail-notification'
-      path: '/gmail-notification'
-      fullPath: '/api/tasks/gmail-notification'
-      preLoaderRoute: typeof ApiTasksGmailNotificationRouteImport
-      parentRoute: typeof ApiTasksRoute
-    }
-    '/api/tasks/facebook-likes': {
-      id: '/api/tasks/facebook-likes'
-      path: '/facebook-likes'
-      fullPath: '/api/tasks/facebook-likes'
-      preLoaderRoute: typeof ApiTasksFacebookLikesRouteImport
-      parentRoute: typeof ApiTasksRoute
-    }
-    '/api/tasks/crew-card-enrolled': {
-      id: '/api/tasks/crew-card-enrolled'
-      path: '/crew-card-enrolled'
-      fullPath: '/api/tasks/crew-card-enrolled'
-      preLoaderRoute: typeof ApiTasksCrewCardEnrolledRouteImport
-      parentRoute: typeof ApiTasksRoute
-    }
-    '/api/tasks/create-nonce-request': {
-      id: '/api/tasks/create-nonce-request'
-      path: '/create-nonce-request'
-      fullPath: '/api/tasks/create-nonce-request'
-      preLoaderRoute: typeof ApiTasksCreateNonceRequestRouteImport
-      parentRoute: typeof ApiTasksRoute
-    }
-    '/api/tasks/create-membership-application': {
-      id: '/api/tasks/create-membership-application'
-      path: '/create-membership-application'
-      fullPath: '/api/tasks/create-membership-application'
-      preLoaderRoute: typeof ApiTasksCreateMembershipApplicationRouteImport
-      parentRoute: typeof ApiTasksRoute
-    }
-    '/api/tasks/create-band-application': {
-      id: '/api/tasks/create-band-application'
-      path: '/create-band-application'
-      fullPath: '/api/tasks/create-band-application'
-      preLoaderRoute: typeof ApiTasksCreateBandApplicationRouteImport
-      parentRoute: typeof ApiTasksRoute
-    }
-    '/api/tasks/band-application-distance': {
-      id: '/api/tasks/band-application-distance'
-      path: '/band-application-distance'
-      fullPath: '/api/tasks/band-application-distance'
-      preLoaderRoute: typeof ApiTasksBandApplicationDistanceRouteImport
-      parentRoute: typeof ApiTasksRoute
-    }
-    '/api/tasks/band-application-demo': {
-      id: '/api/tasks/band-application-demo'
-      path: '/band-application-demo'
-      fullPath: '/api/tasks/band-application-demo'
-      preLoaderRoute: typeof ApiTasksBandApplicationDemoRouteImport
-      parentRoute: typeof ApiTasksRoute
-    }
-    '/api/tasks/badge-awarded': {
-      id: '/api/tasks/badge-awarded'
-      path: '/badge-awarded'
-      fullPath: '/api/tasks/badge-awarded'
-      preLoaderRoute: typeof ApiTasksBadgeAwardedRouteImport
-      parentRoute: typeof ApiTasksRoute
-    }
-    '/api/tasks/awareness-slack': {
-      id: '/api/tasks/awareness-slack'
-      path: '/awareness-slack'
-      fullPath: '/api/tasks/awareness-slack'
-      preLoaderRoute: typeof ApiTasksAwarenessSlackRouteImport
-      parentRoute: typeof ApiTasksRoute
-    }
-    '/api/tasks/awareness-call': {
-      id: '/api/tasks/awareness-call'
-      path: '/awareness-call'
-      fullPath: '/api/tasks/awareness-call'
-      preLoaderRoute: typeof ApiTasksAwarenessCallRouteImport
-      parentRoute: typeof ApiTasksRoute
-    }
-    '/api/stripe/webhook': {
-      id: '/api/stripe/webhook'
-      path: '/api/stripe/webhook'
-      fullPath: '/api/stripe/webhook'
-      preLoaderRoute: typeof ApiStripeWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/slack/twofactor': {
-      id: '/api/slack/twofactor'
-      path: '/api/slack/twofactor'
-      fullPath: '/api/slack/twofactor'
-      preLoaderRoute: typeof ApiSlackTwofactorRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/slack/token': {
-      id: '/api/slack/token'
-      path: '/api/slack/token'
-      fullPath: '/api/slack/token'
-      preLoaderRoute: typeof ApiSlackTokenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/slack/owntracks': {
-      id: '/api/slack/owntracks'
-      path: '/api/slack/owntracks'
-      fullPath: '/api/slack/owntracks'
-      preLoaderRoute: typeof ApiSlackOwntracksRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/slack/mailingliste': {
-      id: '/api/slack/mailingliste'
-      path: '/api/slack/mailingliste'
-      fullPath: '/api/slack/mailingliste'
-      preLoaderRoute: typeof ApiSlackMailinglisteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/slack/interaction': {
-      id: '/api/slack/interaction'
-      path: '/api/slack/interaction'
-      fullPath: '/api/slack/interaction'
-      preLoaderRoute: typeof ApiSlackInteractionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/slack/events': {
-      id: '/api/slack/events'
-      path: '/api/slack/events'
-      fullPath: '/api/slack/events'
-      preLoaderRoute: typeof ApiSlackEventsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/slack/bonbude': {
-      id: '/api/slack/bonbude'
-      path: '/api/slack/bonbude'
-      fullPath: '/api/slack/bonbude'
-      preLoaderRoute: typeof ApiSlackBonbudeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/saml/logout': {
-      id: '/api/saml/logout'
-      path: '/api/saml/logout'
-      fullPath: '/api/saml/logout'
-      preLoaderRoute: typeof ApiSamlLogoutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/saml/login': {
-      id: '/api/saml/login'
-      path: '/api/saml/login'
-      fullPath: '/api/saml/login'
-      preLoaderRoute: typeof ApiSamlLoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/owntracks/config': {
-      id: '/api/owntracks/config'
-      path: '/config'
-      fullPath: '/api/owntracks/config'
-      preLoaderRoute: typeof ApiOwntracksConfigRouteImport
-      parentRoute: typeof ApiOwntracksRoute
-    }
-    '/api/noise/log': {
-      id: '/api/noise/log'
-      path: '/log'
-      fullPath: '/api/noise/log'
-      preLoaderRoute: typeof ApiNoiseLogRouteImport
-      parentRoute: typeof ApiNoiseRoute
-    }
-    '/api/kultcash/log': {
-      id: '/api/kultcash/log'
-      path: '/log'
-      fullPath: '/api/kultcash/log'
-      preLoaderRoute: typeof ApiKultcashLogRouteImport
-      parentRoute: typeof ApiKultcashRoute
-    }
-    '/api/kultcash/lists': {
-      id: '/api/kultcash/lists'
-      path: '/lists'
-      fullPath: '/api/kultcash/lists'
-      preLoaderRoute: typeof ApiKultcashListsRouteImport
-      parentRoute: typeof ApiKultcashRoute
-    }
-    '/_main/news/archiv': {
-      id: '/_main/news/archiv'
-      path: '/news/archiv'
-      fullPath: '/news/archiv'
-      preLoaderRoute: typeof MainNewsArchivRouteImport
-      parentRoute: typeof MainRoute
-    }
-    '/_main/news/$slug': {
-      id: '/_main/news/$slug'
-      path: '/news/$slug'
-      fullPath: '/news/$slug'
-      preLoaderRoute: typeof MainNewsSlugRouteImport
-      parentRoute: typeof MainRoute
-    }
-    '/_main/mitgliedsantrag_/danke': {
-      id: '/_main/mitgliedsantrag_/danke'
-      path: '/mitgliedsantrag/danke'
-      fullPath: '/mitgliedsantrag/danke'
-      preLoaderRoute: typeof MainMitgliedsantragDankeRouteImport
-      parentRoute: typeof MainRoute
-    }
-    '/_main/lineup/$year': {
-      id: '/_main/lineup/$year'
-      path: '/$year'
-      fullPath: '/lineup/$year'
-      preLoaderRoute: typeof MainLineupYearRouteImport
-      parentRoute: typeof MainLineupRoute
-    }
-    '/_main/events_/$id': {
-      id: '/_main/events_/$id'
-      path: '/events/$id'
-      fullPath: '/events/$id'
-      preLoaderRoute: typeof MainEventsIdRouteImport
+    '/_main/booking_/$applicationType': {
+      id: '/_main/booking_/$applicationType'
+      path: '/booking/$applicationType'
+      fullPath: '/booking/$applicationType'
+      preLoaderRoute: typeof MainBookingApplicationTypeRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/card/$hash': {
@@ -1711,68 +1375,348 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainCardHashRouteImport
       parentRoute: typeof MainRoute
     }
-    '/_main/booking_/$applicationType': {
-      id: '/_main/booking_/$applicationType'
-      path: '/booking/$applicationType'
-      fullPath: '/booking/$applicationType'
-      preLoaderRoute: typeof MainBookingApplicationTypeRouteImport
+    '/_main/events_/$id': {
+      id: '/_main/events_/$id'
+      path: '/events/$id'
+      fullPath: '/events/$id'
+      preLoaderRoute: typeof MainEventsIdRouteImport
       parentRoute: typeof MainRoute
     }
-    '/crew/noise/project/$projectId': {
-      id: '/crew/noise/project/$projectId'
-      path: '/project/$projectId'
-      fullPath: '/crew/noise/project/$projectId'
-      preLoaderRoute: typeof CrewNoiseProjectProjectIdRouteImport
-      parentRoute: typeof CrewNoiseRoute
-    }
-    '/crew/noise/device/$device': {
-      id: '/crew/noise/device/$device'
-      path: '/device/$device'
-      fullPath: '/crew/noise/device/$device'
-      preLoaderRoute: typeof CrewNoiseDeviceDeviceRouteImport
-      parentRoute: typeof CrewNoiseRoute
-    }
-    '/crew/booking/$eventId/$applicationId': {
-      id: '/crew/booking/$eventId/$applicationId'
-      path: '/$applicationId'
-      fullPath: '/crew/booking/$eventId/$applicationId'
-      preLoaderRoute: typeof CrewBookingEventIdApplicationIdRouteImport
-      parentRoute: typeof CrewBookingEventIdRoute
-    }
-    '/api/spenden/quittung/$id': {
-      id: '/api/spenden/quittung/$id'
-      path: '/api/spenden/quittung/$id'
-      fullPath: '/api/spenden/quittung/$id'
-      preLoaderRoute: typeof ApiSpendenQuittungIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_main/spenden_/quittung/$id': {
-      id: '/_main/spenden_/quittung/$id'
-      path: '/spenden/quittung/$id'
-      fullPath: '/spenden/quittung/$id'
-      preLoaderRoute: typeof MainSpendenQuittungIdRouteImport
-      parentRoute: typeof MainRoute
-    }
-    '/_main/lineup/$year_/$slug': {
-      id: '/_main/lineup/$year_/$slug'
-      path: '/$year/$slug'
-      fullPath: '/lineup/$year/$slug'
-      preLoaderRoute: typeof MainLineupYearSlugRouteImport
+    '/_main/lineup/': {
+      id: '/_main/lineup/'
+      path: '/'
+      fullPath: '/lineup/'
+      preLoaderRoute: typeof MainLineupIndexRouteImport
       parentRoute: typeof MainLineupRoute
     }
-    '/_main/card/$hash/kult': {
-      id: '/_main/card/$hash/kult'
-      path: '/kult'
-      fullPath: '/card/$hash/kult'
-      preLoaderRoute: typeof MainCardHashKultRouteImport
-      parentRoute: typeof MainCardHashRoute
+    '/_main/lineup/$year': {
+      id: '/_main/lineup/$year'
+      path: '/$year'
+      fullPath: '/lineup/$year'
+      preLoaderRoute: typeof MainLineupYearRouteImport
+      parentRoute: typeof MainLineupRoute
     }
-    '/_main/card/$hash/crew': {
-      id: '/_main/card/$hash/crew'
-      path: '/crew'
-      fullPath: '/card/$hash/crew'
-      preLoaderRoute: typeof MainCardHashCrewRouteImport
-      parentRoute: typeof MainCardHashRoute
+    '/_main/mitgliedsantrag_/danke': {
+      id: '/_main/mitgliedsantrag_/danke'
+      path: '/mitgliedsantrag/danke'
+      fullPath: '/mitgliedsantrag/danke'
+      preLoaderRoute: typeof MainMitgliedsantragDankeRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/news/$slug': {
+      id: '/_main/news/$slug'
+      path: '/news/$slug'
+      fullPath: '/news/$slug'
+      preLoaderRoute: typeof MainNewsSlugRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/news/archiv': {
+      id: '/_main/news/archiv'
+      path: '/news/archiv'
+      fullPath: '/news/archiv'
+      preLoaderRoute: typeof MainNewsArchivRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/api/kultcash/lists': {
+      id: '/api/kultcash/lists'
+      path: '/lists'
+      fullPath: '/api/kultcash/lists'
+      preLoaderRoute: typeof ApiKultcashListsRouteImport
+      parentRoute: typeof ApiKultcashRoute
+    }
+    '/api/kultcash/log': {
+      id: '/api/kultcash/log'
+      path: '/log'
+      fullPath: '/api/kultcash/log'
+      preLoaderRoute: typeof ApiKultcashLogRouteImport
+      parentRoute: typeof ApiKultcashRoute
+    }
+    '/api/noise/log': {
+      id: '/api/noise/log'
+      path: '/log'
+      fullPath: '/api/noise/log'
+      preLoaderRoute: typeof ApiNoiseLogRouteImport
+      parentRoute: typeof ApiNoiseRoute
+    }
+    '/api/owntracks/config': {
+      id: '/api/owntracks/config'
+      path: '/config'
+      fullPath: '/api/owntracks/config'
+      preLoaderRoute: typeof ApiOwntracksConfigRouteImport
+      parentRoute: typeof ApiOwntracksRoute
+    }
+    '/api/saml/login': {
+      id: '/api/saml/login'
+      path: '/api/saml/login'
+      fullPath: '/api/saml/login'
+      preLoaderRoute: typeof ApiSamlLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/saml/logout': {
+      id: '/api/saml/logout'
+      path: '/api/saml/logout'
+      fullPath: '/api/saml/logout'
+      preLoaderRoute: typeof ApiSamlLogoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/slack/bonbude': {
+      id: '/api/slack/bonbude'
+      path: '/api/slack/bonbude'
+      fullPath: '/api/slack/bonbude'
+      preLoaderRoute: typeof ApiSlackBonbudeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/slack/events': {
+      id: '/api/slack/events'
+      path: '/api/slack/events'
+      fullPath: '/api/slack/events'
+      preLoaderRoute: typeof ApiSlackEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/slack/interaction': {
+      id: '/api/slack/interaction'
+      path: '/api/slack/interaction'
+      fullPath: '/api/slack/interaction'
+      preLoaderRoute: typeof ApiSlackInteractionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/slack/mailingliste': {
+      id: '/api/slack/mailingliste'
+      path: '/api/slack/mailingliste'
+      fullPath: '/api/slack/mailingliste'
+      preLoaderRoute: typeof ApiSlackMailinglisteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/slack/owntracks': {
+      id: '/api/slack/owntracks'
+      path: '/api/slack/owntracks'
+      fullPath: '/api/slack/owntracks'
+      preLoaderRoute: typeof ApiSlackOwntracksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/slack/token': {
+      id: '/api/slack/token'
+      path: '/api/slack/token'
+      fullPath: '/api/slack/token'
+      preLoaderRoute: typeof ApiSlackTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/slack/twofactor': {
+      id: '/api/slack/twofactor'
+      path: '/api/slack/twofactor'
+      fullPath: '/api/slack/twofactor'
+      preLoaderRoute: typeof ApiSlackTwofactorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/stripe/webhook': {
+      id: '/api/stripe/webhook'
+      path: '/api/stripe/webhook'
+      fullPath: '/api/stripe/webhook'
+      preLoaderRoute: typeof ApiStripeWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tasks/awareness-call': {
+      id: '/api/tasks/awareness-call'
+      path: '/awareness-call'
+      fullPath: '/api/tasks/awareness-call'
+      preLoaderRoute: typeof ApiTasksAwarenessCallRouteImport
+      parentRoute: typeof ApiTasksRoute
+    }
+    '/api/tasks/awareness-slack': {
+      id: '/api/tasks/awareness-slack'
+      path: '/awareness-slack'
+      fullPath: '/api/tasks/awareness-slack'
+      preLoaderRoute: typeof ApiTasksAwarenessSlackRouteImport
+      parentRoute: typeof ApiTasksRoute
+    }
+    '/api/tasks/badge-awarded': {
+      id: '/api/tasks/badge-awarded'
+      path: '/badge-awarded'
+      fullPath: '/api/tasks/badge-awarded'
+      preLoaderRoute: typeof ApiTasksBadgeAwardedRouteImport
+      parentRoute: typeof ApiTasksRoute
+    }
+    '/api/tasks/band-application-demo': {
+      id: '/api/tasks/band-application-demo'
+      path: '/band-application-demo'
+      fullPath: '/api/tasks/band-application-demo'
+      preLoaderRoute: typeof ApiTasksBandApplicationDemoRouteImport
+      parentRoute: typeof ApiTasksRoute
+    }
+    '/api/tasks/band-application-distance': {
+      id: '/api/tasks/band-application-distance'
+      path: '/band-application-distance'
+      fullPath: '/api/tasks/band-application-distance'
+      preLoaderRoute: typeof ApiTasksBandApplicationDistanceRouteImport
+      parentRoute: typeof ApiTasksRoute
+    }
+    '/api/tasks/create-band-application': {
+      id: '/api/tasks/create-band-application'
+      path: '/create-band-application'
+      fullPath: '/api/tasks/create-band-application'
+      preLoaderRoute: typeof ApiTasksCreateBandApplicationRouteImport
+      parentRoute: typeof ApiTasksRoute
+    }
+    '/api/tasks/create-membership-application': {
+      id: '/api/tasks/create-membership-application'
+      path: '/create-membership-application'
+      fullPath: '/api/tasks/create-membership-application'
+      preLoaderRoute: typeof ApiTasksCreateMembershipApplicationRouteImport
+      parentRoute: typeof ApiTasksRoute
+    }
+    '/api/tasks/create-nonce-request': {
+      id: '/api/tasks/create-nonce-request'
+      path: '/create-nonce-request'
+      fullPath: '/api/tasks/create-nonce-request'
+      preLoaderRoute: typeof ApiTasksCreateNonceRequestRouteImport
+      parentRoute: typeof ApiTasksRoute
+    }
+    '/api/tasks/crew-card-enrolled': {
+      id: '/api/tasks/crew-card-enrolled'
+      path: '/crew-card-enrolled'
+      fullPath: '/api/tasks/crew-card-enrolled'
+      preLoaderRoute: typeof ApiTasksCrewCardEnrolledRouteImport
+      parentRoute: typeof ApiTasksRoute
+    }
+    '/api/tasks/facebook-likes': {
+      id: '/api/tasks/facebook-likes'
+      path: '/facebook-likes'
+      fullPath: '/api/tasks/facebook-likes'
+      preLoaderRoute: typeof ApiTasksFacebookLikesRouteImport
+      parentRoute: typeof ApiTasksRoute
+    }
+    '/api/tasks/gmail-notification': {
+      id: '/api/tasks/gmail-notification'
+      path: '/gmail-notification'
+      fullPath: '/api/tasks/gmail-notification'
+      preLoaderRoute: typeof ApiTasksGmailNotificationRouteImport
+      parentRoute: typeof ApiTasksRoute
+    }
+    '/api/tasks/gmail-reminder': {
+      id: '/api/tasks/gmail-reminder'
+      path: '/gmail-reminder'
+      fullPath: '/api/tasks/gmail-reminder'
+      preLoaderRoute: typeof ApiTasksGmailReminderRouteImport
+      parentRoute: typeof ApiTasksRoute
+    }
+    '/api/tasks/gmail-watch-refresh': {
+      id: '/api/tasks/gmail-watch-refresh'
+      path: '/gmail-watch-refresh'
+      fullPath: '/api/tasks/gmail-watch-refresh'
+      preLoaderRoute: typeof ApiTasksGmailWatchRefreshRouteImport
+      parentRoute: typeof ApiTasksRoute
+    }
+    '/api/tasks/instagram-follower': {
+      id: '/api/tasks/instagram-follower'
+      path: '/instagram-follower'
+      fullPath: '/api/tasks/instagram-follower'
+      preLoaderRoute: typeof ApiTasksInstagramFollowerRouteImport
+      parentRoute: typeof ApiTasksRoute
+    }
+    '/api/tasks/nonce-invalidate': {
+      id: '/api/tasks/nonce-invalidate'
+      path: '/nonce-invalidate'
+      fullPath: '/api/tasks/nonce-invalidate'
+      preLoaderRoute: typeof ApiTasksNonceInvalidateRouteImport
+      parentRoute: typeof ApiTasksRoute
+    }
+    '/api/tasks/nonce-request-invalidate': {
+      id: '/api/tasks/nonce-request-invalidate'
+      path: '/nonce-request-invalidate'
+      fullPath: '/api/tasks/nonce-request-invalidate'
+      preLoaderRoute: typeof ApiTasksNonceRequestInvalidateRouteImport
+      parentRoute: typeof ApiTasksRoute
+    }
+    '/api/tasks/nuclino-update-message': {
+      id: '/api/tasks/nuclino-update-message'
+      path: '/nuclino-update-message'
+      fullPath: '/api/tasks/nuclino-update-message'
+      preLoaderRoute: typeof ApiTasksNuclinoUpdateMessageRouteImport
+      parentRoute: typeof ApiTasksRoute
+    }
+    '/api/tasks/send-email': {
+      id: '/api/tasks/send-email'
+      path: '/send-email'
+      fullPath: '/api/tasks/send-email'
+      preLoaderRoute: typeof ApiTasksSendEmailRouteImport
+      parentRoute: typeof ApiTasksRoute
+    }
+    '/api/tasks/send-gmail': {
+      id: '/api/tasks/send-gmail'
+      path: '/send-gmail'
+      fullPath: '/api/tasks/send-gmail'
+      preLoaderRoute: typeof ApiTasksSendGmailRouteImport
+      parentRoute: typeof ApiTasksRoute
+    }
+    '/api/tasks/spotify-image': {
+      id: '/api/tasks/spotify-image'
+      path: '/spotify-image'
+      fullPath: '/api/tasks/spotify-image'
+      preLoaderRoute: typeof ApiTasksSpotifyImageRouteImport
+      parentRoute: typeof ApiTasksRoute
+    }
+    '/api/tasks/spotify-listeners': {
+      id: '/api/tasks/spotify-listeners'
+      path: '/spotify-listeners'
+      fullPath: '/api/tasks/spotify-listeners'
+      preLoaderRoute: typeof ApiTasksSpotifyListenersRouteImport
+      parentRoute: typeof ApiTasksRoute
+    }
+    '/api/twilio/accept': {
+      id: '/api/twilio/accept'
+      path: '/api/twilio/accept'
+      fullPath: '/api/twilio/accept'
+      preLoaderRoute: typeof ApiTwilioAcceptRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/twilio/incoming': {
+      id: '/api/twilio/incoming'
+      path: '/api/twilio/incoming'
+      fullPath: '/api/twilio/incoming'
+      preLoaderRoute: typeof ApiTwilioIncomingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/twilio/leg-status': {
+      id: '/api/twilio/leg-status'
+      path: '/api/twilio/leg-status'
+      fullPath: '/api/twilio/leg-status'
+      preLoaderRoute: typeof ApiTwilioLegStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/twilio/screen': {
+      id: '/api/twilio/screen'
+      path: '/api/twilio/screen'
+      fullPath: '/api/twilio/screen'
+      preLoaderRoute: typeof ApiTwilioScreenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crew/booking/$eventId': {
+      id: '/crew/booking/$eventId'
+      path: '/booking/$eventId'
+      fullPath: '/crew/booking/$eventId'
+      preLoaderRoute: typeof CrewBookingEventIdRouteImport
+      parentRoute: typeof CrewRoute
+    }
+    '/crew/noise/': {
+      id: '/crew/noise/'
+      path: '/'
+      fullPath: '/crew/noise/'
+      preLoaderRoute: typeof CrewNoiseIndexRouteImport
+      parentRoute: typeof CrewNoiseRoute
+    }
+    '/crew/produkte/': {
+      id: '/crew/produkte/'
+      path: '/'
+      fullPath: '/crew/produkte/'
+      preLoaderRoute: typeof CrewProdukteIndexRouteImport
+      parentRoute: typeof CrewProdukteRoute
+    }
+    '/crew/produkte/$listId': {
+      id: '/crew/produkte/$listId'
+      path: '/$listId'
+      fullPath: '/crew/produkte/$listId'
+      preLoaderRoute: typeof CrewProdukteListIdRouteImport
+      parentRoute: typeof CrewProdukteRoute
     }
     '/_main/booking_/$applicationType_/danke': {
       id: '/_main/booking_/$applicationType_/danke'
@@ -1781,18 +1725,74 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainBookingApplicationTypeDankeRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/card/$hash/crew': {
+      id: '/_main/card/$hash/crew'
+      path: '/crew'
+      fullPath: '/card/$hash/crew'
+      preLoaderRoute: typeof MainCardHashCrewRouteImport
+      parentRoute: typeof MainCardHashRoute
+    }
+    '/_main/card/$hash/kult': {
+      id: '/_main/card/$hash/kult'
+      path: '/kult'
+      fullPath: '/card/$hash/kult'
+      preLoaderRoute: typeof MainCardHashKultRouteImport
+      parentRoute: typeof MainCardHashRoute
+    }
+    '/_main/lineup/$year_/$slug': {
+      id: '/_main/lineup/$year_/$slug'
+      path: '/$year/$slug'
+      fullPath: '/lineup/$year/$slug'
+      preLoaderRoute: typeof MainLineupYearSlugRouteImport
+      parentRoute: typeof MainLineupRoute
+    }
+    '/_main/spenden_/quittung/$id': {
+      id: '/_main/spenden_/quittung/$id'
+      path: '/spenden/quittung/$id'
+      fullPath: '/spenden/quittung/$id'
+      preLoaderRoute: typeof MainSpendenQuittungIdRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/api/spenden/quittung/$id': {
+      id: '/api/spenden/quittung/$id'
+      path: '/api/spenden/quittung/$id'
+      fullPath: '/api/spenden/quittung/$id'
+      preLoaderRoute: typeof ApiSpendenQuittungIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crew/booking/$eventId/$applicationId': {
+      id: '/crew/booking/$eventId/$applicationId'
+      path: '/$applicationId'
+      fullPath: '/crew/booking/$eventId/$applicationId'
+      preLoaderRoute: typeof CrewBookingEventIdApplicationIdRouteImport
+      parentRoute: typeof CrewBookingEventIdRoute
+    }
+    '/crew/noise/device/$device': {
+      id: '/crew/noise/device/$device'
+      path: '/device/$device'
+      fullPath: '/crew/noise/device/$device'
+      preLoaderRoute: typeof CrewNoiseDeviceDeviceRouteImport
+      parentRoute: typeof CrewNoiseRoute
+    }
+    '/crew/noise/project/$projectId': {
+      id: '/crew/noise/project/$projectId'
+      path: '/project/$projectId'
+      fullPath: '/crew/noise/project/$projectId'
+      preLoaderRoute: typeof CrewNoiseProjectProjectIdRouteImport
+      parentRoute: typeof CrewNoiseRoute
+    }
+    '/crew/booking/$eventId/$applicationId/contact': {
+      id: '/crew/booking/$eventId/$applicationId/contact'
+      path: '/contact'
+      fullPath: '/crew/booking/$eventId/$applicationId/contact'
+      preLoaderRoute: typeof CrewBookingEventIdApplicationIdContactRouteImport
+      parentRoute: typeof CrewBookingEventIdApplicationIdRoute
+    }
     '/crew/noise/project/$projectId/': {
       id: '/crew/noise/project/$projectId/'
       path: '/'
       fullPath: '/crew/noise/project/$projectId/'
       preLoaderRoute: typeof CrewNoiseProjectProjectIdIndexRouteImport
-      parentRoute: typeof CrewNoiseProjectProjectIdRoute
-    }
-    '/crew/noise/project/$projectId/map': {
-      id: '/crew/noise/project/$projectId/map'
-      path: '/map'
-      fullPath: '/crew/noise/project/$projectId/map'
-      preLoaderRoute: typeof CrewNoiseProjectProjectIdMapRouteImport
       parentRoute: typeof CrewNoiseProjectProjectIdRoute
     }
     '/crew/noise/project/$projectId/list': {
@@ -1802,12 +1802,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrewNoiseProjectProjectIdListRouteImport
       parentRoute: typeof CrewNoiseProjectProjectIdRoute
     }
-    '/crew/booking/$eventId/$applicationId/contact': {
-      id: '/crew/booking/$eventId/$applicationId/contact'
-      path: '/contact'
-      fullPath: '/crew/booking/$eventId/$applicationId/contact'
-      preLoaderRoute: typeof CrewBookingEventIdApplicationIdContactRouteImport
-      parentRoute: typeof CrewBookingEventIdApplicationIdRoute
+    '/crew/noise/project/$projectId/map': {
+      id: '/crew/noise/project/$projectId/map'
+      path: '/map'
+      fullPath: '/crew/noise/project/$projectId/map'
+      preLoaderRoute: typeof CrewNoiseProjectProjectIdMapRouteImport
+      parentRoute: typeof CrewNoiseProjectProjectIdRoute
     }
   }
 }

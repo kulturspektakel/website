@@ -100,7 +100,7 @@ const AGE_LABELS: Record<(typeof AGE_VALUES)[number], string> = {
 
 const getProductList = createServerFn()
   .middleware([crewAuth])
-  .inputValidator((listId: string) => listId)
+  .validator((listId: string) => listId)
   .handler(async ({data: listId}) => {
     const id = Number(listId);
     if (!Number.isInteger(id)) {
@@ -152,7 +152,7 @@ const productFields = z.object({
  */
 const saveProducts = createServerFn()
   .middleware([crewAuth])
-  .inputValidator(
+  .validator(
     z.object({
       productListId: z.number().int(),
       products: z.array(
