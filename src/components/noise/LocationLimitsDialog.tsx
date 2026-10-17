@@ -37,7 +37,7 @@ import {
 import {errorToast} from './toast';
 import {TimeField, useDraftField} from './TimeField';
 import {applyEdits, hasEdits} from './draftTable';
-import {primarySeries, rangeKey, rangeLabel, seriesOptions} from './level';
+import {primarySeries, rangeKey, seriesOptions} from './level';
 import {limitLabel, type LimitSeries} from './limitLines';
 import {
   orderLocations,
@@ -45,6 +45,7 @@ import {
   type NoiseLimit,
   type NoiseLocationItem,
 } from './projectView';
+import {Name} from './Name';
 
 // The rows of the series column, grouped by weighting — the picker's own list, from the one
 // place that derives it from the series table (see seriesOptions). Shared and not restated
@@ -56,16 +57,17 @@ import {
 // so the finest window reads `LAeq,1m` here rather than the device page's per-second name for
 // the same row.
 //
-// Each block ends on the timeframe's Leq in its weighting, `LAeq,Range` — and the timeframe
-// is the limit's own start and end rather than the crop: a limit on whatever the timeline
-// happens to be cropped to would be a limit on the crop. So "LAeq,Range 85 dB, 20:00–23:00"
-// is the Leq of those three hours (see rangeLimitVerdicts).
+// Each block ends on the Leq of the limit's own hours in its weighting — and those are the
+// limit's start and end rather than the crop: a limit on whatever the timeline happens to be
+// cropped to would be a limit on the crop. So "LAeq,3h ≤ 85 dB, 20:00–23:00" is the Leq of
+// those three hours (see rangeLeqs). Keys only: a row names each option for its own hours
+// (see limitLabel), which is what that last one is called.
 const SERIES_GROUPS = seriesOptions(false).map((group) => ({
   ...group,
   options: [
-    ...group.options,
-    {key: rangeKey(group.weighting), label: rangeLabel(group.weighting)},
-  ] as Array<{key: LimitSeries; label: string}>,
+    ...group.options.map(({key}) => key),
+    rangeKey(group.weighting),
+  ] as LimitSeries[],
 }));
 
 // One line of the table while it is being edited, the same arrangement DraftRow has in
@@ -124,7 +126,9 @@ export function LocationLimitsDialog({
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Limits at {location.locationName}</DialogTitle>
+          <DialogTitle>
+            Limits at <Name>{location.locationName}</Name>
+          </DialogTitle>
         </DialogHeader>
         <DialogCloseTrigger />
         {/* Mounted per opening, which is what discards the draft: Cancel, the ✕ and a
@@ -325,10 +329,13 @@ function LimitRow({
   // What the row's controls are called for anyone not reading the table. Both halves of
   // what a limit is, since either alone names two rows the same the moment a location has a
   // limit on two series — or what the row is for while it has no figure yet.
+  // The hours the row covers, a blank bound being the event's — what a Leq over them is
+  // named for (see limitLabel).
+  const hours = {start: row.start ?? window.start, end: row.end ?? window.end};
   const which =
     row.decibels == null
-      ? `new ${limitLabel(row.series)} limit`
-      : `${row.decibels} dB ${limitLabel(row.series)} limit`;
+      ? `new ${limitLabel(row.series, hours)} limit`
+      : `${row.decibels} dB ${limitLabel(row.series, hours)} limit`;
 
   return (
     <Table.Row>
@@ -354,9 +361,9 @@ function LimitRow({
                 is nothing anyone can scan. */}
             {SERIES_GROUPS.map(({weighting, unit, options}) => (
               <optgroup key={weighting} label={unit}>
-                {options.map(({key, label}) => (
+                {options.map((key) => (
                   <option key={key} value={key}>
-                    {label}
+                    {limitLabel(key, hours)}
                   </option>
                 ))}
               </optgroup>
@@ -376,7 +383,7 @@ function LimitRow({
           label={`Start of ${which}`}
           value={row.start}
           window={window}
-          empty={{label: 'Event start', at: window.start}}
+          empty={{label: 'Project start', at: window.start}}
           onChange={(start) => onChange({...row, start})}
         />
       </Table.Cell>
@@ -385,7 +392,7 @@ function LimitRow({
           label={`End of ${which}`}
           value={row.end}
           window={window}
-          empty={{label: 'Event end', at: window.end}}
+          empty={{label: 'Project end', at: window.end}}
           onChange={(end) => onChange({...row, end})}
         />
       </Table.Cell>

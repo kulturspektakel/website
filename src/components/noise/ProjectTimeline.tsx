@@ -20,6 +20,12 @@ import {
 import type {LogGap} from './logCoverage';
 import {CHART_READOUT_STYLE} from './ChartTooltip';
 import {TimelineMarkers} from './TimelineMarkers';
+import {innermostAt} from './ranges';
+import {
+  isPlayheadPinned,
+  PINNED_PLAYHEAD_CSS,
+  setPlayheadPinned,
+} from './playheadPin';
 import {axisFraction} from './timelineTicks';
 
 // The slider speaks epoch milliseconds, the same unit as everything it is handed,
@@ -127,8 +133,7 @@ const CROP_SPAN = {
 // Four ways for a grip to be "now": hovered, dragged by zag (which flags the thumb it is
 // moving), stepped with the keyboard (focus-visible, so the value is readable while
 // arrowing), and carried by a drag drawing a new window, which zag knows nothing about —
-// hence data-moving below. The playhead's own pill is not one of these: it is not a thumb,
-// and it opens whenever the pointer is anywhere on the strip (see PLAYHEAD_READOUT_CSS).
+// hence data-moving below.
 const READOUT_ATTR = 'data-readout';
 // Hoisted for the same reason the CSS below is, and because a computed key would otherwise
 // have a fresh object built for every pill on every frame of a scrub.
@@ -139,21 +144,9 @@ const READOUT_CSS = {
     {display: 'block'},
 } as const;
 
-// The playhead's pill, set on the strip rather than on the mark: it opens while the pointer
-// is anywhere over the strip, not only over the hairline, and closes when it leaves. The mark
-// itself stays where it was put. A drag holds pointer capture on the strip, which keeps it
-// :hover even once the hand wanders off it; data-dragging covers zag's own thumb drags.
-const PLAYHEAD_ATTR = 'data-playhead';
-const PLAYHEAD_MARK = {[PLAYHEAD_ATTR]: ''} as const;
-const PLAYHEAD_READOUT_CSS = {
-  [`& [${PLAYHEAD_ATTR}] > [${READOUT_ATTR}]`]: {display: 'none'},
-  [`&:hover [${PLAYHEAD_ATTR}] > [${READOUT_ATTR}], &[data-dragging] [${PLAYHEAD_ATTR}] > [${READOUT_ATTR}]`]:
-    {display: 'block'},
-} as const;
-
-// What the pills print: read the same way the row charts' tooltip reads it, off the same rule
-// — a hover writes both at once, and one of them saying 22:15 while the other says
-// Sa 09.08. 22:15 would read as two different instants.
+// What the grips' pills print: read the same way the row charts' tooltip reads it, off the
+// same rule — one of them saying 22:15 while the other says Sa 09.08. 22:15 would read as
+// two different instants. (The playhead's pill names a comment instead; see commentAt.)
 //
 // One closure for the file rather than one per render: `live` is deliberately absent from this
 // component (see below), so there is nothing here for it to close over, and a fresh function
@@ -177,11 +170,10 @@ const labelFormat = instantLabel(false);
  * and Emotion's serialization off those frames — which needs props that don't change identity
  * when the page merely re-renders.
  *
- * One component for the grips and the playhead alike. The two differ in when they show: a
- * grip's is a child of its thumb and left to READOUT_CSS, which opens it only while that grip
- * is pointed at or moving, and the playhead's is left to PLAYHEAD_READOUT_CSS, which opens it
- * while the pointer is anywhere on the strip. The marker attribute is set on both, since it
- * is what that CSS (and the thumb's focus ring) selects on.
+ * One component for the grips and the comment under the pointer alike (see
+ * useCommentHover). A grip's is a child of its thumb and left to READOUT_CSS, which opens it
+ * only while that grip is pointed at or moving; the comment's is mounted only while there is
+ * one to name. The marker attribute is what that CSS (and the thumb's focus ring) selects on.
  */
 const Readout = memo(function Readout({
   fraction,
@@ -320,18 +312,9 @@ const playheadAt = (selection: ProjectSelection, ms: number) =>
  * parked against an edge must not draw over the thing that moves that edge. And
  * pointerEvents none, so the strip under it goes on answering the hover that is carrying it.
  */
-function Playhead({
-  fraction,
-  label,
-}: {
-  fraction: number;
-  // What the pill over the mark says. Shown only while the pointer is on the strip — see
-  // PLAYHEAD_READOUT_CSS, which the strip carries.
-  label: string;
-}) {
+function Playhead({fraction}: {fraction: number}) {
   return (
     <Box
-      {...PLAYHEAD_MARK}
       position="absolute"
       top="0"
       bottom="0"
@@ -340,12 +323,78 @@ function Playhead({
       bg="chart.playhead"
       boxShadow={PLAYHEAD_CASING}
       pointerEvents="none"
-      css={playheadHead(9, 10)}
+      css={{...playheadHead(9, 10), ...PINNED_PLAYHEAD_CSS}}
       style={{left: `${fraction * 100}%`}}
+    />
+  );
+}
+
+/**
+ * The comment under the pointer, named in a pill standing over it — what the strip says while
+ * it is hovered, and nothing outside a comment: the time is the grips' and the toolbar's to
+ * say. Off the pointer and not the playhead, which a click may have pinned elsewhere (see
+ * isPlayheadPinned): the pill answers "what is here", where the hand is.
+ *
+ * Kept as the text and its place, set only when either changes — so a hover across the ground
+ * between comments renders nothing.
+ */
+function useCommentHover(
+  comments: readonly TimelineComment[] | undefined,
+  instantOf: (control: HTMLElement, clientX: number) => number | null,
+  fractionOf: (ms: number) => number,
+) {
+  const [hover, setHover] = useState<{text: string; fraction: number} | null>(
+    null,
+  );
+  const onMove = (event: React.PointerEvent<HTMLElement>) => {
+    const at = instantOf(event.currentTarget, event.clientX);
+    const text = at == null ? null : commentAt(comments, at);
+    const fraction = at == null ? 0 : fractionOf(at);
+    setHover((prev) =>
+      text == null
+        ? null
+        : prev?.text === text && prev.fraction === fraction
+          ? prev
+          : {text, fraction},
+    );
+  };
+  const onLeave = () => setHover(null);
+  return {hover, onMove, onLeave};
+}
+
+function CommentReadout({
+  hover,
+}: {
+  hover: {text: string; fraction: number} | null;
+}) {
+  if (!hover) return null;
+  return (
+    <Box
+      position="absolute"
+      top="0"
+      bottom="0"
+      w="0"
+      pointerEvents="none"
+      style={{left: `${hover.fraction * 100}%`}}
     >
-      <Readout fraction={fraction}>{label}</Readout>
+      <Readout fraction={hover.fraction}>{hover.text}</Readout>
     </Box>
   );
+}
+
+type TimelineComment = {start: number; end: number | null; text: string | null};
+
+// The text of the comment an instant is in — of the ranges with something said, the
+// innermost, by the rule the card's tile picks one by (see innermostAt) — or null outside
+// every one.
+function commentAt(
+  comments: readonly TimelineComment[] | undefined,
+  at: number,
+): string | null {
+  const said = (comments ?? []).flatMap(({start, end, text}) =>
+    text && end != null ? [{start, end, text}] : [],
+  );
+  return innermostAt(said, at)?.text ?? null;
 }
 
 // What the strip is handed, in both of its forms. Stated once because the two differ by
@@ -363,8 +412,9 @@ type TimelineProps = {
   // Where a place on screen read over its limit, as a red wash across the strip. Null
   // when no place on screen has a limit for any series picked (see limitBreaches).
   breaches?: readonly LogGap[] | null;
-  // Where crew left comments, as marks on the strip (see TimelineMarkers).
-  comments?: readonly {start: number; end: number | null}[];
+  // Where crew left comments, as marks on the strip (see TimelineMarkers), and what they
+  // say, which the playhead's pill names while it is in one (see commentAt).
+  comments?: readonly TimelineComment[];
   onCommit: (selection: ProjectSelection) => void;
 };
 
@@ -467,6 +517,9 @@ function CropTimeline({
     // no longer become a click. Here as well as in the state above, because the move handler
     // reads it synchronously, several times per frame.
     drawing: boolean;
+    // Whether the playhead was pinned when the press began, which a click toggles (see
+    // isPlayheadPinned) — read then, since the press itself moves the playhead.
+    wasPinned: boolean;
   } | null>(null);
 
   // The strip's two shared rules, bound to this axis and this selection — see instantAt
@@ -480,6 +533,7 @@ function CropTimeline({
   // back over it. Against sliderMax rather than window.end, because that is the axis the
   // thumbs are on — see the note above CROP_SPAN.
   const fractionOf = (ms: number) => axisFraction(ms, window.start, sliderMax);
+  const commentHover = useCommentHover(comments, pointerAt, fractionOf);
 
   // Whether an instant falls strictly inside the lit window. Not a rule about the playhead
   // any more — that may stand anywhere on the strip — but about what a *press* means: inside
@@ -528,6 +582,7 @@ function CropTimeline({
       anchor: at,
       originX: event.clientX,
       drawing: false,
+      wasPinned: isPlayheadPinned(),
     };
     if (insideCrop(at)) {
       // The playhead goes where the press landed, as it always has — and stays there when the
@@ -565,7 +620,8 @@ function CropTimeline({
   // The same test is what keeps this out of the way of a drag — zag moves its grips off
   // document listeners, but the pointer is still over this control while it does.
   const onHoverMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (event.buttons !== 0) return;
+    // Held where a click pinned it (see isPlayheadPinned).
+    if (event.buttons !== 0 || isPlayheadPinned()) return;
     const at = pointerAt(event.currentTarget, event.clientX);
     // Only a strip with no width to measure, which is nowhere to point at.
     if (at == null) return;
@@ -620,12 +676,16 @@ function CropTimeline({
     press.current = null;
     setDrawing(false);
     if (!own || own.drawing) return;
-    // A click inside the window placed the playhead as it went down, and that is all it ever
-    // did. Outside it, the nearer edge stretches out to meet the pointer — zag's own track
+    // A click inside the window placed the playhead as it went down, and pins it there — or,
+    // pinned already, lets it follow the pointer again from there (see isPlayheadPinned).
+    // Outside it, the nearer edge stretches out to meet the pointer — zag's own track
     // rule, which its handler no longer gets to run, so pressProjectBound is where it lives
     // now, alongside the drawn window's own rule and on the same grid a grip's release lands
     // on.
-    if (insideCrop(own.anchor)) return;
+    if (insideCrop(own.anchor)) {
+      setPlayheadPinned(!own.wasPinned);
+      return;
+    }
     onceNow(pressProjectBound(own.anchor, selection, window));
   };
 
@@ -683,9 +743,12 @@ function CropTimeline({
         // already carries is the same gesture said in the same way. The grips keep their own
         // ew-resize over it, the playhead its crosshair.
         cursor="crosshair"
-        css={PLAYHEAD_READOUT_CSS}
         onPointerDownCapture={onControlPointerDownCapture}
-        onPointerMove={onControlPointerMove}
+        onPointerMove={(event) => {
+          commentHover.onMove(event);
+          onControlPointerMove(event);
+        }}
+        onPointerLeave={commentHover.onLeave}
         onPointerUp={onControlPointerUp}
         onPointerCancel={onControlPointerUp}
         // Fires on the ordinary release and whenever the browser takes the capture
@@ -798,14 +861,9 @@ function CropTimeline({
 
         {/* Where the page is reading, drawn between or beside the grips — see Playhead. Here
             in the tree so the markers are under it and the thumbs, carrying the recipe's own
-            z-index, are over it.
-
-            Its pill shows only while the pointer is on this strip (PLAYHEAD_READOUT_CSS, on
-            the control); the mark itself stays where it was put. */}
-        <Playhead
-          fraction={fractionOf(selection.current)}
-          label={labelFormat(selection.current)}
-        />
+            z-index, are over it. The comment under the pointer is named beside it. */}
+        <Playhead fraction={fractionOf(selection.current)} />
+        <CommentReadout hover={commentHover.hover} />
 
         {thumbs.map((value, i) => {
           const start = i === 0;
@@ -933,9 +991,17 @@ function ScrubTimeline({
   // the strip with a button down, and a ref because the move handler reads it several times
   // a frame and nothing renders from it.
   const pressed = useRef<number | null>(null);
+  // Whether the mark was pinned when the press began, which its release toggles (see
+  // isPlayheadPinned) — read then, since the press itself moves the mark.
+  const wasPinned = useRef(false);
 
   const at = (event: React.PointerEvent<HTMLDivElement>) =>
     instantAt(event.currentTarget, event.clientX, window.start, axisMax);
+  const commentHover = useCommentHover(
+    comments,
+    (control, clientX) => instantAt(control, clientX, window.start, axisMax),
+    (ms) => axisFraction(ms, window.start, axisMax),
+  );
 
   // A press puts the mark down at once, as it does inside the crop on the other strip, and
   // then carries it: there is no other thing a press here could become, so nothing waits on
@@ -953,6 +1019,7 @@ function ScrubTimeline({
     // against the first.
     if (pressed.current != null) return;
     pressed.current = event.pointerId;
+    wasPinned.current = isPlayheadPinned();
     event.currentTarget.setPointerCapture(event.pointerId);
     onceNow(playheadAt(selection, ms));
   };
@@ -963,6 +1030,8 @@ function ScrubTimeline({
     // pointer only ever moves while it is down, so a move with nothing held is a hover by
     // construction — and anything else held is a drag that began elsewhere, passing over.
     if (event.buttons !== 0 && pressed.current !== event.pointerId) return;
+    // A hover leaves a pinned mark where it is (see isPlayheadPinned).
+    if (event.buttons === 0 && isPlayheadPinned()) return;
     const ms = at(event);
     // Only a strip with no width to measure, which is nowhere to point at.
     if (ms == null) return;
@@ -978,7 +1047,11 @@ function ScrubTimeline({
   // does is open the gate again, and it is wired to lost capture as well as to up and cancel,
   // that being the one signal a press cannot end without.
   const endPress = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (pressed.current === event.pointerId) pressed.current = null;
+    if (pressed.current !== event.pointerId) return;
+    pressed.current = null;
+    // Where the press let go is where the mark is pinned — or, pinned already, where it
+    // starts following the pointer again.
+    setPlayheadPinned(!wasPinned.current);
   };
 
   return (
@@ -999,9 +1072,12 @@ function ScrubTimeline({
         // tick labels) that a drag would otherwise select rather than scrub past.
         touchAction="none"
         userSelect="none"
-        css={PLAYHEAD_READOUT_CSS}
         onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
+        onPointerMove={(event) => {
+          commentHover.onMove(event);
+          onPointerMove(event);
+        }}
+        onPointerLeave={commentHover.onLeave}
         onPointerUp={endPress}
         onPointerCancel={endPress}
         onLostPointerCapture={endPress}
@@ -1033,12 +1109,12 @@ function ScrubTimeline({
           overhang={HANDLE_W}
         />
 
-        {/* Last, so it draws over the grid — there are no thumbs here to pass over it. Its
-            pill shows only while the pointer is on the strip (PLAYHEAD_READOUT_CSS). */}
+        {/* Last, so it draws over the grid — there are no thumbs here to pass over it. The
+            comment under the pointer is named beside it. */}
         <Playhead
           fraction={axisFraction(selection.current, window.start, axisMax)}
-          label={labelFormat(selection.current)}
         />
+        <CommentReadout hover={commentHover.hover} />
       </Box>
     </Box>
   );

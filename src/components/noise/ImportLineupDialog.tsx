@@ -13,19 +13,18 @@ import {
 import {NativeSelectRoot} from '../chakra-snippets/native-select';
 import {toaster} from '../chakra-snippets/toaster';
 import {importNoiseLineup, noiseLineupAreas} from '../../routes/crew.noise';
-import {instantLabel} from './chartUtils';
 import {noiseQueryKeys} from './queries';
 import {errorToast} from './toast';
 import {useProjectView, type NoiseLocationItem} from './projectView';
-
-const label = instantLabel(false);
+import {Name} from './Name';
 
 // Pins a stage's lineup to a place: a comment per band playing there while the project
 // runs, named for the band and spanning its set (see importNoiseLineup). What the card's
 // "Import band lineup…" opens — so a reading at the main stage can be read against who was
 // on it.
 //
-// The bands are listed before anything is written, so it is clear what Import will add.
+// How many bands there are is said before anything is written, so it is clear what Import
+// will add.
 // Bands already imported here are skipped by the server, so a second import is harmless.
 export function ImportLineupDialog({
   open,
@@ -104,7 +103,7 @@ function ImportForm({
           <Text color="fg.error">Stages could not be loaded.</Text>
         ) : !area ? (
           <Text color="fg.muted">
-            Nobody is playing on any stage during {project.name}.
+            Nobody is playing on any stage during <Name>{project.name}</Name>.
           </Text>
         ) : (
           <Stack gap="4">
@@ -123,19 +122,12 @@ function ImportForm({
                 </NativeSelectField>
               </NativeSelectRoot>
             </Field.Root>
-            <Stack gap="1">
-              <Text fontSize="sm" color="fg.muted">
-                A comment at {location.locationName} for each of these:
-              </Text>
-              {area.bands.map((band) => (
-                <Text key={band.id} fontSize="sm">
-                  {band.name}{' '}
-                  <Text as="span" color="fg.muted">
-                    {label(band.start)} – {label(band.end)}
-                  </Text>
-                </Text>
-              ))}
-            </Stack>
+            {/* How many, not which: the bands are the lineup, which is known, and the
+                comments are on the chart once imported. */}
+            <Text fontSize="sm" color="fg.muted">
+              {area.bands.length} {area.bands.length === 1 ? 'band' : 'bands'}{' '}
+              will be added to <Name>{location.locationName}</Name>.
+            </Text>
           </Stack>
         )}
       </DialogBody>

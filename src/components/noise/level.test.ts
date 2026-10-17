@@ -189,16 +189,14 @@ describe('seriesLabel', () => {
     expect(seriesLabel('peak:C', false)).toBe('LCpeak');
   });
 
-  // The crop's Leq names the timeframe where a window would be — and carries a weighting
-  // like everything else, because it is an energetic mean over one weighting's minute
-  // column. Which one follows the primary, so the menu row and the card tile are renamed
-  // together by whatever is ticked above them.
-  it('names the timeframe where a window would be, weighted', () => {
-    expect(rangeLabel('A')).toBe('LAeq,Range');
-    expect(rangeLabel('C')).toBe('LCeq,Range');
-    expect(
-      rangeLabel(seriesByKey(primarySeries(['fmax:C', 'peak:C'])).weighting),
-    ).toBe('LCeq,Range');
+  // A range's Leq is named for its length where a window would be, in whole units: each holds
+  // until 120 of it, so 90s stays 90s and 123s is 2m.
+  it('names a range for its length, weighted', () => {
+    const range = (s: number) => ({start: 0, end: s * 1000});
+    expect(rangeLabel('A', range(90))).toBe('LAeq,90s');
+    expect(rangeLabel('A', range(123))).toBe('LAeq,2m');
+    expect(rangeLabel('C', range(90 * 60))).toBe('LCeq,90m');
+    expect(rangeLabel('C', range(150 * 60))).toBe('LCeq,3h');
   });
 });
 

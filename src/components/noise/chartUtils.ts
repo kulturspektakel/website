@@ -438,8 +438,9 @@ export const spanWithinDay = (spanMs: number): boolean => spanMs < DAY_MS;
 // ordinary case, so the rule left the tooltip mute about the day almost always. It costs
 // eight characters on a line that has them.
 //
-// Live keeps its seconds, that window being minutes wide, and takes the date on the same
-// terms as everything else: one shape for the readout rather than one per mode.
+// Live is the clock alone, to the second — hh:mm:ss: its window is the last few minutes off
+// the clock, so the day is today by definition and saying it is eight characters of nothing,
+// while the seconds are what tells two samples in it apart.
 //
 // In milliseconds, unlike the field helpers above: that is the unit an instant travels
 // this page in, and uPlot's seconds are a local fact of the chart. Converting here rather
@@ -448,10 +449,9 @@ export const instantLabel =
   (live: boolean): ((ms: number) => string) =>
   (ms) => {
     const d = zonedDate(ms / 1000);
-    const clock = live
+    return live
       ? `${hourMinuteOf(d)}:${pad2(d.getSeconds())}`
-      : hourMinuteOf(d);
-    return `${dayLabelOf(d)} ${clock}`;
+      : `${dayLabelOf(d)} ${hourMinuteOf(d)}`;
   };
 
 // Vertical-grid steps in seconds, smallest first, for the row charts' time axis.

@@ -3,24 +3,18 @@ import {useMemo} from 'react';
 import {noiseProjectLogs} from '../../routes/crew.noise';
 import {
   locationEnergyIndex,
-  locationRangeTotals,
   logSeries,
-  rangeLimitVerdicts,
-  runningLeqByLocation,
   seriesLevelsByDevice,
-  totalsByLocation,
   type LocationAssignments,
   type PlayheadLevels,
-  type RangeByWeighting,
-  type RangeTotals,
-  type RangeVerdict,
+  type RangeIndex,
   type SeriesTraces,
 } from './projectLogs';
 import {coverageGaps, limitBreaches, type LogGap} from './logCoverage';
 import type {LimitLine} from './limitLines';
 import {noiseQueryKeys} from './queries';
-import {logMinuteIndex, type Weighting} from './noise';
-import {type PickedSeries, type RangePick} from './level';
+import {logMinuteIndex} from './noise';
+import {pickedWeightings, type PickedSeries} from './level';
 import type {ProjectSelection} from './projectSelection';
 
 // Whichever project this is, the whole thing at once. Immutable enough to pin: a
@@ -41,9 +35,9 @@ const LOGS_CACHE = {
  * Nothing is fetched while live mode is on — `enabled` is doing exactly what it is
  * for, and it also means SSR never touches this. The derived shapes are memoized apart
  * because they change on very different things: the levels follow the playhead's *minute*
- * alone; the running totals the payload, the picked range weightings and the assignments;
- * the crop's Leq those totals and the crop, its running line only the crop's start; the
- * traces only the payload and the pick; the coverage gaps the payload alone. So dragging the timeline leaves the levels, the traces
+ * alone; the running totals every range's Leq is read off the payload, the picked series'
+ * weightings and the assignments; the traces only the payload and the pick; the coverage
+ * gaps the payload alone. So dragging the timeline leaves the levels, the traces
  * and the gaps alone, and scrubbing recomputes one small record — and only when it crosses
  * into a new minute.
  */
@@ -51,11 +45,9 @@ export function useProjectLogs({
   projectId,
   live,
   picked,
-  range,
   selection,
   locations,
   timeline,
-  comments,
 }: {
   projectId: string;
   live: boolean;
@@ -63,14 +55,10 @@ export function useProjectLogs({
   // picked (see seriesLevelsByDevice), so changing what the header prints recomputes
   // nothing there — only the traces follow the pick.
   picked: PickedSeries;
-  // Which weightings of the crop's Leq are wanted (see RangePick). Nothing is summed for
-  // one that isn't.
-  range: RangePick;
   selection: ProjectSelection;
-  // Which placements count as each location's, for the crop Leq below. The pins and
-  // the charts resolve their own; this is the one number that has to be summed over
-  // the whole crop rather than read at an instant. With the place's limits, for the ones
-  // written against a `Leq,Range` (see rangeLimitVerdicts).
+  // Which placements count as each location's, for the range Leqs below. The pins and the
+  // charts resolve their own; a range's Leq is the one number that has to be summed over a
+  // stretch rather than read at an instant.
   locations: readonly (LocationAssignments & {
     limits: readonly LimitLine[];
   })[];
@@ -84,21 +72,12 @@ export function useProjectLogs({
     })[];
     all: boolean;
   };
-  // The project's comment ranges, whose own Leq the charts' tooltips print (see
-  // `commentLeqs`). Memoized by the caller.
-  comments: readonly {id: string; start: number; end: number}[];
 }): {
   levels?: PlayheadLevels;
-  // Per picked range weighting: each location's Leq over the crop, and its running Leq from
-  // the crop's start on the traces' minute grid (see runningLeq).
-  locationTotals?: RangeByWeighting<RangeTotals>;
-  rangeTraces?: RangeByWeighting<(number | null)[]>;
-  // Per picked range weighting and location: the `Leq,Range` limits overlapping the crop
-  // whose own hours came to more than they allow.
-  rangeOver?: RangeByWeighting<RangeVerdict[]>;
-  // Per picked range weighting and location: the Leq over each comment range's own
-  // hours, by comment id — what a band's set came to at that place.
-  commentLeqs?: RangeByWeighting<Record<string, number>>;
+  // Each weighting's running totals, which any stretch's Leq at any place is read off in
+  // constant time (see rangeLeqs) — so the readouts ask for the ranges they show, rather
+  // than this computing every range a page might.
+  rangeIndex?: RangeIndex;
   traces?: SeriesTraces;
   // The stretches of the event nobody reported in, which the timeline shades. Absent
   // while live and while the payload is in flight, so the strip draws nothing rather
@@ -119,14 +98,13 @@ export function useProjectLogs({
   // Nothing stored is answered while live, and `enabled` alone does not say that: a query
   // switched off keeps whatever it last fetched, and the payload is pinned for an hour on
   // purpose (see LOGS_CACHE), so going live after a scrub left every derived shape below
-  // still standing on it. That mattered for the crop's Leq, which a card printed beside
-  // its live readings — a number averaged over a timeframe the page is no longer looking
-  // at. Dropped here rather than at each of the three memos, and rather than in the leaves:
+  // still standing on it. That mattered for a range's Leq, which a card printed beside its
+  // live readings — a number averaged over a stretch the page is no longer looking at. Dropped here rather than at each of the three memos, and rather than in the leaves:
   // "absent while live" is one rule about this hook's whole answer, and it is what the
   // context's fields (see ProjectViewCtx) already promise.
   const logs = live ? undefined : data;
 
-  const {start, end, current} = selection;
+  const {current} = selection;
 
   // The playhead's readings, so keyed on the playhead and not on the crop — and on the
   // minute it stands in rather than the instant, because that is all the payload has.
@@ -147,87 +125,24 @@ export function useProjectLogs({
     [logs, minute],
   );
 
-  // The running totals every crop's Leq is read off, which depend on neither end of
-  // it: dragging the timeline is the gesture that asks for those Leqs, once a frame
-  // for every location, and this is what keeps that from re-walking the whole event
-  // each time. Not keyed on the crop, and it must not be — see locationEnergyIndex.
+  // The running totals every range's Leq is read off, which depend on no range: a hover
+  // asks for those Leqs once a frame, and this is what keeps that from re-walking the whole
+  // event each time. Not keyed on the crop, and it must not be — see locationEnergyIndex.
   //
-  // One per picked weighting — an energetic mean is one number over one column — and keyed
-  // on a string for the reason `traces` is below.
-  const rangeKey = range.join(' ');
-  const energies = useMemo(
-    () =>
+  // One per weighting of the picked series (see pickedWeightings) — an energetic mean is
+  // one number over one column — and keyed on a string for the reason `traces` is below.
+  // Absent while live, `logs` being: an instant has no range to average.
+  const weightingsKey = pickedWeightings(picked).join(' ');
+  const rangeIndex = useMemo(
+    (): RangeIndex | undefined =>
       logs &&
-      range.map(
-        (weighting) =>
-          [weighting, locationEnergyIndex(logs, weighting, locations)] as const,
+      Object.fromEntries(
+        pickedWeightings(picked).map((weighting) => [
+          weighting,
+          locationEnergyIndex(logs, weighting, locations),
+        ]),
       ),
-    [logs, rangeKey, locations],
-  );
-
-  // And the reverse of the levels: an energetic mean over every minute of the crop for
-  // every location, which the playhead cannot change. Keying it on the playhead too
-  // would redo all of that on every frame of a scrub for a number that could not have
-  // moved — which is why this is its own memo rather than a branch of the one above.
-  const locationTotals = useMemo(
-    () =>
-      energies &&
-      byWeighting(energies, (index) => totalsByLocation(index, {start, end})),
-    [energies, start, end],
-  );
-
-  // The same mean as a line, from the crop's start — restarting inside each `Leq,Range`
-  // limit at the limit's own start (see runningLeq). Not keyed on the end: the line runs to
-  // the end of the payload and uPlot crops it, so only moving the start redraws it.
-  const rangeTraces = useMemo(
-    () =>
-      energies &&
-      byWeighting(energies, (index, weighting) =>
-        runningLeqByLocation(index, weighting, start, locations),
-      ),
-    [energies, start, locations],
-  );
-
-  // Which of those limits the cards warn about: judged on their own hours, and only the
-  // ones the crop overlaps.
-  const rangeOver = useMemo(
-    () =>
-      energies &&
-      byWeighting(energies, (index, weighting) =>
-        Object.fromEntries(
-          locations.flatMap((location) => {
-            const over = rangeLimitVerdicts(index, weighting, location, {
-              start,
-              end,
-            });
-            return over.length === 0 ? [] : [[location.id, over]];
-          }),
-        ),
-      ),
-    [energies, start, end, locations],
-  );
-
-  // Each comment range's Leq at every place, over the comment's own hours rather than the
-  // crop's — the same mean as a `Leq,Range` limit is judged on (see rangeLimitVerdicts).
-  // Every place against every comment, whatever it is scoped to: a chart looks up only the
-  // ones it shows, and there are a few dozen of each at most.
-  const commentLeqs = useMemo(
-    () =>
-      energies &&
-      byWeighting(energies, (index) =>
-        Object.fromEntries(
-          Object.keys(index.locations).map((id) => [
-            id,
-            Object.fromEntries(
-              comments.flatMap((c) => {
-                const totals = locationRangeTotals(index, id, c);
-                return totals ? [[c.id, totals.db]] : [];
-              }),
-            ),
-          ]),
-        ),
-      ),
-    [energies, comments],
+    [logs, weightingsKey, locations],
   );
 
   // Not keyed on the crop or the playhead: uPlot does the cropping, so dragging the
@@ -265,35 +180,19 @@ export function useProjectLogs({
   );
 
   // The same places against their limits, in every series picked — each one a chart
-  // draws a limit's rule for (see limitBreaches) — and in every picked `Leq,Range`. Keyed
-  // on the string for the reason `traces` is.
+  // draws a limit's rule for (see limitBreaches) — and in their weightings' `Leq,T`.
+  // Keyed on the string for the reason `traces` is.
   const breaches = useMemo(
-    () =>
-      logs &&
-      limitBreaches(
-        logs,
-        timeline.locations,
-        picked,
-        (energies ?? []).map(([weighting, index]) => ({weighting, index})),
-      ),
-    [logs, timeline, pickedKey, energies],
+    () => logs && limitBreaches(logs, timeline.locations, picked, rangeIndex),
+    [logs, timeline, pickedKey, rangeIndex],
   );
 
   return {
     levels,
-    locationTotals,
-    rangeTraces,
-    rangeOver,
-    commentLeqs,
+    rangeIndex,
     traces,
     gaps,
     breaches,
     isFetching,
   };
 }
-
-const byWeighting = <I, T>(
-  indexes: readonly (readonly [Weighting, I])[],
-  read: (index: I, weighting: Weighting) => Record<string, T>,
-): RangeByWeighting<T> =>
-  Object.fromEntries(indexes.map(([w, index]) => [w, read(index, w)]));

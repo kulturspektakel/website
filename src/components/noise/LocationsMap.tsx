@@ -6,22 +6,19 @@ import {SegmentedControl} from '../chakra-snippets/segmented-control';
 import {KULT_LOCATION} from '../../utils/kultLocation';
 import {useLatest} from './chartUtils';
 import {exceedsLimit} from './limitLines';
-import {ChartTooltip, ChartTooltipReadings} from './ChartTooltip';
-import {formatBatteryPercent} from './batteryCurve';
+import {ChartTooltip} from './ChartTooltip';
 import {useDeviceStates, useTick} from './context';
-import {compareDeviceIds, isFresh} from './noise';
 import {
   displayedLevel,
   formatDb,
   isCurrent,
   loudestLevel,
-  seriesLabel,
   weightingUnit,
   type DisplayedLevel,
 } from './level';
 import {seriesByKey, type SeriesKey} from './series';
 import {darkMapStyle, mapBackground} from './mapStyle';
-import {NO_LEVEL_LABEL, pinIcon, pinLabel, warningIcon} from './mapPin';
+import {NO_LEVEL_LABEL, pinIcon, pinLabel} from './mapPin';
 import {LEVEL_BANDS, levelBand} from './pinScale';
 import {glowOverlay, type Glow} from './mapGlow';
 import {pulseOverlay} from './mapPulse';
@@ -44,6 +41,16 @@ export type MapLocation = {
   // them, the pin shows what they read anyway, struck through and without colour, glow
   // or warning — a reading nobody is counting.
   ignoredDeviceIds?: string[];
+  // Whether a `Leq,T` limit in force at the instant the pin reads is broken — what its whole
+  // hours came to was over it, the reading the card's tile and the chart's wash go red on
+  // (see rangeLeqs). Turns the pin red as a series over its limit does.
+  rangeOver?: boolean;
+  // The limits in force for this place at the instant the pin reads, spelled out (e.g.
+  // "LAeq,5m ≤ 85.0 dB") — all its hover says besides its name (see the caller).
+  limitsNow?: string[];
+  // The comment this place is in at the instant the pin reads — a band's set, say — printed
+  // under the pin. Absent outside every one (see the caller).
+  comment?: string;
 };
 
 export type Coordinates = {latitude: number; longitude: number};
@@ -56,12 +63,9 @@ const SINGLE_LOCATION_ZOOM = 17;
 const EMPTY_ZOOM = 16;
 // ~0.1 m. Full click precision is a dozen meaningless digits in a form field.
 const COORD_DECIMALS = 6;
-// Above the pins, which take Google's default. A warned pin and its sign both ask for a
-// layer, and in that order: the sign sits *inside* the badge now, so it has to be over its
-// own pill — and the pill has to be over the neighbouring ones, or a sign floating above
-// somebody else's badge would read as their warning.
+// Above the pins, which take Google's default: a pin over its limit is drawn over its
+// neighbours, so its red is never hidden under somebody else's badge.
 const OVER_PIN_Z_INDEX = 1;
-const WARNING_Z_INDEX = 2;
 // The pin being placed, over every other: it is under the pointer, and the one mark on the
 // map that answers to it.
 const PLACING_Z_INDEX = 3;
@@ -190,7 +194,7 @@ type Pin = {
 // A pin reading its location's level: the loudest of the monitors standing there, as the
 // list rows decide it.
 function levelPin(
-  {deviceIds, ignoredDeviceIds = [], limitDb}: MapLocation,
+  {deviceIds, ignoredDeviceIds = [], limitDb, rangeOver = false}: MapLocation,
   levelOf: (deviceId: string) => DisplayedLevel,
 ): Pin {
   // Ignored wherever every monitor standing there is: a place with one monitor set aside
@@ -222,7 +226,10 @@ function levelPin(
     // number is already drawn as "not this", and warning over it would raise an alarm about
     // a moment nobody is looking at. A missing limit is not a permissive one, so a place
     // with nothing written for it never warns.
-    over: !ignored && current && exceedsLimit(level.db, limitDb),
+    //
+    // Or over a `Leq,T` limit whose hours it is in: that limit judges the stretch rather than
+    // this number, so it holds whatever the number reads now.
+    over: !ignored && current && (rangeOver || exceedsLimit(level.db, limitDb)),
     ignored,
     live: level.kind === 'live',
     named: false,
@@ -285,12 +292,45 @@ function MapCanvas({
     name: string;
     x: number;
     y: number;
-    // How far across the map the pin sits, which keeps the readout inside it (see
-    // ChartTooltip).
-    fraction: number;
   } | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
+  // The comments under the pins, one overlay each (see commentOverlay).
+  const commentsRef = useRef<google.maps.OverlayView[]>([]);
   const [mapTypeId, setMapTypeId] = useState<MapTypeId>('roadmap');
+
+  // What each place's comment says, under its pin — rebuilt only when one of them changes,
+  // which on a scrub is when the instant read crosses into or out of a comment. Not while the
+  // map is being edited, when the pins name their places instead.
+  const commentKey = placing
+    ? ''
+    : locations.map((l) => `${l.id}:${l.comment ?? ''}`).join('|');
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const maps = window.google.maps;
+    for (const overlay of commentsRef.current) overlay.setMap(null);
+    commentsRef.current = placing
+      ? []
+      : locations.flatMap((l) =>
+          l.comment
+            ? [
+                commentOverlay(
+                  maps,
+                  new maps.LatLng({lat: l.latitude, lng: l.longitude}),
+                  l.comment,
+                ),
+              ]
+            : [],
+        );
+    for (const overlay of commentsRef.current) overlay.setMap(map);
+    // `locations` is read through `commentKey`, which says everything about it this uses.
+  }, [commentKey]);
+  useEffect(
+    () => () => {
+      for (const overlay of commentsRef.current) overlay.setMap(null);
+    },
+    [],
+  );
 
   // The map itself is created once. Rebuilding it on every project refetch would
   // reset the viewport and flash.
@@ -452,13 +492,11 @@ function MapCanvas({
             new maps.LatLng({lat: location.latitude, lng: location.longitude}),
           );
         if (!point) return;
-        const width = containerRef.current?.offsetWidth ?? 0;
         setHovered({
           id: location.id,
           name: location.locationName,
           x: point.x,
           y: point.y,
-          fraction: width > 0 ? Math.min(Math.max(point.x / width, 0), 1) : 0.5,
         });
       });
       marker.addListener('mouseout', () => setHovered(null));
@@ -628,39 +666,6 @@ function MapCanvas({
     });
   }, [labelKey, signature, mapTypeId]);
 
-  // The triangle inside every pin over its limit, ahead of the number — a second marker,
-  // since it is a second colour over the pill (see warningIcon). Created and destroyed with the set
-  // of pins that are over, the way the pulses below are, rather than kept per pin and
-  // hidden: an over-limit pin is the rare case, and this way the map carries nothing at all
-  // for a site inside its permit.
-  const overKey = pins.map((pin) => (pin.over ? '1' : '0')).join('');
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map) return;
-    const maps = window.google.maps;
-    const icon = warningIcon(maps);
-    const warnings = locations.flatMap((location, i) =>
-      pins[i]?.over
-        ? [
-            new maps.Marker({
-              map,
-              position: {lat: location.latitude, lng: location.longitude},
-              icon,
-              // Over the badge it sits in, and so over every pin that badge is over.
-              zIndex: WARNING_Z_INDEX,
-              // The pin underneath keeps the click. A mark this size is not a target, and
-              // one that swallowed the press would make the pin it is warning about the
-              // one pin on the map you cannot open.
-              clickable: false,
-            }),
-          ]
-        : [],
-    );
-    return () => {
-      for (const warning of warnings) warning.setMap(null);
-    };
-  }, [overKey, signature]);
-
   // A pulse behind every pin currently fed by the live stream. Keyed on which pins
   // those are, so it only churns when liveness actually changes — not on every
   // level update.
@@ -736,72 +741,21 @@ function MapCanvas({
             <ChartTooltip
               left={hovered.x}
               top={hovered.y - 13}
-              fraction={hovered.fraction}
+              // Centred on its pin, always: it names that pin, and a few short lines
+              // fit beside it anywhere — unlike a chart's readout, which slides along
+              // so a wide one stays inside its card.
+              fraction={0.5}
             >
-              {/* Every monitor standing here with its own reading — the pin carries only
-                  the loudest — and, live, its charge, since that is the other thing a walk
-                  round the site is checking for. Battery only while the monitor is
-                  talking: the stream is the only thing that carries it (see DeviceBadge),
-                  and a last-heard voltage shown as current is worse than none. Beside the
-                  monitor's name where there are several, and beside the place's where
-                  there is one and so no heading to put it in. */}
-              {(() => {
-                const devices = [...(location?.deviceIds ?? [])]
-                  .sort(compareDeviceIds)
-                  .map((deviceId) => {
-                    const state = deviceState(deviceId);
-                    const batteryMv =
-                      live && isFresh(state?.lastSeen, now)
-                        ? state?.latest.batteryMv
-                        : null;
-                    return {
-                      deviceId,
-                      battery:
-                        batteryMv == null
-                          ? null
-                          : formatBatteryPercent(batteryMv),
-                      level: levelOf(deviceId),
-                    };
-                  });
-                const headed = devices.length > 1;
-                const name = pins[i]?.ignored
-                  ? `${hovered.name} (ignored)`
-                  : hovered.name;
-                const lone = headed ? null : devices[0]?.battery;
-                return (
-                  <>
-                    <Text>{lone ? `${name} · ${lone}` : name}</Text>
-                    <ChartTooltipReadings
-                      headed={headed}
-                      groups={devices.map(({deviceId, battery, level}) => ({
-                        key: deviceId,
-                        heading: battery
-                          ? `${deviceId} · ${battery}`
-                          : deviceId,
-                        rows: [
-                          {
-                            key: series,
-                            label: seriesLabel(series, live),
-                            value: formatDb(
-                              level.kind === 'none' ? null : level.db,
-                              'dB',
-                            ),
-                            color: seriesByKey(series).color,
-                            dimmed: !isCurrent(level),
-                            struck:
-                              location?.ignoredDeviceIds?.includes(deviceId) ??
-                              false,
-                            // Against the same figure the pin warns by (see limitDb).
-                            over:
-                              isCurrent(level) &&
-                              exceedsLimit(level.db, location?.limitDb),
-                          },
-                        ],
-                      }))}
-                    />
-                  </>
-                );
-              })()}
+              {/* The place and what it is held to now — nothing else: the pin carries the
+                  reading, and the cards carry each monitor's. */}
+              <Text fontWeight="semibold">
+                {pins[i]?.ignored ? `${hovered.name} (ignored)` : hovered.name}
+              </Text>
+              {location?.limitsNow?.map((limit) => (
+                <Text key={limit} color="fg.muted">
+                  Limit {limit}
+                </Text>
+              ))}
             </ChartTooltip>
           );
         })()}
@@ -940,4 +894,47 @@ function LevelLegend({unit}: {unit: string}) {
       </Text>
     </HStack>
   );
+}
+
+// A comment under a pin: a small readout of its text, centred below the badge — the badge
+// is 26px tall and centred on the place, so its foot is 13px down plus its ring. A pill in
+// the pins' own ring colour, off the theme's variables, since this is a node the map owns
+// and not one React renders. An OverlayView, so the map keeps it under
+// its pin through every pan and zoom without anything here re-running.
+const COMMENT_BELOW_PIN_PX = 17;
+
+function commentOverlay(
+  maps: typeof google.maps,
+  position: google.maps.LatLng,
+  text: string,
+): google.maps.OverlayView {
+  const overlay = new maps.OverlayView();
+  const node = document.createElement('div');
+  node.textContent = text;
+  Object.assign(node.style, {
+    position: 'absolute',
+    transform: `translate(-50%, ${COMMENT_BELOW_PIN_PX}px)`,
+    maxWidth: '10rem',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    padding: '2px 8px',
+    fontSize: '11px',
+    lineHeight: '1.3',
+    color: 'var(--chakra-colors-fg)',
+    // A pill in the ring every pin is drawn with (see pinIcon), so the comment reads as
+    // hung from its pin rather than as a separate mark on the map.
+    background: 'var(--chakra-colors-map-ground)',
+    borderRadius: '9999px',
+    pointerEvents: 'none',
+  } satisfies Partial<CSSStyleDeclaration>);
+  overlay.onAdd = () => overlay.getPanes()?.overlayLayer.appendChild(node);
+  overlay.draw = () => {
+    const point = overlay.getProjection()?.fromLatLngToDivPixel(position);
+    if (!point) return;
+    node.style.left = `${point.x}px`;
+    node.style.top = `${point.y}px`;
+  };
+  overlay.onRemove = () => node.remove();
+  return overlay;
 }

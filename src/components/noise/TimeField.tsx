@@ -1,6 +1,7 @@
 import {useEffect, useState} from 'react';
-import {Box, Button, HStack, IconButton, Input} from '@chakra-ui/react';
-import {LuDelete} from 'react-icons/lu';
+import {Button, IconButton, Input} from '@chakra-ui/react';
+import {LuX} from 'react-icons/lu';
+import {InputGroup} from '../chakra-snippets/input-group';
 import {fromLocalInput, toLocalInput} from './timeframe';
 
 /**
@@ -35,7 +36,7 @@ export function useDraftField(
 // standing), so a row that holds throughout is two empty fields.
 //
 // Empty is said rather than shown as a blank input: the field reads as what an empty bound
-// *means* — "Event start", "Event end" — in the box an input would stand in, so it lines up with
+// *means* — "Project start", "Project end" — in the box an input would stand in, so it lines up with
 // the dated rows around it and is plainly not a value someone forgot to fill. Pressing it sets
 // the bound to the instant it stood for and opens the input on it, so pressing is choosing and
 // the date is there to adjust. A dated bound carries a reset button that empties it again, which a
@@ -48,8 +49,10 @@ export function useDraftField(
 // It reports the cleared field on blur rather than on change, unlike the dB field beside
 // it, because '' is ambiguous here: mid-edit and emptied look the same, and only one of
 // them means the edge of the event.
-// The reset button's width, which an empty bound holds free beside its words (see TimeField).
-const CLEAR_W = '6';
+// The least a field may be: wide enough for the browser's date and time, its picker icon, and
+// the reset button inside the field's end (see TimeField). Shared by the empty bound's button,
+// so the two kinds of row are one width.
+const FIELD_MIN_W = '52';
 
 export function TimeField({
   label,
@@ -75,38 +78,52 @@ export function TimeField({
 
   if (empty && value == null) {
     return (
-      // The dated row's own layout, with the reset button's slot held empty — so the words fill the cell
-      // up to where a date's reset button would stand, and the two kinds of row end on one edge.
-      <HStack gap="1" w="full">
-        <Button
-          variant="outline"
-          size="sm"
-          minW="52"
-          flex="1"
-          justifyContent="flex-start"
-          fontWeight="normal"
-          color="fg.muted"
-          aria-label={`${label}: ${empty.label}`}
-          onClick={() => {
-            onChange(empty.at);
-            setOpened(true);
-          }}
-        >
-          {empty.label}
-        </Button>
-        <Box w={CLEAR_W} flexShrink="0" />
-      </HStack>
+      // The dated field's own width, so the two kinds of row end on one edge.
+      <Button
+        variant="outline"
+        size="sm"
+        minW={FIELD_MIN_W}
+        w="full"
+        justifyContent="flex-start"
+        fontWeight="normal"
+        color="fg.muted"
+        aria-label={`${label}: ${empty.label}`}
+        onClick={() => {
+          onChange(empty.at);
+          setOpened(true);
+        }}
+      >
+        {empty.label}
+      </Button>
     );
   }
 
   return (
-    <HStack gap="1" w="full">
+    // The reset button inside the field's own border, at its end — part of the input rather
+    // than a control beside it, which is what it acts on.
+    <InputGroup
+      w="full"
+      minW={FIELD_MIN_W}
+      endElementProps={{pe: '1'}}
+      endElement={
+        empty &&
+        value != null && (
+          <IconButton
+            aria-label={`Reset ${label} to ${empty.label}`}
+            size="2xs"
+            variant="ghost"
+            color="fg.muted"
+            onClick={() => onChange(null)}
+          >
+            <LuX />
+          </IconButton>
+        )
+      }
+    >
       <Input
         type="datetime-local"
         aria-label={label}
         size="sm"
-        minW="52"
-        flex="1"
         autoFocus={opened}
         // Native bounds, so the picker offers the event rather than the century. Typed
         // input outside it is still accepted — a monitor may have been carried out
@@ -130,19 +147,6 @@ export function TimeField({
           if (!fromLocalInput(draft)) revert();
         }}
       />
-      {empty && value != null && (
-        <IconButton
-          aria-label={`Reset ${label} to ${empty.label}`}
-          size="xs"
-          minW={CLEAR_W}
-          w={CLEAR_W}
-          variant="ghost"
-          color="fg.muted"
-          onClick={() => onChange(null)}
-        >
-          <LuDelete />
-        </IconButton>
-      )}
-    </HStack>
+    </InputGroup>
   );
 }

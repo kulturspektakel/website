@@ -20,10 +20,13 @@ import {
   usePlayheadLevels,
   useProjectView,
   useReadingMinute,
+  type DeviceWindows,
   type NoiseAssignment,
   type NoiseLocationItem,
 } from './projectView';
-import {ignoredDevicesAt} from './rangeTags';
+import {ignoredDevicesAt, locationTags} from './rangeTags';
+import {activeRange, locationRanges, type NamedRange} from './ranges';
+import {rangeLeqs} from './projectLogs';
 import {type LimitLine} from './limitLines';
 
 // One place on the list, and one row for it however many monitors have stood there. The
@@ -93,6 +96,11 @@ export const LocationCard = memo(function LocationCard({
     [location.assignments],
   );
 
+  // The range being swept across the chart — while it is dragged and while its menu is open
+  // — which the header's range tile shows the Leq of: held here, the chart and the tile
+  // being siblings.
+  const [sweep, setSweep] = useState<{start: number; end: number} | null>(null);
+
   return (
     // A card is either on the list or not on it at all, never folded shut: there is no
     // disclosure here, a card that is here is open, and a chart nobody wants is one that
@@ -138,6 +146,8 @@ export const LocationCard = memo(function LocationCard({
           locationId={location.id}
           limits={location.limits}
           assignments={assignments}
+          lines={lines}
+          sweep={sweep}
           empty={lines.length === 0}
         />
         {/* Always here, and always the ⋮: a location with no monitor is exactly the one
@@ -234,7 +244,7 @@ export const LocationCard = memo(function LocationCard({
       {/* The place's whole permit, not the limits in force at the playhead: the chart
           spans the crop, so a limit that lapsed at midnight belongs on a crop that covers
           midnight — the same reason `lines` is the whole assignment history. */}
-      <LocationChart location={location} lines={lines} />
+      <LocationChart location={location} lines={lines} onSweep={setSweep} />
     </Box>
   );
 });
@@ -254,6 +264,8 @@ function LocationLevels({
   locationId,
   limits,
   assignments,
+  lines,
+  sweep,
   empty,
 }: {
   locationId: string;
@@ -262,13 +274,18 @@ function LocationLevels({
   // Resolved at the playhead by the layout — the monitors whose readings are this
   // location's at the instant being viewed.
   assignments: NoiseAssignment[];
+  // Every monitor the place has had, which is what decides the comments reaching it (see
+  // locationTags).
+  lines: readonly DeviceWindows[];
+  // The range being swept across the chart below, which the range tile reads in preference
+  // to the playhead's.
+  sweep: {start: number; end: number} | null;
   // Whether the place has never had a monitor at all, which is the one case with
   // nothing to print. Not `assignments.length`: a location between two placements has
-  // no monitor *now* and still has a crop Leq to show.
+  // no monitor *now* and still has a range Leq to show.
   empty: boolean;
 }) {
-  const {project, live, picked, pickedRange, locationTotals, rangeOver} =
-    useProjectView();
+  const {project, live, picked, rangeIndex} = useProjectView();
   const levels = usePlayheadLevels();
   // The monitors whose readings crew set aside at the minute being read — the same rule
   // and the same minute the map's pin reads them at, so the two agree on what is ignored.
@@ -285,24 +302,36 @@ function LocationLevels({
           ),
     [at, project.tags, locationId, assignments],
   );
-  // Whatever there is, unconditionally: whether this reading is wanted at all is settled
-  // where it is produced, so a card has no gate of its own to get wrong (see
-  // ProjectViewCtx.pickedRange).
-  const totals = useMemo(
+  // The stretches a `Leq,T` is read over here (see locationRanges).
+  const ranges = useMemo(
     () =>
-      pickedRange.map((weighting) => ({
-        weighting,
-        total: locationTotals?.[weighting]?.[locationId],
-        over: rangeOver?.[weighting]?.[locationId],
-      })),
-    [pickedRange, locationTotals, rangeOver, locationId],
+      locationRanges(
+        locationTags(project.tags, locationId, lines).filter(
+          (t) => t.type === 'COMMENT',
+        ),
+        limits,
+      ),
+    [project.tags, locationId, lines, limits],
   );
+  // The one the tile reads: the sweep while there is one, otherwise the range the playhead
+  // is in (see activeRange) — and none at all outside every range, or while live, where
+  // `rangeIndex` is empty and an instant has no stretch to average.
+  const range = useMemo(() => {
+    const active: NamedRange | null = sweep
+      ? {id: 'sweep', ...sweep}
+      : at == null
+        ? null
+        : activeRange(ranges, at);
+    if (!active) return undefined;
+    const leqs = rangeLeqs(rangeIndex, locationId, active, active.limit);
+    return leqs.length === 0 ? undefined : {...active, leqs};
+  }, [sweep, at, ranges, rangeIndex, locationId]);
   if (empty) return null;
 
   return (
     <LocationReadings
       assignments={assignments}
-      totals={totals}
+      range={range}
       levels={levels}
       live={live}
       picked={picked}

@@ -20,6 +20,7 @@ import {
   writeSelection,
 } from '../components/noise/locationSelection';
 import {useProjectView} from '../components/noise/projectView';
+import {stuckShadow, useStuck} from '../components/noise/useStuck';
 
 // The counts as the picker says them. Named by what the arrangement *is* rather than by a
 // word for it: "Raster" was a third entry in the header's view switcher, and what it
@@ -113,6 +114,9 @@ function ProjectListView() {
 
   // Up to the layout, which draws the timeline for whatever is on the list.
   useEffect(() => setListed(selected), [setListed, selected]);
+
+  // Whether more of the list is below the strip at its foot (see useStuck).
+  const {sentinel: footSentinel, stuck: footStuck} = useStuck();
 
   // Computed here and not inside the updater: React invokes updaters twice in
   // development, and writing to storage is not the kind of thing to do twice.
@@ -234,6 +238,8 @@ function ProjectListView() {
         bg="bg"
         borderTopWidth="1px"
         borderColor="border"
+        // A shadow over the list while more of it is below (see stuckShadow).
+        {...stuckShadow(footStuck, 'bottom')}
       >
         {/* The selection itself, not a set rebuilt from the cards on screen: the two only
             ever differ by ids of locations that have since been deleted, and the menu asks
@@ -244,6 +250,8 @@ function ProjectListView() {
         <LocationPicker locations={roster} shown={selected} onToggle={toggle} />
         <ColumnPicker cols={cols} onPick={pickCols} />
       </HStack>
+      {/* Where the strip would stand unstuck, to tell when it is (see useStuck). */}
+      <Box ref={footSentinel} h="0" flexShrink="0" aria-hidden />
     </Box>
   );
 }

@@ -572,6 +572,7 @@ export const NoiseTagScalarFieldEnum = {
   start: 'start',
   end: 'end',
   text: 'text',
+  dedupeKey: 'dedupeKey',
   createdAt: 'createdAt',
   createdByViewerId: 'createdByViewerId'
 } as const
@@ -948,6 +949,7 @@ export const NoiseTagOrderByRelevanceFieldEnum = {
   locationId: 'locationId',
   deviceId: 'deviceId',
   text: 'text',
+  dedupeKey: 'dedupeKey',
   createdByViewerId: 'createdByViewerId'
 } as const
 

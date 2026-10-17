@@ -21,17 +21,17 @@ import {
 export function SelectionMenu({
   at,
   onZoom,
-  onIgnore,
+  onTag,
   onClose,
 }: {
   // Where the sweep ended, in the pixels of the box the chart is absolute in — the same
   // coordinates the tooltip is placed with (see cursorAnchor).
   at: {left: number; top: number};
   onZoom: () => void;
-  // Opens the dialog that tags the range as one to leave out (see RangeTagDialog).
-  // Optional, because only a chart that knows which place it is drawing can say what
-  // the tag applies to.
-  onIgnore?: () => void;
+  // Opens the dialog that tags the range — with a comment, or as one to leave out (see
+  // RangeTagDialog). Optional, because only a chart that knows which place it is drawing
+  // can say what the tag applies to.
+  onTag?: (type: 'IGNORE' | 'COMMENT') => void;
   onClose: () => void;
 }) {
   return (
@@ -64,8 +64,13 @@ export function SelectionMenu({
         <MenuItem value="zoom" onClick={onZoom}>
           Zoom in
         </MenuItem>
-        {onIgnore && (
-          <MenuItem value="ignore" onClick={onIgnore}>
+        {onTag && (
+          <MenuItem value="comment" onClick={() => onTag('COMMENT')}>
+            Comment…
+          </MenuItem>
+        )}
+        {onTag && (
+          <MenuItem value="ignore" onClick={() => onTag('IGNORE')}>
             Ignore…
           </MenuItem>
         )}

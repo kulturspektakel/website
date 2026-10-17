@@ -13,6 +13,7 @@ import {
   formatDb,
   isCurrent,
   loudestLevel,
+  rangeKey,
   rangeLabel,
   seriesLabel,
   type DisplayedLevel,
@@ -20,16 +21,11 @@ import {
 } from './level';
 import {seriesByKey, SERIES} from './series';
 import {type ChartSeriesToken} from '../../theme-noise';
-import {type Weighting} from './noise';
 import {coverageDetail} from './leq';
 import {IGNORED_OPACITY} from './rangeTags';
 import {exceedsLimit, limitAt, type LimitLine} from './limitLines';
-import {
-  type PlayheadLevels,
-  type RangeTotals,
-  type RangeVerdict,
-} from './projectLogs';
-import {formatTimeframeRange} from './timeframe';
+import {type PlayheadLevels} from './projectLogs';
+import {type RangeReading} from './ranges';
 import {type NoiseAssignment} from './projectView';
 
 // How loud it is at a location — the other half of its header, the half that follows the
@@ -48,9 +44,9 @@ import {type NoiseAssignment} from './projectView';
 //                 playhead, resolved the same way and by the same loudestLevel a map pin
 //                 uses, so the card and the pin for one place can no longer print
 //                 different numbers.
-//   the crop    — the energetic mean of that loudest, minute by minute, summed upstream
-//                 (see locationEnergyIndex), once per picked weighting of `Leq,Range`. It
-//                 is where the chart's running line for it ends (see runningLeq).
+//   a range     — the energetic mean of that loudest, minute by minute, over the stretch
+//                 the playhead is in or a sweep names (see activeRange), in each weighting
+//                 of the picked series — and no tile at all outside every range.
 //
 // One tile each, in the picker's order — which is the chart's order too (see SERIES) — the
 // value over the quantity's own name, `LAeq,5m` under 98.0. Naming it is what a row of
@@ -137,7 +133,7 @@ const GRID_COLUMNS = Array.from(
 
 export function LocationReadings({
   assignments,
-  totals,
+  range,
   levels,
   live,
   picked,
@@ -150,18 +146,11 @@ export function LocationReadings({
   // above and the chart below are drawn from, and averaging a monitor's time at another
   // stage into this place's reading is the mistake this shape exists to prevent.
   assignments: NoiseAssignment[];
-  // This location's Leq over the crop, already the envelope, for each weighting the menu's
-  // `Leq,Range` rows have ticked — a badge each, empty while there is no mean. None while
-  // live, when an instant has no range to average over: the caller decides what is asked
-  // for, and this prints whatever it is given.
-  //
-  // `over` is the weighting's `Leq,Range` limits overlapping the crop that their own hours
-  // broke, worst first (see rangeLimitVerdicts). The badge turns red for them and says which.
-  totals: readonly {
-    weighting: Weighting;
-    total?: RangeTotals;
-    over?: readonly RangeVerdict[];
-  }[];
+  // This location's `Leq,T` over the range the playhead is in (see activeRange), one
+  // badge per weighting, with the range's name — nothing at all outside every range, and
+  // while live, when an instant has no range to average over. The caller decides what is
+  // asked for, and this prints whatever it is given.
+  range?: RangeReading;
   // What the playhead's minute holds for each monitor, series by series, from the
   // project's logs. Undefined while live and while the one query behind it is in flight.
   levels?: PlayheadLevels;
@@ -237,45 +226,33 @@ export function LocationReadings({
         ignored: allIgnored,
       };
     }),
-    // Last, and hard against the edge of the card: the crop's mean lines up in one column
-    // down the page, whatever is picked above it. Named for the timeframe where the others
+    // Last, and hard against the edge of the card: a range's mean lines up in one column
+    // down the page, whatever is picked above it. Named for the range where the others
     // name a window, because that is what it averages.
     //
-    // One per ticked `Leq,Range` row, and none while live — an instant has no range to
-    // average. A mean or no mean at all: there is nothing here that could be stale.
+    // One per weighting read, and only while the playhead is in a range (see activeRange).
+    // A mean or no mean at all: there is nothing here that could be stale.
     //
-    // Its caveat is the coverage, because a Leq over a crop is an average of the minutes
+    // Its caveat is also the coverage, because a Leq over a range is an average of the minutes
     // that were measured and how many there were is part of the reading: without it a place
     // monitored for two minutes of an hour is indistinguishable from one monitored
     // throughout. Measured against the minutes a monitor was assigned *here*, so an empty
     // stretch is the location's gap and not charged to the monitor that covered the rest.
     // Same rule as the device page's Leq tile, thresholds included, so a shortfall too small
     // to matter stays unsaid in both.
-    ...totals.map(({weighting, total, over}) => ({
-      key: `range:${weighting}`,
-      level:
-        total == null
-          ? ({kind: 'none'} as const)
-          : ({kind: 'history', db: total.db} as const),
-      label: rangeLabel(weighting),
-      // Its running line's shade: a light neutral off the series ramp, since it is the
-      // mean of the whole picture rather than a reading off any one window.
+    ...(range?.leqs ?? []).map((leq) => ({
+      key: rangeKey(leq.weighting),
+      level: {kind: 'history', db: leq.db} as const,
+      label: leq.label,
+      // A light neutral off the series ramp, since it is the mean of a stretch rather than
+      // a reading off any one window.
       color: 'chart.range' as const,
-      // A limit on `Leq,Range` is judged on its own hours, not the crop's (see
-      // rangeLimitVerdicts), so the badge prints the crop's mean but warns for the limit —
-      // and names the hours and what they came to, since that is not the number shown.
-      caveat:
-        [
-          total && coverageDetail(total),
-          ...(over ?? []).map(
-            ({limit, db}) =>
-              `${formatTimeframeRange(limit.start, limit.end)}: ${formatDb(db, 'dB')}`,
-          ),
-        ]
-          .filter(Boolean)
-          .join(' · ') || undefined,
-      limitDb: over?.[0]?.limit.decibels,
-      over: (over?.length ?? 0) > 0,
+      // By the device page's rule, how much of the range was measured — said only where
+      // minutes are missing.
+      caveat: coverageDetail(leq),
+      // Judged only where the stretch is a `Leq,T` limit's own hours (see rangeLeqs).
+      limitDb: leq.limit,
+      over: exceedsLimit(leq.db, leq.limit),
     })),
   ];
 
@@ -283,7 +260,7 @@ export function LocationReadings({
     // Side by side rather than stacked: they are several readings of one place at one instant,
     // not a headline and its footnotes. And never squashed: what gives when the header runs out
     // of width is the device names beside it, which truncate. One width for all of them, the
-    // widest's — which is the crop's `LAeq,Range` where it is shown (see ReadingTiles).
+    // widest's — which is the crop's `LAeq,T` where it is shown (see ReadingTiles).
     //
     // Only the readings, and nothing about the monitors: when one was last heard from is a
     // fact about *that monitor*, so it is on its own badge (see DeviceBadge). Said here, once,
@@ -391,14 +368,14 @@ function ReadingTile({
   label: string;
   // The line's shade.
   color: string;
-  // The coverage shortfall, spelled out, where there is one worth saying.
+  // The coverage shortfall, spelled out, where there is one worth saying — which puts the
+  // yellow sign on the badge.
   caveat?: string;
   // Tagged to be ignored: the badge fades, the way its line does on the chart, and the
   // number is struck through.
   ignored?: boolean;
-  // The limit in force for this reading, which the tooltip states; and whether the number
-  // is over it, which turns it red behind a warning sign — the same red the chart washes a
-  // breach in, and the same sign the tooltips print (see ChartTooltipRow).
+  // The limit in force for this reading, which the hover states; and whether the number is
+  // over it, which turns the whole badge red — the same red the chart washes a breach in.
   limitDb?: number | null;
   over?: boolean;
 }) {
@@ -411,9 +388,13 @@ function ReadingTile({
   ]
     .filter(Boolean)
     .join(' · ');
-  // The sign, for either reason there is one: a limit crossed (red), or minutes missing
-  // from the mean (yellow).
-  const sign = over ? 'chart.limit' : caveat ? 'yellow.300' : null;
+  // The sign says one thing only: minutes missing from the mean. Over a limit is said by the
+  // badge's colour (below), so the two never compete for the one glyph.
+  const sign = caveat ? 'yellow.300' : null;
+  // Over its limit the whole badge turns red — frame, name row and number — so a card over
+  // its permit is found by glancing along the cards rather than by reading each figure. The
+  // name still says which reading it is.
+  const shade = over ? 'chart.limit' : color;
   const badge = (
     <Box
       display="flex"
@@ -427,9 +408,7 @@ function ReadingTile({
       minW="4.375em"
       // The colour is the badge, and the hairline of it left showing around the number is
       // what makes the two rows one object rather than a number with a bar under it.
-      // Over its limit only the number and the sign beside it go red: the frame and name
-      // row keep the line's colour, so the badge still says which reading it is.
-      bg={color}
+      bg={shade}
       p={BADGE_FRAME}
       // Ignored, the whole badge fades by the amount its line does on the chart below.
       opacity={ignored ? IGNORED_OPACITY : undefined}
@@ -491,7 +470,7 @@ function ReadingTile({
             // reading rather than as a different quantity.
             fontWeight="600"
             lineHeight="1.2"
-            color={over ? 'chart.limit' : color}
+            color={shade}
             opacity={db == null ? 0.5 : undefined}
             textDecoration={ignored ? 'line-through' : undefined}
             ms="auto"

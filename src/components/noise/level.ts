@@ -55,28 +55,25 @@ export type LevelMetric = (typeof LEVEL_METRICS)[number];
  * primarySeries needs no fallback. Only useLevelPick has to prove it, which it does by
  * being the one thing that produces these — everything downstream is handed one.
  *
- * The Leq over the selected timeframe is deliberately not one of these: it has no column,
- * no live counterpart and depends on the crop, so nothing downstream of a series — the
- * table, the stored traces, the limits — has an answer for it. It is picked beside this set
- * instead, one weighting at a time (see RangePick).
+ * A range's Leq (`LAeq,T`) is deliberately not one of these: it has no column and no
+ * live counterpart, being a figure about a stretch rather than a level, so it is read only
+ * where something defines one (see rangeLeqs) — in the weightings of this set (see
+ * pickedWeightings).
  */
 export type PickedSeries = readonly [SeriesKey, ...SeriesKey[]];
 
-/**
- * Which weightings of the crop's Leq are picked — `LAeq,Range`, `LCeq,Range` — in
- * WEIGHTINGS order, and possibly none: the series set is what keeps a chart from being
- * empty, so this one may be.
- *
- * A picked weighting is a tile on each card (the Leq over the whole crop) and a line on its
- * chart: the running Leq from the crop's start up to each minute, which is the same mean
- * over a growing window and so ends at the tile's number — except inside a limit written
- * against it, where the line restarts at the limit's own start and is that limit's Leq so
- * far (see runningLeq).
- */
-export type RangePick = readonly Weighting[];
+// The weightings of the picked series, once each and in WEIGHTINGS order — what a range's
+// Leq (`LAeq,T`, `LCeq,T`) is read in: a range follows the lines on the chart rather
+// than being picked of its own.
+export const pickedWeightings = (
+  picked: readonly SeriesKey[],
+): readonly Weighting[] =>
+  WEIGHTINGS.filter((w) =>
+    picked.some((key) => seriesByKey(key).weighting === w),
+  );
 
-// A weighting of the crop's Leq as a name, the way a series is one — what a limit written
-// against `LAeq,Range` stores in its series column (see LimitSeries), and the menu's row value.
+// A weighting of a range's Leq as a name, the way a series is one — what a limit written
+// against `LAeq,T` stores in its series column (see LimitSeries).
 export type RangeKey = `range:${Weighting}`;
 
 export const rangeKey = (weighting: Weighting): RangeKey =>
@@ -88,14 +85,6 @@ export const isRangeKey = (value: string): value is RangeKey =>
 export const rangeKeyWeighting = (key: RangeKey): Weighting =>
   key.slice('range:'.length) as Weighting;
 
-// The range pick with one weighting added or taken away, in WEIGHTINGS order whatever order
-// they were pressed in.
-export const toggledRange = (
-  range: RangePick,
-  weighting: Weighting,
-): RangePick =>
-  WEIGHTINGS.filter((w) => (w === weighting) !== range.includes(w));
-
 /**
  * The one series the *single* numbers are read in, of however many the charts are
  * drawing: the first of them in table order, which is the finest A-weighted thing picked
@@ -104,8 +93,6 @@ export const toggledRange = (
  * Derived rather than picked separately, so there is no second piece of state and no "the
  * primary must be one of the picked" invariant to keep. A map pin reads it, being a badge
  * over a place with room for one number, and the picker's trigger names it for that reason.
- * The crop's Leq used to follow its weighting too, and now has one picked of its own (see
- * RangePick).
  */
 export const primarySeries = (picked: PickedSeries): SeriesKey => picked[0];
 
@@ -198,21 +185,33 @@ export const seriesLabel = (key: SeriesKey, live: boolean): string => {
   return liveLabel.replace(metricTag(kind, true), metricTag(kind, live));
 };
 
-// What the Leq over the whole picked timeframe is called where a window would be named. Not
-// a window and not a series — it has no stored column and no live counterpart — but it is
-// picked alongside them and read beside them, so it is named like them. `Range` is the
-// word the page already uses for the timeframe (see coverageDetail).
-const RANGE_WINDOW = 'Range';
+/**
+ * A stretch's length as a window is named — `90s`, `2m`, `3h` — in whole seconds, minutes or
+ * hours, never a decimal. Each unit holds until the value would reach 120 of it, so 90s stays
+ * 90s rather than rounding to a minute either way it could be wrong by a third, while 123s is
+ * near enough 2m to be called that; and the same between minutes and hours.
+ */
+export function durationLabel(ms: number): string {
+  const s = Math.round(ms / 1000);
+  if (s < 120) return `${s}s`;
+  const m = Math.round(s / 60);
+  if (m < 120) return `${m}m`;
+  return `${Math.round(m / 60)}h`;
+}
 
 /**
- * Its full name, for a readout that prints the quantity under the number (see seriesLabel),
- * for the picker's row and for the chart's tooltip.
+ * The name of a range's Leq — `LAeq,90s`, `LCeq,3h` — named for how long the range is, the
+ * way a series is named for its window (`LAeq,5m`). The one place it is spelled: the card's
+ * tile and a `Leq,T` limit's name both take it from here.
  *
  * Weighted like everything else here, and it has to be: it is an energetic mean over one
- * weighting's minute column, and both weightings can be picked at once (see RangePick).
+ * weighting's minute column, and both weightings can be read at once (see
+ * pickedWeightings).
  */
-export const rangeLabel = (weighting: Weighting): string =>
-  `L${weighting}eq,${RANGE_WINDOW}`;
+export const rangeLabel = (
+  weighting: Weighting,
+  range: {start: number; end: number},
+): string => `L${weighting}eq,${durationLabel(range.end - range.start)}`;
 
 // A series is a row of the table (seriesByKey), which carries both halves of the
 // answer: `get` reads it off a live record, `col` names the stored field holding it.

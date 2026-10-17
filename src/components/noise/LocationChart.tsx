@@ -1,4 +1,4 @@
-import {useMemo, useState} from 'react';
+import {memo, useMemo, useState} from 'react';
 import {Box} from '@chakra-ui/react';
 import {LevelTrace} from './LevelTrace';
 import {
@@ -9,6 +9,10 @@ import {
 import {locationTags, type NoiseRangeTag} from './rangeTags';
 import {RangeTagDialog} from './RangeTagDialog';
 import {RemoveTagDialog} from './RemoveTagDialog';
+import {CommentDialog} from './CommentDialog';
+import {isRangeKey} from './level';
+import {exceedsLimit} from './limitLines';
+import {rangeLeqs} from './projectLogs';
 
 // A location's levels over the crop, as one chart of the place.
 //
@@ -27,25 +31,30 @@ import {RemoveTagDialog} from './RemoveTagDialog';
 // Always drawn, including for a location nothing has stood at yet: an empty pair of axes
 // says "nothing was measured here", and a card that simply omits the chart says nothing
 // and jumps a hundred pixels the moment a monitor is assigned.
-export function LocationChart({
+// Memoized, and its props are stable (the card's `lines` memo and a state setter): a sweep
+// re-renders the card for its tile on every minute it crosses, and the trace below must not
+// re-render with it.
+export const LocationChart = memo(function LocationChart({
   location,
   lines,
+  onSweep,
 }: {
   // The place itself: its limits are drawn over the trace, and it is what a range swept
   // here is tagged against by default (see RangeTagDialog).
   location: NoiseLocationItem;
   lines: DeviceWindows[];
+  // The range being swept across this chart — while it is dragged and while its menu is
+  // open — or null, which the card's tile reads the Leq of (see LocationCard).
+  onSweep: (range: {start: number; end: number} | null) => void;
 }) {
   const {
     project,
     live,
     picked,
-    pickedRange,
     range,
     bounds,
     traces,
-    rangeTraces,
-    commentLeqs,
+    rangeIndex,
     scrubTo,
     cropTo,
   } = useProjectView();
@@ -56,29 +65,21 @@ export function LocationChart({
     [project.tags, location.id, lines],
   );
 
-  // What crew noted here, a range carrying what this place's picked `Leq,Range`s came to
-  // over its hours.
+  // What crew noted here.
   const comments = useMemo(
-    () =>
-      reaching
-        .filter((t) => t.type === 'COMMENT')
-        .map((t) => ({
-          ...t,
-          leq: pickedRange.flatMap((weighting) => {
-            const db = commentLeqs?.[weighting]?.[location.id]?.[t.id];
-            return db == null ? [] : [{weighting, db}];
-          }),
-        })),
-    [reaching, location.id, pickedRange, commentLeqs],
+    () => reaching.filter((t) => t.type === 'COMMENT'),
+    [reaching],
   );
 
   // The range the selection menu's "Ignore…" was chosen for, while its dialog is open.
-  const [tagging, setTagging] = useState<{start: number; end: number} | null>(
-    null,
-  );
-  // The ignored range whose pill ✕, or the comment whose label ✕, was pressed, while its
-  // dialog is open.
+  const [tagging, setTagging] = useState<{
+    range: {start: number; end: number};
+    type: 'IGNORE' | 'COMMENT';
+  } | null>(null);
+  // The ignored range whose pill ✕ was pressed, while its dialog is open.
   const [untagging, setUntagging] = useState<NoiseRangeTag | null>(null);
+  // The comment whose label was pressed, while its dialog is open.
+  const [editing, setEditing] = useState<NoiseRangeTag | null>(null);
 
   // Every ignored stretch that reaches this place. Memoized so the chart's redraw effect
   // only fires when a tag actually changes.
@@ -87,15 +88,20 @@ export function LocationChart({
     [reaching],
   );
 
-  // The place's running Leq, a line per ticked `Leq,Range` row (see RangePick). Memoized
-  // so a render that changed neither leaves the chart's data alone.
-  const rangeLines = useMemo(
+  // The hours of this place's `Leq,T` limits that were broken — what they came to, in the
+  // weightings being read, was over the limit — by the same reading the card's tile turns red
+  // on (see rangeLeqs), so the chart and the tile cannot disagree.
+  const overRanges = useMemo(
     () =>
-      pickedRange.map((weighting) => ({
-        weighting,
-        db: rangeTraces?.[weighting]?.[location.id],
-      })),
-    [pickedRange, rangeTraces, location.id],
+      location.limits.flatMap((limit) =>
+        isRangeKey(limit.series) &&
+        rangeLeqs(rangeIndex, location.id, limit, limit).some((leq) =>
+          exceedsLimit(leq.db, leq.limit),
+        )
+          ? [{start: limit.start, end: limit.end}]
+          : [],
+      ),
+    [location.limits, location.id, rangeIndex],
   );
 
   // Which of the chart's two modes this card is in, as the one object that decides it:
@@ -119,9 +125,13 @@ export function LocationChart({
         // timeframe to what was pointed at.
         onCrop: cropTo,
         // A swept range tagged from the selection menu instead of zoomed into.
-        onTag: setTagging,
+        onTag: (
+          range: {start: number; end: number},
+          type: 'IGNORE' | 'COMMENT',
+        ) => setTagging({range, type}),
         traces,
-        rangeLines,
+        onSweepChange: onSweep,
+        overRanges,
       } as const);
 
   return (
@@ -132,6 +142,9 @@ export function LocationChart({
     // part of one that can use the room.
     <Box flex="1" minH="0">
       <LevelTrace
+        // No tooltip: the card's header already prints the playhead's readings, including
+        // the `Leq,T` of the range it is in (see LocationReadings).
+        tooltip={false}
         // Grouped by the card above, which names the same monitors in the same order —
         // the chart's lines and the header's names are one list, not two derivations of
         // it. The whole assignment history, not the monitors resolved at the playhead:
@@ -151,8 +164,8 @@ export function LocationChart({
         limits={location.limits}
         tags={tags}
         comments={comments}
-        onDeleteComment={(comment) =>
-          setUntagging(comments.find((t) => t.id === comment.id) ?? null)
+        onOpenComment={(comment) =>
+          setEditing(comments.find((t) => t.id === comment.id) ?? null)
         }
         // The chart hands back one of `tags`, so it is one of the records above.
         onUntag={(tag) =>
@@ -162,11 +175,15 @@ export function LocationChart({
       />
       {tagging && (
         <RangeTagDialog
-          range={tagging}
+          type={tagging.type}
+          range={tagging.range}
           location={location}
           lines={lines}
           onClose={() => setTagging(null)}
         />
+      )}
+      {editing && (
+        <CommentDialog comment={editing} onClose={() => setEditing(null)} />
       )}
       {untagging && (
         <RemoveTagDialog
@@ -177,4 +194,4 @@ export function LocationChart({
       )}
     </Box>
   );
-}
+});

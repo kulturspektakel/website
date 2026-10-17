@@ -69,10 +69,10 @@ const NOISE_COLORS = {
   // A stretch crew tagged to be ignored, washed under the trace (see drawTags). Grey, so
   // it reads as "set aside" rather than as another mark competing with the red rules.
   'chart.ignored': 'gray.500',
-  // The crop's Leq — its running line on the chart and its badge on the card (see
-  // RangePick). A light neutral off the ramp: it is the mean of the whole picture rather than
-  // one more averaging window, and it has to stay clear of the limit's red. Not the
-  // playhead's red, so the two lines don't read as one mark where they cross.
+  // A range's Leq — its badge on the card, and the rule of a limit
+  // written against it (see rangeLeqs). A light neutral off the ramp: it is the mean of a
+  // stretch rather than one more averaging window, and it has to stay clear of the limit's
+  // red and the playhead's.
   'chart.range': 'gray.300',
   // The playhead — the line down every chart and the strip at the instant being read, and
   // its head. Red, the way an editing timeline draws it, so it reads as the one moving mark

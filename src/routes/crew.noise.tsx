@@ -19,6 +19,7 @@ import {useBleDevice} from '../components/noise/useBleDevice';
 import {createServerFn} from '@tanstack/react-start';
 import {crewAuth} from '../server/crewAuth';
 import {prismaClient} from '../server/prismaClient.server';
+import {noiseTagDedupeKey} from '../server/noiseTagKey.server';
 import {deviceAssignments, projectLogs} from '../server/noiseHistory.server';
 import {Toaster} from '../components/chakra-snippets/toaster';
 import {END_BEFORE_START} from '../components/noise/timeframe';
@@ -455,7 +456,7 @@ export const noiseLimitDecibels = z
   .max(NOISE_LIMIT_DB.max);
 
 // Which series the figure is written against — one of the table's (see isSeriesKey) or a
-// weighting's `Leq,Range` (see LimitSeries). The column is text, so this is the only thing
+// weighting's `Leq,T` (see LimitSeries). The column is text, so this is the only thing
 // standing between a typo in a request and a row nothing can draw — and it is `z.custom`
 // rather than a `z.enum` of the names so that the list stays derived from the table rather
 // than spelled out a second time here.
@@ -615,27 +616,84 @@ export const createNoiseTag = createServerFn()
           where: {id: {in: overlapping.map((t) => t.id)}},
         });
       }
-      await tx.noiseTag.create({
-        data: {
-          projectId: data.projectId,
-          locationId,
-          deviceId,
-          type: data.type,
-          // Widened over whatever it swallowed; with nothing overlapping, its own.
-          start: new Date(
-            Math.min(data.start, ...overlapping.map((t) => t.start.getTime())),
-          ),
-          end: instantOrNull(
-            data.end == null
-              ? null
-              : Math.max(data.end, ...overlapping.map((t) => t.end!.getTime())),
-          ),
-          // Only a comment says anything; an ignored range is its own explanation.
-          text: data.type === 'COMMENT' ? data.text || null : null,
-          createdByViewerId: viewerId,
-        },
+      const tag = {
+        projectId: data.projectId,
+        locationId,
+        deviceId,
+        type: data.type,
+        // Widened over whatever it swallowed; with nothing overlapping, its own.
+        start: new Date(
+          Math.min(data.start, ...overlapping.map((t) => t.start.getTime())),
+        ),
+        end: instantOrNull(
+          data.end == null
+            ? null
+            : Math.max(data.end, ...overlapping.map((t) => t.end!.getTime())),
+        ),
+        // Only a comment says anything; an ignored range is its own explanation.
+        text: data.type === 'COMMENT' ? data.text || null : null,
+      };
+      // A tag already there word for word is the one being asked for, so writing it again
+      // is nothing rather than an error (see noiseTagDedupeKey).
+      await tx.noiseTag.createMany({
+        data: [
+          {
+            ...tag,
+            dedupeKey: noiseTagDedupeKey(tag),
+            createdByViewerId: viewerId,
+          },
+        ],
+        skipDuplicates: true,
       });
     });
+  });
+
+// Edits a comment — what the dialog its label opens saves: what it says and when. Only a
+// comment: an ignored range is retimed by taking it back and sweeping again. Its key follows
+// the words and the times (see noiseTagDedupeKey), so an edit that makes it the twin of another
+// comment is refused rather than leaving two of the same. A null end is a marker.
+export const updateNoiseTag = createServerFn()
+  .middleware([crewAuth])
+  .validator(
+    z
+      .object({
+        tagId: z.string().min(1),
+        text: z.string().trim().min(1).max(2000),
+        start: z.number().int(),
+        end: z.number().int().nullable(),
+      })
+      .refine((v) => v.end == null || v.end > v.start, {
+        message: END_BEFORE_START,
+        path: ['end'],
+      }),
+  )
+  .handler(async ({data}) => {
+    const tag = await prismaClient.noiseTag.findFirst({
+      where: {id: data.tagId, type: 'COMMENT'},
+    });
+    if (!tag) throw notFound();
+    const next = {
+      ...tag,
+      text: data.text,
+      start: new Date(data.start),
+      end: instantOrNull(data.end),
+    };
+    try {
+      await prismaClient.noiseTag.update({
+        where: {id: tag.id},
+        data: {
+          text: next.text,
+          start: next.start,
+          end: next.end,
+          dedupeKey: noiseTagDedupeKey(next),
+        },
+      });
+    } catch (error) {
+      if ((error as {code?: string}).code === 'P2002') {
+        throw new Error('The same comment is already there');
+      }
+      throw error;
+    }
   });
 
 // Takes a tag back — what the chart's "Un-ignore" confirms. deleteMany, so a double press
@@ -697,7 +755,7 @@ export const noiseLineupAreas = createServerFn()
 // One comment on a place per band playing on a stage while the project runs, named for the
 // band and spanning its set. Pinned to the location, since that is the card it was asked
 // from. A band already there — a comment at this place with its name over the same set — is
-// skipped, so importing the same stage twice adds nothing the second time.
+// skipped by the tags' unique key, so importing the same stage twice adds nothing.
 export const importNoiseLineup = createServerFn()
   .middleware([crewAuth])
   .validator(
@@ -716,39 +774,32 @@ export const importNoiseLineup = createServerFn()
     });
     if (!location) throw notFound();
     const project = location.NoiseProject;
-    const [bands, existing] = await Promise.all([
-      prismaClient.bandPlaying.findMany({
-        where: {areaId: data.areaId, ...bandsDuring(project)},
-        select: {name: true, startTime: true, endTime: true},
-      }),
-      prismaClient.noiseTag.findMany({
-        where: {
+    const bands = await prismaClient.bandPlaying.findMany({
+      where: {areaId: data.areaId, ...bandsDuring(project)},
+      select: {name: true, startTime: true, endTime: true},
+    });
+    // A band already pinned here is skipped by the unique key rather than looked up first,
+    // so two imports racing each other still write it once (see noiseTagDedupeKey).
+    const {count} = await prismaClient.noiseTag.createMany({
+      data: bands.map((b) => {
+        const tag = {
           projectId: data.projectId,
           locationId: data.locationId,
-          type: 'COMMENT',
-        },
-        select: {text: true, start: true, end: true},
-      }),
-    ]);
-    const key = (text: string | null, start: Date, end: Date | null) =>
-      `${text}|${start.getTime()}|${end?.getTime()}`;
-    const seen = new Set(existing.map((t) => key(t.text, t.start, t.end)));
-    const fresh = bands.filter(
-      (b) => !seen.has(key(b.name, b.startTime, b.endTime)),
-    );
-    if (fresh.length > 0)
-      await prismaClient.noiseTag.createMany({
-        data: fresh.map((b) => ({
-          projectId: data.projectId,
-          locationId: data.locationId,
+          deviceId: null,
           type: 'COMMENT' as const,
           start: b.startTime,
           end: b.endTime,
           text: b.name,
+        };
+        return {
+          ...tag,
+          dedupeKey: noiseTagDedupeKey(tag),
           createdByViewerId: viewerId,
-        })),
-      });
-    return {created: fresh.length, skipped: bands.length - fresh.length};
+        };
+      }),
+      skipDuplicates: true,
+    });
+    return {created: count, skipped: bands.length - count};
   });
 
 export const Route = createFileRoute('/crew/noise')({

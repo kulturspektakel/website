@@ -1,6 +1,7 @@
 import {useRef, useState} from 'react';
 import {
   Button,
+  HStack,
   IconButton,
   NativeSelectField,
   Stack,
@@ -40,6 +41,7 @@ import {
   type NoiseAssignment,
   type NoiseLocationItem,
 } from './projectView';
+import {Name} from './Name';
 
 const NO_DEVICE = '';
 
@@ -91,11 +93,13 @@ export function LocationAssignmentsDialog({
       open={open}
       onOpenChange={(e) => !e.open && onClose()}
       placement="center"
-      size="xl"
+      size="lg"
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Devices at {location.locationName}</DialogTitle>
+          <DialogTitle>
+            Devices at <Name>{location.locationName}</Name>
+          </DialogTitle>
         </DialogHeader>
         <DialogCloseTrigger />
         {/* Mounted per opening, which is what discards the draft: Cancel, the ✕ and
@@ -182,9 +186,9 @@ function AssignmentsForm({
                   <Table.ColumnHeader>Device</Table.ColumnHeader>
                   <Table.ColumnHeader>Start</Table.ColumnHeader>
                   <Table.ColumnHeader>End</Table.ColumnHeader>
-                  {/* The warning and the bin: both one icon wide, and neither needs
-                      saying twice at the top of the table. */}
-                  <Table.ColumnHeader w="0" />
+                  {/* The warning and the bin, in one cell: both one icon wide, neither
+                      needs saying at the top of the table, and one cell's padding rather
+                      than two is what keeps the row inside the dialog. */}
                   <Table.ColumnHeader w="0" />
                 </Table.Row>
               </Table.Header>
@@ -283,7 +287,7 @@ function AssignmentRow({
 
   return (
     <Table.Row>
-      <Table.Cell fontWeight="medium">
+      <Table.Cell fontWeight="medium" whiteSpace="nowrap">
         {/* Which monitor a saved row is about is not editable: that is a different
             placement, so it is a bin and a new row rather than a quiet substitution
             of one device's history for another's. */}
@@ -313,7 +317,7 @@ function AssignmentRow({
           label={`Start of ${who}`}
           value={row.start}
           window={window}
-          empty={{label: 'Event start', at: window.start}}
+          empty={{label: 'Project start', at: window.start}}
           onChange={(start) => onChange({...row, start})}
         />
       </Table.Cell>
@@ -324,24 +328,24 @@ function AssignmentRow({
           window={window}
           // An open end is a monitor still standing there — which, the page reading nothing
           // past the event, is the same as standing there until it ends.
-          empty={{label: 'Event end', at: window.end}}
+          empty={{label: 'Project end', at: window.end}}
           onChange={(end) => onChange({...row, end})}
         />
       </Table.Cell>
       <Table.Cell>
-        <ConflictWarning row={row} conflicts={conflicts} />
-      </Table.Cell>
-      <Table.Cell>
-        <IconButton
-          aria-label={`Delete assignment of ${who}`}
-          size="sm"
-          variant="ghost"
-          color="fg.error"
-          _hover={{bg: 'bg.error'}}
-          onClick={onRemove}
-        >
-          <LuTrash2 />
-        </IconButton>
+        <HStack gap="0" justify="flex-end">
+          <ConflictWarning row={row} conflicts={conflicts} />
+          <IconButton
+            aria-label={`Delete assignment of ${who}`}
+            size="sm"
+            variant="ghost"
+            color="fg.error"
+            _hover={{bg: 'bg.error'}}
+            onClick={onRemove}
+          >
+            <LuTrash2 />
+          </IconButton>
+        </HStack>
       </Table.Cell>
     </Table.Row>
   );

@@ -13,6 +13,7 @@ import {toaster} from '../chakra-snippets/toaster';
 import {deleteNoiseLocation} from '../../routes/crew.noise';
 import {errorToast} from './toast';
 import {useProjectView, type NoiseLocationItem} from './projectView';
+import {Name} from './Name';
 
 const count = (n: number, one: string, many: string) =>
   `${n} ${n === 1 ? one : many}`;
@@ -77,7 +78,9 @@ export function DeleteLocationDialog({
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Delete {location.locationName}?</DialogTitle>
+          <DialogTitle>
+            Delete <Name>{location.locationName}</Name>?
+          </DialogTitle>
         </DialogHeader>
         <DialogCloseTrigger disabled={remove.isPending} />
         <DialogBody>

@@ -9,9 +9,9 @@ import {
 
 /**
  * What a limit can be written against: one of the series, or the Leq over a timeframe in one
- * weighting — `LAeq,Range`. For the latter the timeframe is the limit's own start and end, not
+ * weighting — `LAeq,T`. For the latter the timeframe is the limit's own start and end, not
  * the crop: "LAeq over 20:00–23:00 ≤ 85 dB" is judged on the energetic mean of those hours
- * (see runningLeq and rangeLimitVerdicts).
+ * (see rangeLeqs).
  */
 export type LimitSeries = SeriesKey | RangeKey;
 
@@ -21,10 +21,14 @@ export const isLimitSeries = (value: string): value is LimitSeries =>
   isSeriesKey(value) || isRangeKey(value);
 
 // How a limit's series is named in the dialog and wherever a limit is spelled out — the stored
-// page's names, since that is what a limit is checked against.
-export const limitLabel = (key: LimitSeries): string =>
+// page's names, since that is what a limit is checked against. A range's Leq is named for the
+// limit's own hours (see rangeLabel), so those come with it.
+export const limitLabel = (
+  key: LimitSeries,
+  hours: {start: number; end: number},
+): string =>
   isRangeKey(key)
-    ? rangeLabel(rangeKeyWeighting(key))
+    ? rangeLabel(rangeKeyWeighting(key), hours)
     : seriesLabel(key, false);
 
 // A location's permitted level as a chart takes one: the series it is written against, the

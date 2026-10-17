@@ -10,12 +10,7 @@ import {Box, HStack, IconButton, Text} from '@chakra-ui/react';
 import {LuX} from 'react-icons/lu';
 import uPlot from 'uplot';
 import {subscribeToClock, subscribeToFrames, useNoiseBuffers} from './context';
-import {
-  GAP_THRESHOLD_S,
-  STORED_GAP_THRESHOLD_S,
-  WINDOW_S,
-  type Weighting,
-} from './noise';
+import {GAP_THRESHOLD_S, STORED_GAP_THRESHOLD_S, WINDOW_S} from './noise';
 import {
   alignedBuffers,
   alignedSeries,
@@ -28,8 +23,8 @@ import {
 import {
   formatDb,
   isRangeKey,
+  pickedWeightings,
   rangeKey as rangeKeyOf,
-  rangeLabel,
   seriesLabel,
   type PickedSeries,
 } from './level';
@@ -43,7 +38,7 @@ import {
   type LimitLine,
   type LimitSeries,
 } from './limitLines';
-import {clampTo} from './timeframe';
+import {clampTo, MINUTE_MS} from './timeframe';
 import {
   axisBase,
   PLAYHEAD_CASING,
@@ -69,10 +64,14 @@ import {
   CHART_READOUT_STYLE,
   ChartTooltip,
   ChartTooltipReadings,
-  ChartTooltipRow,
 } from './ChartTooltip';
 import {ignoredAt, IGNORED_OPACITY} from './rangeTags';
 import {SelectionMenu} from './SelectionMenu';
+import {
+  isPlayheadPinned,
+  PINNED_PLAYHEAD_CSS,
+  setPlayheadPinned,
+} from './playheadPin';
 import {attachTouchGestures, attachWheelPan} from './uplotTouchGestures';
 import {usePlayheadEffect, type DeviceWindows} from './projectView';
 
@@ -157,9 +156,6 @@ type TipReading = {
   limit: number | null;
 };
 
-// The location's running Leq at one sample, in one weighting, and the limit it is judged by.
-type RangeReading = {weighting: Weighting; db: number; limit: number | null};
-
 function readingsAt(
   u: uPlot,
   lines: DeviceWindows[],
@@ -194,45 +190,6 @@ function readingsAt(
     }
   }
   return out;
-}
-
-// The location's running Leq at the hovered sample, one per range line — the last
-// `weightings.length` columns of the projection (see project). Same gap rule as the
-// monitors' readings: nothing under a pointer that is past the nearest sample.
-function rangeReadingsAt(
-  u: uPlot,
-  weightings: readonly Weighting[],
-  gapThresholdX: number,
-  limits: readonly LimitLine[],
-): RangeReading[] {
-  const idx = u.cursor.idx;
-  if (idx == null || weightings.length === 0) return [];
-  const dataX = u.data[0]![idx] as number | undefined;
-  const cursorX = u.posToVal(u.cursor.left ?? -1, 'x');
-  if (dataX == null || Math.abs(cursorX - dataX) > gapThresholdX) return [];
-  const first = u.data.length - weightings.length;
-  return weightings.flatMap((weighting, r) => {
-    const db = u.data[first + r]?.[idx];
-    if (db == null) return [];
-    return [
-      {
-        weighting,
-        db,
-        limit: limitAt(limits, rangeKeyOf(weighting), dataX * 1000),
-      },
-    ];
-  });
-}
-
-// The comment ranges the hovered instant falls in, `[start, end)` like every window on the
-// page, with their Leqs — each comment's own hours, so the figure holds still while the
-// pointer moves through it, unlike the running line beside it.
-function commentLeqsAt(comments: readonly ChartComment[], at: number) {
-  return comments.flatMap(({id, start, end, text, leq}) =>
-    end != null && start <= at && at < end && leq && leq.length > 0
-      ? [{id, text, leq}]
-      : [],
-  );
 }
 
 // Whether a keystroke is somebody writing rather than reaching for a shortcut. The
@@ -373,7 +330,8 @@ function drawNextCasing(u: uPlot, sIdx: number): void {
 function drawLimits(
   u: uPlot,
   limits: readonly LimitLine[],
-  // What the chart is drawing: the picked series and any `Leq,Range` line (see drawnKeys).
+  // What the chart is reading: the picked series and their weightings' `Leq,T` (see
+  // drawnKeysRef).
   picked: readonly LimitSeries[],
 ): void {
   if (limits.length === 0) return;
@@ -396,7 +354,7 @@ function drawLimits(
     // statement about one quantity. What keeps it from reading as another measurement is
     // the dash — the form, not the hue. Two weightings of a quantity share a shade by
     // design (see the series table), and so do their limits.
-    // A `Leq,Range` limit is drawn in its running line's neutral.
+    // A `Leq,T` limit is drawn in the neutral its Leq is printed in (see chart.range).
     stroke: themeHex(
       isRangeKey(series) ? 'chart.range' : seriesByKey(series).color,
     ),
@@ -414,8 +372,8 @@ function drawLimits(
   }));
 
   // Every rule ends in a dot at both ends, in its shade — what says "from here to here" where
-  // a dash alone just stops, which matters most for a `Leq,Range` limit, whose window is what
-  // its figure is averaged over (see runningLeq). Only an end that is actually on screen: a
+  // a dash alone just stops, which matters most for a `Leq,T` limit, whose window is what
+  // its figure is averaged over (see rangeLeqs). Only an end that is actually on screen: a
   // segment cut by the crop starts or stops at the plot's edge, and that edge is not the
   // limit's.
   const dots = segments.flatMap(({from, to}, i) => {
@@ -546,23 +504,40 @@ function drawCommentRules(u: uPlot, comments: readonly ChartComment[]): void {
 function drawBreaches(
   u: uPlot,
   limits: readonly LimitLine[],
-  picked: readonly LimitSeries[],
+  picked: readonly SeriesKey[],
   // Which series and monitor a column is — or null for one not to read, which is every
-  // monitor's own line where the envelope already stands for them. A `Leq,Range` line is
-  // the place's, so it has no monitor.
+  // monitor's own line where the envelope already stands for them.
   columnOf: (
     sIdx: number,
-  ) => {series: LimitSeries; deviceId: string | null} | null,
+  ) => {series: SeriesKey; deviceId: string | null} | null,
   tags: readonly ChartTag[],
+  // The hours of `Leq,T` limits whose whole stretch came to more than they allow (see
+  // overRanges), washed end to end: such a limit judges the stretch, not any one sample.
+  overRanges: readonly {start: number; end: number}[],
 ): void {
-  if (!limits.some((l) => picked.includes(l.series))) return;
+  const seriesLimited = limits.some((l) =>
+    (picked as readonly string[]).includes(l.series),
+  );
+  if (!seriesLimited && overRanges.length === 0) return;
   const {min, max} = u.scales.x;
   if (min == null || max == null) return;
 
   const xs = u.data[0];
   const area = new Path2D();
   let any = false;
-  for (let sIdx = 1; sIdx < u.data.length; sIdx++) {
+  // In the same path as the samples' runs, so where the two meet they are one wash rather
+  // than a darker overlap.
+  for (const {start, end} of overRanges) {
+    const x0 = u.valToPos(start / 1000, 'x', true);
+    area.rect(
+      x0,
+      u.bbox.top,
+      u.valToPos(end / 1000, 'x', true) - x0,
+      u.bbox.height,
+    );
+    any = true;
+  }
+  for (let sIdx = 1; seriesLimited && sIdx < u.data.length; sIdx++) {
     const column = columnOf(sIdx);
     if (!column) continue;
     const {series, deviceId} = column;
@@ -714,6 +689,8 @@ const CHART_CSS = {
     pointerEvents: 'none',
     // Its head, a size up from the timeline's (see playheadHead): this is the taller mark.
     ...playheadHead(11, 12),
+    // How it looks once a click has set it (see setPlayheadPinned).
+    ...PINNED_PLAYHEAD_CSS,
   },
 } as const;
 
@@ -753,20 +730,45 @@ const COMMENT_ITEM_CSS = {
   // At rest COMMENT_LABEL_RAISE_PX over the plot's top edge, so a label stands partly in the
   // gutter above it and covers that much less of the trace.
   top: `${COMMENT_LIFT_ROOM_PX - COMMENT_LABEL_RAISE_PX}px`,
+  // A range's span, written by positionComments; a marker's label is as wide as its text.
+  width: 'var(--range-w, auto)',
   '--flip-x': '0px',
   '--lift-y': '0px',
   transform: 'translate(var(--flip-x), var(--lift-y))',
   transition: 'transform 0.08s ease-out',
-  // Over its neighbours while pointed at: labels that crowd each other overlap, and the one
-  // under the pointer is the one being read.
-  '&:hover': {zIndex: 1},
+  // Over its neighbours while the pointer is under it (lifted, below), and over those too
+  // while the pointer is on the label itself: labels that crowd each other overlap, and the
+  // one being pointed at is the one being read.
+  '&:hover': {zIndex: 3},
   // A marker's label near the right edge hangs left of its line.
   '&[data-flip]': {'--flip-x': 'calc(-100% + 1px)'},
-  // Lifted, its bottom on the plot's top edge: off the trace it was over.
-  '&[data-lifted]': {'--lift-y': `calc(-100% + ${COMMENT_LABEL_RAISE_PX}px)`},
-  [`& > ${COMMENT_LABEL}`]: {maxWidth: '12rem'},
-  // A range's label spans it, however long the text.
-  [`&[data-range] > ${COMMENT_LABEL}`]: {maxWidth: 'none'},
+  // Lifted, its bottom on the plot's top edge: off the trace it was over — and as wide as its
+  // whole text, so one cut short at rest is read in full while the pointer is under it.
+  // Never narrower than its range, which it still spans.
+  '&[data-lifted]': {
+    zIndex: 2,
+    '--lift-y': `calc(-100% + ${COMMENT_LABEL_RAISE_PX}px)`,
+    width: 'max-content',
+    minWidth: 'var(--range-w, 0)',
+  },
+  // A range's label spans it, however long the text — and a lifted one, its whole text.
+  [`&[data-range] > ${COMMENT_LABEL}, &[data-lifted] > ${COMMENT_LABEL}`]: {
+    maxWidth: 'none',
+  },
+  // Filling its range even where the text is shorter, so the label shows the stretch it is
+  // about. Stated, since the label is a button and a button is only as wide as its content.
+  [`&[data-range] > ${COMMENT_LABEL}`]: {width: '100%'},
+  // A soft shadow under a lifted label, so it reads as raised off the chart rather than as
+  // one more mark on it — eased in with the lift.
+  [`& > ${COMMENT_LABEL}`]: {
+    maxWidth: '12rem',
+    transition: 'box-shadow 0.08s ease-out',
+    // Its text from the left, where the stretch starts — a button centres its own otherwise.
+    textAlign: 'left',
+  },
+  [`&[data-lifted] > ${COMMENT_LABEL}`]: {
+    boxShadow: '0 2px 6px rgba(0, 0, 0, 0.35)',
+  },
   // Square where its line leaves it.
   [`&:not([data-flip]):not([data-cut-left]) > ${COMMENT_LABEL}`]: {
     borderBottomLeftRadius: '0',
@@ -795,9 +797,6 @@ export type ChartComment = {
   start: number;
   end: number | null;
   text: string | null;
-  // A range's Leq over its own hours, per picked `Leq,Range` weighting — printed in the
-  // tooltip while the pointer is inside it.
-  leq?: readonly {weighting: Weighting; db: number}[];
 };
 
 type LevelTraceProps = {
@@ -829,9 +828,9 @@ type LevelTraceProps = {
   onUntag?: (tag: ChartTag) => void;
   // Notes crew left on the chart, in epoch ms. A null end is a marker at `start`.
   comments?: readonly ChartComment[];
-  // Deletes one of `comments` — what the ✕ on a hovered label does. Optional: without it
-  // the labels can't be pointed at at all.
-  onDeleteComment?: (comment: ChartComment) => void;
+  // Opens one of `comments` to reword or delete — what pressing its label does. Optional:
+  // without it the labels can't be pointed at at all.
+  onOpenComment?: (comment: ChartComment) => void;
   // How much height to give the time axis, for the one caller that cannot take the
   // default. A chart's bottom gutter comes out of its plot area, so two charts side by
   // side draw their grids at different heights unless they reserve the same — and on the
@@ -840,6 +839,10 @@ type LevelTraceProps = {
   // number. Everywhere else the flat HH:MM labels here want no more than X_AXIS_H, and a
   // location card's row has none to spare.
   xAxisSize?: number;
+  // Whether hovering opens the readout of what is under the pointer. Off on a location's
+  // card, whose header already prints the playhead's readings; on the device page the
+  // tooltip is the one place a sample is read out in full.
+  tooltip?: boolean;
 } & (
   | {
       // The rolling window, on the clock: no crop to show, and so nothing to move.
@@ -860,7 +863,8 @@ type LevelTraceProps = {
       onCrop?: never;
       onTag?: never;
       traces?: never;
-      rangeLines?: never;
+      onSweepChange?: never;
+      overRanges?: never;
     }
   | {
       live: false;
@@ -900,9 +904,12 @@ type LevelTraceProps = {
       //
       // An omitted end keeps the crop's own.
       onCrop: (crop: {start?: number; end?: number}) => void;
-      // Tags a swept range, in epoch ms — what the selection menu's "Ignore…" hands back.
-      // Optional: without it the menu has only its zoom.
-      onTag?: (range: {start: number; end: number}) => void;
+      // Tags a swept range, in epoch ms — what the selection menu's "Comment…" and
+      // "Ignore…" hand back. Optional: without it the menu has only its zoom.
+      onTag?: (
+        range: {start: number; end: number},
+        type: 'IGNORE' | 'COMMENT',
+      ) => void;
       // Every device's whole stored trace, at one point per minute, per picked series — the
       // page's own record, passed through rather than picked apart here. Absent while it
       // loads, and missing an entry for a device that measured nothing in the project.
@@ -911,17 +918,16 @@ type LevelTraceProps = {
       // weighting means a row of the table: `picked` above names the series, this is the
       // data for them.
       traces?: SeriesTraces;
-      // The place's running Leq from the crop's start, one line per picked weighting of
-      // `Leq,Range` (see RangePick) — on the same minute grid as `traces`, and the
-      // location's rather than any monitor's, so drawn once however many monitors it has
-      // had. `db` is absent while it loads.
-      rangeLines?: readonly {weighting: Weighting; db?: (number | null)[]}[];
+      // The range being swept, in epoch ms — from the first frame of the drag, through the
+      // menu it opens, until that closes — and null otherwise. For a readout elsewhere on
+      // the card that shows the sweep's Leq as it is drawn.
+      onSweepChange?: (range: {start: number; end: number} | null) => void;
+      // The hours of the `Leq,T` limits this place broke — what those hours came to was over
+      // the limit (see rangeLeqs) — washed red like a breached sample, so the chart says what
+      // the card's tile does. A `Leq,T` has no line to wash under, so the whole stretch is.
+      overRanges?: readonly {start: number; end: number}[];
     }
 );
-
-// No range lines, for the live arm and a caller that passes none. One array, so the
-// digest below is stable.
-const NO_RANGE_LINES: NonNullable<LevelTraceProps['rangeLines']> = [];
 
 export function LevelTrace({
   lines,
@@ -931,15 +937,17 @@ export function LevelTrace({
   tags,
   onUntag,
   comments,
-  onDeleteComment,
+  onOpenComment,
   range,
   bounds,
   onScrub,
   onCrop,
   onTag,
   traces,
-  rangeLines = NO_RANGE_LINES,
+  onSweepChange,
+  overRanges,
   xAxisSize = X_AXIS_H,
+  tooltip = true,
 }: LevelTraceProps) {
   // The buffers alone: a chart has nothing to say about a record arriving — the
   // canvas is redrawn by its own tick below — so it must not subscribe to them.
@@ -952,7 +960,7 @@ export function LevelTrace({
   // not one of them: the gap threshold below is derived from it and is baked into the
   // series at construction, so switching source rebuilds the plot either way.
   const tracesRef = useLatest(traces);
-  const rangeLinesRef = useLatest(rangeLines);
+  const tooltipRef = useLatest(tooltip);
   const rangeRef = useLatest(range);
   // Through a ref for the same reason as the range, and read only from inside a gesture:
   // the window's right edge follows the clock on a running festival, so the object is new
@@ -964,6 +972,7 @@ export function LevelTrace({
   // new one under the pointer. The effect further down asks for that repaint.
   const limitsRef = useLatest(limits);
   const tagsRef = useLatest(tags);
+  const overRangesRef = useLatest(overRanges);
   const commentsRef = useLatest(comments);
   // The pick, through a ref for the same reason — the breach wash reads which series a
   // column is off it, so the draw hook needs the current pick and not the one the plot was
@@ -998,20 +1007,18 @@ export function LevelTrace({
   // columns, the effect that builds the plot — would otherwise be recomputed or torn down
   // for a set that had not changed.
   const pickedKey = picked.join(' ');
-  // Which range lines there are, which is what the plot is built for — their data moves
-  // with the crop's start and is pushed in by the data effect, like `traces`.
-  const rangeKey = rangeLines.map((r) => r.weighting).join(' ');
-  const rangeWeightings = useMemo(
-    () => rangeLines.map((r) => r.weighting),
-    [rangeKey],
-  );
-  const rangeWeightingsRef = useLatest(rangeWeightings);
   // Everything a limit may be drawn against on this chart: the picked series, and the
-  // `Leq,Range` lines — a limit appears when the line it bounds does (see limitSegments).
+  // `Leq,T` of their weightings — a limit appears when what it bounds is being read
+  // (see limitSegments). A `Leq,T` limit is a rule over its hours without a line of its
+  // own; its Leq is the card's tile's while the playhead is in them.
+  // None while live, which reads an instant and so has no range to bound.
   const drawnKeysRef = useLatest(
     useMemo(
-      (): LimitSeries[] => [...picked, ...rangeWeightings.map(rangeKeyOf)],
-      [pickedKey, rangeWeightings],
+      (): readonly LimitSeries[] =>
+        live
+          ? picked
+          : [...picked, ...pickedWeightings(picked).map(rangeKeyOf)],
+      [pickedKey, live],
     ),
   );
   // How many monitors the plot has a line for, per series. At least one, so a location with
@@ -1057,9 +1064,6 @@ export function LevelTrace({
       ),
     [tokens, lineCount],
   );
-  // Where the range lines start in the projection: after the envelope and every monitor's
-  // columns (see project), one each.
-  const firstRangeColumn = (envelope ? 2 : 1) + picked.length * lineCount;
   const onScrubRef = useLatest(onScrub);
   // The live arm's alone, which is the one that also reports a pointer leaving (see the
   // props) — so it is the one typed to take a null.
@@ -1083,6 +1087,10 @@ export function LevelTrace({
   // one number per series for the whole location (the loudest monitor's), while this chart
   // may be drawing a line per monitor per series: what the tooltip answers is which line is
   // which, which is also what the chart has no legend for.
+  // Whether the pointer is over the plot — what the in/out keys are bound to (see below),
+  // and not the tooltip, which a chart may not have. Set only when it changes, so a hover
+  // renders nothing for it.
+  const [hovering, setHovering] = useState(false);
   const [tip, setTip] = useState<{
     left: number;
     top: number;
@@ -1091,8 +1099,6 @@ export function LevelTrace({
     fraction: number;
     label: string;
     readings: TipReading[];
-    rangeReadings: RangeReading[];
-    commentLeqs: ReturnType<typeof commentLeqsAt>;
   } | null>(null);
 
   // The range a sweep has named and not yet done anything with: the crop it would make,
@@ -1268,8 +1274,12 @@ export function LevelTrace({
         node.style.display = 'block';
         node.style.left = `${x}px`;
         // One past the span, so the label's right outline lands on the end's rule rather
-        // than a pixel short of it.
-        node.style.width = range ? `${Math.min(x1, width) - x + 1}px` : '';
+        // than a pixel short of it. A variable rather than the width itself, so a lifted
+        // label can grow past it to show its whole text (see COMMENT_ITEM_CSS).
+        node.style.setProperty(
+          '--range-w',
+          range ? `${Math.min(x1, width) - x + 1}px` : 'auto',
+        );
         node.toggleAttribute('data-range', range);
         node.toggleAttribute('data-flip', !range && x > width * 0.75);
         node.toggleAttribute('data-cut-left', range && x0 < 0);
@@ -1293,21 +1303,31 @@ export function LevelTrace({
     ];
     // Every box read before any is written, so toggling one doesn't make the next read
     // lay the page out again. A finger has no hover to lift for.
-    const under =
-      e == null || e.pointerType === 'touch'
-        ? nodes.map(() => false)
-        : nodes.map((node) => {
-            const r = node.getBoundingClientRect();
-            return (
-              e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top
-            );
-          });
-    nodes.forEach((node, i) => node.toggleAttribute('data-lifted', under[i]));
+    const hover = e == null || e.pointerType === 'touch' ? null : e;
+    const rects = nodes.map((node) => node.getBoundingClientRect());
+    const under = rects.map(
+      (r) =>
+        hover != null &&
+        hover.clientX >= r.left &&
+        hover.clientX <= r.right &&
+        hover.clientY >= r.top,
+    );
+    // On a lifted label itself, nothing else rises: a label grown to its full text reaches
+    // over its neighbours' ranges, and the pointer reading it would otherwise lift another
+    // up under itself. Only the lifted ones it is still under stay up.
+    const onLifted = nodes.some(
+      (node, i) =>
+        node.hasAttribute('data-lifted') &&
+        under[i] &&
+        hover!.clientY <= rects[i]!.bottom,
+    );
+    nodes.forEach((node, i) =>
+      node.toggleAttribute(
+        'data-lifted',
+        under[i]! && (!onLifted || node.hasAttribute('data-lifted')),
+      ),
+    );
   };
-
-  // Whether the pointer is on one of those labels, which holds the tooltip off (see the
-  // setCursor hook). A ref, since the hook that reads it closes over the plot's build.
-  const overCommentRef = useRef(false);
 
   // Stable by construction — positionPlayhead closes over nothing but refs — which is
   // what keeps the subscription from being torn down and re-established as the page
@@ -1361,15 +1381,6 @@ export function LevelTrace({
         ),
       },
     );
-    // The place's running Leq after all of that, a column per range line. Padded to the
-    // shared x where there is nothing to draw — still loading, or a place with no monitor
-    // and so no grid from the traces (the line is all null there anyway).
-    const xs = data[0] ?? [];
-    for (const {db} of live ? [] : rangeLinesRef.current) {
-      data.push(
-        db && db.length === xs.length ? db : new Array(xs.length).fill(null),
-      );
-    }
     return data as uPlot.AlignedData;
     // Keyed on digests rather than on the arrays: the same monitors over the same windows
     // in the same set of quantities are the same projection, and new arrays of them every
@@ -1377,8 +1388,6 @@ export function LevelTrace({
   }, [
     linesKey,
     pickedKey,
-    rangeWeightings,
-    rangeLinesRef,
     linesRef,
     deviceData,
     live,
@@ -1412,15 +1421,15 @@ export function LevelTrace({
     // the faded run must still break where the monitor went quiet.
     const sampleGaps = makeSampleGapsRefiner(gapThresholdX);
     // Whether there is more than one line to keep apart — every monitor's line of every
-    // picked series, and the range lines. Both counts rebuild the plot when they change.
-    const cased = strokes.length + rangeWeightings.length > 1;
+    // picked series. The count rebuilds the plot when it changes.
+    const cased = strokes.length > 1;
     const sampleGapsBySeries = new Map<number, [number, number][]>();
     const ignoredBySeries = new Map<number, [number, number][]>();
     // Which monitor a series column is, off the same layout traceColumn reads — or null
     // for the envelope, which is every monitor's and is cut only by the tags that cover
     // all of them (a monitor's own are taken out of its data instead; see project).
     const deviceOf = (sIdx: number): string | null => {
-      if ((envelope && sIdx === 1) || sIdx >= firstRangeColumn) return null;
+      if (envelope && sIdx === 1) return null;
       const d = (sIdx - (envelope ? 2 : 1)) % lineCount;
       return linesRef.current[d]?.deviceId ?? null;
     };
@@ -1428,15 +1437,7 @@ export function LevelTrace({
     // inside each metric. With an envelope only it is read — it is already the loudest of
     // the monitors, with their own ignored stretches taken out.
     const columnOf = (sIdx: number) => {
-      if (envelope && sIdx > 1 && sIdx < firstRangeColumn) return null;
-      // A `Leq,Range` line is judged against the limits written for it: inside one it is
-      // that limit's own Leq so far (see runningLeq), so the wash reads straight off it.
-      if (sIdx >= firstRangeColumn) {
-        const weighting = rangeWeightingsRef.current[sIdx - firstRangeColumn];
-        return weighting
-          ? {series: rangeKeyOf(weighting), deviceId: null}
-          : null;
-      }
+      if (envelope && sIdx > 1) return null;
       const offset = sIdx - (envelope ? 2 : 1);
       const m = offset < 0 ? 0 : Math.floor(offset / lineCount);
       return {
@@ -1500,9 +1501,10 @@ export function LevelTrace({
               drawBreaches(
                 u,
                 limitsRef.current ?? [],
-                drawnKeysRef.current,
+                pickedRef.current,
                 columnOf,
                 tagsRef.current ?? [],
+                overRangesRef.current ?? [],
               ),
             (u) =>
               drawTags(
@@ -1575,12 +1577,17 @@ export function LevelTrace({
               // way to that menu, and every pixel of the journey would otherwise move the
               // page's playhead and print a tooltip under the thing being read.
               if (pendingRef.current) return;
-              // Nor while the pointer is on a comment's label: what it is reading there is
-              // the note, and a readout opening over it would cover the very thing.
-              if (overCommentRef.current) {
-                setTip(null);
-                return;
-              }
+              // A drag in progress is a sweep being drawn: uPlot has already moved the band
+              // for this frame, so it is read off that.
+              const band = u.select;
+              reportSweep(
+                band.width > 0
+                  ? {
+                      start: u.posToVal(band.left, 'x') * 1000,
+                      end: u.posToVal(band.left + band.width, 'x') * 1000,
+                    }
+                  : null,
+              );
               const left = u.cursor.left;
               // Negative once the pointer leaves — a lifted finger included, which the
               // touch gestures report by parking the cursor off the plot. The tooltip goes
@@ -1596,6 +1603,7 @@ export function LevelTrace({
               // at is still readable with your hand out of the way.
               if (left == null || left < 0) {
                 hoverAtRef.current = null;
+                setHovering(false);
                 setTip(null);
                 // Live is the one arm that does go quiet, and both of these are that arm's:
                 // its instant is this chart's own pointer rather than a page mark anyone
@@ -1612,7 +1620,10 @@ export function LevelTrace({
               // of this — the ref, the page's playhead, the label — is milliseconds.
               const atMs = u.posToVal(left, 'x') * 1000;
               hoverAtRef.current = atMs;
-              onScrubRef.current?.(atMs);
+              setHovering(true);
+              // Held where a click pinned it (see isPlayheadPinned). Not while live, whose
+              // readout is this chart's own pointer rather than a page mark.
+              if (live || !isPlayheadPinned()) onScrubRef.current?.(atMs);
               // Live has no page playhead — nothing is scrubbing a rolling window, so
               // the project page withholds `scrubTo` and the signal every other chart
               // follows stays empty. Draw the line here instead, so pointing at a live
@@ -1621,6 +1632,7 @@ export function LevelTrace({
               // card's: what it marks is where *this* pointer is, and there is no page
               // instant for them to share.
               if (live) positionPlayhead(atMs);
+              if (!tooltipRef.current) return;
               setTip({
                 ...cursorAnchor(u, container, left, u.cursor.top ?? 0),
                 label: formatRef.current(atMs),
@@ -1633,13 +1645,6 @@ export function LevelTrace({
                   limitsRef.current ?? [],
                   tagsRef.current ?? [],
                 ),
-                rangeReadings: rangeReadingsAt(
-                  u,
-                  rangeWeightingsRef.current,
-                  gapThresholdX,
-                  limitsRef.current ?? [],
-                ),
-                commentLeqs: commentLeqsAt(commentsRef.current ?? [], atMs),
               });
             },
           ],
@@ -1731,16 +1736,6 @@ export function LevelTrace({
             gaps,
             points: {show: false},
           })),
-          // The place's running Leq, last so it is drawn over the monitors it averages, and
-          // a touch heavier: it is one line summing the rest. No gaps of its own — it holds
-          // through silences and ignored stretches rather than breaking, neither adding to
-          // the mean (see runningLeq).
-          ...rangeWeightings.map(() => ({
-            stroke: themeHex('chart.range'),
-            width: 1.5,
-            spanGaps: false,
-            points: {show: false},
-          })),
         ],
       },
       project(),
@@ -1807,6 +1802,22 @@ export function LevelTrace({
       ? attachWheelPan(plot, windowGesture)
       : undefined;
 
+    // A click pins the page's playhead where it lands, or — when it is pinned already — lets
+    // it go to follow the pointer again from there (see isPlayheadPinned). A click, not the
+    // end of a sweep: one that opened the selection menu leaves its band up,
+    // which is how the two are told apart — the release fires this either way. Only with a
+    // page playhead to set: a live chart's line is its own pointer's.
+    // Not for a finger, which has no hover to hold the playhead against: a tap already
+    // leaves it where it landed (see attachTouchGestures).
+    const onClick = (e: MouseEvent) => {
+      const left = plot.cursor.left;
+      if ((e as globalThis.PointerEvent).pointerType === 'touch') return;
+      if (live || plot.select.width > 0 || left == null || left < 0) return;
+      onScrubRef.current?.(plot.posToVal(left, 'x') * 1000);
+      setPlayheadPinned(!isPlayheadPinned());
+    };
+    plot.over.addEventListener('click', onClick);
+
     // Only the width can change: the row gives the trace a fixed height. The playhead
     // follows from the setSize hook, once the new size has been committed.
     const ro = new ResizeObserver(() => {
@@ -1822,6 +1833,7 @@ export function LevelTrace({
       // Before the plot goes: the listeners are on a node uPlot is about to take away.
       removeTouch?.();
       removeWheel?.();
+      plot.over.removeEventListener('click', onClick);
       plot.destroy();
       plotRef.current = null;
       // Destroying the plot took the line with it; drop the handle so a stale node
@@ -1845,8 +1857,6 @@ export function LevelTrace({
     lineCount,
     envelope,
     strokes,
-    rangeWeightings,
-    firstRangeColumn,
     cropped,
     boundsRef,
     rangeRef,
@@ -1866,7 +1876,7 @@ export function LevelTrace({
   // arriving record while live, and a limit is edited by hand a few times an evening.
   useEffect(() => {
     plotRef.current?.redraw(false);
-  }, [limits]);
+  }, [limits, overRanges]);
 
   // A comment added or taken back, put where it goes on the plot as it stands — its label,
   // and its rules on the canvas.
@@ -1885,7 +1895,6 @@ export function LevelTrace({
   // row of the list for a keyboard user. Registered and removed with the hover
   // instead, which is also exactly the scope the feature is specified in: at most one
   // chart is hovered, so at most one listener is ever installed.
-  const hovering = tip != null;
   useEffect(() => {
     if (!hovering) return;
     const onKeyDown = (e: KeyboardEvent) => {
@@ -1921,6 +1930,27 @@ export function LevelTrace({
     plotRef.current?.setSelect({left: 0, top: 0, width: 0, height: 0}, false);
     setPending(null);
   }, [pendingRef]);
+
+  // The sweep, as the card around this chart reads it (see onSweepChange): reported while
+  // the drag is drawn (from the cursor hook) and while its menu is open (below), and only
+  // when it changes.
+  const onSweepRef = useLatest(onSweepChange);
+  const sweepKeyRef = useRef<string | null>(null);
+  const reportSweep = useCallback(
+    (sweep: {start: number; end: number} | null) => {
+      // By the minute: a range's Leq is read off a minute grid (see rangeLeqs), so a drag
+      // within one is the same reading, and reporting it would re-render for nothing.
+      const minute = (ms: number) => Math.floor(ms / MINUTE_MS);
+      const key = sweep && `${minute(sweep.start)}|${minute(sweep.end)}`;
+      if (key === sweepKeyRef.current) return;
+      sweepKeyRef.current = key;
+      onSweepRef.current?.(sweep);
+    },
+    [onSweepRef],
+  );
+  useEffect(() => {
+    reportSweep(pending ? {start: pending.start, end: pending.end} : null);
+  }, [pending, reportSweep]);
 
   // Whether this row is anywhere near the viewport, and whether a crop arrived while
   // it wasn't. Refs, because nothing renders from either: scrolling a list must not
@@ -1970,8 +2000,7 @@ export function LevelTrace({
     };
     // `tags` too: a monitor's ignored stretch comes out of the envelope's data, and every
     // tag moves where the lines are cut, both of which only a fresh projection redraws.
-    // And the range lines, whose data follows the crop's start.
-  }, [project, live, traces, tags, rangeLines, xRange]);
+  }, [project, live, traces, tags, xRange]);
 
   const applyCrop = useCallback(() => {
     const range = rangeRef.current;
@@ -2086,56 +2115,27 @@ export function LevelTrace({
                 <HStack
                   {...CHART_READOUT_STYLE}
                   data-comment-label
-                  className="group"
                   gap="1"
                   py="0.5"
                   px="1.5"
                   // The one part of the overlay the pointer can reach, and only where
-                  // there is something for it to do there.
-                  pointerEvents={onDeleteComment ? 'auto' : undefined}
+                  // there is something for it to do there: pressing the label opens the
+                  // comment, to reword or delete (see onOpenComment).
+                  pointerEvents={onOpenComment ? 'auto' : undefined}
+                  {...(onOpenComment && {
+                    as: 'button' as const,
+                    type: 'button' as const,
+                    'aria-label': `Edit comment: ${text}`,
+                    cursor: 'pointer',
+                    onClick: () => onOpenComment(comment),
+                  })}
                   // A mark on the chart rather than copy, and a drag that strays onto it
                   // would otherwise select its text instead of sweeping the trace.
                   userSelect="none"
-                  onPointerEnter={() => {
-                    overCommentRef.current = true;
-                    setTip(null);
-                  }}
-                  onPointerLeave={() => {
-                    overCommentRef.current = false;
-                  }}
                 >
                   <Text flex="1" minW="0" truncate>
                     {text}
                   </Text>
-                  {/* On hover only, so a label at rest is just its note — and taken out
-                      of the layout rather than hidden, so a marker's label is no wider
-                      than its text until there is a reason for it to be. */}
-                  {onDeleteComment && (
-                    <IconButton
-                      aria-label="Delete comment"
-                      size="2xs"
-                      variant="ghost"
-                      cursor="pointer"
-                      // Quiet until it is the thing being pointed at: muted beside the
-                      // note, white under the pointer, and no ground of its own.
-                      color="fg.muted"
-                      _hover={{color: 'white', bg: 'transparent'}}
-                      _active={{bg: 'transparent'}}
-                      borderRadius="full"
-                      minW="4"
-                      h="4"
-                      me="-1"
-                      // Taller than a line of the label's text, so pulled into the padding
-                      // above and below rather than growing the label when it appears.
-                      my="-1"
-                      display="none"
-                      _groupHover={{display: 'inline-flex'}}
-                      _focusVisible={{display: 'inline-flex'}}
-                      onClick={() => onDeleteComment(comment)}
-                    >
-                      <LuX />
-                    </IconButton>
-                  )}
                 </HStack>
               </Box>
             );
@@ -2154,12 +2154,12 @@ export function LevelTrace({
             clearSelection();
             onCrop?.({start, end});
           }}
-          onIgnore={
+          onTag={
             onTag &&
-            (() => {
+            ((type) => {
               const {start, end} = pending;
               clearSelection();
-              onTag({start, end});
+              onTag({start, end}, type);
             })
           }
           onClose={clearSelection}
@@ -2236,43 +2236,8 @@ export function LevelTrace({
                   ? []
                   : [{key: deviceId, heading: deviceId, rows}];
               }),
-              // The place's own, after its monitors': the running Leq is of the
-              // location, so under a monitor's name it would be attributed to one.
-              ...(tip.rangeReadings.length === 0
-                ? []
-                : [
-                    {
-                      key: 'range',
-                      heading: 'Location',
-                      rows: tip.rangeReadings.map(({weighting, db, limit}) => ({
-                        key: rangeKeyOf(weighting),
-                        label: rangeLabel(weighting),
-                        value: formatDb(db, 'dB'),
-                        limit,
-                        color: 'chart.range',
-                        over: exceedsLimit(db, limit),
-                      })),
-                    },
-                  ]),
             ]}
           />
-          {/* Each comment range the pointer is in, under its own text — a band's set, say
-              — with what this place came to over the whole of it. */}
-          {tip.commentLeqs.map(({id, text, leq}) => (
-            <Box key={id} mt="1">
-              <Text fontWeight="semibold" truncate maxW="48">
-                {text ?? 'Comment'}
-              </Text>
-              {leq.map(({weighting, db}) => (
-                <ChartTooltipRow
-                  key={weighting}
-                  label={rangeLabel(weighting)}
-                  value={formatDb(db, 'dB')}
-                  color="chart.range"
-                />
-              ))}
-            </Box>
-          ))}
         </ChartTooltip>
       )}
     </Box>

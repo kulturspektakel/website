@@ -44,7 +44,6 @@ import {
   useLevelPick,
 } from '../components/noise/LevelPicker';
 import {SERIES_STORE} from '../components/noise/seriesSelection';
-import {type RangePick} from '../components/noise/level';
 import {useProjectLogs} from '../components/noise/useProjectLogs';
 import {
   NativeSelectField,
@@ -87,10 +86,6 @@ type View = (typeof VIEWS)[number]['value'];
 // that a drag or a hover across a chart is one write rather than a hundred, short enough
 // that letting go and reaching for the address bar finds it already there.
 const URL_SETTLE_MS = 300;
-
-// No weighting of the crop's Leq, while live (see showRangeLeq). One array rather than a
-// fresh one per render, since it goes into the context and into useProjectLogs' memos.
-const NO_RANGE: RangePick = [];
 
 // `project/` is a static segment because $device already occupies the dynamic slot
 // under /crew/noise — a cuid and a device name are indistinguishable at
@@ -259,12 +254,7 @@ function NoiseProjectDetail() {
   // the same, since the control that sets it is in the layout's own header, and switching
   // view simply re-reads the other view's remembered pick (see useLevelPick).
   const mapOnly = shown === 'map';
-  const {
-    picked,
-    toggleSeries,
-    range: pickedRange,
-    toggleRange,
-  } = useLevelPick({
+  const {picked, toggleSeries} = useLevelPick({
     store: mapOnly ? SERIES_STORE.map : SERIES_STORE.list,
     single: mapOnly,
   });
@@ -352,6 +342,13 @@ function NoiseProjectDetail() {
   );
   // The same places carrying the stretches crew tagged to be ignored at each, for the crop's
   // Leq to leave out (see locationEnergyIndex). Markers set nothing aside, so only ranges.
+  //
+  // Keyed on the ignored ranges alone, so adding or editing a comment — which sets nothing
+  // aside — leaves these, and every energy index summed off them, as they were.
+  const ignoreKey = project.tags
+    .filter((t) => t.type === 'IGNORE' && t.end != null)
+    .map((t) => `${t.deviceId}|${t.locationId}|${t.start}|${t.end}`)
+    .join(' ');
   const withIgnored = useMemo(
     () =>
       ordered.map((location) => ({
@@ -366,7 +363,7 @@ function NoiseProjectDetail() {
             : [],
         ),
       })),
-    [ordered, project.tags],
+    [ordered, ignoreKey],
   );
   const locationsKey = ordered
     .map(
@@ -497,19 +494,10 @@ function NoiseProjectDetail() {
     [project.tags],
   );
 
-  // Every comment with an end, whose Leq over its own hours the charts' tooltips print.
-  const commentRanges = useMemo(
-    () =>
-      comments.flatMap(({id, start, end}) =>
-        end == null ? [] : [{id, start, end}],
-      ),
-    [comments],
-  );
-
   // The comments the strip marks: those reaching the places it speaks for, by the rule
   // the cards' charts use (see locationTags), so the strip marks no note the cards don't
-  // show. Bare instants, since the strip has no room for the text — that is the cards'
-  // (see LevelTrace). Memoized, because the markers layer is memoized on its props.
+  // show. With their text, which the playhead's pill names while it is in one. Memoized,
+  // because the markers layer is memoized on its props.
   const timelineComments = useMemo(() => {
     const reaching = timeline.all
       ? comments
@@ -522,43 +510,23 @@ function NoiseProjectDetail() {
               .map((t) => [t.id, t]),
           ).values(),
         ];
-    return reaching.map(({start, end}) => ({start, end}));
+    return reaching.map(({start, end, text}) => ({start, end, text}));
   }, [comments, timeline]);
 
-  // Whether the cards may print the crop's Leq at all: only given a timeframe to average
-  // over — which live mode has not, an instant being no range.
-  //
-  // Stated here rather than left to `useProjectLogs` withholding `locationTotals` while
-  // live, which would be a correctness resting on an unrelated layer's data-availability
-  // rule that the first change to it would quietly break.
-  const showRangeLeq = !live;
-  const shownRange = showRangeLeq ? pickedRange : NO_RANGE;
-
-  const {
-    levels,
-    locationTotals,
-    rangeTraces,
-    rangeOver,
-    commentLeqs,
-    traces,
-    gaps,
-    breaches,
-    isFetching,
-  } = useProjectLogs({
-    projectId,
-    live,
-    picked,
-    range: shownRange,
-    selection,
-    // The raw locations with their whole assignment history, not the playhead-resolved
-    // `locations` below: the crop Leq is summed over every minute a monitor stood at a
-    // place, which has nothing to do with the instant being viewed. Everything it
-    // returns is keyed by location id, so the order is immaterial — it takes the sorted
-    // array only so there is one of them on the page.
-    locations: withIgnored,
-    timeline,
-    comments: commentRanges,
-  });
+  const {levels, rangeIndex, traces, gaps, breaches, isFetching} =
+    useProjectLogs({
+      projectId,
+      live,
+      picked,
+      selection,
+      // The raw locations with their whole assignment history, not the playhead-resolved
+      // `locations` below: a range's Leq is summed over every minute a monitor stood at a
+      // place, which has nothing to do with the instant being viewed. Everything it
+      // returns is keyed by location id, so the order is immaterial — it takes the sorted
+      // array only so there is one of them on the page.
+      locations: withIgnored,
+      timeline,
+    });
 
   // Assigning or ending changes both this project's locations and which devices
   // are still available, on this page and on the index.
@@ -584,14 +552,8 @@ function NoiseProjectDetail() {
       locations,
       scrubTo,
       cropTo,
-      // Withheld rather than flagged: the reading is absent at the point it is *produced*,
-      // so a card simply prints what it is given and no consumer — a pin, an export, the
-      // next one — has to rediscover the gate. See showRangeLeq.
-      pickedRange: shownRange,
-      locationTotals: showRangeLeq ? locationTotals : undefined,
-      rangeTraces: showRangeLeq ? rangeTraces : undefined,
-      rangeOver: showRangeLeq ? rangeOver : undefined,
-      commentLeqs: showRangeLeq ? commentLeqs : undefined,
+      // Absent while live, an instant having no range to average.
+      rangeIndex,
       traces,
       refresh,
       setListed,
@@ -607,12 +569,7 @@ function NoiseProjectDetail() {
       locations,
       scrubTo,
       cropTo,
-      showRangeLeq,
-      shownRange,
-      locationTotals,
-      rangeTraces,
-      rangeOver,
-      commentLeqs,
+      rangeIndex,
       traces,
       refresh,
       placing,
@@ -717,10 +674,6 @@ function NoiseProjectDetail() {
                   live={live}
                   picked={picked}
                   onToggleSeries={toggleSeries}
-                  // The raw pick, not the one withheld while live: the rows stay ticked,
-                  // greyed, and come back into force when the page leaves live.
-                  range={pickedRange}
-                  onToggleRange={toggleRange}
                 />
               )}
               {mapAvailable && (

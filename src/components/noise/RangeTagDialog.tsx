@@ -1,5 +1,12 @@
 import {useState} from 'react';
-import {Button, Field, NativeSelectField, Stack, Text} from '@chakra-ui/react';
+import {
+  Button,
+  Field,
+  NativeSelectField,
+  Stack,
+  Input,
+  Text,
+} from '@chakra-ui/react';
 import {useMutation} from '@tanstack/react-query';
 import {
   DialogBody,
@@ -22,16 +29,19 @@ import {
   type DeviceWindows,
   type NoiseLocationItem,
 } from './projectView';
+import {Name} from './Name';
 
 type ScopeKind = NoiseTagScope['kind'];
 
-// Tags a swept range as one to leave out — what the selection menu's "Ignore…" opens.
+// Tags a swept range — what the selection menu's "Comment…" and "Ignore…" open. One dialog for
+// both, since a tag is the same record either way and the decisions are the same two: which
+// stretch, and what it applies to. A comment adds the one thing it is for, what it says.
 //
 // The range arrives from the sweep, but the sweep is a gesture at chart resolution and a
 // tag is a record, so both ends are editable here before anything is written. Either end may
-// be left at the event's own — "Event start", "Event end" — which is saved as that instant:
-// an ignored stretch has to have two ends to set anything aside, and one with no end is a
-// marker, which ignores nothing.
+// be left at the event's own — "Project start", "Project end" — which is saved as that instant:
+// an ignored stretch has to have two ends to set anything aside, and a comment made from a
+// sweep is about the stretch swept.
 //
 // What it applies to is the one real decision: the monitor (its readings wherever it
 // stood during the range), the place (every monitor that stood here), or the whole
@@ -40,11 +50,13 @@ type ScopeKind = NoiseTagScope['kind'];
 // Mounted per range, so Cancel, the ✕ and a click outside all discard the draft by
 // unmounting it.
 export function RangeTagDialog({
+  type,
   range,
   location,
   lines,
   onClose,
 }: {
+  type: 'IGNORE' | 'COMMENT';
   range: {start: number; end: number};
   location: NoiseLocationItem;
   // The monitors this location has had, which are the ones a device tag can name from here.
@@ -60,6 +72,9 @@ export function RangeTagDialog({
   );
   const [end, setEnd] = useState<number | null>(() => toMinute(range.end));
   const [kind, setKind] = useState<ScopeKind>('location');
+  // What a comment says. A comment is its text, so it cannot be saved without one.
+  const [text, setText] = useState('');
+  const comment = type === 'COMMENT';
   const [deviceId, setDeviceId] = useState(
     () => busiestDevice(lines, range) ?? '',
   );
@@ -76,18 +91,24 @@ export function RangeTagDialog({
       createNoiseTag({
         data: {
           projectId: project.id,
-          type: 'IGNORE',
+          type,
           scope,
           start: start ?? project.start,
           end: end ?? project.end,
+          text: comment ? text.trim() : undefined,
         },
       }),
     onSuccess: async () => {
       await refresh();
-      toaster.create({type: 'success', title: 'Range ignored'});
+      toaster.create({
+        type: 'success',
+        title: comment ? 'Comment added' : 'Range ignored',
+      });
       onClose();
     },
-    onError: errorToast('Range could not be saved'),
+    onError: errorToast(
+      comment ? 'Comment could not be saved' : 'Range could not be saved',
+    ),
   });
 
   const backwards = (end ?? project.end) <= (start ?? project.start);
@@ -98,13 +119,32 @@ export function RangeTagDialog({
       onOpenChange={(e) => !e.open && onClose()}
       placement="center"
     >
-      <DialogContent>
+      {/* Just wide enough for the start and end fields side by side (see the body): two
+          TimeFields at their least and the gap between them, plus the dialog's own padding —
+          between Chakra's `lg`, which is a little short, and `xl`, which is roomier than a
+          form this size wants. */}
+      <DialogContent maxW="34rem">
         <DialogHeader>
-          <DialogTitle>Ignore range</DialogTitle>
+          <DialogTitle>{comment ? 'Add comment' : 'Ignore range'}</DialogTitle>
         </DialogHeader>
         <DialogCloseTrigger />
         <DialogBody>
           <Stack gap="4">
+            {comment && (
+              <Field.Root required>
+                <Field.Label>Comment</Field.Label>
+                {/* One line, as the label on the chart is. */}
+                <Input
+                  autoFocus
+                  value={text}
+                  onChange={(e) => setText(e.currentTarget.value)}
+                  maxLength={2000}
+                />
+              </Field.Root>
+            )}
+            {/* Side by side, the way a range is read — and so the dialog is the wider size
+                (see below): a TimeField holds its width so the browser's picker shows the
+                whole date and time. Stacked on a phone, which has no room for both. */}
             <Stack direction={{base: 'column', sm: 'row'}} gap="3">
               <Field.Root>
                 <Field.Label>Start</Field.Label>
@@ -112,7 +152,7 @@ export function RangeTagDialog({
                   label="Start"
                   value={start}
                   window={project}
-                  empty={{label: 'Event start', at: project.start}}
+                  empty={{label: 'Project start', at: project.start}}
                   onChange={setStart}
                 />
               </Field.Root>
@@ -122,7 +162,7 @@ export function RangeTagDialog({
                   label="End"
                   value={end}
                   window={project}
-                  empty={{label: 'Event end', at: project.end}}
+                  empty={{label: 'Project end', at: project.end}}
                   onChange={setEnd}
                 />
                 {backwards && (
@@ -141,9 +181,13 @@ export function RangeTagDialog({
               >
                 <Stack gap="2">
                   <Radio value="device" disabled={lines.length === 0}>
-                    {lines.length === 1
-                      ? `Device ${lines[0]!.deviceId}`
-                      : 'One device'}
+                    {lines.length === 1 ? (
+                      <>
+                        Device <Name>{lines[0]!.deviceId}</Name>
+                      </>
+                    ) : (
+                      'One device'
+                    )}
                   </Radio>
                   {/* Only when there is a choice to make: a location that has had one
                       monitor names it in the label above. */}
@@ -163,9 +207,11 @@ export function RangeTagDialog({
                     </NativeSelectRoot>
                   )}
                   <Radio value="location">
-                    All devices at {location.locationName}
+                    All devices at <Name>{location.locationName}</Name>
                   </Radio>
-                  <Radio value="event">Everything in {project.name}</Radio>
+                  <Radio value="event">
+                    Everything in <Name>{project.name}</Name>
+                  </Radio>
                 </Stack>
               </RadioGroup>
             </Stack>
@@ -176,7 +222,7 @@ export function RangeTagDialog({
             Cancel
           </Button>
           <Button
-            disabled={backwards}
+            disabled={backwards || (comment && text.trim() === '')}
             loading={save.isPending}
             onClick={() => save.mutate()}
           >

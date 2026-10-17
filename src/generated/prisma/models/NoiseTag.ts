@@ -33,6 +33,7 @@ export type NoiseTagMinAggregateOutputType = {
   start: Date | null
   end: Date | null
   text: string | null
+  dedupeKey: string | null
   createdAt: Date | null
   createdByViewerId: string | null
 }
@@ -46,6 +47,7 @@ export type NoiseTagMaxAggregateOutputType = {
   start: Date | null
   end: Date | null
   text: string | null
+  dedupeKey: string | null
   createdAt: Date | null
   createdByViewerId: string | null
 }
@@ -59,6 +61,7 @@ export type NoiseTagCountAggregateOutputType = {
   start: number
   end: number
   text: number
+  dedupeKey: number
   createdAt: number
   createdByViewerId: number
   _all: number
@@ -74,6 +77,7 @@ export type NoiseTagMinAggregateInputType = {
   start?: true
   end?: true
   text?: true
+  dedupeKey?: true
   createdAt?: true
   createdByViewerId?: true
 }
@@ -87,6 +91,7 @@ export type NoiseTagMaxAggregateInputType = {
   start?: true
   end?: true
   text?: true
+  dedupeKey?: true
   createdAt?: true
   createdByViewerId?: true
 }
@@ -100,6 +105,7 @@ export type NoiseTagCountAggregateInputType = {
   start?: true
   end?: true
   text?: true
+  dedupeKey?: true
   createdAt?: true
   createdByViewerId?: true
   _all?: true
@@ -186,6 +192,7 @@ export type NoiseTagGroupByOutputType = {
   start: Date
   end: Date | null
   text: string | null
+  dedupeKey: string | null
   createdAt: Date
   createdByViewerId: string
   _count: NoiseTagCountAggregateOutputType | null
@@ -220,6 +227,7 @@ export type NoiseTagWhereInput = {
   start?: Prisma.DateTimeFilter<"NoiseTag"> | Date | string
   end?: Prisma.DateTimeNullableFilter<"NoiseTag"> | Date | string | null
   text?: Prisma.StringNullableFilter<"NoiseTag"> | string | null
+  dedupeKey?: Prisma.StringNullableFilter<"NoiseTag"> | string | null
   createdAt?: Prisma.DateTimeFilter<"NoiseTag"> | Date | string
   createdByViewerId?: Prisma.StringFilter<"NoiseTag"> | string
   NoiseProject?: Prisma.XOR<Prisma.NoiseProjectScalarRelationFilter, Prisma.NoiseProjectWhereInput>
@@ -237,6 +245,7 @@ export type NoiseTagOrderByWithRelationInput = {
   start?: Prisma.SortOrder
   end?: Prisma.SortOrderInput | Prisma.SortOrder
   text?: Prisma.SortOrderInput | Prisma.SortOrder
+  dedupeKey?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   createdByViewerId?: Prisma.SortOrder
   NoiseProject?: Prisma.NoiseProjectOrderByWithRelationInput
@@ -248,6 +257,7 @@ export type NoiseTagOrderByWithRelationInput = {
 
 export type NoiseTagWhereUniqueInput = Prisma.AtLeast<{
   id?: string
+  dedupeKey?: string
   AND?: Prisma.NoiseTagWhereInput | Prisma.NoiseTagWhereInput[]
   OR?: Prisma.NoiseTagWhereInput[]
   NOT?: Prisma.NoiseTagWhereInput | Prisma.NoiseTagWhereInput[]
@@ -264,7 +274,7 @@ export type NoiseTagWhereUniqueInput = Prisma.AtLeast<{
   NoiseLocation?: Prisma.XOR<Prisma.NoiseLocationNullableScalarRelationFilter, Prisma.NoiseLocationWhereInput> | null
   Device?: Prisma.XOR<Prisma.DeviceNullableScalarRelationFilter, Prisma.DeviceWhereInput> | null
   createdByViewer?: Prisma.XOR<Prisma.ViewerScalarRelationFilter, Prisma.ViewerWhereInput>
-}, "id">
+}, "id" | "dedupeKey">
 
 export type NoiseTagOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -275,6 +285,7 @@ export type NoiseTagOrderByWithAggregationInput = {
   start?: Prisma.SortOrder
   end?: Prisma.SortOrderInput | Prisma.SortOrder
   text?: Prisma.SortOrderInput | Prisma.SortOrder
+  dedupeKey?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   createdByViewerId?: Prisma.SortOrder
   _count?: Prisma.NoiseTagCountOrderByAggregateInput
@@ -294,6 +305,7 @@ export type NoiseTagScalarWhereWithAggregatesInput = {
   start?: Prisma.DateTimeWithAggregatesFilter<"NoiseTag"> | Date | string
   end?: Prisma.DateTimeNullableWithAggregatesFilter<"NoiseTag"> | Date | string | null
   text?: Prisma.StringNullableWithAggregatesFilter<"NoiseTag"> | string | null
+  dedupeKey?: Prisma.StringNullableWithAggregatesFilter<"NoiseTag"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"NoiseTag"> | Date | string
   createdByViewerId?: Prisma.StringWithAggregatesFilter<"NoiseTag"> | string
 }
@@ -304,6 +316,7 @@ export type NoiseTagCreateInput = {
   start: Date | string
   end?: Date | string | null
   text?: string | null
+  dedupeKey?: string | null
   createdAt?: Date | string
   NoiseProject: Prisma.NoiseProjectCreateNestedOneWithoutNoiseTagInput
   NoiseLocation?: Prisma.NoiseLocationCreateNestedOneWithoutNoiseTagInput
@@ -320,6 +333,7 @@ export type NoiseTagUncheckedCreateInput = {
   start: Date | string
   end?: Date | string | null
   text?: string | null
+  dedupeKey?: string | null
   createdAt?: Date | string
   createdByViewerId: string
 }
@@ -330,6 +344,7 @@ export type NoiseTagUpdateInput = {
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   end?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dedupeKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   NoiseProject?: Prisma.NoiseProjectUpdateOneRequiredWithoutNoiseTagNestedInput
   NoiseLocation?: Prisma.NoiseLocationUpdateOneWithoutNoiseTagNestedInput
@@ -346,6 +361,7 @@ export type NoiseTagUncheckedUpdateInput = {
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   end?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dedupeKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdByViewerId?: Prisma.StringFieldUpdateOperationsInput | string
 }
@@ -359,6 +375,7 @@ export type NoiseTagCreateManyInput = {
   start: Date | string
   end?: Date | string | null
   text?: string | null
+  dedupeKey?: string | null
   createdAt?: Date | string
   createdByViewerId: string
 }
@@ -369,6 +386,7 @@ export type NoiseTagUpdateManyMutationInput = {
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   end?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dedupeKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -381,6 +399,7 @@ export type NoiseTagUncheckedUpdateManyInput = {
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   end?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dedupeKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdByViewerId?: Prisma.StringFieldUpdateOperationsInput | string
 }
@@ -410,6 +429,7 @@ export type NoiseTagCountOrderByAggregateInput = {
   start?: Prisma.SortOrder
   end?: Prisma.SortOrder
   text?: Prisma.SortOrder
+  dedupeKey?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   createdByViewerId?: Prisma.SortOrder
 }
@@ -423,6 +443,7 @@ export type NoiseTagMaxOrderByAggregateInput = {
   start?: Prisma.SortOrder
   end?: Prisma.SortOrder
   text?: Prisma.SortOrder
+  dedupeKey?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   createdByViewerId?: Prisma.SortOrder
 }
@@ -436,6 +457,7 @@ export type NoiseTagMinOrderByAggregateInput = {
   start?: Prisma.SortOrder
   end?: Prisma.SortOrder
   text?: Prisma.SortOrder
+  dedupeKey?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   createdByViewerId?: Prisma.SortOrder
 }
@@ -618,6 +640,7 @@ export type NoiseTagCreateWithoutCreatedByViewerInput = {
   start: Date | string
   end?: Date | string | null
   text?: string | null
+  dedupeKey?: string | null
   createdAt?: Date | string
   NoiseProject: Prisma.NoiseProjectCreateNestedOneWithoutNoiseTagInput
   NoiseLocation?: Prisma.NoiseLocationCreateNestedOneWithoutNoiseTagInput
@@ -633,6 +656,7 @@ export type NoiseTagUncheckedCreateWithoutCreatedByViewerInput = {
   start: Date | string
   end?: Date | string | null
   text?: string | null
+  dedupeKey?: string | null
   createdAt?: Date | string
 }
 
@@ -674,6 +698,7 @@ export type NoiseTagScalarWhereInput = {
   start?: Prisma.DateTimeFilter<"NoiseTag"> | Date | string
   end?: Prisma.DateTimeNullableFilter<"NoiseTag"> | Date | string | null
   text?: Prisma.StringNullableFilter<"NoiseTag"> | string | null
+  dedupeKey?: Prisma.StringNullableFilter<"NoiseTag"> | string | null
   createdAt?: Prisma.DateTimeFilter<"NoiseTag"> | Date | string
   createdByViewerId?: Prisma.StringFilter<"NoiseTag"> | string
 }
@@ -684,6 +709,7 @@ export type NoiseTagCreateWithoutDeviceInput = {
   start: Date | string
   end?: Date | string | null
   text?: string | null
+  dedupeKey?: string | null
   createdAt?: Date | string
   NoiseProject: Prisma.NoiseProjectCreateNestedOneWithoutNoiseTagInput
   NoiseLocation?: Prisma.NoiseLocationCreateNestedOneWithoutNoiseTagInput
@@ -698,6 +724,7 @@ export type NoiseTagUncheckedCreateWithoutDeviceInput = {
   start: Date | string
   end?: Date | string | null
   text?: string | null
+  dedupeKey?: string | null
   createdAt?: Date | string
   createdByViewerId: string
 }
@@ -734,6 +761,7 @@ export type NoiseTagCreateWithoutNoiseProjectInput = {
   start: Date | string
   end?: Date | string | null
   text?: string | null
+  dedupeKey?: string | null
   createdAt?: Date | string
   NoiseLocation?: Prisma.NoiseLocationCreateNestedOneWithoutNoiseTagInput
   Device?: Prisma.DeviceCreateNestedOneWithoutNoiseTagInput
@@ -748,6 +776,7 @@ export type NoiseTagUncheckedCreateWithoutNoiseProjectInput = {
   start: Date | string
   end?: Date | string | null
   text?: string | null
+  dedupeKey?: string | null
   createdAt?: Date | string
   createdByViewerId: string
 }
@@ -784,6 +813,7 @@ export type NoiseTagCreateWithoutNoiseLocationInput = {
   start: Date | string
   end?: Date | string | null
   text?: string | null
+  dedupeKey?: string | null
   createdAt?: Date | string
   NoiseProject: Prisma.NoiseProjectCreateNestedOneWithoutNoiseTagInput
   Device?: Prisma.DeviceCreateNestedOneWithoutNoiseTagInput
@@ -798,6 +828,7 @@ export type NoiseTagUncheckedCreateWithoutNoiseLocationInput = {
   start: Date | string
   end?: Date | string | null
   text?: string | null
+  dedupeKey?: string | null
   createdAt?: Date | string
   createdByViewerId: string
 }
@@ -837,6 +868,7 @@ export type NoiseTagCreateManyCreatedByViewerInput = {
   start: Date | string
   end?: Date | string | null
   text?: string | null
+  dedupeKey?: string | null
   createdAt?: Date | string
 }
 
@@ -846,6 +878,7 @@ export type NoiseTagUpdateWithoutCreatedByViewerInput = {
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   end?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dedupeKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   NoiseProject?: Prisma.NoiseProjectUpdateOneRequiredWithoutNoiseTagNestedInput
   NoiseLocation?: Prisma.NoiseLocationUpdateOneWithoutNoiseTagNestedInput
@@ -861,6 +894,7 @@ export type NoiseTagUncheckedUpdateWithoutCreatedByViewerInput = {
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   end?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dedupeKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -873,6 +907,7 @@ export type NoiseTagUncheckedUpdateManyWithoutCreatedByViewerInput = {
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   end?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dedupeKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -884,6 +919,7 @@ export type NoiseTagCreateManyDeviceInput = {
   start: Date | string
   end?: Date | string | null
   text?: string | null
+  dedupeKey?: string | null
   createdAt?: Date | string
   createdByViewerId: string
 }
@@ -894,6 +930,7 @@ export type NoiseTagUpdateWithoutDeviceInput = {
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   end?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dedupeKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   NoiseProject?: Prisma.NoiseProjectUpdateOneRequiredWithoutNoiseTagNestedInput
   NoiseLocation?: Prisma.NoiseLocationUpdateOneWithoutNoiseTagNestedInput
@@ -908,6 +945,7 @@ export type NoiseTagUncheckedUpdateWithoutDeviceInput = {
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   end?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dedupeKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdByViewerId?: Prisma.StringFieldUpdateOperationsInput | string
 }
@@ -920,6 +958,7 @@ export type NoiseTagUncheckedUpdateManyWithoutDeviceInput = {
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   end?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dedupeKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdByViewerId?: Prisma.StringFieldUpdateOperationsInput | string
 }
@@ -932,6 +971,7 @@ export type NoiseTagCreateManyNoiseProjectInput = {
   start: Date | string
   end?: Date | string | null
   text?: string | null
+  dedupeKey?: string | null
   createdAt?: Date | string
   createdByViewerId: string
 }
@@ -942,6 +982,7 @@ export type NoiseTagUpdateWithoutNoiseProjectInput = {
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   end?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dedupeKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   NoiseLocation?: Prisma.NoiseLocationUpdateOneWithoutNoiseTagNestedInput
   Device?: Prisma.DeviceUpdateOneWithoutNoiseTagNestedInput
@@ -956,6 +997,7 @@ export type NoiseTagUncheckedUpdateWithoutNoiseProjectInput = {
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   end?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dedupeKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdByViewerId?: Prisma.StringFieldUpdateOperationsInput | string
 }
@@ -968,6 +1010,7 @@ export type NoiseTagUncheckedUpdateManyWithoutNoiseProjectInput = {
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   end?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dedupeKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdByViewerId?: Prisma.StringFieldUpdateOperationsInput | string
 }
@@ -980,6 +1023,7 @@ export type NoiseTagCreateManyNoiseLocationInput = {
   start: Date | string
   end?: Date | string | null
   text?: string | null
+  dedupeKey?: string | null
   createdAt?: Date | string
   createdByViewerId: string
 }
@@ -990,6 +1034,7 @@ export type NoiseTagUpdateWithoutNoiseLocationInput = {
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   end?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dedupeKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   NoiseProject?: Prisma.NoiseProjectUpdateOneRequiredWithoutNoiseTagNestedInput
   Device?: Prisma.DeviceUpdateOneWithoutNoiseTagNestedInput
@@ -1004,6 +1049,7 @@ export type NoiseTagUncheckedUpdateWithoutNoiseLocationInput = {
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   end?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dedupeKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdByViewerId?: Prisma.StringFieldUpdateOperationsInput | string
 }
@@ -1016,6 +1062,7 @@ export type NoiseTagUncheckedUpdateManyWithoutNoiseLocationInput = {
   start?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   end?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dedupeKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdByViewerId?: Prisma.StringFieldUpdateOperationsInput | string
 }
@@ -1031,6 +1078,7 @@ export type NoiseTagSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   start?: boolean
   end?: boolean
   text?: boolean
+  dedupeKey?: boolean
   createdAt?: boolean
   createdByViewerId?: boolean
   NoiseProject?: boolean | Prisma.NoiseProjectDefaultArgs<ExtArgs>
@@ -1048,6 +1096,7 @@ export type NoiseTagSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   start?: boolean
   end?: boolean
   text?: boolean
+  dedupeKey?: boolean
   createdAt?: boolean
   createdByViewerId?: boolean
   NoiseProject?: boolean | Prisma.NoiseProjectDefaultArgs<ExtArgs>
@@ -1065,6 +1114,7 @@ export type NoiseTagSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   start?: boolean
   end?: boolean
   text?: boolean
+  dedupeKey?: boolean
   createdAt?: boolean
   createdByViewerId?: boolean
   NoiseProject?: boolean | Prisma.NoiseProjectDefaultArgs<ExtArgs>
@@ -1082,11 +1132,12 @@ export type NoiseTagSelectScalar = {
   start?: boolean
   end?: boolean
   text?: boolean
+  dedupeKey?: boolean
   createdAt?: boolean
   createdByViewerId?: boolean
 }
 
-export type NoiseTagOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "projectId" | "locationId" | "deviceId" | "type" | "start" | "end" | "text" | "createdAt" | "createdByViewerId", ExtArgs["result"]["noiseTag"]>
+export type NoiseTagOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "projectId" | "locationId" | "deviceId" | "type" | "start" | "end" | "text" | "dedupeKey" | "createdAt" | "createdByViewerId", ExtArgs["result"]["noiseTag"]>
 export type NoiseTagInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   NoiseProject?: boolean | Prisma.NoiseProjectDefaultArgs<ExtArgs>
   NoiseLocation?: boolean | Prisma.NoiseTag$NoiseLocationArgs<ExtArgs>
@@ -1123,6 +1174,7 @@ export type $NoiseTagPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     start: Date
     end: Date | null
     text: string | null
+    dedupeKey: string | null
     createdAt: Date
     createdByViewerId: string
   }, ExtArgs["result"]["noiseTag"]>
@@ -1560,6 +1612,7 @@ export interface NoiseTagFieldRefs {
   readonly start: Prisma.FieldRef<"NoiseTag", 'DateTime'>
   readonly end: Prisma.FieldRef<"NoiseTag", 'DateTime'>
   readonly text: Prisma.FieldRef<"NoiseTag", 'String'>
+  readonly dedupeKey: Prisma.FieldRef<"NoiseTag", 'String'>
   readonly createdAt: Prisma.FieldRef<"NoiseTag", 'DateTime'>
   readonly createdByViewerId: Prisma.FieldRef<"NoiseTag", 'String'>
 }

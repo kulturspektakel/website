@@ -126,9 +126,9 @@ describe('limitBreaches', () => {
     };
     const index = locationEnergyIndex(logs, 'A', [evening]);
     // Minute 1 alone is 70; with minute 2's 80 it is 77.4, and with minute 3's 70 still 76.
-    expect(
-      limitBreaches(logs, [evening], [], [{weighting: 'A', index}]),
-    ).toEqual([{start: at(2), end: at(4)}]);
+    expect(limitBreaches(logs, [evening], [], {A: index})).toEqual([
+      {start: at(2), end: at(4)},
+    ]);
     // Not picked, not asked.
     expect(limitBreaches(logs, [evening], ['eq_fast:A'])).toBeNull();
   });

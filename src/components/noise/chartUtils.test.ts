@@ -166,8 +166,8 @@ describe('instantLabel', () => {
     );
   });
 
-  it('reads to the second while live, and still names the day', () => {
-    expect(instantLabel(true)(ms)).toBe('Fr 24.07. 20:05:09');
+  it('reads the clock alone to the second while live', () => {
+    expect(instantLabel(true)(ms)).toBe('20:05:09');
   });
 });
 

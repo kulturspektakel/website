@@ -7,6 +7,7 @@ import {
   runningLeq,
   type LocationAssignments,
   type LocationEnergyIndex,
+  type RangeIndex,
 } from './projectLogs';
 import {exceedsLimit, type LimitLine} from './limitLines';
 import type {SeriesKey} from './series';
@@ -140,10 +141,11 @@ export function coverageGaps(
  * map's pins warn by (see strictestLimit). Strictly above: a reading that sits exactly on
  * its limit is within it.
  *
- * `range` is the picked weightings of `Leq,Range`, each with the energy index it is summed
- * off. A limit written against one is judged on its own hours (see runningLeq): a minute of
- * them is a breach where the Leq from the limit's start up to that minute is over — the same
- * line, and the same wash, its card's chart draws.
+ * `range` is the energy index of each weighting whose `Leq,T` is read (see RangeIndex).
+ * A limit written against one is judged on its own hours (see runningLeq): a minute of them
+ * is a breach where the Leq from the limit's start up to that minute is over — so the strip
+ * marks when during those hours the mean went over, where the card's tile prints what the
+ * hours came to (see rangeLeqs).
  */
 export function limitBreaches(
   logs: ProjectLogs,
@@ -151,7 +153,7 @@ export function limitBreaches(
     limits: readonly LimitLine[];
   })[],
   series: readonly SeriesKey[],
-  range: readonly {weighting: Weighting; index: LocationEnergyIndex}[] = [],
+  range: RangeIndex = {},
 ): LogGap[] | null {
   const {minutes} = logs;
   const over = new Uint8Array(minutes);
@@ -161,7 +163,10 @@ export function limitBreaches(
   const loudest = new Float64Array(minutes);
   let limited = false;
   for (const location of locations) {
-    for (const {weighting, index} of range) {
+    for (const [weighting, index] of Object.entries(range) as [
+      Weighting,
+      LocationEnergyIndex,
+    ][]) {
       for (const limit of rangeLimits(location.limits, weighting)) {
         limited = true;
         const line = runningLeq(index, location.id, limit.start);

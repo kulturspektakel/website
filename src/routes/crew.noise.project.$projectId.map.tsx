@@ -5,14 +5,28 @@ import LocationsMap, {type Coordinates} from '../components/noise/LocationsMap';
 import {NoiseLocationDialog} from '../components/noise/NoiseLocationDialog';
 import {useWheelScrub} from '../components/noise/useWheelScrub';
 import {
+  locationLines,
   usePlayheadLevels,
   useProjectView,
   useReadingMinute,
 } from '../components/noise/projectView';
-import {ignoredDevicesAt} from '../components/noise/rangeTags';
-import {primarySeries} from '../components/noise/level';
+import {ignoredDevicesAt, locationTags} from '../components/noise/rangeTags';
+import {innermostAt} from '../components/noise/ranges';
+import {
+  formatDb,
+  isRangeKey,
+  primarySeries,
+  rangeKey,
+} from '../components/noise/level';
 import {useTick} from '../components/noise/context';
-import {strictestLimit} from '../components/noise/limitLines';
+import {
+  exceedsLimit,
+  limitLabel,
+  strictestLimit,
+  type LimitLine,
+} from '../components/noise/limitLines';
+import {seriesByKey, type SeriesKey} from '../components/noise/series';
+import {rangeLeqs} from '../components/noise/projectLogs';
 
 export const Route = createFileRoute('/crew/noise/project/$projectId/map')({
   component: ProjectMapView,
@@ -26,6 +40,7 @@ function ProjectMapView() {
     range,
     picked,
     locations,
+    rangeIndex,
     refresh,
     placing,
     setPlacing,
@@ -142,9 +157,45 @@ function ProjectMapView() {
           limitDb:
             strictestLimit(location.limits, primary, limitFrom, limitTo) ??
             undefined,
+          // Whether a `Leq,T` limit in force at that minute was broken over its whole hours —
+          // the reading the card's tile and the chart's wash go red on (see rangeLeqs). In the
+          // weighting of the series the pin shows, `rangeIndex` holding no other.
+          rangeOver:
+            pinsAt != null &&
+            location.limits.some(
+              (limit) =>
+                isRangeKey(limit.series) &&
+                limit.start <= pinsAt &&
+                pinsAt < limit.end &&
+                rangeLeqs(rangeIndex, location.id, limit, limit).some((leq) =>
+                  exceedsLimit(leq.db, leq.limit),
+                ),
+            ),
+          // The limits in force at that minute, spelled out for the pin's hover: the
+          // strictest on the series the pin shows, and on its weighting's `Leq,T`.
+          limitsNow:
+            pinsAt == null
+              ? []
+              : limitsInForce(location.limits, primary, pinsAt),
+          // The comment this place is in at the minute the pins read — its own, the event's,
+          // or a monitor's while it stood here (see locationTags) — printed under the pin.
+          // The innermost, as the card's tile and the timeline pick (see innermostAt).
+          comment:
+            pinsAt == null
+              ? undefined
+              : (innermostAt(
+                  locationTags(
+                    project.tags,
+                    location.id,
+                    locationLines(location.assignments),
+                  ).flatMap(({start, end, text}) =>
+                    text && end != null ? [{start, end, text}] : [],
+                  ),
+                  pinsAt,
+                )?.text ?? undefined),
         };
       }),
-    [locations, primary, limitFrom, limitTo, project.tags, pinsAt],
+    [locations, primary, limitFrom, limitTo, project.tags, pinsAt, rangeIndex],
   );
 
   // Reachable only by hand-typed URL — the index route sends a keyless
@@ -211,4 +262,25 @@ function ProjectMapView() {
       />
     </>
   );
+}
+
+// The limits a pin's place is held to at one instant, as its hover names them: the strictest
+// in force on the series the pin shows, and the strictest on that series' weighting's
+// `Leq,T` — the two a pin is judged by (see `limitDb` and `rangeOver`).
+function limitsInForce(
+  limits: readonly LimitLine[],
+  series: SeriesKey,
+  at: number,
+): string[] {
+  const range = rangeKey(seriesByKey(series).weighting);
+  return [series, range].flatMap((key) => {
+    const strictest = limits
+      .filter((l) => l.series === key && l.start <= at && at < l.end)
+      .sort((a, b) => a.decibels - b.decibels)[0];
+    return strictest
+      ? [
+          `${limitLabel(strictest.series, strictest)} ≤ ${formatDb(strictest.decibels, 'dB')}`,
+        ]
+      : [];
+  });
 }

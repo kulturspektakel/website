@@ -3,6 +3,7 @@ import {useState, type ReactNode} from 'react';
 import {Box, Collapsible, HStack, Heading, IconButton} from '@chakra-ui/react';
 import {LuArrowLeft} from 'react-icons/lu';
 import {stepsBackToOtherRoute} from '../../utils/historyRoutes';
+import {stuckShadow, useStuck} from './useStuck';
 
 // One strip: the gutter it keeps, the rule under it, and the ground both are painted on.
 // Applied to each of the two rather than described twice, which is the whole reason this
@@ -99,6 +100,9 @@ export function NoiseToolbar({
       </Link>
     </IconButton>
   );
+  // Whether the page has scrolled under the strip (see useStuck).
+  const {sentinel, stuck} = useStuck();
+
   // Only the strip's own animations, not ones bubbling up from inside the timeline.
   const onFold =
     (running: boolean) =>
@@ -107,60 +111,66 @@ export function NoiseToolbar({
     };
 
   return (
-    <Box
-      position="sticky"
-      top="0"
-      zIndex="2"
-      flexShrink="0"
-      // Opaque, because content passes underneath. Same ground as the layout, so the
-      // strip reads as the top of the page rather than as a card over it — the rule
-      // under it is what separates the two.
-      bg="bg"
-    >
-      <HStack align="center" gap="3" {...STRIP}>
-        {/* Three slots either way, and only their flex differs. Centred, the two sides
+    <>
+      {/* Where the strip would stand if it didn't stick, to tell when it is (see `stuck`). */}
+      <Box ref={sentinel} h="0" flexShrink="0" aria-hidden />
+      <Box
+        position="sticky"
+        top="0"
+        zIndex="2"
+        flexShrink="0"
+        // Opaque, because content passes underneath. Same ground as the layout, so the
+        // strip reads as the top of the page rather than as a card over it — the rule
+        // under it is what separates the two.
+        bg="bg"
+        // A shadow under it once the page has scrolled under it (see stuckShadow).
+        {...stuckShadow(stuck, 'top')}
+      >
+        <HStack align="center" gap="3" {...STRIP}>
+          {/* Three slots either way, and only their flex differs. Centred, the two sides
             are columns of equal basis and equal growth, so they come out the same width
             whatever is in them and the title sits in the strip's true middle; on a phone
             the arrow's slot goes and the title leads from the left. Otherwise the title
             takes what the arrow and the controls leave. */}
-        {(back || centerTitle) && (
-          <Box
+          {(back || centerTitle) && (
+            <Box
+              flex={centerTitle ? '1 1 0' : 'none'}
+              minW="0"
+              hideBelow={centerTitle ? 'md' : undefined}
+            >
+              {backArrow}
+            </Box>
+          )}
+          <Box flex={centerTitle ? 'none' : '1'} minW="0" maxW="full">
+            {title}
+          </Box>
+          <HStack
             flex={centerTitle ? '1 1 0' : 'none'}
             minW="0"
-            hideBelow={centerTitle ? 'md' : undefined}
+            gap="3"
+            wrap="wrap"
+            justify="flex-end"
           >
-            {backArrow}
-          </Box>
-        )}
-        <Box flex={centerTitle ? 'none' : '1'} minW="0" maxW="full">
-          {title}
-        </Box>
-        <HStack
-          flex={centerTitle ? '1 1 0' : 'none'}
-          minW="0"
-          gap="3"
-          wrap="wrap"
-          justify="flex-end"
-        >
-          {children}
+            {children}
+          </HStack>
         </HStack>
-      </HStack>
-      {below && (
-        // Mounted only while open or on its way closed: a strip nobody can see has no
-        // business drawing a timeline.
-        <Collapsible.Root open={belowOpen} lazyMount unmountOnExit>
-          {/* The whole strip inside, gutter and rule too, so the fold takes the line
+        {below && (
+          // Mounted only while open or on its way closed: a strip nobody can see has no
+          // business drawing a timeline.
+          <Collapsible.Root open={belowOpen} lazyMount unmountOnExit>
+            {/* The whole strip inside, gutter and rule too, so the fold takes the line
               under it with it rather than leaving it behind at height 0. */}
-          <Collapsible.Content
-            overflow={folding ? 'hidden' : 'visible'}
-            onAnimationStart={onFold(true)}
-            onAnimationEnd={onFold(false)}
-          >
-            <Box {...STRIP}>{below}</Box>
-          </Collapsible.Content>
-        </Collapsible.Root>
-      )}
-    </Box>
+            <Collapsible.Content
+              overflow={folding ? 'hidden' : 'visible'}
+              onAnimationStart={onFold(true)}
+              onAnimationEnd={onFold(false)}
+            >
+              <Box {...STRIP}>{below}</Box>
+            </Collapsible.Content>
+          </Collapsible.Root>
+        )}
+      </Box>
+    </>
   );
 }
 

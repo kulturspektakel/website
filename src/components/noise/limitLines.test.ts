@@ -50,7 +50,7 @@ describe('isLimitSeries', () => {
 });
 
 describe('limitSegments', () => {
-  // Drawn where its line is, like any other: with `Leq,Range` on the chart and not without.
+  // Drawn where its line is, like any other: with `Leq,T` on the chart and not without.
   it('draws a range limit only where its line is drawn', () => {
     const range = [
       limit('range:A', 85, '2026-07-25T21:00:00Z', '2026-07-25T22:00:00Z'),

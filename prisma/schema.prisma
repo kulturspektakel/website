@@ -519,6 +519,9 @@ model NoiseTag {
   end               DateTime?
   // COMMENT only: what was said about the range.
   text              String?
+  // What makes two tags the same one (see noiseTagDedupeKey) — unique, so a tag is never
+  // written twice. Nullable only until every row is backfilled.
+  dedupeKey         String?      @unique
   createdAt         DateTime     @default(now())
   createdByViewerId String
 

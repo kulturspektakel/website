@@ -137,22 +137,23 @@ const MARKERS_CSS = {
     color: 'chart.axis',
     whiteSpace: 'nowrap',
   },
-  // A comment: a hairline down the lines' band at its instant — at both ends of a range,
-  // with a bar along the top between them. In `fg.muted` rather than `chart.rule`, which is
-  // every tick's, so a note can't be taken for the clock. Bare: the strip has no room for
-  // the text, which the cards' charts carry.
+  // A comment: a grey pill near the top across a range, and a short tick of the same grey
+  // at a marker's instant. Off the ticks' own `chart.rule`, so a note can't be taken for the
+  // clock, and short of the full height, so it doesn't read as another mark of the hours.
+  // Bare: the strip has no room for the text, which its hover and the cards' charts carry.
+  [`& [${COMMENT_SPAN_ATTR}]`]: {
+    position: 'absolute',
+    top: '2px',
+    h: '7px',
+    rounded: 'full',
+    bg: 'fg.subtle',
+  },
   [`& [${COMMENT_ATTR}]`]: {
     position: 'absolute',
     top: '0',
-    bottom: `${LABEL_ROW_H}px`,
+    h: '11px',
     w: '1px',
-    bg: 'fg.muted',
-  },
-  [`& [${COMMENT_SPAN_ATTR}]`]: {
-    position: 'absolute',
-    top: '0',
-    h: '2px',
-    bg: 'fg.muted',
+    bg: 'fg.subtle',
   },
   // A date, where the day changes: in the full foreground rather than the axis grey, so the
   // day boundaries stand out from the hours between them.
@@ -375,20 +376,15 @@ export const TimelineMarkers = memo(function TimelineMarkers({
           const a = axisFraction(from, start, end) * 100;
           const b = to == null ? null : axisFraction(to, start, end) * 100;
           return [
-            b != null && (
+            b == null ? (
+              <span key={i} {...{[COMMENT_ATTR]: ''}} style={{left: `${a}%`}} />
+            ) : (
               <span
-                key={`${i}:span`}
+                key={i}
                 {...{[COMMENT_SPAN_ATTR]: ''}}
                 style={{left: `${a}%`, width: `${b - a}%`}}
               />
             ),
-            ...(b == null ? [a] : [a, b]).map((at, j) => (
-              <span
-                key={`${i}:${j}`}
-                {...{[COMMENT_ATTR]: ''}}
-                style={{left: `${at}%`}}
-              />
-            )),
           ];
         })}
       </Box>

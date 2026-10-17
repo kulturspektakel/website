@@ -5,10 +5,9 @@ import {
   locationRangeTotals,
   logColumn,
   logSeries,
-  rangeLimitVerdicts,
+  rangeLeqs,
   runningLeq,
   seriesLevelsByDevice,
-  totalsByLocation,
 } from './projectLogs';
 import {SERIES_KEYS} from './series';
 import {coverageDetail, energeticMeanDb} from './leq';
@@ -103,12 +102,12 @@ const sued = {
   assignments: [{deviceId: 'mic-1', start: START, end: at(2)}],
 };
 
-// The line a picked Leq,Range draws: the crop's mean over a window that grows a minute at a
-// time, so wherever the crop ends, its last minute reads what the tile prints.
+// A range's mean over a window that grows a minute at a time — what the timeline's breach
+// marks read for a Leq,T limit's hours.
 describe('runningLeq', () => {
   const index = locationEnergyIndex(logs, 'A', [nord, sued]);
 
-  it('ends each minute on the mean of the crop up to it', () => {
+  it('ends each minute on the mean from its start up to it', () => {
     const line = runningLeq(index, 'nord', at(1));
     expect(line[0]).toBeNull();
     for (const end of [2, 3, 4]) {
@@ -127,28 +126,6 @@ describe('runningLeq', () => {
     expect(line[3]).toBe(line[1]);
   });
 
-  // Inside a `Leq,Range` limit the line is that limit's Leq so far: it restarts at the
-  // limit's start, and goes back to the crop's once the limit is over.
-  it('restarts inside a range limit and reverts after it', () => {
-    const line = runningLeq(index, 'nord', START, [
-      {decibels: 80, start: at(1), end: at(2)},
-    ]);
-    // nord's loudest per minute: 60, 70, 90, 90.
-    expect(line[0]).toBe(60);
-    expect(line[1]).toBeCloseTo(70, 10);
-    expect(line[2]).toBeCloseTo(energeticMeanDb([60, 70, 90])!, 10);
-  });
-
-  it('anchors on the strictest of overlapping limits', () => {
-    const line = runningLeq(index, 'nord', START, [
-      {decibels: 85, start: at(0), end: at(4)},
-      {decibels: 80, start: at(2), end: at(4)},
-    ]);
-    expect(line[1]).toBeCloseTo(energeticMeanDb([60, 70])!, 10);
-    expect(line[2]).toBeCloseTo(90, 10);
-    expect(line[3]).toBeCloseTo(90, 10);
-  });
-
   it('is all null for a place the index does not know', () => {
     expect(runningLeq(index, 'nobody', START)).toEqual([
       null,
@@ -159,37 +136,28 @@ describe('runningLeq', () => {
   });
 });
 
-describe('rangeLimitVerdicts', () => {
-  const index = locationEnergyIndex(logs, 'A', [nord]);
-  const limits = [
-    {series: 'range:A' as const, decibels: 85, start: at(2), end: at(4)},
-    {series: 'range:A' as const, decibels: 95, start: at(2), end: at(4)},
-    {series: 'range:C' as const, decibels: 50, start: at(2), end: at(4)},
-    {series: 'eq_fast:A' as const, decibels: 50, start: at(2), end: at(4)},
-  ];
+describe('rangeLeqs', () => {
+  const index = {A: locationEnergyIndex(logs, 'A', [nord])};
+  const limit = {
+    series: 'range:A' as const,
+    decibels: 85,
+    start: at(2),
+    end: at(4),
+  };
 
-  // Minutes 2–3 are 90 dB(A): over the 85, within the 95, and the C and series limits are
-  // not this weighting's Leq,Range.
-  it('judges each range limit on its own hours', () => {
+  // Minutes 2–3 are 90 dB(A): a limit's own hours are judged by it, and any other stretch
+  // — even one inside them — by nothing.
+  it("judges a limit's own hours by that limit only", () => {
+    expect(rangeLeqs(index, 'nord', limit, limit)).toEqual([
+      expect.objectContaining({
+        weighting: 'A',
+        db: expect.closeTo(90, 10),
+        limit: 85,
+      }),
+    ]);
     expect(
-      rangeLimitVerdicts(
-        index,
-        'A',
-        {id: 'nord', limits},
-        {start: START, end: at(4)},
-      ),
-    ).toEqual([{limit: limits[0], db: expect.closeTo(90, 10)}]);
-  });
-
-  it('leaves out limits the crop does not reach', () => {
-    expect(
-      rangeLimitVerdicts(
-        index,
-        'A',
-        {id: 'nord', limits},
-        {start: START, end: at(2)},
-      ),
-    ).toEqual([]);
+      rangeLeqs(index, 'nord', {start: at(2), end: at(3)})[0]?.limit,
+    ).toBeNull();
   });
 });
 
@@ -375,36 +343,6 @@ describe('seriesLevelsByDevice', () => {
     const levels = seriesLevelsByDevice(logs, {minute: 3});
     expect(levels['eq_fast:A']).toEqual({'mic-1': 80, 'mic-2': 90});
     expect(levels['eq_fast:C']).toEqual({'mic-1': 85, 'mic-2': 95});
-  });
-});
-
-// The number every card leads with, and the reason it is no longer a picker option:
-// it answers a different question from the one above — the crop, not the instant.
-describe('totalsByLocation', () => {
-  const range = {start: START, end: at(4)};
-
-  it('averages the crop for every location, playhead or not', () => {
-    const totals = totalsByLocation(
-      locationEnergyIndex(logs, 'A', [nord, sued]),
-      range,
-    );
-    // The louder of the two at each minute: 60, 70, 90, 90.
-    expect(totals['nord']?.db).toBeCloseTo(
-      energeticMeanDb([60, 70, 90, 90])!,
-      10,
-    );
-    expect(totals['sued']?.db).toBeCloseTo(energeticMeanDb([60, 70])!, 10);
-  });
-
-  it('omits a location with nothing in the crop', () => {
-    expect(
-      Object.keys(
-        totalsByLocation(locationEnergyIndex(logs, 'A', [nord, sued]), {
-          start: at(2),
-          end: at(4),
-        }),
-      ),
-    ).toEqual(['nord']);
   });
 });
 

@@ -15,6 +15,7 @@ import {instantLabel} from './chartUtils';
 import {errorToast} from './toast';
 import {useProjectView, type NoiseLocationItem} from './projectView';
 import type {NoiseRangeTag} from './rangeTags';
+import {Name} from './Name';
 
 const label = instantLabel(false);
 
@@ -22,9 +23,6 @@ const label = instantLabel(false);
 // pill opens. The question names what the range applied to, because the pill stands on
 // one card and the tag may be the whole event's — removing it here counts those readings
 // again everywhere, not just on this chart.
-//
-// A comment is taken back through the same question, from the ✕ on its label — worded for
-// what is lost, which there is the note rather than a stretch set aside.
 //
 // Mounted per tag, so Cancel, the ✕ and a click outside all simply unmount it.
 export function RemoveTagDialog({
@@ -37,40 +35,31 @@ export function RemoveTagDialog({
   onClose: () => void;
 }) {
   const {project, refresh} = useProjectView();
-  const comment = tag.type === 'COMMENT';
-  const copy = comment
-    ? {
-        title: 'Delete comment?',
-        action: 'Delete',
-        done: 'Comment deleted',
-        failed: 'Comment could not be deleted',
-      }
-    : {
-        title: 'Un-ignore range?',
-        action: 'Un-ignore',
-        done: 'Range no longer ignored',
-        failed: 'Range could not be un-ignored',
-      };
 
   const remove = useMutation({
     mutationFn: () => deleteNoiseTag({data: {tagId: tag.id}}),
     onSuccess: async () => {
       await refresh();
-      toaster.create({
-        type: 'success',
-        title: copy.done,
-      });
+      toaster.create({type: 'success', title: 'Range no longer ignored'});
       onClose();
     },
-    onError: errorToast(copy.failed),
+    onError: errorToast('Range could not be un-ignored'),
   });
 
   const scope =
-    tag.deviceId != null
-      ? `device ${tag.deviceId}`
-      : tag.locationId != null
-        ? `all devices at ${location.locationName}`
-        : `everything in ${project.name}`;
+    tag.deviceId != null ? (
+      <>
+        device <Name>{tag.deviceId}</Name>
+      </>
+    ) : tag.locationId != null ? (
+      <>
+        all devices at <Name>{location.locationName}</Name>
+      </>
+    ) : (
+      <>
+        everything in <Name>{project.name}</Name>
+      </>
+    );
 
   return (
     <DialogRoot
@@ -81,24 +70,14 @@ export function RemoveTagDialog({
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{copy.title}</DialogTitle>
+          <DialogTitle>Un-ignore range?</DialogTitle>
         </DialogHeader>
         <DialogCloseTrigger disabled={remove.isPending} />
         <DialogBody>
-          {comment ? (
-            <Text>
-              “{tag.text}” on {scope}{' '}
-              {tag.end == null
-                ? `at ${label(tag.start)}`
-                : `between ${label(tag.start)} and ${label(tag.end)}`}{' '}
-              will be deleted.
-            </Text>
-          ) : (
-            <Text>
-              Readings from {scope} between {label(tag.start)} and{' '}
-              {label(tag.end ?? tag.start)} will count again.
-            </Text>
-          )}
+          <Text>
+            Readings from {scope} between {label(tag.start)} and{' '}
+            {label(tag.end ?? tag.start)} will count again.
+          </Text>
         </DialogBody>
         <DialogFooter>
           <Button
@@ -113,7 +92,7 @@ export function RemoveTagDialog({
             loading={remove.isPending}
             onClick={() => remove.mutate()}
           >
-            {copy.action}
+            Un-ignore
           </Button>
         </DialogFooter>
       </DialogContent>
