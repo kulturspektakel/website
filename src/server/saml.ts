@@ -1,6 +1,8 @@
 import {IdentityProvider, ServiceProvider, setSchemaValidator} from 'samlify';
 import {addMinutes, isPast} from 'date-fns';
-import {prismaClient} from './prismaClient.server';
+import {eq} from 'drizzle-orm';
+import {db} from './db.server';
+import {nonce as nonceTable, viewer as viewerTable} from './db/schema';
 
 /**
  * Migrated from `~/api.kulturspektakel.de/src/routes/saml/index.ts`.
@@ -259,24 +261,29 @@ async function sendSAMLResponse(
   });
 }
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 async function viewerFromNonce(nonce?: string) {
-  if (!nonce) {
+  // Nonces are uuids; anything else can't be one (and would be a database
+  // error rather than "no such nonce").
+  if (!nonce || !UUID.test(nonce)) {
     return;
   }
-  try {
-    const {createdFor, expiresAt} = await prismaClient.nonce.delete({
-      where: {nonce},
-      select: {
-        createdFor: true,
-        expiresAt: true,
-      },
+  // Deleting consumes the nonce, atomically: a second login with the same
+  // nonce finds nothing. Missing (already used) or expired means the caller
+  // redirects away.
+  const [consumed] = await db
+    .delete(nonceTable)
+    .where(eq(nonceTable.nonce, nonce))
+    .returning({
+      createdForId: nonceTable.createdForId,
+      expiresAt: nonceTable.expiresAt,
     });
-    if (createdFor && !isPast(expiresAt)) {
-      return createdFor;
-    }
-  } catch (e) {
-    // Prisma throws P2025 when the nonce doesn't exist (already consumed or
-    // expired). That's the expected "invalid login" path, so swallow it and
-    // let the caller redirect away.
+  if (!consumed?.createdForId || isPast(consumed.expiresAt)) {
+    return;
   }
+  return db.query.viewer.findFirst({
+    where: eq(viewerTable.id, consumed.createdForId),
+    columns: {displayName: true, email: true},
+  });
 }

@@ -1,10 +1,28 @@
 import {beforeEach, describe, expect, test, vi} from 'vitest';
 import {subMinutes, addMinutes} from 'date-fns';
+import {PgDialect} from 'drizzle-orm/pg-core';
 
-const {prismaMock} = vi.hoisted(() => ({
-  prismaMock: {nonce: {delete: vi.fn()}},
+const {deleteNonce, deleteWhere, findViewer} = vi.hoisted(() => ({
+  // Rows `db.delete(nonce).where(…).returning(…)` resolves to.
+  deleteNonce: vi.fn(),
+  deleteWhere: vi.fn(),
+  findViewer: vi.fn(),
 }));
-vi.mock('./prismaClient.server', () => ({prismaClient: prismaMock}));
+vi.mock('./db.server', () => ({
+  db: {
+    delete: () => ({
+      where: (condition: unknown) => {
+        deleteWhere(condition);
+        return {returning: deleteNonce};
+      },
+    }),
+    query: {viewer: {findFirst: findViewer}},
+  },
+}));
+
+const GONE = '00000000-0000-4000-8000-000000000001';
+const EXPIRED = '00000000-0000-4000-8000-000000000002';
+const VALID = '00000000-0000-4000-8000-000000000003';
 
 // IdentityProvider/ServiceProvider are constructed at module import, so the env
 // they read must be set first. The redirect-path tests below never sign a
@@ -41,7 +59,7 @@ describe('handleSamlLogin password fallback', () => {
     const res = await handleSamlLogin(postLogin({password: 'nope'}));
     expect(res.status).toBe(302);
     expect(res.headers.get('location')).toContain('kult.wiki');
-    expect(prismaMock.nonce.delete).not.toHaveBeenCalled();
+    expect(deleteNonce).not.toHaveBeenCalled();
   });
 
   test('rejects a missing password by redirecting to the wiki', async () => {
@@ -67,42 +85,49 @@ describe('handleSamlLogin nonce flow', () => {
     const res = await handleSamlLogin(getLogin());
     expect(res.status).toBe(302);
     expect(res.headers.get('location')).toContain('kult.wiki');
-    expect(prismaMock.nonce.delete).not.toHaveBeenCalled();
+    expect(deleteNonce).not.toHaveBeenCalled();
   });
 
   test('redirects when the nonce no longer exists (consumed/expired)', async () => {
-    // Prisma throws P2025 when deleting a row that isn't there.
-    prismaMock.nonce.delete.mockRejectedValueOnce(new Error('P2025'));
-    const res = await handleSamlLogin(getLogin({nonce: 'gone'}));
+    // Deleting a row that isn't there returns nothing.
+    deleteNonce.mockResolvedValueOnce([]);
+    const res = await handleSamlLogin(getLogin({nonce: GONE}));
     expect(res.status).toBe(302);
     expect(res.headers.get('location')).toContain('kult.wiki');
-    expect(prismaMock.nonce.delete).toHaveBeenCalledWith({
-      where: {nonce: 'gone'},
-      select: {createdFor: true, expiresAt: true},
-    });
+    const {params} = new PgDialect().sqlToQuery(deleteWhere.mock.calls[0][0]);
+    expect(params).toEqual([GONE]);
+  });
+
+  test('redirects on a malformed nonce without touching the database', async () => {
+    const res = await handleSamlLogin(getLogin({nonce: 'not-a-uuid'}));
+    expect(res.status).toBe(302);
+    expect(deleteNonce).not.toHaveBeenCalled();
   });
 
   test('redirects when the nonce exists but has expired', async () => {
-    prismaMock.nonce.delete.mockResolvedValueOnce({
-      createdFor: {displayName: 'Test User', email: 'test@example.com'},
-      expiresAt: subMinutes(new Date(), 1),
-    });
-    const res = await handleSamlLogin(getLogin({nonce: 'expired'}));
+    deleteNonce.mockResolvedValueOnce([
+      {createdForId: 'U1', expiresAt: subMinutes(new Date(), 1)},
+    ]);
+    const res = await handleSamlLogin(getLogin({nonce: EXPIRED}));
     expect(res.status).toBe(302);
     expect(res.headers.get('location')).toContain('kult.wiki');
+    expect(findViewer).not.toHaveBeenCalled();
   });
 
   test('consumes a valid nonce before attempting to build a response', async () => {
     // A live nonce passes the auth gate; building the actual SAML response then
     // requires a real SAMLRequest in the query, which these unit tests don't
     // forge — so we only assert the nonce was consumed (deleted) exactly once.
-    prismaMock.nonce.delete.mockResolvedValueOnce({
-      createdFor: {displayName: 'Test User', email: 'test@example.com'},
-      expiresAt: addMinutes(new Date(), 5),
+    deleteNonce.mockResolvedValueOnce([
+      {createdForId: 'U1', expiresAt: addMinutes(new Date(), 5)},
+    ]);
+    findViewer.mockResolvedValueOnce({
+      displayName: 'Test User',
+      email: 'test@example.com',
     });
     await expect(
-      handleSamlLogin(getLogin({nonce: 'valid'})),
+      handleSamlLogin(getLogin({nonce: VALID})),
     ).rejects.toBeDefined();
-    expect(prismaMock.nonce.delete).toHaveBeenCalledTimes(1);
+    expect(deleteNonce).toHaveBeenCalledTimes(1);
   });
 });
