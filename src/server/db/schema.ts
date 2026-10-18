@@ -5,9 +5,13 @@
 //
 // Started as `drizzle-kit pull` from production (2026-10-18), with these
 // edits: timestamps read as `Date` (`mode: 'date'`); citext and bytea as custom
-// types; default index opclasses (pull emitted wrong ones); and the defaults
-// Prisma used to apply in the client (`$defaultFn` / `$onUpdate`) — new rows
-// get a uuid where Prisma used a cuid; the ids are opaque text.
+// types; default index opclasses (pull emitted wrong ones).
+//
+// Timestamp defaults are at millisecond precision, like a JS `Date`.
+// Generated ids (`gen_random_uuid()`) and
+// `Viewer.updatedAt` (trigger) are filled in by the database, so writers
+// outside the app (Directus, SQL) get them too. Ids are opaque text: older
+// rows have Prisma cuids.
 import {
   customType,
   pgTable,
@@ -72,7 +76,7 @@ export const deviceConfigVersion = pgTable(
     crc32: integer().notNull(),
     version: serial().primaryKey().notNull(),
     createdAt: timestamp({precision: 3, mode: 'date'})
-      .default(sql`CURRENT_TIMESTAMP`)
+      .default(sql`CURRENT_TIMESTAMP(3)`)
       .notNull(),
   },
   (table) => [
@@ -85,7 +89,7 @@ export const donation = pgTable(
   {
     amount: integer().notNull(),
     createdAt: timestamp({precision: 3, mode: 'date'})
-      .default(sql`CURRENT_TIMESTAMP`)
+      .default(sql`CURRENT_TIMESTAMP(3)`)
       .notNull(),
     email: text(),
     name: text(),
@@ -150,7 +154,7 @@ export const news = pgTable('News', {
   title: text().notNull(),
   content: text().notNull(),
   createdAt: timestamp({precision: 3, mode: 'date'})
-    .default(sql`CURRENT_TIMESTAMP`)
+    .default(sql`CURRENT_TIMESTAMP(3)`)
     .notNull(),
 });
 
@@ -206,7 +210,7 @@ export const bandApplication = pgTable(
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
     createdAt: timestamp({precision: 3, mode: 'date'})
-      .default(sql`CURRENT_TIMESTAMP`)
+      .default(sql`CURRENT_TIMESTAMP(3)`)
       .notNull(),
     email: text().notNull(),
     bandname: text().notNull(),
@@ -266,7 +270,7 @@ export const bandApplicationComment = pgTable(
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
     createdAt: timestamp({precision: 3, mode: 'date'})
-      .default(sql`CURRENT_TIMESTAMP`)
+      .default(sql`CURRENT_TIMESTAMP(3)`)
       .notNull(),
     viewerId: text().notNull(),
     comment: text().notNull(),
@@ -295,16 +299,15 @@ export const viewer = pgTable('Viewer', {
   id: text()
     .primaryKey()
     .notNull()
-    .$defaultFn(() => crypto.randomUUID()),
+    .default(sql`gen_random_uuid()::text`),
   displayName: text().notNull(),
   email: text().notNull(),
   profilePicture: text(),
   slackToken: text(),
   slackScopes: text().array(),
   updatedAt: timestamp({precision: 3, mode: 'date'})
-    .default(sql`CURRENT_TIMESTAMP`)
-    .notNull()
-    .$onUpdate(() => new Date()),
+    .default(sql`CURRENT_TIMESTAMP(3)`)
+    .notNull(),
 });
 
 export const bandApplicationTag = pgTable(
@@ -313,7 +316,7 @@ export const bandApplicationTag = pgTable(
     bandApplicationId: uuid().notNull(),
     tag: citext().notNull(),
     createdAt: timestamp({precision: 3, mode: 'date'})
-      .default(sql`CURRENT_TIMESTAMP`)
+      .default(sql`CURRENT_TIMESTAMP(3)`)
       .notNull(),
     createdByViewerId: text().notNull(),
   },
@@ -398,7 +401,7 @@ export const deviceLog = pgTable(
     usbVoltage: integer(),
     deviceId: text().notNull(),
     createdAt: timestamp({precision: 3, mode: 'date'})
-      .default(sql`CURRENT_TIMESTAMP`)
+      .default(sql`CURRENT_TIMESTAMP(3)`)
       .notNull(),
     deviceTime: timestamp({precision: 3, mode: 'date'}).notNull(),
   },
@@ -449,7 +452,7 @@ export const order = pgTable(
   {
     id: serial().primaryKey().notNull(),
     createdAt: timestamp({precision: 3, mode: 'date'})
-      .default(sql`CURRENT_TIMESTAMP`)
+      .default(sql`CURRENT_TIMESTAMP(3)`)
       .notNull(),
     payment: orderPayment().notNull(),
     deposit: integer().default(0).notNull(),
@@ -569,7 +572,7 @@ export const noiseLocationAssignment = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => crypto.randomUUID()),
+      .default(sql`gen_random_uuid()::text`),
     locationId: text().notNull(),
     deviceId: text().notNull(),
     start: timestamp({precision: 3, mode: 'date'}),
@@ -609,7 +612,7 @@ export const noiseLocation = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => crypto.randomUUID()),
+      .default(sql`gen_random_uuid()::text`),
     projectId: text().notNull(),
     latitude: doublePrecision().notNull(),
     longitude: doublePrecision().notNull(),
@@ -632,7 +635,7 @@ export const noiseLocationLimit = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => crypto.randomUUID()),
+      .default(sql`gen_random_uuid()::text`),
     locationId: text().notNull(),
     decibels: doublePrecision().notNull(),
     start: timestamp({precision: 3, mode: 'date'}),
@@ -659,7 +662,7 @@ export const noiseProject = pgTable('NoiseProject', {
   id: text()
     .primaryKey()
     .notNull()
-    .$defaultFn(() => crypto.randomUUID()),
+    .default(sql`gen_random_uuid()::text`),
   name: text().notNull(),
   start: timestamp({precision: 3, mode: 'date'}).notNull(),
   end: timestamp({precision: 3, mode: 'date'}).notNull(),
@@ -671,7 +674,7 @@ export const noiseLog = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => crypto.randomUUID()),
+      .default(sql`gen_random_uuid()::text`),
     deviceId: text().notNull(),
     measuredAt: timestamp({precision: 3, mode: 'date'}).notNull(),
     bands: bytea().notNull(),
@@ -707,7 +710,7 @@ export const noiseTag = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => crypto.randomUUID()),
+      .default(sql`gen_random_uuid()::text`),
     projectId: text().notNull(),
     locationId: text(),
     deviceId: text(),
@@ -716,7 +719,7 @@ export const noiseTag = pgTable(
     end: timestamp({precision: 3, mode: 'date'}),
     text: text(),
     createdAt: timestamp({precision: 3, mode: 'date'})
-      .default(sql`CURRENT_TIMESTAMP`)
+      .default(sql`CURRENT_TIMESTAMP(3)`)
       .notNull(),
     createdByViewerId: text().notNull(),
     dedupeKey: text(),
@@ -855,7 +858,7 @@ export const viewerLocation = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => crypto.randomUUID()),
+      .default(sql`gen_random_uuid()::text`),
     viewerId: text().notNull(),
     createdAt: timestamp({precision: 3, mode: 'date'}).notNull(),
     latitude: doublePrecision().notNull(),
