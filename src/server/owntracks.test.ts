@@ -1,20 +1,37 @@
 import {beforeEach, describe, expect, test, vi} from 'vitest';
 import {createHash} from 'node:crypto';
+import {PgDialect} from 'drizzle-orm/pg-core';
+import type {SQL} from 'drizzle-orm';
 
-const {findUnique, create, queryRaw} = vi.hoisted(() => ({
-  findUnique: vi.fn(),
+const {findFirst, create, friends, where} = vi.hoisted(() => ({
+  findFirst: vi.fn(),
+  // `db.insert(viewerLocation).values(row)`
   create: vi.fn(),
-  queryRaw: vi.fn(),
+  // Rows the friends `selectDistinctOn` query resolves to.
+  friends: vi.fn(),
+  // The friends query's `where` condition.
+  where: vi.fn(),
 }));
-vi.mock('./prismaClient.server', () => ({
-  prismaClient: {
-    viewer: {findUnique},
-    viewerLocation: {create},
-    // The friends view is one raw `DISTINCT ON` query; the mock receives the
-    // tagged-template args (strings, ...values).
-    $queryRaw: queryRaw,
-  },
-}));
+vi.mock('./db.server', () => {
+  // The friends query is one builder chain ending in `orderBy`, which resolves
+  // to the rows.
+  const chain = {
+    from: () => chain,
+    innerJoin: () => chain,
+    where: (condition: SQL) => {
+      where(condition);
+      return chain;
+    },
+    orderBy: () => friends(),
+  };
+  return {
+    db: {
+      query: {viewer: {findFirst}},
+      insert: () => ({values: create}),
+      selectDistinctOn: () => chain,
+    },
+  };
+});
 
 process.env.JWT_SECRET = 'test-jwt-secret';
 const {handleOwnTracks} = await import('./owntracks');
@@ -39,8 +56,8 @@ beforeEach(() => vi.clearAllMocks());
 
 describe('handleOwnTracks', () => {
   test('valid auth + location persists a ViewerLocation', async () => {
-    findUnique.mockResolvedValueOnce({id: 'U1'});
-    queryRaw.mockResolvedValueOnce([]);
+    findFirst.mockResolvedValueOnce({id: 'U1'});
+    friends.mockResolvedValueOnce([]);
     const res = await handleOwnTracks(
       ingest('U1', password('U1'), {
         _type: 'location',
@@ -51,15 +68,13 @@ describe('handleOwnTracks', () => {
     );
     expect(res.status).toBe(200);
     expect(create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({latitude: 48.1, longitude: 11.3, viewerId: 'U1'}),
-      }),
+      expect.objectContaining({latitude: 48.1, longitude: 11.3, viewerId: 'U1'}),
     );
   });
 
   test('friend cards/locations use the viewer id as tid (unique, not initials)', async () => {
-    findUnique.mockResolvedValueOnce({id: 'U1'});
-    queryRaw.mockResolvedValueOnce([
+    findFirst.mockResolvedValueOnce({id: 'U1'});
+    friends.mockResolvedValueOnce([
       {
         id: 'U2',
         displayName: 'Daniel Büchele',
@@ -86,8 +101,8 @@ describe('handleOwnTracks', () => {
       arrayBuffer: async () => new TextEncoder().encode('PNGBYTES').buffer,
     });
     vi.stubGlobal('fetch', fetchMock);
-    findUnique.mockResolvedValueOnce({id: 'U1'});
-    queryRaw.mockResolvedValueOnce([
+    findFirst.mockResolvedValueOnce({id: 'U1'});
+    friends.mockResolvedValueOnce([
       {
         id: 'U2',
         displayName: 'Daniel Büchele',
@@ -113,19 +128,21 @@ describe('handleOwnTracks', () => {
   });
 
   test('friends response excludes the requesting viewer (no self-duplicate)', async () => {
-    findUnique.mockResolvedValueOnce({id: 'U1'});
-    queryRaw.mockResolvedValueOnce([]);
+    findFirst.mockResolvedValueOnce({id: 'U1'});
+    friends.mockResolvedValueOnce([]);
     await handleOwnTracks(
       ingest('U1', password('U1'), {_type: 'location', lat: 1, lon: 2, tst: 1}),
     );
-    // The requester's id is passed as a bound parameter of the `<>` filter.
-    expect(queryRaw.mock.calls[0]).toContain('U1');
+    // The requester's id is a bound parameter of the `<>` filter.
+    const {sql, params} = new PgDialect().sqlToQuery(where.mock.calls[0][0]);
+    expect(sql).toContain('<>');
+    expect(params).toContain('U1');
   });
 
   test('empty body does not throw, returns friends view without persisting', async () => {
     // OwnTracks sometimes POSTs an empty body; must not crash on JSON.parse.
-    findUnique.mockResolvedValueOnce({id: 'U1'});
-    queryRaw.mockResolvedValueOnce([]);
+    findFirst.mockResolvedValueOnce({id: 'U1'});
+    friends.mockResolvedValueOnce([]);
     const req = new Request('https://test/owntracks', {
       method: 'POST',
       headers: {

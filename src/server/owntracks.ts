@@ -1,5 +1,7 @@
 import {sub} from 'date-fns';
-import {prismaClient} from './prismaClient.server';
+import {and, desc, eq, gt, ne} from 'drizzle-orm';
+import {db} from './db.server';
+import {viewer as viewerTable, viewerLocation} from './db/schema';
 import {ApiError} from './apiError.server';
 import {ownTracksPassword} from './ownTracksPassword.server';
 
@@ -42,13 +44,6 @@ type OwnTracksMessage =
   | {_type: 'waypoint' | 'waypoints'; [k: string]: unknown};
 
 type Viewer = {id: string; displayName: string; profilePicture: string | null};
-
-/** One row of the "latest location per viewer" query below. */
-type RecentLocation = Viewer & {
-  latitude: number;
-  longitude: number;
-  createdAt: Date;
-};
 
 function tid(viewer: {displayName: string}): string {
   return viewer.displayName
@@ -132,7 +127,10 @@ export async function handleOwnTracks(request: Request): Promise<Response> {
   if (!viewerId) {
     throw new ApiError(401, 'Invalid token');
   }
-  const viewer = await prismaClient.viewer.findUnique({where: {id: viewerId}});
+  const viewer = await db.query.viewer.findFirst({
+    where: eq(viewerTable.id, viewerId),
+    columns: {id: true},
+  });
   if (!viewer) {
     throw new ApiError(401, 'Invalid token');
   }
@@ -154,14 +152,12 @@ export async function handleOwnTracks(request: Request): Promise<Response> {
   }
 
   if (body?._type === 'location') {
-    await prismaClient.viewerLocation.create({
-      data: {
-        latitude: body.lat,
-        longitude: body.lon,
-        viewerId,
-        createdAt: new Date(body.tst * 1000),
-        payload: body,
-      },
+    await db.insert(viewerLocation).values({
+      latitude: body.lat,
+      longitude: body.lon,
+      viewerId,
+      createdAt: new Date(body.tst * 1000),
+      payload: body,
     });
   }
 
@@ -170,24 +166,26 @@ export async function handleOwnTracks(request: Request): Promise<Response> {
   // device under its own topic (owntracks/<user>/<device>), and echoing it back
   // would surface a duplicate friend re-topiced to owntracks/http/<tid>.
   //
-  // One `DISTINCT ON` query instead of Prisma's `some` + per-viewer `take: 1`
-  // include: that pair costs two round trips and a window function over every
-  // recent row, where this is a single index scan on
-  // ViewerLocation(viewerId, createdAt) — on the hottest endpoint we have.
-  const viewers = await prismaClient.$queryRaw<RecentLocation[]>`
-    SELECT DISTINCT ON (l."viewerId")
-      l."viewerId" AS "id",
-      v."displayName",
-      v."profilePicture",
-      l."latitude",
-      l."longitude",
-      l."createdAt"
-    FROM "ViewerLocation" l
-    JOIN "Viewer" v ON v."id" = l."viewerId"
-    WHERE l."createdAt" > ${sub(new Date(), {hours: 5})}
-      AND l."viewerId" <> ${viewerId}
-    ORDER BY l."viewerId", l."createdAt" DESC
-  `;
+  // One `DISTINCT ON` query (latest location per viewer): a single index scan
+  // on ViewerLocation(viewerId, createdAt), on the hottest endpoint we have.
+  const viewers = await db
+    .selectDistinctOn([viewerLocation.viewerId], {
+      id: viewerLocation.viewerId,
+      displayName: viewerTable.displayName,
+      profilePicture: viewerTable.profilePicture,
+      latitude: viewerLocation.latitude,
+      longitude: viewerLocation.longitude,
+      createdAt: viewerLocation.createdAt,
+    })
+    .from(viewerLocation)
+    .innerJoin(viewerTable, eq(viewerTable.id, viewerLocation.viewerId))
+    .where(
+      and(
+        gt(viewerLocation.createdAt, sub(new Date(), {hours: 5})),
+        ne(viewerLocation.viewerId, viewerId),
+      ),
+    )
+    .orderBy(viewerLocation.viewerId, desc(viewerLocation.createdAt));
 
   // Encode avatars in parallel (cached), keyed by viewer id, before the
   // synchronous message build below.
