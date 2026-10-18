@@ -125,13 +125,38 @@ function loadTerraformOutputs() {
   return outputs;
 }
 
+// gRPC codes worth another try: INTERNAL (13), which Google's auth backend
+// returns now and then ("Authentication backend internal server error. Please
+// retry.") and which the client library doesn't retry itself, UNAVAILABLE (14)
+// and DEADLINE_EXCEEDED (4).
+const RETRYABLE_CODES = new Set([4, 13, 14]);
+
+async function withRetry(label, fn, attempts = 5) {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await fn();
+    } catch (e) {
+      if (attempt >= attempts || !RETRYABLE_CODES.has(e?.code)) {
+        throw e;
+      }
+      const delay = 500 * 2 ** (attempt - 1);
+      console.warn(
+        `${label}: ${e.message} — retrying in ${delay} ms (${attempt}/${attempts - 1})`,
+      );
+      await new Promise((r) => setTimeout(r, delay));
+    }
+  }
+}
+
 async function loadSecrets(projectId) {
   const client = new SecretManagerServiceClient();
   const fetched = await Promise.all(
     namesFrom('secret').map(async (name) => {
-      const [version] = await client.accessSecretVersion({
-        name: `projects/${projectId}/secrets/${name}/versions/latest`,
-      });
+      const [version] = await withRetry(name, () =>
+        client.accessSecretVersion({
+          name: `projects/${projectId}/secrets/${name}/versions/latest`,
+        }),
+      );
       const data = version.payload?.data;
       if (!data) {
         throw new Error(`Empty value for secret ${name}`);
