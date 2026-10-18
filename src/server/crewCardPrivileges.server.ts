@@ -1,4 +1,4 @@
-import {and, gt, inArray, isNotNull, ne, notInArray, eq} from 'drizzle-orm';
+import {and, eq, gt, inArray, isNotNull, notInArray} from 'drizzle-orm';
 import {db} from './db.server';
 import {crewCard} from './db/schema';
 import {conversationMembers} from './slack.server';
@@ -17,12 +17,8 @@ import {SlackChannel} from '../utils/slackChannels';
  *
  * The two directions are deliberately asymmetric — see the doc comments below.
  *
- * `suspended`/`privileged` are nullable booleans, and the filters below are
- * `<> true` — which, as SQL does, leaves NULLs out. (This used to be Prisma's
- * `{not: true}`, which does the same; the old comment claimed it matched NULL.)
- * So a card whose flag is NULL is neither granted nor, by these filters,
- * touched. Filtering on `privileged` on both sides makes a redundant event a
- * zero-row write.
+ * Filtering on `privileged` on both sides makes a redundant event a zero-row
+ * write.
  */
 
 /**
@@ -38,8 +34,8 @@ export async function grantBonbudePrivilege(viewerId: string): Promise<number> {
       and(
         eq(crewCard.viewerId, viewerId),
         gt(crewCard.validUntil, new Date()),
-        ne(crewCard.suspended, true),
-        ne(crewCard.privileged, true),
+        eq(crewCard.suspended, false),
+        eq(crewCard.privileged, false),
       ),
     )
     .returning({id: crewCard.id});
@@ -51,7 +47,7 @@ export async function grantBonbudePrivilege(viewerId: string): Promise<number> {
 
 /**
  * Revoking applies regardless of validity or suspension, because `handleLists`
- * selects `{privileged: true, suspended: {not: true}}` with no `validUntil`
+ * ships every privileged, unsuspended card with no `validUntil`
  * filter — an *expired* privileged card is still shipped to the devices, so
  * leaving one privileged would leave it live.
  */
@@ -119,8 +115,8 @@ export async function reconcileBonbudePrivileges(): Promise<{
         and(
           inArray(crewCard.viewerId, members),
           gt(crewCard.validUntil, new Date()),
-          ne(crewCard.suspended, true),
-          ne(crewCard.privileged, true),
+          eq(crewCard.suspended, false),
+          eq(crewCard.privileged, false),
         ),
       )
       .returning({id: crewCard.id}),

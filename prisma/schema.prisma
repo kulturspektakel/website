@@ -148,8 +148,8 @@ model CardTransaction {
 model CrewCard {
   id         Bytes    @id
   nickname   String?
-  suspended  Boolean?
-  privileged Boolean?
+  suspended  Boolean  @default(false)
+  privileged Boolean  @default(false)
   viewerId   String?
   validUntil DateTime
   enrolledAt DateTime

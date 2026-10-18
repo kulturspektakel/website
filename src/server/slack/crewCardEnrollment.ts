@@ -121,7 +121,7 @@ export async function assignCrewCard(
         viewerId
           ? eq(crewCardTable.viewerId, viewerId)
           : eq(crewCardTable.nickname, nickname!),
-        ne(crewCardTable.suspended, true),
+        eq(crewCardTable.suspended, false),
         gt(crewCardTable.validUntil, new Date()),
         ne(crewCardTable.id, cardIdBytes),
       ),

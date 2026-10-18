@@ -482,8 +482,8 @@ export const crewCard = pgTable(
   {
     id: bytea().primaryKey().notNull(),
     nickname: text(),
-    suspended: boolean(),
-    privileged: boolean(),
+    suspended: boolean().default(false).notNull(),
+    privileged: boolean().default(false).notNull(),
     viewerId: text(),
     validUntil: timestamp({precision: 3, mode: 'date'}).notNull(),
     enrolledAt: timestamp({precision: 3, mode: 'date'}).notNull(),

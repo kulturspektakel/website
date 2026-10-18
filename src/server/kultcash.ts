@@ -70,13 +70,10 @@ export async function handleLists(request: Request): Promise<Response> {
       .from(crewCard)
       .where(or(eq(crewCard.privileged, true), eq(crewCard.suspended, true))),
   ]);
-  const suspendedCrewCards = flaggedCrewCards.filter(
-    (c) => c.suspended === true,
-  );
-  // Privileged unless suspended. As before (SQL `suspended <> true`), a card
-  // whose `suspended` is NULL doesn't count as privileged.
+  const suspendedCrewCards = flaggedCrewCards.filter((c) => c.suspended);
+  // A suspended card isn't privileged, whatever its flag says.
   const privilegedCrewCards = flaggedCrewCards.filter(
-    (c) => c.privileged === true && c.suspended === false,
+    (c) => c.privileged && !c.suspended,
   );
 
   const allLists: AllLists = {

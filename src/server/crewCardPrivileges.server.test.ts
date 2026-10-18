@@ -26,12 +26,12 @@ beforeEach(() => {
 describe('crewCardPrivileges', () => {
   test('granting is limited to currently-valid, unsuspended cards', async () => {
     await grantBonbudePrivilege('U1');
-    // viewer, validUntil > now (sent as an ISO string), suspended <> true,
-    // privileged <> true
+    // viewer, validUntil > now (sent as an ISO string), not suspended, not
+    // privileged yet
     expect(updates).toHaveBeenCalledWith(
       'CrewCard',
       {privileged: true},
-      ['U1', expect.any(String), true, true],
+      ['U1', expect.any(String), false, false],
     );
   });
 
@@ -68,7 +68,7 @@ describe('crewCardPrivileges', () => {
     expect(grant).toEqual([
       'CrewCard',
       {privileged: true},
-      ['U1', 'U2', expect.any(String), true, true],
+      ['U1', 'U2', expect.any(String), false, false],
     ]);
     // viewerId IS NOT NULL (no parameter), NOT IN members, privileged
     expect(revoke).toEqual([
