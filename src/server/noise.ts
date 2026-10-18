@@ -1,9 +1,9 @@
-import {prismaClient} from './prismaClient.server';
+import {db} from './db.server';
+import {noiseLog} from './db/schema';
 import {LogMessage} from '../proto/logmessage';
 import {ApiError} from './apiError.server';
 import type {DeviceToken} from './apiAuth.server';
-import {deviceLogCreateInput, deviceTimeToDate} from './deviceLog.server';
-import {Prisma} from '../generated/prisma/client';
+import {deviceTimeToDate, insertDeviceLog} from './deviceLog.server';
 
 /**
  * POST /api/noise/log — ingests a protobuf `LogMessage` from a noise monitor.
@@ -65,53 +65,33 @@ export async function handleNoiseLog(
 
   // The upload carries the same device-telemetry envelope as KultCash. When the
   // device sends a `clientId` (the log's primary key), record a `DeviceLog` for
-  // this check-in too — battery/USB voltage keyed to the device — reusing the
-  // shared builder. Re-uploads collide on `clientId`; swallow the `P2002` so
-  // they stay idempotent (matching the noise-log `skipDuplicates` below).
+  // this check-in too — battery/USB voltage keyed to the device. A re-upload
+  // already has one, which `insertDeviceLog` skips (like the noise log below).
   if (message.clientId) {
-    await prismaClient.deviceLog
-      .create({
-        data: deviceLogCreateInput(
-          message,
-          deviceId,
-          measuredAt,
-          'NOISE_MONITOR',
-        ),
-      })
-      .catch((e) => {
-        if (
-          e instanceof Prisma.PrismaClientKnownRequestError &&
-          e.code === 'P2002'
-        ) {
-          return;
-        }
-        throw e;
-      });
+    await insertDeviceLog(db, message, deviceId, measuredAt, 'NOISE_MONITOR');
   }
 
-  // `createMany` with `skipDuplicates` keeps re-uploads idempotent (they return
-  // 201 with no new row rather than a unique-constraint error), so the device
-  // can safely retry and then delete the file.
-  await prismaClient.noiseLog.createMany({
-    data: [
-      {
-        deviceId,
-        measuredAt,
-        bands: Uint8Array.from(recording.bands),
-        laeq: recording.laeq,
-        lceq: recording.lceq,
-        lafmax: recording.lafmax,
-        lcfmax: recording.lcfmax,
-        lcpeak: recording.lcpeak,
-        // Absent until the device's rolling window has filled → stored as null.
-        laeq5m: recording.laeq5m ?? null,
-        lceq5m: recording.lceq5m ?? null,
-        laeq30m: recording.laeq30m ?? null,
-        lceq30m: recording.lceq30m ?? null,
-      },
-    ],
-    skipDuplicates: true,
-  });
+  // Skipping duplicates keeps re-uploads idempotent (they return 201 with no
+  // new row rather than a unique-constraint error), so the device can safely
+  // retry and then delete the file.
+  await db
+    .insert(noiseLog)
+    .values({
+      deviceId,
+      measuredAt,
+      bands: Buffer.from(recording.bands),
+      laeq: recording.laeq,
+      lceq: recording.lceq,
+      lafmax: recording.lafmax,
+      lcfmax: recording.lcfmax,
+      lcpeak: recording.lcpeak,
+      // Absent until the device's rolling window has filled → stored as null.
+      laeq5m: recording.laeq5m ?? null,
+      lceq5m: recording.lceq5m ?? null,
+      laeq30m: recording.laeq30m ?? null,
+      lceq30m: recording.lceq30m ?? null,
+    })
+    .onConflictDoNothing();
 
   return new Response('Created', {status: 201});
 }

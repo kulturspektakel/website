@@ -1,6 +1,25 @@
 import {notFound} from '@tanstack/react-router';
-import {Prisma} from '../generated/prisma/client';
-import {prismaClient} from './prismaClient.server';
+import {
+  and,
+  asc,
+  eq,
+  exists,
+  gt,
+  gte,
+  isNull,
+  lt,
+  lte,
+  or,
+  sql,
+} from 'drizzle-orm';
+import {db} from './db.server';
+import {
+  noiseLocation,
+  noiseLocationAssignment,
+  noiseLocationLimit,
+  noiseLog,
+  noiseProject,
+} from './db/schema';
 import {
   decodeDb,
   logMinuteIndex,
@@ -13,8 +32,8 @@ import {limitLine, type LimitLine} from '../components/noise/limitLines';
 import {visibleProjectWindow} from '../components/noise/projectSelection';
 import {MINUTE_MS} from '../components/noise/timeframe';
 
-// The displayable levels, as the wire names them against the Prisma field each comes
-// from. One table rather than the same names spelled out in the select, the
+// The displayable levels, as the wire names them against the NoiseLog column each
+// comes from. One table rather than the same names spelled out in the select, the
 // initializer and the fill: adding one is one row here, and the reader resolves the
 // same names through the series table (see logColumn).
 //
@@ -32,8 +51,8 @@ const LOG_COLUMNS = [
   ['lcpeak', 'lcpeak'],
 ] as const satisfies ReadonlyArray<readonly [LevelColumn, LevelField]>;
 
-// The Prisma fields the table above may name. Spelling them again as a select is
-// unavoidable — Prisma infers the row type from a literal, so a computed select would
+// The NoiseLog columns the table above may name. Spelling them again as a select is
+// unavoidable — the row type is inferred from a literal, so a computed select would
 // hand back untyped rows — but `satisfies` keys both against this one union, so a
 // missing or misspelt field is a compile error rather than a column of nulls.
 type LevelField =
@@ -48,16 +67,16 @@ type LevelField =
   | 'lcpeak';
 
 const LEVEL_SELECT = {
-  laeq: true,
-  lceq: true,
-  laeq5m: true,
-  lceq5m: true,
-  laeq30m: true,
-  lceq30m: true,
-  lafmax: true,
-  lcfmax: true,
-  lcpeak: true,
-} as const satisfies Record<LevelField, true> & Prisma.NoiseLogSelect;
+  laeq: noiseLog.laeq,
+  lceq: noiseLog.lceq,
+  laeq5m: noiseLog.laeq5m,
+  lceq5m: noiseLog.lceq5m,
+  laeq30m: noiseLog.laeq30m,
+  lceq30m: noiseLog.lceq30m,
+  lafmax: noiseLog.lafmax,
+  lcfmax: noiseLog.lcfmax,
+  lcpeak: noiseLog.lcpeak,
+} satisfies Record<LevelField, unknown>;
 
 // What one project may hand to the browser, in device-minutes actually deployed. A
 // festival is a fortnight at the outside and fifteen monitors is a lot of them, which
@@ -102,11 +121,14 @@ const MAX_PROJECT_LOG_MINUTES = 200_000;
 export async function deviceAssignment(
   deviceId: string,
 ): Promise<DeviceAssignment | null> {
-  const row = await prismaClient.noiseLocationAssignment.findFirst({
-    where: {deviceId, ...currentAssignmentWhere(new Date())},
-    orderBy: CURRENT_ASSIGNMENT_ORDER,
-    select: CURRENT_ASSIGNMENT_SELECT,
-  });
+  const [row] = await currentAssignments()
+    .where(
+      and(
+        eq(noiseLocationAssignment.deviceId, deviceId),
+        currentAssignmentWhere(new Date()),
+      ),
+    )
+    .limit(1);
   return row ? toDeviceAssignment(row) : null;
 }
 
@@ -132,11 +154,8 @@ export async function deviceAssignment(
 export async function deviceAssignments(): Promise<
   Map<string, DeviceAssignment>
 > {
-  const rows = await prismaClient.noiseLocationAssignment.findMany({
-    where: currentAssignmentWhere(new Date()),
-    orderBy: CURRENT_ASSIGNMENT_ORDER,
-    select: {deviceId: true, ...CURRENT_ASSIGNMENT_SELECT},
-  });
+  const now = new Date();
+  const rows = await currentAssignments().where(currentAssignmentWhere(now));
   const assignments = new Map<string, DeviceAssignment>();
   for (const row of rows) {
     // Not `set` unconditionally: the order above puts the likeliest first, so the
@@ -170,30 +189,45 @@ export async function deviceAssignments(): Promise<
  */
 export async function deviceLimits(deviceId: string): Promise<LimitLine[]> {
   const now = new Date();
-  const rows = await prismaClient.noiseLocationLimit.findMany({
-    where: {
-      NoiseLocation: {
-        NoiseLocationAssignment: {
-          some: {deviceId, ...currentAssignmentWhere(now)},
-        },
-      },
-    },
-    orderBy: {start: 'asc'},
-    select: {
-      series: true,
-      decibels: true,
-      start: true,
-      end: true,
-      NoiseLocation: {
-        select: {NoiseProject: {select: {start: true, end: true}}},
-      },
-    },
-  });
+  const rows = await db
+    .select({
+      series: noiseLocationLimit.series,
+      decibels: noiseLocationLimit.decibels,
+      start: noiseLocationLimit.start,
+      end: noiseLocationLimit.end,
+      projectStart: noiseProject.start,
+      projectEnd: noiseProject.end,
+    })
+    .from(noiseLocationLimit)
+    .innerJoin(
+      noiseLocation,
+      eq(noiseLocation.id, noiseLocationLimit.locationId),
+    )
+    .innerJoin(noiseProject, eq(noiseProject.id, noiseLocation.projectId))
+    .where(
+      // The limits of the location this monitor currently stands at. The
+      // assignment is the same location's, so it shares the joined project.
+      exists(
+        db
+          .select({one: sql`1`})
+          .from(noiseLocationAssignment)
+          .where(
+            and(
+              eq(noiseLocationAssignment.locationId, noiseLocation.id),
+              eq(noiseLocationAssignment.deviceId, deviceId),
+              currentAssignmentWhere(now),
+            ),
+          ),
+      ),
+    )
+    // Ties (two limits without a start) broken by id, so the order is stable.
+    .orderBy(asc(noiseLocationLimit.start), asc(noiseLocationLimit.id));
   // Both bounds resolved and the series narrowed by the one helper the project page's
   // loader uses too (see limitLine) — the column is text, and a blank bound is the edge
   // of the event either side.
   return rows.flatMap(
-    (row) => limitLine(row, row.NoiseLocation.NoiseProject) ?? [],
+    (row) =>
+      limitLine(row, {start: row.projectStart, end: row.projectEnd}) ?? [],
   );
 }
 
@@ -202,56 +236,54 @@ export async function deviceLimits(deviceId: string): Promise<LimitLine[]> {
 // were asked about. One clause per bound, each "the row's own, or the event's where it
 // has none". Two ORs, so they are spelled as an AND of them rather than merged — a
 // single OR list would read as "either bound holds", which is not the question.
-const currentAssignmentWhere = (
-  now: Date,
-): Prisma.NoiseLocationAssignmentWhereInput => ({
-  AND: [
-    {
-      OR: [
-        {start: {lte: now}},
-        {start: null, NoiseLocation: {NoiseProject: {start: {lte: now}}}},
-      ],
-    },
-    {
-      OR: [
-        {end: {gt: now}},
-        {end: null, NoiseLocation: {NoiseProject: {end: {gt: now}}}},
-      ],
-    },
-  ],
-});
-
-// Latest start first, blanks last — a blank start is the event's own, so it is the
-// earliest a placement can begin and the least specific claim on this instant.
-const CURRENT_ASSIGNMENT_ORDER = {
-  start: {sort: 'desc', nulls: 'last'},
-} as const satisfies Prisma.NoiseLocationAssignmentOrderByWithRelationInput;
+//
+// Reads the event's bounds from `noiseProject`, so the query must join it (through the
+// assignment's location).
+const currentAssignmentWhere = (now: Date) =>
+  and(
+    or(
+      lte(noiseLocationAssignment.start, now),
+      and(isNull(noiseLocationAssignment.start), lte(noiseProject.start, now)),
+    ),
+    or(
+      gt(noiseLocationAssignment.end, now),
+      and(isNull(noiseLocationAssignment.end), gt(noiseProject.end, now)),
+    ),
+  );
 
 // A placement names both the spot and the festival it is a spot at, which is what
-// makes it worth showing (see DeviceAssignment).
-const CURRENT_ASSIGNMENT_SELECT = {
-  NoiseLocation: {
-    select: {
-      id: true,
-      locationName: true,
-      projectId: true,
-      NoiseProject: {select: {name: true}},
-    },
-  },
-} as const satisfies Prisma.NoiseLocationAssignmentSelect;
+// makes it worth showing (see DeviceAssignment). Latest start first, blanks last — a
+// blank start is the event's own, so it is the earliest a placement can begin and the
+// least specific claim on this instant. (Spelled out: Postgres sorts NULLs first in a
+// descending order.)
+const currentAssignments = () =>
+  db
+    .select({
+      deviceId: noiseLocationAssignment.deviceId,
+      locationId: noiseLocation.id,
+      locationName: noiseLocation.locationName,
+      projectId: noiseLocation.projectId,
+      projectName: noiseProject.name,
+    })
+    .from(noiseLocationAssignment)
+    .innerJoin(
+      noiseLocation,
+      eq(noiseLocation.id, noiseLocationAssignment.locationId),
+    )
+    .innerJoin(noiseProject, eq(noiseProject.id, noiseLocation.projectId))
+    .orderBy(sql`${noiseLocationAssignment.start} desc nulls last`)
+    .$dynamic();
 
 const toDeviceAssignment = (row: {
-  NoiseLocation: {
-    id: string;
-    locationName: string;
-    projectId: string;
-    NoiseProject: {name: string};
-  };
+  locationId: string;
+  locationName: string;
+  projectId: string;
+  projectName: string;
 }): DeviceAssignment => ({
-  locationId: row.NoiseLocation.id,
-  locationName: row.NoiseLocation.locationName,
-  projectId: row.NoiseLocation.projectId,
-  projectName: row.NoiseLocation.NoiseProject.name,
+  locationId: row.locationId,
+  locationName: row.locationName,
+  projectId: row.projectId,
+  projectName: row.projectName,
 });
 
 // Every stored level of one project, as one minute-indexed column per device per
@@ -277,15 +309,15 @@ export async function projectLogs(projectId: string): Promise<ProjectLogs> {
   // The assignments come along with the project rather than in a second round trip:
   // the overlap filter below needs the window this query resolves, and a project holds
   // few enough assignments to filter in memory.
-  const project = await prismaClient.noiseProject.findUnique({
-    where: {id: projectId},
-    select: {
-      start: true,
-      end: true,
-      NoiseLocation: {
-        select: {
-          NoiseLocationAssignment: {
-            select: {deviceId: true, start: true, end: true},
+  const project = await db.query.noiseProject.findFirst({
+    where: eq(noiseProject.id, projectId),
+    columns: {start: true, end: true},
+    with: {
+      noiseLocations: {
+        columns: {id: true},
+        with: {
+          noiseLocationAssignments: {
+            columns: {deviceId: true, start: true, end: true},
           },
         },
       },
@@ -308,15 +340,17 @@ export async function projectLogs(projectId: string): Promise<ProjectLogs> {
   //
   // Deployed minutes rather than devices × window, so a monitor that stood there for
   // an afternoon costs an afternoon, which is also what the cap below measures.
-  const spans = project.NoiseLocation.flatMap((l) =>
-    l.NoiseLocationAssignment.map((a) => ({
-      deviceId: a.deviceId,
-      // A null start is the event's own, and `start` is already the event's start (capped
-      // at now), so the clamp below is the whole of what resolving it takes.
-      from: new Date(Math.max(a.start?.getTime() ?? start, start)),
-      to: new Date(Math.min(a.end?.getTime() ?? end, end)),
-    })),
-  ).filter((s) => s.to > s.from);
+  const spans = project.noiseLocations
+    .flatMap((l) =>
+      l.noiseLocationAssignments.map((a) => ({
+        deviceId: a.deviceId,
+        // A null start is the event's own, and `start` is already the event's start (capped
+        // at now), so the clamp below is the whole of what resolving it takes.
+        from: new Date(Math.max(a.start?.getTime() ?? start, start)),
+        to: new Date(Math.min(a.end?.getTime() ?? end, end)),
+      })),
+    )
+    .filter((s) => s.to > s.from);
   if (spans.length === 0 || minutes <= 0) {
     return {...grid, minutes: Math.max(0, minutes), devices: {}};
   }
@@ -332,19 +366,24 @@ export async function projectLogs(projectId: string): Promise<ProjectLogs> {
     );
   }
 
-  const rows = await prismaClient.noiseLog.findMany({
-    where: {
-      OR: spans.map((s) => ({
-        deviceId: s.deviceId,
-        measuredAt: {gte: s.from, lt: s.to},
-      })),
-    },
-    select: {
-      deviceId: true,
-      measuredAt: true,
+  const rows = await db
+    .select({
+      deviceId: noiseLog.deviceId,
+      measuredAt: noiseLog.measuredAt,
       ...LEVEL_SELECT,
-    },
-  });
+    })
+    .from(noiseLog)
+    .where(
+      or(
+        ...spans.map((s) =>
+          and(
+            eq(noiseLog.deviceId, s.deviceId),
+            gte(noiseLog.measuredAt, s.from),
+            lt(noiseLog.measuredAt, s.to),
+          ),
+        ),
+      ),
+    );
 
   // One column per displayable window, filled by index. Every window travels, so the
   // page's weighting and window pickers change what is shown without another request.

@@ -1,6 +1,7 @@
 import {createRequire} from 'node:module';
 import {Pool, neonConfig} from '@neondatabase/serverless';
 import {drizzle} from 'drizzle-orm/neon-serverless';
+import {DrizzleQueryError} from 'drizzle-orm/errors';
 import ws from 'ws';
 import * as relations from './db/relations';
 import * as tables from './db/schema';
@@ -48,3 +49,15 @@ export const db = createDb() as ReturnType<typeof drizzle<typeof schema>>;
 // The `tx` handed to `db.transaction(async (tx) => …)`, for helpers that run
 // inside a caller's transaction.
 export type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+// Either `db` or a transaction, for helpers that work both ways.
+export type DbExecutor = typeof db | DbTransaction;
+
+// Whether a query failed on a unique constraint (Postgres 23505; Prisma's
+// `P2002`), for writes that can't skip a duplicate up front.
+export function isUniqueViolation(e: unknown) {
+  return (
+    e instanceof DrizzleQueryError &&
+    (e.cause as {code?: string} | undefined)?.code === '23505'
+  );
+}

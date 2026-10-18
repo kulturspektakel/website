@@ -18,7 +18,34 @@ import {useNoiseStream} from '../components/noise/useNoiseStream';
 import {useBleDevice} from '../components/noise/useBleDevice';
 import {createServerFn} from '@tanstack/react-start';
 import {crewAuth} from '../server/crewAuth';
-import {prismaClient} from '../server/prismaClient.server';
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  gt,
+  gte,
+  inArray,
+  isNull,
+  lt,
+  lte,
+  notExists,
+  sql,
+  type SQL,
+} from 'drizzle-orm';
+import type {AnyPgColumn} from 'drizzle-orm/pg-core';
+import {db, isUniqueViolation} from '../server/db.server';
+import {
+  area,
+  bandPlaying,
+  device,
+  noiseLocation,
+  noiseLocationAssignment,
+  noiseLocationLimit,
+  noiseProject,
+  noiseTag,
+} from '../server/db/schema';
 import {noiseTagDedupeKey} from '../server/noiseTagKey.server';
 import {deviceAssignments, projectLogs} from '../server/noiseHistory.server';
 import {Toaster} from '../components/chakra-snippets/toaster';
@@ -38,22 +65,22 @@ export const listNoiseProjects = createServerFn()
   .middleware([crewAuth])
   .handler(async () => {
     // Newest festival first — that's the one you're almost always after.
-    const projects = await prismaClient.noiseProject.findMany({
-      orderBy: [{start: 'desc'}, {name: 'asc'}],
-      select: {
-        id: true,
-        name: true,
-        start: true,
-        end: true,
-        _count: {select: {NoiseLocation: true}},
-      },
-    });
+    const projects = await db
+      .select({
+        id: noiseProject.id,
+        name: noiseProject.name,
+        start: noiseProject.start,
+        end: noiseProject.end,
+        locationCount: count(noiseLocation.id),
+      })
+      .from(noiseProject)
+      .leftJoin(noiseLocation, eq(noiseLocation.projectId, noiseProject.id))
+      .groupBy(noiseProject.id)
+      .orderBy(desc(noiseProject.start), asc(noiseProject.name));
     return projects.map((p) => ({
-      id: p.id,
-      name: p.name,
+      ...p,
       start: p.start.getTime(),
       end: p.end.getTime(),
-      locationCount: p._count.NoiseLocation,
     }));
   });
 
@@ -83,37 +110,37 @@ export const createNoiseProject = createServerFn()
   .handler(async ({data}) =>
     // Returns the id so the dialog can drop the user straight into the project
     // they just created (which is why they created it).
-    prismaClient.noiseProject.create({
-      data: {
+    db
+      .insert(noiseProject)
+      .values({
         name: data.name,
         start: new Date(data.start),
         end: new Date(data.end),
-      },
-      select: {id: true},
-    }),
+      })
+      .returning({id: noiseProject.id})
+      .then(([created]) => created),
   );
 
 export const loadNoiseProject = createServerFn()
   .middleware([crewAuth])
   .validator(z.object({projectId: z.string().min(1)}))
   .handler(async ({data}) => {
-    const project = await prismaClient.noiseProject.findUnique({
-      where: {id: data.projectId},
-      select: {
-        id: true,
-        name: true,
-        start: true,
-        end: true,
+    const project = await db.query.noiseProject.findFirst({
+      where: eq(noiseProject.id, data.projectId),
+      columns: {id: true, name: true, start: true, end: true},
+      with: {
         // Unordered on purpose: what order locations are shown in is decided in one
         // place, and it isn't here (see compareLocations). Postgres would sort
         // `Bühne 10` before `Bühne 2`, and a second opinion in the query is a second
         // thing to keep in step with the first.
-        NoiseLocation: {
-          select: {
+        noiseLocations: {
+          columns: {
             id: true,
             locationName: true,
             latitude: true,
             longitude: true,
+          },
+          with: {
             // The whole history, not just the open rows: which monitor stood here is
             // a question the page asks about the instant it is showing, and it
             // resolves that client-side (see assignmentsAt). `end == null` still
@@ -123,22 +150,17 @@ export const loadNoiseProject = createServerFn()
             // rows never match an in-window instant, and one case needs them: a device
             // assigned after a finished project's end has an open assignment starting
             // past the window, and live mode must still show it standing there.
-            NoiseLocationAssignment: {
-              orderBy: {start: 'asc'},
-              select: {
-                id: true,
-                deviceId: true,
-                start: true,
-                end: true,
-                Device: {select: {lastSeen: true}},
-              },
+            noiseLocationAssignments: {
+              orderBy: asc(noiseLocationAssignment.start),
+              columns: {id: true, deviceId: true, start: true, end: true},
+              with: {device: {columns: {lastSeen: true}}},
             },
             // What each place is permitted. They travel with the location because they
             // belong to it, so the card's chart draws them and its ⋮ edits them without
             // either fetching per card.
-            NoiseLocationLimit: {
-              orderBy: {start: 'asc'},
-              select: {
+            noiseLocationLimits: {
+              orderBy: asc(noiseLocationLimit.start),
+              columns: {
                 id: true,
                 series: true,
                 decibels: true,
@@ -151,9 +173,9 @@ export const loadNoiseProject = createServerFn()
         // Every tag in the project, whatever it applies to: which of them a location's
         // chart shades is decided client-side against the monitors it has had (see
         // locationTags), so one query serves every card.
-        NoiseTag: {
-          orderBy: {start: 'asc'},
-          select: {
+        noiseTags: {
+          orderBy: asc(noiseTag.start),
+          columns: {
             id: true,
             type: true,
             text: true,
@@ -174,12 +196,12 @@ export const loadNoiseProject = createServerFn()
       // Browser-key for the Maps JS API, shipped to the client the same way the
       // booking detail route does it.
       apiKey: process.env.GOOGLE_MAPS_API_KEY ?? null,
-      locations: project.NoiseLocation.map((l) => ({
+      locations: project.noiseLocations.map((l) => ({
         id: l.id,
         locationName: l.locationName,
         latitude: l.latitude,
         longitude: l.longitude,
-        assignments: l.NoiseLocationAssignment.map((a) => ({
+        assignments: l.noiseLocationAssignments.map((a) => ({
           id: a.id,
           deviceId: a.deviceId,
           // Resolved here and nowhere else: a null start means the event's own (see the
@@ -196,7 +218,7 @@ export const loadNoiseProject = createServerFn()
           // Null means still standing there; every other field is epoch ms, as
           // everything that crosses this wire is.
           end: a.end?.getTime() ?? null,
-          lastSeen: a.Device.lastSeen?.getTime() ?? null,
+          lastSeen: a.device.lastSeen?.getTime() ?? null,
         })),
         // Both bounds resolved and the series narrowed by the shared helper (see
         // limitLine), which the device page's loader calls too — so a limit reaches a
@@ -208,7 +230,7 @@ export const loadNoiseProject = createServerFn()
         // two flags beside them are what the editor needs to leave a field blank when it
         // was blank. Writing a resolved instant back would pin a limit that was meant to
         // follow the event's dates.
-        limits: l.NoiseLocationLimit.flatMap((x) => {
+        limits: l.noiseLocationLimits.flatMap((x) => {
           const line = limitLine(x, project);
           return line
             ? [
@@ -222,7 +244,7 @@ export const loadNoiseProject = createServerFn()
             : [];
         }),
       })),
-      tags: project.NoiseTag.map((t) => ({
+      tags: project.noiseTags.map((t) => ({
         id: t.id,
         type: t.type,
         text: t.text,
@@ -251,12 +273,16 @@ export const createNoiseLocation = createServerFn()
   .handler(async ({data}) => {
     // The FK would reject an unknown project anyway, but a 404 is the honest
     // answer for a stale page.
-    const project = await prismaClient.noiseProject.findUnique({
-      where: {id: data.projectId},
-      select: {id: true},
+    const project = await db.query.noiseProject.findFirst({
+      where: eq(noiseProject.id, data.projectId),
+      columns: {id: true},
     });
     if (!project) throw notFound();
-    return prismaClient.noiseLocation.create({data, select: {id: true}});
+    const [created] = await db
+      .insert(noiseLocation)
+      .values(data)
+      .returning({id: noiseLocation.id});
+    return created;
   });
 
 // A location and everything that is only about it: the monitors placed there, its limits,
@@ -271,12 +297,16 @@ export const deleteNoiseLocation = createServerFn()
   .middleware([crewAuth])
   .validator(z.object({locationId: z.string().min(1)}))
   .handler(async ({data: {locationId}}) => {
-    await prismaClient.$transaction([
-      prismaClient.noiseLocationAssignment.deleteMany({where: {locationId}}),
-      prismaClient.noiseLocationLimit.deleteMany({where: {locationId}}),
-      prismaClient.noiseTag.deleteMany({where: {locationId}}),
-      prismaClient.noiseLocation.deleteMany({where: {id: locationId}}),
-    ]);
+    await db.transaction(async (tx) => {
+      await tx
+        .delete(noiseLocationAssignment)
+        .where(eq(noiseLocationAssignment.locationId, locationId));
+      await tx
+        .delete(noiseLocationLimit)
+        .where(eq(noiseLocationLimit.locationId, locationId));
+      await tx.delete(noiseTag).where(eq(noiseTag.locationId, locationId));
+      await tx.delete(noiseLocation).where(eq(noiseLocation.id, locationId));
+    });
   });
 
 // Every stored level of one project, in one payload: the page then answers its own
@@ -291,16 +321,28 @@ export const noiseProjectLogs = createServerFn()
 export const assignableNoiseDevices = createServerFn()
   .middleware([crewAuth])
   .handler(async () => {
-    const devices = await prismaClient.device.findMany({
-      // A monitor hangs in one place at a time, so "available" means it has no
-      // open assignment anywhere — including in another project.
-      where: {
-        type: 'NOISE_MONITOR',
-        NoiseLocationAssignment: {none: {end: null}},
-      },
-      orderBy: {id: 'asc'},
-      select: {id: true, lastSeen: true},
-    });
+    const devices = await db
+      .select({id: device.id, lastSeen: device.lastSeen})
+      .from(device)
+      .where(
+        and(
+          eq(device.type, 'NOISE_MONITOR'),
+          // A monitor hangs in one place at a time, so "available" means it has
+          // no open assignment anywhere — including in another project.
+          notExists(
+            db
+              .select({one: sql`1`})
+              .from(noiseLocationAssignment)
+              .where(
+                and(
+                  eq(noiseLocationAssignment.deviceId, device.id),
+                  isNull(noiseLocationAssignment.end),
+                ),
+              ),
+          ),
+        ),
+      )
+      .orderBy(asc(device.id));
     return devices.map((d) => ({
       id: d.id,
       lastSeen: d.lastSeen?.getTime() ?? null,
@@ -322,11 +364,11 @@ export const noiseMonitorDevices = createServerFn()
   .middleware([crewAuth])
   .handler(async () => {
     const [devices, assignments] = await Promise.all([
-      prismaClient.device.findMany({
-        where: {type: 'NOISE_MONITOR'},
-        orderBy: {id: 'asc'},
-        select: {id: true, lastSeen: true},
-      }),
+      db
+        .select({id: device.id, lastSeen: device.lastSeen})
+        .from(device)
+        .where(eq(device.type, 'NOISE_MONITOR'))
+        .orderBy(asc(device.id)),
       deviceAssignments(),
     ]);
     return devices.map((d) => ({
@@ -365,18 +407,18 @@ export const assignNoiseDevice = createServerFn()
     }),
   )
   .handler(async ({data}) => {
-    const [location, device] = await Promise.all([
-      prismaClient.noiseLocation.findUnique({
-        where: {id: data.locationId},
-        select: {id: true},
+    const [location, monitor] = await Promise.all([
+      db.query.noiseLocation.findFirst({
+        where: eq(noiseLocation.id, data.locationId),
+        columns: {id: true},
       }),
-      prismaClient.device.findUnique({
-        where: {id: data.deviceId},
-        select: {id: true, type: true},
+      db.query.device.findFirst({
+        where: eq(device.id, data.deviceId),
+        columns: {id: true, type: true},
       }),
     ]);
     if (!location) throw notFound();
-    if (!device || device.type !== 'NOISE_MONITOR') {
+    if (!monitor || monitor.type !== 'NOISE_MONITOR') {
       throw new Error('Unknown noise monitor.');
     }
 
@@ -385,13 +427,11 @@ export const assignNoiseDevice = createServerFn()
     // the windows editable by hand that invariant is neither enforceable nor
     // wanted, so the dialog warns about the overlap instead of the server quietly
     // rewriting a row nobody opened (see overlappingAssignments in projectView.ts).
-    await prismaClient.noiseLocationAssignment.create({
-      data: {
-        locationId: data.locationId,
-        deviceId: data.deviceId,
-        start: instantOrNull(data.start),
-        end: instantOrNull(data.end),
-      },
+    await db.insert(noiseLocationAssignment).values({
+      locationId: data.locationId,
+      deviceId: data.deviceId,
+      start: instantOrNull(data.start),
+      end: instantOrNull(data.end),
     });
   });
 
@@ -411,13 +451,13 @@ export const updateNoiseAssignment = createServerFn()
     // One write, whatever was typed: a blank bound is a blank column now, so an edit that
     // clears the start no longer has to walk down to the event and back for a value to
     // put there.
-    await prismaClient.noiseLocationAssignment.update({
-      where: {id: data.assignmentId},
-      data: {
-        start: instantOrNull(data.start),
-        end: instantOrNull(data.end),
-      },
-    });
+    const updated = await db
+      .update(noiseLocationAssignment)
+      .set({start: instantOrNull(data.start), end: instantOrNull(data.end)})
+      .where(eq(noiseLocationAssignment.id, data.assignmentId))
+      .returning({id: noiseLocationAssignment.id});
+    // Gone under a stale page: say so rather than report a save that didn't happen.
+    if (updated.length === 0) throw notFound();
   });
 
 // Removes the row rather than closing it: a placement that never happened should
@@ -430,9 +470,9 @@ export const deleteNoiseAssignment = createServerFn()
   .middleware([crewAuth])
   .validator(z.object({assignmentId: z.string().min(1)}))
   .handler(async ({data}) => {
-    await prismaClient.noiseLocationAssignment.deleteMany({
-      where: {id: data.assignmentId},
-    });
+    await db
+      .delete(noiseLocationAssignment)
+      .where(eq(noiseLocationAssignment.id, data.assignmentId));
   });
 
 // A dB figure, and never z.coerce.number() for the reason the coordinates aren't
@@ -481,19 +521,17 @@ export const createNoiseLimit = createServerFn()
   .handler(async ({data}) => {
     // The FK would reject an unknown location anyway; a 404 is the honest answer for
     // a page whose project has been deleted under it.
-    const location = await prismaClient.noiseLocation.findUnique({
-      where: {id: data.locationId},
-      select: {id: true},
+    const location = await db.query.noiseLocation.findFirst({
+      where: eq(noiseLocation.id, data.locationId),
+      columns: {id: true},
     });
     if (!location) throw notFound();
-    await prismaClient.noiseLocationLimit.create({
-      data: {
-        locationId: data.locationId,
-        series: data.series,
-        decibels: data.decibels,
-        start: instantOrNull(data.start),
-        end: instantOrNull(data.end),
-      },
+    await db.insert(noiseLocationLimit).values({
+      locationId: data.locationId,
+      series: data.series,
+      decibels: data.decibels,
+      start: instantOrNull(data.start),
+      end: instantOrNull(data.end),
     });
   });
 
@@ -516,15 +554,18 @@ export const updateNoiseLimit = createServerFn()
     }),
   )
   .handler(async ({data}) => {
-    await prismaClient.noiseLocationLimit.update({
-      where: {id: data.limitId},
-      data: {
+    const updated = await db
+      .update(noiseLocationLimit)
+      .set({
         series: data.series,
         decibels: data.decibels,
         start: instantOrNull(data.start),
         end: instantOrNull(data.end),
-      },
-    });
+      })
+      .where(eq(noiseLocationLimit.id, data.limitId))
+      .returning({id: noiseLocationLimit.id});
+    // Gone under a stale page: say so rather than report a save that didn't happen.
+    if (updated.length === 0) throw notFound();
   });
 
 // deleteMany, so a double-tap or a stale list deletes nothing twice.
@@ -532,9 +573,9 @@ export const deleteNoiseLimit = createServerFn()
   .middleware([crewAuth])
   .validator(z.object({limitId: z.string().min(1)}))
   .handler(async ({data}) => {
-    await prismaClient.noiseLocationLimit.deleteMany({
-      where: {id: data.limitId},
-    });
+    await db
+      .delete(noiseLocationLimit)
+      .where(eq(noiseLocationLimit.id, data.limitId));
   });
 
 // What a tag applies to, as the one field that says so: a monitor, a place, or the whole
@@ -548,6 +589,11 @@ const noiseTagScope = z.discriminatedUnion('kind', [
 ]);
 
 export type NoiseTagScope = z.infer<typeof noiseTagScope>;
+
+// `= value`, or `IS NULL` for a null one: a tag's unset scope key is a NULL, and
+// `= NULL` matches nothing.
+const eqOrNull = (column: AnyPgColumn, value: string | null): SQL =>
+  value == null ? isNull(column) : eq(column, value);
 
 export const createNoiseTag = createServerFn()
   .middleware([crewAuth])
@@ -574,15 +620,18 @@ export const createNoiseTag = createServerFn()
     // A tag on a place belongs to that place's project, so a location from another
     // project is as unknown here as one that doesn't exist.
     if (scope.kind === 'location') {
-      const location = await prismaClient.noiseLocation.findFirst({
-        where: {id: scope.locationId, projectId: data.projectId},
-        select: {id: true},
+      const location = await db.query.noiseLocation.findFirst({
+        where: and(
+          eq(noiseLocation.id, scope.locationId),
+          eq(noiseLocation.projectId, data.projectId),
+        ),
+        columns: {id: true},
       });
       if (!location) throw notFound();
     } else {
-      const project = await prismaClient.noiseProject.findUnique({
-        where: {id: data.projectId},
-        select: {id: true},
+      const project = await db.query.noiseProject.findFirst({
+        where: eq(noiseProject.id, data.projectId),
+        columns: {id: true},
       });
       if (!project) throw notFound();
     }
@@ -596,25 +645,34 @@ export const createNoiseTag = createServerFn()
     // the location's being taken back. Every overlapping one at once, so a range bridging
     // two leaves one, as a fresh row over all of them. In a transaction, so the widened
     // range and the deletes of the ones it swallowed land together or not at all.
-    await prismaClient.$transaction(async (tx) => {
+    await db.transaction(async (tx) => {
       const overlapping =
         data.type === 'IGNORE' && data.end != null
-          ? await tx.noiseTag.findMany({
-              where: {
-                projectId: data.projectId,
-                type: 'IGNORE',
-                locationId,
-                deviceId,
-                start: {lte: new Date(data.end)},
-                end: {gte: new Date(data.start)},
-              },
-              select: {id: true, start: true, end: true},
-            })
+          ? await tx
+              .select({
+                id: noiseTag.id,
+                start: noiseTag.start,
+                end: noiseTag.end,
+              })
+              .from(noiseTag)
+              .where(
+                and(
+                  eq(noiseTag.projectId, data.projectId),
+                  eq(noiseTag.type, 'IGNORE'),
+                  eqOrNull(noiseTag.locationId, locationId),
+                  eqOrNull(noiseTag.deviceId, deviceId),
+                  lte(noiseTag.start, new Date(data.end)),
+                  gte(noiseTag.end, new Date(data.start)),
+                ),
+              )
           : [];
       if (overlapping.length > 0) {
-        await tx.noiseTag.deleteMany({
-          where: {id: {in: overlapping.map((t) => t.id)}},
-        });
+        await tx.delete(noiseTag).where(
+          inArray(
+            noiseTag.id,
+            overlapping.map((t) => t.id),
+          ),
+        );
       }
       const tag = {
         projectId: data.projectId,
@@ -635,16 +693,14 @@ export const createNoiseTag = createServerFn()
       };
       // A tag already there word for word is the one being asked for, so writing it again
       // is nothing rather than an error (see noiseTagDedupeKey).
-      await tx.noiseTag.createMany({
-        data: [
-          {
-            ...tag,
-            dedupeKey: noiseTagDedupeKey(tag),
-            createdByViewerId: viewerId,
-          },
-        ],
-        skipDuplicates: true,
-      });
+      await tx
+        .insert(noiseTag)
+        .values({
+          ...tag,
+          dedupeKey: noiseTagDedupeKey(tag),
+          createdByViewerId: viewerId,
+        })
+        .onConflictDoNothing();
     });
   });
 
@@ -668,8 +724,8 @@ export const updateNoiseTag = createServerFn()
       }),
   )
   .handler(async ({data}) => {
-    const tag = await prismaClient.noiseTag.findFirst({
-      where: {id: data.tagId, type: 'COMMENT'},
+    const tag = await db.query.noiseTag.findFirst({
+      where: and(eq(noiseTag.id, data.tagId), eq(noiseTag.type, 'COMMENT')),
     });
     if (!tag) throw notFound();
     const next = {
@@ -679,17 +735,17 @@ export const updateNoiseTag = createServerFn()
       end: instantOrNull(data.end),
     };
     try {
-      await prismaClient.noiseTag.update({
-        where: {id: tag.id},
-        data: {
+      await db
+        .update(noiseTag)
+        .set({
           text: next.text,
           start: next.start,
           end: next.end,
           dedupeKey: noiseTagDedupeKey(next),
-        },
-      });
+        })
+        .where(eq(noiseTag.id, tag.id));
     } catch (error) {
-      if ((error as {code?: string}).code === 'P2002') {
+      if (isUniqueViolation(error)) {
         throw new Error('The same comment is already there');
       }
       throw error;
@@ -702,16 +758,17 @@ export const deleteNoiseTag = createServerFn()
   .middleware([crewAuth])
   .validator(z.object({tagId: z.string().min(1)}))
   .handler(async ({data: {tagId}}) => {
-    await prismaClient.noiseTag.deleteMany({where: {id: tagId}});
+    await db.delete(noiseTag).where(eq(noiseTag.id, tagId));
   });
 
 // The bands overlapping a project's window, so a set that started before the monitors went
 // up still counts — the one filter the lineup dialog previews with and the import writes
 // from, so the two cannot list different bands.
-const bandsDuring = (project: {start: Date; end: Date}) => ({
-  startTime: {lt: project.end},
-  endTime: {gt: project.start},
-});
+const bandsDuring = (project: {start: Date; end: Date}) =>
+  and(
+    lt(bandPlaying.startTime, project.end),
+    gt(bandPlaying.endTime, project.start),
+  );
 
 // The festival's stages with the bands playing on each while a project runs — what the
 // location card's "Import band lineup…" offers to pin to a place. Any band overlapping the
@@ -721,29 +778,28 @@ export const noiseLineupAreas = createServerFn()
   .middleware([crewAuth])
   .validator(z.object({projectId: z.string().min(1)}))
   .handler(async ({data: {projectId}}) => {
-    const project = await prismaClient.noiseProject.findUnique({
-      where: {id: projectId},
-      select: {start: true, end: true},
+    const project = await db.query.noiseProject.findFirst({
+      where: eq(noiseProject.id, projectId),
+      columns: {start: true, end: true},
     });
     if (!project) throw notFound();
-    const areas = await prismaClient.area.findMany({
-      orderBy: {order: 'asc'},
-      select: {
-        id: true,
-        displayName: true,
-        BandPlaying: {
+    const areas = await db.query.area.findMany({
+      orderBy: asc(area.order),
+      columns: {id: true, displayName: true},
+      with: {
+        bandPlayings: {
           where: bandsDuring(project),
-          orderBy: {startTime: 'asc'},
-          select: {id: true, name: true, startTime: true, endTime: true},
+          orderBy: asc(bandPlaying.startTime),
+          columns: {id: true, name: true, startTime: true, endTime: true},
         },
       },
     });
     return areas
-      .filter((a) => a.BandPlaying.length > 0)
+      .filter((a) => a.bandPlayings.length > 0)
       .map((a) => ({
         id: a.id,
         displayName: a.displayName,
-        bands: a.BandPlaying.map((b) => ({
+        bands: a.bandPlayings.map((b) => ({
           id: b.id,
           name: b.name,
           start: b.startTime.getTime(),
@@ -768,38 +824,52 @@ export const importNoiseLineup = createServerFn()
   .handler(async ({data, context}) => {
     const viewerId = context.viewer?.id;
     if (!viewerId) throw new Error('Unauthorized');
-    const location = await prismaClient.noiseLocation.findFirst({
-      where: {id: data.locationId, projectId: data.projectId},
-      select: {NoiseProject: {select: {start: true, end: true}}},
+    const location = await db.query.noiseLocation.findFirst({
+      where: and(
+        eq(noiseLocation.id, data.locationId),
+        eq(noiseLocation.projectId, data.projectId),
+      ),
+      columns: {id: true},
+      with: {noiseProject: {columns: {start: true, end: true}}},
     });
     if (!location) throw notFound();
-    const project = location.NoiseProject;
-    const bands = await prismaClient.bandPlaying.findMany({
-      where: {areaId: data.areaId, ...bandsDuring(project)},
-      select: {name: true, startTime: true, endTime: true},
-    });
+    const project = location.noiseProject;
+    const bands = await db
+      .select({
+        name: bandPlaying.name,
+        startTime: bandPlaying.startTime,
+        endTime: bandPlaying.endTime,
+      })
+      .from(bandPlaying)
+      .where(and(eq(bandPlaying.areaId, data.areaId), bandsDuring(project)));
+    if (bands.length === 0) {
+      return {created: 0, skipped: 0};
+    }
     // A band already pinned here is skipped by the unique key rather than looked up first,
     // so two imports racing each other still write it once (see noiseTagDedupeKey).
-    const {count} = await prismaClient.noiseTag.createMany({
-      data: bands.map((b) => {
-        const tag = {
-          projectId: data.projectId,
-          locationId: data.locationId,
-          deviceId: null,
-          type: 'COMMENT' as const,
-          start: b.startTime,
-          end: b.endTime,
-          text: b.name,
-        };
-        return {
-          ...tag,
-          dedupeKey: noiseTagDedupeKey(tag),
-          createdByViewerId: viewerId,
-        };
-      }),
-      skipDuplicates: true,
-    });
-    return {created: count, skipped: bands.length - count};
+    const created = await db
+      .insert(noiseTag)
+      .values(
+        bands.map((b) => {
+          const tag = {
+            projectId: data.projectId,
+            locationId: data.locationId,
+            deviceId: null,
+            type: 'COMMENT' as const,
+            start: b.startTime,
+            end: b.endTime,
+            text: b.name,
+          };
+          return {
+            ...tag,
+            dedupeKey: noiseTagDedupeKey(tag),
+            createdByViewerId: viewerId,
+          };
+        }),
+      )
+      .onConflictDoNothing()
+      .returning({id: noiseTag.id});
+    return {created: created.length, skipped: bands.length - created.length};
   });
 
 export const Route = createFileRoute('/crew/noise')({

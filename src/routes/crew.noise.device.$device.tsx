@@ -1,7 +1,9 @@
 import {createFileRoute} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
 import {crewAuth} from '../server/crewAuth';
-import {prismaClient} from '../server/prismaClient.server';
+import {eq} from 'drizzle-orm';
+import {db} from '../server/db.server';
+import {device as deviceTable} from '../server/db/schema';
 import {useMemo} from 'react';
 import {Box, HStack, VisuallyHidden} from '@chakra-ui/react';
 import {DeviceMenu} from '../components/noise/DeviceMenu';
@@ -40,9 +42,9 @@ const loadDevice = createServerFn()
       deviceLimits(device),
       // Null for a name that has never reported: nothing forbids navigating to one, and it
       // reads as "nie gesehen" rather than as an error.
-      prismaClient.device.findUnique({
-        where: {id: device},
-        select: {lastSeen: true},
+      db.query.device.findFirst({
+        where: eq(deviceTable.id, device),
+        columns: {lastSeen: true},
       }),
     ]);
     return {assignment, limits, lastSeen: row?.lastSeen?.getTime() ?? null};
