@@ -4,23 +4,13 @@ import {SlackChannel} from '../utils/slackChannels';
 
 const {enqueueGcpTask} = vi.hoisted(() => ({enqueueGcpTask: vi.fn()}));
 const {slackApiRequest} = vi.hoisted(() => ({slackApiRequest: vi.fn()}));
-const {findFirst, create} = vi.hoisted(() => ({
-  findFirst: vi.fn(),
-  create: vi.fn(),
-}));
+const {db, query, inserts} = await vi.hoisted(async () =>
+  (await import('../../test/dbMock')).dbMock(),
+);
 
 vi.mock('./enqueueGcpTask.server', () => ({enqueueGcpTask}));
 vi.mock('./slack.server', () => ({slackApiRequest}));
-// `create` is `db.insert(donation).values(row)`; it returns the builder whose
-// `.returning()` resolves to the new row.
-vi.mock('./db.server', () => ({
-  db: {
-    query: {donation: {findFirst}},
-    insert: () => ({
-      values: (row: unknown) => ({returning: () => create(row)}),
-    }),
-  },
-}));
+vi.mock('./db.server', () => ({db}));
 
 const SECRET = 'whsec_test_secret';
 process.env.STRIPE_SIGNING_SECRET = SECRET;
@@ -73,8 +63,8 @@ beforeEach(() => {
   vi.clearAllMocks();
   enqueueGcpTask.mockResolvedValue(undefined);
   slackApiRequest.mockResolvedValue({ok: true});
-  findFirst.mockResolvedValue(null);
-  create.mockResolvedValue([{id: 'donation-1'}]);
+  query.donation.findFirst.mockResolvedValue(null);
+  inserts.mockResolvedValue([{id: 'donation-1'}]);
 });
 
 describe('handleStripeWebhook', () => {
@@ -82,7 +72,7 @@ describe('handleStripeWebhook', () => {
     const res = await handleStripeWebhook(signedRequest(checkoutCompleted()));
     expect(res.status).toBe(200);
 
-    expect(create).toHaveBeenCalledWith({
+    expect(inserts).toHaveBeenCalledWith('Donation', {
       reference: 'cs_test_123',
       createdAt: new Date(created * 1000),
       email: 'donor@example.test',
@@ -122,7 +112,8 @@ describe('handleStripeWebhook', () => {
       ),
     );
 
-    expect(create).toHaveBeenCalledWith(
+    expect(inserts).toHaveBeenCalledWith(
+      'Donation',
       expect.objectContaining({
         email: 'fallback@example.test',
         name: undefined,
@@ -151,7 +142,8 @@ describe('handleStripeWebhook', () => {
       ),
     );
 
-    expect(create).toHaveBeenCalledWith(
+    expect(inserts).toHaveBeenCalledWith(
+      'Donation',
       expect.objectContaining({
         name: undefined,
         quittungName: 'Barbara Thomas',
@@ -184,7 +176,8 @@ describe('handleStripeWebhook', () => {
       ),
     );
 
-    expect(create).toHaveBeenCalledWith(
+    expect(inserts).toHaveBeenCalledWith(
+      'Donation',
       expect.objectContaining({
         // Public name still comes from the custom field.
         name: 'Erika Musterfrau',
@@ -202,15 +195,15 @@ describe('handleStripeWebhook', () => {
         checkoutCompleted({customer_email: null, customer_details: null}),
       ),
     );
-    expect(create).toHaveBeenCalled();
+    expect(inserts).toHaveBeenCalled();
     expect(enqueueGcpTask).not.toHaveBeenCalled();
   });
 
   test('is idempotent: a replayed checkout is ignored', async () => {
-    findFirst.mockResolvedValue({id: 'donation-1'});
+    query.donation.findFirst.mockResolvedValue({id: 'donation-1'});
     const res = await handleStripeWebhook(signedRequest(checkoutCompleted()));
     expect(res.status).toBe(200);
-    expect(create).not.toHaveBeenCalled();
+    expect(inserts).not.toHaveBeenCalled();
     expect(slackApiRequest).not.toHaveBeenCalled();
     expect(enqueueGcpTask).not.toHaveBeenCalled();
   });
@@ -226,7 +219,7 @@ describe('handleStripeWebhook', () => {
         }),
       ),
     ).rejects.toMatchObject({code: 400});
-    expect(create).not.toHaveBeenCalled();
+    expect(inserts).not.toHaveBeenCalled();
   });
 
   test('rejects an invalid signature with 400', async () => {
@@ -239,7 +232,7 @@ describe('handleStripeWebhook', () => {
         }),
       ),
     ).rejects.toMatchObject({code: 400});
-    expect(create).not.toHaveBeenCalled();
+    expect(inserts).not.toHaveBeenCalled();
   });
 
   test('ignores unrelated event types', async () => {
@@ -251,6 +244,6 @@ describe('handleStripeWebhook', () => {
       }),
     );
     expect(res.status).toBe(200);
-    expect(create).not.toHaveBeenCalled();
+    expect(inserts).not.toHaveBeenCalled();
   });
 });

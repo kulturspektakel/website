@@ -31,20 +31,13 @@ export function dbMock() {
   const deletes = vi.fn();
 
   // `await builder` and `await builder.returning()` both resolve to the result.
-  const builder = (run: () => unknown) => {
-    let result: Promise<unknown> | undefined;
-    const settle = () => (result ??= Promise.resolve(run()));
-    const b = {
-      returning: () => settle(),
-      onConflictDoNothing: () => b,
-      onConflictDoUpdate: () => b,
-      then: (
-        resolve: (value: unknown) => unknown,
-        reject: (reason: unknown) => unknown,
-      ) => settle().then(resolve, reject),
-    };
-    return b;
-  };
+  const builder = (run: () => unknown) => ({
+    returning: async () => run(),
+    then: (
+      resolve: (value: unknown) => unknown,
+      reject: (reason: unknown) => unknown,
+    ) => Promise.resolve(run()).then(resolve, reject),
+  });
 
   const query = new Proxy(
     {} as Record<

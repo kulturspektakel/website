@@ -54,8 +54,6 @@ function fakeGmail(opts: {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  // Handler chains `.catch` on the delete; default to a resolved promise so
-  // the call doesn't blow up on `undefined.catch`.
 });
 
 describe('handleGmailReminder', () => {

@@ -2,7 +2,7 @@ import {createServerFn} from '@tanstack/react-start';
 import {eq} from 'drizzle-orm';
 import {db} from './db.server';
 import {page as pageTable} from './db/schema';
-import {imageIDsFromMarkdown, markdownCDNUrls} from '../utils/markdownText';
+import {imageIDsFromMarkdown} from '../utils/markdownText';
 import {directusImages} from './directusImage.server';
 import {markdownText, pageColumns} from './markdownText.server';
 

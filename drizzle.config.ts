@@ -19,6 +19,9 @@ export default defineConfig({
   // and a leftover `graphile_worker` schema, which drizzle-kit must never
   // touch.
   schemaFilter: ['public'],
+  // Keep column names as they are when pulling (the default camelCases them,
+  // which turned `laeq30m` into `laeq30M`).
+  introspect: {casing: 'preserve'},
   dbCredentials: {
     url: directUrl(
       process.env.DRIZZLE_DATABASE_URL ?? process.env.DATABASE_URL!,

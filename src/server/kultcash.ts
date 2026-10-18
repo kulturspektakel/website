@@ -1,5 +1,5 @@
-import {and, asc, eq, ne} from 'drizzle-orm';
-import {db, type DbTransaction, isUniqueViolation} from './db.server';
+import {asc, eq, or} from 'drizzle-orm';
+import {db, type DbTransaction} from './db.server';
 import {
   cardTransaction as cardTransactionTable,
   crewCard,
@@ -48,7 +48,7 @@ function getDeviceConfig(list: {
  * Supports `If-None-Match` for caching via the config CRC32.
  */
 export async function handleLists(request: Request): Promise<Response> {
-  const [lists, privilegedCrewCards, suspendedCrewCards] = await Promise.all([
+  const [lists, flaggedCrewCards] = await Promise.all([
     db.query.productList.findMany({
       where: eq(productList.active, true),
       orderBy: asc(productList.name),
@@ -62,15 +62,22 @@ export async function handleLists(request: Request): Promise<Response> {
       },
     }),
     db
-      .select({id: crewCard.id})
+      .select({
+        id: crewCard.id,
+        privileged: crewCard.privileged,
+        suspended: crewCard.suspended,
+      })
       .from(crewCard)
-      // `<> true` leaves out NULLs, like Prisma's `{not: true}`.
-      .where(and(eq(crewCard.privileged, true), ne(crewCard.suspended, true))),
-    db
-      .select({id: crewCard.id})
-      .from(crewCard)
-      .where(eq(crewCard.suspended, true)),
+      .where(or(eq(crewCard.privileged, true), eq(crewCard.suspended, true))),
   ]);
+  const suspendedCrewCards = flaggedCrewCards.filter(
+    (c) => c.suspended === true,
+  );
+  // Privileged unless suspended. As before (SQL `suspended <> true`), a card
+  // whose `suspended` is NULL doesn't count as privileged.
+  const privilegedCrewCards = flaggedCrewCards.filter(
+    (c) => c.privileged === true && c.suspended === false,
+  );
 
   const allLists: AllLists = {
     productList: lists.map(getDeviceConfig),
@@ -82,13 +89,15 @@ export async function handleLists(request: Request): Promise<Response> {
   };
   allLists.checksum = crc32.buf(AllLists.encode(allLists).finish());
 
-  const configVersion = await configVersionFor(allLists.checksum);
-  allLists.versionNumber = configVersion.version;
-  allLists.timestamp = Math.floor(configVersion.createdAt.getTime() / 1000);
-
+  // The checksum covers the lists, not the version, so an unchanged poll (the
+  // common case) is answered without the version lookup.
   if (request.headers.get('if-none-match') === `"${allLists.checksum}"`) {
     return new Response(null, {status: 304});
   }
+
+  const configVersion = await configVersionFor(allLists.checksum);
+  allLists.versionNumber = configVersion.version;
+  allLists.timestamp = Math.floor(configVersion.createdAt.getTime() / 1000);
 
   const message = AllLists.encode(allLists).finish();
   return new Response(message.buffer as ArrayBuffer, {
@@ -170,42 +179,32 @@ export async function handleLog(request: Request): Promise<Response> {
   // a card transaction is part of the same transaction too, so a failure can't
   // leave a log behind whose order is missing (a re-upload would then be
   // rejected as a duplicate).
-  let createdOrder: {id: number; crewCardId: Buffer | null} | undefined;
-  try {
-    createdOrder = await db.transaction(async (tx) => {
-      await insertDeviceLog(
-        tx,
-        message,
-        deviceId,
-        deviceTime,
-        'CONTACTLESS_TERMINAL',
-      );
-      const created =
-        order != null
-          ? await insertOrder(tx, order, deviceId, deviceTime)
-          : undefined;
-      if (cardTransaction != null) {
-        await tx.insert(cardTransactionTable).values({
-          clientId: message.clientId,
-          cardId: cardTransaction.cardId,
-          balanceBefore: cardTransaction.balanceBefore,
-          balanceAfter: cardTransaction.balanceAfter,
-          depositBefore: cardTransaction.depositBefore,
-          depositAfter: cardTransaction.depositAfter,
-          counter: cardTransaction.counter,
-          transactionType: mapTransactionType(cardTransaction.transactionType),
-          orderId: created?.id,
-        });
-      }
-      return created;
-    });
-  } catch (e) {
-    if (isUniqueViolation(e)) {
-      // client ID already exists
+  const createdOrder = await db.transaction(async (tx) => {
+    const isNew = await insertDeviceLog(
+      tx,
+      message,
+      deviceId,
+      deviceTime,
+      'CONTACTLESS_TERMINAL',
+    );
+    if (!isNew) {
+      // client ID already exists; throwing rolls back the device insert too
       throw new ApiError(409, 'Conflict');
     }
-    throw e;
-  }
+    const created =
+      order != null
+        ? await insertOrder(tx, order, deviceId, deviceTime)
+        : undefined;
+    if (cardTransaction != null) {
+      await tx.insert(cardTransactionTable).values({
+        ...cardTransaction,
+        clientId: message.clientId,
+        transactionType: mapTransactionType(cardTransaction.transactionType),
+        orderId: created?.id,
+      });
+    }
+    return created;
+  });
 
   // Orders paid within a card transaction don't award badges.
   if (!cardTransaction && createdOrder?.crewCardId) {
@@ -214,24 +213,21 @@ export async function handleLog(request: Request): Promise<Response> {
 
   if (crewCardEnrollment) {
     const validUntil = kultEpochToDate(crewCardEnrollment.validUntil);
-    const crewCardData = {
-      id: Buffer.from(crewCardEnrollment.crewCardId),
+    const reset = {
       validUntil,
-      // resetting
       viewerId: null,
       nickname: null,
       suspended: false,
       privileged: false,
       enrolledAt: deviceTime,
     };
-    const {id, ...reset} = crewCardData;
     await db
       .insert(crewCard)
-      .values(crewCardData)
+      .values({id: Buffer.from(crewCardEnrollment.crewCardId), ...reset})
       .onConflictDoUpdate({target: crewCard.id, set: reset});
 
     await enqueueGcpTask('crew-card-enrolled', {
-      crewCardId: Array.from(crewCardData.id),
+      crewCardId: Array.from(crewCardEnrollment.crewCardId),
       validUntil: validUntil.toISOString(),
     });
   }

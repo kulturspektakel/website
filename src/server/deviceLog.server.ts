@@ -32,8 +32,9 @@ export function deviceTimeToDate(
  * only applies then). Runs inside the caller's transaction, so the log and its
  * payload are written together.
  *
- * Callers must ensure `message.clientId` is set (it's the primary key) and
- * treat a unique violation (`isUniqueViolation`) as a re-upload.
+ * Callers must ensure `message.clientId` is set (it's the primary key).
+ * Returns false when this log was uploaded before (a re-upload of the same
+ * `clientId`); the caller decides what that means.
  */
 export async function insertDeviceLog(
   tx: DbTransaction,
@@ -46,28 +47,23 @@ export async function insertDeviceLog(
     .insert(device)
     .values({id: deviceId, lastSeen: new Date(), type})
     .onConflictDoNothing();
-  await tx.insert(deviceLog).values({
-    clientId: message.clientId,
-    batteryVoltage: message.batteryVoltage,
-    usbVoltage: message.usbVoltage,
-    deviceTime,
-    deviceId,
-  });
+  const inserted = await tx
+    .insert(deviceLog)
+    .values({
+      clientId: message.clientId,
+      batteryVoltage: message.batteryVoltage,
+      usbVoltage: message.usbVoltage,
+      deviceTime,
+      deviceId,
+    })
+    .onConflictDoNothing({target: deviceLog.clientId})
+    .returning({clientId: deviceLog.clientId});
+  return inserted.length > 0;
 }
 
 /**
- * Prisma version of `insertDeviceLog`, still used by the noise ingest until it
- * moves to Drizzle.
- *
- * Build the `DeviceLog` create input for a `LogMessage` envelope — the
- * per-upload device telemetry (`clientId`-keyed battery/USB voltage +
- * `deviceTime`) that rides along with any log upload, independent of its
- * payload (card transaction, noise recording, …).
- *
- * Shared by the KultCash and noise ingest paths. Callers must ensure
- * `message.clientId` is set (it's the primary key) and handle `P2002` so
- * re-uploads stay idempotent. `type` is only applied when the device row
- * doesn't exist yet.
+ * Prisma version of `insertDeviceLog` for the noise ingest (`P2002` there means
+ * re-upload). Delete it when noise moves to Drizzle.
  */
 export function deviceLogCreateInput(
   message: LogMessage,

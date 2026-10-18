@@ -28,8 +28,9 @@ before and after, not just locally.
 
 `drizzle-orm` **0.45.x** + `drizzle-kit` 0.31. `@neon/realtime-drizzle` 0.1
 requires `drizzle-orm >=0.45.2 <0.46`, so not the 1.0 release candidates (new
-relational-query API) yet. `@paralleldrive/cuid2` replaces Prisma's
-client-side `cuid()`.
+relational-query API) yet. Prisma's client-side `cuid()` ids become
+`crypto.randomUUID()` (a cuid library added ~5 ms CPU to every cold start just
+by being imported).
 
 ## Phase 0 — schema and baseline (done)
 
@@ -78,7 +79,7 @@ client-side `cuid()`.
 - Tests: the e2e harness stays as it is. `db.server.ts` honours the same
   `DB_DRIVER=pg` + `TEST_DATABASE_URL` switch as `prismaClient.server.ts`
   (node-postgres against the PGlite socket, pool of one). Checked by hand:
-  defaults (`uuid`, cuid2), `updatedAt` and a UTC round trip. Unit-test mocks
+  defaults (`uuid`), `updatedAt` and a UTC round trip. Unit-test mocks
   of `prismaClient` move with their modules in phase 2; the e2e DDL keeps
   coming from `prisma migrate diff` until phase 3.
 - Enums: `src/utils/enums.ts` (`as const` objects + union types, identical to
@@ -120,4 +121,8 @@ its own.
   writes through Drizzle.
 - Until phase 3, Prisma owns the schema: change `prisma/schema.prisma` first,
   then mirror it in `src/server/db/schema.ts`.
-- New cuid2 ids are 24 characters (cuid v1: 25); nothing validates the format.
+- New rows in the former `cuid()` tables get uuids (36 characters; existing
+  rows keep their 25-character cuids). Nothing validates the format.
+- Until phase 3, nothing checks that `src/server/db/schema.ts` still matches
+  `prisma/schema.prisma`: the e2e database is built from Prisma's DDL. Repeat
+  the phase-0 round trip after schema changes.

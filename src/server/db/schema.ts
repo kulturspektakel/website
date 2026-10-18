@@ -5,10 +5,12 @@
 // - citext and bytea, which drizzle-kit can't introspect, are custom types;
 // - Prisma's client-side defaults (`@default(uuid())`, `@default(cuid())`,
 //   `@updatedAt`) are `$defaultFn` / `$onUpdate`, since the database has no
-//   default for them.
+//   default for them. New rows get a uuid where Prisma used a cuid; the ids
+//   are opaque text, nothing depends on their format.
 // While Prisma still owns the schema (see docs/drizzle-migration-plan.md),
 // change prisma/schema.prisma first and mirror the change here.
 import {
+  customType,
   pgTable,
   uniqueIndex,
   integer,
@@ -28,9 +30,6 @@ import {
 } from 'drizzle-orm/pg-core';
 import {sql} from 'drizzle-orm';
 import * as enums from '../../utils/enums';
-
-import {createId} from '@paralleldrive/cuid2';
-import {customType} from 'drizzle-orm/pg-core';
 
 // Case-insensitive text (the `citext` extension), read and written as string.
 const citext = customType<{data: string}>({dataType: () => 'citext'});
@@ -569,7 +568,10 @@ export const productList = pgTable(
 export const noiseLocationAssignment = pgTable(
   'NoiseLocationAssignment',
   {
-    id: text().primaryKey().notNull().$defaultFn(createId), // Prisma `@default(cuid())`
+    id: text()
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => crypto.randomUUID()), // Prisma `@default(cuid())`
     locationId: text().notNull(),
     deviceId: text().notNull(),
     start: timestamp({precision: 3, mode: 'date'}),
@@ -606,7 +608,10 @@ export const noiseLocationAssignment = pgTable(
 export const noiseLocation = pgTable(
   'NoiseLocation',
   {
-    id: text().primaryKey().notNull().$defaultFn(createId), // Prisma `@default(cuid())`
+    id: text()
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => crypto.randomUUID()), // Prisma `@default(cuid())`
     projectId: text().notNull(),
     latitude: doublePrecision().notNull(),
     longitude: doublePrecision().notNull(),
@@ -626,7 +631,10 @@ export const noiseLocation = pgTable(
 export const noiseLocationLimit = pgTable(
   'NoiseLocationLimit',
   {
-    id: text().primaryKey().notNull().$defaultFn(createId), // Prisma `@default(cuid())`
+    id: text()
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => crypto.randomUUID()), // Prisma `@default(cuid())`
     locationId: text().notNull(),
     decibels: doublePrecision().notNull(),
     start: timestamp({precision: 3, mode: 'date'}),
@@ -650,7 +658,10 @@ export const noiseLocationLimit = pgTable(
 );
 
 export const noiseProject = pgTable('NoiseProject', {
-  id: text().primaryKey().notNull().$defaultFn(createId), // Prisma `@default(cuid())`
+  id: text()
+    .primaryKey()
+    .notNull()
+    .$defaultFn(() => crypto.randomUUID()), // Prisma `@default(cuid())`
   name: text().notNull(),
   start: timestamp({precision: 3, mode: 'date'}).notNull(),
   end: timestamp({precision: 3, mode: 'date'}).notNull(),
@@ -659,7 +670,10 @@ export const noiseProject = pgTable('NoiseProject', {
 export const noiseLog = pgTable(
   'NoiseLog',
   {
-    id: text().primaryKey().notNull().$defaultFn(createId), // Prisma `@default(cuid())`
+    id: text()
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => crypto.randomUUID()), // Prisma `@default(cuid())`
     deviceId: text().notNull(),
     measuredAt: timestamp({precision: 3, mode: 'date'}).notNull(),
     bands: bytea().notNull(),
@@ -692,7 +706,10 @@ export const noiseLog = pgTable(
 export const noiseTag = pgTable(
   'NoiseTag',
   {
-    id: text().primaryKey().notNull().$defaultFn(createId), // Prisma `@default(cuid())`
+    id: text()
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => crypto.randomUUID()), // Prisma `@default(cuid())`
     projectId: text().notNull(),
     locationId: text(),
     deviceId: text(),
@@ -837,7 +854,10 @@ export const product = pgTable(
 export const viewerLocation = pgTable(
   'ViewerLocation',
   {
-    id: text().primaryKey().notNull().$defaultFn(createId), // Prisma `@default(cuid())`
+    id: text()
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => crypto.randomUUID()), // Prisma `@default(cuid())`
     viewerId: text().notNull(),
     createdAt: timestamp({precision: 3, mode: 'date'}).notNull(),
     latitude: doublePrecision().notNull(),

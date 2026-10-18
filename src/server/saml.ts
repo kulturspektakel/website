@@ -1,6 +1,7 @@
 import {IdentityProvider, ServiceProvider, setSchemaValidator} from 'samlify';
 import {addMinutes, isPast} from 'date-fns';
 import {eq} from 'drizzle-orm';
+import {z} from 'zod';
 import {db} from './db.server';
 import {nonce as nonceTable, viewer as viewerTable} from './db/schema';
 
@@ -261,12 +262,11 @@ async function sendSAMLResponse(
   });
 }
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
 async function viewerFromNonce(nonce?: string) {
   // Nonces are uuids; anything else can't be one (and would be a database
   // error rather than "no such nonce").
-  if (!nonce || !UUID.test(nonce)) {
+  const parsed = z.uuid().safeParse(nonce);
+  if (!parsed.success) {
     return;
   }
   // Deleting consumes the nonce, atomically: a second login with the same
@@ -274,7 +274,7 @@ async function viewerFromNonce(nonce?: string) {
   // redirects away.
   const [consumed] = await db
     .delete(nonceTable)
-    .where(eq(nonceTable.nonce, nonce))
+    .where(eq(nonceTable.nonce, parsed.data))
     .returning({
       createdForId: nonceTable.createdForId,
       expiresAt: nonceTable.expiresAt,

@@ -1,24 +1,11 @@
 import {beforeEach, describe, expect, test, vi} from 'vitest';
 import {subMinutes, addMinutes} from 'date-fns';
-import {PgDialect} from 'drizzle-orm/pg-core';
 
-const {deleteNonce, deleteWhere, findViewer} = vi.hoisted(() => ({
-  // Rows `db.delete(nonce).where(…).returning(…)` resolves to.
-  deleteNonce: vi.fn(),
-  deleteWhere: vi.fn(),
-  findViewer: vi.fn(),
-}));
-vi.mock('./db.server', () => ({
-  db: {
-    delete: () => ({
-      where: (condition: unknown) => {
-        deleteWhere(condition);
-        return {returning: deleteNonce};
-      },
-    }),
-    query: {viewer: {findFirst: findViewer}},
-  },
-}));
+// `deletes` resolves to the rows `db.delete(nonce)…returning()` returns.
+const {db, query, deletes} = await vi.hoisted(async () =>
+  (await import('../../test/dbMock')).dbMock(),
+);
+vi.mock('./db.server', () => ({db}));
 
 const GONE = '00000000-0000-4000-8000-000000000001';
 const EXPIRED = '00000000-0000-4000-8000-000000000002';
@@ -59,7 +46,7 @@ describe('handleSamlLogin password fallback', () => {
     const res = await handleSamlLogin(postLogin({password: 'nope'}));
     expect(res.status).toBe(302);
     expect(res.headers.get('location')).toContain('kult.wiki');
-    expect(deleteNonce).not.toHaveBeenCalled();
+    expect(deletes).not.toHaveBeenCalled();
   });
 
   test('rejects a missing password by redirecting to the wiki', async () => {
@@ -85,49 +72,48 @@ describe('handleSamlLogin nonce flow', () => {
     const res = await handleSamlLogin(getLogin());
     expect(res.status).toBe(302);
     expect(res.headers.get('location')).toContain('kult.wiki');
-    expect(deleteNonce).not.toHaveBeenCalled();
+    expect(deletes).not.toHaveBeenCalled();
   });
 
   test('redirects when the nonce no longer exists (consumed/expired)', async () => {
     // Deleting a row that isn't there returns nothing.
-    deleteNonce.mockResolvedValueOnce([]);
+    deletes.mockResolvedValueOnce([]);
     const res = await handleSamlLogin(getLogin({nonce: GONE}));
     expect(res.status).toBe(302);
     expect(res.headers.get('location')).toContain('kult.wiki');
-    const {params} = new PgDialect().sqlToQuery(deleteWhere.mock.calls[0][0]);
-    expect(params).toEqual([GONE]);
+    expect(deletes).toHaveBeenCalledWith('Nonce', [GONE]);
   });
 
   test('redirects on a malformed nonce without touching the database', async () => {
     const res = await handleSamlLogin(getLogin({nonce: 'not-a-uuid'}));
     expect(res.status).toBe(302);
-    expect(deleteNonce).not.toHaveBeenCalled();
+    expect(deletes).not.toHaveBeenCalled();
   });
 
   test('redirects when the nonce exists but has expired', async () => {
-    deleteNonce.mockResolvedValueOnce([
+    deletes.mockResolvedValueOnce([
       {createdForId: 'U1', expiresAt: subMinutes(new Date(), 1)},
     ]);
     const res = await handleSamlLogin(getLogin({nonce: EXPIRED}));
     expect(res.status).toBe(302);
     expect(res.headers.get('location')).toContain('kult.wiki');
-    expect(findViewer).not.toHaveBeenCalled();
+    expect(query.viewer.findFirst).not.toHaveBeenCalled();
   });
 
   test('consumes a valid nonce before attempting to build a response', async () => {
     // A live nonce passes the auth gate; building the actual SAML response then
     // requires a real SAMLRequest in the query, which these unit tests don't
     // forge — so we only assert the nonce was consumed (deleted) exactly once.
-    deleteNonce.mockResolvedValueOnce([
+    deletes.mockResolvedValueOnce([
       {createdForId: 'U1', expiresAt: addMinutes(new Date(), 5)},
     ]);
-    findViewer.mockResolvedValueOnce({
+    query.viewer.findFirst.mockResolvedValueOnce({
       displayName: 'Test User',
       email: 'test@example.com',
     });
     await expect(
       handleSamlLogin(getLogin({nonce: VALID})),
     ).rejects.toBeDefined();
-    expect(deleteNonce).toHaveBeenCalledTimes(1);
+    expect(deletes).toHaveBeenCalledTimes(1);
   });
 });
