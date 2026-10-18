@@ -1,9 +1,7 @@
-import {sql} from 'drizzle-orm';
+import {and, inArray, isNotNull, sql} from 'drizzle-orm';
 import {db} from './db.server';
+import {directusFiles} from './db/directus';
 import {DirectusImage} from '../utils/directusImage';
-
-// Directus' tables live in the `directus` schema of the same database and
-// aren't part of the Drizzle schema, so these are raw queries.
 
 export async function directusImages(
   ids: Array<string | null | undefined>,
@@ -11,17 +9,27 @@ export async function directusImages(
   if (!ids.length) {
     return {};
   }
-  const {rows} = await db.execute<DirectusImage>(sql`
-    SELECT id, width, height, copyright, title
-      FROM "directus"."directus_files"
-     WHERE id::text IN (${sql.join(
-       ids.map((id) => sql`${id}`),
-       sql`, `,
-     )})
-       AND width IS NOT NULL AND height IS NOT NULL`);
+  const rows = await db
+    .select({
+      id: directusFiles.id,
+      width: directusFiles.width,
+      height: directusFiles.height,
+      copyright: directusFiles.copyright,
+      title: directusFiles.title,
+    })
+    .from(directusFiles)
+    .where(
+      and(
+        // Compared as text: callers may pass ids that aren't uuids.
+        inArray(sql`${directusFiles.id}::text`, ids),
+        isNotNull(directusFiles.width),
+        isNotNull(directusFiles.height),
+      ),
+    );
   const result: Record<string, DirectusImage> = {};
-  for (const image of rows) {
-    result[image.id] = image;
+  for (const {width, height, ...image} of rows) {
+    // Non-null: filtered above.
+    result[image.id] = {...image, width: width!, height: height!};
   }
   return result;
 }

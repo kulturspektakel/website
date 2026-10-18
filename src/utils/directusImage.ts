@@ -2,8 +2,8 @@ export type DirectusImage = {
   id: string;
   width: number;
   height: number;
-  copyright: string;
-  title: string;
+  copyright: string | null;
+  title: string | null;
 };
 
 export const BASE_URL = 'https://files.kulturspektakel.de/';

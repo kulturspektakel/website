@@ -1,5 +1,6 @@
-import {sql} from 'drizzle-orm';
+import {eq} from 'drizzle-orm';
 import {db} from './db.server';
+import {directusUsers} from './db/directus';
 import {viewer} from './db/schema';
 
 export type CrewViewer = {
@@ -14,9 +15,7 @@ export type CrewViewer = {
  * time we see a user that doesn't have one yet.
  *
  * The bridge is `directus_users.external_identifier`, which holds the Slack user
- * id and therefore equals `Viewer.id`. The Directus table lives in the
- * externally-owned `directus` Postgres schema, so it's read with raw SQL rather
- * than modeled (drizzle-kit only manages `public`; see drizzle.config.ts). Existing crew
+ * id and therefore equals `Viewer.id` (see db/directus.ts). Existing crew
  * already have a rich, Slack-sourced `Viewer`, so we only create for
  * genuinely-new users and never overwrite an existing row.
  *
@@ -28,45 +27,37 @@ export async function resolveCrewViewer(
 ): Promise<CrewViewer | null> {
   // This runs on every crew request (crewAuth), so the Directus user and their
   // Viewer come back in one round trip.
-  const {
-    rows: [du],
-  } = await db.execute<{
-    external_identifier: string | null;
-    email: string | null;
-    first_name: string | null;
-    last_name: string | null;
-    viewer_id: string | null;
-    display_name: string | null;
-    profile_picture: string | null;
-  }>(sql`
-    SELECT du.external_identifier, du.email, du.first_name, du.last_name,
-           v.id AS viewer_id, v."displayName" AS display_name,
-           v."profilePicture" AS profile_picture
-      FROM "directus"."directus_users" du
-      LEFT JOIN ${viewer} v ON v.id = du.external_identifier
-     WHERE du.id = ${directusUserId}::uuid`);
+  const [du] = await db
+    .select({
+      external_identifier: directusUsers.external_identifier,
+      email: directusUsers.email,
+      first_name: directusUsers.first_name,
+      last_name: directusUsers.last_name,
+      viewer: {
+        id: viewer.id,
+        displayName: viewer.displayName,
+        profilePicture: viewer.profilePicture,
+      },
+    })
+    .from(directusUsers)
+    .leftJoin(viewer, eq(viewer.id, directusUsers.external_identifier))
+    .where(eq(directusUsers.id, directusUserId));
 
   if (!du?.external_identifier) {
     return null; // no Slack identity → can't key a Viewer
   }
   const id = du.external_identifier; // == Viewer.id
 
-  if (du.viewer_id) {
+  if (du.viewer) {
     // already exists — don't touch it
-    return {
-      id: du.viewer_id,
-      displayName: du.display_name!,
-      profilePicture: du.profile_picture,
-    };
+    return du.viewer;
   }
 
   // First sight of this user: provision a minimal Viewer keyed by their Slack
   // id. On a race between concurrent first requests the insert skips, and the
   // row the other request created is read back.
   const displayName =
-    [du.first_name, du.last_name].filter(Boolean).join(' ') ||
-    du.email ||
-    id;
+    [du.first_name, du.last_name].filter(Boolean).join(' ') || du.email || id;
   const columns = {
     id: viewer.id,
     displayName: viewer.displayName,
