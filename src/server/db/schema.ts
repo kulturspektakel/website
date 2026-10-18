@@ -1,14 +1,14 @@
 // The app's tables (Postgres schema `public`) — the source of truth for the
 // database. To change it: edit this file, `yarn db:generate` for a migration in
 // drizzle/, review the SQL, then `yarn db:migrate` (local .env is production).
-// Functions and triggers live in hand-written migrations (drizzle/0002_*).
+// Functions and triggers live in hand-written SQL in the migrations.
 //
 // Started as `drizzle-kit pull` from production (2026-10-18), with these
 // edits: timestamps read as `Date` (`mode: 'date'`); citext and bytea as custom
 // types; default index opclasses (pull emitted wrong ones).
 //
-// Timestamp defaults are at millisecond precision, like a JS `Date`.
-// Generated ids (`gen_random_uuid()`) and
+// Timestamps are `timestamptz` (defaults at millisecond precision, like a JS
+// `Date`), and generated ids (`gen_random_uuid()`) and
 // `Viewer.updatedAt` (trigger) are filled in by the database, so writers
 // outside the app (Directus, SQL) get them too. Ids are opaque text: older
 // rows have Prisma cuids.
@@ -75,7 +75,7 @@ export const deviceConfigVersion = pgTable(
   {
     crc32: integer().notNull(),
     version: serial().primaryKey().notNull(),
-    createdAt: timestamp({precision: 3, mode: 'date'})
+    createdAt: timestamp({withTimezone: true, mode: 'date'})
       .default(sql`CURRENT_TIMESTAMP(3)`)
       .notNull(),
   },
@@ -88,7 +88,7 @@ export const donation = pgTable(
   'Donation',
   {
     amount: integer().notNull(),
-    createdAt: timestamp({precision: 3, mode: 'date'})
+    createdAt: timestamp({withTimezone: true, mode: 'date'})
       .default(sql`CURRENT_TIMESTAMP(3)`)
       .notNull(),
     email: text(),
@@ -96,9 +96,9 @@ export const donation = pgTable(
     reference: text(),
     source: donationSource().notNull(),
     message: text(),
-    sentConfirmationAt: timestamp({precision: 3, mode: 'date'}),
+    sentConfirmationAt: timestamp({withTimezone: true, mode: 'date'}),
     id: uuid().defaultRandom().primaryKey().notNull(),
-    spendenQuittungAt: timestamp({precision: 3, mode: 'date'}),
+    spendenQuittungAt: timestamp({withTimezone: true, mode: 'date'}),
     quittungCity: text(),
     quittungName: text(),
     quittungStreet: text(),
@@ -113,7 +113,9 @@ export const gmailReminders = pgTable('GmailReminders', {
 });
 
 export const itemLocation = pgTable('ItemLocation', {
-  timeStamp: timestamp({precision: 3, mode: 'date'}).primaryKey().notNull(),
+  timeStamp: timestamp({withTimezone: true, mode: 'date'})
+    .primaryKey()
+    .notNull(),
   latitude: doublePrecision().notNull(),
   longitude: doublePrecision().notNull(),
   payload: jsonb().notNull(),
@@ -153,7 +155,7 @@ export const news = pgTable('News', {
   slug: text().primaryKey().notNull(),
   title: text().notNull(),
   content: text().notNull(),
-  createdAt: timestamp({precision: 3, mode: 'date'})
+  createdAt: timestamp({withTimezone: true, mode: 'date'})
     .default(sql`CURRENT_TIMESTAMP(3)`)
     .notNull(),
 });
@@ -161,19 +163,19 @@ export const news = pgTable('News', {
 export const event = pgTable('Event', {
   id: text().primaryKey().notNull(),
   name: text().notNull(),
-  start: timestamp({precision: 3, mode: 'date'}).notNull(),
-  end: timestamp({precision: 3, mode: 'date'}).notNull(),
+  start: timestamp({withTimezone: true, mode: 'date'}).notNull(),
+  end: timestamp({withTimezone: true, mode: 'date'}).notNull(),
   eventType: eventType().notNull(),
-  bandApplicationStart: timestamp({precision: 3, mode: 'date'}),
-  bandApplicationEnd: timestamp({precision: 3, mode: 'date'}),
-  djApplicationEnd: timestamp({precision: 3, mode: 'date'}),
+  bandApplicationStart: timestamp({withTimezone: true, mode: 'date'}),
+  bandApplicationEnd: timestamp({withTimezone: true, mode: 'date'}),
+  djApplicationEnd: timestamp({withTimezone: true, mode: 'date'}),
   poster: uuid(),
   description: text(),
-  djApplicationStart: timestamp({precision: 3, mode: 'date'}),
+  djApplicationStart: timestamp({withTimezone: true, mode: 'date'}),
   latitude: doublePrecision(),
   location: text(),
   longitude: doublePrecision(),
-  lineupAnnouncementTime: timestamp({precision: 3, mode: 'date'}),
+  lineupAnnouncementTime: timestamp({withTimezone: true, mode: 'date'}),
   immichAlbumShareUrl: text(),
 });
 
@@ -190,8 +192,8 @@ export const areaOpeningHour = pgTable(
   'AreaOpeningHour',
   {
     id: serial().primaryKey().notNull(),
-    startTime: timestamp({precision: 3, mode: 'date'}).notNull(),
-    endTime: timestamp({precision: 3, mode: 'date'}).notNull(),
+    startTime: timestamp({withTimezone: true, mode: 'date'}).notNull(),
+    endTime: timestamp({withTimezone: true, mode: 'date'}).notNull(),
     areaId: text().notNull(),
   },
   (table) => [
@@ -209,7 +211,7 @@ export const bandApplication = pgTable(
   'BandApplication',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
-    createdAt: timestamp({precision: 3, mode: 'date'})
+    createdAt: timestamp({withTimezone: true, mode: 'date'})
       .default(sql`CURRENT_TIMESTAMP(3)`)
       .notNull(),
     email: text().notNull(),
@@ -234,7 +236,7 @@ export const bandApplication = pgTable(
     instagramFollower: integer(),
     eventId: text().notNull(),
     hasPreviouslyPlayed: previouslyPlayed(),
-    lastContactedAt: timestamp({precision: 3, mode: 'date'}),
+    lastContactedAt: timestamp({withTimezone: true, mode: 'date'}),
     latitude: doublePrecision(),
     longitude: doublePrecision(),
     demoEmbedUrl: text(),
@@ -269,7 +271,7 @@ export const bandApplicationComment = pgTable(
   'BandApplicationComment',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
-    createdAt: timestamp({precision: 3, mode: 'date'})
+    createdAt: timestamp({withTimezone: true, mode: 'date'})
       .default(sql`CURRENT_TIMESTAMP(3)`)
       .notNull(),
     viewerId: text().notNull(),
@@ -305,7 +307,7 @@ export const viewer = pgTable('Viewer', {
   profilePicture: text(),
   slackToken: text(),
   slackScopes: text().array(),
-  updatedAt: timestamp({precision: 3, mode: 'date'})
+  updatedAt: timestamp({withTimezone: true, mode: 'date'})
     .default(sql`CURRENT_TIMESTAMP(3)`)
     .notNull(),
 });
@@ -315,7 +317,7 @@ export const bandApplicationTag = pgTable(
   {
     bandApplicationId: uuid().notNull(),
     tag: citext().notNull(),
-    createdAt: timestamp({precision: 3, mode: 'date'})
+    createdAt: timestamp({withTimezone: true, mode: 'date'})
       .default(sql`CURRENT_TIMESTAMP(3)`)
       .notNull(),
     createdByViewerId: text().notNull(),
@@ -347,8 +349,8 @@ export const bandPlaying = pgTable(
   'BandPlaying',
   {
     name: text().notNull(),
-    startTime: timestamp({precision: 3, mode: 'date'}).notNull(),
-    endTime: timestamp({precision: 3, mode: 'date'}).notNull(),
+    startTime: timestamp({withTimezone: true, mode: 'date'}).notNull(),
+    endTime: timestamp({withTimezone: true, mode: 'date'}).notNull(),
     description: text(),
     shortDescription: text(),
     genre: text(),
@@ -400,10 +402,10 @@ export const deviceLog = pgTable(
     batteryVoltage: integer(),
     usbVoltage: integer(),
     deviceId: text().notNull(),
-    createdAt: timestamp({precision: 3, mode: 'date'})
+    createdAt: timestamp({withTimezone: true, mode: 'date'})
       .default(sql`CURRENT_TIMESTAMP(3)`)
       .notNull(),
-    deviceTime: timestamp({precision: 3, mode: 'date'}).notNull(),
+    deviceTime: timestamp({withTimezone: true, mode: 'date'}).notNull(),
   },
   (table) => [
     foreignKey({
@@ -451,7 +453,7 @@ export const order = pgTable(
   'Order',
   {
     id: serial().primaryKey().notNull(),
-    createdAt: timestamp({precision: 3, mode: 'date'})
+    createdAt: timestamp({withTimezone: true, mode: 'date'})
       .default(sql`CURRENT_TIMESTAMP(3)`)
       .notNull(),
     payment: orderPayment().notNull(),
@@ -486,8 +488,8 @@ export const crewCard = pgTable(
     suspended: boolean().default(false).notNull(),
     privileged: boolean().default(false).notNull(),
     viewerId: text(),
-    validUntil: timestamp({precision: 3, mode: 'date'}).notNull(),
-    enrolledAt: timestamp({precision: 3, mode: 'date'}).notNull(),
+    validUntil: timestamp({withTimezone: true, mode: 'date'}).notNull(),
+    enrolledAt: timestamp({withTimezone: true, mode: 'date'}).notNull(),
   },
   (table) => [
     foreignKey({
@@ -504,7 +506,7 @@ export const device = pgTable(
   'Device',
   {
     id: text().primaryKey().notNull(),
-    lastSeen: timestamp({precision: 3, mode: 'date'}),
+    lastSeen: timestamp({withTimezone: true, mode: 'date'}),
     productListId: integer(),
     softwareVersion: text(),
     type: deviceType().notNull(),
@@ -525,7 +527,7 @@ export const deviceLocation = pgTable(
   {
     id: text().primaryKey().notNull(),
     deviceId: text().notNull(),
-    createdAt: timestamp({precision: 3, mode: 'date'}).notNull(),
+    createdAt: timestamp({withTimezone: true, mode: 'date'}).notNull(),
     latitude: doublePrecision(),
     longitude: doublePrecision(),
     locationName: text().notNull(),
@@ -551,7 +553,7 @@ export const productList = pgTable(
     name: varchar({length: 20}).notNull(),
     emoji: text(),
     active: boolean().default(true).notNull(),
-    updatedAt: timestamp({precision: 3, mode: 'date'}),
+    updatedAt: timestamp({withTimezone: true, mode: 'date'}),
     description: text(),
     lastUpdatedBy: text(),
   },
@@ -575,8 +577,8 @@ export const noiseLocationAssignment = pgTable(
       .default(sql`gen_random_uuid()::text`),
     locationId: text().notNull(),
     deviceId: text().notNull(),
-    start: timestamp({precision: 3, mode: 'date'}),
-    end: timestamp({precision: 3, mode: 'date'}),
+    start: timestamp({withTimezone: true, mode: 'date'}),
+    end: timestamp({withTimezone: true, mode: 'date'}),
   },
   (table) => [
     index('NoiseLocationAssignment_deviceId_start_idx').using(
@@ -638,8 +640,8 @@ export const noiseLocationLimit = pgTable(
       .default(sql`gen_random_uuid()::text`),
     locationId: text().notNull(),
     decibels: doublePrecision().notNull(),
-    start: timestamp({precision: 3, mode: 'date'}),
-    end: timestamp({precision: 3, mode: 'date'}),
+    start: timestamp({withTimezone: true, mode: 'date'}),
+    end: timestamp({withTimezone: true, mode: 'date'}),
     series: text().notNull(),
   },
   (table) => [
@@ -664,8 +666,8 @@ export const noiseProject = pgTable('NoiseProject', {
     .notNull()
     .default(sql`gen_random_uuid()::text`),
   name: text().notNull(),
-  start: timestamp({precision: 3, mode: 'date'}).notNull(),
-  end: timestamp({precision: 3, mode: 'date'}).notNull(),
+  start: timestamp({withTimezone: true, mode: 'date'}).notNull(),
+  end: timestamp({withTimezone: true, mode: 'date'}).notNull(),
 });
 
 export const noiseLog = pgTable(
@@ -676,7 +678,7 @@ export const noiseLog = pgTable(
       .notNull()
       .default(sql`gen_random_uuid()::text`),
     deviceId: text().notNull(),
-    measuredAt: timestamp({precision: 3, mode: 'date'}).notNull(),
+    measuredAt: timestamp({withTimezone: true, mode: 'date'}).notNull(),
     bands: bytea().notNull(),
     laeq: smallint().notNull(),
     lafmax: smallint().notNull(),
@@ -715,10 +717,10 @@ export const noiseTag = pgTable(
     locationId: text(),
     deviceId: text(),
     type: noiseTagType().notNull(),
-    start: timestamp({precision: 3, mode: 'date'}).notNull(),
-    end: timestamp({precision: 3, mode: 'date'}),
+    start: timestamp({withTimezone: true, mode: 'date'}).notNull(),
+    end: timestamp({withTimezone: true, mode: 'date'}),
     text: text(),
-    createdAt: timestamp({precision: 3, mode: 'date'})
+    createdAt: timestamp({withTimezone: true, mode: 'date'})
       .default(sql`CURRENT_TIMESTAMP(3)`)
       .notNull(),
     createdByViewerId: text().notNull(),
@@ -765,7 +767,7 @@ export const noiseTag = pgTable(
 export const nonceRequest = pgTable(
   'NonceRequest',
   {
-    expiresAt: timestamp({precision: 3, mode: 'date'}).notNull(),
+    expiresAt: timestamp({withTimezone: true, mode: 'date'}).notNull(),
     createdForId: text(),
     status: nonceRequestStatus().default('Pending').notNull(),
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -786,7 +788,7 @@ export const nonce = pgTable(
   'Nonce',
   {
     nonce: uuid().defaultRandom().primaryKey().notNull(),
-    expiresAt: timestamp({precision: 3, mode: 'date'}).notNull(),
+    expiresAt: timestamp({withTimezone: true, mode: 'date'}).notNull(),
     createdForId: text(),
   },
   (table) => [
@@ -860,7 +862,7 @@ export const viewerLocation = pgTable(
       .notNull()
       .default(sql`gen_random_uuid()::text`),
     viewerId: text().notNull(),
-    createdAt: timestamp({precision: 3, mode: 'date'}).notNull(),
+    createdAt: timestamp({withTimezone: true, mode: 'date'}).notNull(),
     latitude: doublePrecision().notNull(),
     longitude: doublePrecision().notNull(),
     payload: jsonb().notNull(),

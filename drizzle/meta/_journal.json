@@ -29,6 +29,13 @@
       "when": 1792344816795,
       "tag": "0003_db_defaults",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792344826049,
+      "tag": "0004_timestamptz",
+      "breakpoints": true
     }
   ]
 }

@@ -1,8 +1,4 @@
-import {
-  createRealtimeClient,
-  pgTypeOids,
-  type RealtimeClient,
-} from '@neon/realtime/client';
+import {createRealtimeClient, type RealtimeClient} from '@neon/realtime/client';
 import {realtimeCollectionOptions} from '@neon/realtime-tanstack';
 import {
   type Collection,
@@ -93,11 +89,6 @@ export const tagKey = (bandApplicationId: string, tag: string) =>
 
 export const hasTag = (tags: string[], tag: string) =>
   tags.some((t) => normalizeTag(t) === normalizeTag(tag));
-
-// Timestamps are stored as zone-less UTC (`timestamp(3)`), but the client's
-// default reads zone-less timestamps as browser-local time, like node-postgres.
-const parseUtcTimestamp = (value: string) =>
-  new Date(`${value.replace(' ', 'T')}Z`);
 
 // Resolves once the tab is visible. Sealed queries expire after 60 s and the
 // SDK renews them ~10 s before that on a timer, so without this every
@@ -206,10 +197,7 @@ function createBookingCollections(
   eventId: string,
   sealed: SealedBookingQueries,
 ) {
-  const realtimeClient = (client ??= createRealtimeClient({
-    url: sealed.url,
-    parsers: {[pgTypeOids.timestamp]: parseUtcTimestamp},
-  }));
+  const realtimeClient = (client ??= createRealtimeClient({url: sealed.url}));
   const live = <Name extends Exclude<keyof SealedBookingQueries, 'url'>>(
     name: Name,
   ) => ({

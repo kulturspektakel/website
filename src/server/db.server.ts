@@ -8,9 +8,8 @@ import * as tables from './db/schema';
 
 // The single place the app connects to the database.
 //
-// Timestamps: Drizzle hands zone-less `timestamp` values through as strings
-// and the `mode: 'date'` columns read and write them as UTC. Raw
-// `db.execute(sql…)` results keep them as strings.
+// Timestamps are `timestamptz`; the `mode: 'date'` columns read and write
+// `Date`s. Raw `db.execute(sql…)` results keep them as strings.
 const schema = {...tables, ...relations};
 
 function createDb() {
