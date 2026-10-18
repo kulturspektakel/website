@@ -142,7 +142,11 @@ export async function handleLog(request: Request): Promise<Response> {
   }
 
   if (!message.deviceId || !message.clientId) {
-    throw new ApiError(400, 'Bad Request', new Error('Missing device/clientID'));
+    throw new ApiError(
+      400,
+      'Bad Request',
+      new Error('Missing device/clientID'),
+    );
   }
 
   const {deviceId, order, cardTransaction, crewCardEnrollment} = message;

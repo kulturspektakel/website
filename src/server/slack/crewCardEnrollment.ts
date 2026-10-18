@@ -2,11 +2,7 @@ import {subDays} from 'date-fns';
 import {and, eq, gt, ne} from 'drizzle-orm';
 import {db} from '../db.server';
 import {crewCard as crewCardTable} from '../db/schema';
-import {
-  fetchUser,
-  postResponseUrl,
-  slackApiRequest,
-} from '../slack.server';
+import {fetchUser, postResponseUrl, slackApiRequest} from '../slack.server';
 import {upsertViewer} from '../upsertViewer.server';
 import {
   grantBonbudePrivilege,

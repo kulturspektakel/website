@@ -33,10 +33,17 @@ export async function getPlace(place: string): Promise<{
  * Driving distance in km from a place id to the festival site, via the Google
  * Distance Matrix API. Returns null if no route is found.
  */
-export async function getDistanceToKult(placeId: string): Promise<number | null> {
-  const url = new URL('https://maps.googleapis.com/maps/api/distancematrix/json');
+export async function getDistanceToKult(
+  placeId: string,
+): Promise<number | null> {
+  const url = new URL(
+    'https://maps.googleapis.com/maps/api/distancematrix/json',
+  );
   url.searchParams.set('origins', `place_id:${placeId}`);
-  url.searchParams.set('destinations', 'Germeringer Str. 41, 82131 Gauting, Germany');
+  url.searchParams.set(
+    'destinations',
+    'Germeringer Str. 41, 82131 Gauting, Germany',
+  );
   url.searchParams.set('mode', 'driving');
   url.searchParams.set('units', 'metric');
   url.searchParams.set('key', process.env.GOOGLE_MAPS_API_KEY_SERVER);

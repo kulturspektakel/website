@@ -68,7 +68,11 @@ describe('handleOwnTracks', () => {
     );
     expect(res.status).toBe(200);
     expect(create).toHaveBeenCalledWith(
-      expect.objectContaining({latitude: 48.1, longitude: 11.3, viewerId: 'U1'}),
+      expect.objectContaining({
+        latitude: 48.1,
+        longitude: 11.3,
+        viewerId: 'U1',
+      }),
     );
   });
 

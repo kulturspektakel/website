@@ -224,10 +224,14 @@ function pushToVercel(envVars) {
   for (const name of Object.keys(envVars).sort()) {
     const value = envVars[name];
     for (const environment of ['production', 'development']) {
-      spawnSync(VERCEL, ['env', 'rm', name, environment, '--yes', ...tokenArgs], {
-        encoding: 'utf-8',
-        timeout: 60_000,
-      });
+      spawnSync(
+        VERCEL,
+        ['env', 'rm', name, environment, '--yes', ...tokenArgs],
+        {
+          encoding: 'utf-8',
+          timeout: 60_000,
+        },
+      );
       const result = spawnSync(
         VERCEL,
         ['env', 'add', name, environment, ...tokenArgs],
@@ -238,11 +242,11 @@ function pushToVercel(envVars) {
         },
       );
       const ok = result.status === 0;
-      console.log(
-        `${ok ? 'OK  ' : 'FAIL'} ${name.padEnd(40)} ${environment}`,
-      );
+      console.log(`${ok ? 'OK  ' : 'FAIL'} ${name.padEnd(40)} ${environment}`);
       if (!ok) {
-        console.log(`      stderr: ${(result.stderr ?? '').trim().slice(-200)}`);
+        console.log(
+          `      stderr: ${(result.stderr ?? '').trim().slice(-200)}`,
+        );
         failures.push(`${name} (${environment})`);
       }
     }

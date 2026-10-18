@@ -6,10 +6,12 @@ import {parseBookingParams} from './_main.booking_.$applicationType';
 import useFacebookPixel from '../utils/useFacebookPixel';
 import {useEffect} from 'react';
 
-export const Route = createFileRoute('/_main/booking_/$applicationType_/danke')({
-  component: Thanks,
-  parseParams: parseBookingParams,
-});
+export const Route = createFileRoute('/_main/booking_/$applicationType_/danke')(
+  {
+    component: Thanks,
+    parseParams: parseBookingParams,
+  },
+);
 
 function Thanks() {
   const {event} = useLoaderData({from: '/_main'});

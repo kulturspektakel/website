@@ -72,9 +72,7 @@ export default function Step1() {
           name={isDJ ? 'genre' : 'genreCategory'}
           required={!isDJ}
           label="Musikrichtung"
-          options={
-            isDJ ? undefined : BAND_GENRE_CATEGORY_OPTIONS
-          }
+          options={isDJ ? undefined : BAND_GENRE_CATEGORY_OPTIONS}
         />
         {values.genreCategory !== 'DJ' && (
           <ConnectedField name="genre" placeholder="genaues Genre (optional)" />

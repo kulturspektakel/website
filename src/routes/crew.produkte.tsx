@@ -13,7 +13,13 @@ export const listProductLists = createServerFn()
   .handler(async () => {
     const lists = await db.query.productList.findMany({
       orderBy: asc(productList.name),
-      columns: {id: true, name: true, emoji: true, active: true, updatedAt: true},
+      columns: {
+        id: true,
+        name: true,
+        emoji: true,
+        active: true,
+        updatedAt: true,
+      },
       // `viewer` is whoever last updated the list.
       with: {viewer: {columns: {displayName: true}}},
     });

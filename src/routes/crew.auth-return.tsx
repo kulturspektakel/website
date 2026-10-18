@@ -14,9 +14,7 @@ export const Route = createFileRoute('/crew/auth-return')({
     // Only forward to an internal crew path — never an absolute or
     // protocol-relative URL — so this can't be abused as an open redirect.
     const dest =
-      search.to && /^\/crew(\/|$)/.test(search.to)
-        ? search.to
-        : '/crew/noise';
+      search.to && /^\/crew(\/|$)/.test(search.to) ? search.to : '/crew/noise';
     throw redirect({href: dest});
   },
 });

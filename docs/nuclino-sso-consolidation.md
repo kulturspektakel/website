@@ -61,18 +61,19 @@ the Slack-approval flow and the `/nuclino` flow — deleting the model would bre
 now **set** by `GET /api/slack/token` (the `/nuclino` flow). The branch is live
 and correct; do not remove it.
 
-### 4. Rotate the copied-forward secrets — *security hygiene*
+### 4. Rotate the copied-forward secrets — _security hygiene_
 
 `SAML_PRIVATE_KEY` and `NUCLINO_ANONYMOUS_PASSWORD` were copied into GSM from the
 legacy repo, where they are committed in plaintext (`.env.json`). They should be
 rotated so the leaked values are no longer live:
+
 - **`SAML_PRIVATE_KEY`**: generate a fresh RSA keypair, update the public cert
   inlined in `src/server/routes/saml.ts` (`SIGNING_CERT`) and the cert configured
   on Nuclino, then push the new private key to GSM.
 - **`NUCLINO_ANONYMOUS_PASSWORD`**: set a new shared wiki password (coordinate
   with crew) and update the GSM secret.
 
-### 5. Decommission the legacy app — *unblocked once cutover completes*
+### 5. Decommission the legacy app — _unblocked once cutover completes_
 
 #1 is done and the whole Slack/SAML/OwnTracks/Nuclino surface is migrated, so
 once the **cutover** finishes (Slack App Request URLs → `/api/slack/*`; Nuclino
@@ -82,7 +83,7 @@ IdP Entity ID → `https://www.kulturspektakel.de/api/saml/login`, SSO URL stays
 can be retired. Redundant there: the `/saml/*` + `/slack/*` + `/owntracks`
 routes, the Slack/nonce graphile-worker tasks, the `nuclinoUpdateMessage` cron,
 and the `SAML_PRIVATE_KEY` / `NUCLINO_*` / `JWT_SECRET` env vars. (Edits in the
-*other* repo — not this one.)
+_other_ repo — not this one.)
 
 ## Operational prerequisites (for going live here)
 

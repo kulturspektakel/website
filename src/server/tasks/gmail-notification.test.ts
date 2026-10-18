@@ -26,7 +26,9 @@ const {handleGmailNotification} = await import('./gmail-notification');
 
 function pubSubPush(emailAddress: string | undefined) {
   const data = emailAddress
-    ? Buffer.from(JSON.stringify({emailAddress, historyId: 1})).toString('base64')
+    ? Buffer.from(JSON.stringify({emailAddress, historyId: 1})).toString(
+        'base64',
+      )
     : undefined;
   return new Request('https://example.test/x', {
     method: 'POST',
@@ -35,14 +37,16 @@ function pubSubPush(emailAddress: string | undefined) {
   });
 }
 
-function fakeGmail(opts: {
-  threads?: Array<{id: string}>;
-  threadMessages?: Array<{
-    id?: string;
-    labelIds?: string[];
-    internalDate?: string;
-  }>;
-} = {}) {
+function fakeGmail(
+  opts: {
+    threads?: Array<{id: string}>;
+    threadMessages?: Array<{
+      id?: string;
+      labelIds?: string[];
+      internalDate?: string;
+    }>;
+  } = {},
+) {
   return {
     users: {
       threads: {
@@ -82,7 +86,10 @@ describe('handleGmailNotification — happy path', () => {
         text: `Neue E-Mail für ${ACCOUNT}`,
       }),
     );
-    expect(inserts).toHaveBeenCalledWith('GmailReminders', {messageId: 'm1', account: ACCOUNT});
+    expect(inserts).toHaveBeenCalledWith('GmailReminders', {
+      messageId: 'm1',
+      account: ACCOUNT,
+    });
     expect(enqueueGcpTask).toHaveBeenCalledWith(
       'gmail-reminder',
       {account: ACCOUNT, messageId: 'm1'},

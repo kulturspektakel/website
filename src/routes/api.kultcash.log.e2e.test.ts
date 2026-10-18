@@ -31,7 +31,12 @@ describe('POST /api/kultcash/log', () => {
 
   test('persists the log (incl. voltages) and dedupes a replayed clientId with 409', async () => {
     const clientId = 'log-client-1';
-    const msg = LogMessage.create({...base, clientId, batteryVoltage: 4100, usbVoltage: 5000});
+    const msg = LogMessage.create({
+      ...base,
+      clientId,
+      batteryVoltage: 4100,
+      usbVoltage: 5000,
+    });
 
     const first = await post(msg);
     expect(first.status).toBe(201);
@@ -95,7 +100,11 @@ describe('POST /api/kultcash/log', () => {
     );
     expect(order.payment).toBe('KULT_CARD');
 
-    const items = await query<{amount: number; name: string; perUnitPrice: number}>(
+    const items = await query<{
+      amount: number;
+      name: string;
+      perUnitPrice: number;
+    }>(
       `select amount, name, "perUnitPrice" from "OrderItem" where "orderId" = $1`,
       [tx.orderId],
     );
@@ -145,7 +154,10 @@ describe('POST /api/kultcash/log', () => {
     expect(res.status).toBe(201);
 
     // no card transaction was created for this log
-    const txs = await query(`select 1 from "CardTransaction" where "clientId" = $1`, [clientId]);
+    const txs = await query(
+      `select 1 from "CardTransaction" where "clientId" = $1`,
+      [clientId],
+    );
     expect(txs).toHaveLength(0);
 
     // the order exists, links the crew card, and has its item
@@ -155,7 +167,10 @@ describe('POST /api/kultcash/log', () => {
       [Buffer.from(crewCardId)],
     );
     expect(order?.payment).toBe('FREE_CREW');
-    const items = await query(`select 1 from "OrderItem" where "orderId" = $1`, [order.id]);
+    const items = await query(
+      `select 1 from "OrderItem" where "orderId" = $1`,
+      [order.id],
+    );
     expect(items).toHaveLength(1);
   });
 
@@ -215,7 +230,10 @@ describe('POST /api/kultcash/log', () => {
       LogMessage.create({
         ...base,
         clientId: 'log-enroll',
-        crewCardEnrollment: {crewCardId: Uint8Array.from(crewCardId), validUntil: 3},
+        crewCardEnrollment: {
+          crewCardId: Uint8Array.from(crewCardId),
+          validUntil: 3,
+        },
       }),
     );
     expect(res.status).toBe(201);
@@ -235,7 +253,11 @@ describe('POST /api/kultcash/log', () => {
       [idBuf],
     );
     // enrollment resets ownership/flags ...
-    expect(card).toMatchObject({nickname: null, suspended: false, privileged: false});
+    expect(card).toMatchObject({
+      nickname: null,
+      suspended: false,
+      privileged: false,
+    });
     // ... and stamps enrolledAt with the device time
     expect(card.enrolledAt).toBe(deviceTime);
   });

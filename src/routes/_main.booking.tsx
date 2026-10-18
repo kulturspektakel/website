@@ -12,9 +12,8 @@ export const Route = createFileRoute('/_main/booking')({
   // directly. Inside a request that's the same entry the layout's loader already
   // populated, so this costs nothing.
   head: async ({match}) => {
-    const {event} = await match.context.queryClient.ensureQueryData(
-      currentEventQuery,
-    );
+    const {event} =
+      await match.context.queryClient.ensureQueryData(currentEventQuery);
     return seo({
       title: 'Band- und DJ-Bewerbungen',
       description: event.bandApplicationEnd

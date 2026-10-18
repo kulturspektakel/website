@@ -9,17 +9,15 @@ export function computeBadges(
 ) {
   return (Object.entries(badgeConfig) as [BadgeKey, BadgeDefinition][])
     .filter(([_, v]) => (isCrew ? v.availableForCrew : v.availableForRegular))
-    .map(
-      ([badgeKey, {compute}]) => ({
-        badgeKey,
-        ...compute(
-          [...cardActivities]
-            .reverse()
-            .filter((a) => !(a.type === 'order' && a.notForMe)),
-          event,
-        ),
-      }),
-    );
+    .map(([badgeKey, {compute}]) => ({
+      badgeKey,
+      ...compute(
+        [...cardActivities]
+          .reverse()
+          .filter((a) => !(a.type === 'order' && a.notForMe)),
+        event,
+      ),
+    }));
 }
 
 export function useBadges(

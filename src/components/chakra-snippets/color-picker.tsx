@@ -1,4 +1,4 @@
-import type { IconButtonProps, StackProps } from "@chakra-ui/react"
+import type {IconButtonProps, StackProps} from '@chakra-ui/react';
 import {
   ColorPicker as ChakraColorPicker,
   For,
@@ -8,15 +8,15 @@ import {
   Stack,
   Text,
   VStack,
-} from "@chakra-ui/react"
-import * as React from "react"
-import { LuCheck, LuPipette } from "react-icons/lu"
+} from '@chakra-ui/react';
+import * as React from 'react';
+import {LuCheck, LuPipette} from 'react-icons/lu';
 
 export const ColorPickerTrigger = React.forwardRef<
   HTMLButtonElement,
-  ChakraColorPicker.TriggerProps & { fitContent?: boolean }
+  ChakraColorPicker.TriggerProps & {fitContent?: boolean}
 >(function ColorPickerTrigger(props, ref) {
-  const { fitContent, ...rest } = props
+  const {fitContent, ...rest} = props;
   return (
     <ChakraColorPicker.Trigger
       data-fit-content={fitContent || undefined}
@@ -25,34 +25,34 @@ export const ColorPickerTrigger = React.forwardRef<
     >
       {props.children || <ChakraColorPicker.ValueSwatch />}
     </ChakraColorPicker.Trigger>
-  )
-})
+  );
+});
 
 export const ColorPickerInput = React.forwardRef<
   HTMLInputElement,
-  Omit<ChakraColorPicker.ChannelInputProps, "channel">
+  Omit<ChakraColorPicker.ChannelInputProps, 'channel'>
 >(function ColorHexInput(props, ref) {
-  return <ChakraColorPicker.ChannelInput channel="hex" ref={ref} {...props} />
-})
+  return <ChakraColorPicker.ChannelInput channel="hex" ref={ref} {...props} />;
+});
 
 interface ColorPickerContentProps extends ChakraColorPicker.ContentProps {
-  portalled?: boolean
-  portalRef?: React.RefObject<HTMLElement>
+  portalled?: boolean;
+  portalRef?: React.RefObject<HTMLElement>;
 }
 
 export const ColorPickerContent = React.forwardRef<
   HTMLDivElement,
   ColorPickerContentProps
 >(function ColorPickerContent(props, ref) {
-  const { portalled = true, portalRef, ...rest } = props
+  const {portalled = true, portalRef, ...rest} = props;
   return (
     <Portal disabled={!portalled} container={portalRef}>
       <ChakraColorPicker.Positioner>
         <ChakraColorPicker.Content ref={ref} {...rest} />
       </ChakraColorPicker.Positioner>
     </Portal>
-  )
-})
+  );
+});
 
 export const ColorPickerInlineContent = React.forwardRef<
   HTMLDivElement,
@@ -66,8 +66,8 @@ export const ColorPickerInlineContent = React.forwardRef<
       ref={ref}
       {...props}
     />
-  )
-})
+  );
+});
 
 export const ColorPickerSliders = React.forwardRef<HTMLDivElement, StackProps>(
   function ColorPickerSliders(props, ref) {
@@ -76,9 +76,9 @@ export const ColorPickerSliders = React.forwardRef<HTMLDivElement, StackProps>(
         <ColorPickerChannelSlider channel="hue" />
         <ColorPickerChannelSlider channel="alpha" />
       </Stack>
-    )
+    );
   },
-)
+);
 
 export const ColorPickerArea = React.forwardRef<
   HTMLDivElement,
@@ -89,8 +89,8 @@ export const ColorPickerArea = React.forwardRef<
       <ChakraColorPicker.AreaBackground />
       <ChakraColorPicker.AreaThumb />
     </ChakraColorPicker.Area>
-  )
-})
+  );
+});
 
 export const ColorPickerEyeDropper = React.forwardRef<
   HTMLButtonElement,
@@ -102,8 +102,8 @@ export const ColorPickerEyeDropper = React.forwardRef<
         <LuPipette />
       </IconButton>
     </ChakraColorPicker.EyeDropperTrigger>
-  )
-})
+  );
+});
 
 export const ColorPickerChannelSlider = React.forwardRef<
   HTMLDivElement,
@@ -115,20 +115,20 @@ export const ColorPickerChannelSlider = React.forwardRef<
       <ChakraColorPicker.ChannelSliderTrack />
       <ChakraColorPicker.ChannelSliderThumb />
     </ChakraColorPicker.ChannelSlider>
-  )
-})
+  );
+});
 
 export const ColorPickerSwatchTrigger = React.forwardRef<
   HTMLButtonElement,
   ChakraColorPicker.SwatchTriggerProps & {
-    swatchSize?: ChakraColorPicker.SwatchTriggerProps["boxSize"]
+    swatchSize?: ChakraColorPicker.SwatchTriggerProps['boxSize'];
   }
 >(function ColorPickerSwatchTrigger(props, ref) {
-  const { swatchSize, children, ...rest } = props
+  const {swatchSize, children, ...rest} = props;
   return (
     <ChakraColorPicker.SwatchTrigger
       ref={ref}
-      style={{ ["--color" as string]: props.value }}
+      style={{['--color' as string]: props.value}}
       {...rest}
     >
       {children || (
@@ -139,8 +139,8 @@ export const ColorPickerSwatchTrigger = React.forwardRef<
         </ChakraColorPicker.Swatch>
       )}
     </ChakraColorPicker.SwatchTrigger>
-  )
-})
+  );
+});
 
 export const ColorPickerRoot = React.forwardRef<
   HTMLDivElement,
@@ -151,21 +151,21 @@ export const ColorPickerRoot = React.forwardRef<
       {props.children}
       <ChakraColorPicker.HiddenInput tabIndex={-1} />
     </ChakraColorPicker.Root>
-  )
-})
+  );
+});
 
 const formatMap = {
-  rgba: ["red", "green", "blue", "alpha"],
-  hsla: ["hue", "saturation", "lightness", "alpha"],
-  hsba: ["hue", "saturation", "brightness", "alpha"],
-  hexa: ["hex", "alpha"],
-} as const
+  rgba: ['red', 'green', 'blue', 'alpha'],
+  hsla: ['hue', 'saturation', 'lightness', 'alpha'],
+  hsba: ['hue', 'saturation', 'brightness', 'alpha'],
+  hexa: ['hex', 'alpha'],
+} as const;
 
 export const ColorPickerChannelInputs = React.forwardRef<
   HTMLDivElement,
   ChakraColorPicker.ViewProps
 >(function ColorPickerChannelInputs(props, ref) {
-  const channels = formatMap[props.format]
+  const channels = formatMap[props.format];
   return (
     <ChakraColorPicker.View flexDirection="row" ref={ref} {...props}>
       {channels.map((channel) => (
@@ -183,14 +183,14 @@ export const ColorPickerChannelInputs = React.forwardRef<
         </VStack>
       ))}
     </ChakraColorPicker.View>
-  )
-})
+  );
+});
 
 export const ColorPickerChannelSliders = React.forwardRef<
   HTMLDivElement,
   ChakraColorPicker.ViewProps
 >(function ColorPickerChannelSliders(props, ref) {
-  const channels = formatMap[props.format]
+  const channels = formatMap[props.format];
   return (
     <ChakraColorPicker.View {...props} ref={ref}>
       <For each={channels}>
@@ -209,12 +209,12 @@ export const ColorPickerChannelSliders = React.forwardRef<
         )}
       </For>
     </ChakraColorPicker.View>
-  )
-})
+  );
+});
 
-export const ColorPickerLabel = ChakraColorPicker.Label
-export const ColorPickerControl = ChakraColorPicker.Control
-export const ColorPickerValueText = ChakraColorPicker.ValueText
-export const ColorPickerValueSwatch = ChakraColorPicker.ValueSwatch
-export const ColorPickerChannelInput = ChakraColorPicker.ChannelInput
-export const ColorPickerSwatchGroup = ChakraColorPicker.SwatchGroup
+export const ColorPickerLabel = ChakraColorPicker.Label;
+export const ColorPickerControl = ChakraColorPicker.Control;
+export const ColorPickerValueText = ChakraColorPicker.ValueText;
+export const ColorPickerValueSwatch = ChakraColorPicker.ValueSwatch;
+export const ColorPickerChannelInput = ChakraColorPicker.ChannelInput;
+export const ColorPickerSwatchGroup = ChakraColorPicker.SwatchGroup;

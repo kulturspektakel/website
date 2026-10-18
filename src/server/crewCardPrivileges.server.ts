@@ -80,7 +80,10 @@ export async function isBonbudeMember(viewerId: string): Promise<boolean> {
     const members = await conversationMembers(SlackChannel.bonbude);
     return members.includes(viewerId);
   } catch (e) {
-    console.error('[crew-card-privileges] #bonbude membership lookup failed', e);
+    console.error(
+      '[crew-card-privileges] #bonbude membership lookup failed',
+      e,
+    );
     return false;
   }
 }

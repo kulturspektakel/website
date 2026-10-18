@@ -60,7 +60,12 @@ export async function immichAlbumAssets(
 
     const images = (album.assets ?? [])
       .filter((a) => a.type === 'IMAGE')
-      .map(({id, width, height, thumbhash}) => ({id, width, height, thumbhash}));
+      .map(({id, width, height, thumbhash}) => ({
+        id,
+        width,
+        height,
+        thumbhash,
+      }));
 
     return {
       slug,

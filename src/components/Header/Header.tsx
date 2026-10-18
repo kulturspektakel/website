@@ -33,9 +33,7 @@ function Item({children, to}: {children: React.ReactNode; to: string}) {
     >
       <Link to={to}>
         {({isActive}) => (
-          <Text color={isActive ? 'brand.500' : undefined}>
-            {children}
-          </Text>
+          <Text color={isActive ? 'brand.500' : undefined}>{children}</Text>
         )}
       </Link>
     </ChakraLink>

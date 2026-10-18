@@ -44,7 +44,10 @@ describe('handleSendEmail', () => {
       }),
     );
     expect(res.status).toBe(204);
-    expect(templateFn).toHaveBeenCalledWith({bandname: 'Tester', eventYear: '2026'});
+    expect(templateFn).toHaveBeenCalledWith({
+      bandname: 'Tester',
+      eventYear: '2026',
+    });
     expect(sendMail).toHaveBeenCalledWith({
       from: 'Kulturspektakel Gauting <info@kulturspektakel.de>',
       to: 'someone@example.test',

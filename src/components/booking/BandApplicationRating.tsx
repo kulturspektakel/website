@@ -155,7 +155,11 @@ export function BandApplicationRating({
                 content={r.displayName}
                 positioning={{placement: 'top'}}
               >
-                <Box as="span" display="inline-flex" ml={i === 0 ? '0' : '-1.5'}>
+                <Box
+                  as="span"
+                  display="inline-flex"
+                  ml={i === 0 ? '0' : '-1.5'}
+                >
                   <Avatar
                     name={r.displayName}
                     src={r.profilePicture ?? undefined}

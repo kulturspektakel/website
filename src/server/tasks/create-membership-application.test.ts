@@ -6,9 +6,8 @@ const {slackApiRequest} = vi.hoisted(() => ({slackApiRequest: vi.fn()}));
 vi.mock('../../server/enqueueGcpTask.server', () => ({enqueueGcpTask}));
 vi.mock('../../server/slack.server', () => ({slackApiRequest}));
 
-const {handleCreateMembershipApplication} = await import(
-  './create-membership-application'
-);
+const {handleCreateMembershipApplication} =
+  await import('./create-membership-application');
 
 function membershipRequest(body: unknown) {
   return new Request('https://example.test/x', {

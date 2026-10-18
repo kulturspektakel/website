@@ -1,13 +1,13 @@
-import { Tooltip as ChakraTooltip, Portal } from "@chakra-ui/react"
-import * as React from "react"
+import {Tooltip as ChakraTooltip, Portal} from '@chakra-ui/react';
+import * as React from 'react';
 
 export interface TooltipProps extends ChakraTooltip.RootProps {
-  showArrow?: boolean
-  portalled?: boolean
-  portalRef?: React.RefObject<HTMLElement>
-  content: React.ReactNode
-  contentProps?: ChakraTooltip.ContentProps
-  disabled?: boolean
+  showArrow?: boolean;
+  portalled?: boolean;
+  portalRef?: React.RefObject<HTMLElement>;
+  content: React.ReactNode;
+  contentProps?: ChakraTooltip.ContentProps;
+  disabled?: boolean;
 }
 
 export const Tooltip = React.forwardRef<HTMLDivElement, TooltipProps>(
@@ -21,7 +21,7 @@ export const Tooltip = React.forwardRef<HTMLDivElement, TooltipProps>(
       contentProps,
       portalRef,
       ...rest
-    } = props
+    } = props;
 
     // Each tooltip mounts its own Ark state machine + listeners. In lists/tables
     // with a tooltip per row that's the dominant mount/re-render cost, even
@@ -36,37 +36,38 @@ export const Tooltip = React.forwardRef<HTMLDivElement, TooltipProps>(
     // Content portal, while `Tooltip.Root` still spins up a Zag state machine +
     // trigger listeners per instance — which is the exact per-row cost we avoid
     // by not rendering `Tooltip.Root` at all until activation.
-    const [activated, setActivated] = React.useState(false)
-    const [open, setOpen] = React.useState(false)
+    const [activated, setActivated] = React.useState(false);
+    const [open, setOpen] = React.useState(false);
 
     // Consumers that drive `open`/`defaultOpen` themselves opt out of lazy
     // mounting and keep full control — they're one-off tooltips, not the
     // per-row case this optimises.
-    const controlled = rest.open !== undefined || rest.defaultOpen !== undefined
+    const controlled =
+      rest.open !== undefined || rest.defaultOpen !== undefined;
 
-    if (disabled) return children
+    if (disabled) return children;
 
     if (!controlled && !activated && React.isValidElement(children)) {
       const el = children as React.ReactElement<{
-        onPointerEnter?: React.PointerEventHandler
-        onFocus?: React.FocusEventHandler
-      }>
+        onPointerEnter?: React.PointerEventHandler;
+        onFocus?: React.FocusEventHandler;
+      }>;
       const activate = () => {
-        setActivated(true)
-        setOpen(true)
-      }
+        setActivated(true);
+        setOpen(true);
+      };
       return React.cloneElement(el, {
         onPointerEnter: (e) => {
-          el.props.onPointerEnter?.(e)
+          el.props.onPointerEnter?.(e);
           // Skip touch: tooltips are hover/focus affordances and shouldn't pop
           // on a tap (matches Ark's default, which never opens on touch).
-          if (e.pointerType !== "touch") activate()
+          if (e.pointerType !== 'touch') activate();
         },
         onFocus: (e) => {
-          el.props.onFocus?.(e)
-          activate()
+          el.props.onFocus?.(e);
+          activate();
         },
-      })
+      });
     }
 
     // Once activated we own open/onOpenChange (starts open from the activating
@@ -74,7 +75,7 @@ export const Tooltip = React.forwardRef<HTMLDivElement, TooltipProps>(
     // consumers keep their own open/onOpenChange via `rest`.
     const openProps: Partial<ChakraTooltip.RootProps> = controlled
       ? {}
-      : { open, onOpenChange: (e) => setOpen(e.open) }
+      : {open, onOpenChange: (e) => setOpen(e.open)};
 
     return (
       <ChakraTooltip.Root {...rest} {...openProps}>
@@ -92,6 +93,6 @@ export const Tooltip = React.forwardRef<HTMLDivElement, TooltipProps>(
           </ChakraTooltip.Positioner>
         </Portal>
       </ChakraTooltip.Root>
-    )
+    );
   },
-)
+);

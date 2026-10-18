@@ -86,7 +86,11 @@ describe('handleInstagramFollower', () => {
       instagram: 'nope',
     });
     mockApify([
-      {username: 'nope', error: 'not_found', errorDescription: 'Post does not exist'},
+      {
+        username: 'nope',
+        error: 'not_found',
+        errorDescription: 'Post does not exist',
+      },
     ]);
 
     const res = await handleInstagramFollower(request('app1'));

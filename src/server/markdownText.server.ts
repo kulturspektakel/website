@@ -3,7 +3,11 @@ import {DirectusImage} from '../utils/directusImage';
 import {db} from './db.server';
 import {page} from './db/schema';
 import {directusImages} from './directusImage.server';
-import {imageIDsFromMarkdown, markdownCDNUrls, Markdown} from '../utils/markdownText';
+import {
+  imageIDsFromMarkdown,
+  markdownCDNUrls,
+  Markdown,
+} from '../utils/markdownText';
 
 // The columns of a `Page` the site renders.
 export const pageColumns = {

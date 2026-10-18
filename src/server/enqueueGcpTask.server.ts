@@ -230,7 +230,9 @@ function gcpContext(): GcpContext {
     return cachedContext;
   }
   const projectId = process.env.GCP_PROJECT_ID;
-  const credentials = JSON.parse(process.env.GCP_TASKS_SERVICE_ACCOUNT_KEY_JSON);
+  const credentials = JSON.parse(
+    process.env.GCP_TASKS_SERVICE_ACCOUNT_KEY_JSON,
+  );
   const client = new CloudTasksClient({credentials, projectId});
   cachedContext = {
     client,

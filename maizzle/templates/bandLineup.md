@@ -3,7 +3,6 @@ title: 'Infos zu Auftritt von „{{ dynamic.bandname }}“ beim Kulturspektakel 
 preheader: 'Lineup-Veröffentlichung Kulturspektakel Gauting {{ dynamic.eventYear }}'
 ---
 
-
 Hey {{ dynamic.name }},
 
 wir freuen uns, dass ihr mit {{ dynamic.bandname }} auf dem Kulturspektakel 2025 dabei seid. Mittlerweile ist das Line-Up für das Kulturspektakel vollständig und wir veröffentlichen es am 26.04.2025 auf unserer Webseite und Social Media.

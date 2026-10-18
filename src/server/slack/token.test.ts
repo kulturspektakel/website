@@ -17,9 +17,8 @@ vi.mock('../enqueueGcpTask.server', () => ({enqueueGcpTask}));
 
 process.env.NUCLINO_TEAM_ID = 'team123';
 process.env.SITE_URL = 'https://www.kulturspektakel.de';
-const {handleNuclinoTokenCommand, handleNuclinoTokenRedirect} = await import(
-  './token'
-);
+const {handleNuclinoTokenCommand, handleNuclinoTokenRedirect} =
+  await import('./token');
 
 beforeEach(() => vi.clearAllMocks());
 
@@ -74,7 +73,9 @@ describe('handleNuclinoTokenCommand (POST)', () => {
     // modal opened, button links back to /slack/token with the nonce
     const view = slackApiRequest.mock.calls[0][1].view;
     const buttonUrl = view.blocks[1].elements[0].url as string;
-    expect(buttonUrl).toContain('https://www.kulturspektakel.de/api/slack/token');
+    expect(buttonUrl).toContain(
+      'https://www.kulturspektakel.de/api/slack/token',
+    );
     expect(buttonUrl).toContain('nonce=n-1');
   });
 });

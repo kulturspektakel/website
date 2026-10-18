@@ -50,7 +50,10 @@ function twilioCreds(): TwilioCreds {
   };
 }
 
-export async function placeAwarenessCall(text: string, to: string): Promise<void> {
+export async function placeAwarenessCall(
+  text: string,
+  to: string,
+): Promise<void> {
   const creds = twilioCreds();
   const twiml = `<Response><Say voice="Polly.Vicki" language="de-DE">${escapeXml(
     text,
@@ -83,7 +86,11 @@ export async function placeCall(opts: {
   timeout?: number;
 }): Promise<string> {
   const creds = twilioCreds();
-  const body = new URLSearchParams({To: opts.to, From: creds.from, Url: opts.url});
+  const body = new URLSearchParams({
+    To: opts.to,
+    From: creds.from,
+    Url: opts.url,
+  });
   if (opts.statusCallback) {
     body.set('StatusCallback', opts.statusCallback);
     for (const event of opts.statusCallbackEvent ?? []) {
@@ -103,7 +110,9 @@ export async function placeCall(opts: {
     body,
   });
   if (!res.ok) {
-    throw new Error(`Twilio placeCall failed (${res.status}): ${await res.text()}`);
+    throw new Error(
+      `Twilio placeCall failed (${res.status}): ${await res.text()}`,
+    );
   }
   const json = (await res.json()) as {sid: string};
   return json.sid;
@@ -118,7 +127,10 @@ export const SMS_SENDER_ID = 'KultGauting';
  * Send an SMS from the `KultGauting` alphanumeric sender ID (or `TWILIO_SMS_FROM`
  * if set). Returns the new message's SID.
  */
-export async function sendSms(opts: {to: string; body: string}): Promise<string> {
+export async function sendSms(opts: {
+  to: string;
+  body: string;
+}): Promise<string> {
   const creds = twilioCreds();
   const res = await fetch(`${REST_BASE}/${creds.accountSid}/Messages.json`, {
     method: 'POST',
@@ -133,7 +145,9 @@ export async function sendSms(opts: {to: string; body: string}): Promise<string>
     }),
   });
   if (!res.ok) {
-    throw new Error(`Twilio sendSms failed (${res.status}): ${await res.text()}`);
+    throw new Error(
+      `Twilio sendSms failed (${res.status}): ${await res.text()}`,
+    );
   }
   const json = (await res.json()) as {sid: string};
   return json.sid;
@@ -146,7 +160,9 @@ export type ActiveCall = {sid: string; to: string; status: string};
  * in-progress). Used to find the sibling screening legs so we can cancel them
  * when one callee accepts, and to detect when every leg has ended.
  */
-export async function listActiveCallsTo(numbers: string[]): Promise<ActiveCall[]> {
+export async function listActiveCallsTo(
+  numbers: string[],
+): Promise<ActiveCall[]> {
   const creds = twilioCreds();
   const calls: ActiveCall[] = [];
   for (const status of ['queued', 'ringing', 'in-progress'] as const) {
@@ -180,15 +196,20 @@ export async function endCall(
   status: 'completed' | 'canceled',
 ): Promise<void> {
   const creds = twilioCreds();
-  const res = await fetch(`${REST_BASE}/${creds.accountSid}/Calls/${sid}.json`, {
-    method: 'POST',
-    headers: {
-      Authorization: creds.authHeader,
-      'Content-Type': 'application/x-www-form-urlencoded',
+  const res = await fetch(
+    `${REST_BASE}/${creds.accountSid}/Calls/${sid}.json`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: creds.authHeader,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({Status: status}),
     },
-    body: new URLSearchParams({Status: status}),
-  });
+  );
   if (!res.ok && res.status !== 404 && res.status !== 409) {
-    throw new Error(`Twilio endCall failed (${res.status}): ${await res.text()}`);
+    throw new Error(
+      `Twilio endCall failed (${res.status}): ${await res.text()}`,
+    );
   }
 }

@@ -40,8 +40,7 @@ type LocationMessage = {
   bs?: BatteryStatus;
 };
 type OwnTracksMessage =
-  | LocationMessage
-  | {_type: 'waypoint' | 'waypoints'; [k: string]: unknown};
+  LocationMessage | {_type: 'waypoint' | 'waypoints'; [k: string]: unknown};
 
 type Viewer = {id: string; displayName: string; profilePicture: string | null};
 
@@ -71,9 +70,9 @@ export function configString(viewer: Viewer): string {
 }
 
 function viewerIdFromBasicAuth(request: Request): string | undefined {
-  const [scheme, encoded] = (
-    request.headers.get('authorization') ?? ''
-  ).split(' ');
+  const [scheme, encoded] = (request.headers.get('authorization') ?? '').split(
+    ' ',
+  );
   if (scheme !== 'Basic' || !encoded) {
     return undefined;
   }
@@ -206,7 +205,12 @@ export async function handleOwnTracks(request: Request): Promise<Response> {
     // the viewer id as the tid, and show the person on the map via the card
     // `face` (avatar) instead. The human-readable name comes from `name`.
     return [
-      {_type: 'card', name: v.displayName, tid: v.id, face: faces.get(v.id) ?? ''},
+      {
+        _type: 'card',
+        name: v.displayName,
+        tid: v.id,
+        face: faces.get(v.id) ?? '',
+      },
       {
         _type: 'location',
         tid: v.id,

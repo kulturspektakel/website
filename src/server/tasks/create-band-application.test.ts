@@ -10,9 +10,7 @@ vi.mock('../../server/enqueueGcpTask.server', () => ({enqueueGcpTask}));
 vi.mock('../../server/slack.server', () => ({slackApiRequest}));
 vi.mock('../../server/db.server', () => ({db}));
 
-const {handleCreateBandApplication} = await import(
-  './create-band-application'
-);
+const {handleCreateBandApplication} = await import('./create-band-application');
 
 function request(id: string) {
   return new Request('https://example.test/x', {
@@ -46,9 +44,7 @@ beforeEach(() => {
 
 describe('handleCreateBandApplication', () => {
   test('always sends email + distance + Slack; skips enrichment with no links', async () => {
-    query.bandApplication.findFirst.mockResolvedValue(
-      baseApplication,
-    );
+    query.bandApplication.findFirst.mockResolvedValue(baseApplication);
 
     const res = await handleCreateBandApplication(request('app1'));
     expect(res.status).toBe(204);

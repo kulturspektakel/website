@@ -28,7 +28,9 @@ export function StageMatrix(props: StageMatrixProps) {
 
   const toggle = (r: number, c: number) => {
     if (props.multiple) {
-      const exists = props.value.some((cell) => cell.row === r && cell.col === c);
+      const exists = props.value.some(
+        (cell) => cell.row === r && cell.col === c,
+      );
       props.onChange(
         exists
           ? props.value.filter((cell) => !(cell.row === r && cell.col === c))
@@ -120,8 +122,12 @@ export function StageMatrix(props: StageMatrixProps) {
                   borderRightWidth={lastCol ? '1px' : undefined}
                   borderTopLeftRadius={firstRow && firstCol ? 'md' : undefined}
                   borderTopRightRadius={firstRow && lastCol ? 'md' : undefined}
-                  borderBottomLeftRadius={lastRow && firstCol ? 'md' : undefined}
-                  borderBottomRightRadius={lastRow && lastCol ? 'md' : undefined}
+                  borderBottomLeftRadius={
+                    lastRow && firstCol ? 'md' : undefined
+                  }
+                  borderBottomRightRadius={
+                    lastRow && lastCol ? 'md' : undefined
+                  }
                   onClick={() => toggle(ri, ci)}
                 >
                   <Box

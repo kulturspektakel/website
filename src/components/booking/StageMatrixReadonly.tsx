@@ -15,7 +15,11 @@ const CELL = '0.5rem';
 export function StageMatrixReadonly({value}: {value: StageValue}) {
   if (!value) return null;
   return (
-    <Tooltip content={stageLabel(value)} positioning={{placement: 'top'}} showArrow>
+    <Tooltip
+      content={stageLabel(value)}
+      positioning={{placement: 'top'}}
+      showArrow
+    >
       <Grid
         templateColumns={`repeat(${STAGE_COLS.length}, ${CELL})`}
         w="fit-content"

@@ -93,11 +93,11 @@ Zufahrten zum Gelände befinden sich Schranken, diese sollten offen sein.
 Falls sie geschlossen sind und ihr sie nicht selbst öffnen könnt,
 kontaktiert die Bühnenbetreuung.
 
-* Große Bühne (Germeringer Str. 48, 82131 Gauting):\
+- Große Bühne (Germeringer Str. 48, 82131 Gauting):\
   https://maps.app.goo.gl/BnctABDcn6737C5Z9
-* Kultbühne (Germeringer Str. 37, 82131 Gauting):\
+- Kultbühne (Germeringer Str. 37, 82131 Gauting):\
   https://maps.app.goo.gl/U2X1fUh7sN4FVMFu6
-* Waldbühne (Wiesmahdstr. 9, 82131 Gauting):\
+- Waldbühne (Wiesmahdstr. 9, 82131 Gauting):\
   https://maps.app.goo.gl/JaDVhJqf4zVAm3Uu9
 
 Fahrzeuge, die nicht zur Anlieferung an die Bühnen müssen, können auf dem

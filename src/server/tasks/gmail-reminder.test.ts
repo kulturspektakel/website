@@ -30,14 +30,18 @@ function reminderRequest(account: string, messageId: string) {
   });
 }
 
-function fakeGmail(opts: {
-  message?: {labelIds?: string[]; threadId?: string} | null;
-  threadLatestMessageId?: string;
-} = {}) {
+function fakeGmail(
+  opts: {
+    message?: {labelIds?: string[]; threadId?: string} | null;
+    threadLatestMessageId?: string;
+  } = {},
+) {
   return {
     users: {
       messages: {
-        get: vi.fn().mockResolvedValue(opts.message ? {data: opts.message} : null),
+        get: vi
+          .fn()
+          .mockResolvedValue(opts.message ? {data: opts.message} : null),
       },
       threads: {
         get: vi.fn().mockResolvedValue({
@@ -73,7 +77,9 @@ describe('handleGmailReminder', () => {
       'chat.postMessage',
       expect.objectContaining({
         channel: 'C-TEST',
-        text: expect.stringContaining(`unbeantwortet im Posteingang von ${ACCOUNT}`),
+        text: expect.stringContaining(
+          `unbeantwortet im Posteingang von ${ACCOUNT}`,
+        ),
       }),
     );
   });

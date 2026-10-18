@@ -36,9 +36,8 @@ export const Route = createFileRoute('/api/spenden/quittung/$id')({
         // and a static import here would put them in the shared server chunk
         // that every page render compiles. Deferred to the one request that
         // needs them. See src/server/spendenQuittung.server.tsx.
-        const {renderSpendenQuittung} = await import(
-          '../server/spendenQuittung.server'
-        );
+        const {renderSpendenQuittung} =
+          await import('../server/spendenQuittung.server');
 
         return new Response(await renderSpendenQuittung({donation, origin}), {
           headers: {'Content-Type': 'application/pdf'},

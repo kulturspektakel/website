@@ -59,7 +59,11 @@ export async function handleCreateMembershipApplication(
 
   const accountHolder =
     data.accountHolder === 'different'
-      ? [data.accountHolderName, data.accountHolderAddress, data.accountHolderCity]
+      ? [
+          data.accountHolderName,
+          data.accountHolderAddress,
+          data.accountHolderCity,
+        ]
           .filter(Boolean)
           .join(', ')
       : undefined;

@@ -78,7 +78,9 @@ describe('handleNuclinoUpdateMessage', () => {
   });
 
   test('completes (204) without posting when the Nuclino API is unavailable', async () => {
-    allItems.mockRejectedValueOnce(new NuclinoApiError(503, 'Service Unavailable'));
+    allItems.mockRejectedValueOnce(
+      new NuclinoApiError(503, 'Service Unavailable'),
+    );
 
     const res = await handleNuclinoUpdateMessage();
     expect(res.status).toBe(204);

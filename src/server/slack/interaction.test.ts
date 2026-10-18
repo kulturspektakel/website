@@ -56,11 +56,10 @@ describe('handleSlackInteraction', () => {
     );
     expect(res.status).toBe(200);
     // id, and "not expired yet" (now, sent as an ISO string)
-    expect(updates).toHaveBeenCalledWith(
-      'NonceRequest',
-      {status: 'Approved'},
-      ['nr1', expect.any(String)],
-    );
+    expect(updates).toHaveBeenCalledWith('NonceRequest', {status: 'Approved'}, [
+      'nr1',
+      expect.any(String),
+    ]);
     expect(postResponseUrl).toHaveBeenCalledWith('https://hooks.slack/resp', {
       delete_original: 'true',
     });
@@ -89,7 +88,12 @@ describe('handleSlackInteraction', () => {
           }),
           state: {
             values: {
-              b1: {'users_select-action': {type: 'users_select', selected_user: 'U9'}},
+              b1: {
+                'users_select-action': {
+                  type: 'users_select',
+                  selected_user: 'U9',
+                },
+              },
             },
           },
         },

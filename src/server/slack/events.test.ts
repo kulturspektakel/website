@@ -96,7 +96,11 @@ describe('handleSlackEvents', () => {
     await handleSlackEvents(
       event({
         type: 'event_callback',
-        event: {type: 'member_joined_channel', user: 'U1', channel: 'C93K75X61'},
+        event: {
+          type: 'member_joined_channel',
+          user: 'U1',
+          channel: 'C93K75X61',
+        },
       }),
     );
     expect(grantBonbudePrivilege).not.toHaveBeenCalled();
@@ -106,7 +110,11 @@ describe('handleSlackEvents', () => {
     await handleSlackEvents(
       event({
         type: 'event_callback',
-        event: {type: 'member_left_channel', user: 'U1', channel: 'C0BKU2WSN7K'},
+        event: {
+          type: 'member_left_channel',
+          user: 'U1',
+          channel: 'C0BKU2WSN7K',
+        },
       }),
     );
     expect(revokeBonbudePrivilege).toHaveBeenCalledWith('U1');

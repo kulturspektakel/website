@@ -330,7 +330,8 @@ function BandContactRoute() {
                   Diese Band wurde bereits von {data.contactedBy}
                   {data.lastContactedAt && (
                     <>
-                      {' '}am{' '}
+                      {' '}
+                      am{' '}
                       <DateString
                         date={new Date(data.lastContactedAt)}
                         options={{

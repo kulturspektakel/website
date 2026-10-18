@@ -1,0 +1,11 @@
+# Generated — rewritten by their tools, so formatting them only adds churn.
+src/routeTree.gen.ts
+src/proto/*.ts
+drizzle/meta/
+maizzle/generated/
+
+# Tool state and local settings.
+terraform/.terraform/
+terraform/*.tfstate*
+.claude/settings.local.json
+.figma/

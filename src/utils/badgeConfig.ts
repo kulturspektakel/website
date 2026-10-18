@@ -97,7 +97,7 @@ const sugarList = new Set<string>([
   'Zimtzucker',
   'Schoko',
   'Schoko-Banane',
-  'Waffel'
+  'Waffel',
 ]);
 
 export type BadgeKey = keyof typeof badgeConfig;
@@ -267,9 +267,15 @@ export const badgeConfig = createBadgeDefinitions({
     compute: (activities) => {
       const wb = new Set(['Kinderbude', 'Wein & Italien', 'EKP']);
       let hasWb = false;
-      const rondell = new Set(['Pizza',  'Grill', 'Craft Beer']);
+      const rondell = new Set(['Pizza', 'Grill', 'Craft Beer']);
       let hasRondell = false;
-      const kb = new Set(['Waffel', 'Empanadas', 'Käsespätzle', 'Wraps', 'Crêpes']);
+      const kb = new Set([
+        'Waffel',
+        'Empanadas',
+        'Käsespätzle',
+        'Wraps',
+        'Crêpes',
+      ]);
       let hasKb = false;
       const gb = new Set(['Hot Dog', 'Frittiererei', 'Burger', 'Cocktail']);
       let hasGb = false;
@@ -374,8 +380,7 @@ export const badgeConfig = createBadgeDefinitions({
         'Veggie-Burger mit Pommes',
         'Vegetarisches Huhn Wrap',
         'Veggie Chilli Cheese Nachos',
-        'Veggie Chilli Cheese Fries'
-
+        'Veggie Chilli Cheese Fries',
       ]);
       for (const activity of activities) {
         if (
@@ -856,9 +861,7 @@ export const badgeConfig = createBadgeDefinitions({
         }
 
         // Local Europe/Berlin hour of the order (0–23).
-        const hour = Number(
-          format(activity.time, 'H', {in: tz(timeZone)}),
-        );
+        const hour = Number(format(activity.time, 'H', {in: tz(timeZone)}));
         if (hour >= 6 && hour < 12) {
           return {
             status: 'awarded',

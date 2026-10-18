@@ -18,7 +18,10 @@ import {getCookie} from '@tanstack/react-start/server';
 import {addMinutes} from 'date-fns';
 import {and, eq, gt} from 'drizzle-orm';
 import {db} from '../server/db.server';
-import {nonce as nonceTable, nonceRequest as nonceRequestTable} from '../server/db/schema';
+import {
+  nonce as nonceTable,
+  nonceRequest as nonceRequestTable,
+} from '../server/db/schema';
 import {enqueueGcpTask} from '../server/enqueueGcpTask.server';
 
 const NONCE_LIFETIME_MINUTES = 5;

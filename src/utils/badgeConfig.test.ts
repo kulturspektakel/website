@@ -36,7 +36,9 @@ function order(
 
 test('no badge is awarded by default', () => {
   Object.keys(badgeConfig).forEach((key) => {
-    expect(badgeConfig[key as BadgeKey].compute([], event).status).toBe('not awarded');
+    expect(badgeConfig[key as BadgeKey].compute([], event).status).toBe(
+      'not awarded',
+    );
   });
 });
 

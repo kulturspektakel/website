@@ -47,14 +47,17 @@ describe('verifySlackRequest', () => {
   });
 
   test('rejects a tampered body', async () => {
-    const req = new Request('https://www.kulturspektakel.de/api/slack/owntracks', {
-      method: 'POST',
-      body: 'token=x&user_id=U1&text=<@U999>',
-      headers: {
-        'content-type': 'application/x-www-form-urlencoded',
-        ...signed(NOW),
+    const req = new Request(
+      'https://www.kulturspektakel.de/api/slack/owntracks',
+      {
+        method: 'POST',
+        body: 'token=x&user_id=U1&text=<@U999>',
+        headers: {
+          'content-type': 'application/x-www-form-urlencoded',
+          ...signed(NOW),
+        },
       },
-    });
+    );
     expect(await verifySlackRequest(req)).toBe(false);
   });
 

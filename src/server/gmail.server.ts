@@ -253,7 +253,10 @@ function htmlToSlackMarkdown(html: string): {
   return {text, quoteStripped: quoteWasStripped};
 }
 
-export function getHeaderField(message: gmail_v1.Schema$Message, field: string) {
+export function getHeaderField(
+  message: gmail_v1.Schema$Message,
+  field: string,
+) {
   const header = message.payload?.headers?.find(
     (h) => h.name?.toLowerCase() === field.toLowerCase(),
   );
@@ -271,10 +274,10 @@ export function parseInternalDate(message: gmail_v1.Schema$Message): Date {
  * those require a literal `<`.
  */
 function escapeSlack(value: string | null): string | null {
-  return value
-    ?.replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;') ?? null;
+  return (
+    value?.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') ??
+    null
+  );
 }
 
 /**
@@ -380,7 +383,8 @@ function chunkBody(body: string): string[] {
  * "Archivieren" and "In GMail öffnen" actions live on the channel message.
  */
 function gmailModalView(message: gmail_v1.Schema$Message, account: string) {
-  const subject = escapeSlack(getHeaderField(message, 'subject')) ?? '(kein Betreff)';
+  const subject =
+    escapeSlack(getHeaderField(message, 'subject')) ?? '(kein Betreff)';
   const from = escapeSlack(getHeaderField(message, 'from')) ?? '';
   const parsed = getMessageBody(message);
   const body = parsed?.text || '(kein Textinhalt gefunden)';
@@ -403,7 +407,10 @@ function gmailModalView(message: gmail_v1.Schema$Message, account: string) {
     title: {type: 'plain_text', text: 'E-Mail'},
     close: {type: 'plain_text', text: 'Schließen'},
     blocks: [
-      {type: 'section', text: {type: 'mrkdwn', text: `*${from}*\n*${subject}*`}},
+      {
+        type: 'section',
+        text: {type: 'mrkdwn', text: `*${from}*\n*${subject}*`},
+      },
       {type: 'divider'},
       ...chunks.map((text) => ({
         type: 'section',

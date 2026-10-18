@@ -1,5 +1,13 @@
 import {createFileRoute, Link} from '@tanstack/react-router';
-import {Box, Heading, HStack, IconButton, Span, Stack, Text} from '@chakra-ui/react';
+import {
+  Box,
+  Heading,
+  HStack,
+  IconButton,
+  Span,
+  Stack,
+  Text,
+} from '@chakra-ui/react';
 import {useQuery, useQueryClient} from '@tanstack/react-query';
 import {useState} from 'react';
 import {formatDistanceToNow} from 'date-fns';

@@ -6,8 +6,14 @@ const headers = deviceHeaders('NM-1', 'NoiseMonitor/test');
 
 describe('POST /api/noise/log', () => {
   test('rejects a message without noise_recording with 400', async () => {
-    const body = LogMessage.encode(LogMessage.create({deviceId: 'NM-1'})).finish();
-    const res = await fetch(`${baseUrl}/api/noise/log`, {method: 'POST', headers, body});
+    const body = LogMessage.encode(
+      LogMessage.create({deviceId: 'NM-1'}),
+    ).finish();
+    const res = await fetch(`${baseUrl}/api/noise/log`, {
+      method: 'POST',
+      headers,
+      body,
+    });
     expect(res.status).toBe(400);
   });
 
@@ -23,12 +29,20 @@ describe('POST /api/noise/log', () => {
         noiseRecording: {
           seqNo: 1,
           bands: new Uint8Array(31),
-          laeq: 60, lceq: 62, lafmax: 70, lcfmax: 68, lcpeak: 80,
+          laeq: 60,
+          lceq: 62,
+          lafmax: 70,
+          lcfmax: 68,
+          lcpeak: 80,
           recordIntervalSeconds: 1,
         },
       }),
     ).finish();
-    const res = await fetch(`${baseUrl}/api/noise/log`, {method: 'POST', headers, body});
+    const res = await fetch(`${baseUrl}/api/noise/log`, {
+      method: 'POST',
+      headers,
+      body,
+    });
     expect(res.status).toBe(400);
   });
 
@@ -52,11 +66,19 @@ describe('POST /api/noise/log', () => {
         }),
       ).finish();
 
-    const first = await fetch(`${baseUrl}/api/noise/log`, {method: 'POST', headers, body: body()});
+    const first = await fetch(`${baseUrl}/api/noise/log`, {
+      method: 'POST',
+      headers,
+      body: body(),
+    });
     expect(first.status).toBe(201);
 
     // re-uploading the same file is deduplicated by @@unique([deviceId, measuredAt])
-    const second = await fetch(`${baseUrl}/api/noise/log`, {method: 'POST', headers, body: body()});
+    const second = await fetch(`${baseUrl}/api/noise/log`, {
+      method: 'POST',
+      headers,
+      body: body(),
+    });
     expect(second.status).toBe(201);
 
     const rows = await query<{
@@ -85,8 +107,15 @@ describe('POST /api/noise/log', () => {
     expect(rows).toEqual([
       {
         ts: 1_735_689_600,
-        laeq: 60, lceq: 62, lafmax: 70, lcfmax: 68, lcpeak: 80,
-        laeq5m: null, lceq5m: null, laeq30m: null, lceq30m: null,
+        laeq: 60,
+        lceq: 62,
+        lafmax: 70,
+        lcfmax: 68,
+        lcpeak: 80,
+        laeq5m: null,
+        lceq5m: null,
+        laeq30m: null,
+        lceq30m: null,
         bands_len: 31,
       },
     ]);
@@ -105,13 +134,24 @@ describe('POST /api/noise/log', () => {
         noiseRecording: {
           seqNo: 1,
           bands: new Uint8Array(31),
-          laeq: 60, lceq: 62, lafmax: 70, lcfmax: 68, lcpeak: 80,
+          laeq: 60,
+          lceq: 62,
+          lafmax: 70,
+          lcfmax: 68,
+          lcpeak: 80,
           recordIntervalSeconds: 60,
-          laeq5m: 58, lceq5m: 61, laeq30m: 56, lceq30m: 59,
+          laeq5m: 58,
+          lceq5m: 61,
+          laeq30m: 56,
+          lceq30m: 59,
         },
       }),
     ).finish();
-    const res = await fetch(`${baseUrl}/api/noise/log`, {method: 'POST', headers: nmHeaders, body});
+    const res = await fetch(`${baseUrl}/api/noise/log`, {
+      method: 'POST',
+      headers: nmHeaders,
+      body,
+    });
     expect(res.status).toBe(201);
 
     const rows = await query<{
@@ -141,18 +181,30 @@ describe('POST /api/noise/log', () => {
           noiseRecording: {
             seqNo: 1,
             bands: new Uint8Array(31),
-            laeq: 60, lceq: 62, lafmax: 70, lcfmax: 68, lcpeak: 80,
+            laeq: 60,
+            lceq: 62,
+            lafmax: 70,
+            lcfmax: 68,
+            lcpeak: 80,
             recordIntervalSeconds: 60,
           },
         }),
       ).finish();
 
-    const first = await fetch(`${baseUrl}/api/noise/log`, {method: 'POST', headers: dlHeaders, body: body()});
+    const first = await fetch(`${baseUrl}/api/noise/log`, {
+      method: 'POST',
+      headers: dlHeaders,
+      body: body(),
+    });
     expect(first.status).toBe(201);
 
     // Re-uploading collides on the DeviceLog clientId PK; the P2002 is swallowed
     // so the response stays idempotent and no second row is written.
-    const second = await fetch(`${baseUrl}/api/noise/log`, {method: 'POST', headers: dlHeaders, body: body()});
+    const second = await fetch(`${baseUrl}/api/noise/log`, {
+      method: 'POST',
+      headers: dlHeaders,
+      body: body(),
+    });
     expect(second.status).toBe(201);
 
     const rows = await query<{
@@ -167,7 +219,12 @@ describe('POST /api/noise/log', () => {
       ['NM-DL'],
     );
     expect(rows).toEqual([
-      {clientId: 'NM-DL-client-1', batteryVoltage: 4100, usbVoltage: 5000, ts: 1_735_689_600},
+      {
+        clientId: 'NM-DL-client-1',
+        batteryVoltage: 4100,
+        usbVoltage: 5000,
+        ts: 1_735_689_600,
+      },
     ]);
   });
 
@@ -181,12 +238,20 @@ describe('POST /api/noise/log', () => {
         noiseRecording: {
           seqNo: 1,
           bands: new Uint8Array(31),
-          laeq: 60, lceq: 62, lafmax: 70, lcfmax: 68, lcpeak: 80,
+          laeq: 60,
+          lceq: 62,
+          lafmax: 70,
+          lcfmax: 68,
+          lcpeak: 80,
           recordIntervalSeconds: 60,
         },
       }),
     ).finish();
-    const res = await fetch(`${baseUrl}/api/noise/log`, {method: 'POST', headers: noClientHeaders, body});
+    const res = await fetch(`${baseUrl}/api/noise/log`, {
+      method: 'POST',
+      headers: noClientHeaders,
+      body,
+    });
     expect(res.status).toBe(201);
 
     const rows = await query<{n: number}>(
@@ -210,12 +275,20 @@ describe('POST /api/noise/log', () => {
         noiseRecording: {
           seqNo: 1,
           bands: new Uint8Array(31),
-          laeq: 55, lceq: 57, lafmax: 65, lcfmax: 63, lcpeak: 75,
+          laeq: 55,
+          lceq: 57,
+          lafmax: 65,
+          lcfmax: 63,
+          lcpeak: 75,
           recordIntervalSeconds: 60,
         },
       }),
     ).finish();
-    const res = await fetch(`${baseUrl}/api/noise/log`, {method: 'POST', headers: tzHeaders, body});
+    const res = await fetch(`${baseUrl}/api/noise/log`, {
+      method: 'POST',
+      headers: tzHeaders,
+      body,
+    });
     expect(res.status).toBe(201);
 
     const rows = await query<{ts: number}>(

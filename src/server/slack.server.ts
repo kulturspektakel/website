@@ -18,9 +18,7 @@ export type SlackApiUser = {
   };
 };
 
-export type SlackApiResponse<T> =
-  | ({ok: true} & T)
-  | {ok: false; error: string};
+export type SlackApiResponse<T> = ({ok: true} & T) | {ok: false; error: string};
 
 export async function slackApiRequest<T>(
   endpoint: string,

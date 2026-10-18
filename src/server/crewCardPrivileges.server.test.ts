@@ -28,11 +28,12 @@ describe('crewCardPrivileges', () => {
     await grantBonbudePrivilege('U1');
     // viewer, validUntil > now (sent as an ISO string), not suspended, not
     // privileged yet
-    expect(updates).toHaveBeenCalledWith(
-      'CrewCard',
-      {privileged: true},
-      ['U1', expect.any(String), false, false],
-    );
+    expect(updates).toHaveBeenCalledWith('CrewCard', {privileged: true}, [
+      'U1',
+      expect.any(String),
+      false,
+      false,
+    ]);
   });
 
   test('revoking ignores validity and suspension', async () => {
@@ -40,11 +41,10 @@ describe('crewCardPrivileges', () => {
     // `handleLists`, so leaving one privileged would leave it live.
     await revokeBonbudePrivilege('U1');
     // viewer and privileged only: no validity or suspension filter
-    expect(updates).toHaveBeenCalledWith(
-      'CrewCard',
-      {privileged: false},
-      ['U1', true],
-    );
+    expect(updates).toHaveBeenCalledWith('CrewCard', {privileged: false}, [
+      'U1',
+      true,
+    ]);
   });
 
   test('isBonbudeMember resolves false when Slack fails', async () => {

@@ -93,7 +93,8 @@ describe('parseGcpToken — production', () => {
   });
 
   test('rejects when GCP_TASKS_SERVICE_ACCOUNT_EMAIL is unset', async () => {
-    delete (process.env as Partial<NodeJS.ProcessEnv>).GCP_TASKS_SERVICE_ACCOUNT_EMAIL;
+    delete (process.env as Partial<NodeJS.ProcessEnv>)
+      .GCP_TASKS_SERVICE_ACCOUNT_EMAIL;
     expect(
       await parseGcpToken(
         request({Authorization: 'Bearer good-jwt'}),
@@ -108,7 +109,11 @@ describe('parseGcpToken — dev bypass', () => {
   test('returns a stub token without verification when NODE_ENV is not production', async () => {
     process.env.NODE_ENV = 'development';
     const token = await parseGcpToken(request(), 'heartbeat');
-    expect(token).toEqual({iss: 'gcp', email: 'dev@local', audience: 'heartbeat'});
+    expect(token).toEqual({
+      iss: 'gcp',
+      email: 'dev@local',
+      audience: 'heartbeat',
+    });
     expect(verifyIdToken).not.toHaveBeenCalled();
   });
 });

@@ -214,7 +214,11 @@ export async function handleSlackInteraction(
             .get({id: messageId, userId: 'me'})
             .catch(() => null);
           const attachments = message?.data
-            ? [slackAttachment(message.data, account, {archivedBy: payload.user.id})]
+            ? [
+                slackAttachment(message.data, account, {
+                  archivedBy: payload.user.id,
+                }),
+              ]
             : [];
 
           await postResponseUrl(payload.response_url, {

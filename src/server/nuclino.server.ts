@@ -28,8 +28,7 @@ export type NuclinoUser = {
 };
 
 type APIResponse<T> =
-  | {status: 'success'; data: T}
-  | {status: 'fail' | 'error'; message: string};
+  {status: 'success'; data: T} | {status: 'fail' | 'error'; message: string};
 
 /**
  * Thrown when the Nuclino API responds with a non-2xx status. Carries the HTTP
@@ -37,7 +36,10 @@ type APIResponse<T> =
  * temporarily-unavailable API — 429/5xx — and skips that run).
  */
 export class NuclinoApiError extends Error {
-  constructor(readonly status: number, statusText: string) {
+  constructor(
+    readonly status: number,
+    statusText: string,
+  ) {
     super(`Nuclino API ${status} ${statusText}`);
     this.name = 'NuclinoApiError';
   }
@@ -69,7 +71,9 @@ export async function items(params: {
   limit?: number;
   after?: string;
 }): Promise<Array<APIObject>> {
-  const query = new URLSearchParams({workspaceId: process.env.NUCLINO_WORKSPACE_ID ?? ''});
+  const query = new URLSearchParams({
+    workspaceId: process.env.NUCLINO_WORKSPACE_ID ?? '',
+  });
   for (const [k, v] of Object.entries(params)) {
     if (v) query.set(k, String(v));
   }

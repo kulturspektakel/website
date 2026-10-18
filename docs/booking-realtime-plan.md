@@ -87,12 +87,12 @@ snapshot) instead of one. After that, every update is incremental.
 
 ### Live collections (one set per event, eager sync)
 
-| Collection | Contents | Read by |
-|---|---|---|
-| `applications` | lean table columns + `stageRow/Column`, `contactedByViewerId` | table, modal header, stage picker, contact state |
-| `ratings` | `BandApplicationRating` rows for the event, with the rater's `displayName`/`profilePicture` joined in | average / my rating / raters in table and modal |
-| `tags` | `BandApplicationTag` rows for the event | tag column, tag filter, modal tag editor, tag suggestions (replaces `listBandApplicationTags` + its react-query cache) |
-| `comments` | all comments for the event, with the author's `displayName`/`profilePicture` joined in | modal comment list, "kommentiert" tag / `hasComments` (replaces the `_count`) |
+| Collection     | Contents                                                                                              | Read by                                                                                                                |
+| -------------- | ----------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `applications` | lean table columns + `stageRow/Column`, `contactedByViewerId`                                         | table, modal header, stage picker, contact state                                                                       |
+| `ratings`      | `BandApplicationRating` rows for the event, with the rater's `displayName`/`profilePicture` joined in | average / my rating / raters in table and modal                                                                        |
+| `tags`         | `BandApplicationTag` rows for the event                                                               | tag column, tag filter, modal tag editor, tag suggestions (replaces `listBandApplicationTags` + its react-query cache) |
+| `comments`     | all comments for the event, with the author's `displayName`/`profilePicture` joined in                | modal comment list, "kommentiert" tag / `hasComments` (replaces the `_count`)                                          |
 
 - Comments are **event-wide**, not per application: a per-application query
   would need a new seal (server-fn call) on every modal open / arrow-key step.

@@ -207,9 +207,7 @@ function FooterLink({children, to}: {to: string; children: string}) {
     >
       <RouterLink to={to}>
         {(a) => (
-          <Text color={a.isActive ? 'white' : undefined}>
-            {children}
-          </Text>
+          <Text color={a.isActive ? 'white' : undefined}>{children}</Text>
         )}
       </RouterLink>
     </Link>

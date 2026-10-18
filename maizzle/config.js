@@ -32,10 +32,7 @@ export default {
     inline: true,
     tailwind: {
       plugins: [emailVariants],
-      content: [
-        'maizzle/templates/**/*.md',
-        'maizzle/components/**/*.html',
-      ],
+      content: ['maizzle/templates/**/*.md', 'maizzle/components/**/*.html'],
       theme: {
         extend: {
           colors: {

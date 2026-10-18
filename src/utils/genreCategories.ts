@@ -24,8 +24,14 @@ const ENTRIES: [GenreCategory, {label: string; icon: string}][] = [
     GenreCategory.Blues_Funk_Jazz_Soul,
     {label: 'Blues / Funk / Jazz / Soul', icon: '/genre/jazz.svg'},
   ],
-  [GenreCategory.Reggae_Ska, {label: 'Reggae / Ska', icon: '/genre/reggae.svg'}],
-  [GenreCategory.Other, {label: 'andere Musikrichtung', icon: '/genre/hippie.svg'}],
+  [
+    GenreCategory.Reggae_Ska,
+    {label: 'Reggae / Ska', icon: '/genre/reggae.svg'},
+  ],
+  [
+    GenreCategory.Other,
+    {label: 'andere Musikrichtung', icon: '/genre/hippie.svg'},
+  ],
   [GenreCategory.DJ, {label: 'DJ', icon: '/genre/disco.svg'}],
 ];
 

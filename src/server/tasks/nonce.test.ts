@@ -12,9 +12,8 @@ vi.mock('../../server/upsertViewer.server', () => ({upsertViewer}));
 vi.mock('../../server/db.server', () => ({db}));
 
 const {handleCreateNonceRequest} = await import('./create-nonce-request');
-const {handleNonceRequestInvalidate} = await import(
-  './nonce-request-invalidate'
-);
+const {handleNonceRequestInvalidate} =
+  await import('./nonce-request-invalidate');
 const {handleNonceInvalidate} = await import('./nonce-invalidate');
 
 function postJson(body: unknown) {
@@ -58,12 +57,21 @@ describe('handleCreateNonceRequest', () => {
     const [endpoint, body] = slackApiRequest.mock.calls[1];
     expect(endpoint).toBe('chat.postMessage');
     const actions = (body as any).blocks[1].elements;
-    expect(actions[0]).toMatchObject({action_id: 'approve-nonce-request', value: id});
-    expect(actions[1]).toMatchObject({action_id: 'reject-nonce-request', value: id});
+    expect(actions[0]).toMatchObject({
+      action_id: 'approve-nonce-request',
+      value: id,
+    });
+    expect(actions[1]).toMatchObject({
+      action_id: 'reject-nonce-request',
+      value: id,
+    });
   });
 
   test('returns 204 (no-op) when no Slack user matches the email', async () => {
-    slackApiRequest.mockResolvedValueOnce({ok: false, error: 'users_not_found'});
+    slackApiRequest.mockResolvedValueOnce({
+      ok: false,
+      error: 'users_not_found',
+    });
 
     const res = await handleCreateNonceRequest(postJson({id, email}));
 
@@ -79,9 +87,9 @@ describe('handleCreateNonceRequest', () => {
       .mockResolvedValueOnce({ok: false, error: 'channel_not_found'});
     upsertViewer.mockResolvedValueOnce({id: slackId});
 
-    await expect(handleCreateNonceRequest(postJson({id, email}))).rejects.toThrow(
-      ApiError,
-    );
+    await expect(
+      handleCreateNonceRequest(postJson({id, email})),
+    ).rejects.toThrow(ApiError);
   });
 });
 

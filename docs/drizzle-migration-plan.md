@@ -10,10 +10,10 @@ Vercel Hobby's CPU budget is the only real constraint, and cold starts are most
 of it. A cold Node process that imports the ORM and runs one query, bundled
 with esbuild (2026-10-18, local, median of 9 runs):
 
-| | Bundle | Import + init | First query (wall) | Process CPU |
-|---|---|---|---|---|
-| Prisma 7 (`PrismaNeon`) | 5.5 MB | 30 ms | 162 ms | **342 ms** |
-| Drizzle 0.45 (`neon-serverless`) | 0.7 MB | 22 ms | 186 ms | **88 ms** |
+|                                  | Bundle | Import + init | First query (wall) | Process CPU |
+| -------------------------------- | ------ | ------------- | ------------------ | ----------- |
+| Prisma 7 (`PrismaNeon`)          | 5.5 MB | 30 ms         | 162 ms             | **342 ms**  |
+| Drizzle 0.45 (`neon-serverless`) | 0.7 MB | 22 ms         | 186 ms             | **88 ms**   |
 
 Wall time is network-bound and about equal; CPU per cold start drops by
 ~250 ms. Secondary gains: typed Neon Realtime queries via
@@ -49,7 +49,7 @@ by being imported).
     the defaults);
   - `NoiseLog.laeq30m` etc. (pull produced `laeq30M`);
   - `BandApplicationRating` primary key column order `(viewerId,
-    bandApplicationId)` as in production (it's also the index);
+bandApplicationId)` as in production (it's also the index);
   - `_ProductToProductAdditives` keys named `A`/`B` like the columns.
 - Verified by round trip on a throwaway local Postgres 18: a schema-only copy
   of production vs. an empty database built by `drizzle-kit push` from
@@ -132,6 +132,7 @@ Things that differ between the two and had to be spelled out:
   against production is a no-op, and `drizzle-kit generate` finds no changes.
   The legacy sequence `productlist_id_seq` was renamed to `ProductList_id_seq`
   so a fresh database and production agree exactly.
+
 - Workflow: edit `src/server/db/schema.ts` → `yarn db:generate` → review the SQL
   → `yarn db:migrate`. Local `.env` is production, so the migration is the
   change. Functions, triggers and data fixes go in `--custom` migrations.

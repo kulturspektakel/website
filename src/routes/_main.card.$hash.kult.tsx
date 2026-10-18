@@ -13,9 +13,7 @@ import {
 import {decodePayload} from '../utils/decodePayload';
 
 const loader = createServerFn()
-  .validator(
-    (data: {hash: string; event: {start: Date; end: Date}}) => data,
-  )
+  .validator((data: {hash: string; event: {start: Date; end: Date}}) => data)
   .handler(async ({data: {event, hash}}) => {
     const {cardId, counter, balance, deposit} = decodePayload('kultcard', hash);
 
@@ -48,7 +46,8 @@ export const currencyFormatter = new Intl.NumberFormat('de-DE', {
 export const Route = createFileRoute('/_main/card/$hash/kult')({
   component: KultCard,
   loader: async ({params: {hash}, context}) => {
-    const {event} = await context.queryClient.ensureQueryData(currentEventQuery);
+    const {event} =
+      await context.queryClient.ensureQueryData(currentEventQuery);
     return await loader({data: {hash, event}});
   },
   head: ({loaderData}) =>

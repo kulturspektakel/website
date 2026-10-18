@@ -10,9 +10,7 @@ export type FacebookLikesPayload = {id: string};
  * Resolves the page id from the applicant's Facebook URL and stores its
  * follower count on the BandApplication. Private profiles are a no-op.
  */
-export async function handleFacebookLikes(
-  request: Request,
-): Promise<Response> {
+export async function handleFacebookLikes(request: Request): Promise<Response> {
   const {id} = await readJsonPayload<FacebookLikesPayload>(request);
 
   const application = await db.query.bandApplication.findFirst({

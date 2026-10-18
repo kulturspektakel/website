@@ -32,7 +32,9 @@ export async function handleGmailNotification(
   if (!envelope.message?.data) {
     return new Response(null, {status: 204});
   }
-  const decoded = Buffer.from(envelope.message.data, 'base64').toString('utf-8');
+  const decoded = Buffer.from(envelope.message.data, 'base64').toString(
+    'utf-8',
+  );
   const {emailAddress: account} = JSON.parse(decoded) as {
     emailAddress: string;
     historyId: number;

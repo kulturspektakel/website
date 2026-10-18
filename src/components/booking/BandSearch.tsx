@@ -5,11 +5,7 @@ import {useVirtualizer} from '@tanstack/react-virtual';
 import {GenreCategory} from '../../utils/enums';
 import {normalizeBandName} from '../../utils/normalizeBandName';
 import {BandName} from './BandName';
-import {
-  DialogBody,
-  DialogContent,
-  DialogRoot,
-} from '../chakra-snippets/dialog';
+import {DialogBody, DialogContent, DialogRoot} from '../chakra-snippets/dialog';
 
 // Only the fields needed to render + navigate; the booking table's richer Row
 // is structurally assignable to this.
@@ -86,7 +82,8 @@ export function BandSearch({
       if (r !== null) scored.push({band, r});
     }
     scored.sort(
-      (a, b) => a.r - b.r || a.band.bandname.localeCompare(b.band.bandname, 'de'),
+      (a, b) =>
+        a.r - b.r || a.band.bandname.localeCompare(b.band.bandname, 'de'),
     );
     return scored.slice(0, MAX_RESULTS).map((s) => s.band);
   }, [query, index]);

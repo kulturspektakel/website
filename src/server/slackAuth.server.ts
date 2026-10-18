@@ -54,7 +54,11 @@ export async function verifySlackRequest(request: Request): Promise<boolean> {
     return false;
   }
 
-  const expected = slackSignature(timestamp, await request.clone().text(), secret);
+  const expected = slackSignature(
+    timestamp,
+    await request.clone().text(),
+    secret,
+  );
   const a = Buffer.from(signature);
   const b = Buffer.from(expected);
   return a.length === b.length && timingSafeEqual(a, b);

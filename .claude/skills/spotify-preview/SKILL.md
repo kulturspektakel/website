@@ -10,10 +10,12 @@ Resolves a Spotify track URL to its preview MP3 and writes the preview URL to th
 ## Inputs
 
 The user provides:
+
 - A **band identifier** — name or slug
 - A **Spotify track URL**, e.g. `https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT?si=xyz`
 
 Both can come in any order or format. Common shapes:
+
 - `<band name>: <url>`
 - `<url> for <band name>`
 - Two consecutive lines
@@ -60,6 +62,7 @@ ORDER BY "startTime" DESC;
 ```
 
 Resolution:
+
 - **0 rows** → tell the user no match was found, suggest checking the spelling.
 - **1 row** → proceed.
 - **>1 rows** → list each with `name`, `eventId`, and `startTime` formatted as a date, then ask the user which one to update. Don't guess.
@@ -77,6 +80,7 @@ WHERE id = '{ROW_ID}';
 ### 5. Confirm
 
 Report back:
+
 - The band name and event/year
 - The preview URL (linkified so the user can click to verify)
 

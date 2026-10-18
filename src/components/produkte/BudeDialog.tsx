@@ -43,7 +43,12 @@ export function BudeDialog({
   onSaved,
 }: {
   open: boolean;
-  list: {id: number; name: string; emoji: string | null; active: boolean} | null;
+  list: {
+    id: number;
+    name: string;
+    emoji: string | null;
+    active: boolean;
+  } | null;
   onClose: () => void;
   onSaved: () => Promise<void> | void;
 }) {
