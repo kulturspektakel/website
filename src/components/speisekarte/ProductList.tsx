@@ -36,7 +36,7 @@ export default function ProductList({
 }: {
   productList: {
     description: string | null;
-    product: {
+    products: {
       name: string;
       price: number;
       requiresDeposit: boolean;
@@ -44,15 +44,15 @@ export default function ProductList({
     }[];
   };
 }) {
-  const showDepositText = productList.product.some(
+  const showDepositText = productList.products.some(
     (item) => item.requiresDeposit,
   );
-  const productListLength = productList.product.length;
+  const productListLength = productList.products.length;
 
   return (
     <>
       <ListRoot listStyleType="none" marginInlineStart={0}>
-        {productList.product.map((item, index) => (
+        {productList.products.map((item, index) => (
           <ListItem key={item.name}>
             <HStack justifyContent="space-between" py={1}>
               <Text>

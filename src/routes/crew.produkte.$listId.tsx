@@ -47,11 +47,7 @@ import {FaChevronLeft} from 'react-icons/fa6';
 import {LuPencil} from 'react-icons/lu';
 import {asc, eq, inArray} from 'drizzle-orm';
 import {db, type DbTransaction} from '../server/db.server';
-import {
-  product,
-  productList,
-  productToProductAdditives,
-} from '../server/db/schema';
+import {product, productList, productAdditiveLink} from '../server/db/schema';
 import {createServerFn} from '@tanstack/react-start';
 import {crewAuth} from '../server/crewAuth';
 import {seo} from '../utils/seo';
@@ -128,7 +124,7 @@ const getProductList = createServerFn()
             minimumAge: true,
           },
           with: {
-            productToProductAdditives: {
+            additiveLinks: {
               columns: {},
               with: {
                 productAdditive: {columns: {id: true, displayName: true}},
@@ -141,11 +137,11 @@ const getProductList = createServerFn()
     if (!list) {
       throw notFound();
     }
-    // The shape the editor works with: `product`, each with its `additives`.
+    // Each product with its additives rather than the link rows.
     const {products, ...rest} = list;
     return {
       ...rest,
-      product: products.map(({productToProductAdditives: links, ...p}) => ({
+      products: products.map(({additiveLinks: links, ...p}) => ({
         ...p,
         additives: links.map((link) => link.productAdditive),
       })),
@@ -161,21 +157,20 @@ const productFields = z.object({
   additiveIds: z.array(z.string()),
 });
 
-// A product's additives, replaced by exactly these (Prisma's `set`). Duplicate
-// ids collapse, as they did there.
+// A product's additives, replaced by exactly these. Duplicate ids collapse.
 async function setAdditives(
   tx: DbTransaction,
   productId: number,
   additiveIds: string[],
 ) {
   await tx
-    .delete(productToProductAdditives)
-    .where(eq(productToProductAdditives.A, productId));
+    .delete(productAdditiveLink)
+    .where(eq(productAdditiveLink.productId, productId));
   const ids = [...new Set(additiveIds)];
   if (ids.length) {
     await tx
-      .insert(productToProductAdditives)
-      .values(ids.map((B) => ({A: productId, B})));
+      .insert(productAdditiveLink)
+      .values(ids.map((productAdditiveId) => ({productId, productAdditiveId})));
   }
 }
 
@@ -268,7 +263,7 @@ export const Route = createFileRoute('/crew/produkte/$listId')({
 });
 
 type ListData = Awaited<ReturnType<typeof getProductList>>;
-type ProductData = ListData['product'][number];
+type ProductData = ListData['products'][number];
 
 function ProductListEditor() {
   const {listId} = Route.useParams();
@@ -351,7 +346,7 @@ function Products({
   onSaved: () => Promise<void> | void;
 }) {
   const listId = list.id;
-  const products = list.product;
+  const products = list.products;
   const [draft, setDraft] = useState<DraftProduct[]>(() =>
     products.map(toDraft),
   );

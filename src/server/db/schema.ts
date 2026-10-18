@@ -888,33 +888,35 @@ export const productAdditives = pgTable('ProductAdditives', {
   displayName: text().notNull(),
 });
 
-export const productToProductAdditives = pgTable(
-  '_ProductToProductAdditives',
+// Which additives a product contains.
+export const productAdditiveLink = pgTable(
+  'ProductAdditiveLink',
   {
-    // Prisma's implicit many-to-many join table. The keys match the column
-    // names: drizzle-kit compares the composite primary key by key.
-    A: integer().notNull(),
-    B: text().notNull(),
+    productId: integer().notNull(),
+    productAdditiveId: text().notNull(),
   },
   (table) => [
-    index().using('btree', table.B),
+    index('ProductAdditiveLink_productAdditiveId_idx').using(
+      'btree',
+      table.productAdditiveId,
+    ),
     foreignKey({
-      columns: [table.A],
+      columns: [table.productId],
       foreignColumns: [product.id],
-      name: '_ProductToProductAdditives_A_fkey',
+      name: 'ProductAdditiveLink_productId_fkey',
     })
       .onUpdate('cascade')
       .onDelete('cascade'),
     foreignKey({
-      columns: [table.B],
+      columns: [table.productAdditiveId],
       foreignColumns: [productAdditives.id],
-      name: '_ProductToProductAdditives_B_fkey',
+      name: 'ProductAdditiveLink_productAdditiveId_fkey',
     })
       .onUpdate('cascade')
       .onDelete('cascade'),
     primaryKey({
-      columns: [table.A, table.B],
-      name: '_ProductToProductAdditives_AB_pkey',
+      columns: [table.productId, table.productAdditiveId],
+      name: 'ProductAdditiveLink_pkey',
     }),
   ],
 );

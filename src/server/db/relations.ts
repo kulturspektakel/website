@@ -26,7 +26,7 @@ import {
   orderItem,
   product,
   viewerLocation,
-  productToProductAdditives,
+  productAdditiveLink,
   productAdditives,
   bandApplicationRating,
 } from './schema';
@@ -285,7 +285,7 @@ export const productRelations = relations(product, ({one, many}) => ({
     fields: [product.productListId],
     references: [productList.id],
   }),
-  productToProductAdditives: many(productToProductAdditives),
+  additiveLinks: many(productAdditiveLink),
 }));
 
 export const viewerLocationRelations = relations(viewerLocation, ({one}) => ({
@@ -295,15 +295,15 @@ export const viewerLocationRelations = relations(viewerLocation, ({one}) => ({
   }),
 }));
 
-export const productToProductAdditivesRelations = relations(
-  productToProductAdditives,
+export const productAdditiveLinkRelations = relations(
+  productAdditiveLink,
   ({one}) => ({
     product: one(product, {
-      fields: [productToProductAdditives.A],
+      fields: [productAdditiveLink.productId],
       references: [product.id],
     }),
     productAdditive: one(productAdditives, {
-      fields: [productToProductAdditives.B],
+      fields: [productAdditiveLink.productAdditiveId],
       references: [productAdditives.id],
     }),
   }),
@@ -312,7 +312,7 @@ export const productToProductAdditivesRelations = relations(
 export const productAdditivesRelations = relations(
   productAdditives,
   ({many}) => ({
-    productToProductAdditives: many(productToProductAdditives),
+    productLinks: many(productAdditiveLink),
   }),
 );
 

@@ -9,7 +9,7 @@ import {
   product,
   productAdditives,
   productList,
-  productToProductAdditives,
+  productAdditiveLink,
 } from '../server/db/schema';
 import {seo} from '../utils/seo';
 
@@ -29,12 +29,12 @@ function productFilter(
     case 'glutenfrei':
       return notExists(
         db
-          .select({a: productToProductAdditives.A})
-          .from(productToProductAdditives)
+          .select({productId: productAdditiveLink.productId})
+          .from(productAdditiveLink)
           .where(
             and(
-              eq(productToProductAdditives.A, p.id),
-              eq(productToProductAdditives.B, 'A'),
+              eq(productAdditiveLink.productId, p.id),
+              eq(productAdditiveLink.productAdditiveId, 'A'),
             ),
           ),
       );
@@ -47,7 +47,10 @@ const loader = createServerFn()
   .validator((data: {filter?: DietFilter}) => data)
   .handler(async ({data}) => {
     const additives = await db
-      .select({id: productAdditives.id, displayName: productAdditives.displayName})
+      .select({
+        id: productAdditives.id,
+        displayName: productAdditives.displayName,
+      })
       .from(productAdditives)
       .orderBy(asc(productAdditives.id));
 
@@ -77,7 +80,7 @@ const loader = createServerFn()
           where: (p) => productFilter(data.filter, p),
           columns: {id: true, name: true, price: true, requiresDeposit: true},
           with: {
-            productToProductAdditives: {
+            additiveLinks: {
               columns: {},
               with: {
                 productAdditive: {columns: {id: true, displayName: true}},
@@ -87,10 +90,10 @@ const loader = createServerFn()
         },
       },
     });
-    // The shape the page renders (Prisma's: `product`, `additives`).
+    // Each product with its additives rather than the link rows.
     const lists = rows.map(({products, ...list}) => ({
       ...list,
-      product: products.map(({productToProductAdditives: links, ...p}) => ({
+      products: products.map(({additiveLinks: links, ...p}) => ({
         ...p,
         additives: links.map((link) => link.productAdditive),
       })),
