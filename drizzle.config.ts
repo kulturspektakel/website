@@ -2,12 +2,10 @@ import 'dotenv/config';
 import {defineConfig} from 'drizzle-kit';
 
 // drizzle-kit needs a direct connection: Neon's pooler doesn't support
-// everything introspection and DDL use, and `pgbouncer=true` is a Prisma-only
-// parameter that node-postgres would send to the server as a setting.
+// everything introspection and DDL use.
 function directUrl(url: string) {
   const u = new URL(url);
   u.hostname = u.hostname.replace('-pooler.', '.');
-  u.searchParams.delete('pgbouncer');
   return u.toString();
 }
 
