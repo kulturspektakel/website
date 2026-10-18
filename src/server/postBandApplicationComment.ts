@@ -1,6 +1,7 @@
 import {createServerFn} from '@tanstack/react-start';
 import {z} from 'zod';
 import {crewAuth} from './crewAuth';
+import {bandApplicationComment} from './db/schema';
 import {withTxid} from './withTxid.server';
 
 // Post a comment on a band application. The client picks the id, so its
@@ -24,13 +25,11 @@ export const postBandApplicationComment = createServerFn()
       throw new Error('Unauthorized');
     }
     return withTxid((tx) =>
-      tx.bandApplicationComment.create({
-        data: {
-          id: data.id,
-          viewerId,
-          bandApplicationId: data.applicationId,
-          comment: data.comment,
-        },
+      tx.insert(bandApplicationComment).values({
+        id: data.id,
+        viewerId,
+        bandApplicationId: data.applicationId,
+        comment: data.comment,
       }),
     );
   });

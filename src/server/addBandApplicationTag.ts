@@ -1,6 +1,7 @@
 import {createServerFn} from '@tanstack/react-start';
 import {z} from 'zod';
 import {crewAuth} from './crewAuth';
+import {bandApplicationTag} from './db/schema';
 import {withTxid} from './withTxid.server';
 
 // Add a tag to an application (idempotent — the [bandApplicationId, tag] pair is
@@ -17,19 +18,14 @@ export const addBandApplicationTag = createServerFn()
       throw new Error('Unauthorized');
     }
     return withTxid((tx) =>
-      tx.bandApplicationTag.upsert({
-        where: {
-          bandApplicationId_tag: {
-            bandApplicationId: data.applicationId,
-            tag: data.tag,
-          },
-        },
-        create: {
+      tx
+        .insert(bandApplicationTag)
+        .values({
           bandApplicationId: data.applicationId,
           tag: data.tag,
           createdByViewerId: viewerId,
-        },
-        update: {},
-      }),
+        })
+        // Already there, in any casing (citext unique key): nothing to do.
+        .onConflictDoNothing(),
     );
   });

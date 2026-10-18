@@ -1,6 +1,8 @@
 import {createServerFn} from '@tanstack/react-start';
 import {z} from 'zod';
 import {crewAuth} from './crewAuth';
+import {and, eq} from 'drizzle-orm';
+import {bandApplicationComment} from './db/schema';
 import {withTxid} from './withTxid.server';
 
 // Delete one of your own comments on a band application.
@@ -17,8 +19,13 @@ export const deleteBandApplicationComment = createServerFn()
       throw new Error('Unauthorized');
     }
     return withTxid((tx) =>
-      tx.bandApplicationComment.deleteMany({
-        where: {id: data.commentId, viewerId},
-      }),
+      tx
+        .delete(bandApplicationComment)
+        .where(
+          and(
+            eq(bandApplicationComment.id, data.commentId),
+            eq(bandApplicationComment.viewerId, viewerId),
+          ),
+        ),
     );
   });

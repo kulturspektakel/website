@@ -1,6 +1,8 @@
 import {createServerFn} from '@tanstack/react-start';
 import {z} from 'zod';
 import {crewAuth} from './crewAuth';
+import {eq} from 'drizzle-orm';
+import {bandApplication} from './db/schema';
 import {withTxid} from './withTxid.server';
 
 // Persist (or clear) the "Bühne" stage-assignment for a band application. The
@@ -22,12 +24,18 @@ export const setBandApplicationStage = createServerFn()
       throw new Error('Unauthorized');
     }
     const clear = data.row == null || data.col == null;
-    return withTxid((tx) =>
-      tx.bandApplication.update({
-        where: {id: data.applicationId},
-        data: clear
-          ? {stageRow: null, stageColumn: null}
-          : {stageRow: data.row, stageColumn: data.col},
-      }),
-    );
+    return withTxid(async (tx) => {
+      const updated = await tx
+        .update(bandApplication)
+        .set(
+          clear
+            ? {stageRow: null, stageColumn: null}
+            : {stageRow: data.row, stageColumn: data.col},
+        )
+        .where(eq(bandApplication.id, data.applicationId))
+        .returning({id: bandApplication.id});
+      if (updated.length === 0) {
+        throw new Error(`BandApplication ${data.applicationId} not found`);
+      }
+    });
   });

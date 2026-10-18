@@ -8,7 +8,9 @@ import {
 import {useMutation} from '@tanstack/react-query';
 import {z} from 'zod';
 import {Button, Input, Stack, Textarea} from '@chakra-ui/react';
-import {prismaClient} from '../server/prismaClient.server';
+import {asc, eq} from 'drizzle-orm';
+import {db} from '../server/db.server';
+import {area, bandApplication, event as eventTable} from '../server/db/schema';
 import {createServerFn} from '@tanstack/react-start';
 import {crewAuth} from '../server/crewAuth';
 import {enqueueGcpTask} from '../server/enqueueGcpTask.server';
@@ -40,31 +42,31 @@ const loadContactData = createServerFn()
   .middleware([crewAuth])
   .validator((applicationId: string) => applicationId)
   .handler(async ({data: applicationId}) => {
-    const application = await prismaClient.bandApplication.findUnique({
-      where: {id: applicationId},
-      select: {
+    const application = await db.query.bandApplication.findFirst({
+      where: eq(bandApplication.id, applicationId),
+      columns: {
         id: true,
         bandname: true,
         contactName: true,
         email: true,
         eventId: true,
         lastContactedAt: true,
-        contactedByViewer: {select: {displayName: true}},
       },
+      with: {viewer: {columns: {displayName: true}}},
     });
     if (!application) {
       throw notFound();
     }
     const [event, stages] = await Promise.all([
-      prismaClient.event.findUnique({
-        where: {id: application.eventId},
-        select: {name: true, start: true, end: true},
+      db.query.event.findFirst({
+        where: eq(eventTable.id, application.eventId),
+        columns: {name: true, start: true, end: true},
       }),
       // Areas are global (no event relation); some may not be band stages.
-      prismaClient.area.findMany({
-        select: {id: true, displayName: true},
-        orderBy: {order: 'asc'},
-      }),
+      db
+        .select({id: area.id, displayName: area.displayName})
+        .from(area)
+        .orderBy(asc(area.order)),
     ]);
     if (!event) {
       throw notFound();
@@ -79,7 +81,7 @@ const loadContactData = createServerFn()
       end: event.end,
       stages,
       lastContactedAt: application.lastContactedAt,
-      contactedBy: application.contactedByViewer?.displayName ?? null,
+      contactedBy: application.viewer?.displayName ?? null,
     };
   });
 
@@ -102,13 +104,13 @@ const sendBandContactEmail = createServerFn()
       subject: data.subject,
       text: data.body,
     });
-    await prismaClient.bandApplication.update({
-      where: {id: data.applicationId},
-      data: {
+    await db
+      .update(bandApplication)
+      .set({
         lastContactedAt: new Date(),
         contactedByViewerId: context.viewer?.id ?? null,
-      },
-    });
+      })
+      .where(eq(bandApplication.id, data.applicationId));
   });
 
 // ---------------------------------------------------------------------------

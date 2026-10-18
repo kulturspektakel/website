@@ -1,6 +1,8 @@
 import {createServerFn} from '@tanstack/react-start';
 import {z} from 'zod';
 import {crewAuth} from './crewAuth';
+import {and, eq} from 'drizzle-orm';
+import {bandApplicationRating} from './db/schema';
 import {withTxid} from './withTxid.server';
 
 // Create/update (or clear) the viewer's own rating for a band application.
@@ -22,26 +24,32 @@ export const rateBandApplication = createServerFn()
       // with no Slack-keyed Viewer.
       throw new Error('Unauthorized');
     }
-    return withTxid((tx) =>
-      data.rating === 0
-        ? // Clearing the rating: remove the row (deleteMany won't throw when
-          // absent).
-          tx.bandApplicationRating.deleteMany({
-            where: {viewerId, bandApplicationId: data.applicationId},
-          })
-        : tx.bandApplicationRating.upsert({
-            where: {
-              viewerId_bandApplicationId: {
-                viewerId,
-                bandApplicationId: data.applicationId,
-              },
-            },
-            create: {
-              viewerId,
-              bandApplicationId: data.applicationId,
-              rating: data.rating,
-            },
-            update: {rating: data.rating},
-          }),
-    );
+    return withTxid(async (tx) => {
+      if (data.rating === 0) {
+        // Clearing the rating: remove the row (a no-op when there is none).
+        await tx
+          .delete(bandApplicationRating)
+          .where(
+            and(
+              eq(bandApplicationRating.viewerId, viewerId),
+              eq(bandApplicationRating.bandApplicationId, data.applicationId),
+            ),
+          );
+        return;
+      }
+      await tx
+        .insert(bandApplicationRating)
+        .values({
+          viewerId,
+          bandApplicationId: data.applicationId,
+          rating: data.rating,
+        })
+        .onConflictDoUpdate({
+          target: [
+            bandApplicationRating.viewerId,
+            bandApplicationRating.bandApplicationId,
+          ],
+          set: {rating: data.rating},
+        });
+    });
   });

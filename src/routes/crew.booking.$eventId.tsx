@@ -48,7 +48,9 @@ import {useVirtualizer} from '@tanstack/react-virtual';
 import type {WithVirtualProps} from '@tanstack/react-db';
 
 import {BAND_GENRE_CATEGORY_OPTIONS} from '../utils/genreCategories';
-import {prismaClient} from '../server/prismaClient.server';
+import {eq} from 'drizzle-orm';
+import {db} from '../server/db.server';
+import {bandPlaying, event as eventTable} from '../server/db/schema';
 import {sealBookingQueries} from '../server/realtime.server';
 import {Tooltip} from '../components/chakra-snippets/tooltip';
 import {BandName} from '../components/booking/BandName';
@@ -107,15 +109,15 @@ const loadBookingPage = createServerFn()
   .handler(async ({data: eventId}) => {
     const prevId = previousEventId(eventId);
     const [event, lastYearBands] = await Promise.all([
-      prismaClient.event.findUnique({
-        where: {id: eventId},
-        select: {id: true},
+      db.query.event.findFirst({
+        where: eq(eventTable.id, eventId),
+        columns: {id: true},
       }),
       prevId
-        ? prismaClient.bandPlaying.findMany({
-            where: {eventId: prevId},
-            select: {name: true},
-          })
+        ? db
+            .select({name: bandPlaying.name})
+            .from(bandPlaying)
+            .where(eq(bandPlaying.eventId, prevId))
         : [],
     ]);
     if (!event) {

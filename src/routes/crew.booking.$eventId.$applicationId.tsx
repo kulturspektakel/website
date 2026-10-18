@@ -42,7 +42,9 @@ import {
   FaRegTrashCan,
 } from 'react-icons/fa6';
 import {BandRepertoire, DemoEmbedType, GenreCategory, PreviouslyPlayed} from '../utils/enums';
-import {prismaClient} from '../server/prismaClient.server';
+import {and, eq, ne} from 'drizzle-orm';
+import {db} from '../server/db.server';
+import {bandApplication, bandPlaying} from '../server/db/schema';
 import {Avatar} from '../components/chakra-snippets/avatar';
 import {BandName} from '../components/booking/BandName';
 import {BandApplicationRating} from '../components/booking/BandApplicationRating';
@@ -99,9 +101,13 @@ const loadBandApplicationDetail = createServerFn()
   .handler(async ({data: {eventId, applicationId: id}}) => {
     // Only applications the booking table lists (this event, no DJs), so the
     // modal always has a live row to show.
-    const a = await prismaClient.bandApplication.findFirst({
-      where: {id, eventId, genreCategory: {not: GenreCategory.DJ}},
-      select: {
+    const a = await db.query.bandApplication.findFirst({
+      where: and(
+        eq(bandApplication.id, id),
+        eq(bandApplication.eventId, eventId),
+        ne(bandApplication.genreCategory, GenreCategory.DJ),
+      ),
+      columns: {
         id: true,
         bandname: true,
         genre: true,
@@ -144,24 +150,32 @@ const loadBandApplicationDetail = createServerFn()
     // lean select and filter in JS so the exact normalization is reused.
     const norm = normalizeBandName(a.bandname);
     const [allApplications, allPerformances] = await Promise.all([
-      prismaClient.bandApplication.findMany({
-        select: {
-          id: true,
-          bandname: true,
-          createdAt: true,
-          lastContactedAt: true,
-          event: {select: {name: true}},
-          contactedByViewer: {select: {displayName: true}},
-          bandApplicationRating: {select: {rating: true}},
-        },
-      }),
-      prismaClient.bandPlaying.findMany({
-        select: {
-          name: true,
-          startTime: true,
-          endTime: true,
-          area: {select: {displayName: true}},
-          event: {select: {name: true}},
+      db.query.bandApplication
+        .findMany({
+          columns: {
+            id: true,
+            bandname: true,
+            createdAt: true,
+            lastContactedAt: true,
+          },
+          with: {
+            event: {columns: {name: true}},
+            viewer: {columns: {displayName: true}},
+            bandApplicationRatings: {columns: {rating: true}},
+          },
+        })
+        .then((rows) =>
+          rows.map(({viewer, bandApplicationRatings, ...x}) => ({
+            ...x,
+            contactedByViewer: viewer,
+            bandApplicationRating: bandApplicationRatings,
+          })),
+        ),
+      db.query.bandPlaying.findMany({
+        columns: {name: true, startTime: true, endTime: true},
+        with: {
+          area: {columns: {displayName: true}},
+          event: {columns: {name: true}},
         },
       }),
     ]);
