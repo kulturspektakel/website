@@ -1,7 +1,9 @@
 import {createFileRoute, Outlet} from '@tanstack/react-router';
 import {Container} from '@chakra-ui/react';
 import {z} from 'zod';
-import {prismaClient} from '../server/prismaClient.server';
+import {asc, eq} from 'drizzle-orm';
+import {db} from '../server/db.server';
+import {productAdditives, productList} from '../server/db/schema';
 import {createServerFn} from '@tanstack/react-start';
 import {crewAuth} from '../server/crewAuth';
 import {seo} from '../utils/seo';
@@ -9,30 +11,28 @@ import {seo} from '../utils/seo';
 export const listProductLists = createServerFn()
   .middleware([crewAuth])
   .handler(async () => {
-    const lists = await prismaClient.productList.findMany({
-      orderBy: {name: 'asc'},
-      select: {
-        id: true,
-        name: true,
-        emoji: true,
-        active: true,
-        updatedAt: true,
-        lastUpdatedByViewer: {select: {displayName: true}},
-      },
+    const lists = await db.query.productList.findMany({
+      orderBy: asc(productList.name),
+      columns: {id: true, name: true, emoji: true, active: true, updatedAt: true},
+      // `viewer` is whoever last updated the list.
+      with: {viewer: {columns: {displayName: true}}},
     });
-    return lists.map(({lastUpdatedByViewer, ...l}) => ({
+    return lists.map(({viewer, ...l}) => ({
       ...l,
-      updatedByName: lastUpdatedByViewer?.displayName ?? null,
+      updatedByName: viewer?.displayName ?? null,
     }));
   });
 
 export const listAdditives = createServerFn()
   .middleware([crewAuth])
   .handler(async () => {
-    return prismaClient.productAdditives.findMany({
-      orderBy: {displayName: 'asc'},
-      select: {id: true, displayName: true},
-    });
+    return db
+      .select({
+        id: productAdditives.id,
+        displayName: productAdditives.displayName,
+      })
+      .from(productAdditives)
+      .orderBy(asc(productAdditives.displayName));
   });
 
 const emoji = z
@@ -51,10 +51,11 @@ export const createProductList = createServerFn()
   .middleware([crewAuth])
   .validator(createProductListInput)
   .handler(async ({data}) => {
-    return prismaClient.productList.create({
-      data: {name: data.name, emoji: data.emoji},
-      select: {id: true},
-    });
+    const [created] = await db
+      .insert(productList)
+      .values({name: data.name, emoji: data.emoji})
+      .returning({id: productList.id});
+    return created;
   });
 
 export const updateProductListInput = z.object({
@@ -68,16 +69,20 @@ export const updateProductList = createServerFn()
   .middleware([crewAuth])
   .validator(updateProductListInput)
   .handler(async ({data, context}) => {
-    await prismaClient.productList.update({
-      where: {id: data.id},
-      data: {
+    const updated = await db
+      .update(productList)
+      .set({
         name: data.name,
         emoji: data.emoji,
         active: data.active,
         updatedAt: new Date(),
         lastUpdatedBy: context.viewer?.id ?? null,
-      },
-    });
+      })
+      .where(eq(productList.id, data.id))
+      .returning({id: productList.id});
+    if (updated.length === 0) {
+      throw new Error(`ProductList ${data.id} not found`);
+    }
   });
 
 export const Route = createFileRoute('/crew/produkte')({

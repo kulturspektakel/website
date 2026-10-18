@@ -45,7 +45,13 @@ import {
 import {CSS} from '@dnd-kit/utilities';
 import {FaChevronLeft} from 'react-icons/fa6';
 import {LuPencil} from 'react-icons/lu';
-import {prismaClient} from '../server/prismaClient.server';
+import {asc, eq, inArray} from 'drizzle-orm';
+import {db, type DbTransaction} from '../server/db.server';
+import {
+  product,
+  productList,
+  productToProductAdditives,
+} from '../server/db/schema';
 import {createServerFn} from '@tanstack/react-start';
 import {crewAuth} from '../server/crewAuth';
 import {seo} from '../utils/seo';
@@ -106,16 +112,13 @@ const getProductList = createServerFn()
     if (!Number.isInteger(id)) {
       throw notFound();
     }
-    const list = await prismaClient.productList.findUnique({
-      where: {id},
-      select: {
-        id: true,
-        name: true,
-        emoji: true,
-        active: true,
-        product: {
-          orderBy: {order: 'asc'},
-          select: {
+    const list = await db.query.productList.findFirst({
+      where: eq(productList.id, id),
+      columns: {id: true, name: true, emoji: true, active: true},
+      with: {
+        products: {
+          orderBy: asc(product.order),
+          columns: {
             id: true,
             name: true,
             price: true,
@@ -123,7 +126,14 @@ const getProductList = createServerFn()
             requiresDeposit: true,
             diet: true,
             minimumAge: true,
-            additives: {select: {id: true, displayName: true}},
+          },
+          with: {
+            productToProductAdditives: {
+              columns: {},
+              with: {
+                productAdditive: {columns: {id: true, displayName: true}},
+              },
+            },
           },
         },
       },
@@ -131,7 +141,15 @@ const getProductList = createServerFn()
     if (!list) {
       throw notFound();
     }
-    return list;
+    // The shape the editor works with: `product`, each with its `additives`.
+    const {products, ...rest} = list;
+    return {
+      ...rest,
+      product: products.map(({productToProductAdditives: links, ...p}) => ({
+        ...p,
+        additives: links.map((link) => link.productAdditive),
+      })),
+    };
   });
 
 const productFields = z.object({
@@ -142,6 +160,24 @@ const productFields = z.object({
   minimumAge: z.enum(AGE_VALUES),
   additiveIds: z.array(z.string()),
 });
+
+// A product's additives, replaced by exactly these (Prisma's `set`). Duplicate
+// ids collapse, as they did there.
+async function setAdditives(
+  tx: DbTransaction,
+  productId: number,
+  additiveIds: string[],
+) {
+  await tx
+    .delete(productToProductAdditives)
+    .where(eq(productToProductAdditives.A, productId));
+  const ids = [...new Set(additiveIds)];
+  if (ids.length) {
+    await tx
+      .insert(productToProductAdditives)
+      .values(ids.map((B) => ({A: productId, B})));
+  }
+}
 
 /**
  * Persist the whole desired product list in one transaction: products with an
@@ -162,52 +198,58 @@ const saveProducts = createServerFn()
   )
   .handler(async ({data, context}) => {
     const lastUpdatedBy = context.viewer?.id ?? null;
-    const existing = await prismaClient.product.findMany({
-      where: {productListId: data.productListId},
-      select: {id: true},
-    });
+    const existing = await db
+      .select({id: product.id})
+      .from(product)
+      .where(eq(product.productListId, data.productListId));
     const keep = new Set(
       data.products.flatMap((p) => (p.id == null ? [] : [p.id])),
     );
     const toDelete = existing.filter((e) => !keep.has(e.id)).map((e) => e.id);
 
-    await prismaClient.$transaction([
-      ...(toDelete.length
-        ? [prismaClient.product.deleteMany({where: {id: {in: toDelete}}})]
-        : []),
-      ...data.products.map((p, index) =>
-        p.id == null
-          ? prismaClient.product.create({
-              data: {
-                productListId: data.productListId,
-                name: p.name,
-                price: p.price,
-                order: index,
-                requiresDeposit: p.requiresDeposit,
-                diet: p.diet,
-                minimumAge: p.minimumAge,
-                additives: {connect: p.additiveIds.map((id) => ({id}))},
-              },
-            })
-          : prismaClient.product.update({
-              where: {id: p.id},
-              data: {
-                name: p.name,
-                price: p.price,
-                order: index,
-                requiresDeposit: p.requiresDeposit,
-                diet: p.diet,
-                minimumAge: p.minimumAge,
-                additives: {set: p.additiveIds.map((id) => ({id}))},
-              },
-            }),
-      ),
+    await db.transaction(async (tx) => {
+      // Their additive links go with them (the join table cascades).
+      if (toDelete.length) {
+        await tx.delete(product).where(inArray(product.id, toDelete));
+      }
+      for (const [index, p] of data.products.entries()) {
+        const fields = {
+          name: p.name,
+          price: p.price,
+          order: index,
+          requiresDeposit: p.requiresDeposit,
+          diet: p.diet,
+          minimumAge: p.minimumAge,
+        };
+        let productId: number;
+        if (p.id == null) {
+          [{id: productId}] = await tx
+            .insert(product)
+            .values({productListId: data.productListId, ...fields})
+            .returning({id: product.id});
+        } else {
+          const updated = await tx
+            .update(product)
+            .set(fields)
+            .where(eq(product.id, p.id))
+            .returning({id: product.id});
+          if (updated.length === 0) {
+            throw new Error(`Product ${p.id} not found`);
+          }
+          productId = p.id;
+        }
+        await setAdditives(tx, productId, p.additiveIds);
+      }
       // Adding/editing/deleting/reordering products counts as editing the bude.
-      prismaClient.productList.update({
-        where: {id: data.productListId},
-        data: {updatedAt: new Date(), lastUpdatedBy},
-      }),
-    ]);
+      const touched = await tx
+        .update(productList)
+        .set({updatedAt: new Date(), lastUpdatedBy})
+        .where(eq(productList.id, data.productListId))
+        .returning({id: productList.id});
+      if (touched.length === 0) {
+        throw new Error(`ProductList ${data.productListId} not found`);
+      }
+    });
   });
 
 // ---------------------------------------------------------------------------
