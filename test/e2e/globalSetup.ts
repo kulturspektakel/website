@@ -8,6 +8,7 @@ import {PGLiteSocketServer} from '@electric-sql/pglite-socket';
 import {spawn} from 'node:child_process';
 import {drizzle} from 'drizzle-orm/pglite';
 import {migrate} from 'drizzle-orm/pglite/migrator';
+import {E2E_JWT_SECRET} from './secrets';
 import {createServer} from 'node:net';
 import {existsSync, readFileSync} from 'node:fs';
 
@@ -85,7 +86,13 @@ export default async function setup({
     'node_modules/.bin/vite',
     ['dev', '--port', String(serverPort), '--strictPort'],
     {
-      env: {...process.env, DB_DRIVER: 'pg', TEST_DATABASE_URL: dbUrl},
+      env: {
+        ...process.env,
+        DB_DRIVER: 'pg',
+        TEST_DATABASE_URL: dbUrl,
+        // Never the real one: OwnTracks passwords are derived from it.
+        JWT_SECRET: E2E_JWT_SECRET,
+      },
       stdio: 'ignore',
     },
   );

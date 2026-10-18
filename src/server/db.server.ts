@@ -1,7 +1,6 @@
 import {createRequire} from 'node:module';
 import {Pool, neonConfig} from '@neondatabase/serverless';
 import {drizzle} from 'drizzle-orm/neon-serverless';
-import {DrizzleQueryError} from 'drizzle-orm/errors';
 import ws from 'ws';
 import * as relations from './db/relations';
 import * as tables from './db/schema';
@@ -53,11 +52,17 @@ export type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 // Either `db` or a transaction, for helpers that work both ways.
 export type DbExecutor = typeof db | DbTransaction;
 
+// Drizzle wraps driver errors in a `DrizzleQueryError` whose `cause` carries
+// the Postgres code. Not checked with `instanceof`: in tests the driver comes
+// from drizzle-orm's CommonJS build (see `createRequire` above), whose class is
+// a different one.
+const hasPgCode = (e: unknown, code: string) =>
+  (e as {cause?: {code?: unknown}} | undefined)?.cause?.code === code;
+
 // Whether a query failed on a unique constraint (Postgres 23505), for writes
 // that can't skip a duplicate up front.
-export function isUniqueViolation(e: unknown) {
-  return (
-    e instanceof DrizzleQueryError &&
-    (e.cause as {code?: string} | undefined)?.code === '23505'
-  );
-}
+export const isUniqueViolation = (e: unknown) => hasPgCode(e, '23505');
+
+// Whether a write referenced a row that doesn't exist (Postgres 23503), for
+// writes that let the foreign key check it instead of looking it up first.
+export const isForeignKeyViolation = (e: unknown) => hasPgCode(e, '23503');

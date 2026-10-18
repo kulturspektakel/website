@@ -1,6 +1,6 @@
 import {sub} from 'date-fns';
 import {and, desc, eq, gt, ne} from 'drizzle-orm';
-import {db} from './db.server';
+import {db, isForeignKeyViolation} from './db.server';
 import {viewer as viewerTable, viewerLocation} from './db/schema';
 import {ApiError} from './apiError.server';
 import {ownTracksPassword} from './ownTracksPassword.server';
@@ -122,15 +122,10 @@ async function avatarFace(url: string | null): Promise<string> {
 }
 
 export async function handleOwnTracks(request: Request): Promise<Response> {
+  // The password is derived from the viewer id, so a valid one proves we issued
+  // it. Whether the viewer still exists is checked below.
   const viewerId = viewerIdFromBasicAuth(request);
   if (!viewerId) {
-    throw new ApiError(401, 'Invalid token');
-  }
-  const viewer = await db.query.viewer.findFirst({
-    where: eq(viewerTable.id, viewerId),
-    columns: {id: true},
-  });
-  if (!viewer) {
     throw new ApiError(401, 'Invalid token');
   }
 
@@ -150,14 +145,31 @@ export async function handleOwnTracks(request: Request): Promise<Response> {
     }
   }
 
+  // Location updates are nearly all the traffic. For them the insert's foreign
+  // key checks that the viewer exists, which saves a lookup on every POST;
+  // anything else looks the viewer up.
   if (body?._type === 'location') {
-    await db.insert(viewerLocation).values({
-      latitude: body.lat,
-      longitude: body.lon,
-      viewerId,
-      createdAt: new Date(body.tst * 1000),
-      payload: body,
-    });
+    try {
+      await db.insert(viewerLocation).values({
+        latitude: body.lat,
+        longitude: body.lon,
+        viewerId,
+        createdAt: new Date(body.tst * 1000),
+        payload: body,
+      });
+    } catch (e) {
+      if (isForeignKeyViolation(e)) {
+        throw new ApiError(401, 'Invalid token');
+      }
+      throw e;
+    }
+  } else if (
+    !(await db.query.viewer.findFirst({
+      where: eq(viewerTable.id, viewerId),
+      columns: {id: true},
+    }))
+  ) {
+    throw new ApiError(401, 'Invalid token');
   }
 
   // Reply with the recent locations of all *other* viewers (the OwnTracks

@@ -1,6 +1,7 @@
 import {inject} from 'vitest';
 import {createHash} from 'node:crypto';
 import {Client} from 'pg';
+import {E2E_JWT_SECRET} from './secrets';
 
 /**
  * Shared helpers for the colocated route e2e tests. Connection details come
@@ -25,6 +26,17 @@ export function deviceHeaders(
     Authorization:
       'Basic ' +
       Buffer.from(`${deviceId}:${sign(deviceId)}`).toString('base64'),
+  };
+}
+
+/** Basic auth a viewer's OwnTracks app would send. */
+export function ownTracksHeaders(viewerId: string) {
+  const password = createHash('sha1')
+    .update(viewerId + E2E_JWT_SECRET)
+    .digest('hex');
+  return {
+    Authorization:
+      'Basic ' + Buffer.from(`${viewerId}:${password}`).toString('base64'),
   };
 }
 
