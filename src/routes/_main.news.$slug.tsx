@@ -3,22 +3,17 @@ import {createFileRoute, notFound} from '@tanstack/react-router';
 import {markdownToTxt} from 'markdown-to-txt';
 import {seo} from '../utils/seo';
 import {createServerFn} from '@tanstack/react-start';
-import {prismaClient} from '../server/prismaClient.server';
+import {eq} from 'drizzle-orm';
+import {db} from '../server/db.server';
+import {news} from '../server/db/schema';
 import {markdownText} from '../server/markdownText.server';
 
 const loader = createServerFn()
   .validator((slug: string) => slug)
   .handler(async ({data: slug}) => {
-    const data = await prismaClient.news.findUnique({
-      where: {
-        slug,
-      },
-      select: {
-        title: true,
-        content: true,
-        slug: true,
-        createdAt: true,
-      },
+    const data = await db.query.news.findFirst({
+      where: eq(news.slug, slug),
+      columns: {title: true, content: true, slug: true, createdAt: true},
     });
 
     if (!data) {

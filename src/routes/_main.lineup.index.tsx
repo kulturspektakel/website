@@ -1,27 +1,20 @@
 import {createFileRoute, redirect} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
-import {prismaClient} from '../server/prismaClient.server';
+import {desc} from 'drizzle-orm';
+import {db} from '../server/db.server';
+import {event} from '../server/db/schema';
+import {lineupPublished} from '../server/eventQuery.server';
 
 const firstEventWithBands = createServerFn().handler(async () => {
-  const firstEvent = await prismaClient.event.findFirstOrThrow({
-    where: {
-      eventType: 'Kulturspektakel',
-      BandPlaying: {
-        some: {},
-      },
-      OR: [
-        {lineupAnnouncementTime: {lte: new Date()}},
-        {lineupAnnouncementTime: null},
-      ],
-    },
-    select: {
-      id: true,
-      start: true,
-    },
-    orderBy: {
-      start: 'desc',
-    },
-  });
+  const [firstEvent] = await db
+    .select({id: event.id, start: event.start})
+    .from(event)
+    .where(lineupPublished())
+    .orderBy(desc(event.start))
+    .limit(1);
+  if (!firstEvent) {
+    throw new Error('No festival with a published lineup');
+  }
 
   return firstEvent;
 });

@@ -12,26 +12,25 @@ import Card from '../components/Card';
 import DateString from '../components/DateString';
 import Mark from '../components/Mark';
 import {createServerFn, useServerFn} from '@tanstack/react-start';
-import {prismaClient} from '../server/prismaClient.server';
+import {desc, sql} from 'drizzle-orm';
+import {db} from '../server/db.server';
+import {news} from '../server/db/schema';
 import {markdownPages} from '../server/markdownText.server';
 import {imageUrl} from '../utils/directusImage';
 
 const loader = createServerFn()
   .validator((cursor: string | undefined) => cursor)
   .handler(async ({data: cursor}) => {
-    const data = await prismaClient.news.findMany({
-      select: {
-        title: true,
-        content: true,
-        slug: true,
-        createdAt: true,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: 30,
-      skip: cursor ? 1 : 0,
-      cursor: cursor ? {slug: cursor} : undefined,
+    // `cursor` is the slug of the last article of the previous page; ties on
+    // `createdAt` are broken by slug so none is skipped or repeated.
+    const data = await db.query.news.findMany({
+      columns: {title: true, content: true, slug: true, createdAt: true},
+      where: cursor
+        ? (n) =>
+            sql`(${n.createdAt}, ${n.slug}) < (select "createdAt", "slug" from ${news} where "slug" = ${cursor})`
+        : undefined,
+      orderBy: [desc(news.createdAt), desc(news.slug)],
+      limit: 30,
     });
 
     return await markdownPages(data);

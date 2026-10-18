@@ -18,13 +18,12 @@ import {EventType} from '../utils/enums';
 import {useInfiniteQuery} from '@tanstack/react-query';
 import {useState} from 'react';
 import {seo} from '../utils/seo';
-import {prismaClient} from '../server/prismaClient.server';
+import {listEvents} from '../server/eventQuery.server';
 import {
   directusImage,
   directusImageConnection,
 } from '../server/directusImage.server';
 import {markdownText} from '../server/markdownText.server';
-import {eventSelect} from '../components/events/Event';
 import {immichAlbumAssets} from '../server/immich.server';
 
 const loader = createServerFn()
@@ -32,18 +31,10 @@ const loader = createServerFn()
     (cursor: {cursor?: string; eventType: EventType | 'ALL'}) => cursor,
   )
   .handler(async ({data}) => {
-    const res = await prismaClient.event.findMany({
-      select: eventSelect,
-      orderBy: {
-        start: 'desc',
-      },
-      where: {
-        eventType:
-          data && data.eventType !== 'ALL' ? data.eventType : undefined,
-      },
-      take: 10,
-      skip: data?.cursor ? 1 : 0,
-      cursor: data?.cursor ? {id: data.cursor} : undefined,
+    const res = await listEvents({
+      eventType: data && data.eventType !== 'ALL' ? data.eventType : undefined,
+      cursor: data?.cursor,
+      limit: 10,
     });
 
     return Promise.all(

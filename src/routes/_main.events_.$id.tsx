@@ -8,28 +8,18 @@ import {createFileRoute, notFound} from '@tanstack/react-router';
 import {seo} from '../utils/seo';
 import {markdownToTxt} from 'markdown-to-txt';
 import {createServerFn} from '@tanstack/react-start';
-import {prismaClient} from '../server/prismaClient.server';
+import {findEvent} from '../server/eventQuery.server';
 import {
   directusImage,
   directusImageConnection,
 } from '../server/directusImage.server';
 import {markdownText} from '../server/markdownText.server';
-import {eventSelect} from '../components/events/Event';
 import {immichAlbumAssets} from '../server/immich.server';
 
 const loader = createServerFn()
   .validator((eventId: string) => eventId)
   .handler(async ({data: eventId}) => {
-    const data = await prismaClient.event.findUnique({
-      where: {
-        id: eventId,
-      },
-      select: {
-        ...eventSelect,
-        latitude: true,
-        longitude: true,
-      },
-    });
+    const data = await findEvent(eventId);
 
     if (!data) {
       throw notFound();

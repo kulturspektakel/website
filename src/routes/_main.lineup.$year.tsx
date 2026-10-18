@@ -4,38 +4,36 @@ import {isSameDay, timeZone} from '../utils/dateUtils';
 import {SegmentedControlOrSelect} from '../components/SegmentedControlOrSelect';
 import {createFileRoute, useNavigate} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
-import {prismaClient} from '../server/prismaClient.server';
+import {asc, eq} from 'drizzle-orm';
+import {db} from '../server/db.server';
+import {area, bandPlaying} from '../server/db/schema';
 import {seo} from '../utils/seo';
 
 const loader = createServerFn()
   .validator((data: {year: string}) => data)
   .handler(async ({data}) => {
-    const bands = await prismaClient.bandPlaying.findMany({
-      where: {
-        eventId: `kult${data.year}`,
-      },
-      select: {
-        name: true,
-        slug: true,
-        photo: true,
-        startTime: true,
-        genre: true,
-        areaId: true,
-        spotifyPreviewUrl: true,
-      },
-      orderBy: {
-        startTime: 'asc',
-      },
-    });
+    const bands = await db
+      .select({
+        name: bandPlaying.name,
+        slug: bandPlaying.slug,
+        photo: bandPlaying.photo,
+        startTime: bandPlaying.startTime,
+        genre: bandPlaying.genre,
+        areaId: bandPlaying.areaId,
+        spotifyPreviewUrl: bandPlaying.spotifyPreviewUrl,
+      })
+      .from(bandPlaying)
+      .where(eq(bandPlaying.eventId, `kult${data.year}`))
+      .orderBy(asc(bandPlaying.startTime));
 
-    const areas = await prismaClient.area.findMany({
-      select: {
-        id: true,
-        displayName: true,
-        themeColor: true,
-        order: true,
-      },
-    });
+    const areas = await db
+      .select({
+        id: area.id,
+        displayName: area.displayName,
+        themeColor: area.themeColor,
+        order: area.order,
+      })
+      .from(area);
 
     return {
       bands,

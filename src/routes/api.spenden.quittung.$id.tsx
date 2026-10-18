@@ -1,5 +1,7 @@
 import {createFileRoute} from '@tanstack/react-router';
-import {prismaClient} from '../server/prismaClient.server';
+import {and, eq, isNotNull} from 'drizzle-orm';
+import {db} from '../server/db.server';
+import {donation as donationTable} from '../server/db/schema';
 
 export const Route = createFileRoute('/api/spenden/quittung/$id')({
   server: {
@@ -10,8 +12,8 @@ export const Route = createFileRoute('/api/spenden/quittung/$id')({
             ? 'http://localhost:3000'
             : 'https://www.kulturspektakel.de';
 
-        const donation = await prismaClient.donation.findFirstOrThrow({
-          select: {
+        const donation = await db.query.donation.findFirst({
+          columns: {
             id: true,
             amount: true,
             createdAt: true,
@@ -20,13 +22,14 @@ export const Route = createFileRoute('/api/spenden/quittung/$id')({
             quittungCity: true,
             spendenQuittungAt: true,
           },
-          where: {
-            id: params.id,
-            spendenQuittungAt: {
-              not: null,
-            },
-          },
+          where: and(
+            eq(donationTable.id, params.id),
+            isNotNull(donationTable.spendenQuittungAt),
+          ),
         });
+        if (!donation) {
+          throw new Error(`No receipt for donation ${params.id}`);
+        }
 
         // Deliberately dynamic: `@react-pdf/renderer` and its dependencies
         // (brotli, fontkit, pdfkit, yoga-layout) are ~213 ms of cold-start CPU,

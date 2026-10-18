@@ -1,21 +1,22 @@
 import {Alert} from '../chakra-snippets/alert';
 import {useLoaderData} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
-import {prismaClient} from '../../server/prismaClient.server';
+import {and, eq, sql} from 'drizzle-orm';
+import {db} from '../../server/db.server';
+import {bandApplication} from '../../server/db/schema';
 import {useQuery} from '@tanstack/react-query';
 import {locale, timeZone} from '../../utils/dateUtils';
 
 const getDuplicateApplication = createServerFn()
   .validator((data: {bandname: string; eventId: string}) => data)
   .handler(async ({data}) => {
-    const application = await prismaClient.bandApplication.findFirst({
-      where: {
-        bandname: {
-          equals: data.bandname,
-          mode: 'insensitive',
-        },
-        eventId: data.eventId,
-      },
+    const application = await db.query.bandApplication.findFirst({
+      where: (a) =>
+        and(
+          // Case-insensitive, as Prisma's `mode: 'insensitive'` was.
+          sql`lower(${a.bandname}) = lower(${data.bandname})`,
+          eq(a.eventId, data.eventId),
+        ),
     });
 
     if (application == null) {

@@ -1,7 +1,9 @@
 import {createFileRoute, useNavigate, redirect} from '@tanstack/react-router';
 import {seo} from '../utils/seo';
 import {createServerFn} from '@tanstack/react-start';
-import {prismaClient} from '../server/prismaClient.server';
+import {and, eq, isNull} from 'drizzle-orm';
+import {db} from '../server/db.server';
+import {donation} from '../server/db/schema';
 import {Heading, Text, VStack, Button, Flex} from '@chakra-ui/react';
 import {useMemo} from 'react';
 import DateString from '../components/DateString';
@@ -39,12 +41,13 @@ const select = {
 const loader = createServerFn()
   .validator((id: string) => id)
   .handler(async ({data: id}) => {
-    const data = await prismaClient.donation.findFirstOrThrow({
-      select,
-      where: {
-        id,
-      },
+    const data = await db.query.donation.findFirst({
+      columns: select,
+      where: eq(donation.id, id),
     });
+    if (!data) {
+      throw new Error(`Donation ${id} not found`);
+    }
 
     if (data.spendenQuittungAt) {
       throw redirect({
@@ -59,19 +62,26 @@ const loader = createServerFn()
 const setData = createServerFn()
   .validator(FormSchemaWithId)
   .handler(async ({data: {id, ...data}}) => {
-    return prismaClient.donation.update({
-      where: {
-        id,
-        spendenQuittungAt: {
-          equals: null,
-        },
-      },
-      data: {
-        ...data,
-        spendenQuittungAt: new Date(),
-      },
-      select,
-    });
+    // Only once: a receipt that was already issued isn't rewritten.
+    const [updated] = await db
+      .update(donation)
+      .set({...data, spendenQuittungAt: new Date()})
+      .where(and(eq(donation.id, id), isNull(donation.spendenQuittungAt)))
+      .returning({
+        id: donation.id,
+        name: donation.name,
+        quittungName: donation.quittungName,
+        quittungStreet: donation.quittungStreet,
+        quittungCity: donation.quittungCity,
+        amount: donation.amount,
+        createdAt: donation.createdAt,
+        source: donation.source,
+        spendenQuittungAt: donation.spendenQuittungAt,
+      });
+    if (!updated) {
+      throw new Error(`No open receipt for donation ${id}`);
+    }
+    return updated;
   });
 
 export const Route = createFileRoute('/_main/spenden_/quittung/$id')({

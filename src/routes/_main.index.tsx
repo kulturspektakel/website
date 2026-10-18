@@ -4,25 +4,20 @@ import Article from '../components/news/Article';
 import LinkButton from '../components/LinkButton';
 import {createFileRoute} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
-import {prismaClient} from '../server/prismaClient.server';
+import {desc} from 'drizzle-orm';
+import {db} from '../server/db.server';
+import {news} from '../server/db/schema';
 import {markdownPages} from '../server/markdownText.server';
 
 const newsLoader = createServerFn().handler(async () => {
-  const news = await prismaClient.news.findMany({
-    take: 10,
-    orderBy: {
-      createdAt: 'desc',
-    },
-    select: {
-      title: true,
-      slug: true,
-      createdAt: true,
-      content: true,
-    },
+  const latest = await db.query.news.findMany({
+    limit: 10,
+    orderBy: desc(news.createdAt),
+    columns: {title: true, slug: true, createdAt: true, content: true},
   });
 
   return {
-    news: await markdownPages(news),
+    news: await markdownPages(latest),
   };
 });
 

@@ -15,27 +15,8 @@ import {type ImmichAsset} from '../../utils/immich';
 import Countdown from 'react-countdown';
 import {Link} from '@tanstack/react-router';
 import {DirectusImage, imageUrl} from '../../utils/directusImage';
-import {Prisma} from '../../generated/prisma/browser';
 import MarkdownText from '../MarkdownText';
 import {Markdown} from '../../utils/markdownText';
-
-export const eventSelect: Prisma.EventSelect = {
-  id: true,
-  name: true,
-  description: true,
-  location: true,
-  start: true,
-  end: true,
-  poster: true,
-  eventType: true,
-  lineupAnnouncementTime: true,
-  immichAlbumShareUrl: true,
-  BandPlaying: {
-    select: {
-      name: true,
-    },
-  },
-};
 
 export default function Event({
   event,

@@ -3,23 +3,41 @@ import ProductList from '../components/speisekarte/ProductList';
 import DietFilterSelect from '../components/speisekarte/DietFilterSelect';
 import {createFileRoute} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
-import {prismaClient} from '../server/prismaClient.server';
-import type {Prisma} from '../generated/prisma/client';
+import {and, asc, eq, exists, notExists} from 'drizzle-orm';
+import {db} from '../server/db.server';
+import {
+  product,
+  productAdditives,
+  productList,
+  productToProductAdditives,
+} from '../server/db/schema';
 import {seo} from '../utils/seo';
 
 export type DietFilter = 'vegan' | 'glutenfrei';
 
-// Translates the active filter into a Prisma `where` applied to each list's
-// products. `glutenfrei` keeps products that don't carry additive `A` (gluten),
-// including products with no additives at all.
-function productWhereForFilter(
+// Translates the active filter into a condition on a list's products. `glutenfrei`
+// keeps products that don't carry additive `A` (gluten), including products with no
+// additives at all. Takes the products table it applies to, because a nested
+// relation query refers to it under its own alias.
+function productFilter(
   filter: DietFilter | undefined,
-): Prisma.ProductWhereInput | undefined {
+  p: Pick<typeof product, 'id' | 'diet'>,
+) {
   switch (filter) {
     case 'vegan':
-      return {diet: 'VEGAN'};
+      return eq(p.diet, 'VEGAN');
     case 'glutenfrei':
-      return {additives: {none: {id: 'A'}}};
+      return notExists(
+        db
+          .select({a: productToProductAdditives.A})
+          .from(productToProductAdditives)
+          .where(
+            and(
+              eq(productToProductAdditives.A, p.id),
+              eq(productToProductAdditives.B, 'A'),
+            ),
+          ),
+      );
     default:
       return undefined;
   }
@@ -28,47 +46,55 @@ function productWhereForFilter(
 const loader = createServerFn()
   .validator((data: {filter?: DietFilter}) => data)
   .handler(async ({data}) => {
-    const productWhere = productWhereForFilter(data.filter);
+    const additives = await db
+      .select({id: productAdditives.id, displayName: productAdditives.displayName})
+      .from(productAdditives)
+      .orderBy(asc(productAdditives.id));
 
-    const additives = await prismaClient.productAdditives.findMany({
-      orderBy: {id: 'asc'},
-      select: {
-        id: true,
-        displayName: true,
-      },
-    });
-
-    const lists = await prismaClient.productList.findMany({
-      where: {
-        active: true,
-        // Hide lists that have no matching product under the active filter.
-        ...(productWhere && {product: {some: productWhere}}),
-      },
-      orderBy: {
-        name: 'asc',
-      },
-      select: {
-        id: true,
-        name: true,
-        emoji: true,
-        description: true,
-        product: {
-          where: productWhere,
-          select: {
-            id: true,
-            name: true,
-            price: true,
-            requiresDeposit: true,
-            additives: {
-              select: {
-                id: true,
-                displayName: true,
+    const rows = await db.query.productList.findMany({
+      where: (l) =>
+        and(
+          eq(l.active, true),
+          // Hide lists that have no matching product under the active filter.
+          data.filter
+            ? exists(
+                db
+                  .select({id: product.id})
+                  .from(product)
+                  .where(
+                    and(
+                      eq(product.productListId, l.id),
+                      productFilter(data.filter, product),
+                    ),
+                  ),
+              )
+            : undefined,
+        ),
+      orderBy: asc(productList.name),
+      columns: {id: true, name: true, emoji: true, description: true},
+      with: {
+        products: {
+          where: (p) => productFilter(data.filter, p),
+          columns: {id: true, name: true, price: true, requiresDeposit: true},
+          with: {
+            productToProductAdditives: {
+              columns: {},
+              with: {
+                productAdditive: {columns: {id: true, displayName: true}},
               },
             },
           },
         },
       },
     });
+    // The shape the page renders (Prisma's: `product`, `additives`).
+    const lists = rows.map(({products, ...list}) => ({
+      ...list,
+      product: products.map(({productToProductAdditives: links, ...p}) => ({
+        ...p,
+        additives: links.map((link) => link.productAdditive),
+      })),
+    }));
 
     return {lists, additives};
   });

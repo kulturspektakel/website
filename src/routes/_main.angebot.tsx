@@ -3,7 +3,9 @@ import Page from '../components/Page';
 import LinkButton from '../components/LinkButton';
 import {createFileRoute} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
-import {prismaClient} from '../server/prismaClient.server';
+import {eq} from 'drizzle-orm';
+import {db} from '../server/db.server';
+import {productList} from '../server/db/schema';
 import {multiPage} from '../server/markdownText.server';
 import {seo} from '../utils/seo';
 
@@ -15,17 +17,15 @@ const loader = createServerFn().handler(async () => {
     'workshops',
   ] as const);
 
-  const productLists = await prismaClient.productList.findMany({
-    where: {
-      active: true,
-    },
-    select: {
-      id: true,
-      name: true,
-      emoji: true,
-      description: true,
-    },
-  });
+  const productLists = await db
+    .select({
+      id: productList.id,
+      name: productList.name,
+      emoji: productList.emoji,
+      description: productList.description,
+    })
+    .from(productList)
+    .where(eq(productList.active, true));
 
   return {
     ...pages,

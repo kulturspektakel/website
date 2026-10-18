@@ -7,7 +7,9 @@ import {useCombobox} from 'downshift';
 import DropdownMenu from '../DropdownMenu';
 import {InputGroup} from '../chakra-snippets/input-group';
 import {createServerFn, useServerFn} from '@tanstack/react-start';
-import {prismaClient} from '../../server/prismaClient.server';
+import {desc, sql} from 'drizzle-orm';
+import {db} from '../../server/db.server';
+import {bandPlaying} from '../../server/db/schema';
 import {useNavigate} from '@tanstack/react-router';
 
 const serverFn = createServerFn()
@@ -24,16 +26,20 @@ const serverFn = createServerFn()
     // lowercases ASCII — umlauts in band names keep their case and never match
     // what the user types. Normalise both sides with unaccent(lower(...)) so
     // "über"/"uber"/"Übertreibhaus" all find "Übertreibhaus".
-    return prismaClient.$queryRaw<
-      Array<{id: string; name: string; slug: string; startTime: Date}>
-    >`
-      SELECT id, name, slug, "startTime"
-      FROM "BandPlaying"
-      WHERE to_tsvector('simple', unaccent(lower(name)))
-            @@ to_tsquery('simple', unaccent(lower(${q})))
-      ORDER BY "startTime" DESC
-      LIMIT 10
-    `;
+    return db
+      .select({
+        id: bandPlaying.id,
+        name: bandPlaying.name,
+        slug: bandPlaying.slug,
+        startTime: bandPlaying.startTime,
+      })
+      .from(bandPlaying)
+      .where(
+        sql`to_tsvector('simple', unaccent(lower(${bandPlaying.name})))
+          @@ to_tsquery('simple', unaccent(lower(${q})))`,
+      )
+      .orderBy(desc(bandPlaying.startTime))
+      .limit(10);
   });
 
 export default function Search(props: BoxProps) {

@@ -28,7 +28,8 @@ import {
 import useIsDJ from '../components/booking/useIsDJ';
 import {useMutation} from '@tanstack/react-query';
 import {createServerFn} from '@tanstack/react-start';
-import {prismaClient} from '../server/prismaClient.server';
+import {db} from '../server/db.server';
+import {bandApplication} from '../server/db/schema';
 import {enqueueGcpTask} from '../server/enqueueGcpTask.server';
 import z from 'zod';
 import {toFormikValidationSchema} from 'zod-formik-adapter';
@@ -50,10 +51,10 @@ export type ServerSchemaInput = z.input<typeof serverSchema>;
 const createBandApplication = createServerFn()
   .validator(serverSchema)
   .handler(async ({data}) => {
-    const application = await prismaClient.bandApplication.create({
-      data,
-      select: {id: true},
-    });
+    const [application] = await db
+      .insert(bandApplication)
+      .values(data)
+      .returning({id: bandApplication.id});
     await enqueueGcpTask('create-band-application', application);
   });
 

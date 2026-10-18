@@ -4,7 +4,9 @@ import {Stack} from '@chakra-ui/react';
 import Page from '../components/Page';
 import {seo} from '../utils/seo';
 import {pageLoader} from '../server/pageLoader';
-import {prismaClient} from '../server/prismaClient.server';
+import {and, asc, eq, gt, gte, lte} from 'drizzle-orm';
+import {db} from '../server/db.server';
+import {areaOpeningHour} from '../server/db/schema';
 import {AwarenessBox} from '../components/awareness/AwarenessBox';
 
 // The awareness team is reachable when the current moment falls within an
@@ -14,17 +16,24 @@ import {AwarenessBox} from '../components/awareness/AwarenessBox';
 // we're back.
 const awarenessAvailability = createServerFn().handler(async () => {
   const now = new Date();
-  const open = await prismaClient.areaOpeningHour.findFirst({
-    where: {areaId: 'gb', startTime: {lte: now}, endTime: {gte: now}},
-    select: {id: true},
+  const open = await db.query.areaOpeningHour.findFirst({
+    where: and(
+      eq(areaOpeningHour.areaId, 'gb'),
+      lte(areaOpeningHour.startTime, now),
+      gte(areaOpeningHour.endTime, now),
+    ),
+    columns: {id: true},
   });
   if (open) {
     return {available: true as const, nextOpen: null};
   }
-  const next = await prismaClient.areaOpeningHour.findFirst({
-    where: {areaId: 'gb', startTime: {gt: now}},
-    orderBy: {startTime: 'asc'},
-    select: {startTime: true},
+  const next = await db.query.areaOpeningHour.findFirst({
+    where: and(
+      eq(areaOpeningHour.areaId, 'gb'),
+      gt(areaOpeningHour.startTime, now),
+    ),
+    orderBy: asc(areaOpeningHour.startTime),
+    columns: {startTime: true},
   });
   return {available: false as const, nextOpen: next?.startTime ?? null};
 });

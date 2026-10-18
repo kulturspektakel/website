@@ -23,29 +23,17 @@ import {
 } from '@tanstack/react-router';
 import {useSuspenseQuery} from '@tanstack/react-query';
 import {createServerFn, useServerFn} from '@tanstack/react-start';
-import {prismaClient} from '../server/prismaClient.server';
+import {desc} from 'drizzle-orm';
+import {db} from '../server/db.server';
+import {event} from '../server/db/schema';
+import {lineupPublished} from '../server/eventQuery.server';
 
 const lineups = createServerFn().handler(async () => {
-  const lineups = await prismaClient.event.findMany({
-    where: {
-      eventType: 'Kulturspektakel',
-      BandPlaying: {
-        some: {},
-      },
-      OR: [
-        {lineupAnnouncementTime: {lte: new Date()}},
-        {lineupAnnouncementTime: null},
-      ],
-    },
-    select: {
-      id: true,
-      name: true,
-      start: true,
-    },
-    orderBy: {
-      start: 'desc',
-    },
-  });
+  const lineups = await db
+    .select({id: event.id, name: event.name, start: event.start})
+    .from(event)
+    .where(lineupPublished())
+    .orderBy(desc(event.start));
 
   return {
     lineups,

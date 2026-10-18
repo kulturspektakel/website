@@ -5,25 +5,23 @@ import {Alert} from '../components/chakra-snippets/alert';
 import Image from '../components/Image';
 import {imageUrl} from '../utils/directusImage';
 import {createServerFn} from '@tanstack/react-start';
-import {prismaClient} from '../server/prismaClient.server';
+import {desc, eq} from 'drizzle-orm';
+import {db} from '../server/db.server';
+import {event} from '../server/db/schema';
 import {directusImages} from '../server/directusImage.server';
 import {seo} from '../utils/seo';
 
 const loader = createServerFn().handler(async () => {
-  const data = await prismaClient.event.findMany({
-    where: {
-      eventType: 'Kulturspektakel',
-    },
-    orderBy: {
-      start: 'desc',
-    },
-    select: {
-      id: true,
-      name: true,
-      start: true,
-      poster: true,
-    },
-  });
+  const data = await db
+    .select({
+      id: event.id,
+      name: event.name,
+      start: event.start,
+      poster: event.poster,
+    })
+    .from(event)
+    .where(eq(event.eventType, 'Kulturspektakel'))
+    .orderBy(desc(event.start));
 
   const images = await directusImages(data.map((event) => event.poster));
   return data.map(({poster, ...data}) => ({

@@ -19,7 +19,9 @@ import {
 } from '@tanstack/react-router';
 import {DirectusImage, imageUrl} from '../utils/directusImage';
 import {createServerFn} from '@tanstack/react-start';
-import {prismaClient} from '../server/prismaClient.server';
+import {and, asc, desc, eq, gt, lt} from 'drizzle-orm';
+import {db} from '../server/db.server';
+import {bandPlaying} from '../server/db/schema';
 import {directusImage} from '../server/directusImage.server';
 import {isSameDay} from '../utils/dateUtils';
 import {seo} from '../utils/seo';
@@ -27,14 +29,13 @@ import {seo} from '../utils/seo';
 const loader = createServerFn()
   .validator((data: {year: string; slug: string}) => data)
   .handler(async ({data}) => {
-    const band = await prismaClient.bandPlaying.findUnique({
-      where: {
-        eventId_slug: {
-          eventId: `kult${data.year}`,
-          slug: data.slug,
-        },
-      },
-      select: {
+    const eventId = `kult${data.year}`;
+    const band = await db.query.bandPlaying.findFirst({
+      where: and(
+        eq(bandPlaying.eventId, eventId),
+        eq(bandPlaying.slug, data.slug),
+      ),
+      columns: {
         name: true,
         slug: true,
         photo: true,
@@ -48,44 +49,30 @@ const loader = createServerFn()
         soundcloud: true,
         shortDescription: true,
         description: true,
-        area: {
-          select: {
-            id: true,
-            displayName: true,
-            themeColor: true,
-          },
-        },
       },
+      with: {area: {columns: {id: true, displayName: true, themeColor: true}}},
     });
 
     if (!band) {
       throw notFound();
     }
 
-    const neighborSelect = {
-      name: true,
-      slug: true,
-      startTime: true,
-    };
+    const neighborColumns = {name: true, slug: true, startTime: true} as const;
+    const onSameStage = and(
+      eq(bandPlaying.eventId, eventId),
+      eq(bandPlaying.areaId, band.area.id),
+    );
 
     const [previous, next] = await Promise.all([
-      prismaClient.bandPlaying.findFirst({
-        where: {
-          eventId: `kult${data.year}`,
-          areaId: band.area.id,
-          startTime: {lt: band.startTime},
-        },
-        orderBy: {startTime: 'desc'},
-        select: neighborSelect,
+      db.query.bandPlaying.findFirst({
+        where: and(onSameStage, lt(bandPlaying.startTime, band.startTime)),
+        orderBy: desc(bandPlaying.startTime),
+        columns: neighborColumns,
       }),
-      prismaClient.bandPlaying.findFirst({
-        where: {
-          eventId: `kult${data.year}`,
-          areaId: band.area.id,
-          startTime: {gt: band.startTime},
-        },
-        orderBy: {startTime: 'asc'},
-        select: neighborSelect,
+      db.query.bandPlaying.findFirst({
+        where: and(onSameStage, gt(bandPlaying.startTime, band.startTime)),
+        orderBy: asc(bandPlaying.startTime),
+        columns: neighborColumns,
       }),
     ]);
 

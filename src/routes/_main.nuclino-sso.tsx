@@ -16,7 +16,9 @@ import {seo} from '../utils/seo';
 import {createServerFn} from '@tanstack/react-start';
 import {getCookie} from '@tanstack/react-start/server';
 import {addMinutes} from 'date-fns';
-import {prismaClient} from '../server/prismaClient.server';
+import {and, eq, gt} from 'drizzle-orm';
+import {db} from '../server/db.server';
+import {nonce as nonceTable, nonceRequest as nonceRequestTable} from '../server/db/schema';
 import {enqueueGcpTask} from '../server/enqueueGcpTask.server';
 
 const NONCE_LIFETIME_MINUTES = 5;
@@ -49,12 +51,10 @@ const createNonceRequest = createServerFn()
   .validator((data: {email: string}) => data)
   .handler(async ({data}) => {
     const expiresAt = addMinutes(new Date(), NONCE_LIFETIME_MINUTES);
-    const nonceRequest = await prismaClient.nonceRequest.create({
-      data: {
-        expiresAt,
-        createdForEmail: data.email,
-      },
-    });
+    const [nonceRequest] = await db
+      .insert(nonceRequestTable)
+      .values({expiresAt, createdForEmail: data.email})
+      .returning({id: nonceRequestTable.id});
 
     await Promise.all([
       // Sends the Slack DM with approve/reject buttons.
@@ -76,13 +76,13 @@ const createNonceRequest = createServerFn()
 const checkNonceRequest = createServerFn()
   .validator((data: {nonceRequestId: string}) => data)
   .handler(async ({data}) => {
-    const nonceRequest = await prismaClient.nonceRequest.findUnique({
-      where: {
-        id: data.nonceRequestId,
-        expiresAt: {gt: new Date()},
-        status: 'Approved',
-      },
-      include: {createdFor: true},
+    const nonceRequest = await db.query.nonceRequest.findFirst({
+      where: and(
+        eq(nonceRequestTable.id, data.nonceRequestId),
+        gt(nonceRequestTable.expiresAt, new Date()),
+        eq(nonceRequestTable.status, 'Approved'),
+      ),
+      columns: {createdForId: true},
     });
 
     if (!nonceRequest) {
@@ -90,12 +90,10 @@ const checkNonceRequest = createServerFn()
     }
 
     const expiresAt = addMinutes(new Date(), NONCE_LIFETIME_MINUTES);
-    const {nonce} = await prismaClient.nonce.create({
-      data: {
-        expiresAt,
-        createdForId: nonceRequest.createdForId,
-      },
-    });
+    const [{nonce}] = await db
+      .insert(nonceTable)
+      .values({expiresAt, createdForId: nonceRequest.createdForId})
+      .returning({nonce: nonceTable.nonce});
     await enqueueGcpTask('nonce-invalidate', {nonce}, {scheduleAt: expiresAt});
 
     return nonce;
