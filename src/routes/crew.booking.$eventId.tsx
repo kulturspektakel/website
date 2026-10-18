@@ -12,6 +12,7 @@ import {
   notFound,
   Outlet,
   useParams,
+  useRouter,
 } from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
 import {crewAuth} from '../server/crewAuth';
@@ -843,6 +844,25 @@ function BookingPage() {
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [applicationId, navigate, eventId]);
+
+  // Preload the detail of the row Arrow Down opens next, so stepping through
+  // the list doesn't wait on the detail loader each time.
+  const router = useRouter();
+  useEffect(() => {
+    if (!applicationId) return;
+    const current = rowsRef.current.findIndex(
+      (r) => r.original.id === applicationId,
+    );
+    const next = current >= 0 ? rowsRef.current[current + 1] : undefined;
+    if (!next) return;
+    router
+      .preloadRoute({
+        to: '/crew/booking/$eventId/$applicationId',
+        params: {eventId, applicationId: next.original.id},
+      })
+      // Only a head start: a failed preload just loads on navigation.
+      .catch(() => {});
+  }, [applicationId, eventId, router]);
 
   return (
     <Box h="100dvh" display="flex" flexDirection="column">

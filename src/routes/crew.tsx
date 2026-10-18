@@ -51,7 +51,13 @@ const loadCrewViewer = createServerFn()
   .handler(({context}) => context.viewer);
 
 export const Route = createFileRoute('/crew')({
-  beforeLoad: async ({location}) => {
+  beforeLoad: async ({location, preload}) => {
+    // Not for preloads (hovered links, the booking modal's neighbours): there's
+    // no page to redirect yet, and their loaders are behind `crewAuth` anyway.
+    // The check runs when the navigation actually happens.
+    if (preload) {
+      return;
+    }
     const login = await crewLoginUrl({data: location.href});
     if (login) {
       throw redirect({href: login});
