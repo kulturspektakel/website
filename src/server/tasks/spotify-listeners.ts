@@ -1,4 +1,6 @@
-import {prismaClient} from '../../server/prismaClient.server';
+import {eq} from 'drizzle-orm';
+import {db} from '../../server/db.server';
+import {bandApplication} from '../../server/db/schema';
 import {readJsonPayload} from '../../server/readJsonPayload.server';
 import {spotifyArtistUrl} from '../../utils/spotifyArtistId';
 
@@ -15,8 +17,8 @@ export async function handleSpotifyListeners(
 ): Promise<Response> {
   const {id} = await readJsonPayload<SpotifyListenersPayload>(request);
 
-  const application = await prismaClient.bandApplication.findUnique({
-    where: {id},
+  const application = await db.query.bandApplication.findFirst({
+    where: eq(bandApplication.id, id),
   });
   if (!application?.spotifyArtist) {
     return new Response(null, {status: 204});
@@ -44,10 +46,10 @@ export async function handleSpotifyListeners(
   }
 
   if (spotifyMonthlyListeners != null) {
-    await prismaClient.bandApplication.update({
-      where: {id},
-      data: {spotifyMonthlyListeners},
-    });
+    await db
+      .update(bandApplication)
+      .set({spotifyMonthlyListeners})
+      .where(eq(bandApplication.id, id));
   } else {
     throw new Error(
       `Could not find monthly listeners for ${application.spotifyArtist}`,

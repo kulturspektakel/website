@@ -1,4 +1,6 @@
-import {prismaClient} from '../../server/prismaClient.server';
+import {eq} from 'drizzle-orm';
+import {db} from '../../server/db.server';
+import {bandApplication} from '../../server/db/schema';
 import {readJsonPayload} from '../../server/readJsonPayload.server';
 
 export type FacebookLikesPayload = {id: string};
@@ -13,8 +15,8 @@ export async function handleFacebookLikes(
 ): Promise<Response> {
   const {id} = await readJsonPayload<FacebookLikesPayload>(request);
 
-  const application = await prismaClient.bandApplication.findUnique({
-    where: {id},
+  const application = await db.query.bandApplication.findFirst({
+    where: eq(bandApplication.id, id),
   });
   if (!application?.facebook) {
     return new Response(null, {status: 204});
@@ -46,10 +48,10 @@ export async function handleFacebookLikes(
   }
 
   if (res.ok && 'followers_count' in data) {
-    await prismaClient.bandApplication.update({
-      where: {id},
-      data: {facebookLikes: data.followers_count},
-    });
+    await db
+      .update(bandApplication)
+      .set({facebookLikes: data.followers_count})
+      .where(eq(bandApplication.id, id));
   } else if (
     'error' in data &&
     data.error.code === 100 &&

@@ -1,4 +1,6 @@
-import {prismaClient} from '../../server/prismaClient.server';
+import {eq} from 'drizzle-orm';
+import {db} from '../../server/db.server';
+import {order as orderTable} from '../../server/db/schema';
 import {readJsonPayload} from '../../server/readJsonPayload.server';
 import {orderToCardActivity, queryCrewCard} from '../../server/cardUtils.server';
 import {computeBadges} from '../../utils/useBadges';
@@ -18,11 +20,14 @@ import {slackApiRequest} from '../../server/slack.server';
 export async function handleBadgeAwarded(request: Request): Promise<Response> {
   const {orderId} = await readJsonPayload<{orderId: number}>(request);
 
-  const order = await prismaClient.order.findUnique({
-    where: {id: orderId},
-    include: {crewCard: {include: {viewer: true}}},
+  // The cardholder's Slack id is the card's `viewerId` (Viewer ids are Slack
+  // ids); a card nobody claimed yet has none.
+  const order = await db.query.order.findFirst({
+    where: eq(orderTable.id, orderId),
+    columns: {crewCardId: true},
+    with: {crewCard: {columns: {viewerId: true}}},
   });
-  if (!order?.crewCardId || !order.crewCard?.viewer) {
+  if (!order?.crewCardId || !order.crewCard?.viewerId) {
     return new Response(null, {status: 204});
   }
 
@@ -47,7 +52,7 @@ export async function handleBadgeAwarded(request: Request): Promise<Response> {
     oldBadges.every((ob) => ob.badgeKey !== nb.badgeKey),
   );
 
-  const viewerSlackId = order.crewCard.viewer.id;
+  const viewerSlackId = order.crewCard.viewerId;
   await Promise.all(
     newlyAwarded.map((badge) =>
       slackApiRequest('chat.postMessage', {

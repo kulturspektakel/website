@@ -3,17 +3,15 @@ import {beforeEach, describe, expect, test, vi} from 'vitest';
 const {slackApiRequest} = vi.hoisted(() => ({slackApiRequest: vi.fn()}));
 const {enqueueGcpTask} = vi.hoisted(() => ({enqueueGcpTask: vi.fn()}));
 const {gmailClient} = vi.hoisted(() => ({gmailClient: vi.fn()}));
-const {prismaMock} = vi.hoisted(() => ({
-  prismaMock: {
-    gmailReminders: {findUnique: vi.fn(), create: vi.fn()},
-  },
-}));
+const {db, query, inserts} = await vi.hoisted(async () =>
+  (await import('../../../test/dbMock')).dbMock(),
+);
 
 const ACCOUNT = 'booking@kulturspektakel.de';
 
 vi.mock('../../server/slack.server', () => ({slackApiRequest}));
 vi.mock('../../server/enqueueGcpTask.server', () => ({enqueueGcpTask}));
-vi.mock('../../server/prismaClient.server', () => ({prismaClient: prismaMock}));
+vi.mock('../../server/db.server', () => ({db}));
 vi.mock('../../server/gmail.server', () => ({
   gmailClient,
   GMAIL_REMINDERS: {
@@ -72,7 +70,7 @@ describe('handleGmailNotification — happy path', () => {
         ],
       }),
     );
-    prismaMock.gmailReminders.findUnique.mockResolvedValueOnce(null);
+    query.gmailReminders.findFirst.mockResolvedValueOnce(null);
 
     const res = await handleGmailNotification(pubSubPush(ACCOUNT));
 
@@ -84,9 +82,7 @@ describe('handleGmailNotification — happy path', () => {
         text: `Neue E-Mail für ${ACCOUNT}`,
       }),
     );
-    expect(prismaMock.gmailReminders.create).toHaveBeenCalledWith({
-      data: {messageId: 'm1', account: ACCOUNT},
-    });
+    expect(inserts).toHaveBeenCalledWith('GmailReminders', {messageId: 'm1', account: ACCOUNT});
     expect(enqueueGcpTask).toHaveBeenCalledWith(
       'gmail-reminder',
       {account: ACCOUNT, messageId: 'm1'},
@@ -151,7 +147,7 @@ describe('handleGmailNotification — dedup', () => {
         threadMessages: [{id: 'm1', labelIds: ['INBOX']}],
       }),
     );
-    prismaMock.gmailReminders.findUnique.mockResolvedValueOnce({
+    query.gmailReminders.findFirst.mockResolvedValueOnce({
       messageId: 'm1',
     });
 
@@ -171,7 +167,7 @@ describe('handleGmailNotification — dedup', () => {
         ],
       }),
     );
-    prismaMock.gmailReminders.findUnique.mockResolvedValueOnce(null);
+    query.gmailReminders.findFirst.mockResolvedValueOnce(null);
 
     const res = await handleGmailNotification(pubSubPush(ACCOUNT));
     expect(res.status).toBe(204);

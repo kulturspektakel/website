@@ -2,13 +2,13 @@ import {beforeEach, describe, expect, test, vi} from 'vitest';
 
 const {enqueueGcpTask} = vi.hoisted(() => ({enqueueGcpTask: vi.fn()}));
 const {slackApiRequest} = vi.hoisted(() => ({slackApiRequest: vi.fn()}));
-const {prismaMock} = vi.hoisted(() => ({
-  prismaMock: {bandApplication: {findUniqueOrThrow: vi.fn()}},
-}));
+const {db, query} = await vi.hoisted(async () =>
+  (await import('../../../test/dbMock')).dbMock(),
+);
 
 vi.mock('../../server/enqueueGcpTask.server', () => ({enqueueGcpTask}));
 vi.mock('../../server/slack.server', () => ({slackApiRequest}));
-vi.mock('../../server/prismaClient.server', () => ({prismaClient: prismaMock}));
+vi.mock('../../server/db.server', () => ({db}));
 
 const {handleCreateBandApplication} = await import(
   './create-band-application'
@@ -46,7 +46,7 @@ beforeEach(() => {
 
 describe('handleCreateBandApplication', () => {
   test('always sends email + distance + Slack; skips enrichment with no links', async () => {
-    prismaMock.bandApplication.findUniqueOrThrow.mockResolvedValue(
+    query.bandApplication.findFirst.mockResolvedValue(
       baseApplication,
     );
 
@@ -75,7 +75,7 @@ describe('handleCreateBandApplication', () => {
   });
 
   test('DJ application posts to #dj and emails from info@', async () => {
-    prismaMock.bandApplication.findUniqueOrThrow.mockResolvedValue({
+    query.bandApplication.findFirst.mockResolvedValue({
       ...baseApplication,
       genreCategory: 'DJ',
     });
@@ -95,7 +95,7 @@ describe('handleCreateBandApplication', () => {
   });
 
   test('fans out enrichment tasks when links are present', async () => {
-    prismaMock.bandApplication.findUniqueOrThrow.mockResolvedValue({
+    query.bandApplication.findFirst.mockResolvedValue({
       ...baseApplication,
       demo: 'https://youtu.be/abc',
       facebook: 'https://facebook.com/band',

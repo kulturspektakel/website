@@ -1,5 +1,7 @@
 import {differenceInDays} from 'date-fns';
-import {prismaClient} from '../../server/prismaClient.server';
+import {eq} from 'drizzle-orm';
+import {db} from '../../server/db.server';
+import {gmailReminders} from '../../server/db/schema';
 import {readJsonPayload} from '../../server/readJsonPayload.server';
 import {slackApiRequest} from '../../server/slack.server';
 import {
@@ -24,9 +26,10 @@ export async function handleGmailReminder(request: Request): Promise<Response> {
     messageId: string;
   }>(request);
 
-  await prismaClient.gmailReminders
-    .delete({where: {messageId}})
-    .catch(() => null);
+  // A no-op if the row is already gone.
+  await db
+    .delete(gmailReminders)
+    .where(eq(gmailReminders.messageId, messageId));
 
   const config = GMAIL_REMINDERS[account];
   if (!config) {

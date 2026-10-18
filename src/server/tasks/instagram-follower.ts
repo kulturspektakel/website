@@ -1,4 +1,6 @@
-import {prismaClient} from '../../server/prismaClient.server';
+import {eq} from 'drizzle-orm';
+import {db} from '../../server/db.server';
+import {bandApplication} from '../../server/db/schema';
 import {readJsonPayload} from '../../server/readJsonPayload.server';
 
 export type InstagramFollowerPayload = {id: string};
@@ -38,8 +40,8 @@ export async function handleInstagramFollower(
 ): Promise<Response> {
   const {id} = await readJsonPayload<InstagramFollowerPayload>(request);
 
-  const application = await prismaClient.bandApplication.findUnique({
-    where: {id},
+  const application = await db.query.bandApplication.findFirst({
+    where: eq(bandApplication.id, id),
   });
   const handle = application?.instagram;
   if (!handle) {
@@ -68,10 +70,10 @@ export async function handleInstagramFollower(
     );
   }
 
-  await prismaClient.bandApplication.update({
-    where: {id},
-    data: {instagramFollower: count},
-  });
+  await db
+    .update(bandApplication)
+    .set({instagramFollower: count})
+    .where(eq(bandApplication.id, id));
 
   return new Response(null, {status: 204});
 }

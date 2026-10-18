@@ -1,4 +1,6 @@
-import {prismaClient} from '../../server/prismaClient.server';
+import {eq} from 'drizzle-orm';
+import {db} from '../../server/db.server';
+import {bandApplication} from '../../server/db/schema';
 import {readJsonPayload} from '../../server/readJsonPayload.server';
 import {fetchSpotifyArtistImage} from '../../server/spotify.server';
 
@@ -13,8 +15,8 @@ export type SpotifyImagePayload = {id: string};
 export async function handleSpotifyImage(request: Request): Promise<Response> {
   const {id} = await readJsonPayload<SpotifyImagePayload>(request);
 
-  const application = await prismaClient.bandApplication.findUnique({
-    where: {id},
+  const application = await db.query.bandApplication.findFirst({
+    where: eq(bandApplication.id, id),
   });
   if (!application?.spotifyArtist) {
     return new Response(null, {status: 204});
@@ -22,7 +24,10 @@ export async function handleSpotifyImage(request: Request): Promise<Response> {
 
   const imageUrl = await fetchSpotifyArtistImage(application.spotifyArtist);
   if (imageUrl) {
-    await prismaClient.bandApplication.update({where: {id}, data: {imageUrl}});
+    await db
+      .update(bandApplication)
+      .set({imageUrl})
+      .where(eq(bandApplication.id, id));
   }
 
   return new Response(null, {status: 204});

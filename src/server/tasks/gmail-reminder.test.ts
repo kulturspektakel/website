@@ -2,15 +2,15 @@ import {beforeEach, describe, expect, test, vi} from 'vitest';
 
 const {slackApiRequest} = vi.hoisted(() => ({slackApiRequest: vi.fn()}));
 const {gmailClient} = vi.hoisted(() => ({gmailClient: vi.fn()}));
-const {prismaMock} = vi.hoisted(() => ({
-  prismaMock: {gmailReminders: {delete: vi.fn()}},
-}));
+const {db, deletes} = await vi.hoisted(async () =>
+  (await import('../../../test/dbMock')).dbMock(),
+);
 
 const ACCOUNT = 'booking@kulturspektakel.de';
 const MID = 'm1';
 
 vi.mock('../../server/slack.server', () => ({slackApiRequest}));
-vi.mock('../../server/prismaClient.server', () => ({prismaClient: prismaMock}));
+vi.mock('../../server/db.server', () => ({db}));
 vi.mock('../../server/gmail.server', () => ({
   gmailClient,
   GMAIL_REMINDERS: {
@@ -56,7 +56,6 @@ beforeEach(() => {
   vi.clearAllMocks();
   // Handler chains `.catch` on the delete; default to a resolved promise so
   // the call doesn't blow up on `undefined.catch`.
-  prismaMock.gmailReminders.delete.mockResolvedValue({});
 });
 
 describe('handleGmailReminder', () => {
@@ -71,9 +70,7 @@ describe('handleGmailReminder', () => {
     const res = await handleGmailReminder(reminderRequest(ACCOUNT, MID));
 
     expect(res.status).toBe(204);
-    expect(prismaMock.gmailReminders.delete).toHaveBeenCalledWith({
-      where: {messageId: MID},
-    });
+    expect(deletes).toHaveBeenCalledWith('GmailReminders', [MID]);
     expect(slackApiRequest).toHaveBeenCalledWith(
       'chat.postMessage',
       expect.objectContaining({
@@ -88,7 +85,7 @@ describe('handleGmailReminder', () => {
       reminderRequest('unknown@example.test', MID),
     );
     expect(res.status).toBe(204);
-    expect(prismaMock.gmailReminders.delete).toHaveBeenCalled();
+    expect(deletes).toHaveBeenCalled();
     expect(gmailClient).not.toHaveBeenCalled();
     expect(slackApiRequest).not.toHaveBeenCalled();
   });

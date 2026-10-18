@@ -1,4 +1,6 @@
-import {prismaClient} from '../../server/prismaClient.server';
+import {eq} from 'drizzle-orm';
+import {db} from '../../server/db.server';
+import {bandApplication} from '../../server/db/schema';
 import {readJsonPayload} from '../../server/readJsonPayload.server';
 import {enqueueGcpTask} from '../../server/enqueueGcpTask.server';
 import {slackApiRequest} from '../../server/slack.server';
@@ -18,10 +20,13 @@ export async function handleCreateBandApplication(
 ): Promise<Response> {
   const {id} = await readJsonPayload<CreateBandApplicationPayload>(request);
 
-  const application = await prismaClient.bandApplication.findUniqueOrThrow({
-    where: {id},
-    include: {event: true},
+  const application = await db.query.bandApplication.findFirst({
+    where: eq(bandApplication.id, id),
+    with: {event: true},
   });
+  if (!application) {
+    throw new Error(`BandApplication ${id} not found`);
+  }
 
   const eventYear = application.event.start.getFullYear();
   const isDJ = application.genreCategory === 'DJ';

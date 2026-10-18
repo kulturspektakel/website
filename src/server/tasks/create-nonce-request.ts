@@ -1,5 +1,7 @@
 import {ApiError} from '../../server/apiError.server';
-import {prismaClient} from '../../server/prismaClient.server';
+import {eq} from 'drizzle-orm';
+import {db} from '../../server/db.server';
+import {nonceRequest} from '../../server/db/schema';
 import {readJsonPayload} from '../../server/readJsonPayload.server';
 import {slackApiRequest, type SlackApiUser} from '../../server/slack.server';
 import {upsertViewer} from '../../server/upsertViewer.server';
@@ -30,10 +32,10 @@ export async function handleCreateNonceRequest(
   }
 
   const viewer = await upsertViewer(slackUser.user);
-  await prismaClient.nonceRequest.update({
-    where: {id},
-    data: {createdForId: viewer.id},
-  });
+  await db
+    .update(nonceRequest)
+    .set({createdForId: viewer.id})
+    .where(eq(nonceRequest.id, id));
 
   const post = await slackApiRequest('chat.postMessage', {
     channel: slackUser.user.id,

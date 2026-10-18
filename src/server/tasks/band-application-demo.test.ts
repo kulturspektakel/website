@@ -1,12 +1,10 @@
 import {beforeEach, describe, expect, test, vi} from 'vitest';
 
-const {prismaMock} = vi.hoisted(() => ({
-  prismaMock: {
-    bandApplication: {findUniqueOrThrow: vi.fn(), update: vi.fn()},
-  },
-}));
+const {db, query, updates} = await vi.hoisted(async () =>
+  (await import('../../../test/dbMock')).dbMock(),
+);
 
-vi.mock('../../server/prismaClient.server', () => ({prismaClient: prismaMock}));
+vi.mock('../../server/db.server', () => ({db}));
 
 const {handleBandApplicationDemo} = await import('./band-application-demo');
 
@@ -20,7 +18,6 @@ function request(id: string) {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  prismaMock.bandApplication.update.mockResolvedValue({});
 });
 
 describe('handleBandApplicationDemo', () => {
@@ -30,7 +27,7 @@ describe('handleBandApplicationDemo', () => {
   ])('resolves YouTube Shorts link %s', async (demo) => {
     // Would otherwise be treated as the channel handle "shorts"
     const fetchSpy = vi.spyOn(globalThis, 'fetch');
-    prismaMock.bandApplication.findUniqueOrThrow.mockResolvedValue({
+    query.bandApplication.findFirst.mockResolvedValue({
       id: 'app1',
       demo,
     });
@@ -39,9 +36,10 @@ describe('handleBandApplicationDemo', () => {
 
     expect(res.status).toBe(204);
     expect(fetchSpy).not.toHaveBeenCalled();
-    expect(prismaMock.bandApplication.update).toHaveBeenCalledWith({
-      where: {id: 'app1'},
-      data: {demoEmbed: 'U-nxqFuy2mk', demoEmbedType: 'YouTubeVideo'},
-    });
+    expect(updates).toHaveBeenCalledWith(
+      'BandApplication',
+      {demoEmbed: 'U-nxqFuy2mk', demoEmbedType: 'YouTubeVideo'},
+      ['app1'],
+    );
   });
 });

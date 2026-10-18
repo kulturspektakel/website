@@ -3,16 +3,13 @@ import {ApiError} from '../../server/apiError.server';
 
 const {slackApiRequest} = vi.hoisted(() => ({slackApiRequest: vi.fn()}));
 const {upsertViewer} = vi.hoisted(() => ({upsertViewer: vi.fn()}));
-const {prismaMock} = vi.hoisted(() => ({
-  prismaMock: {
-    nonce: {delete: vi.fn()},
-    nonceRequest: {update: vi.fn(), delete: vi.fn()},
-  },
-}));
+const {db, updates, deletes} = await vi.hoisted(async () =>
+  (await import('../../../test/dbMock')).dbMock(),
+);
 
 vi.mock('../../server/slack.server', () => ({slackApiRequest}));
 vi.mock('../../server/upsertViewer.server', () => ({upsertViewer}));
-vi.mock('../../server/prismaClient.server', () => ({prismaClient: prismaMock}));
+vi.mock('../../server/db.server', () => ({db}));
 
 const {handleCreateNonceRequest} = await import('./create-nonce-request');
 const {handleNonceRequestInvalidate} = await import(
@@ -43,7 +40,6 @@ describe('handleCreateNonceRequest', () => {
       .mockResolvedValueOnce({ok: true, user: slackUser}) // users.lookupByEmail
       .mockResolvedValueOnce({ok: true}); // chat.postMessage
     upsertViewer.mockResolvedValueOnce({id: slackId});
-    prismaMock.nonceRequest.update.mockResolvedValueOnce({});
 
     const res = await handleCreateNonceRequest(postJson({id, email}));
 
@@ -53,10 +49,11 @@ describe('handleCreateNonceRequest', () => {
       `users.lookupByEmail?email=${encodeURIComponent(email)}`,
     );
     expect(upsertViewer).toHaveBeenCalledWith(slackUser);
-    expect(prismaMock.nonceRequest.update).toHaveBeenCalledWith({
-      where: {id},
-      data: {createdForId: slackId},
-    });
+    expect(updates).toHaveBeenCalledWith(
+      'NonceRequest',
+      {createdForId: slackId},
+      [id],
+    );
     // chat.postMessage with the approve/reject buttons referencing this id
     const [endpoint, body] = slackApiRequest.mock.calls[1];
     expect(endpoint).toBe('chat.postMessage');
@@ -72,7 +69,7 @@ describe('handleCreateNonceRequest', () => {
 
     expect(res.status).toBe(204);
     expect(upsertViewer).not.toHaveBeenCalled();
-    expect(prismaMock.nonceRequest.update).not.toHaveBeenCalled();
+    expect(updates).not.toHaveBeenCalled();
     expect(slackApiRequest).toHaveBeenCalledTimes(1); // no DM sent
   });
 
@@ -81,7 +78,6 @@ describe('handleCreateNonceRequest', () => {
       .mockResolvedValueOnce({ok: true, user: {id: slackId}})
       .mockResolvedValueOnce({ok: false, error: 'channel_not_found'});
     upsertViewer.mockResolvedValueOnce({id: slackId});
-    prismaMock.nonceRequest.update.mockResolvedValueOnce({});
 
     await expect(handleCreateNonceRequest(postJson({id, email}))).rejects.toThrow(
       ApiError,
@@ -91,37 +87,19 @@ describe('handleCreateNonceRequest', () => {
 
 describe('handleNonceRequestInvalidate', () => {
   test('deletes the row and returns 204', async () => {
-    prismaMock.nonceRequest.delete.mockResolvedValueOnce({});
     const res = await handleNonceRequestInvalidate(
       postJson({nonceRequestId: 'r-1'}),
     );
     expect(res.status).toBe(204);
-    expect(prismaMock.nonceRequest.delete).toHaveBeenCalledWith({where: {id: 'r-1'}});
-  });
-
-  test('returns 204 even when the row is already gone (delete throws)', async () => {
-    prismaMock.nonceRequest.delete.mockRejectedValueOnce(
-      new Error('record not found'),
-    );
-    const res = await handleNonceRequestInvalidate(
-      postJson({nonceRequestId: 'r-1'}),
-    );
-    expect(res.status).toBe(204);
+    expect(deletes).toHaveBeenCalledWith('NonceRequest', ['r-1']);
   });
 });
 
 describe('handleNonceInvalidate', () => {
   test('deletes the row and returns 204', async () => {
-    prismaMock.nonce.delete.mockResolvedValueOnce({});
     const res = await handleNonceInvalidate(postJson({nonce: 'n-1'}));
     expect(res.status).toBe(204);
-    expect(prismaMock.nonce.delete).toHaveBeenCalledWith({where: {nonce: 'n-1'}});
-  });
-
-  test('returns 204 even when the row is already gone', async () => {
-    prismaMock.nonce.delete.mockRejectedValueOnce(new Error('record not found'));
-    const res = await handleNonceInvalidate(postJson({nonce: 'n-1'}));
-    expect(res.status).toBe(204);
+    expect(deletes).toHaveBeenCalledWith('Nonce', ['n-1']);
   });
 
   test('rejects malformed JSON body with ApiError(400)', async () => {

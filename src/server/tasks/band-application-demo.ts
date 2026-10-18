@@ -1,6 +1,8 @@
 import bandcamp from 'bandcamp-scraper';
 import {promisify} from 'util';
-import {prismaClient} from '../../server/prismaClient.server';
+import {eq} from 'drizzle-orm';
+import {db} from '../../server/db.server';
+import {bandApplication} from '../../server/db/schema';
 import {readJsonPayload} from '../../server/readJsonPayload.server';
 import {DemoEmbedType} from '../../utils/enums';
 
@@ -17,10 +19,13 @@ export async function handleBandApplicationDemo(
 ): Promise<Response> {
   const {id} = await readJsonPayload<BandApplicationDemoPayload>(request);
 
-  const bandApplication = await prismaClient.bandApplication.findUniqueOrThrow({
-    where: {id},
+  const application = await db.query.bandApplication.findFirst({
+    where: eq(bandApplication.id, id),
   });
-  const demo = bandApplication.demo?.split(' ').shift();
+  if (!application) {
+    throw new Error(`BandApplication ${id} not found`);
+  }
+  const demo = application.demo?.split(' ').shift();
   if (demo == null) {
     return new Response(null, {status: 204});
   }
@@ -139,10 +144,10 @@ export async function handleBandApplicationDemo(
       break;
   }
 
-  await prismaClient.bandApplication.update({
-    where: {id},
-    data: {demoEmbed, demoEmbedType},
-  });
+  await db
+    .update(bandApplication)
+    .set({demoEmbed, demoEmbedType})
+    .where(eq(bandApplication.id, id));
 
   return new Response(null, {status: 204});
 }

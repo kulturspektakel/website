@@ -1,4 +1,6 @@
-import {prismaClient} from '../../server/prismaClient.server';
+import {eq} from 'drizzle-orm';
+import {db} from '../../server/db.server';
+import {nonceRequest} from '../../server/db/schema';
 import {readJsonPayload} from '../../server/readJsonPayload.server';
 
 /**
@@ -13,8 +15,6 @@ export async function handleNonceRequestInvalidate(
   const {nonceRequestId} = await readJsonPayload<{nonceRequestId: string}>(
     request,
   );
-  await prismaClient.nonceRequest
-    .delete({where: {id: nonceRequestId}})
-    .catch(() => null);
+  await db.delete(nonceRequest).where(eq(nonceRequest.id, nonceRequestId));
   return new Response(null, {status: 204});
 }

@@ -1,5 +1,7 @@
 import {addDays, isBefore, subMinutes} from 'date-fns';
-import {prismaClient} from '../../server/prismaClient.server';
+import {eq} from 'drizzle-orm';
+import {db} from '../../server/db.server';
+import {gmailReminders} from '../../server/db/schema';
 import {readJsonPayload} from '../../server/readJsonPayload.server';
 import {slackApiRequest} from '../../server/slack.server';
 import {enqueueGcpTask} from '../../server/enqueueGcpTask.server';
@@ -66,8 +68,8 @@ export async function handleGmailNotification(
     return new Response(null, {status: 204});
   }
 
-  const existing = await prismaClient.gmailReminders.findUnique({
-    where: {messageId: message.id},
+  const existing = await db.query.gmailReminders.findFirst({
+    where: eq(gmailReminders.messageId, message.id),
   });
   if (
     existing ||
@@ -88,9 +90,7 @@ export async function handleGmailNotification(
       text: `Neue E-Mail für ${account}`,
       attachments: [slackAttachment(message, account)],
     }),
-    prismaClient.gmailReminders.create({
-      data: {messageId: message.id, account},
-    }),
+    db.insert(gmailReminders).values({messageId: message.id, account}),
     ...config.reminderInDays.map((days) =>
       enqueueGcpTask(
         'gmail-reminder',
