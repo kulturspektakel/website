@@ -1,4 +1,4 @@
-import {GenreCategory} from '../generated/prisma/browser';
+import {GenreCategory} from './enums';
 
 // Single source of truth for the German genre-category labels and icons, shared
 // by the booking form (Step1) and the crew booking table. Ordered for display

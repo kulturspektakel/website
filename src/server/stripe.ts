@@ -1,6 +1,6 @@
 import Stripe from 'stripe';
 import {prismaClient} from './prismaClient.server';
-import {DonationSource} from '../generated/prisma/client';
+import {DonationSource} from '../utils/enums';
 import {ApiError} from './apiError.server';
 import {enqueueGcpTask} from './enqueueGcpTask.server';
 import {slackApiRequest} from './slack.server';

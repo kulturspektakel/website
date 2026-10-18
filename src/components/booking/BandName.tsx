@@ -1,5 +1,5 @@
 import {Flex, HStack, Image, Text} from '@chakra-ui/react';
-import {GenreCategory} from '../../generated/prisma/browser';
+import {GenreCategory} from '../../utils/enums';
 import {
   GENRE_CATEGORY_ICONS,
   GENRE_CATEGORY_LABELS,

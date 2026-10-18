@@ -41,12 +41,7 @@ import {
   FaMusic,
   FaRegTrashCan,
 } from 'react-icons/fa6';
-import {
-  BandRepertoire,
-  DemoEmbedType,
-  GenreCategory,
-  PreviouslyPlayed,
-} from '../generated/prisma/browser';
+import {BandRepertoire, DemoEmbedType, GenreCategory, PreviouslyPlayed} from '../utils/enums';
 import {prismaClient} from '../server/prismaClient.server';
 import {Avatar} from '../components/chakra-snippets/avatar';
 import {BandName} from '../components/booking/BandName';

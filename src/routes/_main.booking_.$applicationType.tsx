@@ -32,10 +32,7 @@ import {prismaClient} from '../server/prismaClient.server';
 import {enqueueGcpTask} from '../server/enqueueGcpTask.server';
 import z from 'zod';
 import {toFormikValidationSchema} from 'zod-formik-adapter';
-import {
-  GenreCategory,
-  HeardAboutBookingFrom,
-} from '../generated/prisma/browser';
+import {GenreCategory, HeardAboutBookingFrom} from '../utils/enums';
 
 // Server schema validates step3 + eventId and transforms spotifyArtist
 const serverSchema = z

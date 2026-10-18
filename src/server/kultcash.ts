@@ -6,12 +6,8 @@ import {
 } from '../proto/logmessage';
 import {DeviceConfig} from '../proto/config';
 import {AllLists} from '../proto/configs';
-import {
-  ProductList,
-  Prisma,
-  OrderPayment,
-  CardTransactionType,
-} from '../generated/prisma/client';
+import {ProductList, Prisma} from '../generated/prisma/client';
+import {CardTransactionType, OrderPayment} from '../utils/enums';
 import {addDays, isBefore, differenceInDays} from 'date-fns';
 import crc32 from 'crc-32';
 import {ApiError} from './apiError.server';

@@ -2,7 +2,7 @@ import {useEffect, useMemo, useRef, useState} from 'react';
 import {Box, Input} from '@chakra-ui/react';
 import {type useNavigate} from '@tanstack/react-router';
 import {useVirtualizer} from '@tanstack/react-virtual';
-import {GenreCategory} from '../../generated/prisma/browser';
+import {GenreCategory} from '../../utils/enums';
 import {normalizeBandName} from '../../utils/normalizeBandName';
 import {BandName} from './BandName';
 import {

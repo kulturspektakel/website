@@ -10,7 +10,7 @@ import {
   Text,
 } from '@chakra-ui/react';
 import InfoText from './InfoText';
-import {CardTransactionType} from '../../generated/prisma/browser';
+import {CardTransactionType} from '../../utils/enums';
 import {FaBan, FaXmark} from 'react-icons/fa6';
 import {useState} from 'react';
 import {useRouter} from '@tanstack/react-router';

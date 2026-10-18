@@ -12,7 +12,7 @@ import {useFormikContext} from 'formik';
 // import {Alert} from '../chakra-snippets/alert';
 import {ConnectedField} from '../forms/ConnectedField';
 import {z} from 'zod';
-import {BandRepertoire, GenreCategory} from '../../generated/prisma/browser';
+import {BandRepertoire, GenreCategory} from '../../utils/enums';
 import {BAND_GENRE_CATEGORY_OPTIONS} from '../../utils/genreCategories';
 
 const baseSchema = z.object({

@@ -14,7 +14,7 @@ import Headline from '../components/Headline';
 import {SegmentedControlOrSelect} from '../components/SegmentedControlOrSelect';
 import {createFileRoute} from '@tanstack/react-router';
 import {createServerFn, useServerFn} from '@tanstack/react-start';
-import {EventType} from '../generated/prisma/browser';
+import {EventType} from '../utils/enums';
 import {useInfiniteQuery} from '@tanstack/react-query';
 import {useState} from 'react';
 import {seo} from '../utils/seo';

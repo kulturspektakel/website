@@ -27,6 +27,7 @@ import {
   pgEnum,
 } from 'drizzle-orm/pg-core';
 import {sql} from 'drizzle-orm';
+import * as enums from '../../utils/enums';
 
 import {createId} from '@paralleldrive/cuid2';
 import {customType} from 'drizzle-orm/pg-core';
@@ -40,88 +41,32 @@ const bytea = customType<{data: Buffer; driverData: Buffer}>({
   dataType: () => 'bytea',
 });
 
-export const bandRepertoire = pgEnum('BandRepertoire', [
-  'ExclusivelyOwnSongs',
-  'MostlyOwnSongs',
-  'MostlyCoverSongs',
-  'ExclusivelyCoverSongs',
-]);
-export const cardTransactionType = pgEnum('CardTransactionType', [
-  'TopUp',
-  'Charge',
-  'Cashout',
-  'Repair',
-  'Donation',
-]);
-export const demoEmbedType = pgEnum('DemoEmbedType', [
-  'Unresolvable',
-  'YouTubeVideo',
-  'YouTubePlaylist',
-  'BandcampAlbum',
-  'BandcampTrack',
-  'SoundcloudUrl',
-  'SpotifyTrack',
-  'SpotifyArtist',
-  'SpotifyAlbum',
-]);
-export const deviceType = pgEnum('DeviceType', [
-  'CONTACTLESS_TERMINAL',
-  'IPAD',
-  'NOISE_MONITOR',
-]);
-export const dietType = pgEnum('DietType', ['VEGETARIAN', 'VEGAN']);
-export const donationSource = pgEnum('DonationSource', [
-  'Stripe',
-  'Manual',
-  'Membership',
-  'Other',
-]);
-export const eventType = pgEnum('EventType', [
-  'Kulturspektakel',
-  'Other',
-  'Locker',
-]);
-export const genreCategory = pgEnum('GenreCategory', [
-  'Rock',
-  'Pop',
-  'Indie',
-  'Reggae_Ska',
-  'Blues_Funk_Jazz_Soul',
-  'Folk_SingerSongwriter_Country',
-  'Elektro_HipHop',
-  'Hardrock_Metal_Punk',
-  'Other',
-  'DJ',
-]);
-export const heardAboutBookingFrom = pgEnum('HeardAboutBookingFrom', [
-  'BYon',
-  'Newspaper',
-  'Friends',
-  'Website',
-  'Facebook',
-  'Instagram',
-]);
-export const minimumAge = pgEnum('MinimumAge', ['NONE', 'AGE_16', 'AGE_18']);
-export const noiseTagType = pgEnum('NoiseTagType', ['IGNORE', 'COMMENT']);
-export const nonceRequestStatus = pgEnum('NonceRequestStatus', [
-  'Pending',
-  'Approved',
-  'Rejected',
-]);
-export const orderPayment = pgEnum('OrderPayment', [
-  'CASH',
-  'BON',
-  'SUM_UP',
-  'VOUCHER',
-  'FREE_CREW',
-  'FREE_BAND',
-  'KULT_CARD',
-]);
-export const previouslyPlayed = pgEnum('PreviouslyPlayed', [
-  'Yes',
-  'OtherFormation',
-  'No',
-]);
+export const bandRepertoire = pgEnum('BandRepertoire', enums.BandRepertoire);
+export const cardTransactionType = pgEnum(
+  'CardTransactionType',
+  enums.CardTransactionType,
+);
+export const demoEmbedType = pgEnum('DemoEmbedType', enums.DemoEmbedType);
+export const deviceType = pgEnum('DeviceType', enums.DeviceType);
+export const dietType = pgEnum('DietType', enums.DietType);
+export const donationSource = pgEnum('DonationSource', enums.DonationSource);
+export const eventType = pgEnum('EventType', enums.EventType);
+export const genreCategory = pgEnum('GenreCategory', enums.GenreCategory);
+export const heardAboutBookingFrom = pgEnum(
+  'HeardAboutBookingFrom',
+  enums.HeardAboutBookingFrom,
+);
+export const minimumAge = pgEnum('MinimumAge', enums.MinimumAge);
+export const noiseTagType = pgEnum('NoiseTagType', enums.NoiseTagType);
+export const nonceRequestStatus = pgEnum(
+  'NonceRequestStatus',
+  enums.NonceRequestStatus,
+);
+export const orderPayment = pgEnum('OrderPayment', enums.OrderPayment);
+export const previouslyPlayed = pgEnum(
+  'PreviouslyPlayed',
+  enums.PreviouslyPlayed,
+);
 
 export const deviceConfigVersion = pgTable(
   'DeviceConfigVersion',

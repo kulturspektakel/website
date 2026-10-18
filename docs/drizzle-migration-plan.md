@@ -2,7 +2,7 @@
 
 Plan for replacing Prisma 7 with Drizzle ORM, incrementally: both run against
 the same database while the code moves over module by module, and Prisma is
-removed at the end. Started 2026-10-18; phase 0 is done.
+removed at the end. Started 2026-10-18; phases 0 and 1 are done.
 
 ## Why
 
@@ -66,17 +66,27 @@ client-side `cuid()`.
   an introspection bug, harmless but noisy. Another reason to use generated
   migrations rather than `push` in phase 3.
 
-## Phase 1 — plumbing
+## Phase 1 — plumbing (done)
 
-- `src/server/db.server.ts`: one `drizzle({client: Pool, schema})` on
-  `drizzle-orm/neon-serverless` (WebSocket pool, supports transactions), same
-  driver and `connect_timeout` as `prismaClient.server.ts`. Check how it parses
-  zone-less timestamps (must be UTC, like Prisma).
-- Tests: `drizzle-orm/pglite` instead of `adapter-pg` + the PGlite socket.
-- Enums: `src/utils/enums.ts` as `as const` objects (client-safe, no Drizzle
-  runtime in the browser); `pgEnum` reads from them. Replaces the 25 imports
-  of `generated/prisma/browser`.
-- `withTxid` on `db.transaction` + `pg_current_xact_id()`.
+- `src/server/db.server.ts`: `db = drizzle({client: Pool, schema})` on
+  `drizzle-orm/neon-serverless`, same driver, URL and `connect_timeout` as
+  `prismaClient.server.ts`. Verified against production (read-only): same
+  timestamps as Prisma, relational queries work.
+- Timestamps: the driver hands zone-less `timestamp` values through as strings
+  and `mode: 'date'` columns read and write them as UTC, like Prisma. Raw
+  `db.execute(sql…)` results keep them as strings.
+- Tests: the e2e harness stays as it is. `db.server.ts` honours the same
+  `DB_DRIVER=pg` + `TEST_DATABASE_URL` switch as `prismaClient.server.ts`
+  (node-postgres against the PGlite socket, pool of one). Checked by hand:
+  defaults (`uuid`, cuid2), `updatedAt` and a UTC round trip. Unit-test mocks
+  of `prismaClient` move with their modules in phase 2; the e2e DDL keeps
+  coming from `prisma migrate diff` until phase 3.
+- Enums: `src/utils/enums.ts` (`as const` objects + union types, identical to
+  Prisma's generated ones); `schema.ts` builds its `pgEnum`s from them. All
+  enum imports now come from there; `generated/prisma` is only imported for
+  `Prisma`, `PrismaClient` and model types, which go with their modules.
+- `withTxid` moves to Drizzle together with the booking write fns (its only
+  callers), so there's no unused copy in between.
 
 ## Phase 2 — move the queries (most of the work)
 

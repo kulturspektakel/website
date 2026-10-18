@@ -1,7 +1,7 @@
 import {createHash} from 'node:crypto';
 import {createMiddleware} from '@tanstack/react-start';
 import {prismaClient} from './prismaClient.server';
-import type {DeviceType} from '../generated/prisma/client';
+import type {DeviceType} from '../utils/enums';
 
 /**
  * Identity attached to an authenticated `/api/*` request.

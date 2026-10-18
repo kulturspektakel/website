@@ -1,6 +1,7 @@
 import {subMinutes} from 'date-fns';
 import {tzOffset} from '@date-fns/tz';
-import type {Prisma, DeviceType} from '../generated/prisma/client';
+import type {Prisma} from '../generated/prisma/client';
+import type {DeviceType} from '../utils/enums';
 import type {LogMessage} from '../proto/logmessage';
 import {timeZone} from '../utils/dateUtils';
 

@@ -3,10 +3,7 @@ import useIsDJ from './useIsDJ';
 import {ConnectedField} from '../forms/ConnectedField';
 import {z} from 'zod';
 import {useSearch} from '@tanstack/react-router';
-import {
-  HeardAboutBookingFrom,
-  PreviouslyPlayed,
-} from '../../generated/prisma/browser';
+import {HeardAboutBookingFrom, PreviouslyPlayed} from '../../utils/enums';
 
 import {
   djSchema as step2DjSchema,

@@ -2,7 +2,7 @@ import bandcamp from 'bandcamp-scraper';
 import {promisify} from 'util';
 import {prismaClient} from '../../server/prismaClient.server';
 import {readJsonPayload} from '../../server/readJsonPayload.server';
-import {DemoEmbedType} from '../../generated/prisma/browser';
+import {DemoEmbedType} from '../../utils/enums';
 
 export type BandApplicationDemoPayload = {id: string};
 
