@@ -5,14 +5,17 @@ import {pgcrypto} from '@electric-sql/pglite/contrib/pgcrypto';
 import {unaccent} from '@electric-sql/pglite/contrib/unaccent';
 import {uuid_ossp} from '@electric-sql/pglite/contrib/uuid_ossp';
 import {PGLiteSocketServer} from '@electric-sql/pglite-socket';
-import {execFileSync, spawn} from 'node:child_process';
+import {spawn} from 'node:child_process';
+import {drizzle} from 'drizzle-orm/pglite';
+import {migrate} from 'drizzle-orm/pglite/migrator';
 import {createServer} from 'node:net';
 import {existsSync, readFileSync} from 'node:fs';
 
 /**
  * One-time setup for the whole e2e run: boots an in-memory Postgres (PGlite)
- * seeded with the real Prisma schema, exposes it over a socket, and starts the
- * actual dev server pointed at it via the node-postgres adapter. Connection
+ * built from the app's migrations (drizzle/), exposes it over a socket, and
+ * starts the actual dev server pointed at it via node-postgres
+ * (`DB_DRIVER=pg`). Connection
  * details are handed to the colocated route tests through `provide` (see
  * test/e2e/client.ts). No Docker or network required.
  */
@@ -33,7 +36,8 @@ function resolveContactlessSalt(): string {
     return process.env.CONTACTLESS_SALT;
   }
   const match =
-    existsSync('.env') && readFileSync('.env', 'utf8').match(/^CONTACTLESS_SALT=(.*)$/m);
+    existsSync('.env') &&
+    readFileSync('.env', 'utf8').match(/^CONTACTLESS_SALT=(.*)$/m);
   if (match) {
     return match[1].trim().replace(/^["']|["']$/g, '');
   }
@@ -62,26 +66,8 @@ export default async function setup({
   const db = await PGlite.create({
     extensions: {citext, pg_trgm, pgcrypto, unaccent, uuid_ossp},
   });
-  const ddl = execFileSync(
-    'node_modules/.bin/prisma',
-    ['migrate', 'diff', '--from-empty', '--to-schema', 'prisma/schema.prisma', '--script'],
-    {
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'ignore'],
-      // prisma.config.ts resolves env('DATABASE_URL'); this diff is offline and
-      // never connects, but the value must exist (e.g. in CI without a .env).
-      env: {...process.env, DATABASE_URL: process.env.DATABASE_URL ?? 'postgresql://placeholder'},
-    },
-  );
-  await db.exec(ddl);
-
-  // graphile-worker lives outside the Prisma schema. Mock its `add_job` with a
-  // no-op so `scheduleTask` succeeds in tests without a real worker.
-  await db.query('CREATE SCHEMA graphile_worker');
-  await db.query(
-    `CREATE FUNCTION graphile_worker.add_job(identifier text, payload json DEFAULT NULL)
-     RETURNS void LANGUAGE plpgsql AS $$ BEGIN END; $$`,
-  );
+  // The same migrations production is on, so the tests see its schema.
+  await migrate(drizzle(db), {migrationsFolder: 'drizzle'});
 
   const dbPort = await freePort();
   // Allow several connections: the dev server's pool plus each test's client.

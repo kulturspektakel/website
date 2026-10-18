@@ -94,7 +94,7 @@ export const tagKey = (bandApplicationId: string, tag: string) =>
 export const hasTag = (tags: string[], tag: string) =>
   tags.some((t) => normalizeTag(t) === normalizeTag(tag));
 
-// Prisma stores timestamps as zone-less UTC (`timestamp(3)`), but the client's
+// Timestamps are stored as zone-less UTC (`timestamp(3)`), but the client's
 // default reads zone-less timestamps as browser-local time, like node-postgres.
 const parseUtcTimestamp = (value: string) =>
   new Date(`${value.replace(' ', 'T')}Z`);

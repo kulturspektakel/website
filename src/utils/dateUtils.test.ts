@@ -9,8 +9,7 @@ function sourceFiles(dir: string, out: string[] = []): string[] {
   for (const entry of readdirSync(dir, {withFileTypes: true})) {
     const path = join(dir, entry.name);
     if (entry.isDirectory()) {
-      // Generated Prisma client ships its own doc comments and examples.
-      if (entry.name !== 'generated') sourceFiles(path, out);
+      sourceFiles(path, out);
     } else if (/\.tsx?$/.test(entry.name) && !entry.name.includes('.test.')) {
       out.push(path);
     }

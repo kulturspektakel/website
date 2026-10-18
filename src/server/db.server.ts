@@ -6,12 +6,10 @@ import ws from 'ws';
 import * as relations from './db/relations';
 import * as tables from './db/schema';
 
-// The Drizzle counterpart of `prismaClient.server.ts`, the single place the app
-// connects with Drizzle. Both run side by side against the same database while
-// the code moves over (see docs/drizzle-migration-plan.md).
+// The single place the app connects to the database.
 //
 // Timestamps: Drizzle hands zone-less `timestamp` values through as strings
-// and the `mode: 'date'` columns read them as UTC, like Prisma. Raw
+// and the `mode: 'date'` columns read and write them as UTC. Raw
 // `db.execute(sql…)` results keep them as strings.
 const schema = {...tables, ...relations};
 
@@ -34,10 +32,10 @@ function createDb() {
   }
 
   neonConfig.webSocketConstructor = ws;
+  const connectionString = new URL(process.env.DATABASE_URL!);
+  connectionString.searchParams.set('connect_timeout', '10');
   return drizzle({
-    client: new Pool({
-      connectionString: process.env.DATABASE_URL + '&connect_timeout=10',
-    }),
+    client: new Pool({connectionString: connectionString.href}),
     schema,
   });
 }
@@ -53,8 +51,8 @@ export type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 // Either `db` or a transaction, for helpers that work both ways.
 export type DbExecutor = typeof db | DbTransaction;
 
-// Whether a query failed on a unique constraint (Postgres 23505; Prisma's
-// `P2002`), for writes that can't skip a duplicate up front.
+// Whether a query failed on a unique constraint (Postgres 23505), for writes
+// that can't skip a duplicate up front.
 export function isUniqueViolation(e: unknown) {
   return (
     e instanceof DrizzleQueryError &&

@@ -2,8 +2,7 @@
 
 Plan for replacing Prisma 7 with Drizzle ORM, incrementally: both run against
 the same database while the code moves over module by module, and Prisma is
-removed at the end. Started 2026-10-18; phases 0–2 are done (no app code uses
-Prisma any more).
+removed at the end. Started and finished 2026-10-18: Prisma is gone.
 
 ## Why
 
@@ -116,17 +115,34 @@ Things that differ between the two and had to be spelled out:
 - Raw `db.execute(sql…)` returns timestamps as strings; prefer the query builder
   with an `sql` condition where the result needs `Date`s.
 
-## Phase 3 — hand over the schema, remove Prisma
+## Phase 3 — hand over the schema, remove Prisma (done)
 
-- Generated migrations (`drizzle-kit generate` + `migrate`) instead of
-  `db push`: local `.env` is the production database, so a reviewable SQL
-  migration is the safety net `db push` never had. Baseline = the current
-  schema, marked as applied; plus a custom migration recording the functions
-  and the trigger.
-- `directus_users` read-only in a `pgSchema('directus')` outside the
-  `schemaFilter`.
-- Delete `prisma/`, `prisma.config.ts`, `src/generated/prisma`, the Prisma
-  packages; measure cold starts on Vercel again.
+- Generated migrations replace `prisma db push`. `drizzle/` holds:
+  - `0000_extensions` (hand-written: citext, pg_trgm, pgcrypto, unaccent,
+    uuid-ossp),
+  - `0001_baseline` (`drizzle-kit generate` from the schema),
+  - `0002_functions_and_triggers` (hand-written: `slugify`, `f_unaccent`,
+    `set_slug_from_title` and the `news_generate_slug` trigger, copied from
+    production).
+
+  A fresh Postgres 18 migrated with them matches production's `public` schema
+  statement for statement. Production already had all of it, so the three
+  were recorded as applied in `drizzle.__drizzle_migrations` (same hashes and
+  timestamps the migrator computes) instead of being run; `drizzle-kit migrate`
+  against production is a no-op, and `drizzle-kit generate` finds no changes.
+  The legacy sequence `productlist_id_seq` was renamed to `ProductList_id_seq`
+  so a fresh database and production agree exactly.
+- Workflow: edit `src/server/db/schema.ts` → `yarn db:generate` → review the SQL
+  → `yarn db:migrate`. Local `.env` is production, so the migration is the
+  change. Functions, triggers and data fixes go in `--custom` migrations.
+- The e2e harness builds its PGlite database with the same migrations
+  (`drizzle-orm/pglite/migrator`).
+- Deleted: `prisma/`, `prisma.config.ts`, `src/generated/prisma`,
+  `prismaClient.server.ts` and the Prisma packages. PGlite, which the e2e
+  harness uses and which came in through `prisma`, is now a direct dependency.
+- Not done: `directus_users` is still read with raw SQL (one query in
+  `currentViewer.server.ts`); modelling it would need a schema file outside
+  drizzle-kit's, for little gain.
 
 ## Watch out for
 
@@ -137,6 +153,6 @@ Things that differ between the two and had to be spelled out:
   then mirror it in `src/server/db/schema.ts`.
 - New rows in the former `cuid()` tables get uuids (36 characters; existing
   rows keep their 25-character cuids). Nothing validates the format.
-- Until phase 3, nothing checks that `src/server/db/schema.ts` still matches
-  `prisma/schema.prisma`: the e2e database is built from Prisma's DDL. Repeat
-  the phase-0 round trip after schema changes.
+- `drizzle-kit push` is not used: against this database it always wants to
+  drop and re-add `_ProductToProductAdditives_AB_pkey` (an introspection bug).
+  Migrations compare snapshots and don't have that problem.

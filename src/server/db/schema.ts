@@ -1,14 +1,13 @@
-// Drizzle schema of the app's tables (Postgres schema `public`). Generated with
-// `drizzle-kit pull` from the production database on 2026-10-18, then edited:
-// - timestamps are read as `Date` (`mode: 'date'`), like Prisma;
-// - index columns use the default order and opclass (pull emits wrong opclasses);
-// - citext and bytea, which drizzle-kit can't introspect, are custom types;
-// - Prisma's client-side defaults (`@default(uuid())`, `@default(cuid())`,
-//   `@updatedAt`) are `$defaultFn` / `$onUpdate`, since the database has no
-//   default for them. New rows get a uuid where Prisma used a cuid; the ids
-//   are opaque text, nothing depends on their format.
-// While Prisma still owns the schema (see docs/drizzle-migration-plan.md),
-// change prisma/schema.prisma first and mirror the change here.
+// The app's tables (Postgres schema `public`) — the source of truth for the
+// database. To change it: edit this file, `yarn db:generate` for a migration in
+// drizzle/, review the SQL, then `yarn db:migrate` (local .env is production).
+// Functions and triggers live in hand-written migrations (drizzle/0002_*).
+//
+// Started as `drizzle-kit pull` from production (2026-10-18), with these
+// edits: timestamps read as `Date` (`mode: 'date'`); citext and bytea as custom
+// types; default index opclasses (pull emitted wrong ones); and the defaults
+// Prisma used to apply in the client (`$defaultFn` / `$onUpdate`) — new rows
+// get a uuid where Prisma used a cuid; the ids are opaque text.
 import {
   customType,
   pgTable,
@@ -292,8 +291,7 @@ export const bandApplicationComment = pgTable(
 );
 
 export const viewer = pgTable('Viewer', {
-  // Prisma `@default(uuid())` (client-side). Slack-keyed Viewers set the id
-  // themselves (the Slack user id).
+  // Slack-keyed Viewers set the id themselves (the Slack user id).
   id: text()
     .primaryKey()
     .notNull()
@@ -306,7 +304,7 @@ export const viewer = pgTable('Viewer', {
   updatedAt: timestamp({precision: 3, mode: 'date'})
     .default(sql`CURRENT_TIMESTAMP`)
     .notNull()
-    .$onUpdate(() => new Date()), // Prisma `@updatedAt`
+    .$onUpdate(() => new Date()),
 });
 
 export const bandApplicationTag = pgTable(
@@ -571,7 +569,7 @@ export const noiseLocationAssignment = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => crypto.randomUUID()), // Prisma `@default(cuid())`
+      .$defaultFn(() => crypto.randomUUID()),
     locationId: text().notNull(),
     deviceId: text().notNull(),
     start: timestamp({precision: 3, mode: 'date'}),
@@ -611,7 +609,7 @@ export const noiseLocation = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => crypto.randomUUID()), // Prisma `@default(cuid())`
+      .$defaultFn(() => crypto.randomUUID()),
     projectId: text().notNull(),
     latitude: doublePrecision().notNull(),
     longitude: doublePrecision().notNull(),
@@ -634,7 +632,7 @@ export const noiseLocationLimit = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => crypto.randomUUID()), // Prisma `@default(cuid())`
+      .$defaultFn(() => crypto.randomUUID()),
     locationId: text().notNull(),
     decibels: doublePrecision().notNull(),
     start: timestamp({precision: 3, mode: 'date'}),
@@ -661,7 +659,7 @@ export const noiseProject = pgTable('NoiseProject', {
   id: text()
     .primaryKey()
     .notNull()
-    .$defaultFn(() => crypto.randomUUID()), // Prisma `@default(cuid())`
+    .$defaultFn(() => crypto.randomUUID()),
   name: text().notNull(),
   start: timestamp({precision: 3, mode: 'date'}).notNull(),
   end: timestamp({precision: 3, mode: 'date'}).notNull(),
@@ -673,7 +671,7 @@ export const noiseLog = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => crypto.randomUUID()), // Prisma `@default(cuid())`
+      .$defaultFn(() => crypto.randomUUID()),
     deviceId: text().notNull(),
     measuredAt: timestamp({precision: 3, mode: 'date'}).notNull(),
     bands: bytea().notNull(),
@@ -709,7 +707,7 @@ export const noiseTag = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => crypto.randomUUID()), // Prisma `@default(cuid())`
+      .$defaultFn(() => crypto.randomUUID()),
     projectId: text().notNull(),
     locationId: text(),
     deviceId: text(),
@@ -857,7 +855,7 @@ export const viewerLocation = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => crypto.randomUUID()), // Prisma `@default(cuid())`
+      .$defaultFn(() => crypto.randomUUID()),
     viewerId: text().notNull(),
     createdAt: timestamp({precision: 3, mode: 'date'}).notNull(),
     latitude: doublePrecision().notNull(),

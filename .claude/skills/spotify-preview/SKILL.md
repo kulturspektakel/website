@@ -90,6 +90,5 @@ Keep the confirmation under 4 lines. No prose narration of the steps.
 
 ## What this skill does NOT do
 
-- Does not run `prisma generate` or schema migrations — the columns are assumed to exist.
-- Does not update the local `prisma/schema.prisma` — only the database.
+- Does not run schema migrations or touch `src/server/db/schema.ts` — the columns are assumed to exist.
 - Does not handle artist URLs or playlist URLs.

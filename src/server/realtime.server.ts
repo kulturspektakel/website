@@ -31,8 +31,8 @@ const IN_EVENT = `a."eventId" = $1 AND a."genreCategory" <> 'DJ'`;
 // Every live query of the booking page, sealed for one event. The browser can
 // subscribe to these but can't read or change them. Rules for the SQL:
 // - Select columns explicitly; never `Viewer.*` (it has `slackToken`).
-// - Realtime matches columns to row fields by name. Prisma's columns are
-//   already camelCase, so they need no alias.
+// - Realtime matches columns to row fields by name. The columns are already
+//   camelCase, so they need no alias.
 // - No ORDER BY (unsupported; the client sorts).
 // - Extension types like citext can't be output; cast them to text.
 // Pass `debugMode: true` to `createRealtime` (dev only) to see the database's

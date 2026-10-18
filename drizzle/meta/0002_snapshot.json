@@ -1,0 +1,3056 @@
+{
+  "id": "4e8ca3df-1ec4-4f29-a33c-906909a1be3b",
+  "prevId": "2eeb7a79-6a08-403a-8d7e-19c4256f80de",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.Area": {
+      "name": "Area",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "displayName": {
+          "name": "displayName",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "order": {
+          "name": "order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "themeColor": {
+          "name": "themeColor",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "latitude": {
+          "name": "latitude",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "longitude": {
+          "name": "longitude",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.AreaOpeningHour": {
+      "name": "AreaOpeningHour",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "startTime": {
+          "name": "startTime",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "endTime": {
+          "name": "endTime",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "areaId": {
+          "name": "areaId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "AreaOpeningHour_areaId_fkey": {
+          "name": "AreaOpeningHour_areaId_fkey",
+          "tableFrom": "AreaOpeningHour",
+          "columnsFrom": [
+            "areaId"
+          ],
+          "tableTo": "Area",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "cascade",
+          "onDelete": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.BandApplication": {
+      "name": "BandApplication",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "bandname": {
+          "name": "bandname",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "genre": {
+          "name": "genre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "city": {
+          "name": "city",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "facebook": {
+          "name": "facebook",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "demo": {
+          "name": "demo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "numberOfArtists": {
+          "name": "numberOfArtists",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "numberOfNonMaleArtists": {
+          "name": "numberOfNonMaleArtists",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contactName": {
+          "name": "contactName",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "contactPhone": {
+          "name": "contactPhone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "knowsKultFrom": {
+          "name": "knowsKultFrom",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "distance": {
+          "name": "distance",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "facebookLikes": {
+          "name": "facebookLikes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "website": {
+          "name": "website",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "genreCategory": {
+          "name": "genreCategory",
+          "type": "GenreCategory",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "heardAboutBookingFrom": {
+          "name": "heardAboutBookingFrom",
+          "type": "HeardAboutBookingFrom",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contactedByViewerId": {
+          "name": "contactedByViewerId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "instagram": {
+          "name": "instagram",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "instagramFollower": {
+          "name": "instagramFollower",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "eventId": {
+          "name": "eventId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hasPreviouslyPlayed": {
+          "name": "hasPreviouslyPlayed",
+          "type": "PreviouslyPlayed",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lastContactedAt": {
+          "name": "lastContactedAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "latitude": {
+          "name": "latitude",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "longitude": {
+          "name": "longitude",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "demoEmbedUrl": {
+          "name": "demoEmbedUrl",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "demoEmbed": {
+          "name": "demoEmbed",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "demoEmbedType": {
+          "name": "demoEmbedType",
+          "type": "DemoEmbedType",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "repertoire": {
+          "name": "repertoire",
+          "type": "BandRepertoire",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "spotifyArtist": {
+          "name": "spotifyArtist",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "spotifyMonthlyListeners": {
+          "name": "spotifyMonthlyListeners",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "imageUrl": {
+          "name": "imageUrl",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stageColumn": {
+          "name": "stageColumn",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stageRow": {
+          "name": "stageRow",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "BandApplication_contactedByViewerId_fkey": {
+          "name": "BandApplication_contactedByViewerId_fkey",
+          "tableFrom": "BandApplication",
+          "columnsFrom": [
+            "contactedByViewerId"
+          ],
+          "tableTo": "Viewer",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "cascade",
+          "onDelete": "set null"
+        },
+        "BandApplication_eventId_fkey": {
+          "name": "BandApplication_eventId_fkey",
+          "tableFrom": "BandApplication",
+          "columnsFrom": [
+            "eventId"
+          ],
+          "tableTo": "Event",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "cascade",
+          "onDelete": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.BandApplicationComment": {
+      "name": "BandApplicationComment",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "viewerId": {
+          "name": "viewerId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "comment": {
+          "name": "comment",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "bandApplicationId": {
+          "name": "bandApplicationId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "BandApplicationComment_bandApplicationId_fkey": {
+          "name": "BandApplicationComment_bandApplicationId_fkey",
+          "tableFrom": "BandApplicationComment",
+          "columnsFrom": [
+            "bandApplicationId"
+          ],
+          "tableTo": "BandApplication",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "cascade",
+          "onDelete": "restrict"
+        },
+        "BandApplicationComment_viewerId_fkey": {
+          "name": "BandApplicationComment_viewerId_fkey",
+          "tableFrom": "BandApplicationComment",
+          "columnsFrom": [
+            "viewerId"
+          ],
+          "tableTo": "Viewer",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "cascade",
+          "onDelete": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.BandApplicationRating": {
+      "name": "BandApplicationRating",
+      "schema": "",
+      "columns": {
+        "viewerId": {
+          "name": "viewerId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rating": {
+          "name": "rating",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "bandApplicationId": {
+          "name": "bandApplicationId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "BandApplicationRating_bandApplicationId_idx": {
+          "name": "BandApplicationRating_bandApplicationId_idx",
+          "columns": [
+            {
+              "expression": "bandApplicationId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        }
+      },
+      "foreignKeys": {
+        "BandApplicationRating_bandApplicationId_fkey": {
+          "name": "BandApplicationRating_bandApplicationId_fkey",
+          "tableFrom": "BandApplicationRating",
+          "columnsFrom": [
+            "bandApplicationId"
+          ],
+          "tableTo": "BandApplication",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "cascade",
+          "onDelete": "restrict"
+        },
+        "BandApplicationRating_viewerId_fkey": {
+          "name": "BandApplicationRating_viewerId_fkey",
+          "tableFrom": "BandApplicationRating",
+          "columnsFrom": [
+            "viewerId"
+          ],
+          "tableTo": "Viewer",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "cascade",
+          "onDelete": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {
+        "BandApplicationRating_pkey": {
+          "name": "BandApplicationRating_pkey",
+          "columns": [
+            "viewerId",
+            "bandApplicationId"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.BandApplicationTag": {
+      "name": "BandApplicationTag",
+      "schema": "",
+      "columns": {
+        "bandApplicationId": {
+          "name": "bandApplicationId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tag": {
+          "name": "tag",
+          "type": "citext",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "createdByViewerId": {
+          "name": "createdByViewerId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "BandApplicationTag_bandApplicationId_tag_key": {
+          "name": "BandApplicationTag_bandApplicationId_tag_key",
+          "columns": [
+            {
+              "expression": "bandApplicationId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "tag",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        }
+      },
+      "foreignKeys": {
+        "BandApplicationTag_bandApplicationId_fkey": {
+          "name": "BandApplicationTag_bandApplicationId_fkey",
+          "tableFrom": "BandApplicationTag",
+          "columnsFrom": [
+            "bandApplicationId"
+          ],
+          "tableTo": "BandApplication",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "cascade",
+          "onDelete": "restrict"
+        },
+        "BandApplicationTag_createdByViewerId_fkey": {
+          "name": "BandApplicationTag_createdByViewerId_fkey",
+          "tableFrom": "BandApplicationTag",
+          "columnsFrom": [
+            "createdByViewerId"
+          ],
+          "tableTo": "Viewer",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "cascade",
+          "onDelete": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.BandPlaying": {
+      "name": "BandPlaying",
+      "schema": "",
+      "columns": {
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "startTime": {
+          "name": "startTime",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "endTime": {
+          "name": "endTime",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "shortDescription": {
+          "name": "shortDescription",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "genre": {
+          "name": "genre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "instagram": {
+          "name": "instagram",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "spotify": {
+          "name": "spotify",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "facebook": {
+          "name": "facebook",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "website": {
+          "name": "website",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "youtube": {
+          "name": "youtube",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "soundcloud": {
+          "name": "soundcloud",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "areaId": {
+          "name": "areaId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "eventId": {
+          "name": "eventId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "photo": {
+          "name": "photo",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "spotifyPreviewUrl": {
+          "name": "spotifyPreviewUrl",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "BandPlaying_areaId_startTime_key": {
+          "name": "BandPlaying_areaId_startTime_key",
+          "columns": [
+            {
+              "expression": "areaId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "startTime",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        },
+        "BandPlaying_eventId_slug_key": {
+          "name": "BandPlaying_eventId_slug_key",
+          "columns": [
+            {
+              "expression": "eventId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "slug",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        }
+      },
+      "foreignKeys": {
+        "BandPlaying_areaId_fkey": {
+          "name": "BandPlaying_areaId_fkey",
+          "tableFrom": "BandPlaying",
+          "columnsFrom": [
+            "areaId"
+          ],
+          "tableTo": "Area",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "cascade",
+          "onDelete": "restrict"
+        },
+        "BandPlaying_eventId_fkey": {
+          "name": "BandPlaying_eventId_fkey",
+          "tableFrom": "BandPlaying",
+          "columnsFrom": [
+            "eventId"
+          ],
+          "tableTo": "Event",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "cascade",
+          "onDelete": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.CardTransaction": {
+      "name": "CardTransaction",
+      "schema": "",
+      "columns": {
+        "clientId": {
+          "name": "clientId",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "cardId": {
+          "name": "cardId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "depositBefore": {
+          "name": "depositBefore",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "depositAfter": {
+          "name": "depositAfter",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "balanceBefore": {
+          "name": "balanceBefore",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "balanceAfter": {
+          "name": "balanceAfter",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "transactionType": {
+          "name": "transactionType",
+          "type": "CardTransactionType",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "counter": {
+          "name": "counter",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "orderId": {
+          "name": "orderId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "CardTransaction_clientId_fkey": {
+          "name": "CardTransaction_clientId_fkey",
+          "tableFrom": "CardTransaction",
+          "columnsFrom": [
+            "clientId"
+          ],
+          "tableTo": "DeviceLog",
+          "columnsTo": [
+            "clientId"
+          ],
+          "onUpdate": "cascade",
+          "onDelete": "restrict"
+        },
+        "CardTransaction_orderId_fkey": {
+          "name": "CardTransaction_orderId_fkey",
+          "tableFrom": "CardTransaction",
+          "columnsFrom": [
+            "orderId"
+          ],
+          "tableTo": "Order",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "cascade",
+          "onDelete": "set null"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.CrewCard": {
+      "name": "CrewCard",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bytea",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "nickname": {
+          "name": "nickname",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "suspended": {
+          "name": "suspended",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "privileged": {
+          "name": "privileged",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "viewerId": {
+          "name": "viewerId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "validUntil": {
+          "name": "validUntil",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "enrolledAt": {
+          "name": "enrolledAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "CrewCard_viewerId_fkey": {
+          "name": "CrewCard_viewerId_fkey",
+          "tableFrom": "CrewCard",
+          "columnsFrom": [
+            "viewerId"
+          ],
+          "tableTo": "Viewer",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "cascade",
+          "onDelete": "set null"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.Device": {
+      "name": "Device",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "lastSeen": {
+          "name": "lastSeen",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "productListId": {
+          "name": "productListId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "softwareVersion": {
+          "name": "softwareVersion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "type": {
+          "name": "type",
+          "type": "DeviceType",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "Device_productListId_fkey": {
+          "name": "Device_productListId_fkey",
+          "tableFrom": "Device",
+          "columnsFrom": [
+            "productListId"
+          ],
+          "tableTo": "ProductList",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "cascade",
+          "onDelete": "set null"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.DeviceConfigVersion": {
+      "name": "DeviceConfigVersion",
+      "schema": "",
+      "columns": {
+        "crc32": {
+          "name": "crc32",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "version": {
+          "name": "version",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        }
+      },
+      "indexes": {
+        "DeviceConfigVersion_crc32_key": {
+          "name": "DeviceConfigVersion_crc32_key",
+          "columns": [
+            {
+              "expression": "crc32",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.DeviceLocation": {
+      "name": "DeviceLocation",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "deviceId": {
+          "name": "deviceId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "latitude": {
+          "name": "latitude",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "longitude": {
+          "name": "longitude",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "locationName": {
+          "name": "locationName",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "DeviceLocation_deviceId_fkey": {
+          "name": "DeviceLocation_deviceId_fkey",
+          "tableFrom": "DeviceLocation",
+          "columnsFrom": [
+            "deviceId"
+          ],
+          "tableTo": "Device",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "cascade",
+          "onDelete": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.DeviceLog": {
+      "name": "DeviceLog",
+      "schema": "",
+      "columns": {
+        "clientId": {
+          "name": "clientId",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "batteryVoltage": {
+          "name": "batteryVoltage",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "usbVoltage": {
+          "name": "usbVoltage",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "deviceId": {
+          "name": "deviceId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "deviceTime": {
+          "name": "deviceTime",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "DeviceLog_deviceId_fkey": {
+          "name": "DeviceLog_deviceId_fkey",
+          "tableFrom": "DeviceLog",
+          "columnsFrom": [
+            "deviceId"
+          ],
+          "tableTo": "Device",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "cascade",
+          "onDelete": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.Donation": {
+      "name": "Donation",
+      "schema": "",
+      "columns": {
+        "amount": {
+          "name": "amount",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "reference": {
+          "name": "reference",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source": {
+          "name": "source",
+          "type": "DonationSource",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "message": {
+          "name": "message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sentConfirmationAt": {
+          "name": "sentConfirmationAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "spendenQuittungAt": {
+          "name": "spendenQuittungAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "quittungCity": {
+          "name": "quittungCity",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "quittungName": {
+          "name": "quittungName",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "quittungStreet": {
+          "name": "quittungStreet",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "amountPins": {
+          "name": "amountPins",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "Donation_reference_idx": {
+          "name": "Donation_reference_idx",
+          "columns": [
+            {
+              "expression": "reference",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.Event": {
+      "name": "Event",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "start": {
+          "name": "start",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "end": {
+          "name": "end",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "eventType": {
+          "name": "eventType",
+          "type": "EventType",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "bandApplicationStart": {
+          "name": "bandApplicationStart",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bandApplicationEnd": {
+          "name": "bandApplicationEnd",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "djApplicationEnd": {
+          "name": "djApplicationEnd",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "poster": {
+          "name": "poster",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "djApplicationStart": {
+          "name": "djApplicationStart",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "latitude": {
+          "name": "latitude",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "location": {
+          "name": "location",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "longitude": {
+          "name": "longitude",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lineupAnnouncementTime": {
+          "name": "lineupAnnouncementTime",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "immichAlbumShareUrl": {
+          "name": "immichAlbumShareUrl",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.GmailReminders": {
+      "name": "GmailReminders",
+      "schema": "",
+      "columns": {
+        "messageId": {
+          "name": "messageId",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "account": {
+          "name": "account",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.ItemLocation": {
+      "name": "ItemLocation",
+      "schema": "",
+      "columns": {
+        "timeStamp": {
+          "name": "timeStamp",
+          "type": "timestamp (3)",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "latitude": {
+          "name": "latitude",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "longitude": {
+          "name": "longitude",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payload": {
+          "name": "payload",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.News": {
+      "name": "News",
+      "schema": "",
+      "columns": {
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "content": {
+          "name": "content",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.NoiseLocation": {
+      "name": "NoiseLocation",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "projectId": {
+          "name": "projectId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "latitude": {
+          "name": "latitude",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "longitude": {
+          "name": "longitude",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "locationName": {
+          "name": "locationName",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "NoiseLocation_projectId_fkey": {
+          "name": "NoiseLocation_projectId_fkey",
+          "tableFrom": "NoiseLocation",
+          "columnsFrom": [
+            "projectId"
+          ],
+          "tableTo": "NoiseProject",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "cascade",
+          "onDelete": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.NoiseLocationAssignment": {
+      "name": "NoiseLocationAssignment",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "locationId": {
+          "name": "locationId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "deviceId": {
+          "name": "deviceId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "start": {
+          "name": "start",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "end": {
+          "name": "end",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "NoiseLocationAssignment_deviceId_start_idx": {
+          "name": "NoiseLocationAssignment_deviceId_start_idx",
+          "columns": [
+            {
+              "expression": "deviceId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "start",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        },
+        "NoiseLocationAssignment_locationId_start_idx": {
+          "name": "NoiseLocationAssignment_locationId_start_idx",
+          "columns": [
+            {
+              "expression": "locationId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "start",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        }
+      },
+      "foreignKeys": {
+        "NoiseLocationAssignment_deviceId_fkey": {
+          "name": "NoiseLocationAssignment_deviceId_fkey",
+          "tableFrom": "NoiseLocationAssignment",
+          "columnsFrom": [
+            "deviceId"
+          ],
+          "tableTo": "Device",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "cascade",
+          "onDelete": "restrict"
+        },
+        "NoiseLocationAssignment_locationId_fkey": {
+          "name": "NoiseLocationAssignment_locationId_fkey",
+          "tableFrom": "NoiseLocationAssignment",
+          "columnsFrom": [
+            "locationId"
+          ],
+          "tableTo": "NoiseLocation",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "cascade",
+          "onDelete": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.NoiseLocationLimit": {
+      "name": "NoiseLocationLimit",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "locationId": {
+          "name": "locationId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "decibels": {
+          "name": "decibels",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "start": {
+          "name": "start",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "end": {
+          "name": "end",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "series": {
+          "name": "series",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "NoiseLocationLimit_locationId_start_idx": {
+          "name": "NoiseLocationLimit_locationId_start_idx",
+          "columns": [
+            {
+              "expression": "locationId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "start",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        }
+      },
+      "foreignKeys": {
+        "NoiseLocationLimit_locationId_fkey": {
+          "name": "NoiseLocationLimit_locationId_fkey",
+          "tableFrom": "NoiseLocationLimit",
+          "columnsFrom": [
+            "locationId"
+          ],
+          "tableTo": "NoiseLocation",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "cascade",
+          "onDelete": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.NoiseLog": {
+      "name": "NoiseLog",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "deviceId": {
+          "name": "deviceId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "measuredAt": {
+          "name": "measuredAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "bands": {
+          "name": "bands",
+          "type": "bytea",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "laeq": {
+          "name": "laeq",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lafmax": {
+          "name": "lafmax",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lceq": {
+          "name": "lceq",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lcfmax": {
+          "name": "lcfmax",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lcpeak": {
+          "name": "lcpeak",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "laeq30m": {
+          "name": "laeq30m",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "laeq5m": {
+          "name": "laeq5m",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lceq30m": {
+          "name": "lceq30m",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lceq5m": {
+          "name": "lceq5m",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "NoiseLog_deviceId_measuredAt_key": {
+          "name": "NoiseLog_deviceId_measuredAt_key",
+          "columns": [
+            {
+              "expression": "deviceId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "measuredAt",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        }
+      },
+      "foreignKeys": {
+        "NoiseLog_deviceId_fkey": {
+          "name": "NoiseLog_deviceId_fkey",
+          "tableFrom": "NoiseLog",
+          "columnsFrom": [
+            "deviceId"
+          ],
+          "tableTo": "Device",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "cascade",
+          "onDelete": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.NoiseProject": {
+      "name": "NoiseProject",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "start": {
+          "name": "start",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "end": {
+          "name": "end",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.NoiseTag": {
+      "name": "NoiseTag",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "projectId": {
+          "name": "projectId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "locationId": {
+          "name": "locationId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "deviceId": {
+          "name": "deviceId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "type": {
+          "name": "type",
+          "type": "NoiseTagType",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "start": {
+          "name": "start",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "end": {
+          "name": "end",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "text": {
+          "name": "text",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "createdByViewerId": {
+          "name": "createdByViewerId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dedupeKey": {
+          "name": "dedupeKey",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "NoiseTag_dedupeKey_key": {
+          "name": "NoiseTag_dedupeKey_key",
+          "columns": [
+            {
+              "expression": "dedupeKey",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        },
+        "NoiseTag_projectId_start_idx": {
+          "name": "NoiseTag_projectId_start_idx",
+          "columns": [
+            {
+              "expression": "projectId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "start",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        }
+      },
+      "foreignKeys": {
+        "NoiseTag_createdByViewerId_fkey": {
+          "name": "NoiseTag_createdByViewerId_fkey",
+          "tableFrom": "NoiseTag",
+          "columnsFrom": [
+            "createdByViewerId"
+          ],
+          "tableTo": "Viewer",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "cascade",
+          "onDelete": "restrict"
+        },
+        "NoiseTag_deviceId_fkey": {
+          "name": "NoiseTag_deviceId_fkey",
+          "tableFrom": "NoiseTag",
+          "columnsFrom": [
+            "deviceId"
+          ],
+          "tableTo": "Device",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "cascade",
+          "onDelete": "set null"
+        },
+        "NoiseTag_locationId_fkey": {
+          "name": "NoiseTag_locationId_fkey",
+          "tableFrom": "NoiseTag",
+          "columnsFrom": [
+            "locationId"
+          ],
+          "tableTo": "NoiseLocation",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "cascade",
+          "onDelete": "set null"
+        },
+        "NoiseTag_projectId_fkey": {
+          "name": "NoiseTag_projectId_fkey",
+          "tableFrom": "NoiseTag",
+          "columnsFrom": [
+            "projectId"
+          ],
+          "tableTo": "NoiseProject",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "cascade",
+          "onDelete": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.Nonce": {
+      "name": "Nonce",
+      "schema": "",
+      "columns": {
+        "nonce": {
+          "name": "nonce",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "expiresAt": {
+          "name": "expiresAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdForId": {
+          "name": "createdForId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "Nonce_createdForId_fkey": {
+          "name": "Nonce_createdForId_fkey",
+          "tableFrom": "Nonce",
+          "columnsFrom": [
+            "createdForId"
+          ],
+          "tableTo": "Viewer",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "cascade",
+          "onDelete": "set null"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.NonceRequest": {
+      "name": "NonceRequest",
+      "schema": "",
+      "columns": {
+        "expiresAt": {
+          "name": "expiresAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdForId": {
+          "name": "createdForId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "NonceRequestStatus",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Pending'"
+        },
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "createdForEmail": {
+          "name": "createdForEmail",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "NonceRequest_createdForId_fkey": {
+          "name": "NonceRequest_createdForId_fkey",
+          "tableFrom": "NonceRequest",
+          "columnsFrom": [
+            "createdForId"
+          ],
+          "tableTo": "Viewer",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "cascade",
+          "onDelete": "set null"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.Order": {
+      "name": "Order",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "payment": {
+          "name": "payment",
+          "type": "OrderPayment",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "deposit": {
+          "name": "deposit",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "deviceId": {
+          "name": "deviceId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "crewCardId": {
+          "name": "crewCardId",
+          "type": "bytea",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notForMe": {
+          "name": "notForMe",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "Order_crewCardId_fkey": {
+          "name": "Order_crewCardId_fkey",
+          "tableFrom": "Order",
+          "columnsFrom": [
+            "crewCardId"
+          ],
+          "tableTo": "CrewCard",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "cascade",
+          "onDelete": "set null"
+        },
+        "Order_deviceId_fkey": {
+          "name": "Order_deviceId_fkey",
+          "tableFrom": "Order",
+          "columnsFrom": [
+            "deviceId"
+          ],
+          "tableTo": "Device",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "cascade",
+          "onDelete": "set null"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.OrderItem": {
+      "name": "OrderItem",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "orderId": {
+          "name": "orderId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "amount": {
+          "name": "amount",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "note": {
+          "name": "note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "perUnitPrice": {
+          "name": "perUnitPrice",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "productListId": {
+          "name": "productListId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "OrderItem_orderId_fkey": {
+          "name": "OrderItem_orderId_fkey",
+          "tableFrom": "OrderItem",
+          "columnsFrom": [
+            "orderId"
+          ],
+          "tableTo": "Order",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "cascade",
+          "onDelete": "restrict"
+        },
+        "OrderItem_productListId_fkey": {
+          "name": "OrderItem_productListId_fkey",
+          "tableFrom": "OrderItem",
+          "columnsFrom": [
+            "productListId"
+          ],
+          "tableTo": "ProductList",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "cascade",
+          "onDelete": "set null"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.Page": {
+      "name": "Page",
+      "schema": "",
+      "columns": {
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "content": {
+          "name": "content",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "left": {
+          "name": "left",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "right": {
+          "name": "right",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bottom": {
+          "name": "bottom",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.Product": {
+      "name": "Product",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "price": {
+          "name": "price",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "order": {
+          "name": "order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "productListId": {
+          "name": "productListId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "requiresDeposit": {
+          "name": "requiresDeposit",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "diet": {
+          "name": "diet",
+          "type": "DietType",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "minimumAge": {
+          "name": "minimumAge",
+          "type": "MinimumAge",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'NONE'"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "Product_productListId_fkey": {
+          "name": "Product_productListId_fkey",
+          "tableFrom": "Product",
+          "columnsFrom": [
+            "productListId"
+          ],
+          "tableTo": "ProductList",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "cascade",
+          "onDelete": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.ProductAdditives": {
+      "name": "ProductAdditives",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "displayName": {
+          "name": "displayName",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.ProductList": {
+      "name": "ProductList",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "emoji": {
+          "name": "emoji",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "active": {
+          "name": "active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lastUpdatedBy": {
+          "name": "lastUpdatedBy",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "ProductList_lastUpdatedBy_fkey": {
+          "name": "ProductList_lastUpdatedBy_fkey",
+          "tableFrom": "ProductList",
+          "columnsFrom": [
+            "lastUpdatedBy"
+          ],
+          "tableTo": "Viewer",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "cascade",
+          "onDelete": "set null"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public._ProductToProductAdditives": {
+      "name": "_ProductToProductAdditives",
+      "schema": "",
+      "columns": {
+        "A": {
+          "name": "A",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "B": {
+          "name": "B",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "_ProductToProductAdditives_B_index": {
+          "name": "_ProductToProductAdditives_B_index",
+          "columns": [
+            {
+              "expression": "B",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        }
+      },
+      "foreignKeys": {
+        "_ProductToProductAdditives_A_fkey": {
+          "name": "_ProductToProductAdditives_A_fkey",
+          "tableFrom": "_ProductToProductAdditives",
+          "columnsFrom": [
+            "A"
+          ],
+          "tableTo": "Product",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "cascade",
+          "onDelete": "cascade"
+        },
+        "_ProductToProductAdditives_B_fkey": {
+          "name": "_ProductToProductAdditives_B_fkey",
+          "tableFrom": "_ProductToProductAdditives",
+          "columnsFrom": [
+            "B"
+          ],
+          "tableTo": "ProductAdditives",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "cascade",
+          "onDelete": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {
+        "_ProductToProductAdditives_AB_pkey": {
+          "name": "_ProductToProductAdditives_AB_pkey",
+          "columns": [
+            "A",
+            "B"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.ShortDomainRedirect": {
+      "name": "ShortDomainRedirect",
+      "schema": "",
+      "columns": {
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "targetUrl": {
+          "name": "targetUrl",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.TwoFactor": {
+      "name": "TwoFactor",
+      "schema": "",
+      "columns": {
+        "account": {
+          "name": "account",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "service": {
+          "name": "service",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "secret": {
+          "name": "secret",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "TwoFactor_account_service_key": {
+          "name": "TwoFactor_account_service_key",
+          "columns": [
+            {
+              "expression": "account",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "service",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.Viewer": {
+      "name": "Viewer",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "displayName": {
+          "name": "displayName",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "profilePicture": {
+          "name": "profilePicture",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "slackToken": {
+          "name": "slackToken",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "slackScopes": {
+          "name": "slackScopes",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.ViewerLocation": {
+      "name": "ViewerLocation",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "viewerId": {
+          "name": "viewerId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "latitude": {
+          "name": "latitude",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "longitude": {
+          "name": "longitude",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payload": {
+          "name": "payload",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "ViewerLocation_viewerId_createdAt_idx": {
+          "name": "ViewerLocation_viewerId_createdAt_idx",
+          "columns": [
+            {
+              "expression": "viewerId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "createdAt",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        }
+      },
+      "foreignKeys": {
+        "ViewerLocation_viewerId_fkey": {
+          "name": "ViewerLocation_viewerId_fkey",
+          "tableFrom": "ViewerLocation",
+          "columnsFrom": [
+            "viewerId"
+          ],
+          "tableTo": "Viewer",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "cascade",
+          "onDelete": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.BandRepertoire": {
+      "name": "BandRepertoire",
+      "schema": "public",
+      "values": [
+        "ExclusivelyOwnSongs",
+        "MostlyOwnSongs",
+        "MostlyCoverSongs",
+        "ExclusivelyCoverSongs"
+      ]
+    },
+    "public.CardTransactionType": {
+      "name": "CardTransactionType",
+      "schema": "public",
+      "values": [
+        "TopUp",
+        "Charge",
+        "Cashout",
+        "Repair",
+        "Donation"
+      ]
+    },
+    "public.DemoEmbedType": {
+      "name": "DemoEmbedType",
+      "schema": "public",
+      "values": [
+        "Unresolvable",
+        "YouTubeVideo",
+        "YouTubePlaylist",
+        "BandcampAlbum",
+        "BandcampTrack",
+        "SoundcloudUrl",
+        "SpotifyTrack",
+        "SpotifyArtist",
+        "SpotifyAlbum"
+      ]
+    },
+    "public.DeviceType": {
+      "name": "DeviceType",
+      "schema": "public",
+      "values": [
+        "CONTACTLESS_TERMINAL",
+        "IPAD",
+        "NOISE_MONITOR"
+      ]
+    },
+    "public.DietType": {
+      "name": "DietType",
+      "schema": "public",
+      "values": [
+        "VEGETARIAN",
+        "VEGAN"
+      ]
+    },
+    "public.DonationSource": {
+      "name": "DonationSource",
+      "schema": "public",
+      "values": [
+        "Stripe",
+        "Manual",
+        "Membership",
+        "Other"
+      ]
+    },
+    "public.EventType": {
+      "name": "EventType",
+      "schema": "public",
+      "values": [
+        "Kulturspektakel",
+        "Other",
+        "Locker"
+      ]
+    },
+    "public.GenreCategory": {
+      "name": "GenreCategory",
+      "schema": "public",
+      "values": [
+        "Rock",
+        "Pop",
+        "Indie",
+        "Reggae_Ska",
+        "Blues_Funk_Jazz_Soul",
+        "Folk_SingerSongwriter_Country",
+        "Elektro_HipHop",
+        "Hardrock_Metal_Punk",
+        "Other",
+        "DJ"
+      ]
+    },
+    "public.HeardAboutBookingFrom": {
+      "name": "HeardAboutBookingFrom",
+      "schema": "public",
+      "values": [
+        "BYon",
+        "Newspaper",
+        "Friends",
+        "Website",
+        "Facebook",
+        "Instagram"
+      ]
+    },
+    "public.MinimumAge": {
+      "name": "MinimumAge",
+      "schema": "public",
+      "values": [
+        "NONE",
+        "AGE_16",
+        "AGE_18"
+      ]
+    },
+    "public.NoiseTagType": {
+      "name": "NoiseTagType",
+      "schema": "public",
+      "values": [
+        "IGNORE",
+        "COMMENT"
+      ]
+    },
+    "public.NonceRequestStatus": {
+      "name": "NonceRequestStatus",
+      "schema": "public",
+      "values": [
+        "Pending",
+        "Approved",
+        "Rejected"
+      ]
+    },
+    "public.OrderPayment": {
+      "name": "OrderPayment",
+      "schema": "public",
+      "values": [
+        "CASH",
+        "BON",
+        "SUM_UP",
+        "VOUCHER",
+        "FREE_CREW",
+        "FREE_BAND",
+        "KULT_CARD"
+      ]
+    },
+    "public.PreviouslyPlayed": {
+      "name": "PreviouslyPlayed",
+      "schema": "public",
+      "values": [
+        "Yes",
+        "OtherFormation",
+        "No"
+      ]
+    }
+  },
+  "schemas": {},
+  "views": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

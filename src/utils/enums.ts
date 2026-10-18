@@ -1,8 +1,7 @@
 // The database's enums, as plain `as const` objects plus a union type of the
-// same name, shaped like the ones Prisma generated. Client-safe (no ORM
-// runtime): the browser imports these, and `src/server/db/schema.ts` builds its
-// `pgEnum`s from them. Adding a value: change it here (and, until Prisma is
-// gone, in prisma/schema.prisma), then migrate.
+// same name. Client-safe (no ORM runtime): the browser imports these, and
+// `src/server/db/schema.ts` builds its `pgEnum`s from them. Adding a value:
+// change it here, then `yarn db:generate` and `yarn db:migrate`.
 
 export const BandRepertoire = {
   ExclusivelyOwnSongs: 'ExclusivelyOwnSongs',
