@@ -1,8 +1,19 @@
-import {pageSelect} from '../components/Page';
+import {inArray} from 'drizzle-orm';
 import {DirectusImage} from '../utils/directusImage';
+import {db} from './db.server';
+import {page} from './db/schema';
 import {directusImages} from './directusImage.server';
-import {prismaClient} from './prismaClient.server';
 import {imageIDsFromMarkdown, markdownCDNUrls, Markdown} from '../utils/markdownText';
+
+// The columns of a `Page` the site renders.
+export const pageColumns = {
+  slug: true,
+  title: true,
+  content: true,
+  left: true,
+  right: true,
+  bottom: true,
+} as const;
 
 export async function markdownText(
   text: string,
@@ -80,13 +91,9 @@ export async function markdownPages<
 }
 
 export async function multiPage<T extends string>(pages: T[]) {
-  const data = await prismaClient.page.findMany({
-    where: {
-      slug: {
-        in: pages,
-      },
-    },
-    select: pageSelect,
+  const data = await db.query.page.findMany({
+    where: inArray(page.slug, pages),
+    columns: pageColumns,
   });
 
   const mdPages = await markdownPages(data);

@@ -1,18 +1,17 @@
 import {createServerFn} from '@tanstack/react-start';
-import {prismaClient} from './prismaClient.server';
+import {eq} from 'drizzle-orm';
+import {db} from './db.server';
+import {page as pageTable} from './db/schema';
 import {imageIDsFromMarkdown, markdownCDNUrls} from '../utils/markdownText';
 import {directusImages} from './directusImage.server';
-import {markdownText} from './markdownText.server';
-import {pageSelect} from '../components/Page';
+import {markdownText, pageColumns} from './markdownText.server';
 
 export const pageLoader = createServerFn()
   .validator((slug: string) => slug)
   .handler(async ({data: slug}) => {
-    const data = await prismaClient.page.findUnique({
-      where: {
-        slug,
-      },
-      select: pageSelect,
+    const data = await db.query.page.findFirst({
+      where: eq(pageTable.slug, slug),
+      columns: pageColumns,
     });
 
     if (!data) {
