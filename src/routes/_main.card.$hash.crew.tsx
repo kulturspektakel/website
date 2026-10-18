@@ -19,9 +19,7 @@ import {stringToByteArray} from '../utils/cardUtils';
 import {decodePayload} from '../utils/decodePayload';
 
 const loader = createServerFn()
-  .validator(
-    (data: {hash: string; event: {start: Date; end: Date}}) => data,
-  )
+  .validator((data: {hash: string; event: {start: Date; end: Date}}) => data)
   .handler(async ({data: {hash, event}}) => {
     const {cardId, validUntil} = decodePayload('crewcard', hash);
     const _crewCard = await queryCrewCard(stringToByteArray(cardId), event);
@@ -30,14 +28,15 @@ const loader = createServerFn()
       throw notFound();
     }
 
-    const {Order, ...crewCard} = _crewCard;
+    const {orders, ...crewCard} = _crewCard;
 
     return {
       crewCard,
-      cardActivities: orderToCardActivity(Order),
+      cardActivities: orderToCardActivity(orders),
       totals: {
-        Buchungen: Order.reduce(
-          (acc, cv) => acc + cv.items.reduce((acc, cv) => acc + cv.amount, 0),
+        Buchungen: orders.reduce(
+          (acc, cv) =>
+            acc + cv.orderItems.reduce((acc, cv) => acc + cv.amount, 0),
           0,
         ),
         Badges: 0 as number,
@@ -51,7 +50,8 @@ const loader = createServerFn()
 export const Route = createFileRoute('/_main/card/$hash/crew')({
   component: CrewCard,
   loader: async ({params, context}) => {
-    const {event} = await context.queryClient.ensureQueryData(currentEventQuery);
+    const {event} =
+      await context.queryClient.ensureQueryData(currentEventQuery);
     return await loader({data: {event, hash: params.hash}});
   },
   head: () =>

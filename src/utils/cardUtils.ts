@@ -39,9 +39,9 @@ export function transformCardAvtivities(
     counter: number | null;
     cardId: string;
     transactionType: string;
-    Order: {
+    order: {
       createdAt: Date;
-      items: Array<{
+      orderItems: Array<{
         amount: number;
         name: string;
         productList: {name: string; emoji: string | null} | null;
@@ -105,14 +105,14 @@ export function transformCardAvtivities(
     deposit = transaction.depositBefore;
     balance = transaction.balanceBefore;
 
-    if (transaction.Order) {
+    if (transaction.order) {
       cardActivities.push({
         type: 'order',
         productList:
-          transaction.Order.items?.[0].productList?.name ?? 'Unbekannt',
-        emoji: transaction.Order.items?.[0].productList?.emoji ?? null,
-        time: transaction.Order.createdAt,
-        items: transaction.Order.items.map((oi) => ({
+          transaction.order.orderItems?.[0].productList?.name ?? 'Unbekannt',
+        emoji: transaction.order.orderItems?.[0].productList?.emoji ?? null,
+        time: transaction.order.createdAt,
+        items: transaction.order.orderItems.map((oi) => ({
           amount: oi.amount,
           name: oi.name,
         })),

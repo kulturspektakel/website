@@ -29,7 +29,7 @@ export default function Event({
     description: Markdown | null;
     location: string | null;
     poster: DirectusImage | null;
-    BandPlaying: Array<{
+    bandPlayings: Array<{
       name: string;
     }>;
     media: {
@@ -141,14 +141,15 @@ export default function Event({
             </Flex>
           )}
           {event.description && <MarkdownText {...event.description} />}
-          {event.BandPlaying.length > 0 && (
+          {event.bandPlayings.length > 0 && (
             <>
               <Heading as="h3" size="md" mb="2">
                 Lineup
               </Heading>
               <Box>
                 mit{' '}
-                {event.BandPlaying.slice(0, 12)
+                {event.bandPlayings
+                  .slice(0, 12)
                   .map((b) => b.name)
                   .join(', ')}{' '}
                 <ChakraLink asChild display="inline">
@@ -156,9 +157,9 @@ export default function Event({
                     to="/lineup/$year"
                     params={{year: event.start.getFullYear().toString()}}
                   >
-                    {event.BandPlaying.length > 12 ? (
+                    {event.bandPlayings.length > 12 ? (
                       <>
-                        und {event.BandPlaying.length - 12} weiteren
+                        und {event.bandPlayings.length - 12} weiteren
                         Bands&hellip;
                       </>
                     ) : (

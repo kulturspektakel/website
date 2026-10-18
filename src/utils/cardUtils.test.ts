@@ -54,9 +54,9 @@ describe('transformCardAvtivities', () => {
       deviceLog: {
         deviceTime: new Date('2000-01-01'),
       },
-      Order: {
+      order: {
         createdAt: new Date('2000-01-01'),
-        items: [
+        orderItems: [
           {
             amount: 1,
             name: 'Helles',
@@ -158,7 +158,7 @@ describe('transformCardAvtivities', () => {
           deviceLog: {
             deviceTime: new Date('2000-01-01'),
           },
-          Order: null,
+          order: null,
         },
       ],
       1,
@@ -214,7 +214,7 @@ describe('transformCardAvtivities', () => {
           deviceLog: {
             deviceTime: new Date('2000-01-01'),
           },
-          Order: null,
+          order: null,
         },
       ],
       3,
@@ -242,7 +242,7 @@ describe('transformCardAvtivities', () => {
           deviceLog: {
             deviceTime: new Date('2000-01-01'),
           },
-          Order: null,
+          order: null,
         },
       ],
       3,

@@ -2,7 +2,10 @@ import {eq} from 'drizzle-orm';
 import {db} from '../../server/db.server';
 import {order as orderTable} from '../../server/db/schema';
 import {readJsonPayload} from '../../server/readJsonPayload.server';
-import {orderToCardActivity, queryCrewCard} from '../../server/cardUtils.server';
+import {
+  orderToCardActivity,
+  queryCrewCard,
+} from '../../server/cardUtils.server';
 import {computeBadges} from '../../utils/useBadges';
 import {badgeConfig} from '../../utils/badgeConfig';
 import {getCurrentEvent} from '../../server/getCurrentEvent.server';
@@ -38,12 +41,12 @@ export async function handleBadgeAwarded(request: Request): Promise<Response> {
   }
 
   const oldBadges = computeBadges(
-    orderToCardActivity(crewCard.Order.filter((o) => o.id !== orderId)),
+    orderToCardActivity(crewCard.orders.filter((o) => o.id !== orderId)),
     event,
     true,
   ).filter((b) => b.status === 'awarded');
   const newBadges = computeBadges(
-    orderToCardActivity(crewCard.Order),
+    orderToCardActivity(crewCard.orders),
     event,
     true,
   ).filter((b) => b.status === 'awarded');

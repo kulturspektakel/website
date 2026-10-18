@@ -31,8 +31,10 @@ const loader = createServerFn()
     return {
       event: {
         ...data,
-        BandPlaying: lineupAnnounced ? data.BandPlaying : [],
-        description: data.description ? await markdownText(data.description) : null,
+        bandPlayings: lineupAnnounced ? data.bandPlayings : [],
+        description: data.description
+          ? await markdownText(data.description)
+          : null,
         poster: await directusImage(data.poster),
         media: await directusImageConnection('Event', eventId, 100),
         immich: data.immichAlbumShareUrl

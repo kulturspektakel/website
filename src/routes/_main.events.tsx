@@ -43,7 +43,7 @@ const loader = createServerFn()
           !e.lineupAnnouncementTime || e.lineupAnnouncementTime <= new Date();
         return {
           ...e,
-          BandPlaying: lineupAnnounced ? e.BandPlaying : [],
+          bandPlayings: lineupAnnounced ? e.bandPlayings : [],
           description: e.description ? await markdownText(e.description) : null,
           poster: await directusImage(e.poster),
           media: await directusImageConnection('Event', e.id),
