@@ -1,5 +1,7 @@
 import {subDays} from 'date-fns';
-import {prismaClient} from '../prismaClient.server';
+import {and, eq, gt, ne} from 'drizzle-orm';
+import {db} from '../db.server';
+import {crewCard as crewCardTable} from '../db/schema';
 import {
   fetchUser,
   postResponseUrl,
@@ -105,24 +107,35 @@ export async function assignCrewCard(
     nickname = nonSlackUser;
   }
 
-  const cardIdBytes = new Uint8Array(
+  const cardIdBytes = Buffer.from(
     cardId.split(':').map((part) => parseInt(part, 16)),
   );
 
-  const previousCards = await prismaClient.crewCard.updateManyAndReturn({
-    where: {
-      ...(viewerId ? {viewerId} : {nickname}),
-      suspended: {not: true},
-      validUntil: {gt: new Date()},
-      id: {not: cardIdBytes},
-    },
-    data: {suspended: true},
-  });
+  // The holder's other valid cards, suspended. One of viewerId / nickname is
+  // set (checked above).
+  const previousCards = await db
+    .update(crewCardTable)
+    .set({suspended: true})
+    .where(
+      and(
+        viewerId
+          ? eq(crewCardTable.viewerId, viewerId)
+          : eq(crewCardTable.nickname, nickname!),
+        ne(crewCardTable.suspended, true),
+        gt(crewCardTable.validUntil, new Date()),
+        ne(crewCardTable.id, cardIdBytes),
+      ),
+    )
+    .returning();
 
-  const crewCard = await prismaClient.crewCard.update({
-    where: {id: cardIdBytes},
-    data: {viewerId, nickname},
-  });
+  const [crewCard] = await db
+    .update(crewCardTable)
+    .set({viewerId, nickname})
+    .where(eq(crewCardTable.id, cardIdBytes))
+    .returning();
+  if (!crewCard) {
+    throw new Error('Crew card not found');
+  }
 
   // Enrollment resets `privileged` to false and no membership event fires when a
   // card changes hands, so an already-in-#bonbude holder needs the privilege

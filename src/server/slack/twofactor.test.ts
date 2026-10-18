@@ -1,11 +1,12 @@
 import {beforeEach, describe, expect, test, vi} from 'vitest';
 
-const {findMany} = vi.hoisted(() => ({findMany: vi.fn()}));
+const {db, query} = await vi.hoisted(async () =>
+  (await import('../../../test/dbMock')).dbMock(),
+);
+const findMany = query.twoFactor.findMany;
 const {sendMessage} = vi.hoisted(() => ({sendMessage: vi.fn()}));
 
-vi.mock('../prismaClient.server', () => ({
-  prismaClient: {twoFactor: {findMany}},
-}));
+vi.mock('../db.server', () => ({db}));
 vi.mock('../slack.server', () => ({sendMessage}));
 
 const {handleTwoFactorCommand} = await import('./twofactor');

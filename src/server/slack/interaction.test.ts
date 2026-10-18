@@ -1,10 +1,9 @@
 import {beforeEach, describe, expect, test, vi} from 'vitest';
 
-const {nonceUpdate, ccUpdateMany, ccUpdate} = vi.hoisted(() => ({
-  nonceUpdate: vi.fn(),
-  ccUpdateMany: vi.fn(),
-  ccUpdate: vi.fn(),
-}));
+// `updates` resolves to the rows `.returning()` reports.
+const {db, updates} = await vi.hoisted(async () =>
+  (await import('../../../test/dbMock')).dbMock(),
+);
 const {fetchUser, slackApiRequest, sendMessage, postResponseUrl} = vi.hoisted(
   () => ({
     fetchUser: vi.fn(),
@@ -15,13 +14,7 @@ const {fetchUser, slackApiRequest, sendMessage, postResponseUrl} = vi.hoisted(
 );
 const {upsertViewer} = vi.hoisted(() => ({upsertViewer: vi.fn()}));
 
-vi.mock('../prismaClient.server', () => ({
-  prismaClient: {
-    nonceRequest: {update: nonceUpdate},
-    crewCard: {updateManyAndReturn: ccUpdateMany, update: ccUpdate},
-    twoFactor: {findFirstOrThrow: vi.fn()},
-  },
-}));
+vi.mock('../db.server', () => ({db}));
 vi.mock('../slack.server', () => ({
   fetchUser,
   slackApiRequest,
@@ -50,7 +43,7 @@ beforeEach(() => {
 
 describe('handleSlackInteraction', () => {
   test('approve-nonce-request updates status and deletes the message', async () => {
-    nonceUpdate.mockResolvedValueOnce({});
+    updates.mockResolvedValueOnce([{id: 'nr1'}]);
     const res = await handleSlackInteraction(
       interaction({
         type: 'block_actions',
@@ -62,8 +55,11 @@ describe('handleSlackInteraction', () => {
       }),
     );
     expect(res.status).toBe(200);
-    expect(nonceUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({data: {status: 'Approved'}}),
+    // id, and "not expired yet" (now, sent as an ISO string)
+    expect(updates).toHaveBeenCalledWith(
+      'NonceRequest',
+      {status: 'Approved'},
+      ['nr1', expect.any(String)],
     );
     expect(postResponseUrl).toHaveBeenCalledWith('https://hooks.slack/resp', {
       delete_original: 'true',
@@ -76,8 +72,10 @@ describe('handleSlackInteraction', () => {
       profile: {real_name: 'Test', image_192: '', email: 't@e.de'},
     });
     upsertViewer.mockResolvedValueOnce({id: 'U9'});
-    ccUpdateMany.mockResolvedValueOnce([]);
-    ccUpdate.mockResolvedValueOnce({validUntil: new Date('2026-08-01')});
+    // Suspending the holder's other cards (none), then assigning this one.
+    updates
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{validUntil: new Date('2026-08-01')}]);
 
     const res = await handleSlackInteraction(
       interaction({
@@ -100,8 +98,10 @@ describe('handleSlackInteraction', () => {
     expect(await res.json()).toEqual({response_action: 'clear'});
     expect(fetchUser).toHaveBeenCalledWith('U9');
     expect(upsertViewer).toHaveBeenCalled();
-    expect(ccUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({data: {viewerId: 'U9', nickname: null}}),
+    expect(updates).toHaveBeenLastCalledWith(
+      'CrewCard',
+      {viewerId: 'U9', nickname: null},
+      [expect.anything()],
     );
   });
 });

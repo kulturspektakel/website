@@ -1,13 +1,15 @@
 import {beforeEach, describe, expect, test, vi} from 'vitest';
 import {sub} from 'date-fns';
+import {whereParams} from '../../../test/dbMock';
 
-const {findFirst} = vi.hoisted(() => ({findFirst: vi.fn()}));
+const {db, query} = await vi.hoisted(async () =>
+  (await import('../../../test/dbMock')).dbMock(),
+);
+const findFirst = query.viewerLocation.findFirst;
 const {fetchUser} = vi.hoisted(() => ({fetchUser: vi.fn()}));
 const {upsertViewer} = vi.hoisted(() => ({upsertViewer: vi.fn()}));
 
-vi.mock('../prismaClient.server', () => ({
-  prismaClient: {viewerLocation: {findFirst}},
-}));
+vi.mock('../db.server', () => ({db}));
 vi.mock('../slack.server', () => ({fetchUser}));
 vi.mock('../upsertViewer.server', () => ({upsertViewer}));
 
@@ -40,9 +42,8 @@ describe('handleOwnTracksCommand — /location lookup', () => {
     const body = await res.json();
     const text = body.blocks[0].text.text as string;
 
-    expect(findFirst).toHaveBeenCalledWith(
-      expect.objectContaining({where: expect.objectContaining({viewerId: 'U2'})}),
-    );
+    // The tagged user, within the last day.
+    expect(whereParams(findFirst.mock.calls[0][0].where)[0]).toBe('U2');
     expect(text).toContain('https://www.google.com/maps?q=47.883,10.617');
     expect(text).toContain('<@U2>');
   });

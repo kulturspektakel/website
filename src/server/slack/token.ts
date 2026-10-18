@@ -1,5 +1,6 @@
 import {addMinutes} from 'date-fns';
-import {prismaClient} from '../prismaClient.server';
+import {db} from '../db.server';
+import {nonce as nonceTable} from '../db/schema';
 import {ApiError} from '../apiError.server';
 import {fetchUser, slackApiRequest} from '../slack.server';
 import {upsertViewer} from '../upsertViewer.server';
@@ -18,9 +19,10 @@ const NONCE_LIFETIME_MINUTES = 5;
 
 async function createNonce(createdForId: string): Promise<string> {
   const expiresAt = addMinutes(new Date(), NONCE_LIFETIME_MINUTES);
-  const {nonce} = await prismaClient.nonce.create({
-    data: {expiresAt, createdForId},
-  });
+  const [{nonce}] = await db
+    .insert(nonceTable)
+    .values({expiresAt, createdForId})
+    .returning({nonce: nonceTable.nonce});
   await enqueueGcpTask('nonce-invalidate', {nonce}, {scheduleAt: expiresAt});
   return nonce;
 }

@@ -3,7 +3,9 @@ import {de} from 'date-fns/locale';
 import {fetchUser} from '../slack.server';
 import {upsertViewer} from '../upsertViewer.server';
 import {configString} from '../owntracks';
-import {prismaClient} from '../prismaClient.server';
+import {and, desc, eq, gt} from 'drizzle-orm';
+import {db} from '../db.server';
+import {viewerLocation} from '../db/schema';
 
 /** Extracts a Slack user id from an escaped mention like `<@U012ABC|name>`. */
 function taggedUserId(text: string): string | undefined {
@@ -17,9 +19,12 @@ function taggedUserId(text: string): string | undefined {
  * Slack renders `<@id>` as the display name, so no `fetchUser` is needed.
  */
 async function locationResponse(userId: string): Promise<Response> {
-  const loc = await prismaClient.viewerLocation.findFirst({
-    where: {viewerId: userId, createdAt: {gt: sub(new Date(), {days: 1})}},
-    orderBy: {createdAt: 'desc'},
+  const loc = await db.query.viewerLocation.findFirst({
+    where: and(
+      eq(viewerLocation.viewerId, userId),
+      gt(viewerLocation.createdAt, sub(new Date(), {days: 1})),
+    ),
+    orderBy: desc(viewerLocation.createdAt),
   });
 
   if (!loc) {

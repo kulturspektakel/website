@@ -1,6 +1,8 @@
 import {beforeEach, describe, expect, test, vi} from 'vitest';
 
-const {create} = vi.hoisted(() => ({create: vi.fn()}));
+const {db, inserts} = await vi.hoisted(async () =>
+  (await import('../../../test/dbMock')).dbMock(),
+);
 const {fetchUser, slackApiRequest} = vi.hoisted(() => ({
   fetchUser: vi.fn(),
   slackApiRequest: vi.fn(),
@@ -8,9 +10,7 @@ const {fetchUser, slackApiRequest} = vi.hoisted(() => ({
 const {upsertViewer} = vi.hoisted(() => ({upsertViewer: vi.fn()}));
 const {enqueueGcpTask} = vi.hoisted(() => ({enqueueGcpTask: vi.fn()}));
 
-vi.mock('../prismaClient.server', () => ({
-  prismaClient: {nonce: {create}},
-}));
+vi.mock('../db.server', () => ({db}));
 vi.mock('../slack.server', () => ({fetchUser, slackApiRequest}));
 vi.mock('../upsertViewer.server', () => ({upsertViewer}));
 vi.mock('../enqueueGcpTask.server', () => ({enqueueGcpTask}));
@@ -56,7 +56,7 @@ describe('handleNuclinoTokenCommand (POST)', () => {
       profile: {real_name: 'X', image_192: '', email: 'x@e.de'},
     });
     upsertViewer.mockResolvedValueOnce({id: 'U1'});
-    create.mockResolvedValueOnce({nonce: 'n-1'});
+    inserts.mockResolvedValueOnce([{nonce: 'n-1'}]);
     slackApiRequest.mockResolvedValueOnce({ok: true});
 
     const res = await handleNuclinoTokenCommand(
@@ -67,8 +67,9 @@ describe('handleNuclinoTokenCommand (POST)', () => {
       }),
     );
     expect(res.status).toBe(200);
-    expect(create).toHaveBeenCalledWith(
-      expect.objectContaining({data: expect.objectContaining({createdForId: 'U1'})}),
+    expect(inserts).toHaveBeenCalledWith(
+      'Nonce',
+      expect.objectContaining({createdForId: 'U1'}),
     );
     // modal opened, button links back to /slack/token with the nonce
     const view = slackApiRequest.mock.calls[0][1].view;

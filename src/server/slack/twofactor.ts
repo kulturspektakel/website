@@ -1,5 +1,5 @@
 import {TOTP} from 'otpauth';
-import {prismaClient} from '../prismaClient.server';
+import {db} from '../db.server';
 import {sendMessage} from '../slack.server';
 import {SlackChannel} from '../../utils/slackChannels';
 
@@ -61,7 +61,7 @@ export async function handleTwoFactorCommand(
   const text = String(form.get('text') ?? '');
   const userName = String(form.get('user_name') ?? '');
 
-  const accounts = await prismaClient.twoFactor.findMany();
+  const accounts = await db.query.twoFactor.findMany();
   const matchingAccounts = accounts.filter(
     (a) => a.account.toLowerCase() === text.trim().toLowerCase(),
   );

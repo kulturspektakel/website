@@ -1,4 +1,6 @@
-import {prismaClient} from '../prismaClient.server';
+import {and, eq, gt} from 'drizzle-orm';
+import {db} from '../db.server';
+import {nonceRequest, twoFactor as twoFactorTable} from '../db/schema';
 import {ApiError} from '../apiError.server';
 import {postResponseUrl} from '../slack.server';
 import {
@@ -98,15 +100,28 @@ export async function handleSlackInteraction(
       switch (action?.action_id) {
         case 'approve-nonce-request':
         case 'reject-nonce-request': {
-          await prismaClient.nonceRequest.update({
-            where: {id: action.value, expiresAt: {gt: new Date()}},
-            data: {
+          if (!action.value) {
+            throw new ApiError(400, 'Invalid input');
+          }
+          const decided = await db
+            .update(nonceRequest)
+            .set({
               status:
                 action.action_id === 'approve-nonce-request'
                   ? 'Approved'
                   : 'Rejected',
-            },
-          });
+            })
+            .where(
+              and(
+                eq(nonceRequest.id, action.value),
+                gt(nonceRequest.expiresAt, new Date()),
+              ),
+            )
+            .returning({id: nonceRequest.id});
+          if (decided.length === 0) {
+            // Expired (or already cleaned up) before anyone clicked.
+            throw new Error('Nonce request not found or expired');
+          }
           await postResponseUrl(payload.response_url, {
             delete_original: 'true',
           });
@@ -119,9 +134,15 @@ export async function handleSlackInteraction(
           const parts = action.value.split('@');
           const service = parts.pop();
           const account = parts.join('@');
-          const twoFactor = await prismaClient.twoFactor.findFirstOrThrow({
-            where: {service, account},
+          const twoFactor = await db.query.twoFactor.findFirst({
+            where: and(
+              eq(twoFactorTable.service, service!),
+              eq(twoFactorTable.account, account),
+            ),
           });
+          if (!twoFactor) {
+            throw new Error(`Unknown two-factor account ${action.value}`);
+          }
           const response = await generateTwoFactorCodeResponse(
             payload.user.id,
             twoFactor,
