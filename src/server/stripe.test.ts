@@ -11,8 +11,15 @@ const {findFirst, create} = vi.hoisted(() => ({
 
 vi.mock('./enqueueGcpTask.server', () => ({enqueueGcpTask}));
 vi.mock('./slack.server', () => ({slackApiRequest}));
-vi.mock('./prismaClient.server', () => ({
-  prismaClient: {donation: {findFirst, create}},
+// `create` is `db.insert(donation).values(row)`; it returns the builder whose
+// `.returning()` resolves to the new row.
+vi.mock('./db.server', () => ({
+  db: {
+    query: {donation: {findFirst}},
+    insert: () => ({
+      values: (row: unknown) => ({returning: () => create(row)}),
+    }),
+  },
 }));
 
 const SECRET = 'whsec_test_secret';
@@ -67,7 +74,7 @@ beforeEach(() => {
   enqueueGcpTask.mockResolvedValue(undefined);
   slackApiRequest.mockResolvedValue({ok: true});
   findFirst.mockResolvedValue(null);
-  create.mockResolvedValue({id: 'donation-1'});
+  create.mockResolvedValue([{id: 'donation-1'}]);
 });
 
 describe('handleStripeWebhook', () => {
@@ -76,19 +83,17 @@ describe('handleStripeWebhook', () => {
     expect(res.status).toBe(200);
 
     expect(create).toHaveBeenCalledWith({
-      data: {
-        reference: 'cs_test_123',
-        createdAt: new Date(created * 1000),
-        email: 'donor@example.test',
-        amount: 5000,
-        name: 'Erika Musterfrau',
-        // No billing name/address on this event, so the receipt name falls back
-        // to the custom field and the address fields stay empty.
-        quittungName: 'Erika Musterfrau',
-        quittungStreet: undefined,
-        quittungCity: undefined,
-        source: 'Stripe',
-      },
+      reference: 'cs_test_123',
+      createdAt: new Date(created * 1000),
+      email: 'donor@example.test',
+      amount: 5000,
+      name: 'Erika Musterfrau',
+      // No billing name/address on this event, so the receipt name falls back
+      // to the custom field and the address fields stay empty.
+      quittungName: 'Erika Musterfrau',
+      quittungStreet: undefined,
+      quittungCity: undefined,
+      source: 'Stripe',
     });
 
     expect(slackApiRequest).toHaveBeenCalledWith('chat.postMessage', {
@@ -119,10 +124,8 @@ describe('handleStripeWebhook', () => {
 
     expect(create).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({
-          email: 'fallback@example.test',
-          name: undefined,
-        }),
+        email: 'fallback@example.test',
+        name: undefined,
       }),
     );
     expect(slackApiRequest).toHaveBeenCalledWith('chat.postMessage', {
@@ -139,7 +142,10 @@ describe('handleStripeWebhook', () => {
       signedRequest(
         checkoutCompleted({
           customer_email: null,
-          customer_details: {email: 'barbara@example.test', name: 'Barbara Thomas'},
+          customer_details: {
+            email: 'barbara@example.test',
+            name: 'Barbara Thomas',
+          },
           custom_fields: [{key: 'name', text: {value: null}}],
         }),
       ),
@@ -147,10 +153,8 @@ describe('handleStripeWebhook', () => {
 
     expect(create).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({
-          name: undefined,
-          quittungName: 'Barbara Thomas',
-        }),
+        name: undefined,
+        quittungName: 'Barbara Thomas',
       }),
     );
     // Slack still shows the best available name (billing as fallback).
@@ -182,14 +186,12 @@ describe('handleStripeWebhook', () => {
 
     expect(create).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({
-          // Public name still comes from the custom field.
-          name: 'Erika Musterfrau',
-          // Receipt name prefers the billing name over the custom field.
-          quittungName: 'Barbara Thomas',
-          quittungStreet: 'Bahnhofstraße 6, Hinterhaus',
-          quittungCity: '82131 Gauting',
-        }),
+        // Public name still comes from the custom field.
+        name: 'Erika Musterfrau',
+        // Receipt name prefers the billing name over the custom field.
+        quittungName: 'Barbara Thomas',
+        quittungStreet: 'Bahnhofstraße 6, Hinterhaus',
+        quittungCity: '82131 Gauting',
       }),
     );
   });

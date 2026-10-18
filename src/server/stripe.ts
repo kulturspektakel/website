@@ -1,5 +1,7 @@
 import Stripe from 'stripe';
-import {prismaClient} from './prismaClient.server';
+import {eq} from 'drizzle-orm';
+import {db} from './db.server';
+import {donation as donationTable} from './db/schema';
 import {DonationSource} from '../utils/enums';
 import {ApiError} from './apiError.server';
 import {enqueueGcpTask} from './enqueueGcpTask.server';
@@ -63,9 +65,9 @@ async function checkoutSessionCompleted(session: Stripe.Checkout.Session) {
 
   // Stripe retries webhooks until it gets a 2xx, so guard against recording
   // the same checkout twice (the legacy handler could double-insert).
-  const existing = await prismaClient.donation.findFirst({
-    where: {reference: session.id},
-    select: {id: true},
+  const existing = await db.query.donation.findFirst({
+    where: eq(donationTable.reference, session.id),
+    columns: {id: true},
   });
   if (existing) {
     return;
@@ -92,8 +94,9 @@ async function checkoutSessionCompleted(session: Stripe.Checkout.Session) {
     [address?.postal_code, address?.city].filter(Boolean).join(' ') ||
     undefined;
 
-  const donation = await prismaClient.donation.create({
-    data: {
+  const [donation] = await db
+    .insert(donationTable)
+    .values({
       reference: session.id,
       createdAt: new Date(session.created * 1000),
       email,
@@ -103,8 +106,8 @@ async function checkoutSessionCompleted(session: Stripe.Checkout.Session) {
       quittungStreet,
       quittungCity,
       source: DonationSource.Stripe,
-    },
-  });
+    })
+    .returning({id: donationTable.id});
 
   const formattedAmount = currencyFormat.format(session.amount_total / 100);
 
