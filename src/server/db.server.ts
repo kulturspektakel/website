@@ -31,10 +31,13 @@ function createDb() {
   }
 
   neonConfig.webSocketConstructor = ws;
-  const connectionString = new URL(process.env.DATABASE_URL!);
-  connectionString.searchParams.set('connect_timeout', '10');
+  // Unit tests import this module without a DATABASE_URL (they never connect),
+  // so don't parse it eagerly.
+  const url = process.env.DATABASE_URL;
+  const connectionString =
+    url && `${url}${url.includes('?') ? '&' : '?'}connect_timeout=10`;
   return drizzle({
-    client: new Pool({connectionString: connectionString.href}),
+    client: new Pool({connectionString}),
     schema,
   });
 }
