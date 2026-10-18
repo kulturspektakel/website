@@ -1,6 +1,7 @@
 import {createHash} from 'node:crypto';
 import {createMiddleware} from '@tanstack/react-start';
-import {prismaClient} from './prismaClient.server';
+import {db} from './db.server';
+import {device} from './db/schema';
 import type {DeviceType} from '../utils/enums';
 
 /**
@@ -97,11 +98,11 @@ async function touchDevice(
 ) {
   const lastSeen = new Date();
   const softwareVersion = getSoftwareVersion(request);
-  await prismaClient.device.upsert({
-    where: {id: deviceId},
-    create: {id: deviceId, lastSeen, softwareVersion, type},
-    update: {lastSeen, softwareVersion},
-  });
+  await db
+    .insert(device)
+    .values({id: deviceId, lastSeen, softwareVersion, type})
+    // An unknown software version (`undefined`) leaves the stored one alone.
+    .onConflictDoUpdate({target: device.id, set: {lastSeen, softwareVersion}});
 }
 
 /**

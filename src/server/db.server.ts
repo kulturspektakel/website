@@ -44,3 +44,14 @@ function createDb() {
 // Typed as the Neon variant; the node-postgres one used in tests has the same
 // query API.
 export const db = createDb() as ReturnType<typeof drizzle<typeof schema>>;
+
+// The `tx` handed to `db.transaction(async (tx) => …)`, for helpers that run
+// inside a caller's transaction.
+export type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+// Whether a query failed on a unique constraint (Postgres 23505, Prisma's
+// `P2002`). Drizzle wraps the driver's error as the `cause`.
+export function isUniqueViolation(e: unknown) {
+  const error = e as {code?: string; cause?: {code?: string}} | undefined;
+  return (error?.cause?.code ?? error?.code) === '23505';
+}

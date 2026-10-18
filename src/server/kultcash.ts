@@ -1,4 +1,14 @@
-import {prismaClient} from './prismaClient.server';
+import {and, asc, eq, ne} from 'drizzle-orm';
+import {db, type DbTransaction, isUniqueViolation} from './db.server';
+import {
+  cardTransaction as cardTransactionTable,
+  crewCard,
+  deviceConfigVersion,
+  order as orderTable,
+  orderItem,
+  product,
+  productList,
+} from './db/schema';
 import {
   LogMessage,
   LogMessage_CardTransaction_TransactionType,
@@ -6,39 +16,25 @@ import {
 } from '../proto/logmessage';
 import {DeviceConfig} from '../proto/config';
 import {AllLists} from '../proto/configs';
-import {ProductList, Prisma} from '../generated/prisma/client';
 import {CardTransactionType, OrderPayment} from '../utils/enums';
 import {addDays, isBefore, differenceInDays} from 'date-fns';
 import crc32 from 'crc-32';
 import {ApiError} from './apiError.server';
-import {deviceLogCreateInput, deviceTimeToDate} from './deviceLog.server';
+import {deviceTimeToDate, insertDeviceLog} from './deviceLog.server';
 import {enqueueGcpTask} from './enqueueGcpTask.server';
 import UnreachableCaseError from '../utils/UnreachableCaseError';
 
 const PROTOBUF_HEADERS = {'Content-Type': 'application/x-protobuf'};
 
-const productListQuery = {
-  product: {
-    select: {
-      name: true,
-      price: true,
-    },
-    orderBy: {
-      order: 'asc' as const,
-    },
-    take: 30,
-  },
-};
-
-function getDeviceConfig(
-  list: ProductList & {
-    product: Array<{name: string; price: number}>;
-  },
-) {
+function getDeviceConfig(list: {
+  id: number;
+  name: string;
+  products: Array<{name: string; price: number}>;
+}) {
   const deviceConfig: DeviceConfig = {
     listId: list.id,
     name: list.name,
-    products: list.product,
+    products: list.products,
     checksum: 0,
   };
 
@@ -53,18 +49,27 @@ function getDeviceConfig(
  */
 export async function handleLists(request: Request): Promise<Response> {
   const [lists, privilegedCrewCards, suspendedCrewCards] = await Promise.all([
-    prismaClient.productList.findMany({
-      where: {active: true},
-      include: productListQuery,
-      orderBy: {name: 'asc'},
+    db.query.productList.findMany({
+      where: eq(productList.active, true),
+      orderBy: asc(productList.name),
+      columns: {id: true, name: true},
+      with: {
+        products: {
+          columns: {name: true, price: true},
+          orderBy: asc(product.order),
+          limit: 30,
+        },
+      },
     }),
-    prismaClient.crewCard.findMany({
-      where: {privileged: true, suspended: {not: true}},
-      select: {id: true},
-    }),
-    prismaClient.crewCard.findMany({
-      where: {suspended: true},
-    }),
+    db
+      .select({id: crewCard.id})
+      .from(crewCard)
+      // `<> true` leaves out NULLs, like Prisma's `{not: true}`.
+      .where(and(eq(crewCard.privileged, true), ne(crewCard.suspended, true))),
+    db
+      .select({id: crewCard.id})
+      .from(crewCard)
+      .where(eq(crewCard.suspended, true)),
   ]);
 
   const allLists: AllLists = {
@@ -77,11 +82,7 @@ export async function handleLists(request: Request): Promise<Response> {
   };
   allLists.checksum = crc32.buf(AllLists.encode(allLists).finish());
 
-  const configVersion = await prismaClient.deviceConfigVersion.upsert({
-    where: {crc32: allLists.checksum},
-    create: {crc32: allLists.checksum},
-    update: {},
-  });
+  const configVersion = await configVersionFor(allLists.checksum);
   allLists.versionNumber = configVersion.version;
   allLists.timestamp = Math.floor(configVersion.createdAt.getTime() / 1000);
 
@@ -96,6 +97,27 @@ export async function handleLists(request: Request): Promise<Response> {
       ETag: `"${allLists.checksum}"`,
     },
   });
+}
+
+// The version row for a config checksum, created on first sight. Devices poll
+// `/lists`, so this reads first: an upsert would write (a new row version, WAL,
+// replication) on every poll even when nothing changed.
+async function configVersionFor(crc32: number) {
+  const find = () =>
+    db.query.deviceConfigVersion.findFirst({
+      where: eq(deviceConfigVersion.crc32, crc32),
+    });
+  const existing = await find();
+  if (existing) {
+    return existing;
+  }
+  const [created] = await db
+    .insert(deviceConfigVersion)
+    .values({crc32})
+    .onConflictDoNothing()
+    .returning();
+  // `undefined` when a concurrent poll inserted it first.
+  return created ?? (await find())!;
 }
 
 /**
@@ -132,9 +154,9 @@ export async function handleLog(request: Request): Promise<Response> {
   // the item rows just store a null product list (name/price are denormalized).
   if (
     order?.listId != null &&
-    !(await prismaClient.productList.findUnique({
-      where: {id: order.listId},
-      select: {id: true},
+    !(await db.query.productList.findFirst({
+      where: eq(productList.id, order.listId),
+      columns: {id: true},
     }))
   ) {
     throw new ApiError(
@@ -144,90 +166,56 @@ export async function handleLog(request: Request): Promise<Response> {
     );
   }
 
-  const orderCreate: Prisma.OrderCreateInput | undefined =
-    order != null
-      ? {
-          payment: mapPayment(order.paymentMethod),
-          createdAt: deviceTime,
-          crewCard: order.crewCardId
-            ? {
-                connectOrCreate: {
-                  where: {id: Uint8Array.from(order.crewCardId)},
-                  create: {
-                    // only necessary if crewCard enrollment is not uploaded yet
-                    id: Uint8Array.from(order.crewCardId),
-                    // do not further enroll card
-                    validUntil: new Date(),
-                    enrolledAt: deviceTime,
-                  },
-                },
-              }
-            : undefined,
-          device: {connect: {id: deviceId}},
-          items: {
-            createMany: {
-              data: order.cartItems
-                .filter(({product}) => product != undefined)
-                .map(({amount, product}) => ({
-                  amount,
-                  name: product!.name,
-                  perUnitPrice: product!.price,
-                  productListId: order.listId,
-                })),
-            },
-          },
-        }
-      : undefined;
-
-  await prismaClient.deviceLog
-    .create({
-      data: {
-        ...deviceLogCreateInput(
-          message,
-          deviceId,
-          deviceTime,
-          'CONTACTLESS_TERMINAL',
-        ),
-        CardTransaction:
-          cardTransaction != null
-            ? {
-                create: {
-                  ...cardTransaction,
-                  transactionType: mapTransactionType(
-                    cardTransaction.transactionType,
-                  ),
-                  Order: order != null ? {create: orderCreate} : undefined,
-                },
-              }
-            : undefined,
-      },
-    })
-    .catch((e) => {
-      if (
-        e instanceof Prisma.PrismaClientKnownRequestError &&
-        e.code === 'P2002'
-      ) {
-        // client ID already exists
-        throw new ApiError(409, 'Conflict');
+  // The log and everything it carries are written together. An order without
+  // a card transaction is part of the same transaction too, so a failure can't
+  // leave a log behind whose order is missing (a re-upload would then be
+  // rejected as a duplicate).
+  let createdOrder: {id: number; crewCardId: Buffer | null} | undefined;
+  try {
+    createdOrder = await db.transaction(async (tx) => {
+      await insertDeviceLog(
+        tx,
+        message,
+        deviceId,
+        deviceTime,
+        'CONTACTLESS_TERMINAL',
+      );
+      const created =
+        order != null
+          ? await insertOrder(tx, order, deviceId, deviceTime)
+          : undefined;
+      if (cardTransaction != null) {
+        await tx.insert(cardTransactionTable).values({
+          clientId: message.clientId,
+          cardId: cardTransaction.cardId,
+          balanceBefore: cardTransaction.balanceBefore,
+          balanceAfter: cardTransaction.balanceAfter,
+          depositBefore: cardTransaction.depositBefore,
+          depositAfter: cardTransaction.depositAfter,
+          counter: cardTransaction.counter,
+          transactionType: mapTransactionType(cardTransaction.transactionType),
+          orderId: created?.id,
+        });
       }
-      throw e;
+      return created;
     });
-
-  if (!cardTransaction && orderCreate) {
-    // manually create order, because it's not part of a card transaction
-    const createdOrder = await prismaClient.order.create({
-      data: orderCreate,
-    });
-
-    if (createdOrder.crewCardId) {
-      await enqueueGcpTask('badge-awarded', {orderId: createdOrder.id});
+  } catch (e) {
+    if (isUniqueViolation(e)) {
+      // client ID already exists
+      throw new ApiError(409, 'Conflict');
     }
+    throw e;
+  }
+
+  // Orders paid within a card transaction don't award badges.
+  if (!cardTransaction && createdOrder?.crewCardId) {
+    await enqueueGcpTask('badge-awarded', {orderId: createdOrder.id});
   }
 
   if (crewCardEnrollment) {
     const validUntil = kultEpochToDate(crewCardEnrollment.validUntil);
     const crewCardData = {
-      id: Uint8Array.from(crewCardEnrollment.crewCardId),
+      id: Buffer.from(crewCardEnrollment.crewCardId),
       validUntil,
       // resetting
       viewerId: null,
@@ -236,11 +224,11 @@ export async function handleLog(request: Request): Promise<Response> {
       privileged: false,
       enrolledAt: deviceTime,
     };
-    await prismaClient.crewCard.upsert({
-      where: {id: crewCardData.id},
-      update: crewCardData,
-      create: crewCardData,
-    });
+    const {id, ...reset} = crewCardData;
+    await db
+      .insert(crewCard)
+      .values(crewCardData)
+      .onConflictDoUpdate({target: crewCard.id, set: reset});
 
     await enqueueGcpTask('crew-card-enrolled', {
       crewCardId: Array.from(crewCardData.id),
@@ -249,6 +237,46 @@ export async function handleLog(request: Request): Promise<Response> {
   }
 
   return new Response('Created', {status: 201});
+}
+
+// The order of a log message, with its items. The crew card it was paid with
+// is registered first if the device hasn't uploaded its enrollment yet (and
+// then not further enrolled: valid until now).
+async function insertOrder(
+  tx: DbTransaction,
+  order: NonNullable<LogMessage['order']>,
+  deviceId: string,
+  deviceTime: Date,
+) {
+  const crewCardId = order.crewCardId ? Buffer.from(order.crewCardId) : null;
+  if (crewCardId) {
+    await tx
+      .insert(crewCard)
+      .values({id: crewCardId, validUntil: new Date(), enrolledAt: deviceTime})
+      .onConflictDoNothing();
+  }
+  const [created] = await tx
+    .insert(orderTable)
+    .values({
+      payment: mapPayment(order.paymentMethod),
+      createdAt: deviceTime,
+      crewCardId,
+      deviceId,
+    })
+    .returning({id: orderTable.id, crewCardId: orderTable.crewCardId});
+  const items = order.cartItems
+    .filter(({product}) => product != undefined)
+    .map(({amount, product}) => ({
+      orderId: created.id,
+      amount,
+      name: product!.name,
+      perUnitPrice: product!.price,
+      productListId: order.listId,
+    }));
+  if (items.length) {
+    await tx.insert(orderItem).values(items);
+  }
+  return created;
 }
 
 function mapTransactionType(
