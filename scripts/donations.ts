@@ -6,17 +6,19 @@
  * `yarn email:donations` to run.
  */
 import 'dotenv/config';
-import {prismaClient} from '../src/server/prismaClient.server';
+import {and, eq, gte, isNotNull, isNull, notInArray} from 'drizzle-orm';
+import {db} from '../src/server/db.server';
+import {donation as donationTable} from '../src/server/db/schema';
 import {sendMail} from '../src/server/sendMail.server';
 
 async function main() {
-  const donations = await prismaClient.donation.findMany({
-    where: {
-      source: {notIn: ['Other', 'Membership']},
-      amount: {gte: 2500},
-      email: {not: null},
-      sentConfirmationAt: {equals: null},
-    },
+  const donations = await db.query.donation.findMany({
+    where: and(
+      notInArray(donationTable.source, ['Other', 'Membership']),
+      gte(donationTable.amount, 2500),
+      isNotNull(donationTable.email),
+      isNull(donationTable.sentConfirmationAt),
+    ),
   });
 
   for (const donation of donations) {
@@ -29,12 +31,13 @@ async function main() {
       {to: donation.email!},
     );
 
-    await prismaClient.donation.update({
-      where: {id: donation.id},
-      data: {sentConfirmationAt: new Date()},
-    });
+    await db
+      .update(donationTable)
+      .set({sentConfirmationAt: new Date()})
+      .where(eq(donationTable.id, donation.id));
     console.log(`Sending email to ${donation.email}`);
   }
 }
 
 await main();
+await db.$client.end();

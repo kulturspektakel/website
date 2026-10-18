@@ -8,24 +8,29 @@
  */
 import 'dotenv/config';
 import {gmailClient} from '../src/server/gmail.server';
-import {prismaClient} from '../src/server/prismaClient.server';
+import {and, eq, isNull, ne} from 'drizzle-orm';
+import {db} from '../src/server/db.server';
+import {bandApplication, event as eventTable} from '../src/server/db/schema';
 import {sendMail} from '../src/server/sendMail.server';
 
 const account = 'booking@kulturspektakel.de';
 const EVENT_ID = 'kult2026';
 
 async function main() {
-  const event = await prismaClient.event.findUniqueOrThrow({
-    where: {id: EVENT_ID},
+  const event = await db.query.event.findFirst({
+    where: eq(eventTable.id, EVENT_ID),
   });
+  if (!event) {
+    throw new Error(`Event ${EVENT_ID} not found`);
+  }
 
-  const data = await prismaClient.bandApplication.findMany({
-    where: {
-      contactedByViewerId: null,
-      lastContactedAt: null,
-      eventId: EVENT_ID,
-      genreCategory: {not: 'DJ'},
-    },
+  const data = await db.query.bandApplication.findMany({
+    where: and(
+      isNull(bandApplication.contactedByViewerId),
+      isNull(bandApplication.lastContactedAt),
+      eq(bandApplication.eventId, EVENT_ID),
+      ne(bandApplication.genreCategory, 'DJ'),
+    ),
   });
   console.log(`Sending ${data.length} rejections for ${event.name}`);
 
@@ -73,11 +78,12 @@ async function main() {
     );
 
     console.log(`Sent: ${band.bandname}`);
-    await prismaClient.bandApplication.update({
-      data: {lastContactedAt: new Date()},
-      where: {id: band.id},
-    });
+    await db
+      .update(bandApplication)
+      .set({lastContactedAt: new Date()})
+      .where(eq(bandApplication.id, band.id));
   }
 }
 
 await main();
+await db.$client.end();

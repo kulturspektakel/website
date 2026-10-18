@@ -13,12 +13,12 @@ import {
   type WithVirtualProps,
 } from '@tanstack/react-db';
 import type {
-  BandApplication,
-  BandApplicationComment,
-  BandApplicationRating,
-  BandApplicationTag,
-  Viewer,
-} from '../../generated/prisma/browser';
+  bandApplication,
+  bandApplicationComment,
+  bandApplicationRating,
+  bandApplicationTag,
+  viewer,
+} from '../../server/db/schema';
 import {addBandApplicationTag} from '../../server/addBandApplicationTag';
 import {deleteBandApplicationComment} from '../../server/deleteBandApplicationComment';
 import {postBandApplicationComment} from '../../server/postBandApplicationComment';
@@ -29,7 +29,14 @@ import {setBandApplicationStage} from '../../server/setBandApplicationStage';
 import {errorToast} from '../toast';
 
 // Row types of the booking page's live queries (see `sealBookingQueries`),
-// picked from the Prisma models so a schema change shows up here.
+// picked from the table types so a schema change shows up here. (Type-only:
+// nothing of the schema module reaches the browser.)
+
+type BandApplication = typeof bandApplication.$inferSelect;
+type BandApplicationComment = typeof bandApplicationComment.$inferSelect;
+type BandApplicationRating = typeof bandApplicationRating.$inferSelect;
+type BandApplicationTag = typeof bandApplicationTag.$inferSelect;
+type Viewer = typeof viewer.$inferSelect;
 
 type ViewerProfile = Pick<Viewer, 'displayName' | 'profilePicture'>;
 

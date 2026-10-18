@@ -7,13 +7,15 @@
 //
 //   yarn tsx scripts/backfillNoiseTagDedupeKey.ts [--delete-duplicates]
 import 'dotenv/config';
-import {prismaClient} from '../src/server/prismaClient.server';
+import {asc, eq, inArray} from 'drizzle-orm';
+import {db} from '../src/server/db.server';
+import {noiseTag} from '../src/server/db/schema';
 import {noiseTagDedupeKey} from '../src/server/noiseTagKey.server';
 
 async function main() {
   const deleteDuplicates = process.argv.includes('--delete-duplicates');
-  const tags = await prismaClient.noiseTag.findMany({
-    orderBy: {createdAt: 'asc'},
+  const tags = await db.query.noiseTag.findMany({
+    orderBy: asc(noiseTag.createdAt),
   });
 
   const byKey = new Map<string, typeof tags>();
@@ -42,12 +44,17 @@ async function main() {
     .map(([key, [kept]]) => ({id: kept!.id, key, current: kept!.dedupeKey}))
     .filter(({key, current}) => key !== current);
 
-  await prismaClient.$transaction([
-    prismaClient.noiseTag.deleteMany({where: {id: {in: extraIds}}}),
-    ...updates.map(({id, key}) =>
-      prismaClient.noiseTag.update({where: {id}, data: {dedupeKey: key}}),
-    ),
-  ]);
+  await db.transaction(async (tx) => {
+    if (extraIds.length) {
+      await tx.delete(noiseTag).where(inArray(noiseTag.id, extraIds));
+    }
+    for (const {id, key} of updates) {
+      await tx
+        .update(noiseTag)
+        .set({dedupeKey: key})
+        .where(eq(noiseTag.id, id));
+    }
+  });
   console.log(
     `Deleted ${extraIds.length} duplicates, set ${updates.length} keys.`,
   );
@@ -58,4 +65,4 @@ main()
     console.error(error);
     process.exitCode = 1;
   })
-  .finally(() => prismaClient.$disconnect());
+  .finally(() => db.$client.end());

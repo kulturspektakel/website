@@ -2,7 +2,8 @@
 
 Plan for replacing Prisma 7 with Drizzle ORM, incrementally: both run against
 the same database while the code moves over module by module, and Prisma is
-removed at the end. Started 2026-10-18; phases 0 and 1 are done.
+removed at the end. Started 2026-10-18; phases 0–2 are done (no app code uses
+Prisma any more).
 
 ## Why
 
@@ -89,18 +90,31 @@ by being imported).
 - `withTxid` moves to Drizzle together with the booking write fns (its only
   callers), so there's no unused copy in between.
 
-## Phase 2 — move the queries (most of the work)
+## Phase 2 — move the queries (done)
 
-~80 files, ~140 Prisma calls, 21 raw queries, 8 transactions. Hottest paths
-first: the public `_main` page loader, OwnTracks, Stripe/Kultcash/SAML, the
-task handlers; then crew; scripts last. One area per commit, each deployable on
-its own.
+All app code, tests and scripts use Drizzle; `prismaClient.server.ts` has no
+importers. Area by area (one commit each), every read compared against the
+Prisma query on production and every non-trivial write against the Prisma
+version on PGlite.
 
-- `findMany`/`findUnique` with `select` → `db.query.x.findMany({columns, with})`
-- `_count` → a `sql<number>` subquery or `count()` + `groupBy`
-- `upsert` → `insert().onConflictDoUpdate()`
-- `$queryRaw` → `sql` templates or plain queries
-- booking live queries → `@neon/realtime-drizzle`
+Things that differ between the two and had to be spelled out:
+
+- `null` in a Prisma filter is `IS NULL`; `undefined` is "no condition". Drizzle
+  needs `isNull(...)` and an explicit branch.
+- Prisma's `{not: true}` on a nullable column is SQL `<> true`, which leaves
+  NULL out (checked on PGlite) — `ne(col, true)` is the faithful translation.
+- `update` / `findUniqueOrThrow` throw on a missing row in Prisma; Drizzle
+  silently matches nothing. Where callers relied on the error, the update
+  `.returning()`s and throws.
+- `createMany([])` is fine in Prisma; Drizzle throws on `values([])`.
+- Relation filters (`some` / `none`) become `EXISTS` / `NOT EXISTS`. Inside a
+  nested relational query, refer to the table through the `where: (t) => …`
+  callback; and a column inside a raw `sql` template can render unqualified
+  (`"id"`), which bit once (a correlated count compared a table with itself).
+- `nulls: 'last'` on a descending sort must be explicit (`DESC NULLS LAST`).
+- Prisma's cursor pagination is replaced by `(timestamp, id) < (…)` tuples.
+- Raw `db.execute(sql…)` returns timestamps as strings; prefer the query builder
+  with an `sql` condition where the result needs `Date`s.
 
 ## Phase 3 — hand over the schema, remove Prisma
 
