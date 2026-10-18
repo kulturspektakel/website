@@ -1,8 +1,7 @@
 import {subMinutes} from 'date-fns';
 import {tzOffset} from '@date-fns/tz';
 import type {DbExecutor} from './db.server';
-import {device, deviceLog} from './db/schema';
-import type {DeviceType} from '../utils/enums';
+import {deviceLog} from './db/schema';
 import type {LogMessage} from '../proto/logmessage';
 import {timeZone} from '../utils/dateUtils';
 
@@ -27,9 +26,9 @@ export function deviceTimeToDate(
 /**
  * Insert the `DeviceLog` for a `LogMessage` envelope — the per-upload device
  * telemetry (`clientId`-keyed battery/USB voltage + `deviceTime`) that rides
- * along with any log upload — registering the device on first contact (`type`
- * only applies then). Pass the caller's transaction to write the log together
- * with its payload.
+ * along with any log upload. The device row already exists: every ingest route
+ * is behind `deviceAuth`, which registers the device before the handler runs.
+ * Pass the caller's transaction to write the log together with its payload.
  *
  * Callers must ensure `message.clientId` is set (it's the primary key).
  * Returns false when this log was uploaded before (a re-upload of the same
@@ -40,12 +39,7 @@ export async function insertDeviceLog(
   message: LogMessage,
   deviceId: string,
   deviceTime: Date,
-  type: DeviceType,
 ) {
-  await tx
-    .insert(device)
-    .values({id: deviceId, lastSeen: new Date(), type})
-    .onConflictDoNothing();
   const inserted = await tx
     .insert(deviceLog)
     .values({

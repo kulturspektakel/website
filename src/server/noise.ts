@@ -68,7 +68,7 @@ export async function handleNoiseLog(
   // this check-in too — battery/USB voltage keyed to the device. A re-upload
   // already has one, which `insertDeviceLog` skips (like the noise log below).
   if (message.clientId) {
-    await insertDeviceLog(db, message, deviceId, measuredAt, 'NOISE_MONITOR');
+    await insertDeviceLog(db, message, deviceId, measuredAt);
   }
 
   // Skipping duplicates keeps re-uploads idempotent (they return 201 with no

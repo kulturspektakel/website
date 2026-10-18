@@ -181,15 +181,9 @@ export async function handleLog(request: Request): Promise<Response> {
   // leave a log behind whose order is missing (a re-upload would then be
   // rejected as a duplicate).
   const createdOrder = await db.transaction(async (tx) => {
-    const isNew = await insertDeviceLog(
-      tx,
-      message,
-      deviceId,
-      deviceTime,
-      'CONTACTLESS_TERMINAL',
-    );
+    const isNew = await insertDeviceLog(tx, message, deviceId, deviceTime);
     if (!isNew) {
-      // client ID already exists; throwing rolls back the device insert too
+      // client ID already exists
       throw new ApiError(409, 'Conflict');
     }
     const created =
