@@ -1,14 +1,12 @@
-import {prismaClient} from './prismaClient.server';
+import {desc, eq} from 'drizzle-orm';
+import {db} from './db.server';
+import {event} from './db/schema';
 
 export async function getCurrentEvent() {
-  const event = await prismaClient.event.findFirstOrThrow({
-    where: {
-      eventType: 'Kulturspektakel',
-    },
-    orderBy: {
-      start: 'desc',
-    },
-    select: {
+  const current = await db.query.event.findFirst({
+    where: eq(event.eventType, 'Kulturspektakel'),
+    orderBy: desc(event.start),
+    columns: {
       start: true,
       name: true,
       end: true,
@@ -19,5 +17,8 @@ export async function getCurrentEvent() {
       djApplicationEnd: true,
     },
   });
-  return event;
+  if (!current) {
+    throw new Error('No Kulturspektakel event');
+  }
+  return current;
 }

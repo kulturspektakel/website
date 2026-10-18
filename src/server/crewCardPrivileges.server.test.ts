@@ -3,12 +3,13 @@ import {beforeEach, describe, expect, test, vi} from 'vitest';
 const {conversationMembers} = vi.hoisted(() => ({
   conversationMembers: vi.fn(),
 }));
-const {prismaMock} = vi.hoisted(() => ({
-  prismaMock: {crewCard: {updateMany: vi.fn()}},
-}));
+// `updates` resolves to the rows `.returning()` reports as changed.
+const {db, updates} = await vi.hoisted(async () =>
+  (await import('../../test/dbMock')).dbMock(),
+);
 
 vi.mock('./slack.server', () => ({conversationMembers}));
-vi.mock('./prismaClient.server', () => ({prismaClient: prismaMock}));
+vi.mock('./db.server', () => ({db}));
 
 const {
   grantBonbudePrivilege,
@@ -19,31 +20,31 @@ const {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  prismaMock.crewCard.updateMany.mockResolvedValue({count: 0});
+  updates.mockResolvedValue([]);
 });
 
 describe('crewCardPrivileges', () => {
   test('granting is limited to currently-valid, unsuspended cards', async () => {
     await grantBonbudePrivilege('U1');
-    expect(prismaMock.crewCard.updateMany).toHaveBeenCalledWith({
-      where: {
-        viewerId: 'U1',
-        validUntil: {gt: expect.any(Date)},
-        suspended: {not: true},
-        privileged: {not: true},
-      },
-      data: {privileged: true},
-    });
+    // viewer, validUntil > now (sent as an ISO string), suspended <> true,
+    // privileged <> true
+    expect(updates).toHaveBeenCalledWith(
+      'CrewCard',
+      {privileged: true},
+      ['U1', expect.any(String), true, true],
+    );
   });
 
   test('revoking ignores validity and suspension', async () => {
     // Expired privileged cards are still shipped to the devices by
     // `handleLists`, so leaving one privileged would leave it live.
     await revokeBonbudePrivilege('U1');
-    expect(prismaMock.crewCard.updateMany).toHaveBeenCalledWith({
-      where: {viewerId: 'U1', privileged: true},
-      data: {privileged: false},
-    });
+    // viewer and privileged only: no validity or suspension filter
+    expect(updates).toHaveBeenCalledWith(
+      'CrewCard',
+      {privileged: false},
+      ['U1', true],
+    );
   });
 
   test('isBonbudeMember resolves false when Slack fails', async () => {
@@ -63,26 +64,24 @@ describe('crewCardPrivileges', () => {
     });
     expect(conversationMembers).toHaveBeenCalledWith('C0BKU2WSN7K');
 
-    const [[grant], [revoke]] = prismaMock.crewCard.updateMany.mock.calls;
-    expect(grant).toEqual({
-      where: {
-        viewerId: {in: ['U1', 'U2']},
-        validUntil: {gt: expect.any(Date)},
-        suspended: {not: true},
-        privileged: {not: true},
-      },
-      data: {privileged: true},
-    });
-    expect(revoke).toEqual({
-      where: {viewerId: {notIn: ['U1', 'U2'], not: null}, privileged: true},
-      data: {privileged: false},
-    });
+    const [grant, revoke] = updates.mock.calls;
+    expect(grant).toEqual([
+      'CrewCard',
+      {privileged: true},
+      ['U1', 'U2', expect.any(String), true, true],
+    ]);
+    // viewerId IS NOT NULL (no parameter), NOT IN members, privileged
+    expect(revoke).toEqual([
+      'CrewCard',
+      {privileged: false},
+      ['U1', 'U2', true],
+    ]);
   });
 
   test('reconcile writes nothing when the channel reads back empty', async () => {
     conversationMembers.mockResolvedValue([]);
 
     expect(await reconcileBonbudePrivileges()).toBeNull();
-    expect(prismaMock.crewCard.updateMany).not.toHaveBeenCalled();
+    expect(updates).not.toHaveBeenCalled();
   });
 });

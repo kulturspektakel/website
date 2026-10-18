@@ -1,13 +1,14 @@
 import {beforeEach, describe, expect, test, vi} from 'vitest';
 
-const {findUnique} = vi.hoisted(() => ({
-  findUnique: vi.fn(),
-}));
-vi.mock('./prismaClient.server', () => ({
-  prismaClient: {
-    shortDomainRedirect: {findUnique},
-  },
-}));
+import {whereParams} from '../../test/dbMock';
+
+const {db, query} = await vi.hoisted(async () =>
+  (await import('../../test/dbMock')).dbMock(),
+);
+vi.mock('./db.server', () => ({db}));
+const findUnique = query.shortDomainRedirect.findFirst;
+// The slug a lookup asked for.
+const lookedUp = () => whereParams(findUnique.mock.calls[0][0].where)[0];
 vi.mock('@sentry/tanstackstart-react', () => ({captureException: vi.fn()}));
 
 const {shortUrlRedirect} = await import('./shortUrlRedirect');
@@ -29,26 +30,26 @@ describe('shortUrlRedirect', () => {
     const res = await shortUrlRedirect(req('kult.wiki', '/foo'));
     expect(res?.status).toBe(302);
     expect(res?.headers.get('location')).toBe('https://example.com/foo');
-    expect(findUnique).toHaveBeenCalledWith({where: {slug: '/foo'}});
+    expect(lookedUp()).toBe('/foo');
   });
 
   test('kult.wiki + unknown slug → 404', async () => {
     findUnique.mockResolvedValueOnce(null);
     const res = await shortUrlRedirect(req('kult.wiki', '/missing'));
     expect(res?.status).toBe(404);
-    expect(findUnique).toHaveBeenCalledWith({where: {slug: '/missing'}});
+    expect(lookedUp()).toBe('/missing');
   });
 
   test('trailing slash is normalized before lookup', async () => {
     findUnique.mockResolvedValueOnce(null);
     await shortUrlRedirect(req('kult.wiki', '/bar/'));
-    expect(findUnique).toHaveBeenCalledWith({where: {slug: '/bar'}});
+    expect(lookedUp()).toBe('/bar');
   });
 
   test('root path is left untouched', async () => {
     findUnique.mockResolvedValueOnce(null);
     await shortUrlRedirect(req('kult.wiki', '/'));
-    expect(findUnique).toHaveBeenCalledWith({where: {slug: '/'}});
+    expect(lookedUp()).toBe('/');
   });
 
   test('subdomain of kult.wiki is handled', async () => {
@@ -95,7 +96,7 @@ describe('shortUrlRedirect', () => {
   test('slug lookup is case-insensitive', async () => {
     findUnique.mockResolvedValueOnce(null);
     await shortUrlRedirect(req('kult.wiki', '/Helfen'));
-    expect(findUnique).toHaveBeenCalledWith({where: {slug: '/helfen'}});
+    expect(lookedUp()).toBe('/helfen');
   });
 
   test('hits get an hour at the edge, misses five minutes', async () => {

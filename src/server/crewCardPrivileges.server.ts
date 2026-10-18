@@ -1,4 +1,6 @@
-import {prismaClient} from './prismaClient.server';
+import {and, gt, inArray, isNotNull, ne, notInArray, eq} from 'drizzle-orm';
+import {db} from './db.server';
+import {crewCard} from './db/schema';
 import {conversationMembers} from './slack.server';
 import {SlackChannel} from '../utils/slackChannels';
 
@@ -15,9 +17,12 @@ import {SlackChannel} from '../utils/slackChannels';
  *
  * The two directions are deliberately asymmetric — see the doc comments below.
  *
- * `suspended`/`privileged` are nullable booleans, so `{not: true}` (rather than
- * `false`) is needed to also match NULL. Filtering on `privileged` on both
- * sides makes a redundant event a zero-row write.
+ * `suspended`/`privileged` are nullable booleans, and the filters below are
+ * `<> true` — which, as SQL does, leaves NULLs out. (This used to be Prisma's
+ * `{not: true}`, which does the same; the old comment claimed it matched NULL.)
+ * So a card whose flag is NULL is neither granted nor, by these filters,
+ * touched. Filtering on `privileged` on both sides makes a redundant event a
+ * zero-row write.
  */
 
 /**
@@ -26,15 +31,18 @@ import {SlackChannel} from '../utils/slackChannels';
  * those filters we'd re-privilege dead cards.
  */
 export async function grantBonbudePrivilege(viewerId: string): Promise<number> {
-  const {count} = await prismaClient.crewCard.updateMany({
-    where: {
-      viewerId,
-      validUntil: {gt: new Date()},
-      suspended: {not: true},
-      privileged: {not: true},
-    },
-    data: {privileged: true},
-  });
+  const {length: count} = await db
+    .update(crewCard)
+    .set({privileged: true})
+    .where(
+      and(
+        eq(crewCard.viewerId, viewerId),
+        gt(crewCard.validUntil, new Date()),
+        ne(crewCard.suspended, true),
+        ne(crewCard.privileged, true),
+      ),
+    )
+    .returning({id: crewCard.id});
   if (count > 0) {
     console.log(`[crew-card-privileges] granted ${count} for ${viewerId}`);
   }
@@ -50,10 +58,11 @@ export async function grantBonbudePrivilege(viewerId: string): Promise<number> {
 export async function revokeBonbudePrivilege(
   viewerId: string,
 ): Promise<number> {
-  const {count} = await prismaClient.crewCard.updateMany({
-    where: {viewerId, privileged: true},
-    data: {privileged: false},
-  });
+  const {length: count} = await db
+    .update(crewCard)
+    .set({privileged: false})
+    .where(and(eq(crewCard.viewerId, viewerId), eq(crewCard.privileged, true)))
+    .returning({id: crewCard.id});
   if (count > 0) {
     console.log(`[crew-card-privileges] revoked ${count} for ${viewerId}`);
   }
@@ -103,26 +112,36 @@ export async function reconcileBonbudePrivileges(): Promise<{
   }
 
   const [granted, revoked] = await Promise.all([
-    prismaClient.crewCard.updateMany({
-      where: {
-        viewerId: {in: members},
-        validUntil: {gt: new Date()},
-        suspended: {not: true},
-        privileged: {not: true},
-      },
-      data: {privileged: true},
-    }),
-    prismaClient.crewCard.updateMany({
-      // `not: null` keeps nickname-only cards out of it.
-      where: {viewerId: {notIn: members, not: null}, privileged: true},
-      data: {privileged: false},
-    }),
+    db
+      .update(crewCard)
+      .set({privileged: true})
+      .where(
+        and(
+          inArray(crewCard.viewerId, members),
+          gt(crewCard.validUntil, new Date()),
+          ne(crewCard.suspended, true),
+          ne(crewCard.privileged, true),
+        ),
+      )
+      .returning({id: crewCard.id}),
+    db
+      .update(crewCard)
+      .set({privileged: false})
+      .where(
+        and(
+          // `IS NOT NULL` keeps nickname-only cards out of it.
+          isNotNull(crewCard.viewerId),
+          notInArray(crewCard.viewerId, members),
+          eq(crewCard.privileged, true),
+        ),
+      )
+      .returning({id: crewCard.id}),
   ]);
 
-  if (granted.count > 0 || revoked.count > 0) {
+  if (granted.length > 0 || revoked.length > 0) {
     console.log(
-      `[crew-card-privileges] reconciled: granted ${granted.count}, revoked ${revoked.count}`,
+      `[crew-card-privileges] reconciled: granted ${granted.length}, revoked ${revoked.length}`,
     );
   }
-  return {granted: granted.count, revoked: revoked.count};
+  return {granted: granted.length, revoked: revoked.length};
 }

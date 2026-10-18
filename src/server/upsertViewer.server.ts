@@ -1,4 +1,5 @@
-import {prismaClient} from './prismaClient.server';
+import {db} from './db.server';
+import {viewer} from './db/schema';
 import type {SlackApiUser} from './slack.server';
 
 /**
@@ -13,9 +14,10 @@ export async function upsertViewer(slackUser: SlackApiUser) {
     profilePicture: slackUser.profile.image_192,
     email: slackUser.profile.email,
   };
-  return prismaClient.viewer.upsert({
-    where: {id: slackUser.id},
-    create: {id: slackUser.id, ...data},
-    update: data,
-  });
+  const [row] = await db
+    .insert(viewer)
+    .values({id: slackUser.id, ...data})
+    .onConflictDoUpdate({target: viewer.id, set: data})
+    .returning();
+  return row;
 }

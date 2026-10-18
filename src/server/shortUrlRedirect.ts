@@ -1,5 +1,7 @@
 import * as Sentry from '@sentry/tanstackstart-react';
-import {prismaClient} from './prismaClient.server';
+import {eq} from 'drizzle-orm';
+import {db} from './db.server';
+import {shortDomainRedirect} from './db/schema';
 
 // A hit is one row that changes maybe once a year, so let the edge own it: an
 // hour of `s-maxage` collapses a whole QR poster into one Neon lookup per
@@ -58,9 +60,12 @@ export async function shortUrlRedirect(
   // lowercase, so fold the input rather than expecting people to match case.
   slug = slug.toLowerCase();
 
-  let data: {targetUrl: string} | null = null;
+  let data: {targetUrl: string} | undefined;
   try {
-    data = await prismaClient.shortDomainRedirect.findUnique({where: {slug}});
+    data = await db.query.shortDomainRedirect.findFirst({
+      where: eq(shortDomainRedirect.slug, slug),
+      columns: {targetUrl: true},
+    });
   } catch (e) {
     // A Neon blip shouldn't 500 a link that's printed on a poster. Report it and
     // return the normal miss response, uncached so it can't outlive the outage.

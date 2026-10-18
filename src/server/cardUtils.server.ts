@@ -1,13 +1,19 @@
 import {isPast, sub} from 'date-fns';
+import {and, desc, eq, exists, gt, gte, isNotNull, lt} from 'drizzle-orm';
 import {CardActivity} from '../components/kultcard/CardActivities';
-import {prismaClient} from './prismaClient.server';
+import {db} from './db.server';
+import {cardTransaction, crewCard, deviceLog, order} from './db/schema';
+
+// Both queries hand back the shape their callers were written against (Prisma's
+// relation names: `Order`, `items`).
 
 export async function queryCardTransactions(
   cardId: string,
   event: {start: Date; end: Date},
 ) {
-  return prismaClient.cardTransaction.findMany({
-    select: {
+  const since = isPast(event.end) ? event.start : sub(new Date(), {days: 7});
+  const rows = await db.query.cardTransaction.findMany({
+    columns: {
       balanceAfter: true,
       balanceBefore: true,
       depositAfter: true,
@@ -15,95 +21,77 @@ export async function queryCardTransactions(
       counter: true,
       cardId: true,
       transactionType: true,
-      Order: {
-        select: {
-          createdAt: true,
-          items: {
-            select: {
-              amount: true,
-              name: true,
-              productList: {
-                select: {
-                  name: true,
-                  emoji: true,
-                },
-              },
-            },
+    },
+    with: {
+      order: {
+        columns: {createdAt: true},
+        with: {
+          orderItems: {
+            columns: {amount: true, name: true},
+            with: {productList: {columns: {name: true, emoji: true}}},
           },
         },
       },
-      deviceLog: {
-        select: {
-          deviceTime: true,
-        },
-      },
+      deviceLog: {columns: {deviceTime: true}},
     },
-    where: {
-      cardId,
-      deviceLog: {
-        deviceTime: {
-          gte: isPast(event.end) ? event.start : sub(new Date(), {days: 7}),
-        },
-      },
-      counter: {
-        not: null,
-      },
-    },
-    orderBy: {
-      counter: 'desc',
-    },
+    // The callback's table is the query's own alias, which the subquery has to
+    // refer to.
+    where: (t) =>
+      and(
+        eq(t.cardId, cardId),
+        isNotNull(t.counter),
+        exists(
+          db
+            .select({clientId: deviceLog.clientId})
+            .from(deviceLog)
+            .where(
+              and(
+                eq(deviceLog.clientId, t.clientId),
+                gte(deviceLog.deviceTime, since),
+              ),
+            ),
+        ),
+      ),
+    orderBy: desc(cardTransaction.counter),
   });
+  return rows.map(({order: o, ...t}) => ({
+    ...t,
+    Order: o && {createdAt: o.createdAt, items: o.orderItems},
+  }));
 }
 
-export function queryCrewCard(
+export async function queryCrewCard(
   cardId: Uint8Array<ArrayBuffer>,
   event: {start: Date; end: Date},
 ) {
-  return prismaClient.crewCard.findUnique({
-    where: {
-      id: cardId,
-    },
-    select: {
-      privileged: true,
-      suspended: true,
-      nickname: true,
-      viewer: {
-        select: {
-          displayName: true,
-          profilePicture: true,
-        },
-      },
-      Order: {
-        where: {
-          createdAt: {
-            lt: event.end,
-            gt: event.start,
-          },
-        },
-        select: {
-          id: true,
-          createdAt: true,
-          notForMe: true,
-          items: {
-            select: {
-              name: true,
-              amount: true,
-              productList: {
-                select: {
-                  id: true,
-                  name: true,
-                  emoji: true,
-                },
-              },
+  const card = await db.query.crewCard.findFirst({
+    where: eq(crewCard.id, Buffer.from(cardId)),
+    columns: {privileged: true, suspended: true, nickname: true},
+    with: {
+      viewer: {columns: {displayName: true, profilePicture: true}},
+      orders: {
+        where: and(lt(order.createdAt, event.end), gt(order.createdAt, event.start)),
+        orderBy: desc(order.createdAt),
+        columns: {id: true, createdAt: true, notForMe: true},
+        with: {
+          orderItems: {
+            columns: {name: true, amount: true},
+            with: {
+              productList: {columns: {id: true, name: true, emoji: true}},
             },
           },
-        },
-        orderBy: {
-          createdAt: 'desc',
         },
       },
     },
   });
+  if (!card) {
+    return null;
+  }
+  const {orders, ...rest} = card;
+  return {
+    ...rest,
+    Order: orders.map(({orderItems, ...o}) => ({...o, items: orderItems})),
+  };
 }
 
 export function orderToCardActivity(

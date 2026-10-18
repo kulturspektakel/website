@@ -16,7 +16,9 @@ import {useState} from 'react';
 import {useRouter} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
 import {z} from 'zod';
-import {prismaClient} from '../../server/prismaClient.server';
+import {and, eq} from 'drizzle-orm';
+import {db} from '../../server/db.server';
+import {order} from '../../server/db/schema';
 import {stringToByteArray} from '../../utils/cardUtils';
 import {locale, timeZone} from '../../utils/dateUtils';
 
@@ -31,10 +33,15 @@ const setOrderNotForMe = createServerFn({method: 'POST'})
     }),
   )
   .handler(async ({data: {cardId, orderId, notForMe}}) => {
-    await prismaClient.order.updateMany({
-      where: {id: orderId, crewCardId: stringToByteArray(cardId)},
-      data: {notForMe},
-    });
+    await db
+      .update(order)
+      .set({notForMe})
+      .where(
+        and(
+          eq(order.id, orderId),
+          eq(order.crewCardId, Buffer.from(stringToByteArray(cardId))),
+        ),
+      );
   });
 
 type CardChange = {

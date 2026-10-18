@@ -1,4 +1,6 @@
-import {prismaClient} from './prismaClient.server';
+import {sql} from 'drizzle-orm';
+import {db} from './db.server';
+import {viewer} from './db/schema';
 
 export type CrewViewer = {
   id: string;
@@ -13,9 +15,8 @@ export type CrewViewer = {
  *
  * The bridge is `directus_users.external_identifier`, which holds the Slack user
  * id and therefore equals `Viewer.id`. The Directus table lives in the
- * externally-owned `directus` Postgres schema, so we read it with `$queryRaw`
- * rather than modeling it (modeling it would pull the schema under Prisma's
- * management and make `prisma db push` drop the Directus tables). Existing crew
+ * externally-owned `directus` Postgres schema, so it's read with raw SQL rather
+ * than modeled (drizzle-kit only manages `public`; see drizzle.config.ts). Existing crew
  * already have a rich, Slack-sourced `Viewer`, so we only create for
  * genuinely-new users and never overwrite an existing row.
  *
@@ -25,43 +26,62 @@ export type CrewViewer = {
 export async function resolveCrewViewer(
   directusUserId: string,
 ): Promise<CrewViewer | null> {
-  const rows = await prismaClient.$queryRaw<
-    Array<{
-      external_identifier: string | null;
-      email: string | null;
-      first_name: string | null;
-      last_name: string | null;
-    }>
-  >`
-    SELECT external_identifier, email, first_name, last_name
-    FROM "directus"."directus_users"
-    WHERE id = ${directusUserId}::uuid`;
+  // This runs on every crew request (crewAuth), so the Directus user and their
+  // Viewer come back in one round trip.
+  const {
+    rows: [du],
+  } = await db.execute<{
+    external_identifier: string | null;
+    email: string | null;
+    first_name: string | null;
+    last_name: string | null;
+    viewer_id: string | null;
+    display_name: string | null;
+    profile_picture: string | null;
+  }>(sql`
+    SELECT du.external_identifier, du.email, du.first_name, du.last_name,
+           v.id AS viewer_id, v."displayName" AS display_name,
+           v."profilePicture" AS profile_picture
+      FROM "directus"."directus_users" du
+      LEFT JOIN ${viewer} v ON v.id = du.external_identifier
+     WHERE du.id = ${directusUserId}::uuid`);
 
-  const du = rows[0];
   if (!du?.external_identifier) {
     return null; // no Slack identity → can't key a Viewer
   }
   const id = du.external_identifier; // == Viewer.id
 
-  const existing = await prismaClient.viewer.findUnique({
-    where: {id},
-    select: {id: true, displayName: true, profilePicture: true},
-  });
-  if (existing) {
-    return existing; // already exists — don't touch it
+  if (du.viewer_id) {
+    // already exists — don't touch it
+    return {
+      id: du.viewer_id,
+      displayName: du.display_name!,
+      profilePicture: du.profile_picture,
+    };
   }
 
   // First sight of this user: provision a minimal Viewer keyed by their Slack
-  // id. `upsert` (not `create`) guards against a race between concurrent first
-  // requests; the empty `update` leaves an already-created row untouched.
+  // id. On a race between concurrent first requests the insert skips, and the
+  // row the other request created is read back.
   const displayName =
     [du.first_name, du.last_name].filter(Boolean).join(' ') ||
     du.email ||
     id;
-  return prismaClient.viewer.upsert({
-    where: {id},
-    create: {id, displayName, email: du.email ?? ''},
-    update: {},
-    select: {id: true, displayName: true, profilePicture: true},
-  });
+  const columns = {
+    id: viewer.id,
+    displayName: viewer.displayName,
+    profilePicture: viewer.profilePicture,
+  };
+  const [created] = await db
+    .insert(viewer)
+    .values({id, displayName, email: du.email ?? ''})
+    .onConflictDoNothing()
+    .returning(columns);
+  return (
+    created ??
+    (await db.query.viewer.findFirst({
+      where: (v, {eq}) => eq(v.id, id),
+      columns: {id: true, displayName: true, profilePicture: true},
+    }))!
+  );
 }
