@@ -12,7 +12,7 @@ import {
 import {toaster} from '../chakra-snippets/toaster';
 import {deleteNoiseTag} from '../../routes/crew.noise';
 import {instantLabel} from './chartUtils';
-import {errorToast} from './toast';
+import {errorToast} from '../toast';
 import {useProjectView, type NoiseLocationItem} from './projectView';
 import type {NoiseRangeTag} from './rangeTags';
 import {Name} from './Name';

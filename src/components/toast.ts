@@ -1,9 +1,9 @@
-import {toaster} from '../chakra-snippets/toaster';
+import {toaster} from './chakra-snippets/toaster';
 
-// Every failure in this section surfaces the same way: an error toast titled
-// with what didn't work, described by whatever the thrown value says. The two
-// callers that need the message on its own (to decide whether to toast at all)
-// use errorMessage directly.
+// Failures surface the same way everywhere: an error toast titled with what
+// didn't work, described by whatever the thrown value says. Callers that need
+// the message on its own (to decide whether to toast at all) use errorMessage
+// directly.
 
 export const errorMessage = (e: unknown): string =>
   e instanceof Error ? e.message : String(e);

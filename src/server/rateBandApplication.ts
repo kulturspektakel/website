@@ -1,7 +1,7 @@
 import {createServerFn} from '@tanstack/react-start';
 import {z} from 'zod';
 import {crewAuth} from './crewAuth';
-import {prismaClient} from './prismaClient.server';
+import {withTxid} from './withTxid.server';
 
 // Create/update (or clear) the viewer's own rating for a band application.
 // crewAuth resolves the Slack-keyed Viewer onto context.viewer; ratings are
@@ -22,25 +22,26 @@ export const rateBandApplication = createServerFn()
       // with no Slack-keyed Viewer.
       throw new Error('Unauthorized');
     }
-    if (data.rating === 0) {
-      // Clearing the rating: remove the row (deleteMany won't throw when absent).
-      await prismaClient.bandApplicationRating.deleteMany({
-        where: {viewerId, bandApplicationId: data.applicationId},
-      });
-    } else {
-      await prismaClient.bandApplicationRating.upsert({
-        where: {
-          viewerId_bandApplicationId: {
-            viewerId,
-            bandApplicationId: data.applicationId,
-          },
-        },
-        create: {
-          viewerId,
-          bandApplicationId: data.applicationId,
-          rating: data.rating,
-        },
-        update: {rating: data.rating},
-      });
-    }
+    return withTxid((tx) =>
+      data.rating === 0
+        ? // Clearing the rating: remove the row (deleteMany won't throw when
+          // absent).
+          tx.bandApplicationRating.deleteMany({
+            where: {viewerId, bandApplicationId: data.applicationId},
+          })
+        : tx.bandApplicationRating.upsert({
+            where: {
+              viewerId_bandApplicationId: {
+                viewerId,
+                bandApplicationId: data.applicationId,
+              },
+            },
+            create: {
+              viewerId,
+              bandApplicationId: data.applicationId,
+              rating: data.rating,
+            },
+            update: {rating: data.rating},
+          }),
+    );
   });

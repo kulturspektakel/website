@@ -12,7 +12,7 @@ import {
 import {Field} from '../chakra-snippets/field';
 import {PasswordInput} from '../chakra-snippets/password-input';
 import {toaster} from '../chakra-snippets/toaster';
-import {errorToast} from './toast';
+import {errorToast} from '../toast';
 import {type BluetoothSlice} from './noise';
 
 export function WifiDialog({

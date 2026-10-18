@@ -1,6 +1,6 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {toaster} from '../chakra-snippets/toaster';
-import {errorMessage, errorToast} from './toast';
+import {errorMessage, errorToast} from '../toast';
 import {
   audioInputOptions,
   audioOutputOptions,

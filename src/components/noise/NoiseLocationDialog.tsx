@@ -21,7 +21,7 @@ import {
 } from '../chakra-snippets/dialog';
 // From the map, because the map is what produced the point.
 import {type Coordinates} from './LocationsMap';
-import {errorToast} from './toast';
+import {errorToast} from '../toast';
 import {noiseQueryKeys} from './queries';
 import {fromLocalInput, toLocalInput} from './timeframe';
 import {timeZone} from '../../utils/dateUtils';

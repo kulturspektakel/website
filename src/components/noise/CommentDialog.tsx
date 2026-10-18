@@ -12,7 +12,7 @@ import {
 } from '../chakra-snippets/dialog';
 import {toaster} from '../chakra-snippets/toaster';
 import {deleteNoiseTag, updateNoiseTag} from '../../routes/crew.noise';
-import {errorToast} from './toast';
+import {errorToast} from '../toast';
 import {TimeField} from './TimeField';
 import {END_BEFORE_START} from './timeframe';
 import {useProjectView} from './projectView';

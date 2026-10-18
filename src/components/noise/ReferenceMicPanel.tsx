@@ -28,7 +28,7 @@ import {InputLevelMeter} from './InputLevelMeter';
 import {useBluetooth} from './context';
 import {useDeviceView} from './deviceView';
 import {outputChannelOptions} from './referenceMic';
-import {errorToast} from './toast';
+import {errorToast} from '../toast';
 
 // Which microphone on this computer to draw over the monitor's spectrum, the file that says
 // what its levels are worth — and, with both of those settled, measuring one instrument against

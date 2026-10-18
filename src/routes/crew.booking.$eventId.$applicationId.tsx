@@ -1,17 +1,13 @@
-import {useEffect, useId, useRef, useState} from 'react';
+import {useEffect, useId, useMemo, useRef, useState} from 'react';
 import {
   createFileRoute,
   notFound,
   Outlet,
   useLoaderData,
-  useRouter,
 } from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
 import {z} from 'zod';
 import {crewAuth} from '../server/crewAuth';
-import {postBandApplicationComment} from '../server/postBandApplicationComment';
-import {deleteBandApplicationComment} from '../server/deleteBandApplicationComment';
-import {useQuery, useQueryClient} from '@tanstack/react-query';
 import {
   Box,
   Button,
@@ -48,12 +44,21 @@ import {
 import {
   BandRepertoire,
   DemoEmbedType,
+  GenreCategory,
   PreviouslyPlayed,
 } from '../generated/prisma/browser';
 import {prismaClient} from '../server/prismaClient.server';
 import {Avatar} from '../components/chakra-snippets/avatar';
 import {BandName} from '../components/booking/BandName';
 import {BandApplicationRating} from '../components/booking/BandApplicationRating';
+import {
+  bookingCollections,
+  hasTag,
+  normalizeTag,
+  tagKey,
+  toastOnFailure,
+  useLiveRows,
+} from '../components/booking/bookingCollections';
 import {
   MenuContent,
   MenuItem,
@@ -83,12 +88,11 @@ import {
   toStageValue,
   type StageValue,
 } from '../components/booking/stageMatrixShared';
-import {setBandApplicationStage} from '../server/setBandApplicationStage';
 import {KULT_LOCATION} from '../utils/kultLocation';
 import {meanRating} from '../utils/meanRating';
 import {normalizeBandName} from '../utils/normalizeBandName';
 import {spotifyArtistUrl} from '../utils/spotifyArtistId';
-import {computedTagsFor} from './crew.booking.$eventId';
+import {type BookingRow, useBookingRow} from './crew.booking.$eventId';
 
 // ---------------------------------------------------------------------------
 // Server function — lazy detail loader (runs only when the child route opens)
@@ -96,10 +100,12 @@ import {computedTagsFor} from './crew.booking.$eventId';
 
 const loadBandApplicationDetail = createServerFn()
   .middleware([crewAuth])
-  .validator((applicationId: string) => applicationId)
-  .handler(async ({data: id, context}) => {
-    const a = await prismaClient.bandApplication.findUnique({
-      where: {id},
+  .validator(z.object({eventId: z.string(), applicationId: z.string()}))
+  .handler(async ({data: {eventId, applicationId: id}}) => {
+    // Only applications the booking table lists (this event, no DJs), so the
+    // modal always has a live row to show.
+    const a = await prismaClient.bandApplication.findFirst({
+      where: {id, eventId, genreCategory: {not: GenreCategory.DJ}},
       select: {
         id: true,
         bandname: true,
@@ -129,29 +135,8 @@ const loadBandApplicationDetail = createServerFn()
         hasPreviouslyPlayed: true,
         repertoire: true,
         imageUrl: true,
-        stageRow: true,
-        stageColumn: true,
-        contactedByViewerId: true,
-        bandApplicationRating: {
-          select: {
-            rating: true,
-            viewer: {
-              select: {id: true, displayName: true, profilePicture: true},
-            },
-          },
-        },
-        bandApplicationComment: {
-          orderBy: {createdAt: 'asc'},
-          select: {
-            id: true,
-            comment: true,
-            createdAt: true,
-            viewer: {
-              select: {id: true, displayName: true, profilePicture: true},
-            },
-          },
-        },
-        BandApplicationTag: {select: {tag: true}},
+        // Rating, tags, stage and comments aren't loaded here: they come
+        // live from the booking page's collections.
       },
     });
     if (!a) {
@@ -242,12 +227,8 @@ const loadBandApplicationDetail = createServerFn()
         KIND_ORDER[b.kind] - KIND_ORDER[a.kind],
     );
 
-    const myViewerId = context.viewer?.id ?? null;
     return {
       ...a,
-      myRating:
-        a.bandApplicationRating.find((r) => r.viewer.id === myViewerId)
-          ?.rating ?? 0,
       timeline,
       apiKey: process.env.GOOGLE_MAPS_API_KEY,
     };
@@ -278,64 +259,6 @@ type TimelineEntry =
 
 type DetailData = Awaited<ReturnType<typeof loadBandApplicationDetail>>;
 
-// Distinct tags assigned within one event, for the tags combobox suggestions.
-// Scoped to the event so a booking round only proposes the vocabulary the crew
-// actually settled on this year instead of everything ever typed.
-const listBandApplicationTags = createServerFn()
-  .middleware([crewAuth])
-  .validator(z.object({eventId: z.string()}))
-  .handler(async ({data}) => {
-    const rows = await prismaClient.bandApplicationTag.findMany({
-      where: {bandApplication: {eventId: data.eventId}},
-      distinct: ['tag'],
-      select: {tag: true},
-      orderBy: {tag: 'asc'},
-    });
-    return rows.map((r) => r.tag);
-  });
-
-// Add a tag to an application (idempotent — the [bandApplicationId, tag] pair is
-// unique, and `tag` is citext so case-insensitive). Attributed to the crew
-// member via context.viewer.
-const addBandApplicationTag = createServerFn()
-  .middleware([crewAuth])
-  .validator(
-    z.object({applicationId: z.string(), tag: z.string().trim().min(1)}),
-  )
-  .handler(async ({data, context}) => {
-    const viewerId = context.viewer?.id;
-    if (!viewerId) {
-      throw new Error('Unauthorized');
-    }
-    await prismaClient.bandApplicationTag.upsert({
-      where: {
-        bandApplicationId_tag: {
-          bandApplicationId: data.applicationId,
-          tag: data.tag,
-        },
-      },
-      create: {
-        bandApplicationId: data.applicationId,
-        tag: data.tag,
-        createdByViewerId: viewerId,
-      },
-      update: {},
-    });
-  });
-
-const removeBandApplicationTag = createServerFn()
-  .middleware([crewAuth])
-  .validator(z.object({applicationId: z.string(), tag: z.string()}))
-  .handler(async ({data, context}) => {
-    if (!context.viewer?.id) {
-      throw new Error('Unauthorized');
-    }
-    // deleteMany doesn't throw when the tag is already gone.
-    await prismaClient.bandApplicationTag.deleteMany({
-      where: {bandApplicationId: data.applicationId, tag: data.tag},
-    });
-  });
-
 // ---------------------------------------------------------------------------
 // Enum labels (German, copied from the legacy Ant-Design modal)
 // ---------------------------------------------------------------------------
@@ -363,7 +286,7 @@ export const Route = createFileRoute('/crew/booking/$eventId/$applicationId')({
   // Pop the modal open (almost) immediately with a spinner rather than blocking
   // navigation until the detail query resolves.
   pendingMs: 100,
-  loader: ({params}) => loadBandApplicationDetail({data: params.applicationId}),
+  loader: ({params}) => loadBandApplicationDetail({data: params}),
 });
 
 // Loading state: rendered into the parent route's persistent dialog, so the
@@ -393,16 +316,36 @@ function BandApplicationDetailRoute() {
   const data = Route.useLoaderData();
   const {eventId, applicationId} = Route.useParams();
   const navigate = Route.useNavigate();
+  // The live row from the table, so a rename, rating, tag or stage change shows
+  // up here as it happens. The loader only accepts applications the table
+  // lists, so it's missing when the application was deleted or moved out of
+  // the table (e.g. to DJ) while open — or, for a moment, when it's so new
+  // that its row hasn't arrived over Realtime yet.
+  const row = useBookingRow(applicationId);
+  if (!row) {
+    return (
+      <>
+        <DialogHeader>
+          <DialogTitle>Bewerbung nicht gefunden</DialogTitle>
+        </DialogHeader>
+        <DialogBody>
+          <Text color="fg.muted">
+            Diese Bewerbung gibt es in dieser Liste nicht (mehr).
+          </Text>
+        </DialogBody>
+      </>
+    );
+  }
 
   return (
     <>
       <DialogHeader>
         <DialogTitle>
           <BandName
-            bandname={data.bandname}
-            genre={data.genre}
-            genreCategory={data.genreCategory}
-            imageUrl={data.imageUrl}
+            bandname={row.bandname}
+            genre={row.genre}
+            genreCategory={row.genreCategory}
+            imageUrl={row.imageUrl}
             size="md"
             copyableName
           />
@@ -412,6 +355,7 @@ function BandApplicationDetailRoute() {
         <SimpleGrid columns={{base: 1, md: 2}} gap="6">
           <LeftColumn
             data={data}
+            tags={row.tags}
             onContact={() =>
               navigate({
                 to: '/crew/booking/$eventId/$applicationId/contact',
@@ -419,7 +363,7 @@ function BandApplicationDetailRoute() {
               })
             }
           />
-          <RightColumn data={data} />
+          <RightColumn data={data} row={row} />
         </SimpleGrid>
       </DialogBody>
 
@@ -436,9 +380,11 @@ function BandApplicationDetailRoute() {
 
 function LeftColumn({
   data,
+  tags,
   onContact,
 }: {
   data: DetailData;
+  tags: string[];
   onContact: () => void;
 }) {
   const malePercent =
@@ -521,7 +467,7 @@ function LeftColumn({
         <Box mt="3">
           <ContactMenu
             applicationId={data.id}
-            tags={data.BandApplicationTag.map((t) => t.tag)}
+            tags={tags}
             onContact={onContact}
           />
         </Box>
@@ -538,6 +484,17 @@ const RESPONSE_TAGS = [
   {tag: 'zugesagt', label: 'als zugesagt markieren'},
 ];
 
+// Shows up at once in the tags field, the table and for everyone else.
+function addTag(eventId: string, applicationId: string, tag: string) {
+  toastOnFailure(
+    bookingCollections(eventId).tags.insert({
+      bandApplicationId: applicationId,
+      tag,
+    }),
+    'Tag konnte nicht gespeichert werden',
+  );
+}
+
 // Everything you can do about the offer, behind one button in the Kontakt
 // section: write the mail, or record the answer that came back.
 function ContactMenu({
@@ -549,33 +506,12 @@ function ContactMenu({
   tags: string[];
   onContact: () => void;
 }) {
-  const router = useRouter();
-  const queryClient = useQueryClient();
   const {eventId} = Route.useParams();
-  // The tag currently being written, or `null` when idle. One at a time is all
-  // the menu can start — it closes on select.
-  const [pending, setPending] = useState<string | null>(null);
-
-  const add = (tag: string) => {
-    setPending(tag);
-    addBandApplicationTag({data: {applicationId, tag}})
-      .then(() =>
-        Promise.all([
-          // Same refresh the tags field does after an edit: the tag joins the
-          // event's suggestion vocabulary, and the booking table re-renders.
-          queryClient.invalidateQueries({
-            queryKey: ['bandApplicationTags', eventId],
-          }),
-          router.invalidate(),
-        ]),
-      )
-      .finally(() => setPending(null));
-  };
 
   return (
     <MenuRoot>
       <MenuTrigger asChild>
-        <Button size="sm" variant="outline" loading={pending != null}>
+        <Button size="sm" variant="outline">
           Anfrage
           <LuChevronDown />
         </Button>
@@ -590,8 +526,8 @@ function ContactMenu({
             value={tag}
             // Already recorded — remove the chip in the tags field below if it
             // was a mistake. `tag` is citext, so stored casing may differ.
-            disabled={tags.some((t) => t.toLowerCase() === tag)}
-            onClick={() => add(tag)}
+            disabled={hasTag(tags, tag)}
+            onClick={() => addTag(eventId, applicationId, tag)}
           >
             {label}
           </MenuItem>
@@ -605,125 +541,55 @@ function ContactMenu({
 // Right column — social stats, rating, tags, comments
 // ---------------------------------------------------------------------------
 
-function RightColumn({data}: {data: DetailData}) {
-  const router = useRouter();
+function RightColumn({data, row}: {data: DetailData; row: BookingRow}) {
   const {eventId} = Route.useParams();
   const myViewer = useLoaderData({from: '/crew'});
-  const ratings = data.bandApplicationRating;
-  const averageRating = meanRating(ratings);
+  const live = bookingCollections(eventId);
 
-  // Optimistic stage selection, seeded from the loader and re-synced when the
-  // band changes (the modal shell is reused across bands, so this component can
-  // stay mounted while `data` swaps).
-  const [stage, setStage] = useState<StageValue>(() =>
-    toStageValue(data.stageRow, data.stageColumn),
-  );
-  useEffect(() => {
-    setStage(toStageValue(data.stageRow, data.stageColumn));
-  }, [data.stageRow, data.stageColumn]);
-
-  const onStageChange = (next: StageValue) => {
-    setStage(next);
-    setBandApplicationStage({
-      data: {
-        applicationId: data.id,
-        row: next?.row ?? null,
-        col: next?.col ?? null,
-      },
-    }).then(() => router.invalidate());
-  };
+  const onStageChange = (next: StageValue) =>
+    toastOnFailure(
+      live.applications.update(data.id, (draft) => {
+        draft.stageRow = next?.row ?? null;
+        draft.stageColumn = next?.col ?? null;
+      }),
+      'Bühne konnte nicht gespeichert werden',
+    );
 
   const hasSocial =
     data.website || data.facebook || data.instagram || data.spotifyArtist;
 
-  // Computed (non-editable) tags: reuse the booking table's single computation,
-  // run against the row the parent route already loaded (no recompute here).
-  const rows = useLoaderData({from: '/crew/booking/$eventId'});
-  const row = rows.find((r) => r.id === data.id);
-  const dynamicTags = row ? computedTagsFor(row) : [];
+  // Live, so other crew members' comments show up while the modal is open.
+  const {comments} = row;
 
-  // Optimistic comments awaiting the loader refetch. Each carries its
-  // applicationId: the modal shell is reused across bands, so this component can
-  // stay mounted while `data.id` changes — scoping to the current band keeps a
-  // pending comment from bleeding onto another. Merged after the loaded ones and
-  // de-duped against them (same author + text) so the temporary entry never
-  // briefly doubles up with the real one the refetch brings in.
-  const loadedComments = data.bandApplicationComment;
-  const [pendingComments, setPendingComments] = useState<
-    ((typeof loadedComments)[number] & {applicationId: string})[]
-  >([]);
-  // Ids of comments deleted in this session, hidden optimistically until the
-  // loader refetch drops them for real.
-  const [deletedCommentIds, setDeletedCommentIds] = useState<string[]>([]);
-  const comments = [
-    ...loadedComments,
-    ...pendingComments.filter(
-      (p) =>
-        p.applicationId === data.id &&
-        !loadedComments.some(
-          (c) => c.viewer.id === p.viewer.id && c.comment === p.comment,
-        ),
-    ),
-  ].filter((c) => !deletedCommentIds.includes(c.id));
-
-  // Retire an optimistic entry only once the refetched loader data actually
-  // contains it. Dropping it when `router.invalidate()` resolves instead leaves
-  // a frame where the pending entry is already gone but the new loader data has
-  // not been committed yet — the comment blinks out and back in.
-  useEffect(() => {
-    setPendingComments((p) => {
-      const next = p.filter(
-        (c) =>
-          c.applicationId !== data.id ||
-          !loadedComments.some(
-            (l) => l.viewer.id === c.viewer.id && l.comment === c.comment,
-          ),
-      );
-      return next.length === p.length ? p : next;
-    });
-  }, [loadedComments, data.id]);
-
-  const postComment = async (comment: string) => {
-    // Author an optimistic entry when we know the viewer (null in dev / for a
-    // non-Slack account — then we just post and let the refetch reveal it).
-    const optimistic = myViewer
-      ? {
-          id: `optimistic-${Date.now()}`,
-          applicationId: data.id,
-          comment,
-          createdAt: new Date(),
-          viewer: myViewer,
-        }
-      : null;
-    if (optimistic) setPendingComments((p) => [...p, optimistic]);
-    try {
-      await postBandApplicationComment({
-        data: {applicationId: data.id, comment},
-      });
-      await router.invalidate();
-    } catch (e) {
-      // The post failed, so the refetch will never bring a real entry in —
-      // clear the optimistic one instead of leaving it stranded.
-      if (optimistic) {
-        setPendingComments((p) => p.filter((c) => c.id !== optimistic.id));
-      }
-      throw e;
+  const postComment = (comment: string) => {
+    // null in dev / for a non-Slack account, which can't comment (the form is
+    // disabled then).
+    if (!myViewer) {
+      return;
     }
+    toastOnFailure(
+      live.comments.insert({
+        // Picked here so the optimistic comment and the synced one share a key.
+        id: crypto.randomUUID(),
+        createdAt: new Date(),
+        viewerId: myViewer.id,
+        displayName: myViewer.displayName,
+        profilePicture: myViewer.profilePicture,
+        bandApplicationId: data.id,
+        comment,
+      }),
+      'Kommentar konnte nicht gespeichert werden',
+    );
   };
 
-  const deleteComment = async (commentId: string) => {
+  const deleteComment = (commentId: string) => {
     if (!window.confirm('Kommentar wirklich löschen?')) {
       return;
     }
-    setDeletedCommentIds((ids) => [...ids, commentId]);
-    try {
-      await deleteBandApplicationComment({data: {commentId}});
-      await router.invalidate();
-    } catch (e) {
-      // The delete failed, so the comment is still there — un-hide it.
-      setDeletedCommentIds((ids) => ids.filter((id) => id !== commentId));
-      throw e;
-    }
+    toastOnFailure(
+      live.comments.delete(commentId),
+      'Kommentar konnte nicht gelöscht werden',
+    );
   };
 
   return (
@@ -767,16 +633,9 @@ function RightColumn({data}: {data: DetailData}) {
       <Section title="Bewertung">
         <BandApplicationRating
           applicationId={data.id}
-          myRating={data.myRating}
-          averageRating={averageRating}
-          raters={ratings.map((r) => ({
-            id: r.viewer.id,
-            displayName: r.viewer.displayName,
-            profilePicture: r.viewer.profilePicture,
-            rating: r.rating,
-          }))}
+          raters={row.raters}
+          averageRating={row.averageRating}
           size="lg"
-          myViewer={myViewer}
         />
       </Section>
 
@@ -784,13 +643,16 @@ function RightColumn({data}: {data: DetailData}) {
         <BandTags
           eventId={eventId}
           applicationId={data.id}
-          initialTags={data.BandApplicationTag.map((t) => t.tag)}
-          dynamicTags={dynamicTags}
+          tags={row.tags}
+          dynamicTags={row.computedTags}
         />
       </Section>
 
       <Section title="Bühne">
-        <StageMatrix value={stage} onChange={onStageChange} />
+        <StageMatrix
+          value={toStageValue(row.stageRow, row.stageColumn)}
+          onChange={onStageChange}
+        />
       </Section>
 
       <Section title="Kommentare">
@@ -799,15 +661,15 @@ function RightColumn({data}: {data: DetailData}) {
             {comments.map((c) => (
               <HStack key={c.id} gap="2" align="flex-start">
                 <Avatar
-                  name={c.viewer.displayName}
-                  src={c.viewer.profilePicture ?? undefined}
+                  name={c.displayName}
+                  src={c.profilePicture ?? undefined}
                   size="xs"
                   mt="0.5"
                 />
                 <Box>
                   <HStack gap="2">
                     <Text fontWeight="medium" fontSize="sm">
-                      {c.viewer.displayName}
+                      {c.displayName}
                     </Text>
                     <Text fontSize="xs" color="fg.muted">
                       <DateString
@@ -821,26 +683,27 @@ function RightColumn({data}: {data: DetailData}) {
                         }}
                       />
                     </Text>
-                    {c.viewer.id === myViewer?.id &&
-                      !c.id.startsWith('optimistic-') && (
-                        <Tooltip
-                          content="Kommentar löschen"
-                          positioning={{placement: 'top'}}
+                    {/* Not while it's still being saved: the delete could
+                        reach the server before the comment does. */}
+                    {c.viewerId === myViewer?.id && c.$synced && (
+                      <Tooltip
+                        content="Kommentar löschen"
+                        positioning={{placement: 'top'}}
+                      >
+                        <IconButton
+                          aria-label="Kommentar löschen"
+                          size="2xs"
+                          variant="ghost"
+                          color="fg.muted"
+                          minW="4"
+                          h="4"
+                          _icon={{width: '3', height: '3'}}
+                          onClick={() => deleteComment(c.id)}
                         >
-                          <IconButton
-                            aria-label="Kommentar löschen"
-                            size="2xs"
-                            variant="ghost"
-                            color="fg.muted"
-                            minW="4"
-                            h="4"
-                            _icon={{width: '3', height: '3'}}
-                            onClick={() => deleteComment(c.id)}
-                          >
-                            <FaRegTrashCan />
-                          </IconButton>
-                        </Tooltip>
-                      )}
+                          <FaRegTrashCan />
+                        </IconButton>
+                      </Tooltip>
+                    )}
                   </HStack>
                   <Text fontSize="sm" whiteSpace="pre-wrap">
                     <Linkified text={c.comment} />
@@ -850,7 +713,7 @@ function RightColumn({data}: {data: DetailData}) {
             ))}
           </Stack>
         )}
-        <CommentForm onPost={postComment} />
+        <CommentForm onPost={postComment} disabled={!myViewer} />
       </Section>
 
       {data.timeline.length > 0 && (
@@ -947,58 +810,41 @@ function BandTimeline({timeline}: {timeline: TimelineEntry[]}) {
 // Small presentational helpers
 // ---------------------------------------------------------------------------
 
-// Tags combobox (Chakra TagsInput + Combobox). Suggests from the full set of
-// existing tags loaded from the backend; allows adding new ones too. Computed
-// `dynamicTags` are shown as non-deletable chips. Edits are persisted by
-// diffing each change against the previous value and calling the add/remove
-// server fns.
+// Tags combobox (Chakra TagsInput + Combobox). Suggests every tag already used
+// in this event; allows adding new ones too. Computed `dynamicTags` are shown
+// as non-deletable chips. `tags` is live, and an edit is diffed against it and
+// written to the tags collection, which shows it at once everywhere.
 function BandTags({
   eventId,
   applicationId,
-  initialTags,
+  tags: value,
   dynamicTags,
 }: {
   eventId: string;
   applicationId: string;
-  initialTags: string[];
+  tags: string[];
   dynamicTags: {label: string; colorPalette: string}[];
 }) {
-  const router = useRouter();
-  const queryClient = useQueryClient();
-  const {data: options = []} = useQuery({
-    queryKey: ['bandApplicationTags', eventId],
-    queryFn: () => listBandApplicationTags({data: {eventId}}),
-  });
-  const [value, setValue] = useState<string[]>(initialTags);
-  // Tags are also written from outside this component (the Zugesagt/Abgesagt
-  // buttons), which invalidates the route — so re-seed from the loader whenever
-  // the stored set really changed. Keyed on the joined string, since
-  // `initialTags` is a fresh array on every render; split back apart inside the
-  // effect so the dep list stays exact.
-  const initialKey = initialTags.join('\u0000');
-  useEffect(() => {
-    setValue(initialKey ? initialKey.split('\u0000') : []);
-  }, [initialKey]);
+  const live = bookingCollections(eventId);
+  // The event's tag vocabulary, so a booking round only proposes the tags the
+  // crew actually settled on this year. `tag` is citext: one entry per tag,
+  // whatever its casing.
+  const eventTags = useLiveRows(live.tags);
+  const options = useMemo(() => {
+    const byKey = new Map(eventTags.map((t) => [normalizeTag(t.tag), t.tag]));
+    return [...byKey.values()].sort((a, b) => a.localeCompare(b));
+  }, [eventTags]);
 
-  // Persist a single add/remove, then refresh the suggestion list (a brand-new
-  // tag should become suggestable) and the route (the booking table shows tags).
   const persist = (next: string[]) => {
-    const added = next.filter((t) => !value.includes(t));
-    const removed = value.filter((t) => !next.includes(t));
-    setValue(next);
-    Promise.all([
-      ...added.map((tag) =>
-        addBandApplicationTag({data: {applicationId, tag}}),
-      ),
-      ...removed.map((tag) =>
-        removeBandApplicationTag({data: {applicationId, tag}}),
-      ),
-    ]).then(() => {
-      queryClient.invalidateQueries({
-        queryKey: ['bandApplicationTags', eventId],
-      });
-      router.invalidate();
-    });
+    for (const tag of next.filter((t) => !hasTag(value, t))) {
+      addTag(eventId, applicationId, tag);
+    }
+    for (const tag of value.filter((t) => !hasTag(next, t))) {
+      toastOnFailure(
+        live.tags.delete(tagKey(applicationId, tag)),
+        'Tag konnte nicht entfernt werden',
+      );
+    }
   };
 
   const {contains} = useFilter({sensitivity: 'base'});
@@ -1010,7 +856,7 @@ function BandTags({
     filter: contains,
   });
 
-  // Keep the suggestion list in sync once the tags query resolves.
+  // Keep the suggestion list in sync with the event's live tag vocabulary.
   useEffect(() => {
     set(options.map((t) => ({label: t, value: t})));
   }, [options, set]);
@@ -1022,8 +868,9 @@ function BandTags({
     ids,
     value,
     onValueChange: (e) => persist(e.value),
-    // Free-form: allow new tags, just no duplicates.
-    validate: (e) => !e.value.includes(e.inputValue.trim()),
+    // Free-form: allow new tags, just no duplicates (in any casing — `tag` is
+    // citext).
+    validate: (e) => !hasTag(e.value, e.inputValue),
   });
 
   const combobox = useCombobox({
@@ -1112,7 +959,14 @@ function Fact({label, children}: {label: string; children: React.ReactNode}) {
   );
 }
 
-function CommentForm({onPost}: {onPost: (comment: string) => void}) {
+function CommentForm({
+  onPost,
+  disabled,
+}: {
+  onPost: (comment: string) => void;
+  // For a viewer without a Slack-linked account: comments are keyed on it.
+  disabled: boolean;
+}) {
   const [comment, setComment] = useState('');
 
   // Clear the textarea immediately — the comment shows up optimistically in the
@@ -1134,7 +988,12 @@ function CommentForm({onPost}: {onPost: (comment: string) => void}) {
   return (
     <Box mb="3" position="relative">
       <Textarea
-        placeholder="Kommentar hinzufügen..."
+        placeholder={
+          disabled
+            ? 'Kommentieren geht nur mit einem Slack-verknüpften Account'
+            : 'Kommentar hinzufügen...'
+        }
+        disabled={disabled}
         value={comment}
         onChange={(e) => setComment(e.target.value)}
         onKeyDown={handleKeyDown}

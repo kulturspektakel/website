@@ -1,15 +1,17 @@
 import {createServerFn} from '@tanstack/react-start';
 import {z} from 'zod';
 import {crewAuth} from './crewAuth';
-import {prismaClient} from './prismaClient.server';
+import {withTxid} from './withTxid.server';
 
-// Post a comment on a band application.
+// Post a comment on a band application. The client picks the id, so its
+// optimistic comment and the one that comes back over Realtime share a key.
 // crewAuth resolves the Slack-keyed Viewer onto context.viewer; comments are
 // keyed on that Viewer.id.
 export const postBandApplicationComment = createServerFn()
   .middleware([crewAuth])
   .validator(
     z.object({
+      id: z.string().uuid(),
       applicationId: z.string(),
       comment: z.string().min(1).max(1000),
     }),
@@ -21,11 +23,14 @@ export const postBandApplicationComment = createServerFn()
       // with no Slack-keyed Viewer.
       throw new Error('Unauthorized');
     }
-    await prismaClient.bandApplicationComment.create({
-      data: {
-        viewerId,
-        bandApplicationId: data.applicationId,
-        comment: data.comment,
-      },
-    });
+    return withTxid((tx) =>
+      tx.bandApplicationComment.create({
+        data: {
+          id: data.id,
+          viewerId,
+          bandApplicationId: data.applicationId,
+          comment: data.comment,
+        },
+      }),
+    );
   });

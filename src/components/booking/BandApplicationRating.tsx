@@ -1,10 +1,14 @@
-import {useEffect, useMemo, useState} from 'react';
-import {useRouter} from '@tanstack/react-router';
+import {useMemo} from 'react';
+import {useLoaderData, useParams} from '@tanstack/react-router';
 import {Box, HStack, RatingGroup, Text} from '@chakra-ui/react';
-import {rateBandApplication} from '../../server/rateBandApplication';
-import {meanRating} from '../../utils/meanRating';
 import {Avatar} from '../chakra-snippets/avatar';
 import {Tooltip} from '../chakra-snippets/tooltip';
+import {
+  type BookingRating,
+  bookingCollections,
+  ratingKey,
+  toastOnFailure,
+} from './bookingCollections';
 
 // Per-star tooltip labels for the 1–4 rating.
 export const RATING_LABELS = [
@@ -18,74 +22,70 @@ export const RATING_LABELS = [
 // chip listing the remaining names on hover.
 const MAX_AVATARS = 4;
 
-type Rater = {
-  id: string;
-  displayName: string;
-  profilePicture: string | null;
-  rating: number;
-};
-
 // Interactive 1–4 star rating for a band application, shared by the booking
 // table and the detail modal. Shows the viewer's own rating and, once they have
 // rated, the aggregate average + rater avatars beside it (blind-rating pattern).
-// Persists clicks via `rateBandApplication` and re-runs the active loaders.
+// `raters` and `averageRating` come from the booking row; a click writes to the
+// live ratings collection, which shows it optimistically everywhere (table and
+// modal) and persists it via `rateBandApplication`.
 export function BandApplicationRating({
   applicationId,
-  myRating,
-  averageRating,
   raters,
+  averageRating,
   size = 'md',
-  myViewer,
 }: {
   applicationId: string;
-  myRating: number;
+  raters: BookingRating[];
   averageRating: number | null;
-  raters: Rater[];
   size?: RatingGroup.RootProps['size'];
-  // The current viewer, when known. Enables the average + rater avatars to
-  // update optimistically (not just the viewer's own stars) before the loader
-  // refetches. Omit it (e.g. the dense table) to fall back to prop-driven
-  // aggregates.
-  myViewer?: {id: string; displayName: string; profilePicture: string | null} | null;
 }) {
-  const router = useRouter();
-  // Optimistic local value; re-synced when the loader-driven prop changes.
-  const [value, setValue] = useState(myRating);
-  useEffect(() => setValue(myRating), [myRating]);
-
-  // Fold the viewer's optimistic `value` into the aggregate so the average and
-  // their own avatar reflect the click immediately. Without `myViewer` we can't
-  // author the avatar, so the props stand as-is.
-  const {optimisticRaters, optimisticAverage} = useMemo(() => {
-    if (!myViewer) {
-      return {optimisticRaters: raters, optimisticAverage: averageRating};
-    }
-    const others = raters.filter((r) => r.id !== myViewer.id);
-    const next =
-      value > 0
-        ? [...others, {...myViewer, rating: value}]
-        : others;
-    return {optimisticRaters: next, optimisticAverage: meanRating(next)};
-  }, [raters, averageRating, value, myViewer]);
+  const {eventId} = useParams({from: '/crew/booking/$eventId'});
+  // null in dev (cookie never reaches localhost) or for a Directus account with
+  // no Slack-keyed Viewer. Ratings are keyed on it, so such a viewer only sees
+  // the stars read-only.
+  const myViewer = useLoaderData({from: '/crew'});
+  const value = raters.find((r) => r.viewerId === myViewer?.id)?.rating ?? 0;
 
   // Keep the avatar strip to at most MAX_AVATARS slots: show every rater when
   // they fit, otherwise trade the last slot for a "+N" chip that names the rest
   // on hover.
   const {shownRaters, hiddenRaters} = useMemo(
     () =>
-      optimisticRaters.length > MAX_AVATARS
+      raters.length > MAX_AVATARS
         ? {
-            shownRaters: optimisticRaters.slice(0, MAX_AVATARS - 1),
-            hiddenRaters: optimisticRaters.slice(MAX_AVATARS - 1),
+            shownRaters: raters.slice(0, MAX_AVATARS - 1),
+            hiddenRaters: raters.slice(MAX_AVATARS - 1),
           }
-        : {shownRaters: optimisticRaters, hiddenRaters: []},
-    [optimisticRaters],
+        : {shownRaters: raters, hiddenRaters: []},
+    [raters],
   );
 
-  const onValueChange = async (next: number) => {
-    setValue(next);
-    await rateBandApplication({data: {applicationId, rating: next}});
-    await router.invalidate();
+  const onValueChange = (next: number) => {
+    if (!myViewer) {
+      return;
+    }
+    const {ratings} = bookingCollections(eventId);
+    const key = ratingKey(myViewer.id, applicationId);
+    let tx;
+    if (ratings.has(key)) {
+      tx =
+        next === 0
+          ? ratings.delete(key)
+          : ratings.update(key, (draft) => {
+              draft.rating = next;
+            });
+    } else if (next > 0) {
+      tx = ratings.insert({
+        viewerId: myViewer.id,
+        bandApplicationId: applicationId,
+        rating: next,
+        displayName: myViewer.displayName,
+        profilePicture: myViewer.profilePicture,
+      });
+    } else {
+      return;
+    }
+    toastOnFailure(tx, 'Bewertung konnte nicht gespeichert werden');
   };
 
   return (
@@ -99,6 +99,7 @@ export function BandApplicationRating({
         size={size}
         colorPalette="blue"
         value={value}
+        readOnly={!myViewer}
         onValueChange={(e) => onValueChange(e.value)}
         onClick={(e) => e.stopPropagation()}
       >
@@ -114,20 +115,20 @@ export function BandApplicationRating({
         </RatingGroup.Control>
       </RatingGroup.Root>
 
-      {(value > 0 || optimisticRaters.length > 0) && (
+      {(value > 0 || raters.length > 0) && (
         <>
           {/* Fixed-width slot for the average. The number is revealed only once
               the viewer has cast their own rating, but the slot is always
               reserved so the avatars never shift when it appears. Never shrunk
               or wrapped: squeezed, "4.0" would break at the dot. */}
           <Box minW="7" textAlign="end" flexShrink="0">
-            {value > 0 && optimisticAverage != null && (
+            {value > 0 && averageRating != null && (
               <Tooltip
                 positioning={{placement: 'top'}}
                 content={
                   <Box>
-                    {optimisticRaters.map((r) => (
-                      <Text key={r.id} whiteSpace="nowrap">
+                    {raters.map((r) => (
+                      <Text key={r.viewerId} whiteSpace="nowrap">
                         {'★'.repeat(r.rating)}
                         {'☆'.repeat(Math.max(0, 4 - r.rating))} {r.displayName}
                       </Text>
@@ -142,7 +143,7 @@ export function BandApplicationRating({
                   color="blue.solid"
                   whiteSpace="nowrap"
                 >
-                  {optimisticAverage.toFixed(1)}
+                  {averageRating.toFixed(1)}
                 </Text>
               </Tooltip>
             )}
@@ -150,7 +151,7 @@ export function BandApplicationRating({
           <HStack gap="0">
             {shownRaters.map((r, i) => (
               <Tooltip
-                key={r.id}
+                key={r.viewerId}
                 content={r.displayName}
                 positioning={{placement: 'top'}}
               >
@@ -171,7 +172,7 @@ export function BandApplicationRating({
                 content={
                   <Box>
                     {hiddenRaters.map((r) => (
-                      <Text key={r.id} whiteSpace="nowrap">
+                      <Text key={r.viewerId} whiteSpace="nowrap">
                         {r.displayName}
                       </Text>
                     ))}

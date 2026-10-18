@@ -13,7 +13,7 @@ import {
   type WifiStatus,
 } from './bluetooth';
 import {toaster} from '../chakra-snippets/toaster';
-import {errorMessage, errorToast} from './toast';
+import {errorMessage, errorToast} from '../toast';
 import {type BluetoothSlice} from './noise';
 import type {Ingest} from './useNoiseStream';
 

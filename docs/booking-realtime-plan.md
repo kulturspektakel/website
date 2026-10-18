@@ -3,7 +3,9 @@
 A plan for making `/crew/booking/$eventId` live: when one crew member rates,
 tags, comments on or moves a band, everyone else's table updates in place, and
 our own writes show up optimistically without a `router.invalidate()` round
-trip. Nothing here is implemented yet. Researched 2026-10-17.
+trip. Researched 2026-10-17; implemented 2026-10-18 (the plan below is kept as
+written, apart from the collection table). Realtime needed Postgres 18, so the
+database moved to a new Neon project the same day.
 
 ## Status of the pieces (as of 2026-10-17)
 
@@ -43,7 +45,7 @@ Re-check both before starting; the APIs below may have moved.
 ## Today
 
 - `loadBandApplications` (`src/routes/crew.booking.$eventId.tsx`) runs one big
-  Prisma `findMany` (~3000 rows) and `decorateRows` derives `averageRating`,
+  Prisma `findMany` (~500 applications per season) and `decorateRows` derives `averageRating`,
   `myRating`, raters, tags and the popularity score.
 - Every write is a `crewAuth` server fn (`src/server/rateBandApplication.ts`,
   `setBandApplicationStage.ts`, `postBandApplicationComment.ts`,
@@ -87,18 +89,20 @@ snapshot) instead of one. After that, every update is incremental.
 
 | Collection | Contents | Read by |
 |---|---|---|
-| `applications` | lean table columns + `stageRow/Column`, `contactedByViewerId`, `lastContactedAt` | table, modal header, stage picker, contact state |
-| `ratings` | `BandApplicationRating` rows for the event | average / my rating / raters in table and modal |
+| `applications` | lean table columns + `stageRow/Column`, `contactedByViewerId` | table, modal header, stage picker, contact state |
+| `ratings` | `BandApplicationRating` rows for the event, with the rater's `displayName`/`profilePicture` joined in | average / my rating / raters in table and modal |
 | `tags` | `BandApplicationTag` rows for the event | tag column, tag filter, modal tag editor, tag suggestions (replaces `listBandApplicationTags` + its react-query cache) |
-| `comments` | all comments for the event | modal comment list, "kommentiert" tag / `hasComments` (replaces the `_count`) |
-| `viewers` | crew `Viewer`: **`id, displayName, profilePicture` only** | names/avatars for raters, commenters, "contacted by" |
+| `comments` | all comments for the event, with the author's `displayName`/`profilePicture` joined in | modal comment list, "kommentiert" tag / `hasComments` (replaces the `_count`) |
 
 - Comments are **event-wide**, not per application: a per-application query
   would need a new seal (server-fn call) on every modal open / arrow-key step.
 - **Never `SELECT *` on `Viewer`** — it has `slackToken`. Every sealed query is
   hand-written SQL; select columns explicitly.
-- All five are sealed in **one** `crewAuth` server fn (e.g.
-  `sealBookingQueries({eventId})`) and share one WebSocket.
+- Names and avatars are joined into `ratings` and `comments` rather than
+  synced as a separate `viewers` collection, so they always arrive together
+  with the row that needs them.
+- All four are sealed in **one** `crewAuth` server fn (`sealBookingQueries`)
+  and share one WebSocket.
 
 ### Stays as ordinary loaders
 
@@ -165,7 +169,7 @@ almost nowhere in the booking flow afterwards.
    says an existing Terraform-managed project won't work, but it's unconfirmed.
 6. No RLS, latency numbers or subscriber limits published yet (limits don't
    matter for a handful of crew members).
-7. TanStack DB + Table + Virtual together is undocumented; ~3000 rows with eager
+7. TanStack DB + Table + Virtual together is undocumented; ~500 applications plus ~2000 ratings per season, with eager
    sync and client-side sort/filter should be fine.
 
 ## Plan

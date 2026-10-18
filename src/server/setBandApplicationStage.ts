@@ -1,7 +1,7 @@
 import {createServerFn} from '@tanstack/react-start';
 import {z} from 'zod';
 import {crewAuth} from './crewAuth';
-import {prismaClient} from './prismaClient.server';
+import {withTxid} from './withTxid.server';
 
 // Persist (or clear) the "Bühne" stage-assignment for a band application. The
 // selection is a single grid cell — row (time slot, 0–2) and column (stage /
@@ -22,10 +22,12 @@ export const setBandApplicationStage = createServerFn()
       throw new Error('Unauthorized');
     }
     const clear = data.row == null || data.col == null;
-    await prismaClient.bandApplication.update({
-      where: {id: data.applicationId},
-      data: clear
-        ? {stageRow: null, stageColumn: null}
-        : {stageRow: data.row, stageColumn: data.col},
-    });
+    return withTxid((tx) =>
+      tx.bandApplication.update({
+        where: {id: data.applicationId},
+        data: clear
+          ? {stageRow: null, stageColumn: null}
+          : {stageRow: data.row, stageColumn: data.col},
+      }),
+    );
   });

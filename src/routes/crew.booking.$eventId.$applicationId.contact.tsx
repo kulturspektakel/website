@@ -290,10 +290,14 @@ function BandContactRoute() {
       sendBandContactEmail({
         data: {applicationId, to, subject, body},
       }),
-    // Sending stamps contactedBy + lastContactedAt on the application; invalidate
-    // so the reopened detail and the booking list recompute and show "angefragt".
+    // Sending stamps contactedBy + lastContactedAt on the application. The
+    // "angefragt" tag arrives over the live applications query by itself; only
+    // the detail loader (its history timeline) needs a reload.
     onSuccess: async () => {
-      await router.invalidate();
+      await router.invalidate({
+        filter: (match) =>
+          match.routeId === '/crew/booking/$eventId/$applicationId',
+      });
       close();
     },
   });
@@ -443,7 +447,7 @@ function BandContactRoute() {
                 onClick={() => {
                   // Guard against a second send: the mutation resolves quickly
                   // (it only enqueues the mail task), but onSuccess then awaits
-                  // router.invalidate() before close() — a window in which the
+                  // the detail reload before close() — a window in which the
                   // modal is still open. Stay loading through isSuccess so the
                   // button never re-enables in that gap.
                   if (!sending) sendMutation.mutate();

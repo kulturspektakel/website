@@ -21,7 +21,7 @@ import {NativeSelectRoot} from '../chakra-snippets/native-select';
 import {Radio, RadioGroup} from '../chakra-snippets/radio';
 import {toaster} from '../chakra-snippets/toaster';
 import {createNoiseTag, type NoiseTagScope} from '../../routes/crew.noise';
-import {errorToast} from './toast';
+import {errorToast} from '../toast';
 import {TimeField} from './TimeField';
 import {END_BEFORE_START} from './timeframe';
 import {

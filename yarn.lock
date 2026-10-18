@@ -2122,6 +2122,18 @@
     "@emnapi/runtime" "^1.7.1"
     "@tybys/wasm-util" "^0.10.1"
 
+"@neon/realtime-tanstack@0.1.1":
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/@neon/realtime-tanstack/-/realtime-tanstack-0.1.1.tgz#fc8c1ebf9072bf7bf9e37ec7869abba768358b63"
+  integrity sha512-CqBD7HUthCrr4x5iHQDcnp4QVmaTmA4zJBSZAQ2VIM56QEpU8V8ykgSxTJyvhn6axasoU0td9Y8OrG0UET8nQw==
+
+"@neon/realtime@0.1.1":
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/@neon/realtime/-/realtime-0.1.1.tgz#e8a96bd54749996c96cf058ac37c0ee4d7b2c064"
+  integrity sha512-YbTaKcq7Vmaw05oEu/1HNbxrtLeHaofnPHptd6QPGZj2M1uZJRJKKrjb+ShH0GpR5fpBlp8S4iZcTW3IsnIoqg==
+  dependencies:
+    postgres-array "^3.0.4"
+
 "@neondatabase/serverless@>0.6.0 <2":
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/@neondatabase/serverless/-/serverless-1.0.2.tgz#54990eb4cf615ec1e5bc1a6b794355c53f79bd49"
@@ -3350,15 +3362,45 @@
   dependencies:
     tslib "^2.8.0"
 
+"@tanstack/db-ivm@0.1.22":
+  version "0.1.22"
+  resolved "https://registry.yarnpkg.com/@tanstack/db-ivm/-/db-ivm-0.1.22.tgz#0dda75cab11a4cccc35cbd61fc8f1548d9992f1c"
+  integrity sha512-vpNIY6QnvFiVGPwdMVnh1OAZyFLioFkM5gQAqefghvgDhCMmWUPjYka2gw6w+2TBy742zsGPtLnpxBzUKXo9Jw==
+  dependencies:
+    fractional-indexing "^3.2.0"
+    sorted-btree "^1.8.1"
+
+"@tanstack/db@0.9.2":
+  version "0.9.2"
+  resolved "https://registry.yarnpkg.com/@tanstack/db/-/db-0.9.2.tgz#415f39cb7bea086904ac2d7590c9bc2732a8846d"
+  integrity sha512-jeyKbppXwjPNHe0GEVIvsvtirDCxjbPR2xphQaNjgteR15Y+Qnm+6IQNcd3zJ+98uJZ3ot9nagV3UNI+ckVRhQ==
+  dependencies:
+    "@standard-schema/spec" "^1.1.0"
+    "@tanstack/db-ivm" "0.1.22"
+    "@tanstack/pacer-lite" "^0.2.1"
+
 "@tanstack/history@1.162.5":
   version "1.162.5"
   resolved "https://registry.yarnpkg.com/@tanstack/history/-/history-1.162.5.tgz#967cb42b2e33fb1a45cb6d17a561c9223567a0f3"
   integrity sha512-w1+YvwmTkwt5n8yUqEH3IWZ9DsmorCZW/EQ3KYHnqEgIkOZpH54NvW6/Epq3Dzb8H0ifIeYX8PExvrNLIH5FIA==
 
+"@tanstack/pacer-lite@^0.2.1":
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/@tanstack/pacer-lite/-/pacer-lite-0.2.2.tgz#a9d51cb91ecb277ec8b4756d00894c1d1c74809a"
+  integrity sha512-eQ1MyLKCHyXiH7NbdmB80W77OhiMgGBUb+qDx/8WMGbwg5Lf/NlfD0TfNYAqY77i8V3AxoDoYdICrQE5ADw4Yw==
+
 "@tanstack/query-core@5.104.3":
   version "5.104.3"
   resolved "https://registry.yarnpkg.com/@tanstack/query-core/-/query-core-5.104.3.tgz#ef22d22c22dfddf554975b990382506a6b6b4871"
   integrity sha512-DZY9TuJAOgU3UyHUhXb4CcTYEHNZszlwkPg4VViIwTxOKzLprPUU+rbaPZQd3srqkGOtpaDdKpW972UV/LKlcg==
+
+"@tanstack/react-db@0.4.1":
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/@tanstack/react-db/-/react-db-0.4.1.tgz#aff0a9f4b6e629d087a079bc9446b433747ff73e"
+  integrity sha512-mA/a3TAufm0/AZUHmfyKKYfJnEH0XEzJ1Cymt5ZOLqR90MzzDK9KyaDh/JScYHYEipoRkKeRcmedAnHksP6yrg==
+  dependencies:
+    "@tanstack/db" "0.9.2"
+    use-sync-external-store "^1.6.0"
 
 "@tanstack/react-query@^5.104.3":
   version "5.104.3"
@@ -7910,6 +7952,11 @@ forwarded@0.2.0:
   resolved "https://registry.yarnpkg.com/forwarded/-/forwarded-0.2.0.tgz#2269936428aad4c15c7ebe9779a84bf0b2a81811"
   integrity sha512-buRG0fpBtRHSTCOASe6hD258tEubFoRLb4ZNA6NxMVHNw2gOcwHo9wyablzMzOA5z9xA9L1KNjk/Nt6MT9aYow==
 
+fractional-indexing@^3.2.0:
+  version "3.4.0"
+  resolved "https://registry.yarnpkg.com/fractional-indexing/-/fractional-indexing-3.4.0.tgz#b1dc2f12e4e51acfa3f57cbadb666194eaf3cb73"
+  integrity sha512-8J3glhz2rrpKG6KmI7wmJo3zH1VjeOpN+vTJSw1fOyO+Viqq3zX6/5NGh6oaZB2qIAYdOYuu5Dz9xp4faOO0Pg==
+
 fresh@~0.5.2:
   version "0.5.2"
   resolved "https://registry.yarnpkg.com/fresh/-/fresh-0.5.2.tgz#3d8cadd90d976569fa835ab1f8e4b23a105605a7"
@@ -11089,7 +11136,7 @@ postcss@^8.5.29:
     picocolors "^1.1.1"
     source-map-js "^1.2.2"
 
-postgres-array@3.0.4:
+postgres-array@3.0.4, postgres-array@^3.0.4:
   version "3.0.4"
   resolved "https://registry.yarnpkg.com/postgres-array/-/postgres-array-3.0.4.tgz#4efcaf4d2c688d8bcaa8620ed13f35f299f7528c"
   integrity sha512-nAUSGfSDGOaOAEGwqsRY27GPOea7CNipJPOA7lPbdEpx5Kg3qzdP0AaWC5MlhTWV9s4hFX39nomVZ+C4tnGOJQ==
@@ -12289,6 +12336,11 @@ sort-css-media-queries@2.2.0:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/sort-css-media-queries/-/sort-css-media-queries-2.2.0.tgz#aa33cf4a08e0225059448b6c40eddbf9f1c8334c"
   integrity sha512-0xtkGhWCC9MGt/EzgnvbbbKhqWjl1+/rncmhTh5qCpbYguXh6S/qwePfv/JQ8jePXXmqingylxoC49pCkSPIbA==
+
+sorted-btree@^1.8.1:
+  version "1.8.1"
+  resolved "https://registry.yarnpkg.com/sorted-btree/-/sorted-btree-1.8.1.tgz#6e6275f7955e5892bb8737149cbe495be10f426f"
+  integrity sha512-395+XIP+wqNn3USkFSrNz7G3Ss/MXlZEqesxvzCRFwL14h6e8LukDHdLBePn5pwbm5OQ9vGu8mDyz2lLDIqamQ==
 
 source-map-js@^1.2.1:
   version "1.2.1"

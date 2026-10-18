@@ -14,7 +14,7 @@ import {NativeSelectRoot} from '../chakra-snippets/native-select';
 import {toaster} from '../chakra-snippets/toaster';
 import {importNoiseLineup, noiseLineupAreas} from '../../routes/crew.noise';
 import {noiseQueryKeys} from './queries';
-import {errorToast} from './toast';
+import {errorToast} from '../toast';
 import {useProjectView, type NoiseLocationItem} from './projectView';
 import {Name} from './Name';
 

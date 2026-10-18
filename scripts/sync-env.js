@@ -64,6 +64,10 @@ const ENV_VARS = {
   GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY: 'secret',
   GOOGLE_SHEETS_KEY: 'secret',
   JWT_SECRET: 'secret',
+  // Neon Realtime (live queries on /crew/booking). The URL isn't secret, but it
+  // comes from the Neon console together with the secret, so both live in GSM.
+  NEON_REALTIME_SECRET: 'secret',
+  NEON_REALTIME_URL: 'secret',
   NUCLINO_ANONYMOUS_PASSWORD: 'secret',
   NUCLINO_API_KEY: 'secret',
   NUCLINO_TEAM_ID: 'secret',

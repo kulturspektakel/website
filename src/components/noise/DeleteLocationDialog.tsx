@@ -11,7 +11,7 @@ import {
 } from '../chakra-snippets/dialog';
 import {toaster} from '../chakra-snippets/toaster';
 import {deleteNoiseLocation} from '../../routes/crew.noise';
-import {errorToast} from './toast';
+import {errorToast} from '../toast';
 import {useProjectView, type NoiseLocationItem} from './projectView';
 import {Name} from './Name';
 

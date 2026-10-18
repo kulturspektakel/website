@@ -1,7 +1,7 @@
 import {createServerFn} from '@tanstack/react-start';
 import {z} from 'zod';
 import {crewAuth} from './crewAuth';
-import {prismaClient} from './prismaClient.server';
+import {withTxid} from './withTxid.server';
 
 // Delete one of your own comments on a band application.
 // The viewerId in the where clause is the authorization check: a comment
@@ -16,7 +16,9 @@ export const deleteBandApplicationComment = createServerFn()
       // with no Slack-keyed Viewer.
       throw new Error('Unauthorized');
     }
-    await prismaClient.bandApplicationComment.deleteMany({
-      where: {id: data.commentId, viewerId},
-    });
+    return withTxid((tx) =>
+      tx.bandApplicationComment.deleteMany({
+        where: {id: data.commentId, viewerId},
+      }),
+    );
   });

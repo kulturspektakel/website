@@ -1,6 +1,8 @@
 import {
+  createContext,
   forwardRef,
   memo,
+  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -23,7 +25,6 @@ import {
   HStack,
   Icon,
   Span,
-  Spinner,
   Text,
 } from '@chakra-ui/react';
 import {FaFacebook, FaFire, FaInstagram, FaSpotify} from 'react-icons/fa6';
@@ -44,12 +45,23 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import {useVirtualizer} from '@tanstack/react-virtual';
-import {GenreCategory} from '../generated/prisma/browser';
+import type {WithVirtualProps} from '@tanstack/react-db';
+
 import {BAND_GENRE_CATEGORY_OPTIONS} from '../utils/genreCategories';
 import {prismaClient} from '../server/prismaClient.server';
+import {sealBookingQueries} from '../server/realtime.server';
 import {Tooltip} from '../components/chakra-snippets/tooltip';
 import {BandName} from '../components/booking/BandName';
 import {BandApplicationRating} from '../components/booking/BandApplicationRating';
+import {
+  type BookingApplication,
+  type BookingComment,
+  type BookingRating,
+  bookingCollections,
+  disposeBookingCollections,
+  preloadBookingCollections,
+  useLiveRows,
+} from '../components/booking/bookingCollections';
 import {StageMatrixReadonly} from '../components/booking/StageMatrixReadonly';
 import {StageMatrix} from '../components/booking/StageMatrix';
 import {
@@ -87,107 +99,62 @@ const previousEventId = (eventId: string) => {
   return match ? `${match[1]}${Number(match[2]) - 1}` : null;
 };
 
-const loadBandApplications = createServerFn()
+// Everything the booking page needs from the server: the seals for its live
+// queries, plus the one thing that isn't live — who played last year.
+const loadBookingPage = createServerFn()
   .middleware([crewAuth])
   .validator((eventId: string) => eventId)
-  .handler(async ({data: eventId, context}) => {
+  .handler(async ({data: eventId}) => {
     const prevId = previousEventId(eventId);
-    const lastYearBands = prevId
-      ? await prismaClient.bandPlaying.findMany({
-          where: {eventId: prevId},
-          select: {name: true},
-        })
-      : [];
-    const playedLastYear = new Set(
-      lastYearBands.map((b) => normalizeBandName(b.name)),
-    );
-
-    const applications = await prismaClient.bandApplication.findMany({
-      // DJs are handled through a separate flow and never shown here.
-      where: {eventId, genreCategory: {not: GenreCategory.DJ}},
-      select: {
-        id: true,
-        bandname: true,
-        genre: true,
-        genreCategory: true,
-        imageUrl: true,
-        city: true,
-        distance: true,
-        numberOfNonMaleArtists: true,
-        instagramFollower: true,
-        facebookLikes: true,
-        spotifyMonthlyListeners: true,
-        contactedByViewerId: true,
-        stageRow: true,
-        stageColumn: true,
-        _count: {select: {bandApplicationComment: true}},
-        bandApplicationRating: {
-          select: {
-            rating: true,
-            viewer: {
-              select: {id: true, displayName: true, profilePicture: true},
-            },
-          },
-        },
-        BandApplicationTag: {select: {tag: true}},
-      },
-      // Oldest first so the newest applications land at the bottom of the table.
-      orderBy: {createdAt: 'asc'},
-    });
-
-    if (applications.length === 0) {
-      const event = await prismaClient.event.findUnique({
+    const [event, lastYearBands] = await Promise.all([
+      prismaClient.event.findUnique({
         where: {id: eventId},
         select: {id: true},
-      });
-      if (!event) {
-        throw notFound();
-      }
+      }),
+      prevId
+        ? prismaClient.bandPlaying.findMany({
+            where: {eventId: prevId},
+            select: {name: true},
+          })
+        : [],
+    ]);
+    if (!event) {
+      throw notFound();
     }
-
-    const myViewerId = context.viewer?.id ?? null;
-
-    return applications.map((a) => {
-      const ratings = a.bandApplicationRating;
-      const averageRating = meanRating(ratings);
-      return {
-        id: a.id,
-        bandname: a.bandname,
-        genre: a.genre,
-        genreCategory: a.genreCategory,
-        imageUrl: a.imageUrl,
-        city: a.city,
-        distance: a.distance,
-        numberOfNonMaleArtists: a.numberOfNonMaleArtists ?? 0,
-        instagramFollower: a.instagramFollower ?? 0,
-        facebookLikes: a.facebookLikes ?? 0,
-        spotifyMonthlyListeners: a.spotifyMonthlyListeners ?? 0,
-        averageRating,
-        myRating:
-          ratings.find((r) => r.viewer.id === myViewerId)?.rating ?? 0,
-        raters: ratings.map((r) => ({
-          id: r.viewer.id,
-          displayName: r.viewer.displayName,
-          profilePicture: r.viewer.profilePicture,
-          rating: r.rating,
-        })),
-        tags: a.BandApplicationTag.map((t) => t.tag),
-        playedLastYear: playedLastYear.has(normalizeBandName(a.bandname)),
-        hasComments: a._count.bandApplicationComment > 0,
-        wasContacted: a.contactedByViewerId != null,
-        stageRow: a.stageRow,
-        stageColumn: a.stageColumn,
-      };
-    });
+    return {
+      // Normalized names, matched against the live band names on the client so
+      // a rename is picked up too.
+      playedLastYear: lastYearBands.map((b) => normalizeBandName(b.name)),
+      sealed: await sealBookingQueries(eventId),
+    };
   });
 
-export type BandApplicationRow = Awaited<
-  ReturnType<typeof loadBandApplications>
->[number];
+// Reach numbers of an application; missing ones count as 0 in the table.
+type ReachKey =
+  | 'numberOfNonMaleArtists'
+  | 'instagramFollower'
+  | 'facebookLikes'
+  | 'spotifyMonthlyListeners';
+
+// One application as the table shows it: the live application row joined with
+// its ratings, tags and comments on the client.
+type BandApplicationRow = Omit<BookingApplication, ReachKey> &
+  Record<ReachKey, number> & {
+    tags: string[];
+    playedLastYear: boolean;
+    wasContacted: boolean;
+    // Sorted by name, so the avatar order doesn't depend on the order rows
+    // arrived in.
+    raters: BookingRating[];
+    averageRating: number | null;
+    // Oldest first. With `$synced`, false while a comment is still being
+    // saved.
+    comments: WithVirtualProps<BookingComment, string>[];
+  };
 
 type ComputedTag = {label: string; colorPalette: string};
 
-type Row = BandApplicationRow & {
+export type BookingRow = BandApplicationRow & {
   // undefined when the band has no reach numbers on any channel.
   popularityScore: number | undefined;
   computedTags: ComputedTag[];
@@ -213,7 +180,7 @@ const COMPUTED_TAGS: (ComputedTag & {
   {
     label: 'kommentiert',
     colorPalette: 'blue',
-    applies: (r) => r.hasComments,
+    applies: (r) => r.comments.length > 0,
   },
   {
     label: 'angefragt',
@@ -222,7 +189,7 @@ const COMPUTED_TAGS: (ComputedTag & {
   },
 ];
 
-export function computedTagsFor(r: BandApplicationRow): ComputedTag[] {
+function computedTagsFor(r: BandApplicationRow): ComputedTag[] {
   return COMPUTED_TAGS.filter((t) => t.applies(r)).map(
     ({label, colorPalette}) => ({label, colorPalette}),
   );
@@ -230,7 +197,26 @@ export function computedTagsFor(r: BandApplicationRow): ComputedTag[] {
 
 export const Route = createFileRoute('/crew/booking/$eventId')({
   component: BookingPage,
-  loader: ({params}) => loadBandApplications({data: params.eventId}),
+  // Browser-only: the live collections (see bookingCollections.ts) subscribe
+  // from the browser, so there's nothing to render on the server. The detail
+  // and contact child routes inherit this.
+  ssr: false,
+  loader: async ({params}) => {
+    const {playedLastYear, sealed} = await loadBookingPage({
+      data: params.eventId,
+    });
+    await preloadBookingCollections(params.eventId, sealed);
+    return {playedLastYear};
+  },
+  // The loader creates the event's live collections, and leaving the route
+  // disposes them. So it runs exactly once per visit: not on intent-preload
+  // (hovering a link would start subscriptions nobody cleans up), and not when
+  // a child route opens (the data is live; it would only mint unused seals).
+  preload: false,
+  shouldReload: ({cause}) => cause === 'enter',
+  onLeave: ({params}) => {
+    void disposeBookingCollections(params.eventId);
+  },
   // Layout route: opts out of pending UI so its shell survives child navigation.
   // See the same line on `/_main` and `/crew`.
   pendingMs: Infinity,
@@ -280,7 +266,7 @@ const FilterTriggerButton = forwardRef<
 // instantly, and commits the actual column filter — whose recompute re-filters
 // and re-facets all rows — inside a transition so it never blocks the click. One
 // place, so all filters stay responsive on large lists.
-function useColumnFilter<T>(column: Column<Row, unknown>) {
+function useColumnFilter<T>(column: Column<BookingRow, unknown>) {
   const [value, setValue] = useState<T | undefined>(
     () => column.getFilterValue() as T | undefined,
   );
@@ -302,7 +288,7 @@ function FilterMenu({
   title,
   iconOnly,
 }: {
-  column: Column<Row, unknown>;
+  column: Column<BookingRow, unknown>;
   options: {value: string; label: string}[];
   title?: string;
   iconOnly?: boolean;
@@ -343,7 +329,7 @@ function FilterMenu({
 // Tags are free-form, so derive the option list from the column's faceted unique
 // values (TanStack faceting). This also narrows the list to tags still present
 // under any active genre filter.
-function TagFilterHeader({column}: {column: Column<Row, unknown>}) {
+function TagFilterHeader({column}: {column: Column<BookingRow, unknown>}) {
   const facetedValues = column.getFacetedUniqueValues() as Map<string, number>;
   const options = useMemo(
     () =>
@@ -359,7 +345,7 @@ function TagFilterHeader({column}: {column: Column<Row, unknown>}) {
 // filter is a cell picker: it opens a Popover (not a Menu — the matrix owns arrow
 // keys) holding the multi-select StageMatrix bound to the column's filter value
 // (an array of {row, col} cells).
-function StageFilterHeader({column}: {column: Column<Row, unknown>}) {
+function StageFilterHeader({column}: {column: Column<BookingRow, unknown>}) {
   const [value, setFilter] = useColumnFilter<StageCell[]>(column);
   const selected = value ?? [];
   const onChange = (cells: StageCell[]) =>
@@ -405,7 +391,7 @@ function SortableFilterHeader({
   options,
 }: {
   title: string;
-  column: Column<Row, unknown>;
+  column: Column<BookingRow, unknown>;
   options: {value: string; label: string}[];
 }) {
   return (
@@ -457,25 +443,99 @@ function channelScore(
   );
 }
 
-function decorateRows(rows: BandApplicationRow[]): Row[] {
-  return rows.map((r) => {
-    // Take the best channel rather than the mean: a band shouldn't be dragged
-    // down for not having a Facebook page, nor lifted up for having only one.
-    const scores = (
-      Object.keys(POPULARITY_SCALE) as (keyof typeof POPULARITY_SCALE)[]
-    )
-      .filter((key) => r[key] > 0)
-      .map((key) => channelScore(r[key], POPULARITY_SCALE[key]));
-    const computedTags = computedTagsFor(r);
-    return {
-      ...r,
-      // undefined, not 0, when we have no numbers at all — the flame is hidden
-      // entirely and `sortUndefined` parks the row last.
-      popularityScore: scores.length ? Math.max(...scores) : undefined,
-      computedTags,
-      tagLabels: [...computedTags.map((t) => t.label), ...r.tags],
-    };
-  });
+// The table's rows, joined on the client from the event's live collections and
+// rebuilt whenever any of them changes. Built once by the page and shared with
+// the detail modal through `BookingRowsContext`, so both show the same
+// (optimistic) state.
+function useBookingRows(eventId: string) {
+  const {playedLastYear} = Route.useLoaderData();
+  const live = bookingCollections(eventId);
+  const applications = useLiveRows(live.applications);
+  const ratings = useLiveRows(live.ratings);
+  const tags = useLiveRows(live.tags);
+  const comments = useLiveRows(live.comments);
+
+  return useMemo(() => {
+    const lastYear = new Set(playedLastYear);
+    const ratersByApplication = groupBy(ratings, (r) => r.bandApplicationId);
+    const tagsByApplication = groupBy(tags, (t) => t.bandApplicationId);
+    const commentsByApplication = groupBy(
+      comments,
+      (c) => c.bandApplicationId,
+    );
+
+    return (
+      [...applications]
+        // Oldest first so the newest applications land at the bottom.
+        .sort(
+          (a, b) =>
+            a.createdAt.getTime() - b.createdAt.getTime() ||
+            a.id.localeCompare(b.id),
+        )
+        .map((a) => {
+          // `groupBy` returns fresh arrays, so sorting in place is fine.
+          const raters = (ratersByApplication.get(a.id) ?? []).sort((x, y) =>
+            x.displayName.localeCompare(y.displayName),
+          );
+          return decorateRow({
+            ...a,
+            numberOfNonMaleArtists: a.numberOfNonMaleArtists ?? 0,
+            instagramFollower: a.instagramFollower ?? 0,
+            facebookLikes: a.facebookLikes ?? 0,
+            spotifyMonthlyListeners: a.spotifyMonthlyListeners ?? 0,
+            tags: (tagsByApplication.get(a.id) ?? [])
+              .map((t) => t.tag)
+              .sort((x, y) => x.localeCompare(y)),
+            playedLastYear: lastYear.has(normalizeBandName(a.bandname)),
+            wasContacted: a.contactedByViewerId != null,
+            raters,
+            averageRating: meanRating(raters),
+            comments: (commentsByApplication.get(a.id) ?? []).sort(
+              (x, y) => x.createdAt.getTime() - y.createdAt.getTime(),
+            ),
+          });
+        })
+    );
+  }, [playedLastYear, applications, ratings, tags, comments]);
+}
+
+const BookingRowsContext = createContext<BookingRow[]>([]);
+
+// One row of the page's table, for the detail modal rendered inside it.
+export function useBookingRow(applicationId: string) {
+  return useContext(BookingRowsContext).find((r) => r.id === applicationId);
+}
+
+function groupBy<T>(items: T[], key: (item: T) => string) {
+  const groups = new Map<string, T[]>();
+  for (const item of items) {
+    const group = groups.get(key(item));
+    if (group) {
+      group.push(item);
+    } else {
+      groups.set(key(item), [item]);
+    }
+  }
+  return groups;
+}
+
+function decorateRow(r: BandApplicationRow): BookingRow {
+  // Take the best channel rather than the mean: a band shouldn't be dragged
+  // down for not having a Facebook page, nor lifted up for having only one.
+  const scores = (
+    Object.keys(POPULARITY_SCALE) as (keyof typeof POPULARITY_SCALE)[]
+  )
+    .filter((key) => r[key] > 0)
+    .map((key) => channelScore(r[key], POPULARITY_SCALE[key]));
+  const computedTags = computedTagsFor(r);
+  return {
+    ...r,
+    // undefined, not 0, when we have no numbers at all — the flame is hidden
+    // entirely and `sortUndefined` parks the row last.
+    popularityScore: scores.length ? Math.max(...scores) : undefined,
+    computedTags,
+    tagLabels: [...computedTags.map((t) => t.label), ...r.tags],
+  };
 }
 
 // Rows are a fixed height so the virtualizer can position them by pure math
@@ -486,7 +546,7 @@ function decorateRows(rows: BandApplicationRow[]): Row[] {
 // clips to a single row (see below).
 const ROW_HEIGHT = 56;
 
-const col = createColumnHelper<Row>();
+const col = createColumnHelper<BookingRow>();
 
 const columns = [
   col.display({
@@ -595,9 +655,8 @@ const columns = [
     cell: ({row}) => (
       <BandApplicationRating
         applicationId={row.original.id}
-        myRating={row.original.myRating}
-        averageRating={row.original.averageRating}
         raters={row.original.raters}
+        averageRating={row.original.averageRating}
         size="md"
       />
     ),
@@ -654,7 +713,7 @@ const columns = [
 
 // Shared sizing/alignment props for a header or body cell, derived from the
 // column's `meta`. Keeps header and body columns in lockstep.
-function cellLayout(meta: ColumnMeta<Row, unknown> | undefined) {
+function cellLayout(meta: ColumnMeta<BookingRow, unknown> | undefined) {
   return {
     flex: meta?.flex ?? '0 0 auto',
     w: meta?.width,
@@ -683,7 +742,7 @@ function SortArrows({sorted}: {sorted: false | 'asc' | 'desc'}) {
 // `row` identity is stable across scroll frames (TanStack memoizes the row
 // model), so memoizing here skips re-rendering rows that stay in view while
 // scrolling — only newly-entering rows do real work.
-const RowCells = memo(function RowCells({row}: {row: TableRow<Row>}) {
+const RowCells = memo(function RowCells({row}: {row: TableRow<BookingRow>}) {
   return (
     <>
       {row.getVisibleCells().map((cell) => (
@@ -702,9 +761,8 @@ const RowCells = memo(function RowCells({row}: {row: TableRow<Row>}) {
 });
 
 function BookingPage() {
-  const loaderData = Route.useLoaderData();
-  const data = useMemo(() => decorateRows(loaderData), [loaderData]);
   const {eventId} = Route.useParams();
+  const data = useBookingRows(eventId);
   const navigate = Route.useNavigate();
 
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -730,8 +788,6 @@ function BookingPage() {
 
   const rows = table.getRowModel().rows;
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
 
   const virtualizer = useVirtualizer({
     count: rows.length,
@@ -746,24 +802,27 @@ function BookingPage() {
     overscan: 40,
   });
 
+  // `rows` gets a fresh identity on every render, filter and live change; read
+  // it through a ref so the effects below run once per opened modal, not on
+  // every row change (which would snap the table back to the open row whenever
+  // anyone edits anything).
+  const rowsRef = useRef(rows);
+  rowsRef.current = rows;
+
   // When a detail modal is open (incl. deep-links and search selections),
   // scroll the table to the corresponding row — but only if it isn't already
   // visible (`align: 'auto'` is a no-op for in-view rows). `strict: false`
   // reads the optional child-route param.
   const {applicationId} = useParams({strict: false});
   useEffect(() => {
-    if (!mounted || !applicationId) return;
-    const index = rows.findIndex((r) => r.original.id === applicationId);
+    if (!applicationId) return;
+    const index = rowsRef.current.findIndex(
+      (r) => r.original.id === applicationId,
+    );
     if (index >= 0) {
       virtualizer.scrollToIndex(index, {align: 'auto'});
     }
-  }, [applicationId, mounted, rows, virtualizer]);
-
-  // `rows` gets a fresh identity on every render/filter; read it through a ref
-  // so the keydown listener below subscribes once per open modal, not on every
-  // row change.
-  const rowsRef = useRef(rows);
-  rowsRef.current = rows;
+  }, [applicationId, virtualizer]);
 
   // While a detail modal is open, Arrow Up/Down step to the previous/next row in
   // the current (filtered + sorted) order. Skip when a nested control already
@@ -839,44 +898,38 @@ function BookingPage() {
 
       {/* Body */}
       <Box ref={scrollRef} flex="1" minH="0" overflowY="auto">
-        {!mounted ? (
-          <Flex justify="center" py="10">
-            <Spinner />
-          </Flex>
-        ) : (
-          <Box position="relative" h={`${virtualizer.getTotalSize()}px`}>
-            {virtualizer.getVirtualItems().map((vItem) => {
-              const row = rows[vItem.index];
-              const active = row.original.id === applicationId;
-              return (
-                <Flex
-                  key={row.id}
-                  position="absolute"
-                  top="0"
-                  left="0"
-                  w="full"
-                  transform={`translateY(${vItem.start}px)`}
-                  borderBottomWidth="1px"
-                  align="center"
-                  h={`${ROW_HEIGHT}px`}
-                  overflow="hidden"
-                  fontSize="sm"
-                  cursor="pointer"
-                  bg={active ? 'bg.emphasized' : undefined}
-                  _hover={active ? undefined : {bg: 'bg.muted'}}
-                  onClick={() =>
-                    navigate({
-                      to: '/crew/booking/$eventId/$applicationId',
-                      params: {eventId, applicationId: row.original.id},
-                    })
-                  }
-                >
-                  <RowCells row={row} />
-                </Flex>
-              );
-            })}
-          </Box>
-        )}
+        <Box position="relative" h={`${virtualizer.getTotalSize()}px`}>
+          {virtualizer.getVirtualItems().map((vItem) => {
+            const row = rows[vItem.index];
+            const active = row.original.id === applicationId;
+            return (
+              <Flex
+                key={row.id}
+                position="absolute"
+                top="0"
+                left="0"
+                w="full"
+                transform={`translateY(${vItem.start}px)`}
+                borderBottomWidth="1px"
+                align="center"
+                h={`${ROW_HEIGHT}px`}
+                overflow="hidden"
+                fontSize="sm"
+                cursor="pointer"
+                bg={active ? 'bg.emphasized' : undefined}
+                _hover={active ? undefined : {bg: 'bg.muted'}}
+                onClick={() =>
+                  navigate({
+                    to: '/crew/booking/$eventId/$applicationId',
+                    params: {eventId, applicationId: row.original.id},
+                  })
+                }
+              >
+                <RowCells row={row} />
+              </Flex>
+            );
+          })}
+        </Box>
       </Box>
 
       {/* Persistent detail dialog: the shell stays mounted across
@@ -897,7 +950,9 @@ function BookingPage() {
       >
         <DialogContent>
           <DialogCloseTrigger />
-          <Outlet />
+          <BookingRowsContext.Provider value={data}>
+            <Outlet />
+          </BookingRowsContext.Provider>
         </DialogContent>
       </DialogRoot>
 

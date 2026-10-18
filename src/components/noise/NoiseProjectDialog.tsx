@@ -7,7 +7,7 @@ import {createNoiseProject, noiseName} from '../../routes/crew.noise';
 import {ConnectedField} from '../forms/ConnectedField';
 import {timeZone} from '../../utils/dateUtils';
 import {END_BEFORE_START, fromLocalInput} from './timeframe';
-import {errorToast} from './toast';
+import {errorToast} from '../toast';
 import {
   DialogBody,
   DialogCloseTrigger,

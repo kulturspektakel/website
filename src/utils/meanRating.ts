@@ -1,5 +1,5 @@
 // Mean of a set of 1–4 ratings, or null when there are none. Shared by the
-// booking table loader, the detail modal, and the rating widget so the "average
+// booking table's rows and the detail modal's history timeline so the "average
 // rating" rule stays defined in one place.
 export function meanRating(items: {rating: number}[]): number | null {
   return items.length
