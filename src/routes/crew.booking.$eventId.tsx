@@ -1,8 +1,6 @@
 import {
-  createContext,
   forwardRef,
   memo,
-  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -88,6 +86,7 @@ import {seo} from '../utils/seo';
 import {normalizeBandName} from '../utils/normalizeBandName';
 import {meanRating} from '../utils/meanRating';
 import {BandSearch} from '../components/booking/BandSearch';
+import {BookingRowsContext} from '../components/booking/bookingRowsContext';
 import {
   DialogCloseTrigger,
   DialogContent,
@@ -233,7 +232,10 @@ export const Route = createFileRoute('/crew/booking/$eventId')({
 const FilterTriggerButton = forwardRef<
   HTMLButtonElement,
   ButtonProps & {title?: string; active: boolean; iconOnly?: boolean}
->(function FilterTriggerButton({title, active, iconOnly, onClick, ...rest}, ref) {
+>(function FilterTriggerButton(
+  {title, active, iconOnly, onClick, ...rest},
+  ref,
+) {
   return (
     <Button
       ref={ref}
@@ -461,10 +463,7 @@ function useBookingRows(eventId: string) {
     const lastYear = new Set(playedLastYear);
     const ratersByApplication = groupBy(ratings, (r) => r.bandApplicationId);
     const tagsByApplication = groupBy(tags, (t) => t.bandApplicationId);
-    const commentsByApplication = groupBy(
-      comments,
-      (c) => c.bandApplicationId,
-    );
+    const commentsByApplication = groupBy(comments, (c) => c.bandApplicationId);
 
     return (
       [...applications]
@@ -499,13 +498,6 @@ function useBookingRows(eventId: string) {
         })
     );
   }, [playedLastYear, applications, ratings, tags, comments]);
-}
-
-const BookingRowsContext = createContext<BookingRow[]>([]);
-
-// One row of the page's table, for the detail modal rendered inside it.
-export function useBookingRow(applicationId: string) {
-  return useContext(BookingRowsContext).find((r) => r.id === applicationId);
 }
 
 function groupBy<T>(items: T[], key: (item: T) => string) {
@@ -675,8 +667,7 @@ const columns = [
       !filterValue?.length ||
       filterValue.some(
         (c) =>
-          c.row === row.original.stageRow &&
-          c.col === row.original.stageColumn,
+          c.row === row.original.stageRow && c.col === row.original.stageColumn,
       ),
     cell: ({row}) => (
       <StageMatrixReadonly

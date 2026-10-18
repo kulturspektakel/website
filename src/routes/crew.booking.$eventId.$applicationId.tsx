@@ -41,7 +41,12 @@ import {
   FaMusic,
   FaRegTrashCan,
 } from 'react-icons/fa6';
-import {BandRepertoire, DemoEmbedType, GenreCategory, PreviouslyPlayed} from '../utils/enums';
+import {
+  BandRepertoire,
+  DemoEmbedType,
+  GenreCategory,
+  PreviouslyPlayed,
+} from '../utils/enums';
 import {and, eq, ne} from 'drizzle-orm';
 import {db} from '../server/db.server';
 import {bandApplication, bandPlaying} from '../server/db/schema';
@@ -89,7 +94,8 @@ import {KULT_LOCATION} from '../utils/kultLocation';
 import {meanRating} from '../utils/meanRating';
 import {normalizeBandName} from '../utils/normalizeBandName';
 import {spotifyArtistUrl} from '../utils/spotifyArtistId';
-import {type BookingRow, useBookingRow} from './crew.booking.$eventId';
+import type {BookingRow} from './crew.booking.$eventId';
+import {useBookingRow} from '../components/booking/bookingRowsContext';
 
 // ---------------------------------------------------------------------------
 // Server function — lazy detail loader (runs only when the child route opens)
