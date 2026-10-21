@@ -2,6 +2,7 @@ import {eq} from 'drizzle-orm';
 import {db} from '../../server/db.server';
 import {bandApplication} from '../../server/db/schema';
 import {readJsonPayload} from '../../server/readJsonPayload.server';
+import {runApifyActor} from '../../server/runApifyActor.server';
 
 export type InstagramFollowerPayload = {id: string};
 
@@ -55,7 +56,11 @@ export async function handleInstagramFollower(
     return new Response(null, {status: 204});
   }
 
-  const items = await runActor(handle);
+  const items = await runApifyActor<ProfileItem>(
+    ACTOR,
+    {usernames: [handle]},
+    45,
+  );
   const item = items.at(0);
 
   if (item?.error === 'not_found') {
@@ -76,32 +81,4 @@ export async function handleInstagramFollower(
     .where(eq(bandApplication.id, id));
 
   return new Response(null, {status: 204});
-}
-
-/**
- * Runs the actor synchronously and returns its dataset items.
- *
- * `run-sync-get-dataset-items` blocks until the run finishes, which for a
- * single profile is a handful of seconds. The `timeout` bounds that wait well
- * inside the function's own limit: if Apify is slow or wedged we'd rather fail
- * and let the scrapers queue retry later than sit on an open request.
- */
-export async function runActor(username: string): Promise<ProfileItem[]> {
-  const res = await fetch(
-    `https://api.apify.com/v2/acts/${ACTOR}/run-sync-get-dataset-items?timeout=120`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${process.env.APIFY_TOKEN}`,
-      },
-      body: JSON.stringify({usernames: [username]}),
-    },
-  );
-
-  if (!res.ok) {
-    throw new Error(`Apify HTTP${res.status}: ${await res.text()}`);
-  }
-
-  return (await res.json()) as ProfileItem[];
 }

@@ -1,9 +1,8 @@
-import bandcamp from 'bandcamp-scraper';
-import {promisify} from 'util';
 import {eq} from 'drizzle-orm';
 import {db} from '../../server/db.server';
 import {bandApplication} from '../../server/db/schema';
 import {readJsonPayload} from '../../server/readJsonPayload.server';
+import {runApifyActor} from '../../server/runApifyActor.server';
 import {DemoEmbedType} from '../../utils/enums';
 
 export type BandApplicationDemoPayload = {id: string};
@@ -83,28 +82,13 @@ export async function handleBandApplicationDemo(
       demoEmbedType = DemoEmbedType.YouTubeVideo;
       break;
     case 'bandcamp.com': {
-      let albumUrl: string | undefined = url.toString();
-      if (path[1] === 'track') {
-        const track = await promisify(bandcamp.getTrackInfo)(albumUrl);
-        if (track?.raw.id != null) {
-          demoEmbed = track.raw.id.toString();
-          demoEmbedType = DemoEmbedType.BandcampTrack;
-          break;
-        }
-      } else if (path[1] !== 'album') {
-        const match = url.hostname.match(/([^.]+)\.bandcamp\.com/i);
-        if (match && match?.length > 1) {
-          const artist = await promisify(bandcamp.getArtistInfo)(albumUrl);
-          albumUrl = artist?.albums?.pop()?.url;
-        }
-      }
-
-      if (albumUrl != null) {
-        const album = await promisify(bandcamp.getAlbumInfo)(albumUrl);
-        if (album?.raw.id) {
-          demoEmbedType = DemoEmbedType.BandcampAlbum;
-          demoEmbed = album.raw.id.toString();
-        }
+      const release = await bandcampRelease(url.toString());
+      if (release?.type === 'track') {
+        demoEmbedType = DemoEmbedType.BandcampTrack;
+        demoEmbed = release.id.toString();
+      } else if (release?.type === 'album') {
+        demoEmbedType = DemoEmbedType.BandcampAlbum;
+        demoEmbed = release.id.toString();
       }
       break;
     }
@@ -218,4 +202,42 @@ async function youTubeVideoForChannelId(channelId: string | undefined) {
   if (res.items.length > 0) {
     return res.items[0].id.videoId;
   }
+}
+
+const BANDCAMP_ACTOR = 'service-paradis~bandcamp-crawler';
+
+/** One dataset item of `service-paradis/bandcamp-crawler` (the fields we use). */
+type BandcampItem =
+  | {type: 'track' | 'album'; id: number; url: string}
+  | {type: 'artist' | 'label'; releases?: Array<{url: string}>};
+
+/**
+ * Resolves a Bandcamp URL to the track or album it should embed. An artist or
+ * label page resolves to its first listed release, which is the newest one.
+ *
+ * Scraping Bandcamp ourselves stopped working: its bot protection answers
+ * `bandcamp-scraper`'s HTTP client with a challenge page, which that library
+ * then fails to parse inside a callback, so the task hung until Vercel's
+ * timeout instead of failing. Apify's crawler fetches through their proxy.
+ *
+ * One URL per run, without the discography, so the dataset's first item is
+ * the page we asked for. Two runs at most, so each gets about half of the
+ * function's time budget.
+ */
+async function bandcampRelease(url: string) {
+  const run = async (url: string) =>
+    (
+      await runApifyActor<BandcampItem>(
+        BANDCAMP_ACTOR,
+        {startUrls: [{url}], maxItems: 1, includeDiscography: false},
+        25,
+      )
+    ).at(0);
+
+  const item = await run(url);
+  if (item?.type === 'artist' || item?.type === 'label') {
+    const latest = item.releases?.at(0)?.url;
+    return latest ? run(latest) : undefined;
+  }
+  return item;
 }
