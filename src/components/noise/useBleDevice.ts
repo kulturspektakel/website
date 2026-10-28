@@ -17,6 +17,10 @@ import {errorMessage, errorToast} from '../toast';
 import {type BluetoothSlice} from './noise';
 import type {Ingest} from './useNoiseStream';
 
+// A fixed id, there being one connection: reconnecting replaces the toast rather than
+// stacking a second, and cleanup can dismiss it without holding on to what create() returned.
+const CONNECTION_TOAST = 'bluetooth-connection';
+
 // The Web Bluetooth link to one monitor: the GATT connection plus the three
 // characteristics it exposes (the 1 Hz record stream, the pending-upload count,
 // and the WiFi status), and the calibration/WiFi writes that go back over it.
@@ -63,6 +67,7 @@ export function useBleDevice({
     } catch {}
     connRef.current = null;
     connectedDevice.current = null;
+    toaster.dismiss(CONNECTION_TOAST);
     setDeviceName(null);
     setPendingUploads(null);
     setWifiStatus(null);
@@ -72,67 +77,87 @@ export function useBleDevice({
     cleanup();
   }, [cleanup]);
 
-  const connect = useCallback(async (): Promise<string | null> => {
-    if (connecting) return null;
-    if (connRef.current) cleanup();
-    setConnecting(true);
-    try {
-      const conn = await connectBleDevice();
-      const onDisconnect = () => {
-        cleanup();
-        toaster.create({
-          type: 'info',
-          title: 'Bluetooth disconnected',
-        });
-      };
-      conn.device.addEventListener('gattserverdisconnected', onDisconnect);
-      // Each subscription reads its current value on connect and updates on
-      // notify; the record stream is live-only (no initial read) so we don't
-      // plot a stale sample. Every registered cleanup runs in cleanup().
-      cleanupsRef.current = [
-        subscribeCharacteristic(
-          conn.characteristic,
-          (value) =>
-            ingest(
-              conn.deviceName,
-              new Uint8Array(value.buffer, value.byteOffset, value.byteLength),
-              Date.now(),
-            ),
-          {readInitial: false},
-        ),
-        subscribeCharacteristic(conn.uploadsCharacteristic, (value) =>
-          setPendingUploads(decodePendingUploads(value)),
-        ),
-        subscribeCharacteristic(conn.wifiStatusCharacteristic, (value) => {
-          // Ignore the 0xff subscribe sentinel / unknown values (decode → null).
-          const status = decodeWifiStatus(value);
-          if (status) setWifiStatus(status);
-        }),
-        () =>
-          conn.device.removeEventListener(
-            'gattserverdisconnected',
-            onDisconnect,
+  // See connectBleDevice for `name`.
+  const connect = useCallback(
+    async (name?: string): Promise<string | null> => {
+      if (connecting) return null;
+      if (connRef.current) cleanup();
+      setConnecting(true);
+      try {
+        const conn = await connectBleDevice(name);
+        const onDisconnect = () => {
+          cleanup();
+          toaster.create({
+            type: 'info',
+            title: 'Bluetooth disconnected',
+          });
+        };
+        conn.device.addEventListener('gattserverdisconnected', onDisconnect);
+        // Each subscription reads its current value on connect and updates on
+        // notify; the record stream is live-only (no initial read) so we don't
+        // plot a stale sample. Every registered cleanup runs in cleanup().
+        cleanupsRef.current = [
+          subscribeCharacteristic(
+            conn.characteristic,
+            (value) =>
+              ingest(
+                conn.deviceName,
+                new Uint8Array(
+                  value.buffer,
+                  value.byteOffset,
+                  value.byteLength,
+                ),
+                Date.now(),
+              ),
+            {readInitial: false},
           ),
-      ];
-      connRef.current = conn;
-      // Before the state update, so the stream stops taking this device's MQTT
-      // copies from the moment its characteristic is subscribed.
-      connectedDevice.current = conn.deviceName;
-      setDeviceName(conn.deviceName);
-      return conn.deviceName;
-    } catch (e) {
-      // Cancelling the chooser is not a failure, so it gets no toast.
-      if (
-        !(e instanceof DOMException && e.name === 'NotFoundError') &&
-        !/User cancelled/i.test(errorMessage(e))
-      ) {
-        errorToast('Bluetooth connection failed')(e);
+          subscribeCharacteristic(conn.uploadsCharacteristic, (value) =>
+            setPendingUploads(decodePendingUploads(value)),
+          ),
+          subscribeCharacteristic(conn.wifiStatusCharacteristic, (value) => {
+            // Ignore the 0xff subscribe sentinel / unknown values (decode → null).
+            const status = decodeWifiStatus(value);
+            if (status) setWifiStatus(status);
+          }),
+          () =>
+            conn.device.removeEventListener(
+              'gattserverdisconnected',
+              onDisconnect,
+            ),
+        ];
+        connRef.current = conn;
+        // Before the state update, so the stream stops taking this device's MQTT
+        // copies from the moment its characteristic is subscribed.
+        connectedDevice.current = conn.deviceName;
+        setDeviceName(conn.deviceName);
+        // Up for as long as the connection is, on every page under /crew/noise — the
+        // connection is the section's, and outlives the page that made it, so the way to
+        // end it has to as well. Dismissed by cleanup(), whichever way the link ends; the
+        // button's own press dismisses it too, and goes through cleanup like the rest.
+        toaster.create({
+          id: CONNECTION_TOAST,
+          type: 'info',
+          title: `Connected to ${conn.deviceName}`,
+          description: 'via Bluetooth',
+          duration: Infinity,
+          action: {label: 'Disconnect', onClick: cleanup},
+        });
+        return conn.deviceName;
+      } catch (e) {
+        // Cancelling the chooser is not a failure, so it gets no toast.
+        if (
+          !(e instanceof DOMException && e.name === 'NotFoundError') &&
+          !/User cancelled/i.test(errorMessage(e))
+        ) {
+          errorToast('Bluetooth connection failed')(e);
+        }
+        return null;
+      } finally {
+        setConnecting(false);
       }
-      return null;
-    } finally {
-      setConnecting(false);
-    }
-  }, [connecting, cleanup, ingest, connectedDevice]);
+    },
+    [connecting, cleanup, ingest, connectedDevice],
+  );
 
   const readCal = useCallback(async () => {
     const conn = connRef.current;

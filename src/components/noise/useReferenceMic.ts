@@ -331,8 +331,16 @@ export function useReferenceMic(): ReferenceMicSlice {
   // applies — picking an input, dropping a file, choosing one by hand — records the pairing
   // in `devices`, and resolveCal is what reads it back; a second copy in state would be four
   // writers keeping a cache honest about something it is a copy of.
+  //
+  // Only for a microphone we recognise. A file is one capsule's response, and the only
+  // capsules we can tell apart by name are the ones in REFERENCE_MICS — anything else has
+  // no way of saying which file is its own, so a pairing left over from before (or guessed
+  // by resolveCal) would bend its curve by somebody else's, with no control on screen to say
+  // so.
   const calSerial =
-    selected == null ? null : resolveCal(cals, selected.deviceId);
+    selected == null || mic == null
+      ? null
+      : resolveCal(cals, selected.deviceId);
   const calText = calSerial == null ? null : (cals.files[calSerial] ?? null);
   const calibration = useMemo(() => {
     const parsed = calText == null ? null : parseUmikCal(calText);
@@ -878,7 +886,11 @@ export function useReferenceMic(): ReferenceMicSlice {
         // needs no answer — the serial cannot be read off the microphone (see
         // CalStore.devices), so being asked once is the price of ever being asked once.
         // Writing it is also what *selects* it: calSerial reads back out of the store.
-        const resolved = resolveCal(calsRef.current, option.deviceId);
+        // Not for an input we do not recognise, which never gets a file (see calSerial).
+        const resolved =
+          referenceMicFor(option.label) == null
+            ? null
+            : resolveCal(calsRef.current, option.deviceId);
         // Only when it is news. The common case is a pairing written last time, and rewriting
         // it would serialise every stored file to localStorage and hand the page a new store
         // — which re-parses the calibration and re-renders everything below — to say what it

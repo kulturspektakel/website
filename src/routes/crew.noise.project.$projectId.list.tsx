@@ -1,5 +1,11 @@
-import {createFileRoute, useLocation} from '@tanstack/react-router';
-import {Box, HStack, Text} from '@chakra-ui/react';
+import {
+  createFileRoute,
+  useLocation,
+  useNavigate,
+} from '@tanstack/react-router';
+import {Box, Button, HStack} from '@chakra-ui/react';
+import {LuMapPin, LuPlus} from 'react-icons/lu';
+import {EmptyState} from '../components/chakra-snippets/empty-state';
 import {useCallback, useEffect, useMemo, useState} from 'react';
 import {LocationCard} from '../components/noise/LocationCard';
 import {LocationPicker} from '../components/noise/LocationPicker';
@@ -55,6 +61,7 @@ function ProjectListView() {
   // locationSelection.ts), and selected rather than merely read: it is the whole reason the
   // list is on screen. Undefined for every other way in, which is most of them.
   const focus = useLocation({select: (l) => l.state.focusLocation});
+  const navigate = useNavigate();
 
   // The roster: every location the project has, in the one order there is (the layout
   // sorted them — see compareLocations). Both the menu and the stored ids follow it.
@@ -142,14 +149,35 @@ function ProjectListView() {
 
   if (locations.length === 0) {
     return (
-      <Text color="fg.subtle" p="4">
-        {/* A location can only be placed on the map, so without a Maps key there
-            is no way in at all — say so rather than showing an empty list and no
-            control. */}
-        {project.apiKey != null
-          ? 'No locations yet.'
-          : 'No locations yet. Without a Google Maps key the map is unavailable, so no locations can be added at the moment.'}
-      </Text>
+      // A location can only be placed on the map, so the one thing to offer here is the
+      // way there — with the create tool already armed, since placing one is the only
+      // reason to have pressed it. Without a Maps key there is no way in at all, and the
+      // empty state says so rather than offering a button to nowhere.
+      <EmptyState
+        flex="1"
+        icon={<LuMapPin />}
+        title="No locations yet"
+        description={
+          project.apiKey != null
+            ? 'Place one on the map to start measuring.'
+            : 'Without a Google Maps key the map is unavailable, so no locations can be added at the moment.'
+        }
+      >
+        {project.apiKey != null && (
+          <Button
+            size="sm"
+            onClick={() =>
+              navigate({
+                to: '/crew/noise/project/$projectId/map',
+                params: {projectId: project.id},
+                state: {placeLocation: true},
+              })
+            }
+          >
+            <LuPlus /> Add location
+          </Button>
+        )}
+      </EmptyState>
     );
   }
 

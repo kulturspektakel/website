@@ -7,9 +7,13 @@
 // invalidating one can't evict another (see projectLogs below).
 export const noiseQueryKeys = {
   projects: ['noiseProjects'] as const,
-  // Monitors with no open assignment anywhere — offered by the map's create-location
-  // dialog, which is placing a spot that has nobody standing at it yet.
+  // Monitors with no placement anywhere during a project's dates — offered by the map's
+  // create-location dialog, which is placing a spot that has nobody standing at it yet.
+  // Per project, since the answer is; the bare key is the prefix an assignment change
+  // invalidates every project's under.
   assignableDevices: ['assignableNoiseDevices'] as const,
+  assignableDevicesFor: (projectId: string) =>
+    ['assignableNoiseDevices', projectId] as const,
   // Every monitor, assigned or not — the assignments dialog's picker. Separate from
   // `assignableDevices` because the two answer different questions.
   //

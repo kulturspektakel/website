@@ -105,11 +105,10 @@ const MAX_PROJECT_LOG_MINUTES = 200_000;
  * those boundaries are. It is also why the columns are nullable — see the schema: an event
  * whose dates move takes its placements with it.
  *
- * Deliberately *not* the same test as assignableNoiseDevices, which asks whether a monitor
- * has an open row *anywhere* — a stricter question, and the right one there: an open row
- * left behind by a finished festival should be closed rather than quietly written over with
- * a second one. So a monitor can read as free to place and still be standing nowhere, which
- * is exactly the state a forgotten row leaves it in.
+ * Not the same test as assignableNoiseDevices, which asks about a whole event's dates rather
+ * than one instant: a monitor standing nowhere now can still be spoken for later in the
+ * event a location is being placed in, and one standing somewhere now can be free for an
+ * event next month.
  *
  * One row taken, latest start first, blanks last — a blank start is the event's own, so it is
  * the earliest a placement can begin and the least specific claim on this instant. A monitor

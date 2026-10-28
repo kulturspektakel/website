@@ -1,8 +1,13 @@
-import {createFileRoute, useNavigate} from '@tanstack/react-router';
+import {
+  createFileRoute,
+  useLocation,
+  useNavigate,
+} from '@tanstack/react-router';
 import {Box, Text} from '@chakra-ui/react';
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import LocationsMap, {type Coordinates} from '../components/noise/LocationsMap';
 import {NoiseLocationDialog} from '../components/noise/NoiseLocationDialog';
+import {AssignDeviceDialog} from '../components/noise/AssignDeviceDialog';
 import {useWheelScrub} from '../components/noise/useWheelScrub';
 import {
   locationLines,
@@ -27,6 +32,23 @@ import {
 } from '../components/noise/limitLines';
 import {seriesByKey, type SeriesKey} from '../components/noise/series';
 import {rangeLeqs} from '../components/noise/projectLogs';
+
+// Asks the map to open with the create tool armed — what the list's empty state sends,
+// its one button being "add a location". In the history entry rather than the URL for the
+// reason focusLocation is (see locationSelection.ts): it is the last thing pressed, not a
+// view anyone would link to.
+//
+// `assignDevice` is the other way in with a job to do: a monitor's page, sending it here to
+// be put somewhere. While it is set a press on a pin assigns that monitor there instead of
+// opening the place's card, a new location is placed with it preselected, and either one
+// returns to the monitor's page — which is where whoever pressed it was. Carried for the
+// same reason as the other: it is what you came here to do, not a view to link to.
+declare module '@tanstack/history' {
+  interface HistoryState {
+    placeLocation?: boolean;
+    assignDevice?: string;
+  }
+}
 
 export const Route = createFileRoute('/crew/noise/project/$projectId/map')({
   component: ProjectMapView,
@@ -76,14 +98,35 @@ function ProjectMapView() {
   // A step of its own and not a replace: the map is where you came from, and back is how
   // you get to the pin next to this one.
   const navigate = useNavigate();
+  // The monitor this map was opened to place, if it was (see `assignDevice` above), and
+  // the pin pressed for it — the confirmation open over the map.
+  const assigning = useLocation({select: (l) => l.state.assignDevice});
+  const [assignTo, setAssignTo] = useState<{
+    id: string;
+    locationName: string;
+  } | null>(null);
   const select = useCallback(
-    (locationId: string) =>
-      navigate({
+    (locationId: string) => {
+      if (assigning) {
+        const location = project.locations.find((l) => l.id === locationId);
+        if (location) setAssignTo(location);
+        return;
+      }
+      void navigate({
         to: '/crew/noise/project/$projectId/list',
         params: {projectId},
         state: {focusLocation: locationId},
-      }),
-    [navigate, projectId],
+      });
+    },
+    [navigate, projectId, assigning, project.locations],
+  );
+  // Back where the errand started. A step of its own rather than a history back: the map
+  // may have been reached through a redirect or a reload, and the device page is the one
+  // place this is known to have come from.
+  const backToDevice = useCallback(
+    (device: string) =>
+      navigate({to: '/crew/noise/device/$device', params: {device}}),
+    [navigate],
   );
 
   // Escape drops the tool while it is waiting for a click, the way it would close anything
@@ -92,6 +135,13 @@ function ProjectMapView() {
   // Escape drops the tool from there. What says the tool is armed is the map itself: the
   // glow round it, the crosshair and the pin following the pointer (see LocationsMap).
   const waiting = placing && createAt == null;
+  // Armed on arrival when that is what was asked for. An effect and not the layout's initial
+  // state: the layout disarms the tool on every render of the list (see setPlacing), so it
+  // can only be armed once this view is the one on screen.
+  const placeOnArrival = useLocation({select: (l) => l.state.placeLocation});
+  useEffect(() => {
+    if (placeOnArrival) setPlacing(true);
+  }, [placeOnArrival, setPlacing]);
   useEffect(() => {
     if (!waiting) return;
     const onKeyDown = (e: KeyboardEvent) => {
@@ -241,6 +291,7 @@ function ProjectMapView() {
           history={levels?.[primary]}
           placing={placing}
           onPlacingChange={setPlacing}
+          placingLabel={assigning}
           onCreateAt={setCreateAt}
           onSelect={select}
         />
@@ -249,7 +300,8 @@ function ProjectMapView() {
       <NoiseLocationDialog
         coordinates={createAt}
         projectId={projectId}
-        projectStart={project.start}
+        window={project}
+        device={assigning}
         // Abandoned, the tool is still armed: a cancel is most often a point picked a
         // little off, and the next click is the one meant. Only saving (below), the plus,
         // Escape or leaving the map put it back to being read-only.
@@ -258,8 +310,22 @@ function ProjectMapView() {
           await refresh();
           setCreateAt(null);
           setPlacing(false);
+          if (assigning) await backToDevice(assigning);
         }}
       />
+      {assigning && (
+        <AssignDeviceDialog
+          device={assigning}
+          location={assignTo}
+          window={project}
+          onClose={() => setAssignTo(null)}
+          onAssigned={async () => {
+            await refresh();
+            setAssignTo(null);
+            await backToDevice(assigning);
+          }}
+        />
+      )}
     </>
   );
 }

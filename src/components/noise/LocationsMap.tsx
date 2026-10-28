@@ -58,9 +58,13 @@ export type Coordinates = {latitude: number; longitude: number};
 // Two mics twenty metres apart would otherwise make fitBounds zoom to the max.
 const MAX_FIT_ZOOM = 18;
 const SINGLE_LOCATION_ZOOM = 17;
-// A project with no locations yet still gets a map to click on, framed on the
-// festival site — the only sensible guess, since NoiseProject has no coordinates.
+// A project with no locations yet still gets a map to click on, framed on wherever the
+// browser says this is — the person placing the first mic is usually standing on the site
+// it goes on. NoiseProject has no coordinates of its own, so where that is refused or
+// unavailable it falls back to the festival site, which is also what the map opens on
+// while the browser is still being asked.
 const EMPTY_ZOOM = 16;
+const EMPTY_FALLBACK = {lat: 48.078290689891105, lng: 11.376027546239692};
 // ~0.1 m. Full click precision is a dozen meaningless digits in a form field.
 const COORD_DECIMALS = 6;
 // Above the pins, which take Google's default: a pin over its limit is drawn over its
@@ -166,6 +170,10 @@ type MapCanvasProps = {
   // ProjectViewCtx's `placing`): arming it changes more than the map.
   placing?: boolean;
   onPlacingChange?: (placing: boolean) => void;
+  // What the pin following the pointer says while armed, in place of PLACING_LABEL — the
+  // monitor's name when the map was opened to put one somewhere, that being what the next
+  // click will set down.
+  placingLabel?: string;
   // Where the map was clicked while armed. Absent for a map that may not be added
   // to, which also hides the plus button.
   onCreateAt?: (coordinates: Coordinates) => void;
@@ -275,6 +283,7 @@ function MapCanvas({
   history,
   placing = false,
   onPlacingChange,
+  placingLabel = PLACING_LABEL,
   onCreateAt,
   onSelect,
 }: MapCanvasProps) {
@@ -357,7 +366,7 @@ function MapCanvas({
       // POI labels are styled off; this stops their invisible hitboxes from
       // swallowing clicks meant for the map.
       clickableIcons: false,
-      center: {lat: KULT_LOCATION.latitude, lng: KULT_LOCATION.longitude},
+      center: EMPTY_FALLBACK,
       zoom: EMPTY_ZOOM,
     });
     const projection = new maps.OverlayView();
@@ -406,7 +415,7 @@ function MapCanvas({
       // Anchored at a point left of the pill, so the pill hangs right of the pointer. The
       // label's origin is in the same coordinates and moves with it.
       icon: {...pinIcon(maps), anchor: new maps.Point(-PLACING_OFFSET_X, 0)},
-      label: pinLabel(PLACING_LABEL, {named: true}),
+      label: pinLabel(placingLabel, {named: true}),
       clickable: false,
       zIndex: PLACING_Z_INDEX,
     });
@@ -422,7 +431,7 @@ function MapCanvas({
       for (const listener of listeners) listener.remove();
       pin.setMap(null);
     };
-  }, [placing]);
+  }, [placing, placingLabel]);
 
   // Click to place — and only while armed, so the listener is simply not registered
   // the rest of the time.
@@ -508,8 +517,25 @@ function MapCanvas({
       return marker;
     });
 
-    // Nothing to frame yet: leave the festival-site view the map opened with.
-    if (locations.length === 0) return;
+    // Nothing to frame yet: ask where this is, and stay on the festival site the map
+    // opened with if the answer is no. Abandoned if a location arrives first — framing
+    // the pins wins over a position that turned up late.
+    if (locations.length === 0) {
+      if (!navigator.geolocation) return;
+      let cancelled = false;
+      navigator.geolocation.getCurrentPosition(
+        ({coords}) => {
+          if (cancelled) return;
+          map.setCenter({lat: coords.latitude, lng: coords.longitude});
+          map.setZoom(EMPTY_ZOOM);
+        },
+        () => {},
+        {maximumAge: 5 * 60_000, timeout: 10_000},
+      );
+      return () => {
+        cancelled = true;
+      };
+    }
 
     if (locations.length === 1) {
       const only = locations[0]!;

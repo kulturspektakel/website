@@ -318,25 +318,52 @@ export const noiseProjectLogs = createServerFn()
   .validator(z.object({projectId: z.string().min(1)}))
   .handler(async ({data}) => projectLogs(data.projectId));
 
+// The monitors free to place in one project: those with no placement overlapping its
+// dates, in this project or any other. A monitor hangs in one place at a time, so a
+// placement anywhere during the event takes it out of the running for the whole event.
+//
+// Both bounds of a placement resolved the way the schema means them — a blank start is its
+// event's start and a blank end its event's end. Testing for an open row instead (`end` is
+// null) read every monitor ever placed "for the whole time" as standing there forever, so
+// one festival left the whole fleet unplaceable in every project after it.
 export const assignableNoiseDevices = createServerFn()
   .middleware([crewAuth])
-  .handler(async () => {
+  .validator(z.object({projectId: z.string().min(1)}))
+  .handler(async ({data: {projectId}}) => {
+    const target = await db.query.noiseProject.findFirst({
+      where: eq(noiseProject.id, projectId),
+      columns: {start: true, end: true},
+    });
+    if (!target) throw notFound();
     const devices = await db
       .select({id: device.id, lastSeen: device.lastSeen})
       .from(device)
       .where(
         and(
           eq(device.type, 'NOISE_MONITOR'),
-          // A monitor hangs in one place at a time, so "available" means it has
-          // no open assignment anywhere — including in another project.
           notExists(
             db
               .select({one: sql`1`})
               .from(noiseLocationAssignment)
+              .innerJoin(
+                noiseLocation,
+                eq(noiseLocation.id, noiseLocationAssignment.locationId),
+              )
+              .innerJoin(
+                noiseProject,
+                eq(noiseProject.id, noiseLocation.projectId),
+              )
               .where(
                 and(
                   eq(noiseLocationAssignment.deviceId, device.id),
-                  isNull(noiseLocationAssignment.end),
+                  lt(
+                    sql`coalesce(${noiseLocationAssignment.start}, ${noiseProject.start})`,
+                    target.end,
+                  ),
+                  gt(
+                    sql`coalesce(${noiseLocationAssignment.end}, ${noiseProject.end})`,
+                    target.start,
+                  ),
                 ),
               ),
           ),

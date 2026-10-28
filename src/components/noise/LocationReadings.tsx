@@ -1,11 +1,12 @@
 import {Box, HStack, Text} from '@chakra-ui/react';
-import {type ComponentProps} from 'react';
+import {type ComponentProps, useMemo} from 'react';
 // The one icon in this section that isn't lucide's, for two reasons: lucide is a stroke-only
 // set, and at the size this sits — 12px, inside a badge — an outlined triangle is a few
 // hairlines that read as a smudge. Heroicons' *mini* set is drawn for exactly this size, on a
 // 20px grid with the corners rounded and the "!" knocked out by fill-rule rather than by
 // winding — so it stays a warning sign rather than becoming a solid lozenge.
 import {HiMiniExclamationTriangle} from 'react-icons/hi2';
+import {LuChevronDown, LuChevronUp} from 'react-icons/lu';
 import {Tooltip} from '../chakra-snippets/tooltip';
 import {useDeviceStates, useTick} from './context';
 import {
@@ -25,6 +26,16 @@ import {coverageDetail} from './leq';
 import {IGNORED_OPACITY} from './rangeTags';
 import {exceedsLimit, limitAt, type LimitLine} from './limitLines';
 import {type PlayheadLevels} from './projectLogs';
+import {
+  LIMIT_STATE_NAME,
+  currentKey,
+  limitBeatAnimation,
+  forecasts,
+  glowShadow,
+  limitGlow,
+  limitStateOf,
+  type LimitLightState,
+} from './limitState';
 import {type RangeReading} from './ranges';
 import {type NoiseAssignment} from './projectView';
 
@@ -87,6 +98,10 @@ type PrintedLevel = {
   // is over it — absent for the crop's mean, which no limit is written against.
   limitDb?: number | null;
   over?: boolean;
+  // Where the reading stands against that limit, as the badge's glow and chevron say it
+  // (see ReadingTile) — absent where no limit is in force, null where there is one but
+  // nothing current to judge.
+  limitState?: LimitLightState | null;
 };
 
 // The badge's corner, and the corner of the box inside it. Concentric, which means the
@@ -100,12 +115,30 @@ const BADGE_FRAME = 'max(1px, 0.0625em)';
 const INNER_RADIUS = `calc(${BADGE_RADIUS} - ${BADGE_FRAME})`;
 
 // The type a row of badges is set in, which every size inside a badge is relative to: the
-// card header's at 1rem, and the device page's, where the badges are the page's headline
-// numbers, growing with the viewport to twice that.
+// card header's at 1.125rem — a step over the body text, so the readings are what a glance
+// along the cards lands on — and the device page's, where the badges are the page's
+// headline numbers, growing with the viewport to twice the body text.
 const TILE_SIZES = {
-  sm: '1rem',
+  sm: '1.125rem',
   lg: 'clamp(1rem, 0.5rem + 2vw, 2rem)',
 } as const;
+
+// A row that fills the box it is in rather than being set at a size (`size="fit"`): the
+// device page's, whose height the person reading it drags (see LiveView). Sized off the box
+// with container query units — so the box has to be a size container — as large as both of
+// its sides allow: tall enough to fill the height, and no wider in total than the width,
+// since a row that wrapped would be twice the height it was sized for. Never under the body
+// text's 1rem.
+//
+// The two divisors are what one badge measures in its own type: about 2.6em tall (the
+// number's line, the name's and the frame — see ReadingTile) with a hair to spare, and about
+// 5.75em wide with its share of the gaps and room for a sign
+// beside the number. Estimates, and erring large: what they get wrong is some empty space,
+// not a badge cut off.
+const FIT_HEIGHT_EM = 2.7;
+const FIT_WIDTH_EM = 5.75;
+const fitFontSize = (count: number): string =>
+  `max(1rem, min(calc(100cqh / ${FIT_HEIGHT_EM}), calc(100cqw / ${Math.max(1, count) * FIT_WIDTH_EM})))`;
 
 // The most badges a row may put on one line, per breakpoint — the cap that makes five of
 // them fall onto a second row on a narrow card (see the grid below for why a cap rather
@@ -209,10 +242,40 @@ export function LocationReadings({
         ),
       );
       const limitDb = at == null ? null : limitAt(limits, series, at);
+      // The level this series is heading towards, for one that can be said to be heading
+      // anywhere (see forecasts): the loudest of the same monitors in the shortest Leq of
+      // its weighting — the second just gone live, the stored minute otherwise. Null where
+      // that series hasn't been read, which leaves the badge only red or plain.
+      const heading = forecasts(series)
+        ? loudestLevel(
+            counted.map((a) =>
+              displayedLevel({
+                live,
+                now,
+                series: currentKey(series),
+                state: deviceState(a.deviceId),
+                historyDb: levels?.[currentKey(series)]?.[a.deviceId],
+              }),
+            ),
+          )
+        : null;
       return {
         key: series,
         level,
         limitDb,
+        // Judged against the strictest limit in force, which is the one the badge's worst
+        // state comes from; and only on a reading of the instant being viewed that is being
+        // counted — the same two conditions `over` has.
+        limitState:
+          limitDb == null
+            ? undefined
+            : !allIgnored && isCurrent(level)
+              ? limitStateOf(
+                  level.db,
+                  heading && isCurrent(heading) ? heading.db : null,
+                  limitDb,
+                )
+              : null,
         // Only a reading of the instant being viewed, and one that is being counted — the
         // same two conditions the map's pin warns under.
         over:
@@ -250,9 +313,13 @@ export function LocationReadings({
       // By the device page's rule, how much of the range was measured — said only where
       // minutes are missing.
       caveat: coverageDetail(leq),
-      // Judged only where the stretch is a `Leq,T` limit's own hours (see rangeLeqs).
+      // Judged only where the stretch is a `Leq,T` limit's own hours (see rangeLeqs). A
+      // mean over hours that are already the limit's has nowhere to be heading, so red or
+      // nothing — the same glow the windows have, rather than a badge turned red.
       limitDb: leq.limit,
       over: exceedsLimit(leq.db, leq.limit),
+      limitState:
+        leq.limit == null ? undefined : limitStateOf(leq.db, null, leq.limit),
     })),
   ];
 
@@ -305,15 +372,17 @@ export function ReadingTiles({
   spread = false,
 }: {
   tiles: readonly ({key: string} & ComponentProps<typeof ReadingTile>)[];
-  size?: keyof typeof TILE_SIZES;
+  size?: keyof typeof TILE_SIZES | 'fit';
   spread?: boolean;
 }) {
+  const fit = size === 'fit';
   return (
     <Box
       {...(spread
         ? {
             display: 'flex',
-            flexWrap: 'wrap',
+            // Sized so it never has to wrap when it fills its box (see fitFontSize).
+            flexWrap: fit ? 'nowrap' : 'wrap',
             justifyContent: 'space-evenly',
           }
         : {
@@ -321,7 +390,7 @@ export function ReadingTiles({
             gridTemplateColumns: GRID_COLUMNS[tiles.length],
           })}
       gap="0.375em"
-      fontSize={TILE_SIZES[size]}
+      fontSize={fit ? fitFontSize(tiles.length) : TILE_SIZES[size]}
       flexShrink="0"
     >
       {tiles.map(({key, ...tile}) => (
@@ -360,6 +429,7 @@ function ReadingTile({
   ignored = false,
   limitDb,
   over = false,
+  limitState,
 }: {
   // The level, or null where this window has nothing at the instant being viewed — an empty
   // badge, keeping its place and its name.
@@ -374,17 +444,37 @@ function ReadingTile({
   // Tagged to be ignored: the badge fades, the way its line does on the chart, and the
   // number is struck through.
   ignored?: boolean;
-  // The limit in force for this reading, which the hover states; and whether the number is
-  // over it, which turns the whole badge red — the same red the chart washes a breach in.
+  // The limit in force for this reading, which an over-limit badge prints; and whether the
+  // number is over it, which turns the whole badge red — the same red the chart washes a
+  // breach in.
   limitDb?: number | null;
   over?: boolean;
+  // Where this reading's place stands against its limit — over, recovering, heading over or
+  // clear (see judgeLimit) — said as a glow into the number's well from its edges, red when
+  // over and amber when heading over, and an arrow beside the number for the way it is
+  // heading when that is not where it already is; nothing at all when clear (see
+  // limitGlow). Null for a limit with nothing current to judge, which is no
+  // glow either. Absent for a reading nobody asked this of: only the device page does, where the
+  // badges are the instrument's headline. Where it is given it is the whole of what the
+  // badge says about the limit — `over` no longer turns it red, so the two never disagree.
+  limitState?: LimitLightState | null;
 }) {
-  // What hovering the badge says: the coverage behind the crop's mean, or the limit this
-  // reading is held to — which is worth stating whether or not it is crossed, since the
-  // chart draws its rule without a figure (see drawLimits).
+  // What hovering the badge says: the coverage behind the crop's mean, or where the reading
+  // stands against its limit, in words. Not the limit's figure: an over-limit badge prints
+  // that itself (see OverLimitLabel), and what the hover is for is the half the glow can
+  // only hint at — whether it is on its way back, or on its way over. Where nobody asked for
+  // the state, only whether it is over. Nothing for a reading below its limit and staying
+  // there, which is the badge with nothing to say about its limit; nor where there is
+  // nothing current to judge.
+  const state =
+    limitState === undefined
+      ? limitDb != null && over
+        ? 'over'
+        : null
+      : limitState;
   const tooltip = [
     caveat,
-    limitDb == null ? null : `Limit ${formatDb(limitDb, 'dB')}`,
+    state && state !== 'ok' ? LIMIT_STATE_NAME[state] : null,
   ]
     .filter(Boolean)
     .join(' · ');
@@ -394,7 +484,18 @@ function ReadingTile({
   // Over its limit the whole badge turns red — frame, name row and number — so a card over
   // its permit is found by glancing along the cards rather than by reading each figure. The
   // name still says which reading it is.
-  const shade = over ? 'chart.limit' : color;
+  const shade = over && limitState === undefined ? 'chart.limit' : color;
+  const glow = limitState ? limitGlow(limitState) : null;
+  // On the limit's beat, and in phase with every other badge's (see limitBeatAnimation) —
+  // each started afresh only when what it is changes.
+  const pulse = useLimitBeat(glow?.pulse ? 'limitPulse' : null);
+  const drift = useLimitBeat(
+    glow?.direction === 'up'
+      ? 'limitDriftUp'
+      : glow?.direction === 'down'
+        ? 'limitDriftDown'
+        : null,
+  );
   const badge = (
     <Box
       display="flex"
@@ -417,6 +518,11 @@ function ReadingTile({
       // tallest thing in it, and a row of these was making the card taller than the name and
       // the monitors beside them need — the chart underneath is what wants that height.
       mb="-0.25em"
+      // An instrument's readout, not copy: dragging across a row of them selected a run of
+      // digits and names, and the text cursor over one promised a field. The plain arrow,
+      // unless the badge has a hover to give (below).
+      userSelect="none"
+      cursor="default"
       {...(tooltip && {
         // A hover target the size of the badge, rather than a sign inside it to hit: the
         // caveat is about this reading, so the reading is what carries it. Focusable for the
@@ -431,11 +537,59 @@ function ReadingTile({
     >
       {/* Air above and below the number — the badge is read as a number first, and the ground
           it sits on is what gives it room to be one. */}
-      <Box bg="bg" px="0.375em" py="0.125em" roundedTop={INNER_RADIUS}>
+      <Box
+        bg="bg"
+        px="0.375em"
+        py="0.125em"
+        roundedTop={INNER_RADIUS}
+        position="relative"
+      >
+        {/* The limit's state, glowing in from the well's edges round the number — light from
+            outside the display falling into it. A layer of its own, under the number, so the
+            light never sits over the digits and a pulse breathes the light and never them. */}
+        {glow && (
+          <Box
+            position="absolute"
+            inset="0"
+            rounded="inherit"
+            pointerEvents="none"
+            boxShadow={glowShadow(glow.color)}
+            transition="box-shadow 0.3s"
+            // Breathing while the reading is heading the other way, in step with the
+            // chevron's travel — and steady for anyone who asked for less motion.
+            animation={pulse}
+            _motionReduce={{animation: 'none'}}
+          />
+        )}
         {/* The sign goes to the far left, where it is out of the numbers' way: they line up
             on the right edge of the badge and down the page, and a sign between them and
-            that edge would push the one card that has it out of the column. */}
-        <HStack gap="0.375em" justify="space-between" minW="0">
+            that edge would push the one card that has it out of the column. The limit's
+            arrow takes the same place, for the same reason, and in the glow's colour — the
+            two are one statement about one limit. */}
+        <HStack
+          gap="0.375em"
+          justify="space-between"
+          minW="0"
+          position="relative"
+        >
+          {glow?.direction && (
+            // Travelling the way it points (see limitDriftUp/Down in the crew theme), so
+            // the direction is read from the motion as well as the shape. Still for anyone
+            // who asked for less motion: the chevron alone says it.
+            <Box
+              color={glow.color}
+              fontSize="0.875em"
+              lineHeight="1"
+              flexShrink="0"
+              position="relative"
+              top="1px"
+              aria-hidden
+              animation={drift}
+              _motionReduce={{animation: 'none'}}
+            >
+              {glow.direction === 'up' ? <LuChevronUp /> : <LuChevronDown />}
+            </Box>
+          )}
           {sign && (
             // It stays visible: this is what says at a glance, without hovering anything,
             // that the reading is over its limit, or that the average has minutes missing
@@ -472,6 +626,14 @@ function ReadingTile({
             lineHeight="1.2"
             color={shade}
             opacity={db == null ? 0.5 : undefined}
+            // A halo of the well's own ground round the digits while it is lit, so the glow
+            // falling in from the edges stops short of them rather than washing over their
+            // strokes. Invisible anywhere else — it is the colour already behind them.
+            textShadow={
+              glow
+                ? '0 0 0.1em var(--chakra-colors-bg), 0 0 0.4em var(--chakra-colors-bg)'
+                : undefined
+            }
             textDecoration={ignored ? 'line-through' : undefined}
             ms="auto"
           >
@@ -485,21 +647,21 @@ function ReadingTile({
           a figure under LAeq,5m is dB by definition, and printing it would be the third way
           this badge says the same thing. */}
       <Text
-        // Below the smallest step the scale names (`2xs`, 10px): the name is read once to
+        // The smallest step the scale names (`2xs`, 10px on a card): the name is read once to
         // learn what the badge is and then only glanced at, and the number is what the tile
-        // is for — so this is as small as it can be and still be a word.
-        fontSize="0.5625em"
+        // is for — so this is small, but not so small that `LIMIT 60` is squinted at.
+        fontSize="0.625em"
         fontWeight="bold"
         lineHeight="1.4"
         color="bg"
         // The number's side padding, restated against this row's own smaller type.
-        px="0.667em"
+        px="0.6em"
         // No padding under it: the badge's own frame sits below this row in the same
         // colour, so anything here reads as that much more space than it is — and the row is
         // meant to be the colour running to the bottom edge, not a label floating above it.
         whiteSpace="nowrap"
       >
-        {label}
+        {over ? <OverLimitLabel label={label} limitDb={limitDb} /> : label}
       </Text>
     </Box>
   );
@@ -509,5 +671,70 @@ function ReadingTile({
     <Tooltip content={tooltip} showArrow>
       {badge}
     </Tooltip>
+  );
+}
+
+// An `animation` on the limit's beat for the named keyframes, or none for null — phased off
+// the wall clock when the keyframes it is given change and held there while they don't, so a
+// re-render (and this one re-renders every second) never knocks it out of step.
+function useLimitBeat(
+  keyframes: string | null,
+  timing?: string,
+): string | undefined {
+  return useMemo(
+    () => (keyframes ? limitBeatAnimation(keyframes, timing) : undefined),
+    [keyframes, timing],
+  );
+}
+
+// The name row of a badge over its limit, saying `LIMIT 60` for half of every beat — so a
+// breach is spelled out on the badge, figure and all, and not only coloured, for anyone not
+// reading red as red or not hovering for the tooltip.
+//
+// On the limit's beat, with the glow and the chevron (see LIMIT_BEAT_MS): the limit is
+// what it says while they are at their height. In CSS rather than off a JS clock for the
+// same reason — an interval fires whenever it was started, not on the beat, and a swap that
+// lagged the glow by a few hundred milliseconds would be the one thing out of step.
+//
+// Both are laid in the same cell and the hidden one keeps its room, so the badge is always
+// as wide as the longer of the two and never twitches as they trade places.
+//
+// Steady on the name for anyone who asked for less motion: a line that flashes on and off
+// for as long as a reading stays over is the kind of motion that asks to be stopped, and the
+// limit is still in the tooltip.
+function OverLimitLabel({
+  label,
+  limitDb,
+}: {
+  label: string;
+  limitDb?: number | null;
+}) {
+  const name = useLimitBeat('limitLabelName', 'step-end');
+  const limit = useLimitBeat('limitLabelLimit', 'step-end');
+  return (
+    <Box as="span" display="inline-grid" justifyItems="end">
+      <Box
+        as="span"
+        gridArea="1 / 1"
+        animation={name}
+        _motionReduce={{animation: 'none'}}
+      >
+        {label}
+      </Box>
+      <Box
+        as="span"
+        gridArea="1 / 1"
+        opacity="0"
+        animation={limit}
+        _motionReduce={{animation: 'none'}}
+        aria-hidden
+      >
+        {/* Whole limits as whole numbers — a permit says 60, not 60.0 — and anything finer
+            to the reading's one decimal. */}
+        {limitDb == null
+          ? 'LIMIT'
+          : `LIMIT ${Number.isInteger(limitDb) ? limitDb : formatDb(limitDb)}`}
+      </Box>
+    </Box>
   );
 }

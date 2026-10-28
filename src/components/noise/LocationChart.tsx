@@ -142,9 +142,12 @@ export const LocationChart = memo(function LocationChart({
     // part of one that can use the room.
     <Box flex="1" minH="0">
       <LevelTrace
-        // No tooltip: the card's header already prints the playhead's readings, including
-        // the `Leq,T` of the range it is in (see LocationReadings).
-        tooltip={false}
+        // A tooltip only while live. Scrubbing history, the card's header prints the
+        // playhead's readings, including the `Leq,T` of the range it is in (see
+        // LocationReadings), and a second readout beside the pointer would say it twice.
+        // Live, the header stays on now whatever the pointer is over — so what the trace
+        // read at the pointer is the tooltip's to say.
+        tooltip={live}
         // Grouped by the card above, which names the same monitors in the same order —
         // the chart's lines and the header's names are one list, not two derivations of
         // it. The whole assignment history, not the monitors resolved at the playhead:

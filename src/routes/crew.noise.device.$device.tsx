@@ -1,9 +1,9 @@
 import {createFileRoute} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
 import {crewAuth} from '../server/crewAuth';
-import {eq} from 'drizzle-orm';
+import {and, asc, eq, gt, lte} from 'drizzle-orm';
 import {db} from '../server/db.server';
-import {device as deviceTable} from '../server/db/schema';
+import {device as deviceTable, noiseProject} from '../server/db/schema';
 import {useMemo} from 'react';
 import {Box, HStack, VisuallyHidden} from '@chakra-ui/react';
 import {DeviceMenu} from '../components/noise/DeviceMenu';
@@ -18,9 +18,11 @@ import {ReferenceMicPanel} from '../components/noise/ReferenceMicPanel';
 import {useReferenceMic} from '../components/noise/useReferenceMic';
 import {deviceAssignment, deviceLimits} from '../server/noiseHistory.server';
 import {seo} from '../utils/seo';
+import {orderLocations} from '../components/noise/projectView';
 
 // Where the monitor is placed, what that place is permitted, and when it was last heard
-// from — the only three things this page needs the database for, everything else it shows
+// from — the only three things this page needs the database for (and, while it is placed
+// nowhere, which events it could be), everything else it shows
 // is arriving over MQTT. See deviceAssignment for why a placement is a row rather than a
 // field.
 //
@@ -47,7 +49,31 @@ const loadDevice = createServerFn()
         columns: {lastSeen: true},
       }),
     ]);
-    return {assignment, limits, lastSeen: row?.lastSeen?.getTime() ?? null};
+    // The events running right now, and the places at each, which a monitor standing
+    // nowhere can be put to work at from its menu (see DeviceMenu). Only asked for when it
+    // is standing nowhere: a placed monitor has nothing to be assigned to, and the menu
+    // offers it nothing.
+    const now = new Date();
+    const activeProjects = assignment
+      ? []
+      : (
+          await db.query.noiseProject.findMany({
+            where: and(lte(noiseProject.start, now), gt(noiseProject.end, now)),
+            columns: {id: true, name: true},
+            with: {noiseLocations: {columns: {id: true, locationName: true}}},
+            orderBy: [asc(noiseProject.start), asc(noiseProject.name)],
+          })
+        ).map(({noiseLocations, ...project}) => ({
+          ...project,
+          // In the one order locations are listed in (see orderLocations).
+          locations: orderLocations(noiseLocations),
+        }));
+    return {
+      assignment,
+      limits,
+      activeProjects,
+      lastSeen: row?.lastSeen?.getTime() ?? null,
+    };
   });
 
 // `device/` is a static segment, and has to be: a project id and a device name are
@@ -75,7 +101,7 @@ export const Route = createFileRoute('/crew/noise/device/$device')({
 // state either way.
 function DevicePage() {
   const {device} = Route.useParams();
-  const {assignment, limits, lastSeen} = Route.useLoaderData();
+  const {assignment, limits, activeProjects, lastSeen} = Route.useLoaderData();
   // Which series the chart draws — the same pick the project page sets, from the one place
   // that owns it. No primary taken off the set: nothing on this page reads a single series
   // (see DeviceViewCtx).
@@ -125,7 +151,11 @@ function DevicePage() {
               minute. No live switch beside it: this page has no other mode. The badges
               above the chart follow it, one per series picked. */}
           <LevelPicker live picked={picked} onToggleSeries={toggleSeries} />
-          <DeviceMenu device={device} />
+          <DeviceMenu
+            device={device}
+            assignment={assignment}
+            activeProjects={activeProjects}
+          />
         </NoiseToolbar>
         {/* Its own gutter, unlike the project page's edge-to-edge map: what is below is
             charts, and a chart hard against the window edge reads as a cropped one. */}

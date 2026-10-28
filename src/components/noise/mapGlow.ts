@@ -109,19 +109,58 @@ const falloff = (t: number): number => {
   return (GLOW_ALPHA * (Math.exp(-GLOW_SPREAD * t * t) - tail)) / (1 - tail);
 };
 
-// Two hex digits of alpha, which is what an 8-digit colour takes. Rounded rather than
-// floored so the centre stop lands on the intended value exactly.
-const alphaHex = (alpha: number): string =>
-  Math.round(alpha * 255)
-    .toString(16)
-    .padStart(2, '0');
-
-// The offsets are the same for every pin, so only the hex in front of them changes. Built
-// once as a list of `${offset}` / `${alpha}` pairs and joined per colour.
+// The offsets are the same for every pin, and so is each stop's share of the colour — only
+// the colour itself differs, and that is a custom property (see GLOW_COLOR). Built once as a
+// list of `${offset}` / `${share}` pairs.
 const GLOW_CURVE = Array.from({length: GLOW_STOPS + 1}, (_, i) => {
   const t = i / GLOW_STOPS;
-  return {stop: `${Math.round(t * 100)}%`, alpha: alphaHex(falloff(t))};
+  // Percent, rounded to a tenth: what color-mix takes, and finer than one step of alpha.
+  return {
+    stop: `${Math.round(t * 100)}%`,
+    share: `${Math.round(falloff(t) * 1000) / 10}%`,
+  };
 });
+
+/**
+ * How a change of level reaches the halo: over a second rather than at once. Levels arrive
+ * about once a second, so a halo that jumped would flicker between bands on a stage sitting
+ * at the edge of one; eased over the interval between records, it breathes instead.
+ *
+ * The colour is a custom property and not the gradient's own hex, because a gradient is an
+ * image and a browser will not interpolate between two of them — it swaps. A property
+ * registered as a `<color>` does interpolate, and every stop is mixed from it, so the one
+ * transition carries the whole gradient. Registered once per page: a second registration
+ * throws, which a hot reload of this module would otherwise do.
+ */
+const GLOW_COLOR = '--noise-glow-color';
+const GLOW_TRANSITION_S = 1;
+let glowColorRegistered = false;
+const registerGlowColor = () => {
+  if (glowColorRegistered) return;
+  glowColorRegistered = true;
+  try {
+    CSS.registerProperty({
+      name: GLOW_COLOR,
+      syntax: '<color>',
+      inherits: false,
+      initialValue: 'transparent',
+    });
+  } catch {
+    // Already registered — the module was reloaded, and the first one still stands.
+  }
+};
+
+// What eases, and what doesn't. The size eases only when the level moved it: a zoom moves it
+// too, and a halo trailing a second behind the map under it would read as lag, not as
+// motion. Nothing eases for anyone who asked for less motion.
+const glowTransition = (withSize: boolean): string => {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    return 'none';
+  }
+  return [GLOW_COLOR, 'opacity', ...(withSize ? ['transform'] : [])]
+    .map((property) => `${property} ${GLOW_TRANSITION_S}s ease`)
+    .join(', ');
+};
 
 /**
  * How the wash is composited onto whatever is under it — which has to be two answers,
@@ -153,10 +192,13 @@ export type GlowBlend = 'screen' | 'multiply';
 // what gets clipped is the curve at about 2% alpha: a hard round edge, drawn exactly where
 // the fade was supposed to have finished. Sized to the near side instead, the curve reaches
 // zero at the rim and there is nothing left at the boundary to cut.
-const glowGradient = (hex: string): string =>
-  `radial-gradient(circle closest-side, ${GLOW_CURVE.map(
-    ({stop, alpha}) => `${hex}${alpha} ${stop}`,
-  ).join(', ')})`;
+//
+// Every stop is the colour mixed with transparent by its share — in sRGB, which mixes alpha
+// premultiplied, so this is that colour at that alpha and not a greyer one.
+const GLOW_GRADIENT = `radial-gradient(circle closest-side, ${GLOW_CURVE.map(
+  ({stop, share}) =>
+    `color-mix(in srgb, var(${GLOW_COLOR}) ${share}, transparent) ${stop}`,
+).join(', ')})`;
 
 type GlowCtor = new (
   position: google.maps.LatLngLiteral,
@@ -170,7 +212,8 @@ export interface Glow extends google.maps.OverlayView {
   // has an interface: live levels arrive about once a second, and rebuilding a div, its
   // gradient and its pane insertion at that rate — for every pin on the map — to change a
   // colour and a scale factor would be a great deal of work to produce the same element
-  // again. Set on the one that is already standing there, both are property writes.
+  // again. Set on the one that is already standing there, both are property writes — and
+  // both ease into the new level over GLOW_TRANSITION_S.
   setLevel(db: number | null): void;
 }
 
@@ -200,10 +243,11 @@ export function glowOverlay(maps: typeof google.maps): GlowCtor {
     setLevel(db: number | null) {
       if (db === this.db) return;
       this.db = db;
-      this.apply();
+      this.apply(true);
     }
 
     onAdd() {
+      registerGlowColor();
       const div = document.createElement('div');
       Object.assign(div.style, {
         position: 'absolute',
@@ -228,6 +272,13 @@ export function glowOverlay(maps: typeof google.maps): GlowCtor {
         // — and it is the width of a small building on screen, so it would take a great many
         // of them.
         pointerEvents: 'none',
+        // The gradient is the same for every halo and never rewritten: what differs is the
+        // colour it is mixed from (see GLOW_COLOR). Hidden until there is a level, by
+        // opacity rather than display, so a halo appearing or going fades like any other
+        // change of level.
+        background: GLOW_GRADIENT,
+        opacity: '0',
+        transition: glowTransition(false),
       });
       this.div = div;
       // overlayLayer, and under the pins: this is the pin's colour spread out, so anything
@@ -239,21 +290,24 @@ export function glowOverlay(maps: typeof google.maps): GlowCtor {
     }
 
     // The colour and the size, written only where they have actually moved. Called on a new
-    // level and on every draw, since a draw is also how a zoom arrives.
-    private apply() {
+    // level and on every draw, since a draw is also how a zoom arrives — `fromLevel` says
+    // which, because only a level's change of size eases (see glowTransition).
+    private apply(fromLevel = false) {
       const div = this.div;
       if (!div) return;
       if (this.db == null) {
-        div.style.display = 'none';
+        // Faded out where it stands, its colour and size left as they were — so it goes the
+        // way it came rather than shrinking to nothing first.
+        div.style.opacity = '0';
         return;
       }
-      div.style.display = '';
+      div.style.opacity = '1';
 
       // The very colour the pin is filled with, off the same lookup — the halo is that pin's
       // answer spread out, so a second rule for its hue would be a second answer.
       const color = bandFill(this.db);
       if (color !== this.appliedColor) {
-        div.style.background = glowGradient(color);
+        div.style.setProperty(GLOW_COLOR, color);
         this.appliedColor = color;
       }
 
@@ -264,6 +318,13 @@ export function glowOverlay(maps: typeof google.maps): GlowCtor {
       // write a transform that renders identically.
       const scale = Math.round((radius / GLOW_MAX_RADIUS) * 100) / 100;
       if (scale !== this.appliedScale) {
+        // Only touched when the size moves, and set before it does: changing which
+        // properties transition cancels a transition already running on one dropped from
+        // the list, so rewriting it on every pan frame would cut a level's easing short.
+        // The first size is put down where it belongs rather than grown into.
+        div.style.transition = glowTransition(
+          fromLevel && this.appliedScale != null,
+        );
         div.style.transform = `scale(${scale})`;
         this.appliedScale = scale;
       }

@@ -31,7 +31,9 @@ const MAP_RAMP = {
   natural: '#17171a',
   town: '#202024',
   poi: '#26262b',
-  park: '#1e2620',
+  // A step off the town rather than a hue, like everything else here: a park is told
+  // apart from the blocks around it by being a little darker, not by being green.
+  park: '#1c1c20',
   road: '#2e2e33',
   roadLocal: '#33333a',
   roadArterial: '#41414a',
@@ -45,6 +47,11 @@ const MAP_RAMP = {
 // Built at map-init rather than kept as a module constant, so the dependency on
 // the theme is visible where the map is created. Called twice a session.
 export const darkMapStyle = (): google.maps.MapTypeStyle[] => [
+  // Greyscale, all of it. First, so the rules below only ever set lightness: any feature
+  // Google colours that this list doesn't name — woods, sports pitches, a hospital's
+  // grounds — comes out grey instead of being the one patch of colour on the map, where
+  // the only colour should be the pins'.
+  {stylers: [{saturation: -100}]},
   // Ground plane and label defaults; the stroke is a halo in the ground color so
   // text stays legible wherever it lands.
   {elementType: 'geometry', stylers: [{color: themeHex('map.ground')}]},
@@ -86,7 +93,7 @@ export const darkMapStyle = (): google.maps.MapTypeStyle[] => [
     stylers: [{color: MAP_RAMP.poi}],
   },
   {featureType: 'poi', elementType: 'labels', stylers: [{visibility: 'off'}]},
-  // A hint of green so parks and sports grounds don't read as more buildings.
+  // Its own step so parks and sports grounds don't read as more buildings.
   {
     featureType: 'poi.park',
     elementType: 'geometry',

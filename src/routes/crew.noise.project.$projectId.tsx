@@ -36,6 +36,7 @@ import {
   type ProjectViewCtx,
 } from '../components/noise/projectView';
 import {ProjectTimeline} from '../components/noise/ProjectTimeline';
+import {usePlayheadPinKey} from '../components/noise/playheadPin';
 import {locationTags} from '../components/noise/rangeTags';
 import {PlayheadDisplay} from '../components/noise/PlayheadDisplay';
 import {
@@ -584,6 +585,9 @@ function NoiseProjectDetail() {
   // playhead" before the effect below has run.
   const [playheadSignal] = useState(() => createPlayheadSignal(viewedAt));
   useEffect(() => playheadSignal.set(viewedAt), [playheadSignal, viewedAt]);
+  // Space pins the playhead where it stands, or lets it go — wherever the timeline is up to
+  // move it (see belowOpen below).
+  usePlayheadPinKey(!live && !placing);
 
   return (
     <ProjectViewContext.Provider value={view}>

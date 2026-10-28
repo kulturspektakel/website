@@ -1,6 +1,7 @@
 import {type CSSProperties, useState} from 'react';
 import {Box, Button, FloatingPanel, HStack, IconButton, Portal, Spinner, Stack, Text} from '@chakra-ui/react'; // prettier-ignore
 import {FaPlay, FaStop} from 'react-icons/fa6';
+import {LuBluetooth} from 'react-icons/lu';
 import {Alert} from '../chakra-snippets/alert';
 import {CloseButton} from '../chakra-snippets/close-button';
 import {Field} from '../chakra-snippets/field';
@@ -25,8 +26,10 @@ import {
 import {CAL_MAX_DB} from './bluetooth';
 import {CalibrationResultChart} from './CalibrationResultChart';
 import {InputLevelMeter} from './InputLevelMeter';
-import {useBluetooth} from './context';
+import {useBluetooth, useDeviceState, useTick} from './context';
+import {useConnectDevice} from './useConnectDevice';
 import {useDeviceView} from './deviceView';
+import {isFresh} from './noise';
 import {outputChannelOptions} from './referenceMic';
 import {errorToast} from '../toast';
 
@@ -100,11 +103,10 @@ export function ReferenceMicPanel({device}: {device: string}) {
   // Bound once: it gates the block below, feeds the chart, and is what the button applies.
   const result = calibration.result;
 
-  // Whether the monitor this page is about is the one on the other end of the Bluetooth
-  // connection — not merely whether *something* is connected. The write path only checks that
-  // a connection exists (see useBleDevice), so a looser test here would quietly trim whichever
-  // monitor happened to be paired, using a measurement of a different one.
-  const btConnected = bluetooth.deviceName === device;
+  // This monitor over Bluetooth — from the row at the top, ahead of a run, or from Apply when
+  // nobody did that first (see useConnectDevice).
+  const {connected: btConnected, connect: connectThis} =
+    useConnectDevice(device);
 
   // Send the run's finding to the monitor as trims.
   //
@@ -114,6 +116,7 @@ export function ReferenceMicPanel({device}: {device: string}) {
   // always something there to correct: a blind write of the difference would be right only on
   // a monitor that had never been calibrated before.
   const applyToDevice = async (result: CalibrationResult) => {
+    if (!(await connectThis())) return;
     setApplying(true);
     try {
       const current = await bluetooth.readCalibration();
@@ -145,11 +148,25 @@ export function ReferenceMicPanel({device}: {device: string}) {
     }
   };
 
+  // Which half is missing when a run cannot start, under whichever button starts one. A
+  // disabled button with no reason beside it is the same information as no button, and the
+  // two halves fail for quite different reasons — one is a choice above, the other is a
+  // monitor that is not transmitting.
+  const readyHint = calibration.ready ? null : (
+    <Text fontSize="xs" color="fg.subtle">
+      {selected == null
+        ? 'Pick an input to measure against.'
+        : 'Waiting for both the monitor and the microphone.'}
+    </Text>
+  );
+
   return (
     <FloatingPanel.Root
       open={panelOpen}
+      // Not while a run is going: Cancel is the one way out of a run, so the thirty seconds
+      // are not thrown away by a stray Escape or ✕ (which is also disabled, below).
       onOpenChange={(e) => {
-        if (!e.open) close();
+        if (!e.open && !running) close();
       }}
       // Width only, really: wide enough that the chart's 31 bands still get a label under
       // every other one (see bandAxis), and the panel's to remember and resize from there.
@@ -182,12 +199,37 @@ export function ReferenceMicPanel({device}: {device: string}) {
               </FloatingPanel.DragTrigger>
               <FloatingPanel.Control>
                 <FloatingPanel.CloseTrigger asChild>
-                  <CloseButton size="xs" />
+                  <CloseButton size="xs" disabled={running} />
                 </FloatingPanel.CloseTrigger>
               </FloatingPanel.Control>
             </FloatingPanel.Header>
             <FloatingPanel.Body overflowY="auto">
               <Stack gap="4">
+                {/* The monitor being calibrated, and whether it is on the other end of the
+                    Bluetooth connection the finding is written over. Connectable from here so
+                    that it can be done ahead of a run rather than discovered missing at the end
+                    of one — Apply connects too, but by then the reader has been waiting thirty
+                    seconds to press it. Out of reach during a run, like everything else here.
+                    Only connecting: disconnecting is the toolbar menu's, and nothing in a
+                    calibration wants it. */}
+                <Field label="Device">
+                  <HStack gap="2" w="full" justify="space-between">
+                    <DeviceConnection device={device} />
+                    {!btConnected && bluetooth.supported && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        flexShrink="0"
+                        loading={bluetooth.connecting}
+                        disabled={running || applying}
+                        onClick={() => void connectThis()}
+                      >
+                        <LuBluetooth />
+                        Connect
+                      </Button>
+                    )}
+                  </HStack>
+                </Field>
                 {/* Everything about the microphone end, under one label: which input, the file
                     that says what its levels are worth, and whether the two of them add up to a
                     reading. One section rather than four, because none of it is a separate
@@ -233,11 +275,12 @@ export function ReferenceMicPanel({device}: {device: string}) {
                         exists: the microphone does not disclose it, in the browser or over USB,
                         so which file goes with which input is learned here once and remembered.
 
-                        Absent until there is an input, rather than present and refusing: which
-                        file applies is recorded against the input it applies to, so with none
-                        picked there is nowhere to put the answer — and a control that can only
-                        refuse says nothing the empty select above has not already said. */}
-                    {selected != null && serials.length > 0 && (
+                        Absent until there is a microphone we recognise by name (see
+                        REFERENCE_MICS), rather than present and refusing: a file is one
+                        capsule's response, and an input we cannot identify has no way of
+                        saying which file is its own — the warning below says what that costs
+                        it. That also covers no input at all. */}
+                    {mic != null && serials.length > 0 && (
                       /* Shown whenever there is anything to pick from, including while one is
                          already in use: nothing else can change which file applies, and an
                          automatic pairing that chose wrong would otherwise be unreachable. */
@@ -265,7 +308,7 @@ export function ReferenceMicPanel({device}: {device: string}) {
                         part hand-rolling had simply not got — makes the target clickable and
                         reachable from the keyboard, so a calibration file is not something
                         only a mouse can supply. */}
-                    {selected != null && calSerial == null && (
+                    {mic != null && calSerial == null && (
                       <FileUploadRoot
                         w="full"
                         maxFiles={1}
@@ -343,6 +386,7 @@ export function ReferenceMicPanel({device}: {device: string}) {
                               <CloseButton
                                 size="xs"
                                 alignSelf="flex-start"
+                                disabled={running}
                                 onClick={() =>
                                   setVolumeChecked(selected.deviceId)
                                 }
@@ -521,77 +565,66 @@ export function ReferenceMicPanel({device}: {device: string}) {
                           Cancel
                         </Button>
                       </>
-                    ) : (
+                    ) : result == null ? (
                       <>
-                        {/* Solid, which is to say primary, only while there is nothing
-                            measured: then it is the thing this panel is open to do and
-                            everything above it is the setting-up. Blue rather than the
-                            section's yellow because the panel is a light surface (see
-                            theme-crew, and the accent's light half).
-
-                            With a result on screen it steps back to outline, because the
-                            primary action has moved: what to do with a finding is apply it,
-                            and measuring a second time is how you check that or disagree with
-                            it. Two solid buttons in one panel would be asking the reader to
-                            pick between them. */}
+                        {/* Solid, which is to say primary, while there is nothing measured:
+                            then it is the thing this panel is open to do and everything above
+                            it is the setting-up. Blue rather than the section's yellow because
+                            the panel is a light surface (see theme-crew, and the accent's
+                            light half). */}
                         <Button
                           size="sm"
                           w="full"
-                          variant={result == null ? 'solid' : 'outline'}
                           disabled={!calibration.ready}
                           onClick={() => void calibration.start()}
                         >
-                          {result == null
-                            ? 'Start calibration'
-                            : 'Measure again'}
+                          Start calibration
                         </Button>
-                        {/* Which half is missing, when one is. A disabled button with no reason
-                            beside it is the same information as no button, and the two halves
-                            fail for quite different reasons — one is a choice above, the other
-                            is a monitor that is not transmitting. */}
-                        {!calibration.ready && (
-                          <Text fontSize="xs" color="fg.subtle">
-                            {selected == null
-                              ? 'Pick an input to measure against.'
-                              : 'Waiting for both the monitor and the microphone.'}
-                          </Text>
-                        )}
+                        {readyHint}
                       </>
-                    )}
+                    ) : (
+                      /* The finding, for as long as it is about the input that is still
+                         picked (see resetCalibration), and the two things to do with it on
+                         one row under it — the order the decision is made in: you look at
+                         the curve, and then either take it again or accept it.
 
-                    {/* The finding, for as long as it is about the input that is still picked
-                        (see resetCalibration). Under the button rather than replacing it: the
-                        obvious next thing to do with a calibration curve is to take it again
-                        and see whether it comes out the same. */}
-                    {result != null && !running && (
+                         Apply is the primary and on the right; measuring a second time is
+                         how you check a finding or disagree with it, so it steps back to
+                         outline on the left. Two solid buttons side by side would be asking
+                         the reader to pick between them.
+
+                         Not automatic on a run finishing, deliberately: a result is a
+                         measurement, and whether the room it was taken in was the room worth
+                         calibrating against is the one judgement no accumulator can make. */
                       <>
                         <CalibrationResultChart result={result} />
-                        {/* The finding, made the monitor's. Under the chart because that is the
-                            order the decision is made in — you look at the curve, and then you
-                            either accept it or measure again with the button above.
-
-                            Not automatic on a run finishing, deliberately: a result is a
-                            measurement, and whether the room it was taken in was the room worth
-                            calibrating against is the one judgement no accumulator can make. */}
-                        {/* Primary for the same reason, and there is no contest between
-                            the two: they are the two ends of one errand — measure the
-                            monitor, then write what was measured to it — and only one of
-                            them is on screen with anything to do at a time. */}
-                        <Button
-                          size="sm"
-                          w="full"
-                          loading={applying}
-                          disabled={!btConnected}
-                          onClick={() => void applyToDevice(result)}
-                        >
-                          Apply calibration
-                        </Button>
-                        {!btConnected && (
-                          <Text fontSize="xs" color="fg.subtle">
-                            Connect to {device} over Bluetooth to apply these
-                            trims.
-                          </Text>
-                        )}
+                        <HStack gap="2" w="full">
+                          <Button
+                            size="sm"
+                            flex="1"
+                            variant="outline"
+                            disabled={
+                              !calibration.ready ||
+                              applying ||
+                              bluetooth.connecting
+                            }
+                            onClick={() => void calibration.start()}
+                          >
+                            Restart
+                          </Button>
+                          <Button
+                            size="sm"
+                            flex="1"
+                            loading={applying || bluetooth.connecting}
+                            // Only where there is no way to connect at all: otherwise the
+                            // press is how the connection is made (see applyToDevice).
+                            disabled={!btConnected && !bluetooth.supported}
+                            onClick={() => void applyToDevice(result)}
+                          >
+                            Apply
+                          </Button>
+                        </HStack>
+                        {readyHint}
                       </>
                     )}
                   </Stack>
@@ -606,5 +639,35 @@ export function ReferenceMicPanel({device}: {device: string}) {
         </FloatingPanel.Positioner>
       </Portal>
     </FloatingPanel.Root>
+  );
+}
+
+// The monitor's name and which of its three states it is in — on this browser's Bluetooth,
+// reporting, or neither. In that order, because they nest: a monitor on Bluetooth is
+// reporting too, its records arriving over the pairing, and the more specific answer is the
+// one a calibration wants, since Bluetooth is what the finding is written over.
+//
+// A leaf of its own because it reads the live store and ticks every second, and the panel
+// around it has no business re-rendering at that rate. Off the live store alone, unlike the
+// toolbar's line, which merges the record's last-seen as well (see lastSeenAt): this only
+// says whether the monitor is up now, and anything up now is in the store within a second.
+function DeviceConnection({device}: {device: string}) {
+  const bluetooth = useBluetooth();
+  const deviceState = useDeviceState(device);
+  const now = useTick();
+  const state =
+    bluetooth.deviceName === device
+      ? 'Bluetooth'
+      : isFresh(deviceState?.lastSeen, now)
+        ? 'Online'
+        : 'Offline';
+  return (
+    <Text fontSize="sm" truncate>
+      {device}
+      <Text as="span" color="fg.subtle">
+        {' · '}
+        {state}
+      </Text>
+    </Text>
   );
 }

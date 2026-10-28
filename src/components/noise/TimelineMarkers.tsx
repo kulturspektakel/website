@@ -83,18 +83,23 @@ const DATE_ATTR = 'data-date';
 const MARKERS_CSS = {
   // A stretch nobody reported in, and one where a place on screen read over its limit:
   // each a wash held off the strip's frame on all four sides by GAP_INSET, so it is a band
-  // lying inside the strip rather than a fill of it. The location charts' own two washes,
-  // the same colours at the same strength (see LevelTrace's `wash`) — grey for the
-  // stretches that are not being read, red for the ones over a limit — so the strip and the
-  // charts under it say both things one way. The two never overlap: a breach needs a
-  // reading, and a gap is where there is none.
+  // lying inside the strip rather than a fill of it. The location charts' own two colours
+  // (see LevelTrace's `wash`) — grey for the stretches that are not being read, red for the
+  // ones over a limit — so the strip and the charts under it say both things one way. The
+  // two never overlap: a breach needs a reading, and a gap is where there is none.
+  //
+  // The red at twice the charts' 10 %, though. On a chart the wash is a tall field with
+  // the trace climbing through it; here it is a sliver of a strip a few pixels high, and
+  // inside the crop it lies over the window's own yellow (see CROP_SPAN's fill in
+  // ProjectTimeline) — which at 10 % mixed it to a brown nobody read as a breach. The grey
+  // stays faint: a gap is the absence of a reading, and should look like one.
   [`& [${GAP_ATTR}], & [${BREACH_ATTR}]`]: {
     position: 'absolute',
     top: `${GAP_INSET}px`,
     bottom: `${GAP_INSET}px`,
   },
   [`& [${GAP_ATTR}]`]: {bg: 'chart.ignored/10'},
-  [`& [${BREACH_ATTR}]`]: {bg: 'chart.limit/10'},
+  [`& [${BREACH_ATTR}]`]: {bg: 'chart.limit/20'},
   [`& [${TICK_ATTR}]`]: {
     position: 'absolute',
     top: '0',
@@ -141,12 +146,17 @@ const MARKERS_CSS = {
   // at a marker's instant. Off the ticks' own `chart.rule`, so a note can't be taken for the
   // clock, and short of the full height, so it doesn't read as another mark of the hours.
   // Bare: the strip has no room for the text, which its hover and the cards' charts carry.
+  // The pill outlined in that grey and filled with it see-through, so the ticks and washes
+  // it lies across still show inside it, and where two comments overlap their edges say
+  // where each one starts and ends.
   [`& [${COMMENT_SPAN_ATTR}]`]: {
     position: 'absolute',
     top: '2px',
     h: '7px',
     rounded: 'full',
-    bg: 'fg.subtle',
+    borderWidth: '1px',
+    borderColor: 'fg.subtle',
+    bg: 'fg.subtle/40',
   },
   [`& [${COMMENT_ATTR}]`]: {
     position: 'absolute',

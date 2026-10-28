@@ -8,6 +8,7 @@ import {
   MenuSeparator,
   MenuTrigger,
 } from '../chakra-snippets/menu';
+import {DeviceActionItems, useDeviceActionRedirect} from './deviceActions';
 import {LocationReadings} from './LocationReadings';
 import {DeviceBadges} from './DeviceBadge';
 import {LocationChart} from './LocationChart';
@@ -101,6 +102,11 @@ export const LocationCard = memo(function LocationCard({
   // being siblings.
   const [sweep, setSweep] = useState<{start: number; end: number} | null>(null);
 
+  // What can be done to the monitors named on the card — the monitor page's own list (see
+  // deviceActions), each of them by way of that page.
+  const runDeviceAction = useDeviceActionRedirect();
+  const devices = useMemo(() => lines.map((l) => l.deviceId), [lines]);
+
   return (
     // A card is either on the list or not on it at all, never folded shut: there is no
     // disclosure here, a card that is here is open, and a chart nobody wants is one that
@@ -183,6 +189,13 @@ export const LocationCard = memo(function LocationCard({
             <MenuItem value="lineup" onClick={() => setDialog('lineup')}>
               Import band lineup…
             </MenuItem>
+            {/* Off to a monitor's page to do something to it there. The monitors are the
+                ones named on the card, and a place nothing has stood at has none — nor the
+                rule above them, which would otherwise sit on top of the one below. Ruled
+                off from the items above because those edit the place, and these the
+                monitors standing at it. */}
+            {devices.length > 0 && <MenuSeparator />}
+            <DeviceActionItems devices={devices} onSelect={runDeviceAction} />
             {/* Ruled off: the two above edit the place, this one only dismisses
                 the card. Nothing is deleted and nobody else's page changes — it is the
                 roster's untick, reached from the card instead of from a dozen rows at

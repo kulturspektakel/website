@@ -1,15 +1,17 @@
-import {useRef, useState} from 'react';
+import {useCallback, useRef, useState, type ReactNode} from 'react';
 import {
   Button,
   HStack,
   IconButton,
   Input,
   NativeSelectField,
+  Spinner,
   Stack,
   Table,
   Text,
 } from '@chakra-ui/react';
-import {useMutation} from '@tanstack/react-query';
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import {useRouter} from '@tanstack/react-router';
 import {LuChevronDown, LuCopy, LuPlus, LuTrash2} from 'react-icons/lu';
 import {
   DialogBody,
@@ -31,20 +33,29 @@ import {toaster} from '../chakra-snippets/toaster';
 import {
   createNoiseLimit,
   deleteNoiseLimit,
+  loadNoiseProject,
   updateNoiseLimit,
   NOISE_LIMIT_DB,
 } from '../../routes/crew.noise';
 import {errorToast} from '../toast';
 import {TimeField, useDraftField} from './TimeField';
 import {applyEdits, hasEdits} from './draftTable';
-import {primarySeries, rangeKey, seriesOptions} from './level';
+import {
+  primarySeries,
+  rangeKey,
+  seriesOptions,
+  type PickedSeries,
+} from './level';
 import {limitLabel, type LimitSeries} from './limitLines';
 import {
   orderLocations,
   useProjectView,
   type NoiseLimit,
   type NoiseLocationItem,
+  type NoiseProject,
 } from './projectView';
+import {noiseQueryKeys} from './queries';
+import type {DeviceAssignment} from './noise';
 import {Name} from './Name';
 
 // The rows of the series column, grouped by weighting — the picker's own list, from the one
@@ -114,6 +125,67 @@ export function LocationLimitsDialog({
   location: NoiseLocationItem;
 }) {
   return (
+    <LimitsDialogFrame
+      open={open}
+      onClose={onClose}
+      locationName={location.locationName}
+    >
+      {/* Mounted per opening, which is what discards the draft: Cancel, the ✕ and a
+          click outside all just close, and the table is read from the server again
+          the next time it is opened. */}
+      {open && <ProjectLimitsForm location={location} onClose={onClose} />}
+    </LimitsDialogFrame>
+  );
+}
+
+// The same dialog, opened from a monitor's own page for the place it is standing at now.
+//
+// That page has no project loaded — it is live readings and nothing else — so the project
+// is fetched here, on opening, through the very query the project page keeps it under:
+// the location's saved rows, the event's dates its blank bounds resolve against, and the
+// other places "Copy from" offers are all the project's, and one cache entry means a save
+// here is seen there too. Once a save lands, the page's own loader is re-run as well,
+// which is where the rules over its live chart come from (see deviceLimits).
+export function DeviceLimitsDialog({
+  open,
+  onClose,
+  assignment,
+  picked,
+}: {
+  open: boolean;
+  onClose: () => void;
+  assignment: DeviceAssignment;
+  picked: PickedSeries;
+}) {
+  return (
+    <LimitsDialogFrame
+      open={open}
+      onClose={onClose}
+      locationName={assignment.locationName}
+    >
+      {open && (
+        <DeviceLimitsForm
+          assignment={assignment}
+          picked={picked}
+          onClose={onClose}
+        />
+      )}
+    </LimitsDialogFrame>
+  );
+}
+
+function LimitsDialogFrame({
+  open,
+  onClose,
+  locationName,
+  children,
+}: {
+  open: boolean;
+  onClose: () => void;
+  locationName: string;
+  children: ReactNode;
+}) {
+  return (
     <DialogRoot
       open={open}
       onOpenChange={(e) => !e.open && onClose()}
@@ -127,20 +199,18 @@ export function LocationLimitsDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            Limits at <Name>{location.locationName}</Name>
+            Limits at <Name>{locationName}</Name>
           </DialogTitle>
         </DialogHeader>
         <DialogCloseTrigger />
-        {/* Mounted per opening, which is what discards the draft: Cancel, the ✕ and a
-            click outside all just close, and the table is read from the server again
-            the next time it is opened. */}
-        {open && <LimitsForm location={location} onClose={onClose} />}
+        {children}
       </DialogContent>
     </DialogRoot>
   );
 }
 
-function LimitsForm({
+// From a location card, where the project is the page's own.
+function ProjectLimitsForm({
   location,
   onClose,
 }: {
@@ -148,6 +218,80 @@ function LimitsForm({
   onClose: () => void;
 }) {
   const {project, picked, refresh} = useProjectView();
+  return (
+    <LimitsForm
+      project={project}
+      location={location}
+      picked={picked}
+      refresh={refresh}
+      onClose={onClose}
+    />
+  );
+}
+
+function DeviceLimitsForm({
+  assignment,
+  picked,
+  onClose,
+}: {
+  assignment: DeviceAssignment;
+  picked: PickedSeries;
+  onClose: () => void;
+}) {
+  const {projectId, locationId} = assignment;
+  const queryClient = useQueryClient();
+  const router = useRouter();
+  const {data: project, error} = useQuery({
+    queryKey: noiseQueryKeys.project(projectId),
+    queryFn: () => loadNoiseProject({data: {projectId}}),
+  });
+  const refresh = useCallback(async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: noiseQueryKeys.project(projectId),
+      }),
+      router.invalidate(),
+    ]);
+  }, [queryClient, router, projectId]);
+
+  const location = project?.locations.find((l) => l.id === locationId);
+  if (!project || !location) {
+    return (
+      <DialogBody>
+        {error || (project && !location) ? (
+          <Text fontSize="sm" color="fg.error">
+            The limits of this location could not be loaded.
+          </Text>
+        ) : (
+          <Spinner size="sm" />
+        )}
+      </DialogBody>
+    );
+  }
+  return (
+    <LimitsForm
+      project={project}
+      location={location}
+      picked={picked}
+      refresh={refresh}
+      onClose={onClose}
+    />
+  );
+}
+
+function LimitsForm({
+  project,
+  location,
+  picked,
+  refresh,
+  onClose,
+}: {
+  project: NoiseProject;
+  location: NoiseLocationItem;
+  picked: PickedSeries;
+  refresh: () => Promise<void>;
+  onClose: () => void;
+}) {
   // What the first new row opens on: the first of the series the page is showing, which is
   // the one whose lines and numbers are in front of whoever pressed Add.
   const primary = primarySeries(picked);

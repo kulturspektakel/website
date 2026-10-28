@@ -8,6 +8,51 @@ import {noiseColors, noiseSemanticColors} from './theme-noise';
 
 const overrides: SystemConfig = {
   theme: {
+    keyframes: {
+      // The limit's beat on a noise reading (see LIMIT_BEAT_MS): the glow, the chevron and the
+      // over-limit badge's name row all run one cycle of the same length, in phase, and all
+      // come to their height together at its middle — the glow at full, the chevron passing
+      // through where it sits, the name row saying LIMIT — so a badge says one thing on one
+      // beat rather than three things at three rates.
+      //
+      // The glow breathing on a reading heading towards or away from its limit (see
+      // limitGlow): up from a fifth to full at the middle of the beat, and back. Deeper than
+      // Chakra's own `pulse`, which only dips to half — fine for a skeleton, too faint for
+      // something meant to be noticed from across a field.
+      limitPulse: {
+        '0%, 100%': {opacity: '0.2'},
+        '50%': {opacity: '1'},
+      },
+      // The chevron beside a reading heading towards or away from its limit (see
+      // limitGlow), travelling the way the level is: it fades in below (or above) where it
+      // sits, passes through it at the middle of the beat, and fades out past it — one step
+      // of a direction, over and over, rather than a bounce that comes back. In `em`, so the
+      // step scales with the badge.
+      limitDriftUp: {
+        '0%': {transform: 'translateY(0.2em)', opacity: '0'},
+        '40%, 60%': {opacity: '1'},
+        '100%': {transform: 'translateY(-0.2em)', opacity: '0'},
+      },
+      limitDriftDown: {
+        '0%': {transform: 'translateY(-0.2em)', opacity: '0'},
+        '40%, 60%': {opacity: '1'},
+        '100%': {transform: 'translateY(0.2em)', opacity: '0'},
+      },
+      // The two halves of an over-limit badge's name row (see OverLimitLabel): the limit for
+      // the middle half of the beat, round the glow's and the chevron's height, and the
+      // reading's own name for the rest. Run with `step-end`, so each holds and then swaps
+      // outright rather than cross-fading through a blur of both.
+      limitLabelName: {
+        '0%': {opacity: '1'},
+        '25%': {opacity: '0'},
+        '75%, 100%': {opacity: '1'},
+      },
+      limitLabelLimit: {
+        '0%': {opacity: '0'},
+        '25%': {opacity: '1'},
+        '75%, 100%': {opacity: '0'},
+      },
+    },
     tokens: {
       colors: {
         // /crew/noise's accent scale. `brand` is deliberately absent: it

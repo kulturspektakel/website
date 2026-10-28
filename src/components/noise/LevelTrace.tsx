@@ -9,7 +9,12 @@ import {
 import {Box, HStack, IconButton, Text} from '@chakra-ui/react';
 import {LuX} from 'react-icons/lu';
 import uPlot from 'uplot';
-import {subscribeToClock, subscribeToFrames, useNoiseBuffers} from './context';
+import {
+  subscribeToClock,
+  subscribeToFrames,
+  useNoiseBuffers,
+  useNoiseLive,
+} from './context';
 import {GAP_THRESHOLD_S, STORED_GAP_THRESHOLD_S, WINDOW_S} from './noise';
 import {
   alignedBuffers,
@@ -952,6 +957,8 @@ export function LevelTrace({
   // The buffers alone: a chart has nothing to say about a record arriving — the
   // canvas is redrawn by its own tick below — so it must not subscribe to them.
   const deviceData = useNoiseBuffers();
+  // Who to ask to be woken by when one of this chart's monitors reports (see the data push).
+  const noiseLive = useNoiseLive();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const plotRef = useRef<uPlot | null>(null);
 
@@ -1011,14 +1018,19 @@ export function LevelTrace({
   // `Leq,T` of their weightings — a limit appears when what it bounds is being read
   // (see limitSegments). A `Leq,T` limit is a rule over its hours without a line of its
   // own; its Leq is the card's tile's while the playhead is in them.
-  // None while live, which reads an instant and so has no range to bound.
+  //
+  // Live too: a live chart has no Leq of the stretch to print, but the rule is still
+  // the permit the monitor's place is under right now, and a device page that drew none
+  // for a place permitted only as `LAeq,T` would read as one with no limit at all. Only
+  // the rule — the breach wash and the tooltip judge samples against the picked series
+  // alone, so a `Leq,T` limit never turns a single second red.
   const drawnKeysRef = useLatest(
     useMemo(
-      (): readonly LimitSeries[] =>
-        live
-          ? picked
-          : [...picked, ...pickedWeightings(picked).map(rangeKeyOf)],
-      [pickedKey, live],
+      (): readonly LimitSeries[] => [
+        ...picked,
+        ...pickedWeightings(picked).map(rangeKeyOf),
+      ],
+      [pickedKey],
     ),
   );
   // How many monitors the plot has a line for, per series. At least one, so a location with
@@ -1958,49 +1970,67 @@ export function LevelTrace({
   const nearViewRef = useRef(true);
   const missedCropRef = useRef(false);
 
-  // Push data in: once per new trace or mode, and every second while live — the rate the
-  // monitors report at.
+  // Push data in: once per new trace or mode, and while live as each record arrives — on
+  // the frame after it does, so the newest reading is on the chart as soon as it can be.
   // Deliberately not keyed on `range`: the stored trace covers the whole project, so
   // cropping doesn't change a single value.
   //
-  // On the page's shared clock rather than an interval of its own, so a dozen open
-  // cards redraw together once a second instead of painting a chart somewhere twelve
-  // times a second — and skipped entirely for a row scrolled out of view, where the
-  // projection (a merge and a sort across every monitor's window) and the redraw would
-  // both be for nobody — it catches up on the next tick when it scrolls back, which on
-  // a five-minute rolling window is a second of staleness nobody can see. The clock
-  // does not call on registration, hence the eager apply.
+  // Live, the window slides once per animation frame on the page's shared frame clock: a
+  // scale change and a redraw of the plot as it stands, which is all that moving along the
+  // clock takes. An arrival only marks the plot dirty, and the next frame projects it — so
+  // a card with several monitors, or a page of cards, takes every record landing in one
+  // frame in one redraw rather than one each. Its right edge is `now`, so the trace's end
+  // trails off a little between records and catches up as each lands: a short gap at the
+  // tip is the honest price of drawing nothing later than it arrived.
   //
-  // Between those ticks the live window slides on its own, once per animation frame: a scale
-  // change and a redraw of the plot as it stands, which is all that moving along the clock
-  // takes — no new data and nothing rendered. So the trace glides rather than stepping a
-  // second at a time, while the projection still runs at the rate data arrives. Off-screen
-  // rows skip it like the tick, and anyone who asked for less motion keeps the steps.
+  // Skipped for a row scrolled out of view, where the projection (a merge and a sort across
+  // every monitor's window) and the redraw would both be for nobody — the flag stays set,
+  // so it catches up on the first frame it is back. Anyone who asked for less motion gets
+  // steps instead: the data as it arrives, and the window moved once a second so a monitor
+  // that has gone quiet still visibly trails off.
   useEffect(() => {
     const apply = () => plotRef.current?.setData(project());
     apply();
     if (!live) return;
-    const unsubscribeClock = subscribeToClock(1000, () => {
-      if (nearViewRef.current) apply();
-    });
     const reducedMotion = window.matchMedia(
       '(prefers-reduced-motion: reduce)',
     ).matches;
-    const unsubscribeFrames = reducedMotion
-      ? undefined
+    let dirty = false;
+    const onRecord = () => {
+      if (reducedMotion) {
+        if (nearViewRef.current) apply();
+      } else {
+        dirty = true;
+      }
+    };
+    const unsubscribes = linesRef.current.map((l) =>
+      noiseLive.subscribe(l.deviceId, onRecord),
+    );
+    const unsubscribeTicks = reducedMotion
+      ? subscribeToClock(1000, () => {
+          if (nearViewRef.current) apply();
+        })
       : subscribeToFrames(() => {
           const plot = plotRef.current;
           if (!plot || !nearViewRef.current) return;
+          if (dirty) {
+            dirty = false;
+            // setData resets the scales, and the x one through xRange — so this is the
+            // slide for this frame as well, without a second redraw for it.
+            apply();
+            return;
+          }
           const [min, max] = xRange();
           plot.setScale('x', {min, max});
         });
     return () => {
-      unsubscribeClock();
-      unsubscribeFrames?.();
+      for (const unsubscribe of unsubscribes) unsubscribe();
+      unsubscribeTicks();
     };
     // `tags` too: a monitor's ignored stretch comes out of the envelope's data, and every
     // tag moves where the lines are cut, both of which only a fresh projection redraws.
-  }, [project, live, traces, tags, xRange]);
+    // The monitors subscribed to are `project`'s, which is keyed on them.
+  }, [project, live, traces, tags, xRange, noiseLive, linesRef]);
 
   const applyCrop = useCallback(() => {
     const range = rangeRef.current;
