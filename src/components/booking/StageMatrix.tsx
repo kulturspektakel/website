@@ -8,9 +8,26 @@ import {
   colLabel,
 } from './stageMatrixShared';
 
-type StageMatrixProps =
+type StageMatrixProps = (
   | {multiple?: false; value: StageValue; onChange: (next: StageValue) => void}
-  | {multiple: true; value: StageCell[]; onChange: (next: StageCell[]) => void};
+  | {multiple: true; value: StageCell[]; onChange: (next: StageCell[]) => void}
+) & {
+  // How many bands already sit in each cell (keyed `row:col`). Unselected dots
+  // grow with it, relative to the busiest cell; hover and selection keep their
+  // fixed sizes.
+  counts?: Map<string, number>;
+};
+
+// Unselected dot diameter in px: an empty cell keeps the plain 4px dot, the
+// busiest one gets the largest. Scaled by area (sqrt), so a cell with twice the
+// bands reads as twice the dot.
+const DOT_MIN = 4;
+const DOT_MAX = 10;
+function dotSize(count: number, max: number) {
+  return max > 0
+    ? DOT_MIN + (DOT_MAX - DOT_MIN) * Math.sqrt(count / max)
+    : DOT_MIN;
+}
 
 // Interactive stage-assignment grid (mouse-only). Click a cell to select it.
 //
@@ -25,6 +42,7 @@ export function StageMatrix(props: StageMatrixProps) {
         ? [`${props.value.row}:${props.value.col}`]
         : [],
   );
+  const maxCount = Math.max(0, ...(props.counts?.values() ?? []));
 
   const toggle = (r: number, c: number) => {
     if (props.multiple) {
@@ -99,6 +117,7 @@ export function StageMatrix(props: StageMatrixProps) {
           <Box key={ri} role="row" display="contents">
             {STAGE_COLS.map((_, ci) => {
               const isSelected = selectedKeys.has(`${ri}:${ci}`);
+              const count = props.counts?.get(`${ri}:${ci}`) ?? 0;
               // Boundary edges form a single border around the whole cell block.
               const firstRow = ri === 0;
               const lastRow = ri === STAGE_ROWS.length - 1;
@@ -131,7 +150,7 @@ export function StageMatrix(props: StageMatrixProps) {
                   onClick={() => toggle(ri, ci)}
                 >
                   <Box
-                    boxSize={isSelected ? '3' : '1'}
+                    boxSize={isSelected ? '3' : `${dotSize(count, maxCount)}px`}
                     borderRadius="full"
                     bg={isSelected ? 'blue.solid' : 'gray.300'}
                     outline={isSelected ? '2px solid' : undefined}

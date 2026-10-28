@@ -1,4 +1,4 @@
-import {useEffect, useId, useMemo, useRef, useState} from 'react';
+import {useContext, useEffect, useId, useMemo, useRef, useState} from 'react';
 import {
   createFileRoute,
   notFound,
@@ -95,7 +95,10 @@ import {meanRating} from '../utils/meanRating';
 import {normalizeBandName} from '../utils/normalizeBandName';
 import {spotifyArtistUrl} from '../utils/spotifyArtistId';
 import type {BookingRow} from './crew.booking.$eventId';
-import {useBookingRow} from '../components/booking/bookingRowsContext';
+import {
+  BookingRowsContext,
+  useBookingRow,
+} from '../components/booking/bookingRowsContext';
 
 // ---------------------------------------------------------------------------
 // Server function — lazy detail loader (runs only when the child route opens)
@@ -570,6 +573,21 @@ function RightColumn({data, row}: {data: DetailData; row: BookingRow}) {
       'Bühne konnte nicht gespeichert werden',
     );
 
+  // How many of the event's other bands are already placed in each stage cell,
+  // so the matrix shows where the lineup is still thin.
+  const rows = useContext(BookingRowsContext);
+  const stageCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const r of rows) {
+      if (r.id === data.id || r.stageRow == null || r.stageColumn == null) {
+        continue;
+      }
+      const key = `${r.stageRow}:${r.stageColumn}`;
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    return counts;
+  }, [rows, data.id]);
+
   const hasSocial =
     data.website || data.facebook || data.instagram || data.spotifyArtist;
 
@@ -667,6 +685,7 @@ function RightColumn({data, row}: {data: DetailData; row: BookingRow}) {
         <StageMatrix
           value={toStageValue(row.stageRow, row.stageColumn)}
           onChange={onStageChange}
+          counts={stageCounts}
         />
       </Section>
 
