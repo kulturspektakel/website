@@ -1,13 +1,7 @@
 import {subDays} from 'date-fns';
-import {and, eq, gt, ne} from 'drizzle-orm';
-import {db} from '../db.server';
-import {crewCard as crewCardTable} from '../db/schema';
 import {fetchUser, postResponseUrl, slackApiRequest} from '../slack.server';
 import {upsertViewer} from '../upsertViewer.server';
-import {
-  grantBonbudePrivilege,
-  isBonbudeMember,
-} from '../crewCardPrivileges.server';
+import {assignCrewCardToHolder} from '../crewCards.server';
 import {locale, timeZone} from '../../utils/dateUtils';
 
 /**
@@ -107,38 +101,10 @@ export async function assignCrewCard(
     cardId.split(':').map((part) => parseInt(part, 16)),
   );
 
-  // The holder's other valid cards, suspended. One of viewerId / nickname is
-  // set (checked above).
-  const previousCards = await db
-    .update(crewCardTable)
-    .set({suspended: true})
-    .where(
-      and(
-        viewerId
-          ? eq(crewCardTable.viewerId, viewerId)
-          : eq(crewCardTable.nickname, nickname!),
-        eq(crewCardTable.suspended, false),
-        gt(crewCardTable.validUntil, new Date()),
-        ne(crewCardTable.id, cardIdBytes),
-      ),
-    )
-    .returning();
-
-  const [crewCard] = await db
-    .update(crewCardTable)
-    .set({viewerId, nickname})
-    .where(eq(crewCardTable.id, cardIdBytes))
-    .returning();
-  if (!crewCard) {
-    throw new Error('Crew card not found');
-  }
-
-  // Enrollment resets `privileged` to false and no membership event fires when a
-  // card changes hands, so an already-in-#bonbude holder needs the privilege
-  // applied here. Nickname-only cards have no Slack account to look up.
-  if (viewerId && (await isBonbudeMember(viewerId))) {
-    await grantBonbudePrivilege(viewerId);
-  }
+  const {crewCard, suspendedCards} = await assignCrewCardToHolder({
+    cardId: cardIdBytes,
+    holder: viewerId ? {viewerId} : {nickname: nickname!},
+  });
 
   const formattedDate = subDays(crewCard.validUntil, 1).toLocaleDateString(
     locale,
@@ -152,7 +118,7 @@ export async function assignCrewCard(
   );
 
   let text = `<@${assignedByUserId}> hat die CrewCard \`${cardId}\` ${slackUserId ? `<@${slackUserId}>` : `_${nonSlackUser}_`} zugeordnet. Gültig bis einschließlich ${formattedDate}.`;
-  if (previousCards.length > 0) {
+  if (suspendedCards.length > 0) {
     text += '\nDie alte CrewCard für diese Person wurde deaktiviert.';
   }
 

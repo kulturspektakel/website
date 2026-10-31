@@ -32,7 +32,8 @@ export default wrapFetchWithSentry({
       return new Response(null, {
         status: 302,
         headers: {
-          Location: `/card/${match[2]}/${route}`,
+          // Keeps the query, e.g. `?wallet=apple` from `/crewcard`.
+          Location: `/card/${match[2]}/${route}${url.search}`,
         },
       });
     }

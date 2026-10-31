@@ -52,6 +52,7 @@ import { Route as ApiOwntracksConfigRouteImport } from './routes/api.owntracks.c
 import { Route as ApiSamlLoginRouteImport } from './routes/api.saml.login'
 import { Route as ApiSamlLogoutRouteImport } from './routes/api.saml.logout'
 import { Route as ApiSlackBonbudeRouteImport } from './routes/api.slack.bonbude'
+import { Route as ApiSlackCrewcardRouteImport } from './routes/api.slack.crewcard'
 import { Route as ApiSlackEventsRouteImport } from './routes/api.slack.events'
 import { Route as ApiSlackInteractionRouteImport } from './routes/api.slack.interaction'
 import { Route as ApiSlackMailinglisteRouteImport } from './routes/api.slack.mailingliste'
@@ -97,6 +98,7 @@ import { Route as ApiSpendenQuittungIdRouteImport } from './routes/api.spenden.q
 import { Route as CrewBookingEventIdApplicationIdRouteImport } from './routes/crew.booking.$eventId.$applicationId'
 import { Route as CrewNoiseDeviceDeviceRouteImport } from './routes/crew.noise.device.$device'
 import { Route as CrewNoiseProjectProjectIdRouteImport } from './routes/crew.noise.project.$projectId'
+import { Route as ApiCrewcardWalletApplePayloadRouteImport } from './routes/api.crewcard.wallet.apple.$payload'
 import { Route as CrewBookingEventIdApplicationIdContactRouteImport } from './routes/crew.booking.$eventId.$applicationId.contact'
 import { Route as CrewNoiseProjectProjectIdIndexRouteImport } from './routes/crew.noise.project.$projectId.index'
 import { Route as CrewNoiseProjectProjectIdListRouteImport } from './routes/crew.noise.project.$projectId.list'
@@ -316,6 +318,11 @@ const ApiSamlLogoutRoute = ApiSamlLogoutRouteImport.update({
 const ApiSlackBonbudeRoute = ApiSlackBonbudeRouteImport.update({
   id: '/api/slack/bonbude',
   path: '/api/slack/bonbude',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSlackCrewcardRoute = ApiSlackCrewcardRouteImport.update({
+  id: '/api/slack/crewcard',
+  path: '/api/slack/crewcard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiSlackEventsRoute = ApiSlackEventsRouteImport.update({
@@ -558,6 +565,12 @@ const CrewNoiseProjectProjectIdRoute =
     path: '/project/$projectId',
     getParentRoute: () => CrewNoiseRoute,
   } as any)
+const ApiCrewcardWalletApplePayloadRoute =
+  ApiCrewcardWalletApplePayloadRouteImport.update({
+    id: '/api/crewcard/wallet/apple/$payload',
+    path: '/api/crewcard/wallet/apple/$payload',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const CrewBookingEventIdApplicationIdContactRoute =
   CrewBookingEventIdApplicationIdContactRouteImport.update({
     id: '/contact',
@@ -625,6 +638,7 @@ export interface FileRoutesByFullPath {
   '/api/saml/login': typeof ApiSamlLoginRoute
   '/api/saml/logout': typeof ApiSamlLogoutRoute
   '/api/slack/bonbude': typeof ApiSlackBonbudeRoute
+  '/api/slack/crewcard': typeof ApiSlackCrewcardRoute
   '/api/slack/events': typeof ApiSlackEventsRoute
   '/api/slack/interaction': typeof ApiSlackInteractionRoute
   '/api/slack/mailingliste': typeof ApiSlackMailinglisteRoute
@@ -671,6 +685,7 @@ export interface FileRoutesByFullPath {
   '/crew/booking/$eventId/$applicationId': typeof CrewBookingEventIdApplicationIdRouteWithChildren
   '/crew/noise/device/$device': typeof CrewNoiseDeviceDeviceRoute
   '/crew/noise/project/$projectId': typeof CrewNoiseProjectProjectIdRouteWithChildren
+  '/api/crewcard/wallet/apple/$payload': typeof ApiCrewcardWalletApplePayloadRoute
   '/crew/booking/$eventId/$applicationId/contact': typeof CrewBookingEventIdApplicationIdContactRoute
   '/crew/noise/project/$projectId/list': typeof CrewNoiseProjectProjectIdListRoute
   '/crew/noise/project/$projectId/map': typeof CrewNoiseProjectProjectIdMapRoute
@@ -714,6 +729,7 @@ export interface FileRoutesByTo {
   '/api/saml/login': typeof ApiSamlLoginRoute
   '/api/saml/logout': typeof ApiSamlLogoutRoute
   '/api/slack/bonbude': typeof ApiSlackBonbudeRoute
+  '/api/slack/crewcard': typeof ApiSlackCrewcardRoute
   '/api/slack/events': typeof ApiSlackEventsRoute
   '/api/slack/interaction': typeof ApiSlackInteractionRoute
   '/api/slack/mailingliste': typeof ApiSlackMailinglisteRoute
@@ -759,6 +775,7 @@ export interface FileRoutesByTo {
   '/api/spenden/quittung/$id': typeof ApiSpendenQuittungIdRoute
   '/crew/booking/$eventId/$applicationId': typeof CrewBookingEventIdApplicationIdRouteWithChildren
   '/crew/noise/device/$device': typeof CrewNoiseDeviceDeviceRoute
+  '/api/crewcard/wallet/apple/$payload': typeof ApiCrewcardWalletApplePayloadRoute
   '/crew/booking/$eventId/$applicationId/contact': typeof CrewBookingEventIdApplicationIdContactRoute
   '/crew/noise/project/$projectId/list': typeof CrewNoiseProjectProjectIdListRoute
   '/crew/noise/project/$projectId/map': typeof CrewNoiseProjectProjectIdMapRoute
@@ -808,6 +825,7 @@ export interface FileRoutesById {
   '/api/saml/login': typeof ApiSamlLoginRoute
   '/api/saml/logout': typeof ApiSamlLogoutRoute
   '/api/slack/bonbude': typeof ApiSlackBonbudeRoute
+  '/api/slack/crewcard': typeof ApiSlackCrewcardRoute
   '/api/slack/events': typeof ApiSlackEventsRoute
   '/api/slack/interaction': typeof ApiSlackInteractionRoute
   '/api/slack/mailingliste': typeof ApiSlackMailinglisteRoute
@@ -854,6 +872,7 @@ export interface FileRoutesById {
   '/crew/booking/$eventId/$applicationId': typeof CrewBookingEventIdApplicationIdRouteWithChildren
   '/crew/noise/device/$device': typeof CrewNoiseDeviceDeviceRoute
   '/crew/noise/project/$projectId': typeof CrewNoiseProjectProjectIdRouteWithChildren
+  '/api/crewcard/wallet/apple/$payload': typeof ApiCrewcardWalletApplePayloadRoute
   '/crew/booking/$eventId/$applicationId/contact': typeof CrewBookingEventIdApplicationIdContactRoute
   '/crew/noise/project/$projectId/list': typeof CrewNoiseProjectProjectIdListRoute
   '/crew/noise/project/$projectId/map': typeof CrewNoiseProjectProjectIdMapRoute
@@ -903,6 +922,7 @@ export interface FileRouteTypes {
     | '/api/saml/login'
     | '/api/saml/logout'
     | '/api/slack/bonbude'
+    | '/api/slack/crewcard'
     | '/api/slack/events'
     | '/api/slack/interaction'
     | '/api/slack/mailingliste'
@@ -949,6 +969,7 @@ export interface FileRouteTypes {
     | '/crew/booking/$eventId/$applicationId'
     | '/crew/noise/device/$device'
     | '/crew/noise/project/$projectId'
+    | '/api/crewcard/wallet/apple/$payload'
     | '/crew/booking/$eventId/$applicationId/contact'
     | '/crew/noise/project/$projectId/list'
     | '/crew/noise/project/$projectId/map'
@@ -992,6 +1013,7 @@ export interface FileRouteTypes {
     | '/api/saml/login'
     | '/api/saml/logout'
     | '/api/slack/bonbude'
+    | '/api/slack/crewcard'
     | '/api/slack/events'
     | '/api/slack/interaction'
     | '/api/slack/mailingliste'
@@ -1037,6 +1059,7 @@ export interface FileRouteTypes {
     | '/api/spenden/quittung/$id'
     | '/crew/booking/$eventId/$applicationId'
     | '/crew/noise/device/$device'
+    | '/api/crewcard/wallet/apple/$payload'
     | '/crew/booking/$eventId/$applicationId/contact'
     | '/crew/noise/project/$projectId/list'
     | '/crew/noise/project/$projectId/map'
@@ -1085,6 +1108,7 @@ export interface FileRouteTypes {
     | '/api/saml/login'
     | '/api/saml/logout'
     | '/api/slack/bonbude'
+    | '/api/slack/crewcard'
     | '/api/slack/events'
     | '/api/slack/interaction'
     | '/api/slack/mailingliste'
@@ -1131,6 +1155,7 @@ export interface FileRouteTypes {
     | '/crew/booking/$eventId/$applicationId'
     | '/crew/noise/device/$device'
     | '/crew/noise/project/$projectId'
+    | '/api/crewcard/wallet/apple/$payload'
     | '/crew/booking/$eventId/$applicationId/contact'
     | '/crew/noise/project/$projectId/list'
     | '/crew/noise/project/$projectId/map'
@@ -1149,6 +1174,7 @@ export interface RootRouteChildren {
   ApiSamlLoginRoute: typeof ApiSamlLoginRoute
   ApiSamlLogoutRoute: typeof ApiSamlLogoutRoute
   ApiSlackBonbudeRoute: typeof ApiSlackBonbudeRoute
+  ApiSlackCrewcardRoute: typeof ApiSlackCrewcardRoute
   ApiSlackEventsRoute: typeof ApiSlackEventsRoute
   ApiSlackInteractionRoute: typeof ApiSlackInteractionRoute
   ApiSlackMailinglisteRoute: typeof ApiSlackMailinglisteRoute
@@ -1161,6 +1187,7 @@ export interface RootRouteChildren {
   ApiTwilioLegStatusRoute: typeof ApiTwilioLegStatusRoute
   ApiTwilioScreenRoute: typeof ApiTwilioScreenRoute
   ApiSpendenQuittungIdRoute: typeof ApiSpendenQuittungIdRoute
+  ApiCrewcardWalletApplePayloadRoute: typeof ApiCrewcardWalletApplePayloadRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1464,6 +1491,13 @@ declare module '@tanstack/react-router' {
       path: '/api/slack/bonbude'
       fullPath: '/api/slack/bonbude'
       preLoaderRoute: typeof ApiSlackBonbudeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/slack/crewcard': {
+      id: '/api/slack/crewcard'
+      path: '/api/slack/crewcard'
+      fullPath: '/api/slack/crewcard'
+      preLoaderRoute: typeof ApiSlackCrewcardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/slack/events': {
@@ -1781,6 +1815,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrewNoiseProjectProjectIdRouteImport
       parentRoute: typeof CrewNoiseRoute
     }
+    '/api/crewcard/wallet/apple/$payload': {
+      id: '/api/crewcard/wallet/apple/$payload'
+      path: '/api/crewcard/wallet/apple/$payload'
+      fullPath: '/api/crewcard/wallet/apple/$payload'
+      preLoaderRoute: typeof ApiCrewcardWalletApplePayloadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/crew/booking/$eventId/$applicationId/contact': {
       id: '/crew/booking/$eventId/$applicationId/contact'
       path: '/contact'
@@ -2094,6 +2135,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiSamlLoginRoute: ApiSamlLoginRoute,
   ApiSamlLogoutRoute: ApiSamlLogoutRoute,
   ApiSlackBonbudeRoute: ApiSlackBonbudeRoute,
+  ApiSlackCrewcardRoute: ApiSlackCrewcardRoute,
   ApiSlackEventsRoute: ApiSlackEventsRoute,
   ApiSlackInteractionRoute: ApiSlackInteractionRoute,
   ApiSlackMailinglisteRoute: ApiSlackMailinglisteRoute,
@@ -2106,6 +2148,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiTwilioLegStatusRoute: ApiTwilioLegStatusRoute,
   ApiTwilioScreenRoute: ApiTwilioScreenRoute,
   ApiSpendenQuittungIdRoute: ApiSpendenQuittungIdRoute,
+  ApiCrewcardWalletApplePayloadRoute: ApiCrewcardWalletApplePayloadRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -59,7 +59,13 @@ export async function queryCrewCard(
 ) {
   return db.query.crewCard.findFirst({
     where: eq(crewCard.id, Buffer.from(cardId)),
-    columns: {privileged: true, suspended: true, nickname: true},
+    columns: {
+      privileged: true,
+      suspended: true,
+      nickname: true,
+      cardType: true,
+      enrolledAt: true,
+    },
     with: {
       viewer: {columns: {displayName: true, profilePicture: true}},
       orders: {

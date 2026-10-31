@@ -1,4 +1,4 @@
-import {addDays} from 'date-fns';
+import {addDays, differenceInDays, isBefore} from 'date-fns';
 import {CardActivity} from '../components/kultcard/CardActivities';
 import {badgeConfig} from './badgeConfig';
 
@@ -13,10 +13,21 @@ export function stringToByteArray(str: string) {
   return new Uint8Array(str.match(/.{1,2}/g)!.map((b) => parseInt(b, 16)));
 }
 
-// TODO: should be shared with api.kulturspektakel.de
+// CrewCard validity is stored on the card (and in its link) as a uint16 count
+// of days since this epoch.
+// Epoch starts at 02.01.2025 04:00:00 UTC
+// Using UTC-04:00 as time zone, so cards are valid until 06:00 (UTC+02:00, CEST) the next day
 const START_OF_EPOCH = new Date(2025, 0, 2, 4);
 export function kultEpochToDate(epoch: number): Date {
   return addDays(START_OF_EPOCH, epoch);
+}
+
+// The first epoch day boundary after `date`.
+export function dateToKultEpoch(date: Date): number {
+  if (isBefore(date, START_OF_EPOCH)) {
+    return differenceInDays(date, START_OF_EPOCH);
+  }
+  return differenceInDays(date, START_OF_EPOCH) + 1;
 }
 
 // Whether the card's stored counter is behind the latest transaction in the

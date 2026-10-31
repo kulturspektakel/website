@@ -50,6 +50,9 @@ const ENV_VARS = {
 
   // Secrets — Google Secret Manager.
   APIFY_TOKEN: 'secret',
+  // Private key of the CrewCard Pass Type ID certificate (the certificate itself
+  // is public, in src/server/appleWallet/certificates.ts).
+  APPLE_WALLET_CREW_PASS_PRIVATE_KEY: 'secret',
   AWS_ACCESS_KEY_ID: 'secret',
   // Build-time only: the Sentry Vite plugin uses this to upload source maps.
   SENTRY_AUTH_TOKEN: 'secret',

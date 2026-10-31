@@ -1,6 +1,7 @@
 import {
   Avatar,
   Box,
+  Button,
   Text,
   defineStyle,
   Flex,
@@ -17,6 +18,12 @@ import {queryCrewCard, orderToCardActivity} from '../server/cardUtils.server';
 import {currentEventQuery} from '../server/currentEvent';
 import {stringToByteArray} from '../utils/cardUtils';
 import {decodePayload} from '../utils/decodePayload';
+import {CrewCardType} from '../utils/enums';
+import {
+  isWithinWalletDownloadWindow,
+  WalletProvider,
+} from '../utils/walletPass';
+import {useEffect, useState} from 'react';
 
 const loader = createServerFn()
   .validator((data: {hash: string; event: {start: Date; end: Date}}) => data)
@@ -49,6 +56,9 @@ const loader = createServerFn()
 
 export const Route = createFileRoute('/_main/card/$hash/crew')({
   component: CrewCard,
+  // `/crewcard` links here with `?wallet=apple`; see `useWalletPassDownload`.
+  validateSearch: (search: {wallet?: string}): {wallet?: WalletProvider} =>
+    search.wallet === WalletProvider.apple ? {wallet: search.wallet} : {},
   loader: async ({params, context}) => {
     const {event} =
       await context.queryClient.ensureQueryData(currentEventQuery);
@@ -67,9 +77,55 @@ const ringCss = defineStyle({
   outlineStyle: 'solid',
 });
 
+/**
+ * Opened with `?wallet=apple` within minutes of `/crewcard`, the page starts
+ * the pass download itself: Safari shows the pass as a sheet over this page,
+ * which is where the user lands afterwards. Decided here rather than in the
+ * loader so it doesn't depend on render time; the download route checks again.
+ * The param is dropped from the URL right away, so reloads and bookmarks are
+ * just the card page. Returns the pass URL for a fallback button.
+ */
+function useWalletPassDownload(
+  cardType: CrewCardType,
+  enrolledAt: Date,
+): string | null {
+  const {wallet} = Route.useSearch();
+  const {hash} = Route.useParams();
+  const [passUrl, setPassUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!wallet) {
+      return;
+    }
+    // Not through the router: that would re-run the loader for nothing.
+    window.history.replaceState(
+      window.history.state,
+      '',
+      window.location.pathname,
+    );
+    if (
+      wallet === WalletProvider.apple &&
+      cardType === CrewCardType.APPLE_WALLET &&
+      isWithinWalletDownloadWindow(enrolledAt)
+    ) {
+      const url = `/api/crewcard/wallet/apple/${hash}`;
+      setPassUrl(url);
+      window.location.assign(url);
+    }
+    // Once, for the URL the page was opened with.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return passUrl;
+}
+
 function CrewCard() {
   const {crewCard, totals, cardActivities, event, cardId, validUntil} =
     Route.useLoaderData();
+  const walletPassUrl = useWalletPassDownload(
+    crewCard.cardType,
+    crewCard.enrolledAt,
+  );
   const name = crewCard.viewer?.displayName ?? crewCard.nickname;
   const {awardedBadges} = useBadges(cardActivities, event, true);
   totals.Badges = awardedBadges.length;
@@ -99,7 +155,7 @@ function CrewCard() {
         w="full"
         mx="auto"
         overflow="hidden"
-        mb="8"
+        mb={walletPassUrl ? '4' : '8'}
       >
         <Box
           w="15%"
@@ -180,6 +236,16 @@ function CrewCard() {
           </Text>
         </VStack>
       </Flex>
+      {walletPassUrl && (
+        <VStack gap="1" mb="8">
+          <Button asChild>
+            <a href={walletPassUrl}>Zu Apple Wallet hinzufügen</a>
+          </Button>
+          <Text fontSize="sm" opacity="0.5" textAlign="center">
+            Passiert nichts? Öffne den Link in Safari.
+          </Text>
+        </VStack>
+      )}
     </CardDetails>
   );
 }

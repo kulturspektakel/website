@@ -12,6 +12,7 @@ export function whereParams(condition: SQL | undefined) {
 /**
  * A stand-in for `db` from `src/server/db.server.ts` in unit tests:
  *
+ * - `transaction(fn)` calls `fn(db)`;
  * - `query.<table>.findFirst` / `findMany` are `vi.fn()`s to stub reads;
  * - `update`, `insert` and `delete` record `(tableName, values, whereParams)`
  *   (`delete`: `(tableName, whereParams)`) on the returned mocks. Their builders
@@ -52,6 +53,9 @@ export function dbMock() {
 
   const db = {
     query,
+    // Runs the callback against the same mock, so writes inside a transaction
+    // land on the same recorders.
+    transaction: (fn: (tx: unknown) => unknown) => fn(db),
     update: (table: PgTable) => ({
       set: (values: unknown) => ({
         where: (condition: SQL) =>

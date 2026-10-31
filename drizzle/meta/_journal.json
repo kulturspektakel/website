@@ -43,6 +43,13 @@
       "when": 1792346541664,
       "tag": "0005_product_additive_link",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793465747130,
+      "tag": "0006_crew_card_type",
+      "breakpoints": true
     }
   ]
 }

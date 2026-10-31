@@ -22,6 +22,12 @@ export const CardTransactionType = {
 export type CardTransactionType =
   (typeof CardTransactionType)[keyof typeof CardTransactionType];
 
+export const CrewCardType = {
+  PHYSICAL: 'PHYSICAL',
+  APPLE_WALLET: 'APPLE_WALLET',
+} as const;
+export type CrewCardType = (typeof CrewCardType)[keyof typeof CrewCardType];
+
 export const DemoEmbedType = {
   Unresolvable: 'Unresolvable',
   YouTubeVideo: 'YouTubeVideo',

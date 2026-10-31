@@ -16,8 +16,8 @@ import {
 } from '../proto/logmessage';
 import {DeviceConfig} from '../proto/config';
 import {AllLists} from '../proto/configs';
-import {CardTransactionType, OrderPayment} from '../utils/enums';
-import {addDays, isBefore, differenceInDays} from 'date-fns';
+import {CardTransactionType, CrewCardType, OrderPayment} from '../utils/enums';
+import {kultEpochToDate} from '../utils/cardUtils';
 import crc32 from 'crc-32';
 import {ApiError} from './apiError.server';
 import {deviceTimeToDate, insertDeviceLog} from './deviceLog.server';
@@ -215,6 +215,7 @@ export async function handleLog(request: Request): Promise<Response> {
       suspended: false,
       privileged: false,
       enrolledAt: deviceTime,
+      cardType: CrewCardType.PHYSICAL,
     };
     await db
       .insert(crewCard)
@@ -243,7 +244,12 @@ async function insertOrder(
   if (crewCardId) {
     await tx
       .insert(crewCard)
-      .values({id: crewCardId, validUntil: new Date(), enrolledAt: deviceTime})
+      .values({
+        id: crewCardId,
+        validUntil: new Date(),
+        enrolledAt: deviceTime,
+        cardType: CrewCardType.PHYSICAL,
+      })
       .onConflictDoNothing();
   }
   const [created] = await tx
@@ -312,18 +318,4 @@ function mapPayment(payment: LogMessage_Order_PaymentMethod): OrderPayment {
     default:
       throw new UnreachableCaseError(payment);
   }
-}
-
-// Epoch starts at 02.01.2025 04:00:00 UTC
-// Using UTC-04:00 as time zone, so cards are valid until 06:00 (UTC+02:00, CEST) the next day
-const START_OF_EPOCH = new Date(2025, 0, 2, 4);
-export function kultEpochToDate(epoch: number): Date {
-  return addDays(START_OF_EPOCH, epoch);
-}
-
-export function dateToKultEpoch(date: Date): number {
-  if (isBefore(date, START_OF_EPOCH)) {
-    return differenceInDays(date, START_OF_EPOCH);
-  }
-  return differenceInDays(date, START_OF_EPOCH) + 1;
 }

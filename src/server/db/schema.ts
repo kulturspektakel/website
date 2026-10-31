@@ -48,6 +48,7 @@ export const cardTransactionType = pgEnum(
   'CardTransactionType',
   enums.CardTransactionType,
 );
+export const crewCardType = pgEnum('CrewCardType', enums.CrewCardType);
 export const demoEmbedType = pgEnum('DemoEmbedType', enums.DemoEmbedType);
 export const deviceType = pgEnum('DeviceType', enums.DeviceType);
 export const dietType = pgEnum('DietType', enums.DietType);
@@ -490,6 +491,7 @@ export const crewCard = pgTable(
     viewerId: text(),
     validUntil: timestamp({withTimezone: true, mode: 'date'}).notNull(),
     enrolledAt: timestamp({withTimezone: true, mode: 'date'}).notNull(),
+    cardType: crewCardType().notNull(),
   },
   (table) => [
     foreignKey({
