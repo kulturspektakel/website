@@ -1,3 +1,4 @@
+import {createPublicKey} from 'crypto';
 import forge from 'node-forge';
 import {beforeAll, beforeEach, describe, expect, test, vi} from 'vitest';
 import {encodeCrewCardPayload} from '../utils/decodePayload';
@@ -57,4 +58,17 @@ describe('handleAppleWalletPass', () => {
     expect(res.status).toBe(302);
     expect(res.headers.get('Location')).toBe(`/card/${payload()}/crew`);
   });
+});
+
+test('the NFC key is a compressed P-256 point, which Wallet requires', async () => {
+  const {NFC_PUBLIC_KEY} = await import('./appleWallet/pass.server');
+  const key = createPublicKey({
+    key: Buffer.from(NFC_PUBLIC_KEY, 'base64'),
+    format: 'der',
+    type: 'spki',
+  });
+  expect(key.asymmetricKeyDetails?.namedCurve).toBe('prime256v1');
+  // The SPKI ends in the point: 0x02/0x03 + 32-byte x when compressed.
+  const point = Buffer.from(NFC_PUBLIC_KEY, 'base64').subarray(-33);
+  expect([0x02, 0x03]).toContain(point[0]);
 });

@@ -1,3 +1,4 @@
+import {subDays} from 'date-fns';
 import {PKPass} from 'passkit-generator';
 import icon from './icon.png?inline';
 import icon2x from './icon@2x.png?inline';
@@ -5,9 +6,6 @@ import icon3x from './icon@3x.png?inline';
 import logo from './logo.png?inline';
 import logo2x from './logo@2x.png?inline';
 import logo3x from './logo@3x.png?inline';
-import strip from './strip.png?inline';
-import strip2x from './strip@2x.png?inline';
-import strip3x from './strip@3x.png?inline';
 import {APPLE_WWDR_G4, CREW_PASS_CERTIFICATE} from './certificates';
 
 /**
@@ -31,12 +29,21 @@ const CREW_PASS = {
  * SubjectPublicKeyInfo of an ECDH P-256 key. The phone encrypts the NFC message
  * to it; the private half (`pass-nfc.key`, not used by the website) goes on the
  * terminals so they can read wallet cards. Changing it means reissuing passes.
+ *
+ * The point has to be compressed (`openssl ec -pubout -conv_form compressed`,
+ * 33 bytes starting 02/03). Wallet silently rejects passes with the default
+ * uncompressed form ("isn't a valid EC compact public key" in the Mac's log).
  */
-const NFC_PUBLIC_KEY =
-  'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAET/x60YmnQyx1yd2mal3modLUnXno/Z58GqQv0J/m7mKeK6F/nrHwXFTWgzSEV0pJj9MRgikHJZPEJ0GV3cIUwA==';
+export const NFC_PUBLIC_KEY =
+  'MDkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDIgACT/x60YmnQyx1yd2mal3modLUnXno/Z58GqQv0J/m7mI=';
 
 export function isAppleWalletConfigured(): boolean {
   return Boolean(CREW_PASS.privateKey());
+}
+
+// The festival a card is for: it's valid until the day after it ends.
+function festivalYear(validUntil: Date): number {
+  return subDays(validUntil, 1).getFullYear();
 }
 
 // Vite's `?inline` imports are data URLs.
@@ -47,6 +54,7 @@ export function buildAppleWalletPass({
   holderName,
   lastValidDay,
   validUntil,
+  privileged,
   payload,
 }: {
   payload: string;
@@ -54,6 +62,7 @@ export function buildAppleWalletPass({
   holderName: string;
   lastValidDay: string;
   validUntil: Date;
+  privileged: boolean;
 }): Buffer {
   const signerKey = CREW_PASS.privateKey();
   if (!signerKey) {
@@ -68,14 +77,12 @@ export function buildAppleWalletPass({
     serialNumber: cardId,
     organizationName: 'Kulturspektakel Gauting',
     description: 'CrewCard',
-    // The KultCard look (src/components/kultcard/Card.tsx): its red, the white
-    // logo, and its circles and contactless symbol in the strip image (sources:
-    // logo.svg / strip.svg here, rendered with rsvg-convert). "CREW" next to
-    // the logo sets it apart from a KultCard.
+    // The KultCard's red and its white K square (src/components/kultcard/Card.tsx;
+    // source: logo.svg here, rendered with rsvg-convert, 30 pt). "CREW" in the
+    // header's top-right corner sets it apart from a KultCard.
     backgroundColor: 'rgb(228, 19, 57)',
     foregroundColor: 'rgb(255, 255, 255)',
     labelColor: 'rgb(255, 255, 255)',
-    logoText: 'CREW',
     // Hides Wallet's "Share Pass" button. A deterrent: it doesn't stop the
     // .pkpass file itself from being forwarded.
     sharingProhibited: true,
@@ -95,11 +102,24 @@ export function buildAppleWalletPass({
         url: `https://kult.cash/$c/${payload}`,
       },
     ],
-    // storeCard rather than generic: generic passes can't show a strip image;
-    // a store card shows it with the primary field (the name) on top.
-    storeCard: {
+    // Only text on Wallet's own background: a store card's strip image puts
+    // the name over the artwork (long names get cut off) and Wallet's tinted
+    // background shows the strip's edges; a generic thumbnail gets a white
+    // photo frame.
+    generic: {
+      // The label line is reserved even when empty, so it carries the
+      // festival: label + value together sit centered on the logo.
+      headerFields: [
+        {key: 'crew', label: `KULT${festivalYear(validUntil)}`, value: 'CREW'},
+      ],
       primaryFields: [{key: 'name', label: 'Name', value: holderName}],
       secondaryFields: [
+        // Like the card page: "Bonbude" for the privileged, else crew.
+        {
+          key: 'status',
+          label: 'Status',
+          value: privileged ? 'Bonbude' : 'Crew',
+        },
         {key: 'validUntil', label: 'Gültig bis', value: lastValidDay},
       ],
       backFields: [{key: 'cardId', label: 'Karten-ID', value: cardId}],
@@ -115,9 +135,6 @@ export function buildAppleWalletPass({
       'logo.png': png(logo),
       'logo@2x.png': png(logo2x),
       'logo@3x.png': png(logo3x),
-      'strip.png': png(strip),
-      'strip@2x.png': png(strip2x),
-      'strip@3x.png': png(strip3x),
     },
     {wwdr: APPLE_WWDR_G4, signerCert: CREW_PASS.certificate, signerKey},
   );

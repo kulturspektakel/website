@@ -48,6 +48,7 @@ export async function handleAppleWalletPass(
       enrolledAt: true,
       validUntil: true,
       nickname: true,
+      privileged: true,
     },
     with: {viewer: {columns: {displayName: true}}},
   });
@@ -72,6 +73,7 @@ export async function handleAppleWalletPass(
       timeZone,
     }),
     validUntil: card.validUntil,
+    privileged: card.privileged,
   });
 
   return new Response(new Uint8Array(pass), {

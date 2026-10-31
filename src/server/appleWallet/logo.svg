@@ -1,25 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="11.23 11.17 74 25.03">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="10.397 11.17 25.833 25">
+  <!-- The K square from the KultCard (src/components/kultcard/Card.tsx). 1 pt of
+       transparent space on the left evens out the gaps Wallet leaves around
+       the logo (14.4 pt left, 15.4 pt top as measured in Pass Viewer). -->
   <path fill="#fff" fill-rule="evenodd" d="M11.23,11.17v25h25v-25ZM30.71,31H25.56l-4.19-4.89V31H17.22V16.34h4.15v4.83l3.86-4.83h5v.25l-6,7,6.47,7.24V31Z"/>
-  <path fill="#fff" fill-rule="evenodd" d="M46.44,11.24l-3.67,4.12,4,4.35v.09H44.81L41.36,16V19.8H39.81V11.17h1.55v3.65l3.14-3.65h1.94v.07Z"/>
-  <path fill="#fff" fill-rule="evenodd" d="M54.38,11.19v5c0,2.56-1.49,3.86-3.56,3.86a3.53,3.53,0,0,1-3.67-3.86V11.21h1.53v4.94c0,1.56.85,2.37,2.14,2.37s2-.9,2-2.37V11.21h1.54v0Z"/>
-  <path fill="#fff" fill-rule="evenodd" d="M57.47,11.19v7.12h4.25V19.8H55.94V11.17h1.53Z"/>
-  <path fill="#fff" fill-rule="evenodd" d="M63.7,12.66H61.1V11.19h6.79v1.47H65.28V19.8H63.73l0-7.14Z"/>
-  <path fill="#fff" fill-rule="evenodd" d="M76.3,11.19v5c0,2.56-1.49,3.86-3.56,3.86a3.53,3.53,0,0,1-3.68-3.86V11.21H70.6v4.94c0,1.56.85,2.37,2.14,2.37s2-.9,2-2.37V11.21h1.53v0Z"/>
-  <path fill="#fff" fill-rule="evenodd" d="M85.13,19.82H83.29l-2.41-2.88H79.39v2.88H77.83V11.19l3.92,0a2.81,2.81,0,0,1,3,2.87,2.52,2.52,0,0,1-2.09,2.7l2.49,2.95,0,.09ZM79.39,12.7v2.77h2.36a1.37,1.37,0,1,0,0-2.74l-2.36,0Z"/>
-  <path fill="#fff" fill-rule="evenodd" d="M43.5,22.52a1.58,1.58,0,0,0-1.29-.62c-.76,0-1.13.32-1.13.76s.55.63,1.22.73c1.13.14,2.2.46,2.2,1.83s-1.07,1.84-2.29,1.84a2.22,2.22,0,0,1-2.38-1.42l.87-.46a1.54,1.54,0,0,0,1.53.91c.65,0,1.27-.24,1.27-.87s-.53-.76-1.27-.83c-1.11-.14-2.13-.44-2.13-1.75S41.21,21,42.21,21a2.15,2.15,0,0,1,2.14,1.14Z"/>
-  <path fill="#fff" fill-rule="evenodd" d="M47.88,25.18H46.32v1.67h-1V21.13h2.58A2,2,0,0,1,47.88,25.18Zm-1.56-1h1.56a1,1,0,0,0,0-2H46.32Z"/>
-  <path fill="#fff" fill-rule="evenodd" d="M54.67,26.85H50.58V21.13h4.09v1H51.6V23.5h3v1h-3v1.3h3.07Z"/>
-  <path fill="#fff" fill-rule="evenodd" d="M59.85,21.17l-2.42,2.75,2.62,2.89v.07H58.78l-2.29-2.54v2.51h-1V21.13h1v2.42l2.09-2.42h1.29v0Z"/>
-  <path fill="#fff" fill-rule="evenodd" d="M62,22.11H60.26v-1h4.49v1H63v4.74H62V22.11Z"/>
-  <path fill="#fff" fill-rule="evenodd" d="M69.27,25.78H66.4l-.47,1.07H64.82l2.44-5.72H68.4l2.45,5.72H69.71Zm-1.43-3.44-1,2.44h2Z"/>
-  <path fill="#fff" fill-rule="evenodd" d="M75.65,21.17l-2.42,2.75,2.62,2.89v.07H74.58l-2.29-2.54v2.51h-1V21.13h1v2.42l2.09-2.42h1.29l0,0Z"/>
-  <path fill="#fff" fill-rule="evenodd" d="M80.46,26.85H76.37V21.13h4.09v1H77.39V23.5h3v1h-3v1.3h3.07Z"/>
-  <path fill="#fff" fill-rule="evenodd" d="M82.28,21.13v4.72h2.83v1H81.26V21.13Z"/>
-  <path fill="#fff" fill-rule="evenodd" d="M46.15,29.69a3.42,3.42,0,0,0-2.43-1,3.24,3.24,0,0,0-3.31,3.49,3.19,3.19,0,0,0,3.31,3.44,3.3,3.3,0,0,0,2.3-.91V32.48H43.39V32h3.16v3A3.83,3.83,0,0,1,43.7,36.2a3.72,3.72,0,0,1-3.87-4,3.76,3.76,0,0,1,3.87-4.07,3.85,3.85,0,0,1,2.76,1.19Z"/>
-  <path fill="#fff" fill-rule="evenodd" d="M54.11,36.09l-.82-1.93H48.8L48,36.09h-.62l3.36-7.86h.63l3.36,7.86ZM53,33.6l-2-4.79L49,33.6Z"/>
-  <path fill="#fff" fill-rule="evenodd" d="M60.88,28.22v4.89a2.89,2.89,0,1,1-5.76,0V28.22h.57v4.89a2.32,2.32,0,1,0,4.63,0V28.22Z"/>
-  <path fill="#fff" fill-rule="evenodd" d="M64.59,28.78H61.88v-.53h6v.53H65.17v7.31H64.6V28.78Z"/>
-  <path fill="#fff" fill-rule="evenodd" d="M69,36.09V28.22h.58v7.87Z"/>
-  <path fill="#fff" fill-rule="evenodd" d="M71.49,28.22l5.05,6.5v-6.5h.58v7.87H76.9L71.82,29.6v6.49h-.58V28.22Z"/>
-  <path fill="#fff" fill-rule="evenodd" d="M84.71,29.69a3.42,3.42,0,0,0-2.43-1A3.24,3.24,0,0,0,79,32.16a3.19,3.19,0,0,0,3.31,3.44,3.3,3.3,0,0,0,2.3-.91V32.48H82V32h3.16v3a3.83,3.83,0,0,1-2.85,1.27,3.72,3.72,0,0,1-3.87-4,3.76,3.76,0,0,1,3.87-4.07A3.85,3.85,0,0,1,85,29.32Z"/>
 </svg>
