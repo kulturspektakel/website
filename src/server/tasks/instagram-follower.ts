@@ -3,13 +3,11 @@ import {db} from '../../server/db.server';
 import {bandApplication} from '../../server/db/schema';
 import {readJsonPayload} from '../../server/readJsonPayload.server';
 import {runApifyActor} from '../../server/runApifyActor.server';
+import {isInstagramHandle} from '../../utils/instagramHandle';
 
 export type InstagramFollowerPayload = {id: string};
 
 const ACTOR = 'apify~instagram-profile-scraper';
-
-/** Instagram handles are `[A-Za-z0-9._]`, max 30 chars. */
-const HANDLE = /^[A-Za-z0-9._]{1,30}$/;
 
 /** One dataset item of `apify/instagram-profile-scraper` (the fields we use). */
 type ProfileItem = {
@@ -33,8 +31,8 @@ type ProfileItem = {
  * (`17K`, `2M`), so that route could only ever store two or three
  * significant figures for the accounts where the number matters most.
  *
- * Unexpected responses throw so Cloud Tasks retries; a handle Instagram
- * doesn't know is treated as a no-op.
+ * Unexpected responses throw so Cloud Tasks retries; a handle the actor
+ * can't read (error item) is treated as a no-op.
  */
 export async function handleInstagramFollower(
   request: Request,
@@ -51,7 +49,7 @@ export async function handleInstagramFollower(
   // Older rows predate the form's handle normalisation and may hold anything.
   // A junk value can't resolve to a profile, and the actor bills per result,
   // so don't pay to find that out.
-  if (!HANDLE.test(handle)) {
+  if (!isInstagramHandle(handle)) {
     console.error(`Instagram handle ${JSON.stringify(handle)} is not a handle`);
     return new Response(null, {status: 204});
   }
@@ -63,8 +61,13 @@ export async function handleInstagramFollower(
   );
   const item = items.at(0);
 
-  if (item?.error === 'not_found') {
-    console.error(`Instagram user ${handle} not found`);
+  // The actor answers a handle it can't read (unknown, private, or not a
+  // profile) with an error item. That won't change on retry, and every retry
+  // is another billed run, so give up rather than burn the queue's attempts.
+  if (item?.error) {
+    console.error(
+      `No Instagram profile for ${handle}: ${item.error} (${item.errorDescription})`,
+    );
     return new Response(null, {status: 204});
   }
 

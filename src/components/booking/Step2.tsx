@@ -11,6 +11,7 @@ import {
   bandSchema as step1BandSchema,
 } from './Step1';
 import SpotifyDropdown from './SpotifyDropdown';
+import {parseInstagramHandle} from '../../utils/instagramHandle';
 
 const urlNormalizer = z.transform((url: string) => {
   if (!url) {
@@ -35,13 +36,16 @@ const commonStep2 = z.object({
     .nullable(),
   instagram: z
     .string()
-    .trim()
-    .transform((val) => {
-      const igUrl = val?.match(/instagram\.com\/([^\/?]+)/);
-      if (igUrl?.[1]) {
-        val = igUrl[1];
+    .transform((val, ctx) => {
+      const handle = parseInstagramHandle(val);
+      if (handle === null) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Bitte Instagram-Namen oder Profil-Link angeben',
+        });
+        return z.NEVER;
       }
-      return val?.replace(/\s|@|\//g, '');
+      return handle;
     })
     .optional(),
   facebook: z.string().trim().pipe(urlNormalizer).optional(),

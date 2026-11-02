@@ -98,6 +98,23 @@ describe('handleInstagramFollower', () => {
     expect(updates).not.toHaveBeenCalled();
   });
 
+  test('gives up on a profile the actor cannot read', async () => {
+    query.bandApplication.findFirst.mockResolvedValue({
+      id: 'app1',
+      instagram: 'private.band',
+    });
+    mockApify([
+      {
+        error: 'no_items',
+        errorDescription: 'Empty or private data for provided input',
+      },
+    ]);
+
+    const res = await handleInstagramFollower(request('app1'));
+    expect(res.status).toBe(204);
+    expect(updates).not.toHaveBeenCalled();
+  });
+
   test('throws when the actor returns no usable item, so the task retries', async () => {
     query.bandApplication.findFirst.mockResolvedValue({
       id: 'app1',
