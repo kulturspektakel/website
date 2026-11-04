@@ -9,7 +9,6 @@ import {
 } from '@chakra-ui/react';
 import {Gallery} from 'react-photoswipe-gallery';
 import Image from '../Image';
-import Photos from './Photos';
 import ImmichPhotos from './ImmichPhotos';
 import {type ImmichAsset} from '../../utils/immich';
 import Countdown from 'react-countdown';
@@ -32,10 +31,6 @@ export default function Event({
     bandPlayings: Array<{
       name: string;
     }>;
-    media: {
-      files: DirectusImage[];
-      totalCount: number;
-    };
     immich?: {
       slug: string;
       assets: ImmichAsset[];
@@ -172,25 +167,17 @@ export default function Event({
           )}
         </Box>
       </Stack>
-      {(event.immich?.assets.length || event.media.files.length > 0) && (
+      {event.immich && event.immich.assets.length > 0 && (
         <Box w="100%" mt="10">
           <Heading as="h3" size="lg" mt="4" mb="2" id="fotos">
             Fotos
           </Heading>
-          {event.immich && event.immich.assets.length > 0 ? (
-            <ImmichPhotos
-              eventId={event.id}
-              slug={event.immich.slug}
-              assets={event.immich.assets}
-              totalCount={event.immich.totalCount}
-            />
-          ) : (
-            <Photos
-              eventId={event.id}
-              files={event.media.files}
-              totalCount={event.media.totalCount}
-            />
-          )}
+          <ImmichPhotos
+            eventId={event.id}
+            slug={event.immich.slug}
+            assets={event.immich.assets}
+            totalCount={event.immich.totalCount}
+          />
         </Box>
       )}
     </>

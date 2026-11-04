@@ -9,10 +9,7 @@ import {seo} from '../utils/seo';
 import {markdownToTxt} from 'markdown-to-txt';
 import {createServerFn} from '@tanstack/react-start';
 import {findEvent} from '../server/eventQuery.server';
-import {
-  directusImage,
-  directusImageConnection,
-} from '../server/directusImage.server';
+import {directusImage} from '../server/directusImage.server';
 import {markdownText} from '../server/markdownText.server';
 import {immichAlbumAssets} from '../server/immich.server';
 
@@ -36,7 +33,6 @@ const loader = createServerFn()
           ? await markdownText(data.description)
           : null,
         poster: await directusImage(data.poster),
-        media: await directusImageConnection('Event', eventId, 100),
         immich: data.immichAlbumShareUrl
           ? await immichAlbumAssets(data.immichAlbumShareUrl)
           : null,
