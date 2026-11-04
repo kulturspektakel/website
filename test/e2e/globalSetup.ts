@@ -6,6 +6,7 @@ import {unaccent} from '@electric-sql/pglite/contrib/unaccent';
 import {uuid_ossp} from '@electric-sql/pglite/contrib/uuid_ossp';
 import {PGLiteSocketServer} from '@electric-sql/pglite-socket';
 import {spawn} from 'node:child_process';
+import {generateKeyPairSync} from 'node:crypto';
 import {drizzle} from 'drizzle-orm/pglite';
 import {migrate} from 'drizzle-orm/pglite/migrator';
 import {E2E_JWT_SECRET} from './secrets';
@@ -92,6 +93,13 @@ export default async function setup({
         TEST_DATABASE_URL: dbUrl,
         // Never the real one: OwnTracks passwords are derived from it.
         JWT_SECRET: E2E_JWT_SECRET,
+        // A throwaway key so the server can build Wallet passes. It doesn't
+        // match the committed certificate, which signing doesn't check.
+        APPLE_WALLET_CREW_PASS_PRIVATE_KEY: generateKeyPairSync('rsa', {
+          modulusLength: 2048,
+        })
+          .privateKey.export({type: 'pkcs1', format: 'pem'})
+          .toString(),
       },
       stdio: 'ignore',
     },

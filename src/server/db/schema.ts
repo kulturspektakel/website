@@ -492,6 +492,13 @@ export const crewCard = pgTable(
     validUntil: timestamp({withTimezone: true, mode: 'date'}).notNull(),
     enrolledAt: timestamp({withTimezone: true, mode: 'date'}).notNull(),
     cardType: crewCardType().notNull(),
+    // Wallet cards: the pass's `authenticationToken` for the PassKit web
+    // service (random, set when the card is created). Null for physical cards.
+    walletAuthToken: text(),
+    // Wallet cards: when the pass content last changed, set by whoever pushes
+    // the update. Null until the first one; the pass then dates from
+    // `enrolledAt`.
+    passUpdatedAt: timestamp({withTimezone: true, mode: 'date'}),
   },
   (table) => [
     foreignKey({
@@ -501,6 +508,39 @@ export const crewCard = pgTable(
     })
       .onUpdate('cascade')
       .onDelete('set null'),
+  ],
+);
+
+// A wallet CrewCard pass installed on a device, registered through the PassKit
+// web service (src/server/appleWalletWebService.ts). One pass can be on several
+// devices (iCloud sync, a forwarded .pkpass). The push token belongs to the
+// device, so it's repeated on each of its rows and updated on all of them.
+export const walletPassRegistration = pgTable(
+  'WalletPassRegistration',
+  {
+    deviceLibraryIdentifier: text().notNull(),
+    crewCardId: bytea().notNull(),
+    pushToken: text().notNull(),
+    createdAt: timestamp({withTimezone: true, mode: 'date'})
+      .default(sql`CURRENT_TIMESTAMP(3)`)
+      .notNull(),
+  },
+  (table) => [
+    index('WalletPassRegistration_crewCardId_idx').using(
+      'btree',
+      table.crewCardId,
+    ),
+    foreignKey({
+      columns: [table.crewCardId],
+      foreignColumns: [crewCard.id],
+      name: 'WalletPassRegistration_crewCardId_fkey',
+    })
+      .onUpdate('cascade')
+      .onDelete('cascade'),
+    primaryKey({
+      columns: [table.deviceLibraryIdentifier, table.crewCardId],
+      name: 'WalletPassRegistration_pkey',
+    }),
   ],
 );
 

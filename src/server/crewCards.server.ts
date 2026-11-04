@@ -27,7 +27,11 @@ export async function assignCrewCardToHolder({
 }: {
   cardId: Buffer;
   holder: CrewCardHolder;
-  create?: {cardType: CrewCardType; validUntil: Date};
+  create?: {
+    cardType: CrewCardType;
+    validUntil: Date;
+    walletAuthToken?: string;
+  };
 }) {
   const viewerId = 'viewerId' in holder ? holder.viewerId : null;
   const nickname = 'nickname' in holder ? holder.nickname : null;
@@ -85,6 +89,14 @@ export const WALLET_CARD_ID_PREFIX = 0xa1;
 /** A 7-byte id (a physical card's NFC UID length): the prefix + 6 random. */
 export function newWalletCardId(): Buffer {
   return Buffer.concat([Buffer.from([WALLET_CARD_ID_PREFIX]), randomBytes(6)]);
+}
+
+/**
+ * A wallet card's pass `authenticationToken`, which Wallet sends with every
+ * web service request for the pass (Apple wants at least 16 characters).
+ */
+export function newWalletAuthToken(): string {
+  return randomBytes(24).toString('base64url');
 }
 
 /**

@@ -29,6 +29,7 @@ import {
   productAdditiveLink,
   productAdditives,
   bandApplicationRating,
+  walletPassRegistration,
 } from './schema';
 
 export const areaOpeningHourRelations = relations(areaOpeningHour, ({one}) => ({
@@ -168,7 +169,18 @@ export const crewCardRelations = relations(crewCard, ({one, many}) => ({
     fields: [crewCard.viewerId],
     references: [viewer.id],
   }),
+  walletPassRegistrations: many(walletPassRegistration),
 }));
+
+export const walletPassRegistrationRelations = relations(
+  walletPassRegistration,
+  ({one}) => ({
+    crewCard: one(crewCard, {
+      fields: [walletPassRegistration.crewCardId],
+      references: [crewCard.id],
+    }),
+  }),
+);
 
 export const productListRelations = relations(productList, ({one, many}) => ({
   devices: many(device),

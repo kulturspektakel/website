@@ -3,6 +3,7 @@ import {fetchUser, sendMessage} from '../slack.server';
 import {upsertViewer} from '../upsertViewer.server';
 import {
   assignCrewCardToHolder,
+  newWalletAuthToken,
   newWalletCardId,
   nextKulturspektakel,
   walletCardValidity,
@@ -47,6 +48,7 @@ export async function handleCrewCardCommand(
     create: {
       cardType: CrewCardType.APPLE_WALLET,
       validUntil: validity.validUntil,
+      walletAuthToken: newWalletAuthToken(),
     },
   });
 

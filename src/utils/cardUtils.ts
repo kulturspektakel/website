@@ -30,6 +30,17 @@ export function dateToKultEpoch(date: Date): number {
   return differenceInDays(date, START_OF_EPOCH) + 1;
 }
 
+// The inverse of `kultEpochToDate`, for a date exactly on an epoch day boundary
+// (a stored `validUntil`). Unlike `dateToKultEpoch`, which rounds up to the next
+// boundary, this throws for any other date.
+export function kultEpochOfDate(date: Date): number {
+  const epoch = differenceInDays(date, START_OF_EPOCH);
+  if (kultEpochToDate(epoch).getTime() !== date.getTime()) {
+    throw new Error(`${date.toISOString()} isn't a kult epoch day boundary`);
+  }
+  return epoch;
+}
+
 // Whether the card's stored counter is behind the latest transaction in the
 // DB, i.e. bookings happened after the card was last scanned. Must be evaluated
 // on the raw query result (ordered by counter desc) before

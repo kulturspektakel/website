@@ -103,6 +103,7 @@ import { Route as CrewBookingEventIdApplicationIdContactRouteImport } from './ro
 import { Route as CrewNoiseProjectProjectIdIndexRouteImport } from './routes/crew.noise.project.$projectId.index'
 import { Route as CrewNoiseProjectProjectIdListRouteImport } from './routes/crew.noise.project.$projectId.list'
 import { Route as CrewNoiseProjectProjectIdMapRouteImport } from './routes/crew.noise.project.$projectId.map'
+import { Route as ApiCrewcardWalletAppleV1SplatRouteImport } from './routes/api.crewcard.wallet.apple.v1.$'
 
 const MainRoute = MainRouteImport.update({
   id: '/_main',
@@ -595,6 +596,12 @@ const CrewNoiseProjectProjectIdMapRoute =
     path: '/map',
     getParentRoute: () => CrewNoiseProjectProjectIdRoute,
   } as any)
+const ApiCrewcardWalletAppleV1SplatRoute =
+  ApiCrewcardWalletAppleV1SplatRouteImport.update({
+    id: '/api/crewcard/wallet/apple/v1/$',
+    path: '/api/crewcard/wallet/apple/v1/$',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof MainIndexRoute
@@ -690,6 +697,7 @@ export interface FileRoutesByFullPath {
   '/crew/noise/project/$projectId/list': typeof CrewNoiseProjectProjectIdListRoute
   '/crew/noise/project/$projectId/map': typeof CrewNoiseProjectProjectIdMapRoute
   '/crew/noise/project/$projectId/': typeof CrewNoiseProjectProjectIdIndexRoute
+  '/api/crewcard/wallet/apple/v1/$': typeof ApiCrewcardWalletAppleV1SplatRoute
 }
 export interface FileRoutesByTo {
   '/glutenfrei': typeof GlutenfreiRoute
@@ -780,6 +788,7 @@ export interface FileRoutesByTo {
   '/crew/noise/project/$projectId/list': typeof CrewNoiseProjectProjectIdListRoute
   '/crew/noise/project/$projectId/map': typeof CrewNoiseProjectProjectIdMapRoute
   '/crew/noise/project/$projectId': typeof CrewNoiseProjectProjectIdIndexRoute
+  '/api/crewcard/wallet/apple/v1/$': typeof ApiCrewcardWalletAppleV1SplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -877,6 +886,7 @@ export interface FileRoutesById {
   '/crew/noise/project/$projectId/list': typeof CrewNoiseProjectProjectIdListRoute
   '/crew/noise/project/$projectId/map': typeof CrewNoiseProjectProjectIdMapRoute
   '/crew/noise/project/$projectId/': typeof CrewNoiseProjectProjectIdIndexRoute
+  '/api/crewcard/wallet/apple/v1/$': typeof ApiCrewcardWalletAppleV1SplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -974,6 +984,7 @@ export interface FileRouteTypes {
     | '/crew/noise/project/$projectId/list'
     | '/crew/noise/project/$projectId/map'
     | '/crew/noise/project/$projectId/'
+    | '/api/crewcard/wallet/apple/v1/$'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/glutenfrei'
@@ -1064,6 +1075,7 @@ export interface FileRouteTypes {
     | '/crew/noise/project/$projectId/list'
     | '/crew/noise/project/$projectId/map'
     | '/crew/noise/project/$projectId'
+    | '/api/crewcard/wallet/apple/v1/$'
   id:
     | '__root__'
     | '/_main'
@@ -1160,6 +1172,7 @@ export interface FileRouteTypes {
     | '/crew/noise/project/$projectId/list'
     | '/crew/noise/project/$projectId/map'
     | '/crew/noise/project/$projectId/'
+    | '/api/crewcard/wallet/apple/v1/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1188,6 +1201,7 @@ export interface RootRouteChildren {
   ApiTwilioScreenRoute: typeof ApiTwilioScreenRoute
   ApiSpendenQuittungIdRoute: typeof ApiSpendenQuittungIdRoute
   ApiCrewcardWalletApplePayloadRoute: typeof ApiCrewcardWalletApplePayloadRoute
+  ApiCrewcardWalletAppleV1SplatRoute: typeof ApiCrewcardWalletAppleV1SplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1850,6 +1864,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrewNoiseProjectProjectIdMapRouteImport
       parentRoute: typeof CrewNoiseProjectProjectIdRoute
     }
+    '/api/crewcard/wallet/apple/v1/$': {
+      id: '/api/crewcard/wallet/apple/v1/$'
+      path: '/api/crewcard/wallet/apple/v1/$'
+      fullPath: '/api/crewcard/wallet/apple/v1/$'
+      preLoaderRoute: typeof ApiCrewcardWalletAppleV1SplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -2149,6 +2170,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiTwilioScreenRoute: ApiTwilioScreenRoute,
   ApiSpendenQuittungIdRoute: ApiSpendenQuittungIdRoute,
   ApiCrewcardWalletApplePayloadRoute: ApiCrewcardWalletApplePayloadRoute,
+  ApiCrewcardWalletAppleV1SplatRoute: ApiCrewcardWalletAppleV1SplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

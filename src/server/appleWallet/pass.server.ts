@@ -18,7 +18,7 @@ import {APPLE_WWDR_G4, CREW_PASS_CERTIFICATE} from './certificates';
  */
 const APPLE_TEAM_ID = 'S279DHCCVB';
 
-const CREW_PASS = {
+export const CREW_PASS = {
   passTypeIdentifier: 'pass.de.kulturspektakel.crew',
   certificate: CREW_PASS_CERTIFICATE,
   privateKey: () => process.env.APPLE_WALLET_CREW_PASS_PRIVATE_KEY,
@@ -37,6 +37,15 @@ const CREW_PASS = {
 export const NFC_PUBLIC_KEY =
   'MDkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDIgACT/x60YmnQyx1yd2mal3modLUnXno/Z58GqQv0J/m7mI=';
 
+/**
+ * The base URL of the PassKit web service (src/server/appleWalletWebService.ts):
+ * Wallet appends `/v1/devices/…`, `/v1/passes/…` and `/v1/log`. Every pass
+ * issued carries it, so it has to keep working for as long as they're around.
+ * Always production: a pass from a local server registers there too.
+ */
+export const WALLET_WEB_SERVICE_URL =
+  'https://www.kulturspektakel.de/api/crewcard/wallet/apple';
+
 export function isAppleWalletConfigured(): boolean {
   return Boolean(CREW_PASS.privateKey());
 }
@@ -49,32 +58,41 @@ function festivalYear(validUntil: Date): number {
 // Vite's `?inline` imports are data URLs.
 const png = (dataUrl: string) => Buffer.from(dataUrl.split(',')[1], 'base64');
 
-export function buildAppleWalletPass({
+export type CrewPassContent = {
+  /** The card id as plain hex (`A1B2…`): the pass's serial number. */
+  serialNumber: string;
+  /** The card id for display (`A1:B2:…`). */
+  cardId: string;
+  authenticationToken: string;
+  payload: string;
+  holderName: string;
+  lastValidDay: string;
+  validUntil: Date;
+  privileged: boolean;
+};
+
+export function crewPassJson({
+  serialNumber,
   cardId,
+  authenticationToken,
   holderName,
   lastValidDay,
   validUntil,
   privileged,
   payload,
-}: {
-  payload: string;
-  cardId: string;
-  holderName: string;
-  lastValidDay: string;
-  validUntil: Date;
-  privileged: boolean;
-}): Buffer {
-  const signerKey = CREW_PASS.privateKey();
-  if (!signerKey) {
-    throw new Error('Apple Wallet is not configured');
-  }
-
-  const passJson = {
+}: CrewPassContent) {
+  return {
     formatVersion: 1,
     passTypeIdentifier: CREW_PASS.passTypeIdentifier,
     teamIdentifier: APPLE_TEAM_ID,
-    // The card id: installing the same card twice replaces the pass.
-    serialNumber: cardId,
+    // The card id: installing the same card twice replaces the pass. Wallet
+    // knows the pass by it for good, so it can never change (which rules out
+    // the payload: it changes with `validUntil`).
+    serialNumber,
+    // Wallet registers the pass here and fetches updates from here, sending
+    // the token as `Authorization: ApplePass <token>`.
+    webServiceURL: WALLET_WEB_SERVICE_URL,
+    authenticationToken,
     organizationName: 'Kulturspektakel Gauting',
     description: 'CrewCard',
     // The KultCard's red and its white K square (src/components/kultcard/Card.tsx;
@@ -125,10 +143,17 @@ export function buildAppleWalletPass({
       backFields: [{key: 'cardId', label: 'Karten-ID', value: cardId}],
     },
   };
+}
+
+export function buildAppleWalletPass(content: CrewPassContent): Buffer {
+  const signerKey = CREW_PASS.privateKey();
+  if (!signerKey) {
+    throw new Error('Apple Wallet is not configured');
+  }
 
   const pass = new PKPass(
     {
-      'pass.json': Buffer.from(JSON.stringify(passJson)),
+      'pass.json': Buffer.from(JSON.stringify(crewPassJson(content))),
       'icon.png': png(icon),
       'icon@2x.png': png(icon2x),
       'icon@3x.png': png(icon3x),
