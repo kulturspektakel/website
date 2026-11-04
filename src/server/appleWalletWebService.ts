@@ -3,7 +3,8 @@ import * as Sentry from '@sentry/tanstackstart-react';
 import {and, eq} from 'drizzle-orm';
 import {db} from './db.server';
 import {crewCard, walletPassRegistration} from './db/schema';
-import {CREW_PASS, isAppleWalletConfigured} from './appleWallet/pass.server';
+import {isAppleWalletConfigured} from './appleWallet/pass.server';
+import {CREW_PASS} from './appleWallet/passType';
 import {
   buildCrewCardPass,
   passLastModified,

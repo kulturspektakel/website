@@ -1,0 +1,1 @@
+ALTER TABLE "CrewCard" ADD COLUMN "walletMessage" text;

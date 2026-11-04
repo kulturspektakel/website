@@ -499,6 +499,9 @@ export const crewCard = pgTable(
     // the update. Null until the first one; the pass then dates from
     // `enrolledAt`.
     passUpdatedAt: timestamp({withTimezone: true, mode: 'date'}),
+    // Wallet cards: the latest message for the holder, shown on the back of
+    // the pass. Changing it (and pushing) shows it as a notification.
+    walletMessage: text(),
   },
   (table) => [
     foreignKey({

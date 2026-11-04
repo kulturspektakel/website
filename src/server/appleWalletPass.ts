@@ -27,6 +27,7 @@ export const walletCardColumns = {
   privileged: true,
   walletAuthToken: true,
   passUpdatedAt: true,
+  walletMessage: true,
 } as const;
 export const walletCardWith = {
   viewer: {columns: {displayName: true}},
@@ -38,6 +39,7 @@ type WalletCard = {
   nickname: string | null;
   privileged: boolean;
   walletAuthToken: string;
+  walletMessage: string | null;
   viewer: {displayName: string} | null;
 };
 
@@ -72,6 +74,7 @@ export function buildCrewCardPass(card: WalletCard): Buffer {
     }),
     validUntil: card.validUntil,
     privileged: card.privileged,
+    message: card.walletMessage,
   });
 }
 

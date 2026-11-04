@@ -35,6 +35,7 @@ function walletCard(createdAgoMs: number) {
     nickname: null,
     walletAuthToken: 'token-token-token-token',
     passUpdatedAt: null,
+    walletMessage: null,
     viewer: {displayName: 'Erika Mustermann'},
   };
 }
@@ -99,6 +100,14 @@ test('the pass points Wallet at the web service', async () => {
     lastValidDay: 'Mo., 26.07.2027',
     validUntil: kultEpochToDate(940),
     privileged: false,
+    message: 'Schichtplan ist online',
+  });
+  // The message notifies when it changes.
+  expect(json.generic.backFields[0]).toEqual({
+    key: 'message',
+    label: 'Neuigkeiten',
+    value: 'Schichtplan ist online',
+    changeMessage: '%@',
   });
   expect(json).toMatchObject({
     serialNumber: 'A1010203040506',

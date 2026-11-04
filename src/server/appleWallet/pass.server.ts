@@ -6,23 +6,14 @@ import icon3x from './icon@3x.png?inline';
 import logo from './logo.png?inline';
 import logo2x from './logo@2x.png?inline';
 import logo3x from './logo@3x.png?inline';
-import {APPLE_WWDR_G4, CREW_PASS_CERTIFICATE} from './certificates';
+import {APPLE_WWDR_G4} from './certificates';
+import {APPLE_TEAM_ID, CREW_PASS} from './passType';
 
 /**
- * Apple Wallet passes for CrewCards.
- *
- * Every Pass Type ID has its own certificate, so each pass type gets its own
- * entry here; only the certificate's private key is a secret. Without it (e.g.
+ * Apple Wallet passes for CrewCards. Without the pass type's private key (e.g.
  * locally) the feature is off: `/crewcard` sends the plain card link and the
  * download route redirects to the card page.
  */
-const APPLE_TEAM_ID = 'S279DHCCVB';
-
-export const CREW_PASS = {
-  passTypeIdentifier: 'pass.de.kulturspektakel.crew',
-  certificate: CREW_PASS_CERTIFICATE,
-  privateKey: () => process.env.APPLE_WALLET_CREW_PASS_PRIVATE_KEY,
-};
 
 /**
  * The public half of the terminals' NFC (VAS) key pair: base64 X.509
@@ -69,6 +60,8 @@ export type CrewPassContent = {
   lastValidDay: string;
   validUntil: Date;
   privileged: boolean;
+  /** The latest message for the holder (`CrewCard.walletMessage`). */
+  message: string | null;
 };
 
 export function crewPassJson({
@@ -80,6 +73,7 @@ export function crewPassJson({
   validUntil,
   privileged,
   payload,
+  message,
 }: CrewPassContent) {
   return {
     formatVersion: 1,
@@ -140,7 +134,19 @@ export function crewPassJson({
         },
         {key: 'validUntil', label: 'Gültig bis', value: lastValidDay},
       ],
-      backFields: [{key: 'cardId', label: 'Karten-ID', value: cardId}],
+      backFields: [
+        // When the value changes, Wallet shows `changeMessage` (`%@` = the
+        // new value) as a notification; the same text twice doesn't notify.
+        // The field is always there, so a message changes an existing field
+        // rather than adding one, which may not notify.
+        {
+          key: 'message',
+          label: 'Neuigkeiten',
+          value: message ?? '–',
+          changeMessage: '%@',
+        },
+        {key: 'cardId', label: 'Karten-ID', value: cardId},
+      ],
     },
   };
 }
