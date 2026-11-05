@@ -83,6 +83,24 @@ describe('crewCardPrivileges', () => {
     ]);
   });
 
+  test('reconcile refreshes wallet passes with a message per direction', async () => {
+    conversationMembers.mockResolvedValue(['U1']);
+    const granted = Buffer.from([1]);
+    const revoked = Buffer.from([2]);
+    updates
+      .mockResolvedValueOnce([{id: granted}])
+      .mockResolvedValueOnce([{id: revoked}]);
+
+    await reconcileBonbudePrivileges();
+
+    expect(refreshWalletPasses).toHaveBeenCalledWith([granted], {
+      message: 'Bonbude freigeschaltet',
+    });
+    expect(refreshWalletPasses).toHaveBeenCalledWith([revoked], {
+      message: 'Bonbude-Zugang entfernt',
+    });
+  });
+
   test('reconcile writes nothing when the channel reads back empty', async () => {
     conversationMembers.mockResolvedValue([]);
 

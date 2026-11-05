@@ -6,6 +6,13 @@ import {SlackChannel} from '../utils/slackChannels';
 import {refreshWalletPasses} from './crewCardPass.server';
 
 /**
+ * Wallet pass messages for a privilege change. The pass's header shows the
+ * status ("Bonbude" or "Crew"); the message is what makes Wallet notify.
+ */
+const GRANTED_PASS_MESSAGE = 'Bonbude freigeschaltet';
+const REVOKED_PASS_MESSAGE = 'Bonbude-Zugang entfernt';
+
+/**
  * The Bonbude privilege on CrewCards, driven by the membership of #bonbude.
  * `Viewer.id` is the Slack user id and `CrewCard.viewerId` points at it, so
  * channel membership maps straight onto cards — `privileged` is what
@@ -44,8 +51,10 @@ export async function grantBonbudePrivilege(viewerId: string): Promise<number> {
   if (count > 0) {
     console.log(`[crew-card-privileges] granted ${count} for ${viewerId}`);
   }
-  // Wallet passes show the status ("Bonbude" or "Crew").
-  await refreshWalletPasses(changed.map(({id}) => id));
+  await refreshWalletPasses(
+    changed.map(({id}) => id),
+    {message: GRANTED_PASS_MESSAGE},
+  );
   return count;
 }
 
@@ -67,8 +76,10 @@ export async function revokeBonbudePrivilege(
   if (count > 0) {
     console.log(`[crew-card-privileges] revoked ${count} for ${viewerId}`);
   }
-  // Wallet passes show the status ("Bonbude" or "Crew").
-  await refreshWalletPasses(changed.map(({id}) => id));
+  await refreshWalletPasses(
+    changed.map(({id}) => id),
+    {message: REVOKED_PASS_MESSAGE},
+  );
   return count;
 }
 
@@ -149,6 +160,13 @@ export async function reconcileBonbudePrivileges(): Promise<{
       `[crew-card-privileges] reconciled: granted ${granted.length}, revoked ${revoked.length}`,
     );
   }
-  await refreshWalletPasses([...granted, ...revoked].map(({id}) => id));
+  await refreshWalletPasses(
+    granted.map(({id}) => id),
+    {message: GRANTED_PASS_MESSAGE},
+  );
+  await refreshWalletPasses(
+    revoked.map(({id}) => id),
+    {message: REVOKED_PASS_MESSAGE},
+  );
   return {granted: granted.length, revoked: revoked.length};
 }
