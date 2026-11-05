@@ -147,7 +147,11 @@ test('the pass is the template with the card filled in', async () => {
     authenticationToken: 'token-token-token-token',
     sharingProhibited: true,
     expirationDate: kultEpochToDate(940).toISOString(),
-    nfc: {message: payload(), encryptionPublicKey: NFC_PUBLIC_KEY},
+    nfc: {
+      message: payload(),
+      encryptionPublicKey: NFC_PUBLIC_KEY,
+      requiresAuthentication: false,
+    },
     featuredActions: [
       {identifier: 'card-page', url: `https://kult.cash/$c/${payload()}`},
     ],

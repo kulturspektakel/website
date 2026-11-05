@@ -194,8 +194,14 @@ export function crewPassJson(content: CrewPassContent) {
     // Wallet greys the pass out from then on.
     expirationDate: content.validUntil.toISOString(),
     // What the phone hands a terminal over NFC: the same signed payload a
-    // physical card carries after `kult.cash/$c/` (23 chars, max is 64).
-    nfc: {message: content.payload, encryptionPublicKey: NFC_PUBLIC_KEY},
+    // physical card carries after `kult.cash/$c/` (23 chars, max is 64). No
+    // Face ID per use (Apple's default, made explicit): like a physical card,
+    // holding the phone to the terminal is enough.
+    nfc: {
+      message: content.payload,
+      encryptionPublicKey: NFC_PUBLIC_KEY,
+      requiresAuthentication: false,
+    },
     featuredActions: actions,
   };
 }
