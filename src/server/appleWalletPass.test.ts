@@ -9,6 +9,20 @@ const {db} = await vi.hoisted(async () =>
 );
 vi.mock('./db.server', () => ({db}));
 
+const fields = {
+  eventId: 'kult2027',
+  holderName: 'Erika Mustermann',
+  privileged: false,
+  bookingsTotal: 2350,
+  badges: 3,
+  message: 'Schichtplan ist online',
+};
+// The snapshot logic is covered by the web service e2e test.
+const {refreshCrewCardPass} = vi.hoisted(() => ({
+  refreshCrewCardPass: vi.fn(),
+}));
+vi.mock('./crewCardPass.server', () => ({refreshCrewCardPass}));
+
 const {handleAppleWalletPass} = await import('./appleWalletPass');
 
 // A throwaway key standing in for the real one (the committed certificate is
@@ -29,18 +43,18 @@ function walletCard(createdAgoMs: number) {
     id: Buffer.from(cardId),
     cardType: 'APPLE_WALLET',
     suspended: false,
-    privileged: false,
     enrolledAt: new Date(Date.now() - createdAgoMs),
     validUntil: kultEpochToDate(940),
-    nickname: null,
     walletAuthToken: 'token-token-token-token',
     passUpdatedAt: null,
-    walletMessage: null,
-    viewer: {displayName: 'Erika Mustermann'},
+    walletPass: null,
   };
 }
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  refreshCrewCardPass.mockResolvedValue(fields);
+});
 
 describe('handleAppleWalletPass', () => {
   test('serves a signed pass right after the card was created', async () => {
@@ -88,33 +102,58 @@ test('the NFC key is a compressed P-256 point, which Wallet requires', async () 
   expect([0x02, 0x03]).toContain(point[0]);
 });
 
-test('the pass points Wallet at the web service', async () => {
-  const {crewPassJson, WALLET_WEB_SERVICE_URL} =
+test('the pass is the template with the card filled in', async () => {
+  const {crewPassJson, WALLET_WEB_SERVICE_URL, NFC_PUBLIC_KEY} =
     await import('./appleWallet/pass.server');
   const json = crewPassJson({
     serialNumber: 'A1010203040506',
     cardId: 'A1:01:02:03:04:05:06',
     authenticationToken: 'token-token-token-token',
     payload: payload(),
-    holderName: 'Erika Mustermann',
-    lastValidDay: 'Mo., 26.07.2027',
     validUntil: kultEpochToDate(940),
-    privileged: false,
-    message: 'Schichtplan ist online',
-  });
-  // The message notifies when it changes.
-  expect(json.generic.backFields[0]).toEqual({
-    key: 'message',
-    label: 'Neuigkeiten',
-    value: 'Schichtplan ist online',
-    changeMessage: '%@',
-  });
+    fields,
+  }) as Record<string, any>;
+
+  const byKey: Record<string, Record<string, any>> = Object.fromEntries(
+    Object.values(json.generic as Record<string, Array<Record<string, any>>>)
+      .flat()
+      .map((field) => [field.key, field]),
+  );
+  expect(byKey.status).toMatchObject({label: 'KULT2027', value: 'CREW'});
+  expect(byKey.name).toMatchObject({value: 'Erika Mustermann'});
+  // Euros; the template's `currencyCode` formats them.
+  expect(byKey.bookings).toMatchObject({value: 23.5, currencyCode: 'EUR'});
+  // Only the message notifies (`changeMessage` from the template); the rest
+  // updates silently, so an update never changes two notifying fields.
+  expect(byKey.badges).toMatchObject({value: 3});
+  expect(
+    Object.values(byKey)
+      .filter((field) => field.changeMessage)
+      .map((field) => field.key),
+  ).toEqual(['message']);
+  expect(byKey.message).toMatchObject({value: 'Schichtplan ist online'});
+  expect(byKey.message.changeMessage).toContain('%@');
+  // The last valid day, a day before the card runs out.
+  expect(byKey.validUntil.value).toBe(
+    new Date(kultEpochToDate(939)).toISOString(),
+  );
+  expect(byKey.cardId).toMatchObject({value: 'A1:01:02:03:04:05:06'});
+
+  // Set by the code, whatever the template says.
   expect(json).toMatchObject({
     serialNumber: 'A1010203040506',
+    passTypeIdentifier: 'pass.de.kulturspektakel.crew',
     webServiceURL: WALLET_WEB_SERVICE_URL,
     authenticationToken: 'token-token-token-token',
-    nfc: {message: payload()},
+    sharingProhibited: true,
+    expirationDate: kultEpochToDate(940).toISOString(),
+    nfc: {message: payload(), encryptionPublicKey: NFC_PUBLIC_KEY},
+    featuredActions: [
+      {identifier: 'card-page', url: `https://kult.cash/$c/${payload()}`},
+    ],
   });
+  // Pass Designer's own ids stay out of the pass.
+  expect(JSON.stringify(json)).not.toContain('"_id"');
   // Wallet ignores the web service unless it's HTTPS.
   expect(WALLET_WEB_SERVICE_URL).toMatch(/^https:\/\//);
 });

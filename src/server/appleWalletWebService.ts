@@ -3,14 +3,12 @@ import * as Sentry from '@sentry/tanstackstart-react';
 import {and, eq} from 'drizzle-orm';
 import {db} from './db.server';
 import {crewCard, walletPassRegistration} from './db/schema';
-import {isAppleWalletConfigured} from './appleWallet/pass.server';
-import {CREW_PASS} from './appleWallet/passType';
+import {CREW_PASS, isAppleWalletConfigured} from './appleWallet/pass.server';
 import {
   buildCrewCardPass,
   passLastModified,
   passResponse,
   walletCardColumns,
-  walletCardWith,
 } from './appleWalletPass';
 import {byteArrayToString, stringToByteArray} from '../utils/cardUtils';
 import {CrewCardType} from '../utils/enums';
@@ -32,8 +30,8 @@ import {CrewCardType} from '../utils/enums';
  * changed-serials request has no token: it only reveals serials the device
  * registered itself.
  *
- * Nothing pushes updates yet: `passUpdatedAt` stays null, so the passes don't
- * change, but Wallet's pull-to-refresh already gets the current pass.
+ * Passes change through crewCardPass.server.ts, which updates the snapshot,
+ * bumps `passUpdatedAt` and pushes; the device then comes here.
  */
 export async function handleAppleWalletWebService(
   request: Request,
@@ -98,7 +96,6 @@ async function authorizedCard(request: Request, serial: string | undefined) {
       eq(crewCard.cardType, CrewCardType.APPLE_WALLET),
     ),
     columns: walletCardColumns,
-    with: walletCardWith,
   });
   if (!card?.walletAuthToken || !tokensMatch(card.walletAuthToken, token)) {
     return undefined;
@@ -204,14 +201,19 @@ async function updatedSerials(request: Request, deviceId: string) {
 }
 
 /**
- * The current pass. Suspended cards get theirs unchanged for now (voiding
- * comes with pushing updates). 304 when `If-Modified-Since` is current;
- * HTTP dates only have seconds, so the comparison is too.
+ * The current pass, built from the `walletPass` snapshot. The download route
+ * creates it, and a device only knows the pass from there, so it's never
+ * missing (except for passes from before snapshots, which get a 404).
+ * Suspended cards get theirs unchanged for now. 304 when `If-Modified-Since`
+ * is current; HTTP dates only have seconds, so the comparison is too.
  */
 async function latestPass(request: Request, serial: string | undefined) {
   const card = await authorizedCard(request, serial);
   if (!card) {
     return unauthorized();
+  }
+  if (!card.walletPass) {
+    return notFound();
   }
   if (!isAppleWalletConfigured()) {
     return new Response(null, {status: 503});
@@ -232,7 +234,9 @@ async function latestPass(request: Request, serial: string | undefined) {
     });
   }
 
-  return passResponse(buildCrewCardPass(card), {'Last-Modified': lastModified});
+  return passResponse(buildCrewCardPass(card, card.walletPass), {
+    'Last-Modified': lastModified,
+  });
 }
 
 // Unauthenticated, so capped: Wallet only sends a few lines at a time.

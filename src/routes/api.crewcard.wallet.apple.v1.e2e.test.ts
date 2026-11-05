@@ -1,5 +1,6 @@
-import {beforeAll, describe, expect, test} from 'vitest';
+import {beforeAll, describe, expect, inject, test} from 'vitest';
 import {baseUrl, query} from '../../test/e2e/client';
+import {encodeCrewCardPayload} from '../utils/decodePayload';
 
 const base = `${baseUrl}/api/crewcard/wallet/apple/v1`;
 const PASS_TYPE = 'pass.de.kulturspektakel.crew';
@@ -8,6 +9,15 @@ const TOKEN = 'e2e-token-e2e-token-e2e-token';
 const ENROLLED_AT = new Date('2026-11-01T12:00:00.000Z');
 // Kult epoch day 940 (kultEpochToDate: 2025-01-02 04:00 local + 940 days).
 const VALID_UNTIL = new Date(2025, 0, 2 + 940, 4);
+
+const SNAPSHOT = {
+  eventId: 'e2e-wallet-kult',
+  holderName: 'Erika Mustermann',
+  privileged: false,
+  bookingsTotal: 0,
+  badges: 0,
+  message: null,
+};
 
 const auth = (token = TOKEN) => ({Authorization: `ApplePass ${token}`});
 
@@ -29,11 +39,18 @@ const registrations = () =>
 
 describe('Apple Wallet web service', () => {
   beforeAll(async () => {
+    // The festival the cards are for: the first one ending after issue.
     await query(
-      `insert into "CrewCard"(id, "validUntil", "enrolledAt", "cardType", "walletAuthToken")
-       values (decode($1, 'hex'), $2, $3, 'APPLE_WALLET', $4),
-              (decode('A1E2E000000002', 'hex'), $2, $3, 'APPLE_WALLET', 'other-token-other-token')`,
-      [SERIAL, VALID_UNTIL, ENROLLED_AT, TOKEN],
+      `insert into "Event"(id, name, start, "end", "eventType")
+       values ('e2e-wallet-kult', 'Kult E2E', '2027-07-23', '2027-07-26', 'Kulturspektakel')`,
+    );
+    // The first card's pass is installed (it has its snapshot); the second
+    // was just issued, so its download is still open.
+    await query(
+      `insert into "CrewCard"(id, "validUntil", "enrolledAt", "cardType", "walletAuthToken", "walletPass")
+       values (decode($1, 'hex'), $2, $3, 'APPLE_WALLET', $4, $5),
+              (decode('A1E2E000000002', 'hex'), $2, now(), 'APPLE_WALLET', 'other-token-other-token', null)`,
+      [SERIAL, VALID_UNTIL, ENROLLED_AT, TOKEN, SNAPSHOT],
     );
   });
 
@@ -118,6 +135,54 @@ describe('Apple Wallet web service', () => {
       headers: {...auth(), 'If-Modified-Since': ENROLLED_AT.toUTCString()},
     });
     expect(unchanged.status).toBe(304);
+  });
+
+  test('a pass is created with a snapshot for its festival', async () => {
+    const url = `${base}/passes/${PASS_TYPE}/A1E2E000000002`;
+    const headers = auth('other-token-other-token');
+    // Only the download creates snapshots; until then there's no pass.
+    expect((await fetch(url, {headers})).status).toBe(404);
+
+    // The total counts everything since the card was issued, also outside
+    // the festival (badges don't); an order from before it doesn't count.
+    await query(
+      `with booked as (
+         insert into "Order"("crewCardId", payment, "createdAt")
+         values (decode('A1E2E000000002', 'hex'), 'FREE_CREW', now()),
+                (decode('A1E2E000000002', 'hex'), 'FREE_CREW', '2020-01-01')
+         returning id, "createdAt"
+       )
+       insert into "OrderItem"("orderId", name, amount, "perUnitPrice")
+       select id, 'Bier', 2, case when "createdAt" > '2021-01-01' then 175 else 1000 end
+       from booked`,
+    );
+
+    process.env.CONTACTLESS_SALT = inject('e2e').salt;
+    const payload = encodeCrewCardPayload(
+      Buffer.from('A1E2E000000002', 'hex'),
+      940,
+    );
+    const download = await fetch(
+      `${baseUrl}/api/crewcard/wallet/apple/${payload}`,
+      {redirect: 'manual'},
+    );
+    expect(download.status).toBe(200);
+    const [card] = await query<{walletPass: unknown; passUpdatedAt: Date}>(
+      `select "walletPass", "passUpdatedAt" from "CrewCard"
+       where id = decode('A1E2E000000002', 'hex')`,
+    );
+    // The first festival ending after issue; no holder.
+    expect(card.walletPass).toEqual({
+      ...SNAPSHOT,
+      holderName: 'Crew',
+      bookingsTotal: 350,
+    });
+
+    const served = await fetch(url, {headers});
+    expect(served.status).toBe(200);
+    expect(served.headers.get('Last-Modified')).toBe(
+      card.passUpdatedAt.toUTCString(),
+    );
   });
 
   test('unregisters only that device', async () => {

@@ -21,6 +21,7 @@ import {db} from '../../server/db.server';
 import {order} from '../../server/db/schema';
 import {stringToByteArray} from '../../utils/cardUtils';
 import {locale, timeZone} from '../../utils/dateUtils';
+import {refreshWalletPasses} from '../../server/crewCardPass.server';
 
 const DEPOSIT_VALUE = 200;
 
@@ -33,15 +34,13 @@ const setOrderNotForMe = createServerFn({method: 'POST'})
     }),
   )
   .handler(async ({data: {cardId, orderId, notForMe}}) => {
+    const crewCardId = Buffer.from(stringToByteArray(cardId));
     await db
       .update(order)
       .set({notForMe})
-      .where(
-        and(
-          eq(order.id, orderId),
-          eq(order.crewCardId, Buffer.from(stringToByteArray(cardId))),
-        ),
-      );
+      .where(and(eq(order.id, orderId), eq(order.crewCardId, crewCardId)));
+    // Changes the badges a wallet pass shows.
+    await refreshWalletPasses([crewCardId]);
   });
 
 type CardChange = {

@@ -62,13 +62,13 @@ import { Route as ApiSlackTwofactorRouteImport } from './routes/api.slack.twofac
 import { Route as ApiStripeWebhookRouteImport } from './routes/api.stripe.webhook'
 import { Route as ApiTasksAwarenessCallRouteImport } from './routes/api.tasks.awareness-call'
 import { Route as ApiTasksAwarenessSlackRouteImport } from './routes/api.tasks.awareness-slack'
-import { Route as ApiTasksBadgeAwardedRouteImport } from './routes/api.tasks.badge-awarded'
 import { Route as ApiTasksBandApplicationDemoRouteImport } from './routes/api.tasks.band-application-demo'
 import { Route as ApiTasksBandApplicationDistanceRouteImport } from './routes/api.tasks.band-application-distance'
 import { Route as ApiTasksCreateBandApplicationRouteImport } from './routes/api.tasks.create-band-application'
 import { Route as ApiTasksCreateMembershipApplicationRouteImport } from './routes/api.tasks.create-membership-application'
 import { Route as ApiTasksCreateNonceRequestRouteImport } from './routes/api.tasks.create-nonce-request'
 import { Route as ApiTasksCrewCardEnrolledRouteImport } from './routes/api.tasks.crew-card-enrolled'
+import { Route as ApiTasksCrewCardOrderRouteImport } from './routes/api.tasks.crew-card-order'
 import { Route as ApiTasksFacebookLikesRouteImport } from './routes/api.tasks.facebook-likes'
 import { Route as ApiTasksGmailNotificationRouteImport } from './routes/api.tasks.gmail-notification'
 import { Route as ApiTasksGmailReminderRouteImport } from './routes/api.tasks.gmail-reminder'
@@ -371,11 +371,6 @@ const ApiTasksAwarenessSlackRoute = ApiTasksAwarenessSlackRouteImport.update({
   path: '/awareness-slack',
   getParentRoute: () => ApiTasksRoute,
 } as any)
-const ApiTasksBadgeAwardedRoute = ApiTasksBadgeAwardedRouteImport.update({
-  id: '/badge-awarded',
-  path: '/badge-awarded',
-  getParentRoute: () => ApiTasksRoute,
-} as any)
 const ApiTasksBandApplicationDemoRoute =
   ApiTasksBandApplicationDemoRouteImport.update({
     id: '/band-application-demo',
@@ -412,6 +407,11 @@ const ApiTasksCrewCardEnrolledRoute =
     path: '/crew-card-enrolled',
     getParentRoute: () => ApiTasksRoute,
   } as any)
+const ApiTasksCrewCardOrderRoute = ApiTasksCrewCardOrderRouteImport.update({
+  id: '/crew-card-order',
+  path: '/crew-card-order',
+  getParentRoute: () => ApiTasksRoute,
+} as any)
 const ApiTasksFacebookLikesRoute = ApiTasksFacebookLikesRouteImport.update({
   id: '/facebook-likes',
   path: '/facebook-likes',
@@ -655,13 +655,13 @@ export interface FileRoutesByFullPath {
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/api/tasks/awareness-call': typeof ApiTasksAwarenessCallRoute
   '/api/tasks/awareness-slack': typeof ApiTasksAwarenessSlackRoute
-  '/api/tasks/badge-awarded': typeof ApiTasksBadgeAwardedRoute
   '/api/tasks/band-application-demo': typeof ApiTasksBandApplicationDemoRoute
   '/api/tasks/band-application-distance': typeof ApiTasksBandApplicationDistanceRoute
   '/api/tasks/create-band-application': typeof ApiTasksCreateBandApplicationRoute
   '/api/tasks/create-membership-application': typeof ApiTasksCreateMembershipApplicationRoute
   '/api/tasks/create-nonce-request': typeof ApiTasksCreateNonceRequestRoute
   '/api/tasks/crew-card-enrolled': typeof ApiTasksCrewCardEnrolledRoute
+  '/api/tasks/crew-card-order': typeof ApiTasksCrewCardOrderRoute
   '/api/tasks/facebook-likes': typeof ApiTasksFacebookLikesRoute
   '/api/tasks/gmail-notification': typeof ApiTasksGmailNotificationRoute
   '/api/tasks/gmail-reminder': typeof ApiTasksGmailReminderRoute
@@ -747,13 +747,13 @@ export interface FileRoutesByTo {
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/api/tasks/awareness-call': typeof ApiTasksAwarenessCallRoute
   '/api/tasks/awareness-slack': typeof ApiTasksAwarenessSlackRoute
-  '/api/tasks/badge-awarded': typeof ApiTasksBadgeAwardedRoute
   '/api/tasks/band-application-demo': typeof ApiTasksBandApplicationDemoRoute
   '/api/tasks/band-application-distance': typeof ApiTasksBandApplicationDistanceRoute
   '/api/tasks/create-band-application': typeof ApiTasksCreateBandApplicationRoute
   '/api/tasks/create-membership-application': typeof ApiTasksCreateMembershipApplicationRoute
   '/api/tasks/create-nonce-request': typeof ApiTasksCreateNonceRequestRoute
   '/api/tasks/crew-card-enrolled': typeof ApiTasksCrewCardEnrolledRoute
+  '/api/tasks/crew-card-order': typeof ApiTasksCrewCardOrderRoute
   '/api/tasks/facebook-likes': typeof ApiTasksFacebookLikesRoute
   '/api/tasks/gmail-notification': typeof ApiTasksGmailNotificationRoute
   '/api/tasks/gmail-reminder': typeof ApiTasksGmailReminderRoute
@@ -844,13 +844,13 @@ export interface FileRoutesById {
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/api/tasks/awareness-call': typeof ApiTasksAwarenessCallRoute
   '/api/tasks/awareness-slack': typeof ApiTasksAwarenessSlackRoute
-  '/api/tasks/badge-awarded': typeof ApiTasksBadgeAwardedRoute
   '/api/tasks/band-application-demo': typeof ApiTasksBandApplicationDemoRoute
   '/api/tasks/band-application-distance': typeof ApiTasksBandApplicationDistanceRoute
   '/api/tasks/create-band-application': typeof ApiTasksCreateBandApplicationRoute
   '/api/tasks/create-membership-application': typeof ApiTasksCreateMembershipApplicationRoute
   '/api/tasks/create-nonce-request': typeof ApiTasksCreateNonceRequestRoute
   '/api/tasks/crew-card-enrolled': typeof ApiTasksCrewCardEnrolledRoute
+  '/api/tasks/crew-card-order': typeof ApiTasksCrewCardOrderRoute
   '/api/tasks/facebook-likes': typeof ApiTasksFacebookLikesRoute
   '/api/tasks/gmail-notification': typeof ApiTasksGmailNotificationRoute
   '/api/tasks/gmail-reminder': typeof ApiTasksGmailReminderRoute
@@ -942,13 +942,13 @@ export interface FileRouteTypes {
     | '/api/stripe/webhook'
     | '/api/tasks/awareness-call'
     | '/api/tasks/awareness-slack'
-    | '/api/tasks/badge-awarded'
     | '/api/tasks/band-application-demo'
     | '/api/tasks/band-application-distance'
     | '/api/tasks/create-band-application'
     | '/api/tasks/create-membership-application'
     | '/api/tasks/create-nonce-request'
     | '/api/tasks/crew-card-enrolled'
+    | '/api/tasks/crew-card-order'
     | '/api/tasks/facebook-likes'
     | '/api/tasks/gmail-notification'
     | '/api/tasks/gmail-reminder'
@@ -1034,13 +1034,13 @@ export interface FileRouteTypes {
     | '/api/stripe/webhook'
     | '/api/tasks/awareness-call'
     | '/api/tasks/awareness-slack'
-    | '/api/tasks/badge-awarded'
     | '/api/tasks/band-application-demo'
     | '/api/tasks/band-application-distance'
     | '/api/tasks/create-band-application'
     | '/api/tasks/create-membership-application'
     | '/api/tasks/create-nonce-request'
     | '/api/tasks/crew-card-enrolled'
+    | '/api/tasks/crew-card-order'
     | '/api/tasks/facebook-likes'
     | '/api/tasks/gmail-notification'
     | '/api/tasks/gmail-reminder'
@@ -1130,13 +1130,13 @@ export interface FileRouteTypes {
     | '/api/stripe/webhook'
     | '/api/tasks/awareness-call'
     | '/api/tasks/awareness-slack'
-    | '/api/tasks/badge-awarded'
     | '/api/tasks/band-application-demo'
     | '/api/tasks/band-application-distance'
     | '/api/tasks/create-band-application'
     | '/api/tasks/create-membership-application'
     | '/api/tasks/create-nonce-request'
     | '/api/tasks/crew-card-enrolled'
+    | '/api/tasks/crew-card-order'
     | '/api/tasks/facebook-likes'
     | '/api/tasks/gmail-notification'
     | '/api/tasks/gmail-reminder'
@@ -1577,13 +1577,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTasksAwarenessSlackRouteImport
       parentRoute: typeof ApiTasksRoute
     }
-    '/api/tasks/badge-awarded': {
-      id: '/api/tasks/badge-awarded'
-      path: '/badge-awarded'
-      fullPath: '/api/tasks/badge-awarded'
-      preLoaderRoute: typeof ApiTasksBadgeAwardedRouteImport
-      parentRoute: typeof ApiTasksRoute
-    }
     '/api/tasks/band-application-demo': {
       id: '/api/tasks/band-application-demo'
       path: '/band-application-demo'
@@ -1624,6 +1617,13 @@ declare module '@tanstack/react-router' {
       path: '/crew-card-enrolled'
       fullPath: '/api/tasks/crew-card-enrolled'
       preLoaderRoute: typeof ApiTasksCrewCardEnrolledRouteImport
+      parentRoute: typeof ApiTasksRoute
+    }
+    '/api/tasks/crew-card-order': {
+      id: '/api/tasks/crew-card-order'
+      path: '/crew-card-order'
+      fullPath: '/api/tasks/crew-card-order'
+      preLoaderRoute: typeof ApiTasksCrewCardOrderRouteImport
       parentRoute: typeof ApiTasksRoute
     }
     '/api/tasks/facebook-likes': {
@@ -2094,13 +2094,13 @@ const ApiOwntracksRouteWithChildren = ApiOwntracksRoute._addFileChildren(
 interface ApiTasksRouteChildren {
   ApiTasksAwarenessCallRoute: typeof ApiTasksAwarenessCallRoute
   ApiTasksAwarenessSlackRoute: typeof ApiTasksAwarenessSlackRoute
-  ApiTasksBadgeAwardedRoute: typeof ApiTasksBadgeAwardedRoute
   ApiTasksBandApplicationDemoRoute: typeof ApiTasksBandApplicationDemoRoute
   ApiTasksBandApplicationDistanceRoute: typeof ApiTasksBandApplicationDistanceRoute
   ApiTasksCreateBandApplicationRoute: typeof ApiTasksCreateBandApplicationRoute
   ApiTasksCreateMembershipApplicationRoute: typeof ApiTasksCreateMembershipApplicationRoute
   ApiTasksCreateNonceRequestRoute: typeof ApiTasksCreateNonceRequestRoute
   ApiTasksCrewCardEnrolledRoute: typeof ApiTasksCrewCardEnrolledRoute
+  ApiTasksCrewCardOrderRoute: typeof ApiTasksCrewCardOrderRoute
   ApiTasksFacebookLikesRoute: typeof ApiTasksFacebookLikesRoute
   ApiTasksGmailNotificationRoute: typeof ApiTasksGmailNotificationRoute
   ApiTasksGmailReminderRoute: typeof ApiTasksGmailReminderRoute
@@ -2118,7 +2118,6 @@ interface ApiTasksRouteChildren {
 const ApiTasksRouteChildren: ApiTasksRouteChildren = {
   ApiTasksAwarenessCallRoute: ApiTasksAwarenessCallRoute,
   ApiTasksAwarenessSlackRoute: ApiTasksAwarenessSlackRoute,
-  ApiTasksBadgeAwardedRoute: ApiTasksBadgeAwardedRoute,
   ApiTasksBandApplicationDemoRoute: ApiTasksBandApplicationDemoRoute,
   ApiTasksBandApplicationDistanceRoute: ApiTasksBandApplicationDistanceRoute,
   ApiTasksCreateBandApplicationRoute: ApiTasksCreateBandApplicationRoute,
@@ -2126,6 +2125,7 @@ const ApiTasksRouteChildren: ApiTasksRouteChildren = {
     ApiTasksCreateMembershipApplicationRoute,
   ApiTasksCreateNonceRequestRoute: ApiTasksCreateNonceRequestRoute,
   ApiTasksCrewCardEnrolledRoute: ApiTasksCrewCardEnrolledRoute,
+  ApiTasksCrewCardOrderRoute: ApiTasksCrewCardOrderRoute,
   ApiTasksFacebookLikesRoute: ApiTasksFacebookLikesRoute,
   ApiTasksGmailNotificationRoute: ApiTasksGmailNotificationRoute,
   ApiTasksGmailReminderRoute: ApiTasksGmailReminderRoute,

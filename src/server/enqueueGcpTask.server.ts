@@ -50,7 +50,7 @@ export async function enqueueGcpTask(
   options?: EnqueueOptions,
 ): Promise<void>;
 export async function enqueueGcpTask(
-  task: 'badge-awarded',
+  task: 'crew-card-order',
   payload: {orderId: number},
   options?: EnqueueOptions,
 ): Promise<void>;

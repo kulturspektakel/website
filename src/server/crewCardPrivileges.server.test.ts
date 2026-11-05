@@ -8,7 +8,12 @@ const {db, updates} = await vi.hoisted(async () =>
   (await import('../../test/dbMock')).dbMock(),
 );
 
+const {refreshWalletPasses} = vi.hoisted(() => ({
+  refreshWalletPasses: vi.fn(),
+}));
+
 vi.mock('./slack.server', () => ({conversationMembers}));
+vi.mock('./crewCardPass.server', () => ({refreshWalletPasses}));
 vi.mock('./db.server', () => ({db}));
 
 const {

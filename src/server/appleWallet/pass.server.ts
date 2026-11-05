@@ -1,19 +1,26 @@
 import {subDays} from 'date-fns';
 import {PKPass} from 'passkit-generator';
-import icon from './icon.png?inline';
-import icon2x from './icon@2x.png?inline';
-import icon3x from './icon@3x.png?inline';
-import logo from './logo.png?inline';
-import logo2x from './logo@2x.png?inline';
-import logo3x from './logo@3x.png?inline';
-import {APPLE_WWDR_G4} from './certificates';
-import {APPLE_TEAM_ID, CREW_PASS} from './passType';
+import template from './CrewCard.pkpasstemplate/pass.json';
+import {APPLE_WWDR_G4, CREW_PASS_CERTIFICATE} from './certificates';
+import type {WalletPassFields} from '../db/schema';
 
 /**
- * Apple Wallet passes for CrewCards. Without the pass type's private key (e.g.
- * locally) the feature is off: `/crewcard` sends the plain card link and the
- * download route redirects to the card page.
+ * Apple Wallet passes for CrewCards.
+ *
+ * Every Pass Type ID has its own certificate, so each pass type gets its own
+ * entry here; only the certificate's private key is a secret. The same
+ * certificate and key sign the passes and authenticate their APNs pushes
+ * (push.server.ts). Without the key (e.g. locally) the feature is off:
+ * `/crewcard` sends the plain card link and the download route redirects to
+ * the card page.
  */
+const APPLE_TEAM_ID = 'S279DHCCVB';
+
+export const CREW_PASS = {
+  passTypeIdentifier: 'pass.de.kulturspektakel.crew',
+  certificate: CREW_PASS_CERTIFICATE,
+  privateKey: () => process.env.APPLE_WALLET_CREW_PASS_PRIVATE_KEY,
+};
 
 /**
  * The public half of the terminals' NFC (VAS) key pair: base64 X.509
@@ -41,13 +48,53 @@ export function isAppleWalletConfigured(): boolean {
   return Boolean(CREW_PASS.privateKey());
 }
 
-// The festival a card is for: it's valid until the day after it ends.
-function festivalYear(validUntil: Date): number {
-  return subDays(validUntil, 1).getFullYear();
-}
+/**
+ * The pass design: CrewCard.pkpasstemplate, edited with Apple's Pass Designer
+ * (a Mac app; the template is a folder with pass.json and images). Its fields
+ * hold sample values; `crewPassJson` fills in the card's by field `key`, so
+ * labels, colors, alignment, formatting and `changeMessage`s all come from the
+ * template, and fields the code doesn't know keep their (static) text. Every
+ * PNG in the folder goes into the pass; `tooling.json` is the Designer's own.
+ */
+const templateImages = Object.fromEntries(
+  Object.entries(
+    import.meta.glob<string>('./CrewCard.pkpasstemplate/*.png', {
+      eager: true,
+      query: '?inline',
+      import: 'default',
+    }),
+    // Vite's `?inline` imports are data URLs.
+  ).map(([path, dataUrl]) => [
+    path.split('/').pop()!,
+    Buffer.from(dataUrl.split(',')[1], 'base64'),
+  ]),
+);
 
-// Vite's `?inline` imports are data URLs.
-const png = (dataUrl: string) => Buffer.from(dataUrl.split(',')[1], 'base64');
+const FIELD_LISTS = [
+  'headerFields',
+  'primaryFields',
+  'secondaryFields',
+  'auxiliaryFields',
+  'backFields',
+  'footerFields',
+] as const;
+
+type PassField = {key: string; label?: string; value: unknown};
+
+// Pass Designer gives every field and action an `_id` for itself.
+function withoutDesignerIds(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(withoutDesignerIds);
+  }
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value)
+        .filter(([key]) => key !== '_id')
+        .map(([key, v]) => [key, withoutDesignerIds(v)]),
+    );
+  }
+  return value;
+}
 
 export type CrewPassContent = {
   /** The card id as plain hex (`A1B2…`): the pass's serial number. */
@@ -56,98 +103,100 @@ export type CrewPassContent = {
   cardId: string;
   authenticationToken: string;
   payload: string;
-  holderName: string;
-  lastValidDay: string;
   validUntil: Date;
-  privileged: boolean;
-  /** The latest message for the holder (`CrewCard.walletMessage`). */
-  message: string | null;
+  /** The changing part, from the card's `walletPass` snapshot. */
+  fields: WalletPassFields;
 };
 
-export function crewPassJson({
-  serialNumber,
+/** The values the code puts into the template's fields, by `key`. */
+function fieldValues({
   cardId,
-  authenticationToken,
-  holderName,
-  lastValidDay,
   validUntil,
-  privileged,
-  payload,
-  message,
-}: CrewPassContent) {
+  fields,
+}: CrewPassContent): Record<string, Omit<PassField, 'key'>> {
   return {
-    formatVersion: 1,
+    // The festival (event ids are `kult2027` etc.) and the status.
+    status: {
+      label: fields.eventId.toUpperCase(),
+      value: fields.privileged ? 'BONBUDE' : 'CREW',
+    },
+    name: {value: fields.holderName},
+    // Euros: the template's `currencyCode` formats them.
+    bookings: {value: fields.bookingsTotal / 100},
+    badges: {value: fields.badges},
+    // The last valid day (the card runs out early the next morning), as a
+    // date the template's `dateStyle` formats.
+    validUntil: {value: subDays(validUntil, 1).toISOString()},
+    // Always there, so a message changes an existing field rather than adding
+    // one, which may not notify.
+    message: {value: fields.message ?? '–'},
+    cardId: {value: cardId},
+  };
+}
+
+/** The pass.json: the template, with the card's values and our settings. */
+export function crewPassJson(content: CrewPassContent) {
+  const pass = withoutDesignerIds(template) as Record<string, unknown>;
+
+  const values = fieldValues(content);
+  const filled = new Set<string>();
+  // Every pass style in the template (e.g. `generic`, and `posterGeneric`
+  // with `generic` as the fallback for older iOS).
+  for (const style of Object.values(pass)) {
+    if (!style || typeof style !== 'object' || Array.isArray(style)) {
+      continue;
+    }
+    for (const list of FIELD_LISTS) {
+      const passFields = (style as Record<string, unknown>)[list];
+      if (!Array.isArray(passFields)) {
+        continue;
+      }
+      for (const field of passFields as PassField[]) {
+        if (field.key in values) {
+          Object.assign(field, values[field.key]);
+          filled.add(field.key);
+        }
+      }
+    }
+  }
+  const missing = Object.keys(values).filter((key) => !filled.has(key));
+  if (missing.length > 0) {
+    throw new Error(`CrewCard template is missing fields: ${missing}`);
+  }
+
+  const actions = (pass.featuredActions ?? []) as Array<{
+    identifier: string;
+    url?: string;
+  }>;
+  const cardPage = actions.find(({identifier}) => identifier === 'card-page');
+  if (!cardPage) {
+    throw new Error('CrewCard template is missing the card-page action');
+  }
+  // iOS 27 featured action, shown below the pass (older iOS ignores it).
+  cardPage.url = `https://kult.cash/$c/${content.payload}`;
+
+  return {
+    ...pass,
+    // Tied to the signing certificate.
     passTypeIdentifier: CREW_PASS.passTypeIdentifier,
     teamIdentifier: APPLE_TEAM_ID,
     // The card id: installing the same card twice replaces the pass. Wallet
     // knows the pass by it for good, so it can never change (which rules out
     // the payload: it changes with `validUntil`).
-    serialNumber,
+    serialNumber: content.serialNumber,
     // Wallet registers the pass here and fetches updates from here, sending
     // the token as `Authorization: ApplePass <token>`.
     webServiceURL: WALLET_WEB_SERVICE_URL,
-    authenticationToken,
-    organizationName: 'Kulturspektakel Gauting',
-    description: 'CrewCard',
-    // The KultCard's red and its white K square (src/components/kultcard/Card.tsx;
-    // source: logo.svg here, rendered with rsvg-convert, 30 pt). "CREW" in the
-    // header's top-right corner sets it apart from a KultCard.
-    backgroundColor: 'rgb(228, 19, 57)',
-    foregroundColor: 'rgb(255, 255, 255)',
-    labelColor: 'rgb(255, 255, 255)',
+    authenticationToken: content.authenticationToken,
     // Hides Wallet's "Share Pass" button. A deterrent: it doesn't stop the
     // .pkpass file itself from being forwarded.
     sharingProhibited: true,
     // Wallet greys the pass out from then on.
-    expirationDate: validUntil.toISOString(),
+    expirationDate: content.validUntil.toISOString(),
     // What the phone hands a terminal over NFC: the same signed payload a
     // physical card carries after `kult.cash/$c/` (23 chars, max is 64).
-    nfc: {message: payload, encryptionPublicKey: NFC_PUBLIC_KEY},
-    // iOS 27 featured action, shown below the pass (older iOS ignores it).
-    // Apple has no generic "open link" type and sets the label and icon by
-    // type; `membershipBenefits` ("Membership benefits") is the closest fit for
-    // the card page with its bookings and badges.
-    featuredActions: [
-      {
-        identifier: 'card-page',
-        type: 'membershipBenefits',
-        url: `https://kult.cash/$c/${payload}`,
-      },
-    ],
-    // Only text on Wallet's own background: a store card's strip image puts
-    // the name over the artwork (long names get cut off) and Wallet's tinted
-    // background shows the strip's edges; a generic thumbnail gets a white
-    // photo frame.
-    generic: {
-      // The label line is reserved even when empty, so it carries the
-      // festival: label + value together sit centered on the logo.
-      headerFields: [
-        {key: 'crew', label: `KULT${festivalYear(validUntil)}`, value: 'CREW'},
-      ],
-      primaryFields: [{key: 'name', label: 'Name', value: holderName}],
-      secondaryFields: [
-        // Like the card page: "Bonbude" for the privileged, else crew.
-        {
-          key: 'status',
-          label: 'Status',
-          value: privileged ? 'Bonbude' : 'Crew',
-        },
-        {key: 'validUntil', label: 'Gültig bis', value: lastValidDay},
-      ],
-      backFields: [
-        // When the value changes, Wallet shows `changeMessage` (`%@` = the
-        // new value) as a notification; the same text twice doesn't notify.
-        // The field is always there, so a message changes an existing field
-        // rather than adding one, which may not notify.
-        {
-          key: 'message',
-          label: 'Neuigkeiten',
-          value: message ?? '–',
-          changeMessage: '%@',
-        },
-        {key: 'cardId', label: 'Karten-ID', value: cardId},
-      ],
-    },
+    nfc: {message: content.payload, encryptionPublicKey: NFC_PUBLIC_KEY},
+    featuredActions: actions,
   };
 }
 
@@ -159,13 +208,8 @@ export function buildAppleWalletPass(content: CrewPassContent): Buffer {
 
   const pass = new PKPass(
     {
+      ...templateImages,
       'pass.json': Buffer.from(JSON.stringify(crewPassJson(content))),
-      'icon.png': png(icon),
-      'icon@2x.png': png(icon2x),
-      'icon@3x.png': png(icon3x),
-      'logo.png': png(logo),
-      'logo@2x.png': png(logo2x),
-      'logo@3x.png': png(logo3x),
     },
     {wwdr: APPLE_WWDR_G4, signerCert: CREW_PASS.certificate, signerKey},
   );

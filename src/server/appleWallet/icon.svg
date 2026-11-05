@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="11.23 11.17 25 25">
+  <!-- The pass icon (notifications, lock screen): logo.svg's K square with the
+       colors swapped, a white K on the KultCard red. Rendered at 38 pt
+       (76 and 114 px), the size Pass Designer requires. -->
+  <rect x="11.23" y="11.17" width="25" height="25" fill="#e41339"/>
+  <path fill="#fff" d="M30.71,31H25.56l-4.19-4.89V31H17.22V16.34h4.15v4.83l3.86-4.83h5v.25l-6,7,6.47,7.24V31Z"/>
+</svg>

@@ -203,7 +203,7 @@ export async function handleLog(request: Request): Promise<Response> {
 
   // Orders paid within a card transaction don't award badges.
   if (!cardTransaction && createdOrder?.crewCardId) {
-    await enqueueGcpTask('badge-awarded', {orderId: createdOrder.id});
+    await enqueueGcpTask('crew-card-order', {orderId: createdOrder.id});
   }
 
   if (crewCardEnrollment) {

@@ -64,6 +64,13 @@
       "when": 1793831058713,
       "tag": "0008_crew_card_wallet_message",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1793833089523,
+      "tag": "0009_crew_card_wallet_pass",
+      "breakpoints": true
     }
   ]
 }

@@ -1,7 +1,8 @@
 import {isPast, sub} from 'date-fns';
 import {and, desc, eq, exists, gt, gte, isNotNull, lt} from 'drizzle-orm';
 import {CardActivity} from '../components/kultcard/CardActivities';
-import {db} from './db.server';
+import {db, type DbExecutor} from './db.server';
+import {computeBadges} from '../utils/useBadges';
 import {cardTransaction, crewCard, deviceLog, order} from './db/schema';
 
 export async function queryCardTransactions(
@@ -56,8 +57,9 @@ export async function queryCardTransactions(
 export async function queryCrewCard(
   cardId: Uint8Array<ArrayBuffer>,
   event: {start: Date; end: Date},
+  executor: DbExecutor = db,
 ) {
-  return db.query.crewCard.findFirst({
+  return executor.query.crewCard.findFirst({
     where: eq(crewCard.id, Buffer.from(cardId)),
     columns: {
       privileged: true,
@@ -88,8 +90,30 @@ export async function queryCrewCard(
   });
 }
 
+type CrewCardOrders = NonNullable<
+  Awaited<ReturnType<typeof queryCrewCard>>
+>['orders'];
+
+/** The card page's "Buchungen": items booked, over all of the orders. */
+export function bookedItems(orders: CrewCardOrders): number {
+  return orders.reduce(
+    (sum, o) => sum + o.orderItems.reduce((n, item) => n + item.amount, 0),
+    0,
+  );
+}
+
+/** A CrewCard's awarded badges (orders marked "nicht für mich" don't count). */
+export function awardedBadges(
+  orders: CrewCardOrders,
+  event: {start: Date; end: Date},
+) {
+  return computeBadges(orderToCardActivity(orders), event, true).filter(
+    (badge) => badge.status === 'awarded',
+  );
+}
+
 export function orderToCardActivity(
-  orders: NonNullable<Awaited<ReturnType<typeof queryCrewCard>>>['orders'],
+  orders: CrewCardOrders,
 ): Array<CardActivity> {
   return orders.map((o) => ({
     type: 'order' as const,

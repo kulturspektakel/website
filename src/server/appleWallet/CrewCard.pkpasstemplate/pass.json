@@ -1,0 +1,86 @@
+{
+  "authenticationToken" : "",
+  "backgroundColor" : "rgb(228,19,57)",
+  "description" : "CrewCard",
+  "featuredActions" : [
+    {
+      "_id" : "028F6220-D652-4B47-88D0-523A1E51B627",
+      "identifier" : "card-page",
+      "type" : "membershipBenefits",
+      "url" : "https:\/\/kult.cash\/$c\/AAAAAAAAAAAAAAAAAAAAAAA"
+    }
+  ],
+  "foregroundColor" : "rgb(255,255,255)",
+  "formatVersion" : 1,
+  "generic" : {
+    "auxiliaryFields" : [
+
+    ],
+    "backFields" : [
+      {
+        "_id" : "A9C2C851-0BC9-488E-BF83-B5E8FD849049",
+        "changeMessage" : "%@",
+        "key" : "message",
+        "label" : "Neuigkeiten",
+        "value" : "Schichtplan ist online"
+      },
+      {
+        "_id" : "7B805AC3-CAF3-4CC7-9B20-65C0EA568715",
+        "key" : "cardId",
+        "label" : "Karten-ID",
+        "value" : "A1:23:45:67:89:AB:CD"
+      }
+    ],
+    "headerFields" : [
+      {
+        "_id" : "5E88CD47-B0E9-4A27-BA6A-8FE8EBDFF165",
+        "key" : "status",
+        "label" : "KULT2027",
+        "value" : "BONBUDE"
+      }
+    ],
+    "primaryFields" : [
+      {
+        "_id" : "1602DFA5-D538-4F7B-A91E-4FC4E326251D",
+        "key" : "name",
+        "label" : "Name",
+        "value" : "Erika Mustermann"
+      }
+    ],
+    "secondaryFields" : [
+      {
+        "_id" : "90509D28-8A95-48D3-BD99-72F0EF3C230F",
+        "currencyCode" : "EUR",
+        "key" : "bookings",
+        "label" : "Buchungen",
+        "value" : 23.5
+      },
+      {
+        "_id" : "D9E29FF3-E5B8-4769-A215-6E77331FAF4C",
+        "key" : "badges",
+        "label" : "Badges",
+        "textAlignment" : "PKTextAlignmentCenter",
+        "value" : 0
+      },
+      {
+        "_id" : "9E689D6C-C5C3-4413-AF77-F61799C53D6F",
+        "dateStyle" : "PKDateStyleShort",
+        "isRelative" : false,
+        "key" : "validUntil",
+        "label" : "Gültig bis",
+        "textAlignment" : "PKTextAlignmentRight",
+        "value" : "2026-11-05T00:16:03Z"
+      }
+    ]
+  },
+  "labelColor" : "rgb(255,255,255)",
+  "nfc" : {
+    "encryptionPublicKey" : "MDkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDIgACT\/x60YmnQyx1yd2mal3modLUnXno\/Z58GqQv0J\/m7mI=",
+    "message" : "AAAAAAAAAAAAAAAAAAAAAAA"
+  },
+  "organizationName" : "Kulturspektakel Gauting",
+  "passTypeIdentifier" : "pass.de.kulturspektakel.crew",
+  "serialNumber" : "",
+  "sharingProhibited" : true,
+  "teamIdentifier" : "S279DHCCVB"
+}

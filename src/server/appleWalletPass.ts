@@ -1,11 +1,11 @@
-import {subDays} from 'date-fns';
 import {eq} from 'drizzle-orm';
 import {db} from './db.server';
-import {crewCard} from './db/schema';
+import {crewCard, type WalletPassFields} from './db/schema';
 import {
   buildAppleWalletPass,
   isAppleWalletConfigured,
 } from './appleWallet/pass.server';
+import {refreshCrewCardPass} from './crewCardPass.server';
 import {decodePayload, encodeCrewCardPayload} from '../utils/decodePayload';
 import {
   byteArrayToString,
@@ -14,7 +14,6 @@ import {
 } from '../utils/cardUtils';
 import {CrewCardType} from '../utils/enums';
 import {isWithinWalletDownloadWindow} from '../utils/walletPass';
-import {locale, timeZone} from '../utils/dateUtils';
 
 /** What a pass is built from, for `db.query.crewCard` queries. */
 export const walletCardColumns = {
@@ -23,25 +22,10 @@ export const walletCardColumns = {
   suspended: true,
   enrolledAt: true,
   validUntil: true,
-  nickname: true,
-  privileged: true,
   walletAuthToken: true,
   passUpdatedAt: true,
-  walletMessage: true,
+  walletPass: true,
 } as const;
-export const walletCardWith = {
-  viewer: {columns: {displayName: true}},
-} as const;
-
-type WalletCard = {
-  id: Uint8Array;
-  validUntil: Date;
-  nickname: string | null;
-  privileged: boolean;
-  walletAuthToken: string;
-  walletMessage: string | null;
-  viewer: {displayName: string} | null;
-};
 
 /** When the pass content last changed: `Last-Modified` and update tags. */
 export function passLastModified(card: {
@@ -52,29 +36,22 @@ export function passLastModified(card: {
 }
 
 /**
- * The card's current pass, built from the database alone (the download route
- * and the web service serve the same thing). The NFC payload is re-derived
- * from the id and `validUntil`, so it's the card link's payload.
+ * The card's pass: the card itself (serial, token, validity, NFC payload) plus
+ * the `walletPass` snapshot (crewCardPass.server.ts). The NFC payload is
+ * re-derived from the id and `validUntil`, so it's the card link's payload.
  */
-export function buildCrewCardPass(card: WalletCard): Buffer {
+export function buildCrewCardPass(
+  card: {id: Uint8Array; validUntil: Date; walletAuthToken: string},
+  fields: WalletPassFields,
+): Buffer {
   const serialNumber = byteArrayToString(card.id);
   return buildAppleWalletPass({
     serialNumber,
     cardId: serialNumber.match(/.{2}/g)!.join(':'),
     authenticationToken: card.walletAuthToken,
     payload: encodeCrewCardPayload(card.id, kultEpochOfDate(card.validUntil)),
-    // The Slack name, refreshed from Slack whenever `/crewcard` runs.
-    holderName: card.viewer?.displayName ?? card.nickname ?? 'Crew',
-    lastValidDay: subDays(card.validUntil, 1).toLocaleDateString(locale, {
-      weekday: 'short',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      timeZone,
-    }),
     validUntil: card.validUntil,
-    privileged: card.privileged,
-    message: card.walletMessage,
+    fields,
   });
 }
 
@@ -122,7 +99,6 @@ export async function handleAppleWalletPass(
   const card = await db.query.crewCard.findFirst({
     where: eq(crewCard.id, Buffer.from(stringToByteArray(cardId))),
     columns: walletCardColumns,
-    with: walletCardWith,
   });
   if (
     card?.cardType !== CrewCardType.APPLE_WALLET ||
@@ -134,7 +110,13 @@ export async function handleAppleWalletPass(
     return cardPage;
   }
 
+  // Creates the snapshot on the first download; the web service serves it
+  // from then on.
+  const fields = await refreshCrewCardPass(card.id);
+  if (!fields) {
+    return cardPage;
+  }
   return passResponse(
-    buildCrewCardPass({...card, walletAuthToken: card.walletAuthToken}),
+    buildCrewCardPass({...card, walletAuthToken: card.walletAuthToken}, fields),
   );
 }

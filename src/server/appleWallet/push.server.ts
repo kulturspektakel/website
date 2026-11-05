@@ -1,8 +1,8 @@
 import {connect, type ClientHttp2Session} from 'node:http2';
 import {eq, inArray} from 'drizzle-orm';
 import {db} from '../db.server';
-import {crewCard, walletPassRegistration} from '../db/schema';
-import {CREW_PASS} from './passType';
+import {walletPassRegistration} from '../db/schema';
+import {CREW_PASS} from './pass.server';
 
 /**
  * Pass update pushes. A Wallet push carries no content: it only tells the
@@ -15,7 +15,7 @@ import {CREW_PASS} from './passType';
  */
 const APNS_URL = 'https://api.push.apple.com';
 
-export type PassPushResult = {
+type PassPushResult = {
   pushToken: string;
   status: number;
   /** APNs' error reason, e.g. `BadDeviceToken`. */
@@ -23,15 +23,13 @@ export type PassPushResult = {
 };
 
 /** Sends the (empty) update push to each token over one HTTP/2 connection. */
-export async function sendPassPushes(
-  pushTokens: string[],
-): Promise<PassPushResult[]> {
+async function sendPassPushes(pushTokens: string[]): Promise<PassPushResult[]> {
+  if (pushTokens.length === 0) {
+    return [];
+  }
   const key = CREW_PASS.privateKey();
   if (!key) {
     throw new Error('Apple Wallet is not configured');
-  }
-  if (pushTokens.length === 0) {
-    return [];
   }
   const session = connect(APNS_URL, {cert: CREW_PASS.certificate, key});
   // Errors also reach the open requests, which reject with them.
@@ -80,20 +78,11 @@ function sendPush(
 }
 
 /**
- * Applies `changes` to the card, marks its pass as changed (`passUpdatedAt`)
- * and pushes to every device that has it. Only for changes that show on the
- * pass: Wallet complains about an "update" that returns the same pass. Push
- * tokens APNs reports as dead are dropped along with their registrations.
+ * Pushes to every device that has the card's pass (see crewCardPass.server.ts,
+ * which decides when). Push tokens APNs reports as dead are dropped along with
+ * their registrations.
  */
-export async function pushCrewCardPassUpdate(
-  cardId: Buffer,
-  changes: {walletMessage?: string | null} = {},
-): Promise<PassPushResult[]> {
-  await db
-    .update(crewCard)
-    .set({...changes, passUpdatedAt: new Date()})
-    .where(eq(crewCard.id, cardId));
-
+export async function pushToCrewCardDevices(cardId: Buffer): Promise<void> {
   const registrations = await db.query.walletPassRegistration.findMany({
     where: eq(walletPassRegistration.crewCardId, cardId),
     columns: {pushToken: true},
@@ -113,5 +102,4 @@ export async function pushCrewCardPassUpdate(
       .delete(walletPassRegistration)
       .where(inArray(walletPassRegistration.pushToken, dead));
   }
-  return results;
 }

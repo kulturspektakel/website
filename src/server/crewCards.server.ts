@@ -1,7 +1,7 @@
 import {randomBytes} from 'crypto';
 import {addDays, addYears, isAfter} from 'date-fns';
 import {and, asc, eq, gt, ne} from 'drizzle-orm';
-import {db} from './db.server';
+import {db, type DbExecutor} from './db.server';
 import {crewCard, event} from './db/schema';
 import {
   grantBonbudePrivilege,
@@ -127,13 +127,16 @@ export function walletCardValidity(
   return {ok: true, validUntilEpoch, validUntil};
 }
 
-export async function nextKulturspektakel(now: Date) {
-  return db.query.event.findFirst({
+export async function nextKulturspektakel(
+  now: Date,
+  executor: DbExecutor = db,
+) {
+  return executor.query.event.findFirst({
     where: and(
       eq(event.eventType, EventType.Kulturspektakel),
       gt(event.end, now),
     ),
     orderBy: asc(event.start),
-    columns: {name: true, end: true},
+    columns: {id: true, name: true, start: true, end: true},
   });
 }

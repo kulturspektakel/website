@@ -14,7 +14,11 @@ import {useBadges} from '../utils/useBadges';
 import {CardDetails} from '../components/kultcard/CardDetails';
 import {CrewCardInfo} from '../components/kultcard/CrewCardInfo';
 import {createServerFn} from '@tanstack/react-start';
-import {queryCrewCard, orderToCardActivity} from '../server/cardUtils.server';
+import {
+  bookedItems,
+  queryCrewCard,
+  orderToCardActivity,
+} from '../server/cardUtils.server';
 import {currentEventQuery} from '../server/currentEvent';
 import {stringToByteArray} from '../utils/cardUtils';
 import {decodePayload} from '../utils/decodePayload';
@@ -41,11 +45,7 @@ const loader = createServerFn()
       crewCard,
       cardActivities: orderToCardActivity(orders),
       totals: {
-        Buchungen: orders.reduce(
-          (acc, cv) =>
-            acc + cv.orderItems.reduce((acc, cv) => acc + cv.amount, 0),
-          0,
-        ),
+        Buchungen: bookedItems(orders),
         Badges: 0 as number,
       },
       event,

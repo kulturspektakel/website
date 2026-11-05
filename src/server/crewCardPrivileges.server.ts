@@ -3,6 +3,7 @@ import {db} from './db.server';
 import {crewCard} from './db/schema';
 import {conversationMembers} from './slack.server';
 import {SlackChannel} from '../utils/slackChannels';
+import {refreshWalletPasses} from './crewCardPass.server';
 
 /**
  * The Bonbude privilege on CrewCards, driven by the membership of #bonbude.
@@ -27,7 +28,7 @@ import {SlackChannel} from '../utils/slackChannels';
  * those filters we'd re-privilege dead cards.
  */
 export async function grantBonbudePrivilege(viewerId: string): Promise<number> {
-  const {length: count} = await db
+  const changed = await db
     .update(crewCard)
     .set({privileged: true})
     .where(
@@ -39,9 +40,12 @@ export async function grantBonbudePrivilege(viewerId: string): Promise<number> {
       ),
     )
     .returning({id: crewCard.id});
+  const count = changed.length;
   if (count > 0) {
     console.log(`[crew-card-privileges] granted ${count} for ${viewerId}`);
   }
+  // Wallet passes show the status ("Bonbude" or "Crew").
+  await refreshWalletPasses(changed.map(({id}) => id));
   return count;
 }
 
@@ -54,14 +58,17 @@ export async function grantBonbudePrivilege(viewerId: string): Promise<number> {
 export async function revokeBonbudePrivilege(
   viewerId: string,
 ): Promise<number> {
-  const {length: count} = await db
+  const changed = await db
     .update(crewCard)
     .set({privileged: false})
     .where(and(eq(crewCard.viewerId, viewerId), eq(crewCard.privileged, true)))
     .returning({id: crewCard.id});
+  const count = changed.length;
   if (count > 0) {
     console.log(`[crew-card-privileges] revoked ${count} for ${viewerId}`);
   }
+  // Wallet passes show the status ("Bonbude" or "Crew").
+  await refreshWalletPasses(changed.map(({id}) => id));
   return count;
 }
 
@@ -142,5 +149,6 @@ export async function reconcileBonbudePrivileges(): Promise<{
       `[crew-card-privileges] reconciled: granted ${granted.length}, revoked ${revoked.length}`,
     );
   }
+  await refreshWalletPasses([...granted, ...revoked].map(({id}) => id));
   return {granted: granted.length, revoked: revoked.length};
 }

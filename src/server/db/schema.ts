@@ -481,6 +481,20 @@ export const order = pgTable(
   ],
 );
 
+/** The changing content of a wallet CrewCard pass (`CrewCard.walletPass`). */
+export type WalletPassFields = {
+  /** The festival the pass is for; its bookings and badges are counted. */
+  eventId: string;
+  holderName: string;
+  privileged: boolean;
+  /** What was booked on the card since it was issued, in cents. */
+  bookingsTotal: number;
+  /** Badges awarded at that festival. */
+  badges: number;
+  /** The latest message for the holder, or null. */
+  message: string | null;
+};
+
 export const crewCard = pgTable(
   'CrewCard',
   {
@@ -499,9 +513,11 @@ export const crewCard = pgTable(
     // the update. Null until the first one; the pass then dates from
     // `enrolledAt`.
     passUpdatedAt: timestamp({withTimezone: true, mode: 'date'}),
-    // Wallet cards: the latest message for the holder, shown on the back of
-    // the pass. Changing it (and pushing) shows it as a notification.
-    walletMessage: text(),
+    // Wallet cards: what the pass shows, as last built and announced
+    // (src/server/crewCardPass.server.ts). Passes are served from it, so they
+    // only change when it's refreshed, which also bumps `passUpdatedAt` and
+    // pushes. Null until the pass is first downloaded.
+    walletPass: jsonb().$type<WalletPassFields>(),
   },
   (table) => [
     foreignKey({
