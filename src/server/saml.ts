@@ -23,6 +23,11 @@ import {nonce as nonceTable, viewer as viewerTable} from './db/schema';
  */
 const SSO_URL = `${process.env.SITE_URL}/api/saml/login`;
 const SLO_URL = `${process.env.SITE_URL}/api/saml/logout`;
+// Nuclino's Assertion Consumer Service. The response's `Destination` and the
+// assertion's `Recipient` must equal this exactly (Nuclino rejects anything
+// else), and it's where the response is POSTed. Taken from our config rather
+// than the AuthnRequest so a crafted request can't redirect the assertion.
+const NUCLINO_ACS_URL = `https://api.nuclino.com/api/sso/${process.env.NUCLINO_TEAM_ID}/acs`;
 
 // Public signing certificate. Originally read from `artifacts/saml.crt`; inlined
 // here because Vercel's serverless bundle can't reliably read loose files at
@@ -83,7 +88,7 @@ export const sp = ServiceProvider({
   assertionConsumerService: [
     {
       Binding: 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect',
-      Location: `https://api.nuclino.com/api/sso/${process.env.NUCLINO_TEAM_ID}/acs`,
+      Location: NUCLINO_ACS_URL,
     },
   ],
 });
@@ -198,13 +203,10 @@ async function sendSAMLResponse(
 
   const parseResult = await idp.parseLoginRequest(sp, 'redirect', req);
 
-  const {id, assertionConsumerServiceUrl, issueInstant, destination} =
-    parseResult.extract.request as {
-      id: string;
-      assertionConsumerServiceUrl: string;
-      issueInstant: string;
-      destination: string;
-    };
+  const {id, issueInstant} = parseResult.extract.request as {
+    id: string;
+    issueInstant: string;
+  };
 
   const response = await idp.createLoginResponse(
     sp,
@@ -219,16 +221,15 @@ async function sendSAMLResponse(
         context: replaceTagsByValue(samlResponse, {
           ID: id,
           AssertionID: idp.entitySetting.generateID!(),
-          Destination: destination,
+          Destination: NUCLINO_ACS_URL,
           Audience: sp.entityMeta.getEntityID(),
-          SubjectRecipient: destination,
+          SubjectRecipient: NUCLINO_ACS_URL,
           NameIDFormat: idp.entityMeta.getNameIDFormat()[0],
           Issuer: idp.entityMeta.getEntityID(),
           IssueInstant: issueInstant,
           ConditionsNotBefore: issueInstant,
           ConditionsNotOnOrAfter: fiveMinutesLater.toISOString(),
           SubjectConfirmationDataNotOnOrAfter: fiveMinutesLater.toISOString(),
-          AssertionConsumerServiceURL: assertionConsumerServiceUrl,
           EntityID: sp.entityMeta.getEntityID(),
           InResponseTo: id,
           StatusCode: 'urn:oasis:names:tc:SAML:2.0:status:Success',
@@ -243,9 +244,7 @@ async function sendSAMLResponse(
   const relayState = req.query.RelayState ?? '';
 
   // Auto-submitting form that POSTs the SAML response back to Nuclino's ACS.
-  const formHtml = `<form method="post" action="${escapeAttr(
-    assertionConsumerServiceUrl,
-  )}">
+  const formHtml = `<form method="post" action="${escapeAttr(NUCLINO_ACS_URL)}">
   <input type="hidden" name="SAMLResponse" value="${escapeAttr(
     response.context,
   )}" />
