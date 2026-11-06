@@ -87,6 +87,7 @@ import GoogleMaps from '../components/GoogleMaps';
 import {CopyToClipboard} from '../components/CopyToClipboard';
 import {StageMatrix} from '../components/booking/StageMatrix';
 import {
+  countStageCells,
   toStageValue,
   type StageValue,
 } from '../components/booking/stageMatrixShared';
@@ -573,20 +574,10 @@ function RightColumn({data, row}: {data: DetailData; row: BookingRow}) {
       'Bühne konnte nicht gespeichert werden',
     );
 
-  // How many of the event's other bands are already placed in each stage cell,
-  // so the matrix shows where the lineup is still thin.
+  // How many of the event's bands are placed in each stage cell, so the matrix
+  // shows where the lineup is still thin.
   const rows = useContext(BookingRowsContext);
-  const stageCounts = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const r of rows) {
-      if (r.id === data.id || r.stageRow == null || r.stageColumn == null) {
-        continue;
-      }
-      const key = `${r.stageRow}:${r.stageColumn}`;
-      counts.set(key, (counts.get(key) ?? 0) + 1);
-    }
-    return counts;
-  }, [rows, data.id]);
+  const stageCounts = useMemo(() => countStageCells(rows), [rows]);
 
   const hasSocial =
     data.website || data.facebook || data.instagram || data.spotifyArtist;

@@ -1,4 +1,5 @@
 import {Box, Flex, Grid, Text} from '@chakra-ui/react';
+import {Tooltip} from '../chakra-snippets/tooltip';
 import {
   STAGE_CELL,
   STAGE_COLS,
@@ -6,15 +7,16 @@ import {
   type StageCell,
   type StageValue,
   colLabel,
+  stageCellKey,
 } from './stageMatrixShared';
 
 type StageMatrixProps = (
   | {multiple?: false; value: StageValue; onChange: (next: StageValue) => void}
   | {multiple: true; value: StageCell[]; onChange: (next: StageCell[]) => void}
 ) & {
-  // How many bands already sit in each cell (keyed `row:col`). Unselected dots
+  // How many bands sit in each cell (keyed by `stageCellKey`). Unselected dots
   // grow with it, relative to the busiest cell; hover and selection keep their
-  // fixed sizes.
+  // fixed sizes. Each cell also gets a tooltip with its application count.
   counts?: Map<string, number>;
 };
 
@@ -29,6 +31,11 @@ function dotSize(count: number, max: number) {
     : DOT_MIN;
 }
 
+const countLabel = (n: number) =>
+  n === 1 ? '1 Bewerbung' : `${n || 'Keine'} Bewerbungen`;
+
+const TOOLTIP_POSITIONING = {placement: 'top'} as const;
+
 // Interactive stage-assignment grid (mouse-only). Click a cell to select it.
 //
 // Single mode (detail dialog): one cell selected; clicking the selected cell
@@ -37,9 +44,9 @@ function dotSize(count: number, max: number) {
 export function StageMatrix(props: StageMatrixProps) {
   const selectedKeys = new Set(
     props.multiple
-      ? props.value.map((c) => `${c.row}:${c.col}`)
+      ? props.value.map((c) => stageCellKey(c.row, c.col))
       : props.value
-        ? [`${props.value.row}:${props.value.col}`]
+        ? [stageCellKey(props.value.row, props.value.col)]
         : [],
   );
   const maxCount = Math.max(0, ...(props.counts?.values() ?? []));
@@ -116,65 +123,80 @@ export function StageMatrix(props: StageMatrixProps) {
         {STAGE_ROWS.map((row, ri) => (
           <Box key={ri} role="row" display="contents">
             {STAGE_COLS.map((_, ci) => {
-              const isSelected = selectedKeys.has(`${ri}:${ci}`);
-              const count = props.counts?.get(`${ri}:${ci}`) ?? 0;
+              const key = stageCellKey(ri, ci);
+              const isSelected = selectedKeys.has(key);
+              const count = props.counts?.get(key) ?? 0;
               // Boundary edges form a single border around the whole cell block.
               const firstRow = ri === 0;
               const lastRow = ri === STAGE_ROWS.length - 1;
               const firstCol = ci === 0;
               const lastCol = ci === STAGE_COLS.length - 1;
               return (
-                <Flex
+                <Tooltip
                   key={ci}
-                  className="group"
-                  role="gridcell"
-                  aria-selected={isSelected}
-                  aria-label={`${row.aria}, ${colLabel(ci)}`}
-                  justify="center"
-                  align="center"
-                  boxSize={STAGE_CELL}
-                  cursor="pointer"
-                  borderColor="border"
-                  borderTopWidth={firstRow ? '1px' : undefined}
-                  borderBottomWidth={lastRow ? '1px' : undefined}
-                  borderLeftWidth={firstCol ? '1px' : undefined}
-                  borderRightWidth={lastCol ? '1px' : undefined}
-                  borderTopLeftRadius={firstRow && firstCol ? 'md' : undefined}
-                  borderTopRightRadius={firstRow && lastCol ? 'md' : undefined}
-                  borderBottomLeftRadius={
-                    lastRow && firstCol ? 'md' : undefined
-                  }
-                  borderBottomRightRadius={
-                    lastRow && lastCol ? 'md' : undefined
-                  }
-                  onClick={() => toggle(ri, ci)}
+                  disabled={!props.counts}
+                  content={countLabel(count)}
+                  positioning={TOOLTIP_POSITIONING}
+                  showArrow
+                  openDelay={200}
                 >
-                  <Box
-                    boxSize={isSelected ? '3' : `${dotSize(count, maxCount)}px`}
-                    borderRadius="full"
-                    bg={isSelected ? 'blue.solid' : 'gray.300'}
-                    outline={isSelected ? '2px solid' : undefined}
-                    outlineColor="blue.solid"
-                    outlineOffset="2px"
-                    _groupHover={
-                      isSelected
-                        ? undefined
-                        : {
-                            boxSize: '2',
-                            bg: 'gray.400',
-                            // Fast grow on hover-in…
-                            transition:
-                              'width 0.15s ease, height 0.15s ease, background 0.15s ease',
-                          }
+                  <Flex
+                    className="group"
+                    role="gridcell"
+                    aria-selected={isSelected}
+                    aria-label={`${row.aria}, ${colLabel(ci)}`}
+                    justify="center"
+                    align="center"
+                    boxSize={STAGE_CELL}
+                    cursor="pointer"
+                    borderColor="border"
+                    borderTopWidth={firstRow ? '1px' : undefined}
+                    borderBottomWidth={lastRow ? '1px' : undefined}
+                    borderLeftWidth={firstCol ? '1px' : undefined}
+                    borderRightWidth={lastCol ? '1px' : undefined}
+                    borderTopLeftRadius={
+                      firstRow && firstCol ? 'md' : undefined
                     }
-                    // Fast when selecting; slow shrink back on hover-out.
-                    transition={
-                      isSelected
-                        ? 'width 0.15s ease, height 0.15s ease, background 0.15s ease, outline-color 0.15s ease'
-                        : 'width 0.8s ease, height 0.8s ease, background 0.8s ease'
+                    borderTopRightRadius={
+                      firstRow && lastCol ? 'md' : undefined
                     }
-                  />
-                </Flex>
+                    borderBottomLeftRadius={
+                      lastRow && firstCol ? 'md' : undefined
+                    }
+                    borderBottomRightRadius={
+                      lastRow && lastCol ? 'md' : undefined
+                    }
+                    onClick={() => toggle(ri, ci)}
+                  >
+                    <Box
+                      boxSize={
+                        isSelected ? '3' : `${dotSize(count, maxCount)}px`
+                      }
+                      borderRadius="full"
+                      bg={isSelected ? 'blue.solid' : 'gray.300'}
+                      outline={isSelected ? '2px solid' : undefined}
+                      outlineColor="blue.solid"
+                      outlineOffset="2px"
+                      _groupHover={
+                        isSelected
+                          ? undefined
+                          : {
+                              boxSize: '2',
+                              bg: 'gray.400',
+                              // Fast grow on hover-in…
+                              transition:
+                                'width 0.15s ease, height 0.15s ease, background 0.15s ease',
+                            }
+                      }
+                      // Fast when selecting; slow shrink back on hover-out.
+                      transition={
+                        isSelected
+                          ? 'width 0.15s ease, height 0.15s ease, background 0.15s ease, outline-color 0.15s ease'
+                          : 'width 0.8s ease, height 0.8s ease, background 0.8s ease'
+                      }
+                    />
+                  </Flex>
+                </Tooltip>
               );
             })}
           </Box>

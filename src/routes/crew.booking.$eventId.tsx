@@ -34,6 +34,7 @@ import {
   type ColumnMeta,
   type Row as TableRow,
   type SortingState,
+  type Table,
   createColumnHelper,
   flexRender,
   getCoreRowModel,
@@ -67,6 +68,7 @@ import {StageMatrixReadonly} from '../components/booking/StageMatrixReadonly';
 import {StageMatrix} from '../components/booking/StageMatrix';
 import {
   ALL_STAGE_CELLS,
+  countStageCells,
   toStageValue,
   type StageCell,
 } from '../components/booking/stageMatrixShared';
@@ -350,8 +352,17 @@ function TagFilterHeader({column}: {column: Column<BookingRow, unknown>}) {
 // filter is a cell picker: it opens a Popover (not a Menu — the matrix owns arrow
 // keys) holding the multi-select StageMatrix bound to the column's filter value
 // (an array of {row, col} cells).
-function StageFilterHeader({column}: {column: Column<BookingRow, unknown>}) {
+function StageFilterHeader({
+  column,
+  table,
+}: {
+  column: Column<BookingRow, unknown>;
+  table: Table<BookingRow>;
+}) {
   const [value, setFilter] = useColumnFilter<StageCell[]>(column);
+  // Applications per cell across the whole event (ignoring all filters).
+  const rows = table.options.data;
+  const counts = useMemo(() => countStageCells(rows), [rows]);
   const selected = value ?? [];
   const onChange = (cells: StageCell[]) =>
     setFilter(cells.length ? cells : undefined);
@@ -363,7 +374,12 @@ function StageFilterHeader({column}: {column: Column<BookingRow, unknown>}) {
       </PopoverTrigger>
       <PopoverContent w="auto">
         <PopoverBody>
-          <StageMatrix multiple value={selected} onChange={onChange} />
+          <StageMatrix
+            multiple
+            value={selected}
+            onChange={onChange}
+            counts={counts}
+          />
           <HStack gap="2" mt="3">
             <Button
               flex="1"
@@ -659,7 +675,9 @@ const columns = [
   }),
   col.display({
     id: 'stage',
-    header: ({column}) => <StageFilterHeader column={column} />,
+    header: ({column, table}) => (
+      <StageFilterHeader column={column} table={table} />
+    ),
     enableSorting: false,
     // Exact-cell match: a row matches if its assigned (row, col) is among the
     // picked cells. Unassigned rows (null) match nothing, so they drop out when a

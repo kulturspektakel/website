@@ -42,6 +42,23 @@ export const toStageValue = (
   col: number | null,
 ): StageValue => (row != null && col != null ? {row, col} : null);
 
+// Key of a cell in the per-cell `counts` map StageMatrix takes.
+export const stageCellKey = (row: number, col: number) => `${row}:${col}`;
+
+// How many rows are assigned to each cell, keyed by `stageCellKey`. Rows
+// without a full assignment (either column null) aren't counted.
+export function countStageCells(
+  rows: ReadonlyArray<{stageRow: number | null; stageColumn: number | null}>,
+): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const {stageRow, stageColumn} of rows) {
+    if (stageRow == null || stageColumn == null) continue;
+    const key = stageCellKey(stageRow, stageColumn);
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  return counts;
+}
+
 // Accessible label for a column, spelling out the "between" columns.
 export function colLabel(ci: number): string {
   return STAGE_COLS[ci] || `${STAGE_COLS[ci - 1]} oder ${STAGE_COLS[ci + 1]}`;
