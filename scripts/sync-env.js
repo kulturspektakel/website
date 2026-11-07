@@ -18,8 +18,8 @@
  * Adding a var: define its value (add an entry to the terraform `env_vars`
  * output, or `gcloud secrets create NAME`), then add one line to `ENV_VARS`.
  *
- * Pass `--vercel` to also push every var to the Vercel project (Production
- * + Development; preview is skipped — Vercel CLI non-interactive limitation).
+ * Pass `--vercel` to also push the runtime vars to the Vercel project's
+ * Production environment (one REST call; see `pushToVercel`).
  *
  * Auth: ADC. Locally that's `gcloud auth application-default login`; in CI
  * it's whatever `google-github-actions/auth` set up via the GCP_SA_KEY
@@ -27,7 +27,8 @@
  */
 import {SecretManagerServiceClient} from '@google-cloud/secret-manager';
 import {spawnSync} from 'node:child_process';
-import {writeFileSync} from 'node:fs';
+import {existsSync, readFileSync, writeFileSync} from 'node:fs';
+import {homedir} from 'node:os';
 import {dirname, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 
@@ -35,7 +36,6 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const ENV_FILE = resolve(ROOT, '.env');
 const ENV_TYPES = resolve(ROOT, 'types/env.d.ts');
 const TERRAFORM_DIR = resolve(ROOT, 'terraform');
-const VERCEL = resolve(ROOT, 'node_modules/.bin/vercel');
 
 const ENV_VARS = {
   // Non-secret config — terraform `env_vars` output.
@@ -216,52 +216,74 @@ function renderTypes(names) {
   return lines.join('\n') + '\n';
 }
 
-function pushToVercel(envVars) {
-  // In CI there's no interactive `vercel login`, so the CLI needs the token
-  // passed explicitly — otherwise every `env add/rm` fails with "No existing
-  // credentials found" and the sync silently no-ops (it doesn't fail the build).
-  const tokenArgs = process.env.VERCEL_TOKEN
-    ? ['--token', process.env.VERCEL_TOKEN]
-    : [];
-  const failures = [];
-  for (const name of Object.keys(envVars).sort()) {
-    const value = envVars[name];
-    for (const environment of ['production', 'development']) {
-      spawnSync(
-        VERCEL,
-        ['env', 'rm', name, environment, '--yes', ...tokenArgs],
-        {
-          encoding: 'utf-8',
-          timeout: 60_000,
-        },
-      );
-      const result = spawnSync(
-        VERCEL,
-        ['env', 'add', name, environment, ...tokenArgs],
-        {
-          input: value,
-          encoding: 'utf-8',
-          timeout: 60_000,
-        },
-      );
-      const ok = result.status === 0;
-      console.log(`${ok ? 'OK  ' : 'FAIL'} ${name.padEnd(40)} ${environment}`);
-      if (!ok) {
-        console.log(
-          `      stderr: ${(result.stderr ?? '').trim().slice(-200)}`,
-        );
-        failures.push(`${name} (${environment})`);
+// Locally, reuse the `vercel login` session; CI passes VERCEL_TOKEN.
+function vercelToken() {
+  if (process.env.VERCEL_TOKEN) {
+    return process.env.VERCEL_TOKEN;
+  }
+  const authFiles = [
+    resolve(homedir(), 'Library/Application Support/com.vercel.cli/auth.json'),
+    resolve(homedir(), '.local/share/com.vercel.cli/auth.json'),
+  ];
+  for (const file of authFiles) {
+    if (existsSync(file)) {
+      const {token} = JSON.parse(readFileSync(file, 'utf-8'));
+      if (token) {
+        return token;
       }
     }
   }
-  // Fail loudly: a silent partial sync is how missing secrets reached
-  // production unnoticed. Attempt every var first so the log lists them all,
-  // then throw so the build fails.
-  if (failures.length) {
+  throw new Error(
+    'No Vercel credentials: set VERCEL_TOKEN or run `vercel login`.',
+  );
+}
+
+// One request for every var: the endpoint accepts an array, and `upsert=true`
+// overwrites a key that already exists for the target. (This used to be an
+// `env rm` + `env add` CLI call per var and environment, ~2.5 min in CI.)
+//
+// Production only. Local dev reads `.env` written by this script, so the
+// Vercel "development" target (used only by `vercel env pull`/`vercel dev`)
+// had no consumer. Preview deployments don't get these vars either.
+async function pushToVercel(envVars) {
+  const {projectId, orgId} = JSON.parse(
+    readFileSync(resolve(ROOT, '.vercel/project.json'), 'utf-8'),
+  );
+  const body = Object.keys(envVars)
+    .sort()
+    .map((key) => ({
+      key,
+      value: envVars[key],
+      type: 'encrypted',
+      target: ['production'],
+    }));
+  const res = await fetch(
+    `https://api.vercel.com/v10/projects/${projectId}/env?upsert=true&teamId=${orgId}`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${vercelToken()}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    },
+  );
+  const result = await res.json().catch(() => ({}));
+  // A batch can partially fail with a 2xx: per-key errors come back in
+  // `failed`. Fail loudly either way, since a silent partial sync is how missing
+  // secrets reached production unnoticed.
+  const failed = (result.failed ?? []).map(
+    (f) => `${f.error?.key ?? '?'}: ${f.error?.message ?? f.error?.code}`,
+  );
+  if (!res.ok || failed.length) {
     throw new Error(
-      `Failed to push ${failures.length} env var(s) to Vercel: ${failures.join(', ')}`,
+      `Failed to push env vars to Vercel (HTTP ${res.status}): ` +
+        (failed.length
+          ? failed.join(', ')
+          : (result.error?.message ?? JSON.stringify(result))),
     );
   }
+  console.log(`pushed ${body.length} vars to Vercel (production)`);
 }
 
 const envVars = await loadEnvVars();
@@ -273,6 +295,5 @@ writeFileSync(ENV_TYPES, renderTypes(Object.keys(envVars)));
 console.log('wrote types/env.d.ts');
 
 if (process.argv.includes('--vercel')) {
-  console.log('pushing to Vercel (this takes ~30s)...');
-  pushToVercel(envVars);
+  await pushToVercel(envVars);
 }

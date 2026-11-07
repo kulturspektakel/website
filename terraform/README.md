@@ -171,8 +171,9 @@ Happens automatically on every push to `main` (the **Deploy** workflow,
 `.github/workflows/main.yml`). For manual triggers (after a SM rotation),
 use **Run workflow** in the Actions tab.
 
-Run locally with `yarn sync:env --vercel`. Idempotent. Preview deployments
-are skipped (Vercel CLI 50.x limitation).
+Run locally with `yarn sync:env --vercel` (uses your `vercel login` session,
+or `VERCEL_TOKEN`). Idempotent: one bulk upsert to the **Production** target.
+Development and Preview are not populated — local dev reads `.env`.
 
 ## Applying infrastructure changes
 
