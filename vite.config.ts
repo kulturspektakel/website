@@ -100,6 +100,17 @@ export default defineConfig({
       org: 'kulturspektakel',
       project: 'website',
       authToken: env.SENTRY_AUTH_TOKEN,
+      // Client maps must not be published: `build.sourcemap: 'hidden'` drops
+      // the `sourceMappingURL` comment, and this removes the files themselves
+      // once uploaded (runs even when the upload is skipped). Scoped
+      // explicitly because Sentry's default, `./**/*.map`, would also sweep
+      // `node_modules`. Server-function maps stay; they're never served.
+      sourcemaps: {
+        filesToDeleteAfterUpload: [
+          './dist/client/**/*.map',
+          './.vercel/output/static/**/*.map',
+        ],
+      },
     }),
   ],
   ssr: {
@@ -129,7 +140,7 @@ export default defineConfig({
     ],
   },
   build: {
-    sourcemap: true,
+    sourcemap: 'hidden',
   },
   server: {
     port: 3000,
