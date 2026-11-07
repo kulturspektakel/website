@@ -772,6 +772,24 @@ const RowCells = memo(function RowCells({row}: {row: TableRow<BookingRow>}) {
   );
 });
 
+// The visible row Arrow Down/Up would open next, stepping from where the open
+// application last sat (`last`, kept up to date on every render). When its row
+// has dropped out of the filtered list, the row now at that index is the next
+// one. Undefined at either end of the list, or when the open application was
+// never in the visible list (e.g. a deep link to a filtered-out band).
+function neighborId(
+  rows: TableRow<BookingRow>[],
+  last: {id: string; index: number} | null,
+  applicationId: string | undefined,
+  direction: 1 | -1,
+): string | undefined {
+  if (!last || last.id !== applicationId) return undefined;
+  const present = rows[last.index]?.original.id === applicationId;
+  const next =
+    direction === -1 ? last.index - 1 : present ? last.index + 1 : last.index;
+  return rows[next]?.original.id;
+}
+
 function BookingPage() {
   const {eventId} = Route.useParams();
   const data = useBookingRows(eventId);
@@ -836,6 +854,18 @@ function BookingPage() {
     }
   }, [applicationId, virtualizer]);
 
+  // Where the open application last sat in the visible rows. The modal stays
+  // open when its row drops out of the filtered list (rated as rejected,
+  // tagged, …), and the arrows then step from the gap it left: the row now at
+  // that index is the next one, the row before it the previous one.
+  const lastPositionRef = useRef<{id: string; index: number} | null>(null);
+  if (applicationId) {
+    const index = rows.findIndex((r) => r.original.id === applicationId);
+    if (index >= 0) {
+      lastPositionRef.current = {id: applicationId, index};
+    }
+  }
+
   // While a detail modal is open, Arrow Up/Down step to the previous/next row in
   // the current (filtered + sorted) order. Skip when a nested control already
   // handled the key (stage grid, combobox — they call preventDefault) or when
@@ -847,16 +877,17 @@ function BookingPage() {
       if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
       const target = e.target as HTMLElement | null;
       if (target?.closest('input, textarea, [contenteditable="true"]')) return;
-      const current = rowsRef.current.findIndex(
-        (r) => r.original.id === applicationId,
+      const next = neighborId(
+        rowsRef.current,
+        lastPositionRef.current,
+        applicationId,
+        e.key === 'ArrowDown' ? 1 : -1,
       );
-      if (current < 0) return;
-      const next = current + (e.key === 'ArrowDown' ? 1 : -1);
-      if (next < 0 || next >= rowsRef.current.length) return;
+      if (!next) return;
       e.preventDefault();
       navigate({
         to: '/crew/booking/$eventId/$applicationId',
-        params: {eventId, applicationId: rowsRef.current[next].original.id},
+        params: {eventId, applicationId: next},
       });
     };
     window.addEventListener('keydown', handler);
@@ -868,15 +899,17 @@ function BookingPage() {
   const router = useRouter();
   useEffect(() => {
     if (!applicationId) return;
-    const current = rowsRef.current.findIndex(
-      (r) => r.original.id === applicationId,
+    const next = neighborId(
+      rowsRef.current,
+      lastPositionRef.current,
+      applicationId,
+      1,
     );
-    const next = current >= 0 ? rowsRef.current[current + 1] : undefined;
     if (!next) return;
     router
       .preloadRoute({
         to: '/crew/booking/$eventId/$applicationId',
-        params: {eventId, applicationId: next.original.id},
+        params: {eventId, applicationId: next},
       })
       // Only a head start: a failed preload just loads on navigation.
       .catch(() => {});
