@@ -95,6 +95,7 @@ import {KULT_LOCATION} from '../utils/kultLocation';
 import {meanRating} from '../utils/meanRating';
 import {normalizeBandName} from '../utils/normalizeBandName';
 import {spotifyArtistUrl} from '../utils/spotifyArtistId';
+import {externalUrl} from '../utils/externalUrl';
 import type {BookingRow} from './crew.booking.$eventId';
 import {
   BookingRowsContext,
@@ -109,6 +110,11 @@ const loadBandApplicationDetail = createServerFn()
   .middleware([crewAuth])
   .validator(z.object({eventId: z.string(), applicationId: z.string()}))
   .handler(async ({data: {eventId, applicationId: id}}) => {
+    // The id comes straight from the URL; a non-uuid would make Postgres
+    // reject the query instead of matching nothing.
+    if (!z.guid().safeParse(id).success) {
+      throw notFound();
+    }
     // Only applications the booking table lists (this event, no DJs), so the
     // modal always has a live row to show.
     const a = await db.query.bandApplication.findFirst({
@@ -579,8 +585,9 @@ function RightColumn({data, row}: {data: DetailData; row: BookingRow}) {
   const rows = useContext(BookingRowsContext);
   const stageCounts = useMemo(() => countStageCells(rows), [rows]);
 
-  const hasSocial =
-    data.website || data.facebook || data.instagram || data.spotifyArtist;
+  const website = externalUrl(data.website);
+  const facebook = externalUrl(data.facebook);
+  const hasSocial = website || facebook || data.instagram || data.spotifyArtist;
 
   // Live, so other crew members' comments show up while the modal is open.
   const {comments} = row;
@@ -620,16 +627,12 @@ function RightColumn({data, row}: {data: DetailData; row: BookingRow}) {
     <Stack gap="5">
       {hasSocial && (
         <HStack gap="6" justify="flex-start" align="flex-start">
-          {data.website && (
-            <SocialStat
-              href={data.website}
-              icon={<FaGlobe />}
-              label="Webseite"
-            />
+          {website && (
+            <SocialStat href={website} icon={<FaGlobe />} label="Webseite" />
           )}
-          {data.facebook && (
+          {facebook && (
             <SocialStat
-              href={data.facebook}
+              href={facebook}
               icon={<FaFacebook />}
               label="Facebook"
               value={data.facebookLikes}
@@ -1230,6 +1233,7 @@ function Demo({
   const config = demoEmbedType ? DEMO_EMBEDS[demoEmbedType] : undefined;
   const embed = config ? config.src(demoEmbed ?? '') : undefined;
   const {aspectRatio, height} = config ?? {};
+  const demoUrl = externalUrl(demo);
 
   return (
     <Stack gap="2">
@@ -1249,11 +1253,14 @@ function Demo({
           />
         </Box>
       )}
-      {demo && (
-        <Link href={demo} target="_blank" rel="noreferrer" truncate>
-          {demo}
-        </Link>
-      )}
+      {demo &&
+        (demoUrl ? (
+          <Link href={demoUrl} target="_blank" rel="noreferrer" truncate>
+            {demo}
+          </Link>
+        ) : (
+          <Text truncate>{demo}</Text>
+        ))}
     </Stack>
   );
 }
