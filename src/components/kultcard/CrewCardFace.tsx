@@ -17,7 +17,8 @@ const ringCss = defineStyle({
 
 /**
  * The CrewCard as a card: the holder's picture and name, their status, the
- * totals and a footer line (card ids). "ungültig" across it when `invalid`.
+ * totals, something in the top right corner and a footer line. "ungültig"
+ * across it when `invalid`.
  */
 export function CrewCardFace({
   name,
@@ -25,6 +26,7 @@ export function CrewCardFace({
   privileged,
   invalid,
   totals,
+  corner,
   footer,
   mb,
 }: {
@@ -33,7 +35,8 @@ export function CrewCardFace({
   privileged: boolean;
   invalid: boolean;
   totals: Record<string, number>;
-  footer: React.ReactNode;
+  corner?: React.ReactNode;
+  footer?: React.ReactNode;
   mb: string;
 }) {
   return (
@@ -54,13 +57,30 @@ export function CrewCardFace({
       overflow="hidden"
       mb={mb}
     >
-      <Box
-        w="15%"
-        aspectRatio={6}
-        bg="offwhite.100"
-        borderRadius="full"
-        boxShadow="inset"
-      />
+      {/* The punched hole, with the corner content vertically centered on it. */}
+      <Box position="relative" w="full" display="flex" justifyContent="center">
+        <Box
+          w="15%"
+          aspectRatio={6}
+          bg="offwhite.100"
+          borderRadius="full"
+          boxShadow="inset"
+        />
+        {corner && (
+          <Box
+            position="absolute"
+            // Centered on the hole, its top is ~14px from the card's edge (20px
+            // padding + half the hole − half an 18px icon); the same at the
+            // right.
+            right="-6px"
+            top="50%"
+            transform="translateY(-50%)"
+            display="flex"
+          >
+            {corner}
+          </Box>
+        )}
+      </Box>
       <Box w="50%" aspectRatio={1}>
         <Avatar.Root css={ringCss} size="full" background="brand.500">
           <Avatar.Fallback
@@ -128,9 +148,9 @@ export function CrewCardFace({
             </Flex>
           ))}
         </Flex>
-        <Text fontSize="sm" textAlign="center" opacity="0.5">
+        <Box fontSize="sm" textAlign="center">
           {footer}
-        </Text>
+        </Box>
       </VStack>
     </Flex>
   );

@@ -1,4 +1,6 @@
-import {Button, Text, VStack} from '@chakra-ui/react';
+import {Box, Button, HStack, Text, VStack} from '@chakra-ui/react';
+import {FaApple, FaCreditCard} from 'react-icons/fa6';
+import {Tooltip} from '../components/chakra-snippets/tooltip';
 import {createFileRoute, notFound} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
 import {useEffect, useState} from 'react';
@@ -118,7 +120,7 @@ function HolderPage() {
   const {holder, liveCards, cardActivities, bookings, event} =
     Route.useLoaderData();
   const {token} = Route.useParams();
-  const {badge} = Route.useSearch();
+  const {badge, pass} = Route.useSearch();
   const walletPassUrl = useWalletPassDownload();
   const {awardedBadges} = useBadges(cardActivities, event, true);
   const now = new Date();
@@ -134,7 +136,8 @@ function HolderPage() {
       cardType="crew"
       notForMeOwner={{pageToken: token}}
       linkedBadge={badge}
-      footer={<CrewCardInfo />}
+      // Not over the Wallet pass sheet a `?pass=` link opens.
+      footer={<CrewCardInfo autoOpen={!pass} />}
     >
       <CrewCardFace
         name={holder.name}
@@ -142,13 +145,13 @@ function HolderPage() {
         privileged={holder.privileged}
         invalid={validCards.length === 0}
         totals={{Buchungen: bookings, Badges: awardedBadges.length}}
-        footer={liveCards.map((card) => (
-          <Text as="span" display="block" key={card.serial}>
-            {card.cardType === CrewCardType.APPLE_WALLET ? 'Wallet ' : ''}
-            {formatSerial(card.serial)}
-            {card.validUntil <= now && ' (abgelaufen)'}
-          </Text>
-        ))}
+        corner={
+          <HStack gap="2">
+            {liveCards.map((card) => (
+              <CardIcon key={card.serial} card={card} now={now} />
+            ))}
+          </HStack>
+        }
         mb={walletPassUrl ? '4' : '8'}
       />
       {walletPassUrl && (
@@ -162,5 +165,55 @@ function HolderPage() {
         </VStack>
       )}
     </CardDetails>
+  );
+}
+
+/**
+ * A live card as an icon (physical card or Apple Wallet), struck through once
+ * it has expired; hovering shows its id.
+ */
+function CardIcon({
+  card,
+  now,
+}: {
+  card: {cardType: CrewCardType; serial: string; validUntil: Date};
+  now: Date;
+}) {
+  const expired = card.validUntil <= now;
+  const label = `${expired ? 'abgelaufen · ' : ''}${formatSerial(card.serial)}`;
+  const Icon =
+    card.cardType === CrewCardType.APPLE_WALLET ? FaApple : FaCreditCard;
+  return (
+    <Tooltip content={label} showArrow openDelay={100}>
+      <Box
+        as="span"
+        tabIndex={0}
+        aria-label={label}
+        fontSize="lg"
+        color="gray.400"
+        position="relative"
+        display="inline-flex"
+        // Expired: struck through with a diagonal line.
+        _after={
+          expired
+            ? {
+                content: '""',
+                position: 'absolute',
+                left: '-15%',
+                right: '-15%',
+                top: '50%',
+                height: '2px',
+                marginTop: '-1px',
+                bg: 'red.500',
+                transform: 'rotate(-45deg)',
+                borderRadius: 'full',
+              }
+            : undefined
+        }
+        cursor="default"
+      >
+        <Icon />
+      </Box>
+    </Tooltip>
   );
 }

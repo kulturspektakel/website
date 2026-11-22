@@ -49,10 +49,11 @@ describe('/crewcard', () => {
     });
 
     const {text} = await (await handleCrewCardCommand(command())).json();
-    expect(text).toContain(
-      'https://www.kulturspektakel.de/crewcard/page-token?pass=',
+    expect(text).toMatch(
+      /<https:\/\/www\.kulturspektakel\.de\/crewcard\/page-token\?pass=[^|>]+\|Zu Apple Wallet hinzufügen>/,
     );
     expect(inserts).not.toHaveBeenCalled();
+    expect(text).not.toContain('Wichtige Info');
     expect(updates).not.toHaveBeenCalled();
   });
 
@@ -90,5 +91,8 @@ describe('/crewcard', () => {
     );
     expect(text).toContain('/crewcard/page-token?pass=');
     expect(text).toContain('Deine bisherige Wallet-CrewCard wurde deaktiviert');
+    // The CrewCard info comes with a new pass, in Slack mrkdwn.
+    expect(text).toContain('*Wichtige Info*\n');
+    expect(text).toContain('*muss*');
   });
 });

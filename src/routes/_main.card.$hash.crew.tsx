@@ -124,7 +124,7 @@ function AnonymousCrewCard({
         privileged={false}
         invalid={validUntil < new Date()}
         totals={{Buchungen: bookings, Badges: awardedBadges.length}}
-        footer={formatSerial(cardId)}
+        footer={<Text opacity="0.5">{formatSerial(cardId)}</Text>}
         mb="8"
       />
     </CardDetails>

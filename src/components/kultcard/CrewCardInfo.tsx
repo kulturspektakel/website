@@ -1,14 +1,23 @@
-import {Button, Dialog, Text} from '@chakra-ui/react';
+import {Button, Dialog, List} from '@chakra-ui/react';
 import {useEffect, useState} from 'react';
+import {CREW_CARD_INFO, CREW_CARD_INFO_TITLE} from '../../utils/crewCardInfo';
 
 const STORAGE_KEY = 'crewCardInfoSeen';
 
-export function CrewCardInfo() {
+export function CrewCardInfo({
+  autoOpen = true,
+}: {
+  /**
+   * Whether to open on the first visit on this device. Off while something
+   * else takes the screen (the Wallet pass sheet); it then opens next time.
+   */
+  autoOpen?: boolean;
+}) {
   const [open, setOpen] = useState(false);
 
   // Auto-open the first time a CrewCard is scanned on this device.
   useEffect(() => {
-    if (localStorage.getItem(STORAGE_KEY)) {
+    if (!autoOpen || localStorage.getItem(STORAGE_KEY)) {
       return;
     }
     localStorage.setItem(STORAGE_KEY, '1');
@@ -37,16 +46,19 @@ export function CrewCardInfo() {
             <Dialog.CloseTrigger />
             <Dialog.Header>
               <Dialog.Title w="full" fontSize="2xl" mb="-2" mt="3">
-                Wichtige Info
+                {CREW_CARD_INFO_TITLE}
               </Dialog.Title>
             </Dialog.Header>
             <Dialog.Body fontSize="md">
-              <Text>
-                Egal ob du etwas für dich, deine Helfer:inenn, Bands oder andere
-                Orgas holst, alles was du holst <strong>muss</strong> auf deine
-                CrewCard gebucht werden! Für deine Statistik kannst du hier im
-                Nachhinein einzelne Buchungen als "nicht für mich" markieren.
-              </Text>
+              <List.Root gap="2" textAlign="left" ps="4">
+                {CREW_CARD_INFO.map((parts, i) => (
+                  <List.Item key={i}>
+                    {parts.map(({text, strong}, j) =>
+                      strong ? <strong key={j}>{text}</strong> : text,
+                    )}
+                  </List.Item>
+                ))}
+              </List.Root>
             </Dialog.Body>
             <Dialog.Footer>
               <Button onClick={() => setOpen(false)}>Verstanden</Button>

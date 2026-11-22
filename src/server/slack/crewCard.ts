@@ -9,6 +9,7 @@ import {
   formatSerial,
 } from '../../utils/cardUtils';
 import {isAppleWalletConfigured} from '../appleWallet/pass.server';
+import {crewCardInfoMrkdwn} from '../../utils/crewCardInfo';
 
 /**
  * The `/crewcard` slash command: hands the calling Slack user their Apple
@@ -58,16 +59,20 @@ export async function handleCrewCardCommand(
 
   // The holder page, which with Wallet set up also adds the pass when opened
   // within a few minutes (the download token's lifetime).
-  let url = `https://www.kulturspektakel.de/crewcard/${pageToken}`;
-  let text = `Deine CrewCard ist gültig bis einschließlich ${validThrough}: `;
+  // A titled link (Slack's `<url|title>`) rather than the long URL.
+  const pageUrl = `https://www.kulturspektakel.de/crewcard/${pageToken}`;
+  let text = `Deine CrewCard ist gültig bis einschließlich ${validThrough}.\n`;
   if (isAppleWalletConfigured()) {
-    url += `?pass=${signPassDownloadToken(card.id)}`;
-    text += `${url}\nÖffne den Link innerhalb von 5 Minuten auf deinem iPhone, um die CrewCard zu Apple Wallet hinzuzufügen.`;
+    const url = `${pageUrl}?pass=${signPassDownloadToken(card.id)}`;
+    text += `<${url}|Zu Apple Wallet hinzufügen> (öffne den Link innerhalb von 5 Minuten auf deinem iPhone)`;
   } else {
-    text += url;
+    text += `<${pageUrl}|Zu deiner CrewCard>`;
   }
   if (replaced) {
     text += '\nDeine bisherige Wallet-CrewCard wurde deaktiviert.';
+  }
+  if ('issued' in result) {
+    text += `\n\n${crewCardInfoMrkdwn()}`;
   }
   return Response.json({text});
 }
