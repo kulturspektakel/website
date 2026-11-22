@@ -502,8 +502,8 @@ export type WalletPassFields = {
 };
 
 // A person CrewCards are issued to: a Slack user (`viewerId`) or someone
-// without Slack (`nickname`). `privileged` (Bonbude) applies to all their
-// cards. `pageToken` is the random, rotatable part of their holder page URL
+// without Slack (`nickname`). `privileged` (Bonbude, Slack users only)
+// applies to all their cards. `pageToken` is the random, rotatable part of their holder page URL
 // (`/crewcard/<pageToken>`).
 export const crewCardHolder = pgTable(
   'CrewCardHolder',
@@ -527,6 +527,12 @@ export const crewCardHolder = pgTable(
     check(
       'CrewCardHolder_identity_check',
       sql`num_nonnulls(${table.viewerId}, ${table.nickname}) = 1`,
+    ),
+    // Bonbude follows #bonbude (crewCardPrivileges.server.ts), so only Slack
+    // users can have it.
+    check(
+      'CrewCardHolder_privileged_check',
+      sql`NOT ${table.privileged} OR ${table.viewerId} IS NOT NULL`,
     ),
     foreignKey({
       columns: [table.viewerId],

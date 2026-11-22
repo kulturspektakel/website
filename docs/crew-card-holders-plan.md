@@ -32,6 +32,7 @@ CrewCardHolder
   pageToken        text not null UNIQUE      -- random, rotatable; holder page URL
   createdAt        timestamptz not null default now
   CHECK num_nonnulls(viewerId, nickname) = 1
+  CHECK NOT privileged OR viewerId IS NOT NULL   -- Bonbude follows #bonbude: Slack users only
 
 CrewCard
   id               uuid PK default gen_random_uuid()

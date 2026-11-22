@@ -1,0 +1,1 @@
+ALTER TABLE "CrewCardHolder" ADD CONSTRAINT "CrewCardHolder_privileged_check" CHECK (NOT "CrewCardHolder"."privileged" OR "CrewCardHolder"."viewerId" IS NOT NULL);

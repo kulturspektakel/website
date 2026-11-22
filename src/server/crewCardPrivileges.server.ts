@@ -21,7 +21,7 @@ const REVOKED_PASS_MESSAGE = 'Bonbude-Zugang entfernt';
  *
  * Membership changes reach us as `member_joined_channel`/`member_left_channel`
  * events (`src/server/slack/events.ts`). Nickname holders (no Slack account)
- * are never touched and stay whatever they were set to by hand.
+ * can't be privileged (a check constraint).
  *
  * Filtering on the current value makes a redundant event a zero-row write.
  */

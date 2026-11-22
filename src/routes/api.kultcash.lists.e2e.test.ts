@@ -52,9 +52,14 @@ describe('GET /api/kultcash/lists', () => {
 
   test('ships suspended and privileged CrewCard serials', async () => {
     const hex = (b: Uint8Array) => Buffer.from(b).toString('hex');
+    // Only Slack users can be privileged.
+    await query(
+      `insert into "Viewer" (id, "displayName", email)
+       values ('ULISTS', 'Lists Bonbude', 'lists@example.com')`,
+    );
     const [{id: privileged}, {id: regular}] = await query<{id: string}>(
-      `insert into "CrewCardHolder" (nickname, privileged, "pageToken") values
-         ('lists-bonbude', true, 'lists-1'), ('lists-crew', false, 'lists-2')
+      `insert into "CrewCardHolder" ("viewerId", nickname, privileged, "pageToken") values
+         ('ULISTS', null, true, 'lists-1'), (null, 'lists-crew', false, 'lists-2')
        returning id`,
     );
     await query(
