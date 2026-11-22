@@ -2,26 +2,30 @@ import {Button, Dialog, List} from '@chakra-ui/react';
 import {useEffect, useState} from 'react';
 import {CREW_CARD_INFO, CREW_CARD_INFO_TITLE} from '../../utils/crewCardInfo';
 
-const STORAGE_KEY = 'crewCardInfoSeen';
-
 export function CrewCardInfo({
-  autoOpen = true,
+  autoOpenFor,
 }: {
   /**
-   * Whether to open on the first visit on this device. Off while something
-   * else takes the screen (the Wallet pass sheet); it then opens next time.
+   * The current event's id: the dialog opens on its own once per event on
+   * this device, so the info comes again each festival. Unset: only the
+   * button opens it (e.g. over the Wallet pass sheet).
    */
-  autoOpen?: boolean;
+  autoOpenFor?: string;
 }) {
   const [open, setOpen] = useState(false);
 
-  // Auto-open the first time a CrewCard is scanned on this device.
   useEffect(() => {
-    if (!autoOpen || localStorage.getItem(STORAGE_KEY)) {
+    if (!autoOpenFor) {
       return;
     }
-    localStorage.setItem(STORAGE_KEY, '1');
+    const key = `crewCardInfoSeen:${autoOpenFor}`;
+    if (localStorage.getItem(key)) {
+      return;
+    }
+    localStorage.setItem(key, '1');
     setOpen(true);
+    // Once, for the page as opened.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

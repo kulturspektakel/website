@@ -24,7 +24,10 @@ import {db} from '../server/db.server';
 import {crewCard} from '../server/db/schema';
 
 const loader = createServerFn()
-  .validator((data: {token: string; event: {start: Date; end: Date}}) => data)
+  .validator(
+    (data: {token: string; event: {id: string; start: Date; end: Date}}) =>
+      data,
+  )
   .handler(async ({data: {token, event}}) => {
     const holder = await queryHolder({pageToken: token}, event);
     if (!holder) {
@@ -137,7 +140,7 @@ function HolderPage() {
       notForMeOwner={{pageToken: token}}
       linkedBadge={badge}
       // Not over the Wallet pass sheet a `?pass=` link opens.
-      footer={<CrewCardInfo autoOpen={!pass} />}
+      footer={<CrewCardInfo autoOpenFor={pass ? undefined : event.id} />}
     >
       <CrewCardFace
         name={holder.name}

@@ -25,7 +25,9 @@ import {decodePayload} from '../utils/decodePayload';
  * been assigned yet, which gets an anonymous card page.
  */
 const loader = createServerFn()
-  .validator((data: {hash: string; event: {start: Date; end: Date}}) => data)
+  .validator(
+    (data: {hash: string; event: {id: string; start: Date; end: Date}}) => data,
+  )
   .handler(async ({data: {hash, event}}) => {
     let cardId: string;
     let validUntil: Date;
@@ -116,7 +118,7 @@ function AnonymousCrewCard({
       cardType="crew"
       notForMeOwner={{serial: cardId}}
       linkedBadge={badge}
-      footer={<CrewCardInfo />}
+      footer={<CrewCardInfo autoOpenFor={event.id} />}
     >
       <CrewCardFace
         name={null}
