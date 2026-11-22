@@ -8,12 +8,12 @@ const {db, updates} = await vi.hoisted(async () =>
   (await import('../../test/dbMock')).dbMock(),
 );
 
-const {refreshWalletPasses} = vi.hoisted(() => ({
-  refreshWalletPasses: vi.fn(),
+const {refreshHolderWalletPasses} = vi.hoisted(() => ({
+  refreshHolderWalletPasses: vi.fn(),
 }));
 
 vi.mock('./slack.server', () => ({conversationMembers}));
-vi.mock('./crewCardPass.server', () => ({refreshWalletPasses}));
+vi.mock('./crewCardPass.server', () => ({refreshHolderWalletPasses}));
 vi.mock('./db.server', () => ({db}));
 
 const {
@@ -29,27 +29,19 @@ beforeEach(() => {
 });
 
 describe('crewCardPrivileges', () => {
-  test('granting is limited to currently-valid, unsuspended cards', async () => {
+  test('granting and revoking set the holder, covering all their cards', async () => {
     await grantBonbudePrivilege('U1');
-    // viewer, validUntil > now (sent as an ISO string), not suspended, not
-    // privileged yet
-    expect(updates).toHaveBeenCalledWith('CrewCard', {privileged: true}, [
+    // viewer, not privileged yet
+    expect(updates).toHaveBeenCalledWith('CrewCardHolder', {privileged: true}, [
       'U1',
-      expect.any(String),
-      false,
       false,
     ]);
-  });
-
-  test('revoking ignores validity and suspension', async () => {
-    // Expired privileged cards are still shipped to the devices by
-    // `handleLists`, so leaving one privileged would leave it live.
     await revokeBonbudePrivilege('U1');
-    // viewer and privileged only: no validity or suspension filter
-    expect(updates).toHaveBeenCalledWith('CrewCard', {privileged: false}, [
-      'U1',
-      true,
-    ]);
+    expect(updates).toHaveBeenCalledWith(
+      'CrewCardHolder',
+      {privileged: false},
+      ['U1', true],
+    );
   });
 
   test('isBonbudeMember resolves false when Slack fails', async () => {
@@ -71,13 +63,13 @@ describe('crewCardPrivileges', () => {
 
     const [grant, revoke] = updates.mock.calls;
     expect(grant).toEqual([
-      'CrewCard',
+      'CrewCardHolder',
       {privileged: true},
-      ['U1', 'U2', expect.any(String), false, false],
+      ['U1', 'U2', false],
     ]);
     // viewerId IS NOT NULL (no parameter), NOT IN members, privileged
     expect(revoke).toEqual([
-      'CrewCard',
+      'CrewCardHolder',
       {privileged: false},
       ['U1', 'U2', true],
     ]);
@@ -85,18 +77,18 @@ describe('crewCardPrivileges', () => {
 
   test('reconcile refreshes wallet passes with a message per direction', async () => {
     conversationMembers.mockResolvedValue(['U1']);
-    const granted = Buffer.from([1]);
-    const revoked = Buffer.from([2]);
+    const granted = 'holder-1';
+    const revoked = 'holder-2';
     updates
       .mockResolvedValueOnce([{id: granted}])
       .mockResolvedValueOnce([{id: revoked}]);
 
     await reconcileBonbudePrivileges();
 
-    expect(refreshWalletPasses).toHaveBeenCalledWith([granted], {
+    expect(refreshHolderWalletPasses).toHaveBeenCalledWith([granted], {
       message: 'Bonbude freigeschaltet',
     });
-    expect(refreshWalletPasses).toHaveBeenCalledWith([revoked], {
+    expect(refreshHolderWalletPasses).toHaveBeenCalledWith([revoked], {
       message: 'Bonbude-Zugang entfernt',
     });
   });

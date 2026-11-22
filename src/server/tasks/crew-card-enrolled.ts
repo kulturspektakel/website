@@ -1,20 +1,30 @@
-import {subDays} from 'date-fns';
+import {eq} from 'drizzle-orm';
+import {db} from '../../server/db.server';
+import {crewCardHolder} from '../../server/db/schema';
 import {readJsonPayload} from '../../server/readJsonPayload.server';
 import {slackApiRequest} from '../../server/slack.server';
 import {ApiError} from '../../server/apiError.server';
 import {SlackChannel} from '../../utils/slackChannels';
-import {locale, timeZone} from '../../utils/dateUtils';
+import {
+  byteArrayToString,
+  formatLastValidDay,
+  formatSerial,
+} from '../../utils/cardUtils';
 
 export type CrewCardEnrolledPayload = {
   crewCardId: number[];
   validUntil: string;
+  /** Set when the chip had a live card, which the enrollment renewed. */
+  renewedForHolderId?: string;
 };
 
 /**
  * Migrated from `~/api.kulturspektakel.de/src/tasks/crewCardEnrolled.ts`
  * (which delegated to `sendCrewCardEnrollmentMessage`). Triggered from
  * `kultcash.ts` after a CrewCard enrollment is upserted: announces the
- * activation in #crewcards with a "Karte zuordnen" button.
+ * activation in #crewcards with a "Karte zuordnen" button. A renewed card (the
+ * chip had a live card, which keeps its holder) is announced as such, with a
+ * button to assign it to someone else instead.
  *
  * The button (`assign-crew-card-modal`) is still served by the legacy api's
  * Slack interactivity webhook — only the message dispatch has moved here.
@@ -22,42 +32,44 @@ export type CrewCardEnrolledPayload = {
 export async function handleCrewCardEnrolled(
   request: Request,
 ): Promise<Response> {
-  const {crewCardId, validUntil} =
+  const {crewCardId, validUntil, renewedForHolderId} =
     await readJsonPayload<CrewCardEnrolledPayload>(request);
 
-  const cardId = crewCardId
-    .map((byte) => byte.toString(16).padStart(2, '0'))
-    .join(':')
-    .toUpperCase();
+  const cardId = formatSerial(byteArrayToString(Uint8Array.from(crewCardId)));
+  const formattedDate = formatLastValidDay(new Date(validUntil));
 
-  const formattedDate = subDays(new Date(validUntil), 1).toLocaleDateString(
-    locale,
-    {
-      weekday: 'long',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      timeZone,
-    },
-  );
+  const holder = renewedForHolderId
+    ? await db.query.crewCardHolder.findFirst({
+        where: eq(crewCardHolder.id, renewedForHolderId),
+        columns: {viewerId: true, nickname: true},
+      })
+    : undefined;
+  const message = holder
+    ? {
+        text: `CrewCard ${cardId} wurde verlängert`,
+        section: `CrewCard \`${cardId}\` für ${holder.viewerId ? `<@${holder.viewerId}>` : `_${holder.nickname}_`} bis einschließlich ${formattedDate} verlängert`,
+        button: 'Andere Person zuordnen',
+      }
+    : {
+        text: `CrewCard ${cardId} wurde aktiviert`,
+        section: `CrewCard \`${cardId}\` wurde bis einschließlich ${formattedDate} aktiviert`,
+        button: 'Karte zuordnen',
+      };
 
   const res = await slackApiRequest('chat.postMessage', {
     channel: SlackChannel.crewcards,
-    text: `CrewCard ${cardId} wurde aktiviert`,
+    text: message.text,
     blocks: [
       {
         type: 'section',
-        text: {
-          type: 'mrkdwn',
-          text: `CrewCard \`${cardId}\` wurde bis einschließlich ${formattedDate} aktiviert`,
-        },
+        text: {type: 'mrkdwn', text: message.section},
       },
       {
         type: 'actions',
         elements: [
           {
             type: 'button',
-            text: {type: 'plain_text', text: 'Karte zuordnen', emoji: true},
+            text: {type: 'plain_text', text: message.button, emoji: true},
             value: cardId,
             action_id: 'assign-crew-card-modal',
           },

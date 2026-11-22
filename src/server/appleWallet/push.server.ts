@@ -82,7 +82,7 @@ function sendPush(
  * which decides when). Push tokens APNs reports as dead are dropped along with
  * their registrations.
  */
-export async function pushToCrewCardDevices(cardId: Buffer): Promise<void> {
+export async function pushToCrewCardDevices(cardId: string): Promise<void> {
   const registrations = await db.query.walletPassRegistration.findMany({
     where: eq(walletPassRegistration.crewCardId, cardId),
     columns: {pushToken: true},

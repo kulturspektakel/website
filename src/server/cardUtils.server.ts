@@ -1,9 +1,21 @@
 import {isPast, sub} from 'date-fns';
-import {and, desc, eq, exists, gt, gte, isNotNull, lt} from 'drizzle-orm';
+import {
+  and,
+  desc,
+  eq,
+  exists,
+  gt,
+  gte,
+  inArray,
+  isNotNull,
+  lt,
+  type SQLWrapper,
+} from 'drizzle-orm';
 import {CardActivity} from '../components/kultcard/CardActivities';
 import {db, type DbExecutor} from './db.server';
 import {computeBadges} from '../utils/useBadges';
-import {cardTransaction, crewCard, deviceLog, order} from './db/schema';
+import {cardTransaction, crewCardHolder, deviceLog, order} from './db/schema';
+import {enrollmentOrderIds, holderOrderIds} from './crewCards.server';
 
 export async function queryCardTransactions(
   cardId: string,
@@ -54,45 +66,92 @@ export async function queryCardTransactions(
   });
 }
 
-export async function queryCrewCard(
-  cardId: Uint8Array<ArrayBuffer>,
+/** Orders (with items) among `ids` placed during the event, newest first. */
+function eventOrders(
+  ids: SQLWrapper,
   event: {start: Date; end: Date},
-  executor: DbExecutor = db,
+  executor: DbExecutor,
 ) {
-  return executor.query.crewCard.findFirst({
-    where: eq(crewCard.id, Buffer.from(cardId)),
-    columns: {
-      privileged: true,
-      suspended: true,
-      nickname: true,
-      cardType: true,
-      enrolledAt: true,
-    },
+  return executor.query.order.findMany({
+    orderBy: desc(order.createdAt),
+    columns: {id: true, createdAt: true, notForMe: true},
     with: {
-      viewer: {columns: {displayName: true, profilePicture: true}},
-      orders: {
-        where: and(
-          lt(order.createdAt, event.end),
-          gt(order.createdAt, event.start),
-        ),
-        orderBy: desc(order.createdAt),
-        columns: {id: true, createdAt: true, notForMe: true},
+      orderItems: {
+        columns: {name: true, amount: true, perUnitPrice: true},
         with: {
-          orderItems: {
-            columns: {name: true, amount: true},
-            with: {
-              productList: {columns: {id: true, name: true, emoji: true}},
-            },
-          },
+          productList: {columns: {id: true, name: true, emoji: true}},
         },
       },
     },
+    where: and(
+      inArray(order.id, ids),
+      lt(order.createdAt, event.end),
+      gt(order.createdAt, event.start),
+    ),
   });
 }
 
-type CrewCardOrders = NonNullable<
-  Awaited<ReturnType<typeof queryCrewCard>>
->['orders'];
+/**
+ * A CrewCard holder (by id, or by the holder page's token) with their orders
+ * at the event: the orders of all their cards, old and suspended ones included
+ * (see `holderOrderIds`).
+ */
+export async function queryHolder(
+  by: {id: string} | {pageToken: string},
+  event: {start: Date; end: Date},
+  executor: DbExecutor = db,
+) {
+  const holderQuery = executor.query.crewCardHolder.findFirst({
+    where:
+      'id' in by
+        ? eq(crewCardHolder.id, by.id)
+        : eq(crewCardHolder.pageToken, by.pageToken),
+    columns: {id: true, viewerId: true, nickname: true, privileged: true},
+    with: {
+      viewer: {columns: {displayName: true, profilePicture: true}},
+    },
+  });
+  const ordersOf = (holderId: string) =>
+    eventOrders(holderOrderIds(holderId, executor), event, executor);
+
+  if ('id' in by) {
+    const [holder, orders] = await Promise.all([holderQuery, ordersOf(by.id)]);
+    return holder && {...holder, orders};
+  }
+  const holder = await holderQuery;
+  return holder && {...holder, orders: await ordersOf(holder.id)};
+}
+
+/**
+ * The orders of an enrolled chip nobody has been assigned yet (since its
+ * enrollment), for the anonymous card page.
+ */
+export function queryEnrollmentOrders(
+  serial: Buffer,
+  event: {start: Date; end: Date},
+) {
+  return eventOrders(enrollmentOrderIds(serial), event, db);
+}
+
+/** How a holder is called: their Slack name or nickname. */
+export function holderName(holder: {
+  viewer: {displayName: string} | null;
+  nickname: string | null;
+}): string {
+  return holder.viewer?.displayName ?? holder.nickname ?? 'Crew';
+}
+
+type CrewCardOrders = Awaited<ReturnType<typeof queryEnrollmentOrders>>;
+
+/** What was booked in the orders, in cents. */
+export function bookingsTotal(orders: CrewCardOrders): number {
+  return orders.reduce(
+    (sum, o) =>
+      sum +
+      o.orderItems.reduce((n, item) => n + item.amount * item.perUnitPrice, 0),
+    0,
+  );
+}
 
 /** The card page's "Buchungen": items booked, over all of the orders. */
 export function bookedItems(orders: CrewCardOrders): number {

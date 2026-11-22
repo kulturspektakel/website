@@ -2,55 +2,63 @@ import {eq} from 'drizzle-orm';
 import {db} from '../../server/db.server';
 import {order as orderTable} from '../../server/db/schema';
 import {readJsonPayload} from '../../server/readJsonPayload.server';
-import {awardedBadges, queryCrewCard} from '../../server/cardUtils.server';
+import {awardedBadges, queryHolder} from '../../server/cardUtils.server';
+import {holderForOrder} from '../../server/crewCards.server';
 import {badgeConfig, type BadgeKey} from '../../utils/badgeConfig';
 import {getCurrentEvent} from '../../server/getCurrentEvent.server';
 import {slackApiRequest} from '../../server/slack.server';
-import {refreshWalletPasses} from '../../server/crewCardPass.server';
+import {refreshHolderWalletPasses} from '../../server/crewCardPass.server';
 import {formatCents} from '../../utils/currency';
 
 /**
- * Triggered from `kultcash.ts` whenever a CrewCard order lands. Recomputes
- * the cardholder's badges with the new order included, diffs against the
- * pre-order badges, and DMs them on Slack for each newly-awarded one. A wallet
- * card's pass gets the new totals and the order (with any new badges) as its
- * message, which Wallet shows as a notification.
+ * Triggered from `kultcash.ts` whenever a CrewCard order lands. Finds the card
+ * the order belongs to (by its serial and time) and its holder, recomputes the
+ * holder's badges (over all their cards) with the new order included, diffs
+ * against the pre-order badges, and DMs them on Slack for each newly-awarded
+ * one. The holder's live wallet pass gets the new totals and the order (with
+ * any new badges) as its message, which Wallet shows as a notification, also
+ * when the order was paid with their physical card.
  *
- * Previously this task lived in `~/api.kulturspektakel.de/src/tasks/badgeAwarded.ts`
- * and called back into this codebase via `/api/badges` to compute the diff —
- * now both sides live here, so that round-trip endpoint is gone.
+ * Orders of a chip nobody has been assigned yet have no holder: nothing to do.
+ * They count once the chip is assigned.
  */
 export async function handleCrewCardOrder(request: Request): Promise<Response> {
   const {orderId} = await readJsonPayload<{orderId: number}>(request);
 
-  // The cardholder's Slack id is the card's `viewerId` (Viewer ids are Slack
-  // ids); a card nobody claimed yet has none.
-  const order = await db.query.order.findFirst({
-    where: eq(orderTable.id, orderId),
-    columns: {crewCardId: true},
-    with: {
-      crewCard: {columns: {viewerId: true}},
-      orderItems: {
-        columns: {amount: true, perUnitPrice: true},
-        with: {productList: {columns: {name: true}}},
+  const [order, event] = await Promise.all([
+    db.query.order.findFirst({
+      where: eq(orderTable.id, orderId),
+      columns: {crewCardSerial: true, createdAt: true},
+      with: {
+        orderItems: {
+          columns: {amount: true, perUnitPrice: true},
+          with: {productList: {columns: {name: true}}},
+        },
       },
-    },
-  });
-  if (!order?.crewCardId) {
+    }),
+    getCurrentEvent(),
+  ]);
+  if (!order?.crewCardSerial) {
+    return new Response(null, {status: 204});
+  }
+  const holderId = await holderForOrder(
+    Buffer.from(order.crewCardSerial),
+    order.createdAt,
+  );
+  if (!holderId) {
     return new Response(null, {status: 204});
   }
 
-  const event = await getCurrentEvent();
-  const crewCard = await queryCrewCard(new Uint8Array(order.crewCardId), event);
-  if (!crewCard) {
+  const holder = await queryHolder({id: holderId}, event);
+  if (!holder) {
     return new Response(null, {status: 204});
   }
 
   const oldBadges = awardedBadges(
-    crewCard.orders.filter((o) => o.id !== orderId),
+    holder.orders.filter((o) => o.id !== orderId),
     event,
   );
-  const newBadges = awardedBadges(crewCard.orders, event);
+  const newBadges = awardedBadges(holder.orders, event);
 
   const newlyAwarded = newBadges.filter((nb) =>
     oldBadges.every((ob) => ob.badgeKey !== nb.badgeKey),
@@ -58,14 +66,15 @@ export async function handleCrewCardOrder(request: Request): Promise<Response> {
 
   // Never throws, so the DMs below aren't retried over it; and if they are,
   // the same message doesn't change the pass, so it isn't pushed again.
-  await refreshWalletPasses([order.crewCardId], {
+  await refreshHolderWalletPasses([holder.id], {
     message: orderMessage(
       order,
       newlyAwarded.map(({badgeKey}) => badgeKey),
     ),
   });
 
-  const viewerSlackId = order.crewCard?.viewerId;
+  // Viewer ids are Slack ids; nickname holders have no Slack to DM.
+  const viewerSlackId = holder.viewerId;
   if (!viewerSlackId) {
     return new Response(null, {status: 204});
   }

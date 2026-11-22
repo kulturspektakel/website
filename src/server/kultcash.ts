@@ -1,8 +1,7 @@
-import {asc, eq, or} from 'drizzle-orm';
+import {asc, eq} from 'drizzle-orm';
 import {db, type DbTransaction} from './db.server';
 import {
   cardTransaction as cardTransactionTable,
-  crewCard,
   deviceConfigVersion,
   order as orderTable,
   orderItem,
@@ -16,13 +15,14 @@ import {
 } from '../proto/logmessage';
 import {DeviceConfig} from '../proto/config';
 import {AllLists} from '../proto/configs';
-import {CardTransactionType, CrewCardType, OrderPayment} from '../utils/enums';
+import {CardTransactionType, OrderPayment} from '../utils/enums';
 import {kultEpochToDate} from '../utils/cardUtils';
 import crc32 from 'crc-32';
 import {ApiError} from './apiError.server';
 import {deviceTimeToDate, insertDeviceLog} from './deviceLog.server';
 import {enqueueGcpTask} from './enqueueGcpTask.server';
 import UnreachableCaseError from '../utils/UnreachableCaseError';
+import {deviceCardLists, recordEnrollment} from './crewCards.server';
 
 const PROTOBUF_HEADERS = {'Content-Type': 'application/x-protobuf'};
 
@@ -48,7 +48,7 @@ function getDeviceConfig(list: {
  * Supports `If-None-Match` for caching via the config CRC32.
  */
 export async function handleLists(request: Request): Promise<Response> {
-  const [lists, flaggedCrewCards] = await Promise.all([
+  const [lists, crewCards] = await Promise.all([
     db.query.productList.findMany({
       where: eq(productList.active, true),
       orderBy: asc(productList.name),
@@ -61,25 +61,13 @@ export async function handleLists(request: Request): Promise<Response> {
         },
       },
     }),
-    db
-      .select({
-        id: crewCard.id,
-        privileged: crewCard.privileged,
-        suspended: crewCard.suspended,
-      })
-      .from(crewCard)
-      .where(or(eq(crewCard.privileged, true), eq(crewCard.suspended, true))),
+    deviceCardLists(),
   ]);
-  const suspendedCrewCards = flaggedCrewCards.filter((c) => c.suspended);
-  // A suspended card isn't privileged, whatever its flag says.
-  const privilegedCrewCards = flaggedCrewCards.filter(
-    (c) => c.privileged && !c.suspended,
-  );
 
   const allLists: AllLists = {
     productList: lists.map(getDeviceConfig),
-    privilegeTokens: privilegedCrewCards.map(({id}) => new Uint8Array(id)),
-    suspendedCrewCards: suspendedCrewCards.map(({id}) => new Uint8Array(id)),
+    privilegeTokens: crewCards.privileged.map((s) => new Uint8Array(s)),
+    suspendedCrewCards: crewCards.suspended.map((s) => new Uint8Array(s)),
     versionNumber: 0,
     timestamp: 0,
     checksum: 0,
@@ -202,65 +190,49 @@ export async function handleLog(request: Request): Promise<Response> {
   });
 
   // Orders paid within a card transaction don't award badges.
-  if (!cardTransaction && createdOrder?.crewCardId) {
+  if (!cardTransaction && createdOrder?.crewCardSerial) {
     await enqueueGcpTask('crew-card-order', {orderId: createdOrder.id});
   }
 
   if (crewCardEnrollment) {
     const validUntil = kultEpochToDate(crewCardEnrollment.validUntil);
-    const reset = {
+    const {renewed} = await recordEnrollment({
+      serial: Buffer.from(crewCardEnrollment.crewCardId),
       validUntil,
-      viewerId: null,
-      nickname: null,
-      suspended: false,
-      privileged: false,
       enrolledAt: deviceTime,
-      cardType: CrewCardType.PHYSICAL,
-    };
-    await db
-      .insert(crewCard)
-      .values({id: Buffer.from(crewCardEnrollment.crewCardId), ...reset})
-      .onConflictDoUpdate({target: crewCard.id, set: reset});
+      deviceId,
+    });
 
     await enqueueGcpTask('crew-card-enrolled', {
       crewCardId: Array.from(crewCardEnrollment.crewCardId),
       validUntil: validUntil.toISOString(),
+      renewedForHolderId: renewed?.holderId,
     });
   }
 
   return new Response('Created', {status: 201});
 }
 
-// The order of a log message, with its items. The crew card it was paid with
-// is registered first if the device hasn't uploaded its enrollment yet (and
-// then not further enrolled: valid until now).
+// The order of a log message, with its items. A CrewCard order keeps the
+// serial it was paid with; the card it belongs to is found by its time.
 async function insertOrder(
   tx: DbTransaction,
   order: NonNullable<LogMessage['order']>,
   deviceId: string,
   deviceTime: Date,
 ) {
-  const crewCardId = order.crewCardId ? Buffer.from(order.crewCardId) : null;
-  if (crewCardId) {
-    await tx
-      .insert(crewCard)
-      .values({
-        id: crewCardId,
-        validUntil: new Date(),
-        enrolledAt: deviceTime,
-        cardType: CrewCardType.PHYSICAL,
-      })
-      .onConflictDoNothing();
-  }
+  const crewCardSerial = order.crewCardId
+    ? Buffer.from(order.crewCardId)
+    : null;
   const [created] = await tx
     .insert(orderTable)
     .values({
       payment: mapPayment(order.paymentMethod),
       createdAt: deviceTime,
-      crewCardId,
+      crewCardSerial,
       deviceId,
     })
-    .returning({id: orderTable.id, crewCardId: orderTable.crewCardId});
+    .returning({id: orderTable.id, crewCardSerial: orderTable.crewCardSerial});
   const items = order.cartItems
     .filter(({product}) => product != undefined)
     .map(({amount, product}) => ({

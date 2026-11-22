@@ -1,8 +1,7 @@
-import {subDays} from 'date-fns';
 import {fetchUser, postResponseUrl, slackApiRequest} from '../slack.server';
 import {upsertViewer} from '../upsertViewer.server';
-import {assignCrewCardToHolder} from '../crewCards.server';
-import {locale, timeZone} from '../../utils/dateUtils';
+import {assignPhysicalCard} from '../crewCards.server';
+import {formatLastValidDay} from '../../utils/cardUtils';
 
 /**
  * Migrated from `~/api.kulturspektakel.de/src/utils/crewCardEnrollment.ts`
@@ -97,28 +96,17 @@ export async function assignCrewCard(
     nickname = nonSlackUser;
   }
 
-  const cardIdBytes = Buffer.from(
+  const serial = Buffer.from(
     cardId.split(':').map((part) => parseInt(part, 16)),
   );
-
-  const {crewCard, suspendedCards} = await assignCrewCardToHolder({
-    cardId: cardIdBytes,
-    holder: viewerId ? {viewerId} : {nickname: nickname!},
-  });
-
-  const formattedDate = subDays(crewCard.validUntil, 1).toLocaleDateString(
-    locale,
-    {
-      weekday: 'long',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      timeZone,
-    },
+  const {validUntil, replaced} = await assignPhysicalCard(
+    serial,
+    viewerId ? {viewerId} : {nickname: nickname!},
   );
+  const formattedDate = formatLastValidDay(validUntil);
 
   let text = `<@${assignedByUserId}> hat die CrewCard \`${cardId}\` ${slackUserId ? `<@${slackUserId}>` : `_${nonSlackUser}_`} zugeordnet. Gültig bis einschließlich ${formattedDate}.`;
-  if (suspendedCards.length > 0) {
+  if (replaced) {
     text += '\nDie alte CrewCard für diese Person wurde deaktiviert.';
   }
 

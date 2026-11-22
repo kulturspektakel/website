@@ -1,6 +1,6 @@
 import {beforeAll, describe, expect, inject, test} from 'vitest';
 import {baseUrl, query} from '../../test/e2e/client';
-import {encodeCrewCardPayload} from '../utils/decodePayload';
+import {signPassDownloadToken} from '../server/crewCardPassToken.server';
 
 const base = `${baseUrl}/api/crewcard/wallet/apple/v1`;
 const PASS_TYPE = 'pass.de.kulturspektakel.crew';
@@ -44,13 +44,21 @@ describe('Apple Wallet web service', () => {
       `insert into "Event"(id, name, start, "end", "eventType")
        values ('e2e-wallet-kult', 'Kult E2E', '2027-07-23', '2027-07-26', 'Kulturspektakel')`,
     );
-    // The first card's pass is installed (it has its snapshot); the second
-    // was just issued, so its download is still open.
+    const [{id: erika}, {id: max}, {id: previous}] = await query<{id: string}>(
+      `insert into "CrewCardHolder"(nickname, "pageToken") values
+         ('Erika Mustermann', 'wallet-1'), ('Max', 'wallet-2'), ('Vorher', 'wallet-3')
+       returning id`,
+    );
+    // Erika's pass is installed (it has its snapshot). Max's was just issued,
+    // so there's no pass yet; he also had a physical card that was replaced,
+    // a chip someone else had before him.
     await query(
-      `insert into "CrewCard"(id, "validUntil", "enrolledAt", "cardType", "walletAuthToken", "walletPass")
-       values (decode($1, 'hex'), $2, $3, 'APPLE_WALLET', $4, $5),
-              (decode('A1E2E000000002', 'hex'), $2, now(), 'APPLE_WALLET', 'other-token-other-token', null)`,
-      [SERIAL, VALID_UNTIL, ENROLLED_AT, TOKEN, SNAPSHOT],
+      `insert into "CrewCard"(serial, "holderId", "validUntil", "enrolledAt", "cardType", "walletAuthToken", "walletPass", "suspendedAt", "suspendedReason")
+       values (decode($1, 'hex'), $2, $4, $5, 'APPLE_WALLET', $6, $7, null, null),
+              (decode('A1E2E000000002', 'hex'), $3, $4, now(), 'APPLE_WALLET', 'other-token-other-token', null, null, null),
+              (decode('53E2E000000003', 'hex'), $8, $4, '2027-07-01', 'PHYSICAL', null, null, null, null),
+              (decode('53E2E000000003', 'hex'), $3, $4, '2027-07-24 12:00', 'PHYSICAL', null, null, now(), 'replaced')`,
+      [SERIAL, erika, max, VALID_UNTIL, ENROLLED_AT, TOKEN, SNAPSHOT, previous],
     );
   });
 
@@ -143,39 +151,46 @@ describe('Apple Wallet web service', () => {
     // Only the download creates snapshots; until then there's no pass.
     expect((await fetch(url, {headers})).status).toBe(404);
 
-    // The total counts everything since the card was issued, also outside
-    // the festival (badges don't); an order from before it doesn't count.
+    // The holder's bookings at the festival, with all their cards: the
+    // replaced physical card's count too, also after it was suspended (175 +
+    // 200); the chip's previous holder's don't (1000), nor orders outside the
+    // festival (50).
     await query(
       `with booked as (
-         insert into "Order"("crewCardId", payment, "createdAt")
-         values (decode('A1E2E000000002', 'hex'), 'FREE_CREW', now()),
-                (decode('A1E2E000000002', 'hex'), 'FREE_CREW', '2020-01-01')
+         insert into "Order"("crewCardSerial", payment, "createdAt")
+         values (decode('53E2E000000003', 'hex'), 'FREE_CREW', '2027-07-23 18:00'),
+                (decode('53E2E000000003', 'hex'), 'FREE_CREW', '2027-07-24 18:00'),
+                (decode('A1E2E000000002', 'hex'), 'FREE_CREW', '2027-07-25 18:00'),
+                (decode('A1E2E000000002', 'hex'), 'FREE_CREW', '2027-08-01 18:00')
          returning id, "createdAt"
        )
        insert into "OrderItem"("orderId", name, amount, "perUnitPrice")
-       select id, 'Bier', 2, case when "createdAt" > '2021-01-01' then 175 else 1000 end
+       select id, 'Bier', 1, case "createdAt"
+         when '2027-07-23 18:00' then 1000
+         when '2027-07-24 18:00' then 175
+         when '2027-07-25 18:00' then 200
+         else 50 end
        from booked`,
     );
 
     process.env.CONTACTLESS_SALT = inject('e2e').salt;
-    const payload = encodeCrewCardPayload(
-      Buffer.from('A1E2E000000002', 'hex'),
-      940,
+    const [{id: cardId}] = await query<{id: string}>(
+      `select id from "CrewCard" where serial = decode('A1E2E000000002', 'hex')`,
     );
     const download = await fetch(
-      `${baseUrl}/api/crewcard/wallet/apple/${payload}`,
+      `${baseUrl}/api/crewcard/wallet/apple/${signPassDownloadToken(cardId)}`,
       {redirect: 'manual'},
     );
     expect(download.status).toBe(200);
     const [card] = await query<{walletPass: unknown; passUpdatedAt: Date}>(
-      `select "walletPass", "passUpdatedAt" from "CrewCard"
-       where id = decode('A1E2E000000002', 'hex')`,
+      `select "walletPass", "passUpdatedAt" from "CrewCard" where id = $1`,
+      [cardId],
     );
-    // The first festival ending after issue; no holder.
+    // The first festival ending after issue.
     expect(card.walletPass).toEqual({
       ...SNAPSHOT,
-      holderName: 'Crew',
-      bookingsTotal: 350,
+      holderName: 'Max',
+      bookingsTotal: 375,
     });
 
     const served = await fetch(url, {headers});

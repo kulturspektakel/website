@@ -16,31 +16,60 @@ import {useState} from 'react';
 import {useRouter} from '@tanstack/react-router';
 import {createServerFn} from '@tanstack/react-start';
 import {z} from 'zod';
-import {and, eq} from 'drizzle-orm';
+import {and, eq, inArray} from 'drizzle-orm';
 import {db} from '../../server/db.server';
-import {order} from '../../server/db/schema';
+import {crewCardHolder, order} from '../../server/db/schema';
+import {
+  enrollmentOrderIds,
+  holderOrderIds,
+} from '../../server/crewCards.server';
 import {stringToByteArray} from '../../utils/cardUtils';
 import {locale, timeZone} from '../../utils/dateUtils';
-import {refreshWalletPasses} from '../../server/crewCardPass.server';
+import {refreshHolderWalletPasses} from '../../server/crewCardPass.server';
 
 const DEPOSIT_VALUE = 200;
+
+/**
+ * Whose orders "nicht für mich" may be set on: a holder (by their page token)
+ * or an enrolled chip nobody has been assigned yet (by its serial, hex).
+ */
+export type NotForMeOwner = {pageToken: string} | {serial: string};
 
 const setOrderNotForMe = createServerFn({method: 'POST'})
   .validator(
     z.object({
-      cardId: z.string(),
+      owner: z.union([
+        z.object({pageToken: z.string()}),
+        z.object({serial: z.string().regex(/^[0-9A-F]{14}$/)}),
+      ]),
       orderId: z.number().int(),
       notForMe: z.boolean(),
     }),
   )
-  .handler(async ({data: {cardId, orderId, notForMe}}) => {
-    const crewCardId = Buffer.from(stringToByteArray(cardId));
+  .handler(async ({data: {owner, orderId, notForMe}}) => {
+    const holder =
+      'pageToken' in owner
+        ? await db.query.crewCardHolder.findFirst({
+            where: eq(crewCardHolder.pageToken, owner.pageToken),
+            columns: {id: true},
+          })
+        : undefined;
+    const ownOrders = holder
+      ? holderOrderIds(holder.id)
+      : 'serial' in owner
+        ? enrollmentOrderIds(Buffer.from(stringToByteArray(owner.serial)))
+        : undefined;
+    if (!ownOrders) {
+      return;
+    }
     await db
       .update(order)
       .set({notForMe})
-      .where(and(eq(order.id, orderId), eq(order.crewCardId, crewCardId)));
-    // Changes the badges a wallet pass shows.
-    await refreshWalletPasses([crewCardId]);
+      .where(and(eq(order.id, orderId), inArray(order.id, ownOrders)));
+    if (holder) {
+      // Changes the badges a wallet pass shows.
+      await refreshHolderWalletPasses([holder.id]);
+    }
   });
 
 type CardChange = {
@@ -76,10 +105,10 @@ export type CardActivity = MissingTransaction | Order | GenericTransaction;
 
 export function CardActivities({
   newestToOldest: data,
-  crewCardId,
+  notForMeOwner,
 }: {
   newestToOldest?: Array<CardActivity>;
-  crewCardId?: string;
+  notForMeOwner?: NotForMeOwner;
 }) {
   if (data?.length === 0) {
     return (
@@ -98,7 +127,7 @@ export function CardActivities({
   return (
     <ListRoot as="ol" m="0">
       {data?.map((t, i) => (
-        <ActivityItem key={i} data={t} crewCardId={crewCardId} />
+        <ActivityItem key={i} data={t} notForMeOwner={notForMeOwner} />
       ))}
     </ListRoot>
   );
@@ -127,10 +156,10 @@ function genericTitle(data: CardChange) {
 
 function ActivityItem({
   data,
-  crewCardId,
+  notForMeOwner,
 }: {
   data: CardActivity;
-  crewCardId?: string;
+  notForMeOwner?: NotForMeOwner;
 }) {
   switch (data.type) {
     case 'missing':
@@ -175,16 +204,16 @@ function ActivityItem({
           accessoryStart={data.emoji}
           subtitle={
             <Flex align="center" gap="2" display="inline-flex">
-              {data.notForMe && crewCardId && data.orderId != null && (
-                <NotForMeBadge cardId={crewCardId} orderId={data.orderId} />
+              {data.notForMe && notForMeOwner && data.orderId != null && (
+                <NotForMeBadge owner={notForMeOwner} orderId={data.orderId} />
               )}
               {products.join(', ')}
             </Flex>
           }
           description={<CellDateTime time={data.time} />}
           accessoryEnd={
-            !data.notForMe && crewCardId && data.orderId != null ? (
-              <NotForMeButton cardId={crewCardId} orderId={data.orderId} />
+            !data.notForMe && notForMeOwner && data.orderId != null ? (
+              <NotForMeButton owner={notForMeOwner} orderId={data.orderId} />
             ) : data.cardChange ? (
               <CellTotal
                 total={
@@ -198,7 +227,13 @@ function ActivityItem({
   }
 }
 
-function NotForMeBadge({cardId, orderId}: {cardId: string; orderId: number}) {
+function NotForMeBadge({
+  owner,
+  orderId,
+}: {
+  owner: NotForMeOwner;
+  orderId: number;
+}) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   return (
@@ -216,7 +251,7 @@ function NotForMeBadge({cardId, orderId}: {cardId: string; orderId: number}) {
           }
           setPending(true);
           try {
-            await setOrderNotForMe({data: {cardId, orderId, notForMe: false}});
+            await setOrderNotForMe({data: {owner, orderId, notForMe: false}});
             await router.invalidate();
           } finally {
             setPending(false);
@@ -229,7 +264,13 @@ function NotForMeBadge({cardId, orderId}: {cardId: string; orderId: number}) {
   );
 }
 
-function NotForMeButton({cardId, orderId}: {cardId: string; orderId: number}) {
+function NotForMeButton({
+  owner,
+  orderId,
+}: {
+  owner: NotForMeOwner;
+  orderId: number;
+}) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   return (
@@ -248,7 +289,7 @@ function NotForMeButton({cardId, orderId}: {cardId: string; orderId: number}) {
         }
         setPending(true);
         try {
-          await setOrderNotForMe({data: {cardId, orderId, notForMe: true}});
+          await setOrderNotForMe({data: {owner, orderId, notForMe: true}});
           await router.invalidate();
         } finally {
           setPending(false);

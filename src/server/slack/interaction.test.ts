@@ -1,7 +1,7 @@
 import {beforeEach, describe, expect, test, vi} from 'vitest';
 
 // `updates` resolves to the rows `.returning()` reports.
-const {db, updates} = await vi.hoisted(async () =>
+const {db, updates, inserts, deletes} = await vi.hoisted(async () =>
   (await import('../../../test/dbMock')).dbMock(),
 );
 const {fetchUser, slackApiRequest, sendMessage, postResponseUrl} = vi.hoisted(
@@ -71,10 +71,21 @@ describe('handleSlackInteraction', () => {
       profile: {real_name: 'Test', image_192: '', email: 't@e.de'},
     });
     upsertViewer.mockResolvedValueOnce({id: 'U9'});
-    // Suspending the holder's other cards (none), then assigning this one.
-    updates
-      .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([{validUntil: new Date('2026-08-01')}]);
+    const enrolledAt = new Date('2026-07-20');
+    const validUntil = new Date('2026-08-01');
+    // An enrolled chip without a holder; the person already is one.
+    db.query.crewCardEnrollment.findFirst.mockResolvedValueOnce({
+      validUntil,
+      enrolledAt,
+    });
+    db.query.crewCard.findFirst.mockResolvedValueOnce(undefined);
+    db.query.crewCardHolder.findFirst.mockResolvedValueOnce({
+      id: 'h1',
+      viewerId: 'U9',
+    });
+    // Nothing to suspend, then the new card.
+    updates.mockResolvedValue([]);
+    inserts.mockResolvedValueOnce([{validUntil}]);
 
     const res = await handleSlackInteraction(
       interaction({
@@ -102,10 +113,19 @@ describe('handleSlackInteraction', () => {
     expect(await res.json()).toEqual({response_action: 'clear'});
     expect(fetchUser).toHaveBeenCalledWith('U9');
     expect(upsertViewer).toHaveBeenCalled();
-    expect(updates).toHaveBeenLastCalledWith(
+    expect(inserts).toHaveBeenCalledWith(
       'CrewCard',
-      {viewerId: 'U9', nickname: null},
-      [expect.anything()],
+      expect.objectContaining({
+        serial: Buffer.from([0xaa, 0xbb, 0xcc]),
+        cardType: 'PHYSICAL',
+        holderId: 'h1',
+        validUntil,
+        enrolledAt,
+      }),
     );
+    // The enrollment is used up.
+    expect(deletes).toHaveBeenCalledWith('CrewCardEnrollment', [
+      Buffer.from([0xaa, 0xbb, 0xcc]),
+    ]);
   });
 });

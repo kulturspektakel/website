@@ -160,10 +160,10 @@ describe('POST /api/kultcash/log', () => {
     );
     expect(txs).toHaveLength(0);
 
-    // the order exists, links the crew card, and has its item
+    // the order exists, keeps the crew card's serial, and has its item
     const [order] = await query<{id: number; payment: string}>(
       `select o.id, o.payment from "Order" o
-       where o."crewCardId" = $1 and o.payment = 'FREE_CREW'`,
+       where o."crewCardSerial" = $1 and o.payment = 'FREE_CREW'`,
       [Buffer.from(crewCardId)],
     );
     expect(order?.payment).toBe('FREE_CREW');
@@ -216,49 +216,80 @@ describe('POST /api/kultcash/log', () => {
     expect(res.status).toBe(400);
   });
 
-  test('crew card enrollment upserts the card and resets its flags', async () => {
-    const crewCardId = [0x01, 0x02, 0x03, 0x04];
-    const idBuf = Buffer.from(crewCardId);
-    // pre-existing card that is privileged/suspended with a nickname
+  test('re-enrolling a live card renews it for the same holder', async () => {
+    const serial = Buffer.from([0x01, 0x02, 0x03, 0x04]);
+    const [{id: holderId}] = await query<{id: string}>(
+      `insert into "CrewCardHolder" (nickname, "pageToken")
+       values ('renewed', 'renew-token') returning id`,
+    );
     await query(
-      `insert into "CrewCard" (id, nickname, suspended, privileged, "validUntil", "enrolledAt")
-       values ($1, 'old-owner', true, true, '2024-01-01', '2024-01-01')`,
-      [idBuf],
+      `insert into "CrewCard" (serial, "cardType", "holderId", "validUntil", "enrolledAt")
+       values ($1, 'PHYSICAL', $2, '2025-01-01', '2024-07-01')`,
+      [serial, holderId],
     );
 
     const res = await post(
       LogMessage.create({
         ...base,
-        clientId: 'log-enroll',
+        clientId: 'log-renew',
         crewCardEnrollment: {
-          crewCardId: Uint8Array.from(crewCardId),
+          crewCardId: Uint8Array.from(serial),
           validUntil: 3,
         },
       }),
     );
     expect(res.status).toBe(201);
 
-    const [card] = await query<{
-      nickname: string | null;
-      suspended: boolean;
-      privileged: boolean;
+    const cards = await query<{
+      holderId: string;
+      suspendedAt: Date | null;
+      validUntil: Date;
       enrolledAt: number;
+      reenrolledAt: number;
     }>(
-      // `extract(epoch …)` computes the instant in Postgres; reading the raw
-      // `timestamp`-without-tz column into JS would be re-parsed in the process's
-      // local zone and shift the value on a non-UTC machine.
-      `select nickname, suspended, privileged,
-              extract(epoch from "enrolledAt")::int as "enrolledAt"
-       from "CrewCard" where id = $1`,
-      [idBuf],
+      `select "holderId", "suspendedAt", "validUntil",
+              extract(epoch from "enrolledAt")::int as "enrolledAt",
+              extract(epoch from "reenrolledAt")::int as "reenrolledAt"
+       from "CrewCard" where serial = $1`,
+      [serial],
     );
-    // enrollment resets ownership/flags ...
-    expect(card).toMatchObject({
-      nickname: null,
-      suspended: false,
-      privileged: false,
-    });
-    // ... and stamps enrolledAt with the device time
-    expect(card.enrolledAt).toBe(deviceTime);
+    // The same card: holder and order window start kept, validity renewed.
+    expect(cards).toHaveLength(1);
+    expect(cards[0]).toMatchObject({holderId, suspendedAt: null});
+    expect(cards[0].validUntil > new Date('2025-01-01')).toBe(true);
+    expect(cards[0].enrolledAt).toBe(
+      new Date('2024-07-01T00:00:00Z').getTime() / 1000,
+    );
+    expect(cards[0].reenrolledAt).toBe(deviceTime);
+    expect(
+      await query(`select 1 from "CrewCardEnrollment" where serial = $1`, [
+        serial,
+      ]),
+    ).toHaveLength(0);
+  });
+
+  test('enrolling a chip without a live card creates an enrollment', async () => {
+    const serial = Buffer.from([0x05, 0x06, 0x07, 0x08]);
+    const res = await post(
+      LogMessage.create({
+        ...base,
+        clientId: 'log-enroll',
+        crewCardEnrollment: {
+          crewCardId: Uint8Array.from(serial),
+          validUntil: 3,
+        },
+      }),
+    );
+    expect(res.status).toBe(201);
+
+    const [enrollment] = await query<{enrolledAt: number; deviceId: string}>(
+      `select extract(epoch from "enrolledAt")::int as "enrolledAt", "deviceId"
+       from "CrewCardEnrollment" where serial = $1`,
+      [serial],
+    );
+    expect(enrollment).toEqual({enrolledAt: deviceTime, deviceId: 'KASSE-LOG'});
+    expect(
+      await query(`select 1 from "CrewCard" where serial = $1`, [serial]),
+    ).toHaveLength(0);
   });
 });

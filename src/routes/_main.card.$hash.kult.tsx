@@ -61,6 +61,7 @@ export const Route = createFileRoute('/_main/card/$hash/kult')({
 function KultCard() {
   const {balance, deposit, hasNewerTransactions, cardActivities, cardId} =
     Route.useLoaderData();
+  const {badge} = Route.useSearch();
 
   return (
     <CardDetails
@@ -70,6 +71,7 @@ function KultCard() {
       maxW="450px"
       minH="70dvh"
       cardType="regular"
+      linkedBadge={badge}
     >
       {hasNewerTransactions && (
         <Alert title="Neue Buchungen">

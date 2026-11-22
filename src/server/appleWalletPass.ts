@@ -6,20 +6,21 @@ import {
   isAppleWalletConfigured,
 } from './appleWallet/pass.server';
 import {refreshCrewCardPass} from './crewCardPass.server';
-import {decodePayload, encodeCrewCardPayload} from '../utils/decodePayload';
+import {encodeCrewCardPayload} from '../utils/decodePayload';
 import {
   byteArrayToString,
+  formatSerial,
   kultEpochOfDate,
-  stringToByteArray,
 } from '../utils/cardUtils';
 import {CrewCardType} from '../utils/enums';
-import {isWithinWalletDownloadWindow} from '../utils/walletPass';
+import {verifyPassDownloadToken} from './crewCardPassToken.server';
 
 /** What a pass is built from, for `db.query.crewCard` queries. */
 export const walletCardColumns = {
   id: true,
+  serial: true,
   cardType: true,
-  suspended: true,
+  suspendedAt: true,
   enrolledAt: true,
   validUntil: true,
   walletAuthToken: true,
@@ -38,18 +39,21 @@ export function passLastModified(card: {
 /**
  * The card's pass: the card itself (serial, token, validity, NFC payload) plus
  * the `walletPass` snapshot (crewCardPass.server.ts). The NFC payload is
- * re-derived from the id and `validUntil`, so it's the card link's payload.
+ * re-derived from the serial and `validUntil`, so it's the card link's payload.
  */
 export function buildCrewCardPass(
-  card: {id: Uint8Array; validUntil: Date; walletAuthToken: string},
+  card: {serial: Uint8Array; validUntil: Date; walletAuthToken: string},
   fields: WalletPassFields,
 ): Buffer {
-  const serialNumber = byteArrayToString(card.id);
+  const serialNumber = byteArrayToString(card.serial);
   return buildAppleWalletPass({
     serialNumber,
-    cardId: serialNumber.match(/.{2}/g)!.join(':'),
+    cardId: formatSerial(serialNumber),
     authenticationToken: card.walletAuthToken,
-    payload: encodeCrewCardPayload(card.id, kultEpochOfDate(card.validUntil)),
+    payload: encodeCrewCardPayload(
+      card.serial,
+      kultEpochOfDate(card.validUntil),
+    ),
     validUntil: card.validUntil,
     fields,
   });
@@ -67,54 +71,53 @@ export function passResponse(pass: Buffer, headers: HeadersInit = {}) {
 }
 
 /**
- * GET /api/crewcard/wallet/apple/<payload>: the Apple Wallet pass for a wallet
- * CrewCard, started by the card page when it's opened with `?wallet=apple`.
+ * GET /api/crewcard/wallet/apple/<token>: the Apple Wallet pass for a wallet
+ * CrewCard, started by the holder page when it's opened with `?pass=<token>`
+ * (the link `/crewcard` replies with). The token
+ * (crewCardPassToken.server.ts) is valid for a few minutes.
  *
- * Serves the pass only for an unsuspended APPLE_WALLET card in its first
- * minutes (`isWithinWalletDownloadWindow`); the page checks the same thing, but
- * only for convenience. Anything else redirects to the plain card page, so the
- * link quietly stays a card link. Safari shows a pass response as a sheet over
- * the page that requested it, so the user stays on the card page. Once
- * installed, the pass updates through the web service instead
- * (appleWalletWebService.ts), which has no such window.
+ * Serves the pass only for a valid token of a live APPLE_WALLET card.
+ * Anything else redirects to the holder page (or the home page if the token
+ * says nothing), so the link quietly stays a page link. Safari shows a pass
+ * response as a sheet over the page that requested it, so the user stays on
+ * the holder page. Once installed, the pass updates through the web service
+ * instead (appleWalletWebService.ts), which needs no token.
  */
-export async function handleAppleWalletPass(
-  payload: string,
-): Promise<Response> {
-  const cardPage = new Response(null, {
-    status: 302,
-    headers: {Location: `/card/${payload}/crew`, 'Cache-Control': 'no-store'},
-  });
+export async function handleAppleWalletPass(token: string): Promise<Response> {
+  const redirectTo = (location: string) =>
+    new Response(null, {
+      status: 302,
+      headers: {Location: location, 'Cache-Control': 'no-store'},
+    });
 
-  let cardId: string;
-  try {
-    ({cardId} = decodePayload('crewcard', payload));
-  } catch {
-    return cardPage;
+  const cardId = verifyPassDownloadToken(token);
+  if (!cardId) {
+    return redirectTo('/');
   }
-  if (!isAppleWalletConfigured()) {
-    return cardPage;
-  }
-
   const card = await db.query.crewCard.findFirst({
-    where: eq(crewCard.id, Buffer.from(stringToByteArray(cardId))),
+    where: eq(crewCard.id, cardId),
     columns: walletCardColumns,
+    with: {holder: {columns: {pageToken: true}}},
   });
+  if (!card) {
+    return redirectTo('/');
+  }
+  const holderPage = redirectTo(`/crewcard/${card.holder.pageToken}`);
   if (
-    card?.cardType !== CrewCardType.APPLE_WALLET ||
-    card.suspended ||
-    // Every wallet card gets one when `/crewcard` creates it.
-    !card.walletAuthToken ||
-    !isWithinWalletDownloadWindow(card.enrolledAt)
+    !isAppleWalletConfigured() ||
+    card.cardType !== CrewCardType.APPLE_WALLET ||
+    card.suspendedAt ||
+    // Every wallet card has one (a check constraint).
+    !card.walletAuthToken
   ) {
-    return cardPage;
+    return holderPage;
   }
 
   // Creates the snapshot on the first download; the web service serves it
   // from then on.
   const fields = await refreshCrewCardPass(card.id);
   if (!fields) {
-    return cardPage;
+    return holderPage;
   }
   return passResponse(
     buildCrewCardPass({...card, walletAuthToken: card.walletAuthToken}, fields),

@@ -1,15 +1,14 @@
 import {isDeepStrictEqual} from 'node:util';
 import * as Sentry from '@sentry/tanstackstart-react';
-import {and, eq, gte, inArray, sql} from 'drizzle-orm';
+import {and, eq, inArray, isNull} from 'drizzle-orm';
 import {db} from './db.server';
+import {crewCard, event, type WalletPassFields} from './db/schema';
 import {
-  crewCard,
-  event,
-  order,
-  orderItem,
-  type WalletPassFields,
-} from './db/schema';
-import {awardedBadges, queryCrewCard} from './cardUtils.server';
+  awardedBadges,
+  bookingsTotal,
+  holderName,
+  queryHolder,
+} from './cardUtils.server';
 import {nextKulturspektakel} from './crewCards.server';
 import {pushToCrewCardDevices} from './appleWallet/push.server';
 import {CrewCardType} from '../utils/enums';
@@ -18,10 +17,11 @@ import {CrewCardType} from '../utils/enums';
  * A wallet CrewCard's pass content lives as a snapshot in `CrewCard.walletPass`
  * and passes are always built from it, so a pass changes only here: recompute
  * the fields from the database, and if they differ from the snapshot, store
- * them, bump `passUpdatedAt` and push to the card's devices. Anything that may
- * change what a pass shows (an order, "nicht für mich", the Bonbude
- * privilege) calls this; when nothing changed it's a no-op, which also keeps
- * Wallet from seeing an "update" that returns the same pass.
+ * them, bump `passUpdatedAt` and push to the card's devices. The fields are the
+ * holder's, over all their cards. Anything that may change what a pass shows
+ * (an order, "nicht für mich", the Bonbude privilege) calls this; when nothing
+ * changed it's a no-op, which also keeps Wallet from seeing an "update" that
+ * returns the same pass.
  */
 
 /**
@@ -32,7 +32,7 @@ import {CrewCardType} from '../utils/enums';
  * failure; see `refreshWalletPasses` for callers that mustn't fail.
  */
 export async function refreshCrewCardPass(
-  cardId: Buffer,
+  cardId: string,
   {message}: {message?: string} = {},
 ): Promise<WalletPassFields | undefined> {
   // The row lock serializes concurrent refreshes of a card (e.g. two orders
@@ -42,6 +42,7 @@ export async function refreshCrewCardPass(
     const [card] = await tx
       .select({
         cardType: crewCard.cardType,
+        holderId: crewCard.holderId,
         enrolledAt: crewCard.enrolledAt,
         walletPass: crewCard.walletPass,
       })
@@ -60,32 +61,19 @@ export async function refreshCrewCardPass(
           columns: {id: true, start: true, end: true},
         })
       : await nextKulturspektakel(card.enrolledAt, tx);
-    const current =
-      passEvent && (await queryCrewCard(new Uint8Array(cardId), passEvent, tx));
-    if (!passEvent || !current) {
+    const holder =
+      passEvent && (await queryHolder({id: card.holderId}, passEvent, tx));
+    if (!passEvent || !holder) {
       throw new Error('No Kulturspektakel for this card');
     }
-    // Everything booked on the card since it was issued (with its pass), not
-    // just at the festival like the badges.
-    const [{bookingsTotal}] = await tx
-      .select({
-        bookingsTotal: sql<number>`coalesce(sum(${orderItem.amount} * ${orderItem.perUnitPrice}), 0)::int`,
-      })
-      .from(order)
-      .innerJoin(orderItem, eq(orderItem.orderId, order.id))
-      .where(
-        and(
-          eq(order.crewCardId, cardId),
-          gte(order.createdAt, card.enrolledAt),
-        ),
-      );
 
     const fields: WalletPassFields = {
       eventId: passEvent.id,
-      holderName: current.viewer?.displayName ?? current.nickname ?? 'Crew',
-      privileged: current.privileged,
-      bookingsTotal,
-      badges: awardedBadges(current.orders, passEvent).length,
+      holderName: holderName(holder),
+      privileged: holder.privileged,
+      // The holder's, over all their cards, like the badges.
+      bookingsTotal: bookingsTotal(holder.orders),
+      badges: awardedBadges(holder.orders, passEvent).length,
       message: message ?? card.walletPass?.message ?? null,
     };
     if (card.walletPass && isDeepStrictEqual(card.walletPass, fields)) {
@@ -107,15 +95,15 @@ export async function refreshCrewCardPass(
 
 /**
  * `refreshCrewCardPass` for side effects of other actions (an order, a
- * privilege change): takes any cards, refreshes the wallet ones, and never
+ * privilege change): refreshes the live wallet cards of the holders, and never
  * throws, so a Wallet problem doesn't fail (and retry) what triggered it.
  * Failures go to Sentry.
  */
-export async function refreshWalletPasses(
-  cardIds: Buffer[],
+export async function refreshHolderWalletPasses(
+  holderIds: string[],
   options: {message?: string} = {},
 ): Promise<void> {
-  if (cardIds.length === 0) {
+  if (holderIds.length === 0) {
     return;
   }
   const walletCards = await db
@@ -123,8 +111,9 @@ export async function refreshWalletPasses(
     .from(crewCard)
     .where(
       and(
-        inArray(crewCard.id, cardIds),
+        inArray(crewCard.holderId, holderIds),
         eq(crewCard.cardType, CrewCardType.APPLE_WALLET),
+        isNull(crewCard.suspendedAt),
       ),
     )
     .catch(reportRefreshFailure([]));

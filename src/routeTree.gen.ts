@@ -39,6 +39,7 @@ import { Route as CrewNoiseRouteImport } from './routes/crew.noise'
 import { Route as CrewProdukteRouteImport } from './routes/crew.produkte'
 import { Route as MainBookingApplicationTypeRouteImport } from './routes/_main.booking_.$applicationType'
 import { Route as MainCardHashRouteImport } from './routes/_main.card.$hash'
+import { Route as MainCrewcardTokenRouteImport } from './routes/_main.crewcard.$token'
 import { Route as MainEventsIdRouteImport } from './routes/_main.events_.$id'
 import { Route as MainLineupIndexRouteImport } from './routes/_main.lineup.index'
 import { Route as MainLineupYearRouteImport } from './routes/_main.lineup.$year'
@@ -98,7 +99,7 @@ import { Route as ApiSpendenQuittungIdRouteImport } from './routes/api.spenden.q
 import { Route as CrewBookingEventIdApplicationIdRouteImport } from './routes/crew.booking.$eventId.$applicationId'
 import { Route as CrewNoiseDeviceDeviceRouteImport } from './routes/crew.noise.device.$device'
 import { Route as CrewNoiseProjectProjectIdRouteImport } from './routes/crew.noise.project.$projectId'
-import { Route as ApiCrewcardWalletApplePayloadRouteImport } from './routes/api.crewcard.wallet.apple.$payload'
+import { Route as ApiCrewcardWalletAppleTokenRouteImport } from './routes/api.crewcard.wallet.apple.$token'
 import { Route as CrewBookingEventIdApplicationIdContactRouteImport } from './routes/crew.booking.$eventId.$applicationId.contact'
 import { Route as CrewNoiseProjectProjectIdIndexRouteImport } from './routes/crew.noise.project.$projectId.index'
 import { Route as CrewNoiseProjectProjectIdListRouteImport } from './routes/crew.noise.project.$projectId.list'
@@ -253,6 +254,11 @@ const MainBookingApplicationTypeRoute =
 const MainCardHashRoute = MainCardHashRouteImport.update({
   id: '/card/$hash',
   path: '/card/$hash',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainCrewcardTokenRoute = MainCrewcardTokenRouteImport.update({
+  id: '/crewcard/$token',
+  path: '/crewcard/$token',
   getParentRoute: () => MainRoute,
 } as any)
 const MainEventsIdRoute = MainEventsIdRouteImport.update({
@@ -566,10 +572,10 @@ const CrewNoiseProjectProjectIdRoute =
     path: '/project/$projectId',
     getParentRoute: () => CrewNoiseRoute,
   } as any)
-const ApiCrewcardWalletApplePayloadRoute =
-  ApiCrewcardWalletApplePayloadRouteImport.update({
-    id: '/api/crewcard/wallet/apple/$payload',
-    path: '/api/crewcard/wallet/apple/$payload',
+const ApiCrewcardWalletAppleTokenRoute =
+  ApiCrewcardWalletAppleTokenRouteImport.update({
+    id: '/api/crewcard/wallet/apple/$token',
+    path: '/api/crewcard/wallet/apple/$token',
     getParentRoute: () => rootRouteImport,
   } as any)
 const CrewBookingEventIdApplicationIdContactRoute =
@@ -633,6 +639,7 @@ export interface FileRoutesByFullPath {
   '/crew/': typeof CrewIndexRoute
   '/booking/$applicationType': typeof MainBookingApplicationTypeRoute
   '/card/$hash': typeof MainCardHashRouteWithChildren
+  '/crewcard/$token': typeof MainCrewcardTokenRoute
   '/events/$id': typeof MainEventsIdRoute
   '/lineup/$year': typeof MainLineupYearRoute
   '/mitgliedsantrag/danke': typeof MainMitgliedsantragDankeRoute
@@ -692,7 +699,7 @@ export interface FileRoutesByFullPath {
   '/crew/booking/$eventId/$applicationId': typeof CrewBookingEventIdApplicationIdRouteWithChildren
   '/crew/noise/device/$device': typeof CrewNoiseDeviceDeviceRoute
   '/crew/noise/project/$projectId': typeof CrewNoiseProjectProjectIdRouteWithChildren
-  '/api/crewcard/wallet/apple/$payload': typeof ApiCrewcardWalletApplePayloadRoute
+  '/api/crewcard/wallet/apple/$token': typeof ApiCrewcardWalletAppleTokenRoute
   '/crew/booking/$eventId/$applicationId/contact': typeof CrewBookingEventIdApplicationIdContactRoute
   '/crew/noise/project/$projectId/list': typeof CrewNoiseProjectProjectIdListRoute
   '/crew/noise/project/$projectId/map': typeof CrewNoiseProjectProjectIdMapRoute
@@ -725,6 +732,7 @@ export interface FileRoutesByTo {
   '/crew': typeof CrewIndexRoute
   '/booking/$applicationType': typeof MainBookingApplicationTypeRoute
   '/card/$hash': typeof MainCardHashRouteWithChildren
+  '/crewcard/$token': typeof MainCrewcardTokenRoute
   '/events/$id': typeof MainEventsIdRoute
   '/lineup/$year': typeof MainLineupYearRoute
   '/mitgliedsantrag/danke': typeof MainMitgliedsantragDankeRoute
@@ -783,7 +791,7 @@ export interface FileRoutesByTo {
   '/api/spenden/quittung/$id': typeof ApiSpendenQuittungIdRoute
   '/crew/booking/$eventId/$applicationId': typeof CrewBookingEventIdApplicationIdRouteWithChildren
   '/crew/noise/device/$device': typeof CrewNoiseDeviceDeviceRoute
-  '/api/crewcard/wallet/apple/$payload': typeof ApiCrewcardWalletApplePayloadRoute
+  '/api/crewcard/wallet/apple/$token': typeof ApiCrewcardWalletAppleTokenRoute
   '/crew/booking/$eventId/$applicationId/contact': typeof CrewBookingEventIdApplicationIdContactRoute
   '/crew/noise/project/$projectId/list': typeof CrewNoiseProjectProjectIdListRoute
   '/crew/noise/project/$projectId/map': typeof CrewNoiseProjectProjectIdMapRoute
@@ -822,6 +830,7 @@ export interface FileRoutesById {
   '/crew/': typeof CrewIndexRoute
   '/_main/booking_/$applicationType': typeof MainBookingApplicationTypeRoute
   '/_main/card/$hash': typeof MainCardHashRouteWithChildren
+  '/_main/crewcard/$token': typeof MainCrewcardTokenRoute
   '/_main/events_/$id': typeof MainEventsIdRoute
   '/_main/lineup/$year': typeof MainLineupYearRoute
   '/_main/mitgliedsantrag_/danke': typeof MainMitgliedsantragDankeRoute
@@ -881,7 +890,7 @@ export interface FileRoutesById {
   '/crew/booking/$eventId/$applicationId': typeof CrewBookingEventIdApplicationIdRouteWithChildren
   '/crew/noise/device/$device': typeof CrewNoiseDeviceDeviceRoute
   '/crew/noise/project/$projectId': typeof CrewNoiseProjectProjectIdRouteWithChildren
-  '/api/crewcard/wallet/apple/$payload': typeof ApiCrewcardWalletApplePayloadRoute
+  '/api/crewcard/wallet/apple/$token': typeof ApiCrewcardWalletAppleTokenRoute
   '/crew/booking/$eventId/$applicationId/contact': typeof CrewBookingEventIdApplicationIdContactRoute
   '/crew/noise/project/$projectId/list': typeof CrewNoiseProjectProjectIdListRoute
   '/crew/noise/project/$projectId/map': typeof CrewNoiseProjectProjectIdMapRoute
@@ -920,6 +929,7 @@ export interface FileRouteTypes {
     | '/crew/'
     | '/booking/$applicationType'
     | '/card/$hash'
+    | '/crewcard/$token'
     | '/events/$id'
     | '/lineup/$year'
     | '/mitgliedsantrag/danke'
@@ -979,7 +989,7 @@ export interface FileRouteTypes {
     | '/crew/booking/$eventId/$applicationId'
     | '/crew/noise/device/$device'
     | '/crew/noise/project/$projectId'
-    | '/api/crewcard/wallet/apple/$payload'
+    | '/api/crewcard/wallet/apple/$token'
     | '/crew/booking/$eventId/$applicationId/contact'
     | '/crew/noise/project/$projectId/list'
     | '/crew/noise/project/$projectId/map'
@@ -1012,6 +1022,7 @@ export interface FileRouteTypes {
     | '/crew'
     | '/booking/$applicationType'
     | '/card/$hash'
+    | '/crewcard/$token'
     | '/events/$id'
     | '/lineup/$year'
     | '/mitgliedsantrag/danke'
@@ -1070,7 +1081,7 @@ export interface FileRouteTypes {
     | '/api/spenden/quittung/$id'
     | '/crew/booking/$eventId/$applicationId'
     | '/crew/noise/device/$device'
-    | '/api/crewcard/wallet/apple/$payload'
+    | '/api/crewcard/wallet/apple/$token'
     | '/crew/booking/$eventId/$applicationId/contact'
     | '/crew/noise/project/$projectId/list'
     | '/crew/noise/project/$projectId/map'
@@ -1108,6 +1119,7 @@ export interface FileRouteTypes {
     | '/crew/'
     | '/_main/booking_/$applicationType'
     | '/_main/card/$hash'
+    | '/_main/crewcard/$token'
     | '/_main/events_/$id'
     | '/_main/lineup/$year'
     | '/_main/mitgliedsantrag_/danke'
@@ -1167,7 +1179,7 @@ export interface FileRouteTypes {
     | '/crew/booking/$eventId/$applicationId'
     | '/crew/noise/device/$device'
     | '/crew/noise/project/$projectId'
-    | '/api/crewcard/wallet/apple/$payload'
+    | '/api/crewcard/wallet/apple/$token'
     | '/crew/booking/$eventId/$applicationId/contact'
     | '/crew/noise/project/$projectId/list'
     | '/crew/noise/project/$projectId/map'
@@ -1200,7 +1212,7 @@ export interface RootRouteChildren {
   ApiTwilioLegStatusRoute: typeof ApiTwilioLegStatusRoute
   ApiTwilioScreenRoute: typeof ApiTwilioScreenRoute
   ApiSpendenQuittungIdRoute: typeof ApiSpendenQuittungIdRoute
-  ApiCrewcardWalletApplePayloadRoute: typeof ApiCrewcardWalletApplePayloadRoute
+  ApiCrewcardWalletAppleTokenRoute: typeof ApiCrewcardWalletAppleTokenRoute
   ApiCrewcardWalletAppleV1SplatRoute: typeof ApiCrewcardWalletAppleV1SplatRoute
 }
 
@@ -1414,6 +1426,13 @@ declare module '@tanstack/react-router' {
       path: '/card/$hash'
       fullPath: '/card/$hash'
       preLoaderRoute: typeof MainCardHashRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/crewcard/$token': {
+      id: '/_main/crewcard/$token'
+      path: '/crewcard/$token'
+      fullPath: '/crewcard/$token'
+      preLoaderRoute: typeof MainCrewcardTokenRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/events_/$id': {
@@ -1829,11 +1848,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrewNoiseProjectProjectIdRouteImport
       parentRoute: typeof CrewNoiseRoute
     }
-    '/api/crewcard/wallet/apple/$payload': {
-      id: '/api/crewcard/wallet/apple/$payload'
-      path: '/api/crewcard/wallet/apple/$payload'
-      fullPath: '/api/crewcard/wallet/apple/$payload'
-      preLoaderRoute: typeof ApiCrewcardWalletApplePayloadRouteImport
+    '/api/crewcard/wallet/apple/$token': {
+      id: '/api/crewcard/wallet/apple/$token'
+      path: '/api/crewcard/wallet/apple/$token'
+      fullPath: '/api/crewcard/wallet/apple/$token'
+      preLoaderRoute: typeof ApiCrewcardWalletAppleTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/crew/booking/$eventId/$applicationId/contact': {
@@ -1923,6 +1942,7 @@ interface MainRouteChildren {
   MainIndexRoute: typeof MainIndexRoute
   MainBookingApplicationTypeRoute: typeof MainBookingApplicationTypeRoute
   MainCardHashRoute: typeof MainCardHashRouteWithChildren
+  MainCrewcardTokenRoute: typeof MainCrewcardTokenRoute
   MainEventsIdRoute: typeof MainEventsIdRoute
   MainMitgliedsantragDankeRoute: typeof MainMitgliedsantragDankeRoute
   MainNewsSlugRoute: typeof MainNewsSlugRoute
@@ -1950,6 +1970,7 @@ const MainRouteChildren: MainRouteChildren = {
   MainIndexRoute: MainIndexRoute,
   MainBookingApplicationTypeRoute: MainBookingApplicationTypeRoute,
   MainCardHashRoute: MainCardHashRouteWithChildren,
+  MainCrewcardTokenRoute: MainCrewcardTokenRoute,
   MainEventsIdRoute: MainEventsIdRoute,
   MainMitgliedsantragDankeRoute: MainMitgliedsantragDankeRoute,
   MainNewsSlugRoute: MainNewsSlugRoute,
@@ -2169,7 +2190,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiTwilioLegStatusRoute: ApiTwilioLegStatusRoute,
   ApiTwilioScreenRoute: ApiTwilioScreenRoute,
   ApiSpendenQuittungIdRoute: ApiSpendenQuittungIdRoute,
-  ApiCrewcardWalletApplePayloadRoute: ApiCrewcardWalletApplePayloadRoute,
+  ApiCrewcardWalletAppleTokenRoute: ApiCrewcardWalletAppleTokenRoute,
   ApiCrewcardWalletAppleV1SplatRoute: ApiCrewcardWalletAppleV1SplatRoute,
 }
 export const routeTree = rootRouteImport

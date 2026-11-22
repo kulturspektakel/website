@@ -955,3 +955,15 @@ export const badgeConfig = createBadgeDefinitions({
     },
   },
 });
+
+/**
+ * The `?badge=` search param of the card and holder pages (a link from the
+ * badge DM): a known badge key, or nothing.
+ */
+export function validateBadgeSearch(search: {badge?: unknown}): {
+  badge?: BadgeKey;
+} {
+  return typeof search.badge === 'string' && search.badge in badgeConfig
+    ? {badge: search.badge as BadgeKey}
+    : {};
+}

@@ -1,25 +1,24 @@
-import {subDays} from 'date-fns';
 import {fetchUser, sendMessage} from '../slack.server';
 import {upsertViewer} from '../upsertViewer.server';
-import {
-  assignCrewCardToHolder,
-  newWalletAuthToken,
-  newWalletCardId,
-  nextKulturspektakel,
-  walletCardValidity,
-} from '../crewCards.server';
-import {encodeCrewCardPayload} from '../../utils/decodePayload';
-import {CrewCardType} from '../../utils/enums';
+import {walletCardFor} from '../crewCards.server';
+import {signPassDownloadToken} from '../crewCardPassToken.server';
 import {SlackChannel} from '../../utils/slackChannels';
-import {WalletProvider} from '../../utils/walletPass';
+import {
+  byteArrayToString,
+  formatLastValidDay,
+  formatSerial,
+} from '../../utils/cardUtils';
 import {isAppleWalletConfigured} from '../appleWallet/pass.server';
-import {locale, timeZone} from '../../utils/dateUtils';
 
 /**
- * The `/crewcard` slash command: issues an Apple Wallet CrewCard to the calling
- * Slack user, valid until the day after the next Kulturspektakel, and replies
- * (ephemerally) with the same link a physical card carries. No Wallet pass is
- * generated yet. Like any assignment, it suspends the user's other cards.
+ * The `/crewcard` slash command: hands the calling Slack user their Apple
+ * Wallet CrewCard and replies (ephemerally) with a link to their holder page
+ * that adds the pass for its first minutes (`?pass=<token>`).
+ *
+ * A live, unexpired wallet card is handed out again (new phone, deleted pass):
+ * nothing is issued or suspended. Otherwise a new wallet card is issued, valid
+ * until the day after the next Kulturspektakel; an expired one is replaced. A
+ * physical card is left alone either way. No Wallet pass is generated yet.
  */
 export async function handleCrewCardCommand(
   request: Request,
@@ -27,68 +26,48 @@ export async function handleCrewCardCommand(
   const form = await request.formData();
   const userId = String(form.get('user_id') ?? '');
 
-  const now = new Date();
-  const validity = walletCardValidity(await nextKulturspektakel(now), now);
-  if (!validity.ok) {
-    return Response.json({
-      text: `⚠️ CrewCard wurde nicht erstellt: ${validity.error}`,
-    });
-  }
-
   const slackUser = await fetchUser(userId);
   if (!slackUser) {
     throw new Error('Slack user not found');
   }
   const viewer = await upsertViewer(slackUser);
 
-  const cardId = newWalletCardId();
-  const {suspendedCards} = await assignCrewCardToHolder({
-    cardId,
-    holder: {viewerId: viewer.id},
-    create: {
-      cardType: CrewCardType.APPLE_WALLET,
-      validUntil: validity.validUntil,
-      walletAuthToken: newWalletAuthToken(),
-    },
-  });
-
-  // With Wallet set up, the link also hands out the pass for its first
-  // minutes (see the crew card page); otherwise it's just the card link.
-  const walletEnabled = isAppleWalletConfigured();
-  const url = `https://kult.cash/$c/${encodeCrewCardPayload(cardId, validity.validUntilEpoch)}${walletEnabled ? `?wallet=${WalletProvider.apple}` : ''}`;
-  const lastDay = subDays(validity.validUntil, 1).toLocaleDateString(locale, {
-    weekday: 'long',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    timeZone,
-  });
-
-  const deactivated = suspendedCards.map(({cardType}) =>
-    cardType === CrewCardType.PHYSICAL ? 'physische ' : 'bisherige Wallet-',
-  );
-
-  // The channel's record of every card, like the enrollment message for
-  // physical cards. A failed post doesn't fail the command: the card exists.
-  const formattedId = [...cardId]
-    .map((byte) => byte.toString(16).padStart(2, '0'))
-    .join(':')
-    .toUpperCase();
-  let channelText = `<@${userId}> hat sich die Wallet-CrewCard \`${formattedId}\` erstellt. Gültig bis einschließlich ${lastDay}.`;
-  for (const kind of deactivated) {
-    channelText += `\nDie ${kind}CrewCard für diese Person wurde deaktiviert.`;
+  const result = await walletCardFor(viewer.id, new Date());
+  if (!result.ok) {
+    return Response.json({
+      text: `⚠️ CrewCard wurde nicht erstellt: ${result.error}`,
+    });
   }
-  await sendMessage({channel: SlackChannel.crewcards, text: channelText}).catch(
-    (e) => console.error('[crewcard] #crewcards post failed', e),
-  );
+  const {card, pageToken} = result;
+  const replaced = 'issued' in result && result.issued.replaced;
+  const validThrough = formatLastValidDay(card.validUntil);
 
-  let text = `Deine CrewCard ist gültig bis einschließlich ${lastDay}: ${url}`;
-  if (walletEnabled) {
-    text +=
-      '\nÖffne den Link innerhalb von 5 Minuten auf deinem iPhone, um die CrewCard zu Apple Wallet hinzuzufügen.';
+  if ('issued' in result) {
+    // The channel's record of every card, like the enrollment message for
+    // physical cards. A failed post doesn't fail the command: the card exists.
+    let channelText = `<@${userId}> hat sich die Wallet-CrewCard \`${formatSerial(byteArrayToString(result.card.serial))}\` erstellt. Gültig bis einschließlich ${validThrough}.`;
+    if (replaced) {
+      channelText +=
+        '\nDie bisherige Wallet-CrewCard für diese Person wurde deaktiviert.';
+    }
+    await sendMessage({
+      channel: SlackChannel.crewcards,
+      text: channelText,
+    }).catch((e) => console.error('[crewcard] #crewcards post failed', e));
   }
-  for (const kind of deactivated) {
-    text += `\nDeine ${kind}CrewCard wurde deaktiviert.`;
+
+  // The holder page, which with Wallet set up also adds the pass when opened
+  // within a few minutes (the download token's lifetime).
+  let url = `https://www.kulturspektakel.de/crewcard/${pageToken}`;
+  let text = `Deine CrewCard ist gültig bis einschließlich ${validThrough}: `;
+  if (isAppleWalletConfigured()) {
+    url += `?pass=${signPassDownloadToken(card.id)}`;
+    text += `${url}\nÖffne den Link innerhalb von 5 Minuten auf deinem iPhone, um die CrewCard zu Apple Wallet hinzuzufügen.`;
+  } else {
+    text += url;
+  }
+  if (replaced) {
+    text += '\nDeine bisherige Wallet-CrewCard wurde deaktiviert.';
   }
   return Response.json({text});
 }

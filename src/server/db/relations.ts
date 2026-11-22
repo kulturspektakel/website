@@ -13,6 +13,7 @@ import {
   cardTransaction,
   order,
   crewCard,
+  crewCardHolder,
   productList,
   deviceLocation,
   noiseLocationAssignment,
@@ -61,11 +62,11 @@ export const bandApplicationRelations = relations(
   }),
 );
 
-export const viewerRelations = relations(viewer, ({many}) => ({
+export const viewerRelations = relations(viewer, ({one, many}) => ({
   bandApplications: many(bandApplication),
   bandApplicationComments: many(bandApplicationComment),
   bandApplicationTags: many(bandApplicationTag),
-  crewCards: many(crewCard),
+  crewCardHolder: one(crewCardHolder),
   productLists: many(productList),
   noiseTags: many(noiseTag),
   nonceRequests: many(nonceRequest),
@@ -152,10 +153,6 @@ export const cardTransactionRelations = relations(cardTransaction, ({one}) => ({
 
 export const orderRelations = relations(order, ({one, many}) => ({
   cardTransactions: many(cardTransaction),
-  crewCard: one(crewCard, {
-    fields: [order.crewCardId],
-    references: [crewCard.id],
-  }),
   device: one(device, {
     fields: [order.deviceId],
     references: [device.id],
@@ -163,11 +160,21 @@ export const orderRelations = relations(order, ({one, many}) => ({
   orderItems: many(orderItem),
 }));
 
+export const crewCardHolderRelations = relations(
+  crewCardHolder,
+  ({one, many}) => ({
+    viewer: one(viewer, {
+      fields: [crewCardHolder.viewerId],
+      references: [viewer.id],
+    }),
+    crewCards: many(crewCard),
+  }),
+);
+
 export const crewCardRelations = relations(crewCard, ({one, many}) => ({
-  orders: many(order),
-  viewer: one(viewer, {
-    fields: [crewCard.viewerId],
-    references: [viewer.id],
+  holder: one(crewCardHolder, {
+    fields: [crewCard.holderId],
+    references: [crewCardHolder.id],
   }),
   walletPassRegistrations: many(walletPassRegistration),
 }));

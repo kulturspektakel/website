@@ -30,6 +30,7 @@ import {
   smallint,
   primaryKey,
   pgEnum,
+  check,
 } from 'drizzle-orm/pg-core';
 import {sql} from 'drizzle-orm';
 import * as enums from '../../utils/enums';
@@ -49,6 +50,10 @@ export const cardTransactionType = pgEnum(
   enums.CardTransactionType,
 );
 export const crewCardType = pgEnum('CrewCardType', enums.CrewCardType);
+export const crewCardSuspendedReason = pgEnum(
+  'CrewCardSuspendedReason',
+  enums.CrewCardSuspendedReason,
+);
 export const demoEmbedType = pgEnum('DemoEmbedType', enums.DemoEmbedType);
 export const deviceType = pgEnum('DeviceType', enums.DeviceType);
 export const dietType = pgEnum('DietType', enums.DietType);
@@ -460,17 +465,18 @@ export const order = pgTable(
     payment: orderPayment().notNull(),
     deposit: integer().default(0).notNull(),
     deviceId: text(),
-    crewCardId: bytea(),
+    // The `CrewCard.serial` the order was paid with. No foreign key: serials
+    // of physical chips are reused, the card is the one whose order window
+    // (`src/server/crewCards.server.ts`) contains `createdAt`.
+    crewCardSerial: bytea(),
     notForMe: boolean(),
   },
   (table) => [
-    foreignKey({
-      columns: [table.crewCardId],
-      foreignColumns: [crewCard.id],
-      name: 'Order_crewCardId_fkey',
-    })
-      .onUpdate('cascade')
-      .onDelete('set null'),
+    index('Order_crewCardSerial_createdAt_idx').using(
+      'btree',
+      table.crewCardSerial,
+      table.createdAt,
+    ),
     foreignKey({
       columns: [table.deviceId],
       foreignColumns: [device.id],
@@ -487,25 +493,80 @@ export type WalletPassFields = {
   eventId: string;
   holderName: string;
   privileged: boolean;
-  /** What was booked on the card since it was issued, in cents. */
+  /** What the holder booked at that festival (all their cards), in cents. */
   bookingsTotal: number;
-  /** Badges awarded at that festival. */
+  /** Badges the holder was awarded at that festival. */
   badges: number;
   /** The latest message for the holder, or null. */
   message: string | null;
 };
 
+// A person CrewCards are issued to: a Slack user (`viewerId`) or someone
+// without Slack (`nickname`). `privileged` (Bonbude) applies to all their
+// cards. `pageToken` is the random, rotatable part of their holder page URL
+// (`/crewcard/<pageToken>`).
+export const crewCardHolder = pgTable(
+  'CrewCardHolder',
+  {
+    id: uuid()
+      .primaryKey()
+      .notNull()
+      .default(sql`gen_random_uuid()`),
+    viewerId: text(),
+    nickname: citext(),
+    privileged: boolean().default(false).notNull(),
+    pageToken: text().notNull(),
+    createdAt: timestamp({withTimezone: true, mode: 'date'})
+      .default(sql`CURRENT_TIMESTAMP(3)`)
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex('CrewCardHolder_viewerId_key').using('btree', table.viewerId),
+    uniqueIndex('CrewCardHolder_nickname_key').using('btree', table.nickname),
+    uniqueIndex('CrewCardHolder_pageToken_key').using('btree', table.pageToken),
+    check(
+      'CrewCardHolder_identity_check',
+      sql`num_nonnulls(${table.viewerId}, ${table.nickname}) = 1`,
+    ),
+    foreignKey({
+      columns: [table.viewerId],
+      foreignColumns: [viewer.id],
+      name: 'CrewCardHolder_viewerId_fkey',
+    })
+      .onUpdate('cascade')
+      .onDelete('restrict'),
+  ],
+);
+
+// One issuance of a card to a holder. Rows are never deleted, so they're the
+// history of who had which card; a physical chip handed to someone else gets a
+// new row. A holder has at most one live (unsuspended) card per type, a serial
+// at most one live card. Orders belong to the card whose window contains them:
+// from `enrolledAt` until the serial's next card (see crewCards.server.ts).
 export const crewCard = pgTable(
   'CrewCard',
   {
-    id: bytea().primaryKey().notNull(),
-    nickname: text(),
-    suspended: boolean().default(false).notNull(),
-    privileged: boolean().default(false).notNull(),
-    viewerId: text(),
-    validUntil: timestamp({withTimezone: true, mode: 'date'}).notNull(),
-    enrolledAt: timestamp({withTimezone: true, mode: 'date'}).notNull(),
+    id: uuid()
+      .primaryKey()
+      .notNull()
+      .default(sql`gen_random_uuid()`),
+    // The 7-byte id the devices read: a physical chip's NFC UID or a wallet
+    // card's random `A1…` id (also its PassKit serial number).
+    serial: bytea().notNull(),
     cardType: crewCardType().notNull(),
+    holderId: uuid().notNull(),
+    validUntil: timestamp({withTimezone: true, mode: 'date'}).notNull(),
+    // Start of the card's order window: the chip's enrollment (physical) or the
+    // issuance (wallet).
+    enrolledAt: timestamp({withTimezone: true, mode: 'date'}).notNull(),
+    // Physical cards: the chip's last re-enrollment while this card was live
+    // (which renews `validUntil` and keeps the holder).
+    reenrolledAt: timestamp({withTimezone: true, mode: 'date'}),
+    issuedAt: timestamp({withTimezone: true, mode: 'date'})
+      .default(sql`CURRENT_TIMESTAMP(3)`)
+      .notNull(),
+    suspendedAt: timestamp({withTimezone: true, mode: 'date'}),
+    suspendedReason: crewCardSuspendedReason(),
     // Wallet cards: the pass's `authenticationToken` for the PassKit web
     // service (random, set when the card is created). Null for physical cards.
     walletAuthToken: text(),
@@ -520,10 +581,55 @@ export const crewCard = pgTable(
     walletPass: jsonb().$type<WalletPassFields>(),
   },
   (table) => [
+    uniqueIndex('CrewCard_holderId_cardType_live_key')
+      .using('btree', table.holderId, table.cardType)
+      .where(sql`${table.suspendedAt} IS NULL`),
+    uniqueIndex('CrewCard_serial_live_key')
+      .using('btree', table.serial)
+      .where(sql`${table.suspendedAt} IS NULL`),
+    // The newest card of a serial (device lists, card links) and the order
+    // windows, which run per serial.
+    index('CrewCard_serial_issuedAt_idx').using(
+      'btree',
+      table.serial,
+      table.issuedAt,
+    ),
+    // A holder's cards, including suspended ones (their orders).
+    index('CrewCard_holderId_idx').using('btree', table.holderId),
+    check(
+      'CrewCard_suspended_check',
+      sql`(${table.suspendedAt} IS NULL) = (${table.suspendedReason} IS NULL)`,
+    ),
+    check(
+      'CrewCard_walletAuthToken_check',
+      sql`${table.cardType} = 'PHYSICAL' OR ${table.walletAuthToken} IS NOT NULL`,
+    ),
     foreignKey({
-      columns: [table.viewerId],
-      foreignColumns: [viewer.id],
-      name: 'CrewCard_viewerId_fkey',
+      columns: [table.holderId],
+      foreignColumns: [crewCardHolder.id],
+      name: 'CrewCard_holderId_fkey',
+    })
+      .onUpdate('cascade')
+      .onDelete('restrict'),
+  ],
+);
+
+// A physical chip enrolled on a device that has no holder yet. Not a card: it
+// works anonymously (unprivileged) until `validUntil`, and becomes a CrewCard
+// when it's assigned in #crewcards.
+export const crewCardEnrollment = pgTable(
+  'CrewCardEnrollment',
+  {
+    serial: bytea().primaryKey().notNull(),
+    validUntil: timestamp({withTimezone: true, mode: 'date'}).notNull(),
+    enrolledAt: timestamp({withTimezone: true, mode: 'date'}).notNull(),
+    deviceId: text(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.deviceId],
+      foreignColumns: [device.id],
+      name: 'CrewCardEnrollment_deviceId_fkey',
     })
       .onUpdate('cascade')
       .onDelete('set null'),
@@ -538,7 +644,7 @@ export const walletPassRegistration = pgTable(
   'WalletPassRegistration',
   {
     deviceLibraryIdentifier: text().notNull(),
-    crewCardId: bytea().notNull(),
+    crewCardId: uuid().notNull(),
     pushToken: text().notNull(),
     createdAt: timestamp({withTimezone: true, mode: 'date'})
       .default(sql`CURRENT_TIMESTAMP(3)`)

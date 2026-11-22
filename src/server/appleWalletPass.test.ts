@@ -38,18 +38,18 @@ beforeAll(() => {
 const cardId = new Uint8Array([0xa1, 1, 2, 3, 4, 5, 6]);
 const payload = () => encodeCrewCardPayload(cardId, 940);
 
-function walletCard(createdAgoMs: number) {
-  return {
-    id: Buffer.from(cardId),
-    cardType: 'APPLE_WALLET',
-    suspended: false,
-    enrolledAt: new Date(Date.now() - createdAgoMs),
-    validUntil: kultEpochToDate(940),
-    walletAuthToken: 'token-token-token-token',
-    passUpdatedAt: null,
-    walletPass: null,
-  };
-}
+const walletCard = {
+  id: 'card-1',
+  serial: Buffer.from(cardId),
+  cardType: 'APPLE_WALLET',
+  suspendedAt: null,
+  enrolledAt: new Date(),
+  validUntil: kultEpochToDate(940),
+  walletAuthToken: 'token-token-token-token',
+  passUpdatedAt: null,
+  walletPass: null,
+  holder: {pageToken: 'page-token'},
+};
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -57,9 +57,10 @@ beforeEach(() => {
 });
 
 describe('handleAppleWalletPass', () => {
-  test('serves a signed pass right after the card was created', async () => {
-    db.query.crewCard.findFirst.mockResolvedValue(walletCard(60_000));
-    const res = await handleAppleWalletPass(payload());
+  test('serves a signed pass for a valid download token', async () => {
+    const {signPassDownloadToken} = await import('./crewCardPassToken.server');
+    db.query.crewCard.findFirst.mockResolvedValue(walletCard);
+    const res = await handleAppleWalletPass(signPassDownloadToken('card-1'));
     expect(res.status).toBe(200);
     expect(res.headers.get('Content-Type')).toBe(
       'application/vnd.apple.pkpass',
@@ -72,20 +73,34 @@ describe('handleAppleWalletPass', () => {
     ).toBe('PK');
   });
 
-  test('redirects to the card page for a card without a token', async () => {
-    db.query.crewCard.findFirst.mockResolvedValue({
-      ...walletCard(60_000),
-      walletAuthToken: null,
-    });
-    const res = await handleAppleWalletPass(payload());
-    expect(res.status).toBe(302);
+  test('an expired or tampered token gets no pass', async () => {
+    const {signPassDownloadToken} = await import('./crewCardPassToken.server');
+    db.query.crewCard.findFirst.mockResolvedValue(walletCard);
+    const expired = signPassDownloadToken(
+      'card-1',
+      new Date(Date.now() - 6 * 60_000),
+    );
+    expect((await handleAppleWalletPass(expired)).status).toBe(302);
+
+    const [data, sig] = signPassDownloadToken('card-1').split('.');
+    const otherCard = Buffer.from(
+      Buffer.from(data, 'base64url').toString().replace('card-1', 'card-2'),
+    ).toString('base64url');
+    const tampered = await handleAppleWalletPass(`${otherCard}.${sig}`);
+    expect(tampered.status).toBe(302);
+    expect(tampered.headers.get('Location')).toBe('/');
+    expect(refreshCrewCardPass).not.toHaveBeenCalled();
   });
 
-  test('redirects to the card page once the window has passed', async () => {
-    db.query.crewCard.findFirst.mockResolvedValue(walletCard(6 * 60_000));
-    const res = await handleAppleWalletPass(payload());
+  test('a suspended card goes to the holder page', async () => {
+    const {signPassDownloadToken} = await import('./crewCardPassToken.server');
+    db.query.crewCard.findFirst.mockResolvedValue({
+      ...walletCard,
+      suspendedAt: new Date(),
+    });
+    const res = await handleAppleWalletPass(signPassDownloadToken('card-1'));
     expect(res.status).toBe(302);
-    expect(res.headers.get('Location')).toBe(`/card/${payload()}/crew`);
+    expect(res.headers.get('Location')).toBe('/crewcard/page-token');
   });
 });
 

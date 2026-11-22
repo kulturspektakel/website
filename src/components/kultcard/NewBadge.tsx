@@ -3,16 +3,12 @@ import {useEffect, useState} from 'react';
 import {Badge} from './Badges';
 import ConfettiClient from '../Confetti';
 import {badgeConfig} from '../../utils/badgeConfig';
-import {useSearch} from '@tanstack/react-router';
 
 function useNewlyAwardedBadge(
   cardId: string,
   awarded: Array<{badgeKey: keyof typeof badgeConfig}>,
+  linkedBadge: keyof typeof badgeConfig | undefined,
 ) {
-  const search = useSearch({
-    from: '/_main/card/$hash',
-  });
-
   // Compute the newly awarded badge once, on mount. Reading localStorage must
   // not happen on every render: the effect below overwrites the stored keys, so
   // a re-render would read back the just-written value and find no new badge.
@@ -22,8 +18,8 @@ function useNewlyAwardedBadge(
     }
     const oldData = localStorage.getItem(`badges:${cardId}`);
 
-    if (search?.badge && awarded.find((a) => a.badgeKey === search.badge)) {
-      return search.badge;
+    if (linkedBadge && awarded.find((a) => a.badgeKey === linkedBadge)) {
+      return linkedBadge;
     }
 
     if (!oldData) {
@@ -54,12 +50,15 @@ function useNewlyAwardedBadge(
 export function NewBadge({
   cardId,
   awarded,
+  linkedBadge,
 }: {
   cardId: string;
   awarded: Array<{badgeKey: keyof typeof badgeConfig}>;
+  /** The badge from the page's `?badge=` (a link from the badge DM). */
+  linkedBadge: keyof typeof badgeConfig | undefined;
 }) {
   const [open, setOpen] = useState(true);
-  const newlyAwarded = useNewlyAwardedBadge(cardId, awarded);
+  const newlyAwarded = useNewlyAwardedBadge(cardId, awarded, linkedBadge);
 
   if (!newlyAwarded) {
     return null;

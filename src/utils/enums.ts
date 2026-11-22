@@ -28,6 +28,19 @@ export const CrewCardType = {
 } as const;
 export type CrewCardType = (typeof CrewCardType)[keyof typeof CrewCardType];
 
+/**
+ * Why a CrewCard was suspended: `lost` (set by hand), `replaced` (a new card of
+ * the same type was issued to the holder), `reassigned` (the chip was assigned
+ * to someone else, e.g. fixing a wrong assignment).
+ */
+export const CrewCardSuspendedReason = {
+  lost: 'lost',
+  replaced: 'replaced',
+  reassigned: 'reassigned',
+} as const;
+export type CrewCardSuspendedReason =
+  (typeof CrewCardSuspendedReason)[keyof typeof CrewCardSuspendedReason];
+
 export const DemoEmbedType = {
   Unresolvable: 'Unresolvable',
   YouTubeVideo: 'YouTubeVideo',

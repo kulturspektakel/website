@@ -1,12 +1,32 @@
-import {addDays, differenceInDays, isBefore} from 'date-fns';
+import {addDays, differenceInDays, isBefore, subDays} from 'date-fns';
 import {CardActivity} from '../components/kultcard/CardActivities';
 import {badgeConfig} from './badgeConfig';
+import {locale, timeZone} from './dateUtils';
 
 export function byteArrayToString(bytes: Uint8Array) {
   return [...bytes]
     .map((b) => b.toString(16).padStart(2, '0'))
     .join('')
     .toUpperCase();
+}
+
+/** A card id (uppercase hex) as shown to people: `A1:23:45:…`. */
+export function formatSerial(hex: string): string {
+  return hex.match(/.{1,2}/g)?.join(':') ?? hex;
+}
+
+/**
+ * A CrewCard's last valid day for messages ("gültig bis einschließlich …"):
+ * the card runs out at the start of `validUntil`.
+ */
+export function formatLastValidDay(validUntil: Date): string {
+  return subDays(validUntil, 1).toLocaleDateString(locale, {
+    weekday: 'long',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    timeZone,
+  });
 }
 
 export function stringToByteArray(str: string) {

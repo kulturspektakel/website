@@ -3,9 +3,14 @@ import {NewBadge} from './NewBadge';
 import {ClientOnly, StackProps, VStack} from '@chakra-ui/react';
 import {SegmentedControl} from '../chakra-snippets/segmented-control';
 import {BadgeActivity} from './Badges';
-import {CardActivities, CardActivity} from './CardActivities';
+import {
+  CardActivities,
+  type CardActivity,
+  type NotForMeOwner,
+} from './CardActivities';
 import InfoText from './InfoText';
 import {useBadges} from '../../utils/useBadges';
+import type {BadgeKey} from '../../utils/badgeConfig';
 import {useLoaderData} from '@tanstack/react-router';
 
 export function CardDetails({
@@ -14,14 +19,21 @@ export function CardDetails({
   cardActivities,
   cardId,
   cardType,
+  notForMeOwner,
+  linkedBadge,
   footer,
   ...stackProps
 }: {
+  /** Where the badges seen last time are remembered (`badges:<cardId>`). */
   cardId: string;
   infoText: string;
   children: React.ReactNode;
   cardActivities: Array<CardActivity>;
   cardType: 'crew' | 'regular';
+  /** CrewCards: whose orders can be marked "nicht für mich". */
+  notForMeOwner?: NotForMeOwner;
+  /** The badge from the page's `?badge=`. */
+  linkedBadge: BadgeKey | undefined;
   footer?: React.ReactNode;
 } & StackProps) {
   const {event} = useLoaderData({from: '/_main'});
@@ -35,7 +47,11 @@ export function CardDetails({
   return (
     <VStack mr="auto" ml="auto" align="stretch" {...stackProps}>
       <ClientOnly>
-        <NewBadge cardId={cardId} awarded={awardedBadges} />
+        <NewBadge
+          cardId={cardId}
+          awarded={awardedBadges}
+          linkedBadge={linkedBadge}
+        />
       </ClientOnly>
       {children}
       <SegmentedControl
@@ -48,7 +64,7 @@ export function CardDetails({
         {active === 'Buchungen' && (
           <CardActivities
             newestToOldest={cardActivities}
-            crewCardId={cardType === 'crew' ? cardId : undefined}
+            notForMeOwner={notForMeOwner}
           />
         )}
         {active === 'Badges' && (

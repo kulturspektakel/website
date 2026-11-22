@@ -92,7 +92,7 @@ async function authorizedCard(request: Request, serial: string | undefined) {
   }
   const card = await db.query.crewCard.findFirst({
     where: and(
-      eq(crewCard.id, Buffer.from(stringToByteArray(serial))),
+      eq(crewCard.serial, Buffer.from(stringToByteArray(serial))),
       eq(crewCard.cardType, CrewCardType.APPLE_WALLET),
     ),
     columns: walletCardColumns,
@@ -177,18 +177,20 @@ async function updatedSerials(request: Request, deviceId: string) {
   const since = Number(
     new URL(request.url).searchParams.get('passesUpdatedSince') ?? '',
   );
-  const registrations = await db.query.walletPassRegistration.findMany({
-    where: eq(walletPassRegistration.deviceLibraryIdentifier, deviceId),
-    // The id from the registration itself: a bytea nested in a relational
-    // query arrives as `\x…` text, not a Buffer.
-    columns: {crewCardId: true},
-    with: {crewCard: {columns: {passUpdatedAt: true, enrolledAt: true}}},
-  });
+  const cards = await db
+    .select({
+      serial: crewCard.serial,
+      passUpdatedAt: crewCard.passUpdatedAt,
+      enrolledAt: crewCard.enrolledAt,
+    })
+    .from(walletPassRegistration)
+    .innerJoin(crewCard, eq(crewCard.id, walletPassRegistration.crewCardId))
+    .where(eq(walletPassRegistration.deviceLibraryIdentifier, deviceId));
 
-  const updated = registrations
-    .map(({crewCardId, crewCard}) => ({
-      serial: byteArrayToString(crewCardId),
-      modified: passLastModified(crewCard).getTime(),
+  const updated = cards
+    .map((card) => ({
+      serial: byteArrayToString(card.serial),
+      modified: passLastModified(card).getTime(),
     }))
     .filter(({modified}) => !Number.isFinite(since) || modified > since);
   if (updated.length === 0) {
