@@ -6,7 +6,7 @@ import {SlackChannel} from '../../utils/slackChannels';
 /**
  * Migrated from `~/api.kulturspektakel.de/src/tasks/nuclinoUpdateMessage.ts`.
  *
- * Cron (every 10 min via Cloud Scheduler): announces recently-edited Nuclino
+ * Cron (every 15 min via Cloud Scheduler): announces recently-edited Nuclino
  * pages to #wiki.
  *
  * Best-effort: if the Nuclino API is temporarily unavailable (429/5xx) we log
@@ -26,13 +26,13 @@ const SETTLE_MINUTES = 5;
  * here dedupes). Changing the cron period without changing this constant
  * silently drops every edit that falls in the resulting gap.
  */
-const CRON_PERIOD_MINUTES = 10;
+const CRON_PERIOD_MINUTES = 15;
 
 /**
  * Cap per run, so a mass edit doesn't flood #wiki. Scales with the window: at a
- * 10-minute period a run can see twice what the old 5-minute one did.
+ * 15-minute period a run can see three times what the old 5-minute one did.
  */
-const MAX_ITEMS_PER_RUN = 6;
+const MAX_ITEMS_PER_RUN = 9;
 export async function handleNuclinoUpdateMessage(): Promise<Response> {
   let items: Awaited<ReturnType<typeof allItems>>;
   try {

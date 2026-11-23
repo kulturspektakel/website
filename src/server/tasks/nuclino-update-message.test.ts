@@ -21,7 +21,7 @@ const minutesAgo = (m: number) =>
 beforeEach(() => vi.clearAllMocks());
 
 describe('handleNuclinoUpdateMessage', () => {
-  test('announces pages edited 5-10 min ago to #wiki, skips fresh edits', async () => {
+  test('announces pages edited 5-20 min ago to #wiki, skips fresh edits', async () => {
     allItems.mockResolvedValueOnce([
       {
         object: 'item',
@@ -51,7 +51,7 @@ describe('handleNuclinoUpdateMessage', () => {
     );
   });
 
-  test('covers the full 10-min cron period, not just the 5 min before settle', async () => {
+  test('covers the full 15-min cron period, not just the 5 min before settle', async () => {
     allItems.mockResolvedValueOnce([
       {
         object: 'item',
@@ -65,7 +65,7 @@ describe('handleNuclinoUpdateMessage', () => {
         title: 'Edited 20 min ago',
         url: 'https://app.nuclino.com/t/y',
         lastUpdatedUserId: 'NU2',
-        lastUpdatedAt: minutesAgo(20), // the previous run already had it
+        lastUpdatedAt: minutesAgo(25), // the previous run already had it
       },
     ]);
     user.mockResolvedValue({firstName: 'A', lastName: 'B'});
