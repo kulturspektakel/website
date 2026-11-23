@@ -205,6 +205,10 @@ resource "google_cloud_scheduler_job" "nuclino_update_message" {
   time_zone   = "UTC"
   region      = local.region
 
+  # Explicit: `paused` is optional+computed, so omitting it keeps whatever
+  # state the job is in rather than resuming it.
+  paused = false
+
   http_target {
     uri         = "${local.site_url}/api/tasks/nuclino-update-message"
     http_method = "POST"
