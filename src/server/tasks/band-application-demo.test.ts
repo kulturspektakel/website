@@ -55,6 +55,24 @@ describe('handleBandApplicationDemo', () => {
     );
   });
 
+  test('treats a bare youtube.com link as unresolvable', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+    query.bandApplication.findFirst.mockResolvedValue({
+      id: 'app1',
+      demo: 'https://youtube.com',
+    });
+
+    const res = await handleBandApplicationDemo(request('app1'));
+
+    expect(res.status).toBe(204);
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(updates).toHaveBeenCalledWith(
+      'BandApplication',
+      {demoEmbed: undefined, demoEmbedType: 'Unresolvable'},
+      ['app1'],
+    );
+  });
+
   test('resolves a Bandcamp track via Apify', async () => {
     const demo =
       'https://jeskobraun.bandcamp.com/track/das-leben-stellt-dich-blo';

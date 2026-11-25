@@ -156,8 +156,14 @@ function isError(res: object | YouTubeError): res is YouTubeError {
 
 async function youTubeVideoFor(
   forU: 'forUsername' | 'forHandle',
-  value: string,
+  value: string | undefined,
 ) {
+  // A bare `https://youtube.com` (or `/c/`, `/user/`) has an empty segment;
+  // the API rejects an empty filter with a 400, which used to fail the task
+  // and burn all 25 retries.
+  if (!value) {
+    return;
+  }
   const url = new URL('https://www.googleapis.com/youtube/v3/channels');
   url.searchParams.append('key', process.env.YOUTUBE_API_KEY);
   url.searchParams.append('part', 'statistics,brandingSettings,contentDetails');
