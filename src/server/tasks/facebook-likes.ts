@@ -68,6 +68,10 @@ export async function extractFbid(
   uri: string,
   followRedirects = true,
 ): Promise<string | null | undefined> {
+  // The form keeps unparseable input as typed, so this can be free text.
+  if (!URL.canParse(uri)) {
+    return;
+  }
   const url = new URL(uri);
 
   if (

@@ -25,7 +25,8 @@ export async function handleBandApplicationDemo(
     throw new Error(`BandApplication ${id} not found`);
   }
   const demo = application.demo?.split(' ').shift();
-  if (demo == null) {
+  // The form keeps unparseable input as typed, so this can be free text.
+  if (demo == null || !URL.canParse(demo)) {
     return new Response(null, {status: 204});
   }
 

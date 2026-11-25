@@ -20,6 +20,10 @@ describe('extractFbid', () => {
     ).toBe('100000000123');
   });
 
+  test('ignores free text that is not a URL', async () => {
+    expect(await extractFbid('Galerie - FoodsavingandMore')).toBeUndefined();
+  });
+
   test('ignores non-facebook hosts', async () => {
     expect(await extractFbid('https://example.com/band')).toBeUndefined();
   });
